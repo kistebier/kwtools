@@ -1,0 +1,67 @@
+# Funktion kwrsync_home_exec{{{
+#
+# usage: kwrsync_home_exec
+#
+kwrsync_home_exec() {
+	if [ -n "${R_HOST[1]}" ] ; then
+		NOT_NET=$(gettext 'kein Netz?')
+		for h in ${=R_HOST} ; {
+			if ! [ "$h" = localhost -o "$h" = "`hostname`" ] ; then
+				# remote shell Variable belegen
+				check_remote_sh
+				# komplette rsync Optionen.
+				PROG_OPT=($DEFAULT_ARGS --bwlimit=${BW_LIMIT:-0} -HAX
+					$RSYNC_CONF_RSH ${HOME}/* ${h}:${HOME})
+			else
+				continue
+			fi
+			LOG_HOME_START_MSG=$(gettext 'Starte $HOME rsync nach $h ...')
+			LOG_HOME_ERR_MSG=$(gettext 'Fatal: $HOME rsync nach $h mit Fehlern beendet!')
+			LOG_HOME_FINISH_MSG=$(gettext 'Beende $HOME rsync nach $h ...')
+			FINISH_MSG=$(gettext '${gv_ScriptName}: rsync beendet ($h) ')
+			HOME_ERROR_MSG=$(gettext '${gv_ScriptName}: $HOME rsync nach $h mit Fehlern beendet! ')
+			# Logging beginnen.
+			sys_logger -n syslog "$gv_ScriptName" "$LOG_HOME_START_MSG"
+			if [[ -n $gv_Terminal ]] ; then
+				TITLE=$(gettext 'Homesyncronisation')
+				MSG=$(gettext 'Syncronisiere das Home Verzeichnis mit dem Rechner $h.')
+				(rsync ${=PROG_OPT} 2>/dev/null || \
+					sys_logger -r syslog "$gv_ScriptName" "$LOG_HOME_ERR_MSG") | \
+					progressbox "$TITLE" "$MSG"
+				# Fertig!
+				sys_logger -n syslog "$gv_ScriptName" "$LOG_HOME_FINISH_MSG"
+				# Sicher ist sicher...
+				sync
+			else
+				rsync ${=PROG_OPT}
+				# Rueckgabewert pruefen.
+				# 0 = fehlerfrei, 
+				# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
+				# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+				# Alles andere ist fatal -- siehe man (1) rsync
+				if ! [ $? = 24 -o $? = 0 ] ; then
+					sys_logger -r syslog "$gv_ScriptName" "$LOG_HOME_ERR_MSG"
+					> "${gv_WorkDir}/error" <<< "$NOT_NET"
+					mail -s "$HOME_ERROR_MSG" $USER < "${gv_WorkDir}/error"
+				else
+					sys_logger -n syslog "$gv_ScriptName" "$LOG_HOME_FINISH_MSG"
+					# Sicher ist sicher...
+					sync
+				fi
+			fi
+		}
+	else
+		MSG=$(gettext 'Sie muessen mindestens einen Zielrechner konfigurieren, um Ihr Homeverzeichnis syncronisieren zu koennen.')
+		if [[ -n $gv_Terminal ]] ; then
+			msgbox "$gv_Attention" "$MSG"
+		else
+			> ${gv_WorkDir}/kwrsync_cron <<< "$MSG"
+			mail -s "${gv_ScriptName}: kwrsyncrc Error" $USER < ${gv_WorkDir}/kwrsync_cron
+		fi
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

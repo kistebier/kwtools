@@ -1,0 +1,61 @@
+# Funktion (kwmutt_sec_conf), konfiguriert die Sicherheit fuer mutt# {{{
+#
+# usage: kwmutt_sec_conf
+#
+kwmutt_sec_conf() {
+	# Funktion (sec_conf_menu), Menue fuer die Sicherheitseinstellungen{{{
+	lv_Crypt=$(gettext 'crypt')
+	lv_Gpg=$(gettext 'gpg')
+	lv_Ssl=$(gettext 'ssl')
+	lv_Smime=$(gettext 'smime')
+	#
+	sec_conf_menu() {
+		SEC_TITLE="$lv_Security"
+		SEC_MENU=($lv_Crypt \"\" $lv_Gpg \"\" $lv_Smime \"\" $lv_Ssl \"\" $gv_Back \"\")
+		menubox "$1" "$SEC_TITLE" "$gv_Menupoint" "$SEC_MENU"
+	}
+	#}}}
+	sec_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_sec_help
+				sec_conf_menu
+				;;
+			$lv_Crypt)
+				# Crypt Einstellungen# {{{
+				autoload -U kwmutt_crypt_conf kwmutt_crypt_config
+				kwmutt_crypt_conf
+				## }}}
+				sec_conf_menu $lv_Crypt
+				;;
+			$lv_Gpg)
+				# GnuPG Einstellungen# {{{
+				autoload -U kwmutt_gpg_conf kwmutt_gpg_config
+				kwmutt_gpg_conf
+				## }}}
+				sec_conf_menu $lv_Gpg
+				;;
+			$lv_Smime)
+				# SMIME Einstellungen# {{{
+				autoload -U kwmutt_smime_conf kwmutt_smime_config
+				kwmutt_smime_conf
+				## }}}
+				sec_conf_menu $lv_Smime
+				;;
+			$lv_Ssl)
+				# SSL/TLS Einstellungen# {{{
+				autoload -U kwmutt_ssl_conf kwmutt_ssl_config
+				kwmutt_ssl_conf
+				## }}}
+				sec_conf_menu $lv_Ssl
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

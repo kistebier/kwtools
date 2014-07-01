@@ -1,0 +1,218 @@
+# scalemail-backend (?) Konfiguration einstellen{{{
+
+scalemail-backend_conf() {
+
+	# Variable
+	SCALEMAIL_TITLE="${gv_Configuration}::${lv_Scalemail}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)scalemail-backend_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ; s#-#_# ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	#rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_scalemail-backend_menu), die Scalemail-Backend-Parameter einstellen# {{{
+	conf_scalemail-backend_menu() {
+		SCALEMAIL_MENU=(scalemail-backend_delivery_slot_cost \"\$scalemail_backend_delivery_slot_cost\"
+		scalemail-backend_delivery_slot_discount \"\$scalemail_backend_delivery_slot_discount\"
+		scalemail-backend_delivery_slot_loan \"\$scalemail_backend_delivery_slot_loan\"
+		scalemail-backend_destination_concurrency_failed_cohort_limit \"\$scalemail_backend_destination_concurrency_failed_cohort_limit\"
+		scalemail-backend_destination_concurrency_limit \"\$scalemail_backend_destination_concurrency_limit\"
+		scalemail-backend_destination_concurrency_negative_feedback \"\$scalemail_backend_destination_concurrency_negative_feedback\"
+		scalemail-backend_destination_concurrency_positive_feedback \"\$scalemail_backend_destination_concurrency_positive_feedback\"
+		scalemail-backend_destination_rate_delay \"\$scalemail_backend_destination_rate_delay\"
+		scalemail-backend_destination_recipient_limit \"\$scalemail_backend_destination_recipient_limit\"
+		scalemail-backend_extra_recipient_limit \"\$scalemail_backend_extra_recipient_limit\"
+		scalemail-backend_initial_destination_concurrency \"\$scalemail_backend_initial_destination_concurrency\"
+		scalemail-backend_minimum_delivery_slots \"\$scalemail_backend_minimum_delivery_slots\"
+		scalemail-backend_recipient_limit \"\$scalemail_backend_recipient_limit\"
+		scalemail-backend_recipient_refill_delay \"\$scalemail_backend_recipient_refill_delay\"
+		scalemail-backend_recipient_refill_limit \"\$scalemail_backend_recipient_refill_limit\"
+		scalemail-backend_time_limit \"\$scalemail_backend_time_limit\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$SCALEMAIL_TITLE" "$gv_Menupoint" "$SCALEMAIL_MENU"
+	}
+	## }}}
+	conf_scalemail-backend_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help scalemail-backend_help
+				conf_scalemail-backend_menu
+				;;
+			scalemail-backend_delivery_slot_cost)
+				# Standard = $default_delivery_slot_cost# {{{
+				default_or_input scalemail-backend_delivery_slot_cost number_input -i $scalemail-backend_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					scalemail_backend_delivery_slot_cost="$Value"
+					postconf -e scalemail-backend_delivery_slot_cost="$Value"
+				fi
+				#	# }}}
+				conf_scalemail-backend_menu scalemail-backend_delivery_slot_cost
+				;;
+			scalemail-backend_delivery_slot_discount)
+				# Standard = $default_delivery_slot_discount# {{{
+				default_or_input scalemail-backend_delivery_slot_discount number_input -i $scalemail-backend_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					scalemail_backend_delivery_slot_discount="$Value"
+					postconf -e scalemail-backend_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_delivery_slot_discount
+				;;
+			scalemail-backend_delivery_slot_loan)
+				# Standard = $default_delivery_slot_loan# {{{
+				default_or_input scalemail-backend_delivery_slot_loan number_input -i $scalemail-backend_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					scalemail_backend_delivery_slot_loan="$Value"
+					postconf -e scalemail-backend_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_delivery_slot_loan
+				;;
+			scalemail-backend_destination_concurrency_failed_cohort_limit)
+				# Standard = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input scalemail-backend_destination_concurrency_failed_cohort_limit number_input -i $scalemail-backend_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e scalemail-backend_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_concurrency_failed_cohort_limit
+				;;
+			scalemail-backend_destination_concurrency_limit)
+				# Standard = $default_destination_concurrency_limit# {{{
+				default_or_input scalemail-backend_destination_concurrency_limit number_input -i $scalemail-backend_destination_concurrency_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_concurrency_limit="$Value"
+					postconf -e scalemail-backend_destination_concurrency_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_concurrency_limit
+				;;
+			scalemail-backend_destination_concurrency_negative_feedback)
+				# Standard = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input scalemail-backend_destination_concurrency_negative_feedback number_input -i $scalemail-backend_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_concurrency_negative_feedback="$Value"
+					postconf -e scalemail-backend_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_concurrency_negative_feedback
+				;;
+			scalemail-backend_destination_concurrency_positive_feedback)
+				# Standard = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input scalemail-backend_destination_concurrency_positive_feedback number_input -i $scalemail-backend_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_concurrency_positive_feedback="$Value"
+					postconf -e scalemail-backend_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_concurrency_positive_feedback
+				;;
+			scalemail-backend_destination_rate_delay)
+				# Standard = $default_destination_rate_delay# {{{
+				default_or_input scalemail-backend_destination_rate_delay number_input '-a "$SCALEMAIL_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' ${scalemail-backend_destination_rate_delay%?}
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_rate_delay="$Value"
+					postconf -e scalemail-backend_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_rate_delay
+				;;
+			scalemail-backend_destination_recipient_limit)
+				# Standard = $default_destination_recipient_limit# {{{
+				default_or_input scalemail-backend_destination_recipient_limit number_input -i $scalemail-backend_destination_recipient_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_destination_recipient_limit="$Value"
+					postconf -e scalemail-backend_destination_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_destination_recipient_limit
+				;;
+			scalemail-backend_extra_recipient_limit)
+				# Standard = $default_extra_recipient_limit# {{{
+				default_or_input scalemail-backend_extra_recipient_limit number_input -i $scalemail-backend_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_extra_recipient_limit="$Value"
+					postconf -e scalemail-backend_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_extra_recipient_limit
+				;;
+			scalemail-backend_initial_destination_concurrency)
+				# Standard = $initial_destination_concurrency# {{{
+				default_or_input scalemail-backend_initial_destination_concurrency number_input -i $scalemail-backend_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					scalemail_backend_initial_destination_concurrency="$Value"
+					postconf -e scalemail-backend_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_initial_destination_concurrency
+				;;
+			scalemail-backend_minimum_delivery_slots)
+				# Standard = $default_minimum_delivery_slots# {{{
+				default_or_input scalemail-backend_minimum_delivery_slots number_input -i $scalemail-backend_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					scalemail_backend_minimum_delivery_slots="$Value"
+					postconf -e scalemail-backend_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_minimum_delivery_slots
+				;;
+			scalemail-backend_recipient_limit)
+				# Standard = $default_recipient_limit# {{{
+				default_or_input scalemail-backend_recipient_limit number_input -i $scalemail-backend_recipient_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_recipient_limit="$Value"
+					postconf -e scalemail-backend_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_recipient_limit
+				;;
+			scalemail-backend_recipient_refill_delay)
+				# Standard = $default_recipient_refill_delay# {{{
+				default_or_input scalemail-backend_recipient_refill_delay number_input -s ${scalemail-backend_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					scalemail_backend_recipient_refill_delay="$Value"
+					postconf -e scalemail-backend_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_recipient_refill_delay
+				;;
+			scalemail-backend_recipient_refill_limit)
+				# Standard = $default_recipient_refill_limit# {{{
+				default_or_input scalemail-backend_recipient_refill_limit number_input -i $scalemail-backend_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					scalemail_backend_recipient_refill_limit="$Value"
+					postconf -e scalemail-backend_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_recipient_refill_limit
+				;;
+			scalemail-backend_time_limit)
+				# Standard = $command_time_limit# {{{
+				default_or_input scalemail-backend_time_limit number_input -s ${scalemail-backend_time_limit%?}
+				if [[ -n $Value ]] ; then
+					scalemail_backend_time_limit="$Value"
+					postconf -e scalemail-backend_time_limit="$Value"
+				fi
+				## }}}
+				conf_scalemail-backend_menu scalemail-backend_time_limit
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

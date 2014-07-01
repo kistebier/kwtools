@@ -1,0 +1,65 @@
+# Funktion (pv_vgi_auswahl), um PV's heraus zu finden, die keiner VG zugeordnet sind{{{
+#
+# benoetigt die Funktion raid_filter
+#
+# usage: pv_vgi_auswahl
+#
+# LVM Partitionen herausfinden
+pv_vgi_auswahl() {
+	unset -- PV_PARTS_M PV_PARTS_NO_PV_M Pv_Parts
+	local Pv_Parts
+	partdb -i 8e
+	if [ "$PART" ] ; then
+		Pv_Parts="$PART"
+	fi
+	#
+	# vergebene RAID Arrays herrausfiltern. Die Variable R_DEVS wird
+	# von der Funktion raid_filter belegt.
+	raid_filter -t
+	if [ -n "$R_DEVS" ] ; then
+		Pv_Parts="$Pv_Parts $R_DEVS"
+	fi
+	#
+	# nur aktive Cryptdisks herausfinden.
+	#
+	search_cryptdev -a
+	if [ -n "${MAP_DEV_E[1]}" ] ; then
+		Pv_Parts="$Pv_Parts $MAP_DEV_E"
+	fi
+	#
+	# Prüfen, welche PV's schon zu VG's gehören und aussortieren.
+	#
+	# Links zu Device umwandeln.
+	pvscan --short 2>/dev/null >${gv_WorkDir}/pvscan
+	while read a ; do
+		case $a in
+			/dev*)
+				Dev=$(readlink -f $a)
+				if [ -f ${gv_WorkDir}/pvscan1 ] ; then
+					>> ${gv_WorkDir}/pvscan1 <<< "$Dev"
+				else
+					> ${gv_WorkDir}/pvscan1 <<< "$Dev"
+				fi
+				;;
+		esac
+	done < ${gv_WorkDir}/pvscan
+	#
+	for i in ${=Pv_Parts} ; {
+		if [ -z "`print ${${(s: :)${(M)${(f)"$(pvdisplay $i 2>/dev/null)"}##*(VG Name)*}}[3]}`" ] ; then
+			# Pruefen ob es eine PV Laufwerk ist.
+			
+			if [ "${(M)$(< ${gv_WorkDir}/pvscan1)##*$i*}" ] ; then
+				PV_PARTS_M+=($i \"Linux LVM\" off)
+			else
+				PV_PARTS_NO_PV_M+=($i \"Linux LVM\" off)
+			fi
+		fi
+	}
+	#
+	rm -f ${gv_WorkDir}/pvscan1 &>/dev/null
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

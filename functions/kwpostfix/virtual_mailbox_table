@@ -1,0 +1,206 @@
+# Funktion virtual_mailbox_table{{{
+#
+virtual_mailbox_table() {
+	FILE="$1"
+	autoload -U no_adr_and_recipient_adr_msg
+	unset -- Ist_Wert
+	Ist_Wert=$(postconf -h virtual_mailbox_base)
+
+	if [[ -n $Ist_Wert ]] ; then
+		# Funktion virtual_mailbox_menue{{{
+		virtual_mailbox_menue() {
+			VIRTUAL_MB_MENU=($lv_Address \"$ADR\" $lv_Recipient \"$E_ADR\"
+			$gv_Save \"\" $gv_Back \"\")
+			menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_MB_MENU"
+		}
+		#}}}
+		# Funktion virtual_mailbox_aendern{{{
+		virtual_mailbox_aendern() {
+		virtual_mailbox_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help "$TAB_HELP"
+					virtual_mailbox_menue
+					;;
+				$lv_Address)
+					# Adresse waehlen{{{
+					FIRST_ADR_MSG=$(gettext 'Geben Sie hier bitte eine Mailadresse oder Domain ein (Bsp. @domain.de | user@domain.de).')
+					inputbox "$TABLE_TITLE" "$FIRST_ADR_MSG" "$ADR"
+					if [ "$gv_Auswahl" ] ; then
+						case "$gv_Auswahl" in
+							[a-zA-Z0-9]*[-._]*@*.*|@*.*)	ADR="$gv_Auswahl"
+								;;
+							*)
+								unset -- ADR
+								no_input_msg
+								;;
+						esac
+					else
+						unset -- ADR
+						no_input_msg
+					fi
+					#}}}
+					virtual_mailbox_menue $lv_Address
+					;;
+				$lv_Recipient)
+					# Mailbox relativ zum Pfad vom Parameter "$virtual_mailbox_base"{{{
+					#
+					# Ist die Variable Ist_Wert (virtual_mailbox_base) belegt?
+					# Ansonsten gibt es eine Info-Nachricht.
+					if [ -n "$Ist_Wert" ] ; then
+						RECIPIENT_ADR_MSG=$(gettext 'Geben Sie hier den Pfad relativ zum Parameter "virtual_mailbox_base" ein. (Bsp. virtual_mailbox_base = /var/mail/vhosts, Pfad = domain.de/info ergibt eine Mailbox /var/mail/vhosts/domain.de/info.
+
+Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
+						#
+						inputbox "$TABLE_TITLE" "$RECIPIENT_ADR_MSG" "$E_ADR"
+						if [ "$gv_Auswahl" ] ; then
+							case "$gv_Auswahl" in
+								[a-zA-Z0-9]*[a-zA-Z0-9-_./]*)
+									# Verzeichnisse checken
+									dselect_check -c "${Ist_Wert}/${gv_Auswahl}"
+									if [ "$VERZ" ] ; then
+										E_ADR="$gv_Auswahl"
+									fi
+									;;
+								*)	unset -- E_ADR
+									no_input_msg
+									;;
+							esac
+						else
+							unset -- E_ADR
+							no_input_msg
+						fi
+					else
+						MSG=(gettext 'Sie muessen erst den Menuepunkt \"virtual_mailbox_base\" in der Kofiguration von virtual aendern.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					#}}}
+					virtual_mailbox_menue $lv_Recipient
+					;;
+				$gv_Save)
+					# Eintraege speichern{{{
+					#
+					if [ "$ADR" -a "$E_ADR" ] ; then
+						if [ "$AENDERN_ADR" ] ; then
+							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE >$FILE$$
+							mv $FILE$$ $FILE
+						else
+							grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+							>> $FILE$$ <<< "$ADR	$E_ADR"
+							mv $FILE$$ $FILE
+						fi
+						break
+					else
+						no_adr_and_recipient_adr_msg
+						virtual_mailbox_menue
+					fi
+					#}}}
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done
+		}
+		#}}}
+		tabellen_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help tab_help
+					tabellen_menue
+					;;
+				$gv_Display)
+					# Ansicht der Eintraege
+					tab_ansicht
+					tabellen_menue $gv_Display
+					;;
+				$gv_Create)
+					# Werte anlegen
+					unset -- ADR E_ADR AENDERN_ADR AENDERN_ADR1
+					virtual_mailbox_aendern
+					tabellen_menue $gv_Create
+					;;
+				$gv_Edit)
+					# Eintraege bearbeiten# {{{
+					edit_file "$TABLE_TITLE" "$FILE"
+					## }}}
+					tabellen_menue $gv_Edit
+					;;
+				$gv_Change)
+					# Eintraege aendern{{{
+					key_value "$FILE"
+					if [[ -n ${AUSWAHL[1]} ]] ; then
+						CHANGE_MENU=($AUSWAHL)
+						menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help tabs_help
+									menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+									;;
+								*)
+									# Auswahl aendern
+									C_CHOICE="$gv_Auswahl"
+									ADR="${${=gv_Auswahl}[1]}"
+									E_ADR="${${=gv_Auswahl}[2]}"
+									AENDERN_ADR="$ADR"
+									AENDERN_ADR1="$E_ADR"
+									#
+									virtual_mailbox_aendern
+									break
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+					#}}}
+					tabellen_menue $gv_Change
+					;;
+				$gv_Delete)
+					# Eintraege loeschen{{{
+					key_value "$FILE"
+					if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+						DEL_MENU=($AUSWAHL_MULTI)
+						U_OPT=no
+						checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help kwpostfix_del_help
+									U_OPT=no
+									checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+									;;	
+								*)	# Loeschen
+									while read ADRESS REST ; do
+										grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
+										mv $FILE$$ $FILE
+									done < $gv_LogFile$$
+									break
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+					#}}}
+					tabellen_menue $gv_Delete
+					;;
+				$lv_Db)
+					# Datenbank neu erzeugen und Postfix anweisen
+					# die Einstellungen neu einzulesen
+					db_new_reread "$TAB_FM" "$FILE"
+					break
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done
+	else
+		unset -- E_ADR
+		MSG=$(gettext 'Sie muessen erst in der VIRTUAL-Konfiguration den Parameter \"virtual_mailbox_base\" belegen.')
+		msgbox "$gv_Attention" "$MSG"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

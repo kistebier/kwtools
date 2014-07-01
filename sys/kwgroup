@@ -1,0 +1,300 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 18.05.2013
+#
+# Script: kwgroup, anlegen, aendern und loeschen von Gruppen.
+# Version: 0.2.7
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check groupadd groupdel groupmod
+if [ ! -z "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# auf Root pruefen
+root_check
+
+# extra Funktionen laden
+autoload -U check_special_character
+
+# Variablen
+lv_Group_Id=$(gettext 'Gruppen_ID')
+#
+GROUP_TITLE=(${gv_Configuration}::${gv_Group})
+CREATE_MSG=$(gettext 'Geben Sie hier bitte einen Gruppen Namen, ohne Sonderzeichen ein.')
+# Funktion no_group_choice_msg{{{
+#
+no_group_choice_msg() {
+	MSG=$(gettext 'Sie muessen erst eine Gruppe eingeben/auswaehlen, bevor Sie hier etwas aendern koennen.')
+	msgbox "$gv_Attention" "$MSG"
+}
+#}}}
+# Funktion haupt_menue{{{
+MAIN_MENU=($gv_Display \"\" $gv_Create \"\"
+$gv_Change \"\" $gv_Delete \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion group_konf_menue{{{
+group_konf_menue() {
+	CONF_MENU=($gv_Group \"$NGROUP\" $lv_Group_Id \"$NGROUP_ID\"
+	$gv_Passwd \"$gv_Star_Passphrase\" $gv_Save \"\" $gv_Back \"\")
+	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+}
+#}}}
+# Funktion (group_var), die prueft ob eingabe korrekt und wenn die Gruppe{{{
+# schon besteht, alle Variablen belegen.
+#
+# usage: group_var
+#
+group_var() {
+	local Anz
+	integer Anz
+	if [ "$NGROUP" ] ; then
+		# Group uebernehmen und nachschauen, ob diese schon existiert.
+		#
+		if [ "${(M)${(f)"$(< /etc/group)"}[(fr)(#s)${NGROUP}:*]}" ] ; then
+			if [ ${$(< /etc/group)[(fr)${NGROUP}:*]} ] ; then
+				NGROUP_ID=${(s: :)${(s,:,)${$(< /etc/group)[(fr)${NGROUP}:*]}}[3]}
+			fi
+		else
+			# eine Group_id vorwaehlen, also ab 100 hochzaehlen und ueberpruefen.
+			Anz=100
+			while [ ${(s: :)${(s,:,)${"$(< /etc/group)"[(fr)*:$Anz:*]}}[3]} ] ; do
+				(( Anz++ ))
+			done
+			NGROUP_ID="$Anz"
+		fi
+	fi
+}
+#}}}
+# Funktion group_konf{{{
+#
+group_konf() {
+	NGROUP_OLD="$NGROUP"
+	group_konf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help conf_help
+				group_konf_menue	
+				;;
+			$gv_Group)
+				# Gruppe anlegen oder aendern.{{{
+				#
+				inputbox "$GROUP_TITLE" "$CREATE_MSG" "$NGROUP_OLD"
+				if [ "$gv_Auswahl" ] ; then
+					check_special_character "$gv_Auswahl"
+					if [ -n "$VALUE" ] ; then
+						NGROUP="$gv_Auswahl"
+					else
+						NGROUP="$NGROUP_OLD"
+					fi
+				fi
+				#}}}
+				group_konf_menue $gv_Group
+				;;
+			$lv_Group_Id)
+				# Gruppen_ID eingeben{{{
+				GROUP_ID_TITLE=(${gv_Configuration}::${lv_Group_Id})
+				GROUP_ID_MSG=$(gettext 'Geben Sie bitte hier die Gruppen ID Nummer ein. Diese muss Integer sein.')
+				number_input "$GROUP_ID_TITLE" "$GROUP_ID_MSG" "$NGROUP_ID"
+				#
+				if [ "$NUMBER" ] ; then
+					if [ "$NUMBER" -le 65534 ] ; then
+						if [ ${$(< /etc/group)[(fr)*${NUMBER}*]} ] ; then
+							MSG=$(gettext 'Diese Gruppen_ID ($NUMBER) ist schon vorhanden. Nehmen Sie bitte eine andere.')
+							msgbox "$gv_Attention" "$MSG"
+						else
+							NGROUP_ID="$NUMBER"
+						fi
+					else
+						no_id_range_msg "$NUMBER"
+					fi
+				fi
+				#}}}
+				group_konf_menue $lv_Group_Id
+				;;
+			$gv_Passwd)
+				# Passwort eingeben {{{
+				PASSWD_MSG=$(gettext 'Geben Sie hier bitte ein Passwort fuer die Gruppe ($NGROUP) ein und wiederholen es anschliessend.')
+				if [ "$NGROUP" ] ; then
+					user_group_passwd -g "$PASSWD_MSG"
+				else 
+					no_group_choice_msg
+				fi
+				#}}}
+				group_konf_menue $gv_Passwd
+				;;
+			$gv_Save)
+				# Gruppe anlegen oder veraendern{{{
+				if [ "$NGROUP_ID" -a "$NGROUP" ] ; then
+					PROG_OPT="-g $NGROUP_ID"
+					# Passwort benutzen
+					if [ -n "$gv_Pass" ] ; then
+						PROG_OPT="$PROG_OPT -p $gv_Pass"
+					fi
+					# ausfuehren
+					if [ ${(M)$(< /etc/group)##$NGROUP} ] ; then
+						groupmod ${=PROG_OPT} $NGROUP || prog_failure
+						# NIS Database updaten
+						update_nis
+						break $BREAK
+					else
+						groupadd ${=PROG_OPT} $NGROUP || prog_failure
+						# NIS Database updaten
+						update_nis
+						break $BREAK
+					fi
+					unset -- gv_Star_Passphrase gv_Pass
+				else
+					MSG=$(gettext 'Die Gruppen_ID oder Gruppe ist nicht belegt. Geben Sie bitte dort gueltige Werte ein.')
+					msgbox "$gv_Attention" "$MSG"
+					group_konf_menue	
+				fi
+				#}}}
+				;;
+			$gv_Back)	break $BREAK
+				;;
+		esac
+	done
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+net_conf
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Display)
+			# Ansicht der /etc/group Datei.# {{{
+			user_group_check -g
+			if [ "$U_G_ARRAY" ] ; then
+				G_MSG=$(gettext 'GruppenName:Passwort:Gruppen_Id:Benutzerliste')
+				print "$G_MSG" >$gv_LogFile
+				print "" >>$gv_LogFile
+				< /etc/group >> $gv_LogFile 
+				view_file $gv_LogFile
+			fi
+			## }}}
+			haupt_menue $gv_Display
+			;;
+		$gv_Create)
+			# Gruppen Namen eingeben{{{
+			unset -- NGROUP NGROUP_ID
+			inputbox "$GROUP_TITLE" "$CREATE_MSG" 
+			if [ "$gv_Auswahl" ] ; then
+				check_special_character "$gv_Auswahl"
+				if [ -n "$VALUE" ] ; then
+					NGROUP="$gv_Auswahl"
+					group_var
+					group_konf
+				fi
+			fi
+			#}}}
+			haupt_menue $gv_Create
+			;;
+		$gv_Change)
+			# Gruppen aendern{{{
+			unset -- NGROUP NGROUP_ID
+			BREAK="2"
+			user_group_check -g
+			if [ "$?" = 0 ] ; then
+				CHANGE_MENU=($U_G_ARRAY)
+				CHANGE_MSG=$(gettext 'Waehlen Sie eine Gruppe aus, die Sie aendern moechten.')
+				menubox "$NGROUP" "$GROUP_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+				#
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help share/group_help
+							menubox "$NGROUP" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+							;;
+						*)
+							# Variablen von vorhandenen User belegen.
+							NGROUP="$gv_Auswahl"
+							group_var
+							group_konf
+							;;
+					esac
+				done
+			fi
+			#}}}
+			haupt_menue $gv_Change
+			;;
+		$gv_Delete)
+			# Gruppen loeschen{{{
+			user_group_check -g
+			if [ "$?" = 0 ] ; then
+				DEL_MENU=($U_G_ARRAY_M)
+				DEL_TITLE=(${gv_Group}::${gv_Delete})
+				DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Gruppen zum loeschen aus.')
+				checklist "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+				#
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help group_del_help
+							checklist "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+							;;
+						*)
+							# Gruppen loeschen.
+							for i in ${=gv_Auswahl} ; do
+								groupdel $i &>/dev/null
+							done
+							unset -- NGROUP NGROUP_ID
+							break
+							;;
+					esac
+				done
+			fi
+			#}}}
+			haupt_menue $gv_Delete
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,177 @@
+#! /usr/bin/perl
+# Up-to-date source can be found:
+# https://keller.schlittermann.de/hg/check-smtp-auth
+
+#    Check the availability of SMTP AUTH options on a remote server
+#    Copyright (C) 2009  Heiko Schlittermann
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    Heiko Schlittermann <hs@schlittermann.de>
+
+use strict;
+use warnings;
+use Sys::Hostname;
+use IO::Socket::INET;
+use Pod::Usage;
+use Getopt::Long;
+use File::Basename;
+
+my $ME       = basename $0;
+my $HOSTNAME = hostname();
+
+my $opt_ssl   = 0;
+my $opt_debug = 0;
+
+sub load_ssl();
+sub check_auth($$);
+
+MAIN: {
+
+    GetOptions(
+        "d|debug" => \$opt_debug,
+        "s|ssl"   => \$opt_ssl,
+        "m|man"   => sub { pod2usage(-exitval => 0, -verbose => 2) },
+        "h|help"  => sub { pod2usage(-exitval => 0, -verbose => 1) },
+    ) or pod2usage();
+
+    my $remote = shift or pod2usage;
+    $remote .= $opt_ssl ? ":smtps" : ":smtp" if not $remote =~ /:/;
+
+    load_ssl() or die "$ME: Can't load SSL support: $@\n"
+      if $opt_ssl;
+
+    warn "connecting to $remote\n" if $opt_debug;
+    my $s =
+      $opt_ssl
+      ? new IO::Socket::SSL($remote)
+      : new IO::Socket::INET($remote)
+      or die "$ME: Can't open socket to $remote\n";
+
+    # Get the greeting and even expect continuation lines
+    # I do not know if they may appear in the greeting, probably not,
+    # because it's feature of ESMTP and the server doesn't know if the
+    # client would understand it)
+
+    while (<$s>) { last if /^\d{3}\s/ }
+
+    # Do not continue on any error
+    /^2/ or die "$ME: expected 2xx\n";
+
+    # Do not continue if the server does not speak ESMTP
+    /ESMTP/ or die "$ME: expected ESMTP";
+
+    # first attempt plain (or SSL)
+    print map { "$_\n" } check_auth($s, $HOSTNAME);
+
+    # if still not closed we should try STARTTLS
+    if ($s->connected) {
+
+        if (not load_ssl()) {
+            $s->close;
+            die "$ME: Server advertised STARTTLS, "
+              . "but I can't load SSL support: $@\n";
+        }
+
+        warn "trying STARTTLS\n" if $opt_debug;
+
+        print {$s} "STARTTLS\r\n";
+        while (<$s>) { last if /^\d{3}\s/ }
+        /^2.. TLS/ or die "$ME: can't start TLS: $_";
+
+        IO::Socket::SSL->start_SSL($s);
+        print map { "$_\n" } check_auth($s, $HOSTNAME);
+    }
+
+}
+
+sub check_auth($$) {
+    my ($socket, $hostname, $tls) = @_;
+    my $close = 1;
+    my @auth;
+
+    print {$socket} "EHLO $HOSTNAME\r\n";
+
+    my $prefix = ref($socket) =~ /::SSL$/ ? "ssl" : "plain";
+
+    # Parse the response to the EHLO
+    while (<$socket>) {
+        print STDERR if $opt_debug;
+        /STARTTLS/ and $close = 0;
+        push @auth, map { "$prefix $_" } split if s/^.*AUTH\s+//;
+        last if /^\d{3}\s/;    # last line
+    }
+
+    if ($close) {
+        print {$socket} "QUIT\r\n";
+        $socket->close;
+    }
+
+    return @auth;
+}
+
+sub load_ssl() {
+    eval {
+        require IO::Socket::SSL;
+        IO::Socket::SSL->import();
+    };
+    return $@ ? 0 : 1;
+}
+
+__END__
+
+=head1 NAME
+
+ check-smtp-auth - checks the auth capabilities of a remote SMTP server
+
+=head1 SYNOPSIS
+
+ check-smtp-auth [-d|--debug] [-s|--ssl] server[:port]
+ check-smtp-auth [-m|--man] [-h|--help]
+
+=head1 DESCRIPTION
+
+This tools checks the AUTH capabilities of a SMTP server. It connects, 
+issues an "EHLO" command and tries to parse the output.
+
+If in the server output "STARTTLS" appears, it retries to get this
+information after issuing "STARTTLS".
+
+The output is line by line one AUTH method, prefixed with "plain"
+or "ssl", depending on the type of the connection.
+
+=head1 OPTIONS
+
+=over
+
+=item [-s|--ssl]
+
+Connect via a SSL socket. This option changes the default port
+to connect to "smtps" instead of "smtp". (default: 0)
+
+=item [-d|--debug]
+
+Issue some debugging information to STDERR. (default: 0)
+
+=back
+
+=head1 AUTHOR
+
+Heiko Schlittermann <hs@schlittermann.de>
+See L<https://keller.schlittermann.de/hg/check-smtp-auth> for
+the current version.
+
+=cut
+
+# vim:sts=4 sw=4 ai aw:

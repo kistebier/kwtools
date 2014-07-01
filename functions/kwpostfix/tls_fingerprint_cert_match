@@ -1,0 +1,39 @@
+# Funktion (tls_fingerprint_cert_match)# {{{
+#
+# usage: tls_fingerprint_cert_match TITLE OLDVAR
+#
+tls_fingerprint_cert_match() {
+	unset -- Value OldVar
+	TITLE="$1"
+	OldVar="$2"
+	CTmp="[a-zA-Z0-9][a-zA-Z0-9]"
+	CVal="${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}:${CTmp}"
+	FCERT_MATCH_MSG=$(gettext 'Geben Sie die Fingerprints von Zertifikaten der entfernten SMTP Servern ein die akzeptiert werden sollen, getrennt durch ein Leerzeichen.')
+	#
+	inputbox "$TITLE" "$FCERT_MATCH_MSG" "$OldVar"
+	if [ "${(w)#gv_Auswahl}" -gt 1 ] ; then
+		for i in ${=gv_Auswahl} ; {
+			case "$gv_Auswahl" in
+				$CVal)
+					Value+=($i)
+					;;
+			esac
+		}
+	elif [ -n "$gv_Auswahl" ] ; then
+		case "$gv_Auswahl" in
+			$CVal)
+				Value="$gv_Auswahl"
+				;;
+			*)
+				no_input_msg
+				;;
+		esac
+	else
+		Value=""
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

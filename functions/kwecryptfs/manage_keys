@@ -1,0 +1,194 @@
+# Funktion manage_keys Schluessel erstellen/loeschen# {{{
+#
+# usage: manage_keys
+#
+manage_keys() {
+	CREATE_KEY_TITLE="${gv_Key}::${gv_Create}"
+	lv_Encrypt_Input=$(gettext 'Schluesseleingabe')
+	lv_Encrypt_type=$(gettext 'Schluesseltyp')
+	lv_Genpass=$(gettext 'Passwort_generieren')
+	#
+	unset -- FILE_OPT
+	# Funktionen manage_key_menu# {{{
+	KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
+	manage_key_menu() {
+		menubox "" "$gv_Key" "$gv_Menupoint" "$KEY_MENU"
+	}
+	## }}}
+	manage_key_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help manage_key_help
+				manage_key_menu
+				;;
+			$gv_Create)
+				# Schluessel anlegen# {{{
+				unset -- KEY_CRYPT
+				# Funktion create_key_menu# {{{
+				#
+				create_key_menu() {
+					CREATE_KEY_MENU=($gv_Filename \"$KEY_FILE_NAME\"
+					$lv_Encrypt_Input \"$KEY_CRYPT\"
+					$lv_Encrypt_type \"$FILE_OPT\" $lv_Genpass \"\"
+					$gv_Create \"\" $gv_Back \"\")
+					menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+				}
+				## }}}
+				create_key_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help manage_create_key_help
+							create_key_menu
+							;;
+						$gv_Filename)
+							# Dateinamen vergeben# {{{
+							dselect ${KEY_FILE%/*}
+							if [ -n "$VERZ" ] ; then
+								KEYNAME_TITLE="${gv_Key}::${gv_Filename}"
+								KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen fuer die Schluesseldatei ein.')
+								inputbox "$KEYNAME_TITLE" "$KEYNAME_MSG" "${KEY_FILE_NAME##*/}"
+								if [ -n "$gv_Auswahl" ] ; then
+									KEY_FILE_NAME="${VERZ}/${gv_Auswahl}"
+								else
+									no_input_msg
+									unset -- KEY_FILE_NAME
+								fi
+							fi
+							## }}}
+							create_key_menu $gv_Filename
+							;;
+						$lv_Encrypt_Input)
+							# Passwort eingeben# {{{
+							PASSWD_MSG=$(gettext 'Geben Sie bitte eine Passphrase zum verschluesseln ein (mindestens 6 Zeichen lang).')
+							PASSWD1_MSG=$(gettext 'Geben Sie bitte die Passphrase zum verschluesseln erneut ein.')
+							password "$gv_Passwd_TITLE" "$PASSWD_MSG"
+							if [ -n "$PASSPHRASE" ] ; then
+								PASS="$PASSPHRASE"
+								unset -- PASSPHRASE
+								password "$gv_Passwd_TITLE" "$PASSWD1_MSG"
+								if [ "$PASSPHRASE" != "$PASS" ] ; then
+									different_password
+									unset -- PASSPHRASE PASS KEY_CRYPT
+								else
+									KEY_CRYPT="$PASSPHRASE"
+									unset -- PASSPHRASE PASS
+								fi
+							fi
+							## }}}
+							create_key_menu $lv_Encrypt_Input
+							;;
+						$lv_Encrypt_type)
+							# Type der Verschluesselung. Dient zum voran stellen# {{{
+							# der Option fuer die Passphrase.
+							# OPTION=PASSPHRASE
+							# Funktion key_type_menu# {{{
+							#
+							key_type_menu() {
+								KEY_TYPE_MENU=(gpg \"\" openssl \"\"
+								passphrase \"\" pkcs11-helper \"\"
+								tspi \"\" $gv_Back \"\")
+								menubox "" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$KEY_TYPE_MENU"
+							}
+							## }}}
+							key_type_menu
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)
+										script_help manage_create_key_help
+										key_type_menu
+										;;
+									gpg)
+										hier_ist_noch_nichts $gv_Auswahl
+										break
+										;;
+									openssl)
+										FILE_OPT=openssl_passwd
+										break
+										;;
+									passphrase)
+										FILE_OPT=passwd
+										break
+										;;
+									pkcs11-helper)
+										hier_ist_noch_nichts $gv_Auswahl
+										break
+										;;
+									tspi)
+										hier_ist_noch_nichts $gv_Auswahl
+										break
+										;;
+									$gv_Back)	break
+										;;
+								esac
+							done
+							## }}}
+							create_key_menu $lv_Encrypt_type
+							;;
+						$lv_Genpass)
+							# Passwort generieren# {{{
+							autoload -U gen_keys
+							gen_keys
+							if [ -n "$P_PASS" ] ; then
+								KEY_CRYPT="$P_PASS"
+							else
+								unset -- KEY_CRYPT
+							fi
+							## }}}
+							create_key_menu $lv_Genpass
+							;;
+						$gv_Create)
+							# Keyfile anlegen# {{{
+							if [ -n "$KEY_FILE_NAME" -a -n "$KEY_CRYPT" -a "$FILE_OPT" ] ; then
+								if [ -e "$KEY_FILE_NAME" ] ; then
+									# Datei ist vorhanden - ueberschreiben ?
+									MSG=$(gettext 'Die Datei $KEY_FILE_NAME ist schon vorhanden. Soll sie ueberschrieben werden (ja/nein)? Denken Sie an Ihre verschluesselten Dateien die Sie mit einem neuen Schluessel nicht mehr entschluesseln koennen.')
+									yesno "$gv_Attention" "$MSG" "no"
+									if [ "$gv_Auswahl" = yes ] ; then
+										> "$KEY_FILE_NAME" <<< "${FILE_OPT}=${KEY_CRYPT}"
+										chmod 0400 "$KEY_FILE_NAME"
+										unset -- FILE_OPT KEY_CRYPT KEY_FILE_NAME
+										break
+									else
+										unset -- FILE_OPT KEY_FILE_NAME
+									fi
+								else
+									> "$KEY_FILE_NAME" <<< "${FILE_OPT}=${KEY_CRYPT}"
+									chmod 0400 "$KEY_FILE_NAME"
+									unset -- FILE_OPT KEY_CRYPT KEY_FILE_NAME
+									break
+								fi
+							else
+								MSG=$(gettext 'Sie muessen erst die Menuepunkte $gv_Filename, einen Schluessel und Schluesseltyp eingeben bzw. generieren.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+							## }}}
+							create_key_menu
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				## }}}
+				manage_key_menu
+				;;
+			$gv_Delete)
+				# Schluesseldatei loeschen# {{{
+				file_choice "${KEY_FILE%/*}" multi
+				if [ -n "$WERT" ] ; then
+					for i in "$WERT" ; {
+						rm "${VERZ}/${i}" &&>/dev/null
+					}
+				fi
+				## }}}
+				manage_key_menu
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

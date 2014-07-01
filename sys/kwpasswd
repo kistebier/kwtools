@@ -1,0 +1,258 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.01.2014
+#
+# Script: kwpasswd, ein Script zum Passwort aendern,
+# passwd und yppasswd.
+#
+# Version: 0.0.4
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Programm passwd (shadow) oder
+# yppasswd (nis).
+if grep -q '^+::::::' /etc/passwd ; then
+#if ypcat passwd 2>/dev/null ; then
+	PASSWD="yppasswd"
+else
+	PASSWD="passwd"
+fi
+
+# Pruefen ob Passwort Programm ausfuehrbar ist.
+prog_check expect $PASSWD
+if [ ! -z "$NO_PROGS" ] ; then
+	exit 1
+fi
+
+# Variablen
+lv_User=$(gettext 'Benutzer		:')
+OK_MSG=$(gettext 'Passwort wurde erfolgreich geaendert. Sie koennen sich jetzt mit Ihrem neuen Passwort anmelden.')
+NOOK_MSG=$(gettext 'Das Passwort konnte nicht geaendert werden. Wiederholen (ja/nein)?')
+# passwd Meldungen
+SHORT_MSG=$(gettext 'Das Passwort ist zu kurz. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+SIMILAR_MSG=$(gettext 'Das Passwort ist zu aehnlich dem alten. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+DICT_MSG=$(gettext 'Das Passwort basiert auf einem Woerterbucheintrag. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+# yppasswd Meldungen
+NIS_PW_MSG=$(gettext 'Das Passwort ist zu aehnlich dem Benutzernamen. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+NIS_DICT_MSG=$(gettext 'Das Passwort muss grosse und kleine Buchstaben, bzw. nicht nur Buchstaben enthalten. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+NIS_CHAR_MSG=$(gettext 'Das Passwort muss mindestens 6 Zeichen lang sein. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+
+# Funktion (del_expect), loescht die temporaere Datei expect# {{{
+#
+del_expect() {
+	shred -uz ${gv_WorkDir}/expect &>/dev/null
+}
+## }}}
+# Funktion (main_menu), Hauptmenue# {{{
+#
+main_menu() {
+	MAIN_MSG=$(gettext 'Geben Sie hier zuerst Ihr aktuelles Passwort und dann das neue Passwort ein.')
+	MAIN_TITLE=$(gettext 'Passwortaenderung')
+	MAIN_MENU=(\"$lv_User\" "1 1 \"$LOGNAME\" 1 20 20 0 2"
+	\"$gv_Old_Passwd\" "2 1 \"\" 2 20 20 0 1"
+	\"$gv_New_Passwd\" "3 1 \"\" 3 20 20 0 1"
+	\"$gv_New_Passwd\" "4 1 \"\" 4 20 20 0 1")
+	mixedform -i "$MAIN_TITLE" "$MAIN_MSG" "$MAIN_MENU"
+}
+## }}}
+
+main_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help help
+			main_menu
+			;;
+		*)
+			Anz="${(w)#gv_Auswahl}"
+			OPW="${${(ws: :)${=gv_Auswahl}}[2]}"
+			NPW="${${(ws: :)${=gv_Auswahl}}[3]}"
+			NNPW="${${(ws: :)${=gv_Auswahl}}[4]}"
+			if [ "$Anz" -eq 4 ] ; then
+				if [ "$NPW" = "$NNPW" ] ; then
+					# expect# {{{
+					> ${gv_WorkDir}/expect <<<"#!/usr/bin/expect -f
+	
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+              ;# script wasn't run conservatively originally
+if {\$force_conservative} {
+    set send_slow {1 .1}
+    proc send {ignore arg} {
+        sleep .1
+        exp_send -s -- \$arg
+    }
+}
+
+set oldpass \"$OPW\"
+set newpass \"$NPW\"
+set timeout 1
+stty -echo"
+					# Pruefen welches Passwort Programm zu Einsatz kommt.
+					if [ "$PASSWD" = passwd ] ; then
+						# passwd
+						>> ${gv_WorkDir}/expect <<<"spawn passwd
+expect \"Changing password for .*.\r
+(current) UNIX password: \"
+send -- \"\$oldpass\r\"
+expect \"Enter new UNIX password: \"
+send -- \"\$newpass\r\"
+expect \"Retype new UNIX password: \"
+send -- \"\$newpass\r\"
+expect {
+  \"*BAD PASSWORD:*short*\" {exit 9}
+  \"*BAD PASSWORD:*similar*\" {exit 10}
+  \"*BAD PASSWORD:*dictionary*\" {exit 11}
+  \"passwd: password unchanged\r\" {exit 1}
+  \"passwd: password updated successfully\r\" {exit 0}
+}"
+					else
+						# yppasswd
+						>> ${gv_WorkDir}/expect <<<"spawn yppasswd
+expect \"Changing NIS account .*.\r
+Please enter old UNIX password: \"
+send -- \"\$oldpass\r\"
+expect \"Changing NIS password for *\r
+Please enter new password: \"
+send -- \"\$newpass\r\"
+expect \"Please retype new password: \"
+send -- \"\$newpass\r\"
+expect {
+  \"*The password must have both upper and lowercase letters, or non-letters.*\" {exit 12}
+  \"*Please don\'t use something like your username as password.*\" {exit 13}
+  \"*The password must have at least 6 characters.*\" {exit 14}
+  \"passwd: password unchanged\r\" {exit 1}
+  \"The NIS password has been changed*\r\" {exit 0}
+}"
+					fi
+					# letzte expect Werte schreiben
+					>> ${gv_WorkDir}/expect <<<"stty echo
+expect eof"
+					(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect 1>/dev/null)
+					## }}}
+	
+					# EXIT Wert uerberpruefen# {{{
+					case "$?" in
+						9)
+							yesno "$gv_Attention" "$SHORT_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						10)
+							yesno "$gv_Attention" "$SIMILAR_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						11)
+							yesno "$gv_Attention" "$DICT_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						12)
+							yesno "$gv_Attention" "$NIS_DICT_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						13)
+							yesno "$gv_Attention" "$NIS_PW_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						14)
+							yesno "$gv_Attention" "$NIS_CHAR_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+						0)
+							# Passwort geaendert
+							msgbox "$gv_Info" "$OK_MSG"
+							# loeschen der Datei fuer den first Login.
+							rm -f ~/.firstlogin &>/dev/null
+							rm -f ~/.kde/Autostart/firstlogin.desktop &>/dev/null
+							rm -f ~/.config/autostart/firstlogin.desktop &>/dev/null
+							del_expect
+							exit 0
+							;;
+						*)
+							yesno "$gv_Attention" "$NOOK_MSG" ""
+							if [ "$?" = 0 ] ; then
+								main_menu
+							else
+								del_expect
+								exit 1
+							fi
+							;;
+					esac
+					## }}}
+				else
+					different_passwd
+					main_menu
+				fi
+			else
+				failed_entry_msg
+				main_menu
+			fi
+			;;
+	esac
+done
+
+del_expect
+	
+exit 0
+
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

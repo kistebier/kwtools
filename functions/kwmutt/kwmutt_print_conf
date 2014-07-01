@@ -1,0 +1,108 @@
+# Funktion (kwmutt_print_conf), konfiguriert den Pager fuer mutt# {{{
+#
+# usage: kwmutt_print_conf
+kwmutt_print_conf() {
+	Unset=(print print_command print_decode print_split)
+	unset -- $Unset
+	# Funktion (print_conf_menu), menu fuer die Drucker Konfiguration# {{{
+	PRINT_TITLE="$lv_Print"
+	print_conf_menu() {
+		PRINT_CONF_MENU=(print \"$print\"
+		print_command \"$print_command\"
+		print_decode \"$print_decode\"
+		print_split \"$print_split\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$PRINT_TITLE" "$gv_Menupoint" "$PRINT_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_PRINT" ] ; then
+		create_tmp_conf "$M_PRINT"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.
+	print="${print:-ask-no}"
+	print_command="${print_command:-lpr}"
+	print_decode="${print_decode:-yes}"
+	print_split="${print_split:-no}"
+	#
+	print_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_print_help
+				print_conf_menu
+				;;
+			print)
+				# Soll vor dem drucken um Bestaetigung nachgefragt werden?# {{{
+				MSG=$(gettext 'Soll vor dem drucken um Bestaetigung nachgefragt werden?')
+				yesno_select "$PRINT_TITLE" "$MSG" "$print"
+				if [ -n "$VALUE" ] ; then
+					print="$VALUE"
+				else
+					print=""
+				fi
+				## }}}
+				print_conf_menu print
+				;;
+			print_command)
+				# Geben Sie ein Programm zum drucken ein. Standard ist lpr.# {{{
+				MSG=$(gettext 'Geben Sie ein Programm zum drucken ein (z.B. muttprint).')
+				inputbox "$PRINT_TITLE" "$MSG" "$print_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					if [[ -x ${commands[$gv_Auswahl]} ]] ; then
+						print_command="$gv_Auswahl"
+					else
+						no_prog_exec_msg "$gv_Auswahl"
+						print_command=""
+					fi
+				else
+					print_command=""
+				fi
+				## }}}
+				print_conf_menu print_command
+				;;
+			print_decode)
+				# Soll die Nachricht vor dem drucken dekodiert werden (ja/nein)?# {{{
+				MSG=$(gettext 'Soll die Nachricht vor dem drucken dekodiert werden (ja/nein)?')
+				yesno "$PRINT_TITLE" "$MSG" "$print_decode"
+				if [ "$gv_Auswahl" = yes ] ; then
+					print_decode="yes"
+				else
+					print_decode="no"
+				fi
+				## }}}
+				print_conf_menu print_decode
+				;;
+			print_split)
+				# Sollen die Nachrichten einzeln gedruckt werden (ja/nein)?# {{{
+				MSG=$(gettext 'Sollen die Nachrichten einzeln gedruckt werden (ja/nein)?')
+				yesno "$PRINT_TITLE" "$MSG" "$print_split"
+				if [ "$gv_Auswahl" = yes ] ; then
+					print_split="yes"
+				else
+					print_split="no"
+				fi
+				## }}}
+				print_conf_menu print_split
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_print_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

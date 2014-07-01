@@ -1,0 +1,89 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.11.2009
+#
+# Script: kwholiday, zeigt die Feiertage für das angegebene Jahr und
+# Bundesland an.
+# Version: 0.2.5
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# Funktion zur Initialisierung des Scripts laden
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check date gcal
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# Variablen
+LOG_TMP="${gv_WorkDir}/bundesland"
+
+#
+# Wenn es eine Konf.-Datei gibt einlesen.
+#
+read_file kwplanerrc
+if [ -z "$BLAND" ] ; then
+	BLAND="DE_HA"
+fi	
+if [ -z "$JAHR" ] ; then
+	JAHR="`date +%Y`"
+fi	
+#
+# Eingabe des Jahres
+#
+calendarbox
+#
+if [ "$gv_Auswahl" ] ; then
+	JAHR="${${(s,/,)${gv_Auswahl}}[3]}"
+	#
+	#  Feiertage herausbekommen. Von Zeile 6 bis zum Ende.
+	#
+	gcal --usage=cc | sed -n -e '6,$p' >$LOG_TMP || prog_failure
+	if [ -f "$LOG_TMP" ] ; then
+		while read a b c d Rest ; do
+			if [ $BLAND = $a ] ; then
+				typeset -x BlandNotiz="$Rest"
+				break
+			fi
+		done < $LOG_TMP
+		#
+		Text=$(gettext 'Feiertage im Bundesland')
+		Text_Jahr=$(gettext 'im Jahr')
+		> $gv_LogFile$$ <<< "$Text \"${BlandNotiz}\" $Text_Jahr $JAHR.
+"
+		gcal -u --cc-holidays=$BLAND --holiday-list=long -y $JAHR | grep ' ' >>$gv_LogFile$$
+		#
+		# Kalender Anzeige
+		#
+		view_file $gv_LogFile$$
+	fi
+	break &>/dev/null
+fi
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

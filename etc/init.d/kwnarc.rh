@@ -1,0 +1,68 @@
+#! /bin/sh
+#
+# Copyright (c) 2002-2008 Netzworkk, Germany.
+#
+# Author: Kai Wilke <kiste@netzworkk.de>
+#
+# /etc/init.d/kwnarc
+#
+#   and its symbolic link
+#
+# /usr/sbin/rckwnarc
+#
+### BEGIN INIT INFO
+# Provides:          kwnarc
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:      $syslog
+# Should-Stop:       $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts/stops/... your firewall per iptables
+# Description:       starts/stops/reloads the configuration and displays
+#                    the status from your firewall
+### END INIT INFO
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin
+RETVAL=0
+
+prog=kwnarc
+
+# source the configuration
+if [ -f /etc/kwtools/kwnarc.conf ] ; then
+	. /etc/kwtools/kwnarc.conf
+elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
+	. /usr/local/etc/kwtools/kwnarc.conf
+fi
+
+test "$START_IPTABLES" = "yes" || exit 6
+
+usage() {
+	echo "Usage: $0 {chains|conntrack|start|stop|reload|force-reload|restart|status}"
+	RETVAL=1
+}
+
+case "$1" in
+    chains)
+		$prog chains ; RETVAL=$?
+        ;;
+    conntrack)
+		$prog conntrack ; RETVAL=$?
+        ;;
+    start)
+		$prog start ; RETVAL=$?
+        ;;
+    stop)
+		$prog stop ; RETVAL=$?
+        ;;
+    restart|reload|force-reload)
+        $0 stop
+		$0 start ; RETVAL=$?
+        ;;
+    status)
+		$prog status ; RETVAL=$?
+        ;;
+    *)	usage ; RETVAL=2
+		;;
+esac
+exit $RETVAL

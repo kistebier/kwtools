@@ -1,0 +1,164 @@
+# Funktion gpgcrypt_conf{{{
+#
+# benoetigt die Funktion net_conf
+#
+# usage: gpgcrypt_conf
+gpgcrypt_conf() {
+	lv_Default_Keyid_Long=$(gettext 'Standard_Schluessel_ID_lang')
+	lv_Default_Keyid=$(gettext 'Standard_Schluessel_ID')
+	lv_Keyserv=$(gettext 'Schluessel_Server')
+	#
+	# Funktion konf_menue{{{
+	konf_menue() {
+		MENU=($lv_Default_Keyid_Long \"$TRUSTED_KEY\" --------------------------- \"\"
+		$lv_Keyserv \"$KEY_SERV_ALL\" $lv_Default_Keyid \"$DEFAULT_KEY\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MENU"
+	}
+	#}}}
+	konf_menue
+	autoload -U net_conf
+	net_conf
+	#
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help conf_help
+				konf_menue
+				;;
+			$lv_Keyserv)
+				# Schluessel Server angeben.{{{
+				#
+				PROTOCOL=${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[1]}
+				KEY_SERV=${${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[2]}##*/}
+				PORT=${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[3]}
+				KEY_TITLE=(${gv_Configuration}::${lv_Keyserv})
+				#
+				lv_Protocol=$(gettext 'Protokoll')
+				lv_Port=$(gettext 'Port')
+				lv_Mail_Address=$(gettext 'Mailadresse')
+				# Funktion keyserv_menue{{{
+				keyserv_menue() {
+					if [[ $PROTOCOL == mailto ]] ; then
+						MENU=($lv_Protocol \"$PROTOCOL\" $lv_Mail_Address \"$MAIL_ADR\"
+						$gv_Save \"\" $gv_Back \"\")
+					else
+						MENU=($lv_Protocol \"$PROTOCOL\" $lv_Keyserv \"$KEY_SERV\"
+						$lv_Port \"$PORT\" $gv_Save \"\" $gv_Back \"\")
+					fi
+					menubox "$1" "$KEY_TITLE" "$gv_Menupoint" "$MENU"
+				}
+				#}}}
+				keyserv_menue
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help keyserv_help
+							keyserv_menue
+							;;
+						$lv_Protocol)
+							# Protokoll auswaehlen{{{
+							Prot=(hkp \"\" ldap \"\" mailto \"\")
+							PROT_MSG=$(gettext 'Waehlen Sie hier das Protokoll aus, welches benutzt werden soll.')
+							menubox "$PROTOCOL" "$KEY_TITLE" "$PROT_MSG" "$Prot"
+							while [ "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help keyserv_help
+										menubox "$PROTOCOL" "$KEY_TITLE" "$PROT_MSG" "$Prot"
+										;;
+									*)	PROTOCOL="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+							#}}}
+							keyserv_menue $lv_Protocol
+							;;
+						$lv_Keyserv)
+							# Schluesselserver eingeben{{{
+							HOSTNAME_MSG=$(gettext 'Geben Sie hier bitte einen Schluesselserver ein (z. B. wwwkeys.de.pgp.net).')
+							conf_hostname -a "$HOSTNAME_MSG" "$KEY_SERV"
+							if [ "$gv_Hostname" ] ; then
+								KEY_SERV="$gv_Hostname"
+							else
+								no_input_msg
+							fi
+							#}}}
+							keyserv_menue $lv_Keyserv
+							;;
+						$lv_Mail_Address)
+							# Schluesselserver eingeben{{{
+							MAIL_ADR_MSG=$(gettext 'Geben Sie hier bitte einen E-Mail Schluesselserver ein (z. B. pgp-public-keys@keys.pgp.net).')
+							mail_address "$MAIL_ADR_MSG" "$MAIL_ADR"
+							if [ "$gv_Mail_Adr" ] ; then
+								MAIL_ADR="$gv_Mail_Adr"
+							else
+								no_input_msg
+							fi
+							#}}}
+							keyserv_menue $lv_Mail_Address
+							;;
+						$lv_Port)
+							# Port fuer den Schluesselserver eingeben{{{
+							MSG=$(gettext 'Geben Sie bitte den Port fuer den Schluesselserver ein.')
+							number_input "$KEY_TITLE" "$MSG" "$PORT"
+							if [ "$NUMBER" ] ; then
+								PORT="$NUMBER"
+							else
+								unset -- PORT
+							fi
+							#}}}
+							keyserv_menue $lv_Port
+							;;
+						$gv_Save)
+							if [ "$PROTOCOL" = mailto -a "$MAIL_ADR" ] ; then
+								KEY_SERV_ALL="${PROTOCOL}://${MAIL_ADR}"
+							elif [ "$KEY_SERV" -a "$PROTOCOL" -a "$PORT" ] ; then
+								KEY_SERV_ALL="${PROTOCOL}://${KEY_SERV}:${PORT}"
+							elif [ "$KEY_SERV" -a "$PROTOCOL" ] ; then
+								KEY_SERV_ALL="${PROTOCOL}://${KEY_SERV}"
+							elif [ "$KEY_SERV" ] ; then
+								KEY_SERV_ALL="$KEY_SERV"
+							else
+								MSG=$(gettext 'Sie muessen erst einen Schluesselserver angeben.')
+								msgbox "$gv_Attention" "$MSG"
+							fi
+							break
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				#}}}
+				konf_menue $lv_Keyserv
+				;;
+			$lv_Default_Keyid)
+				# Standard_Schluessel_ID auswaehlen, mit der unterschrieben wird.# {{{
+				# belegt die Variablen TRUSTED_KEY und DEFAULT_KEY.
+				autoload -U gpg_getkeys_id
+				gpg_getkeys_id
+				#}}}
+				konf_menue $lv_Default_Keyid
+				;;
+			$lv_Default_Keyid_Long)
+				konf_menue $lv_Default_Keyid_Long
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				#
+				if [ -n "$DEFAULT_KEY" ] ; then
+					gpgcrypt_config
+				else
+					MSG=$(gettext 'Sie muessen mindestens den Menuepunkt Standard_Schluessel_ID mit einem Wert belegen.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

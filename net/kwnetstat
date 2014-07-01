@@ -1,0 +1,116 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 20.10.2012
+#
+# Script: kwnetstat, zeigt einige nuetzliche Informationen
+#		  ueber das Netzwerk an.
+#
+# Version: 0.2.14
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check netstat
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# Variablen
+lv_All=$(gettext 'alles')
+lv_RIvC=$(gettext 'Routing Information vom Cache')
+lv_ExtraInfo=$(gettext 'Zusatzinfos')
+lv_RIvFIB=$(gettext 'Routing Information vom FIB')
+lv_IPvGroups=$(gettext 'IPv6/IPv4 Multicast Gruppenmitgliedschaften')
+lv_NetTable=$(gettext 'Tabelle aller Netzwerkverbindugen')
+lv_LaunchSocket=$(gettext 'lauschende Sockets')
+lv_NetMask=$(gettext 'Masquerade Verbindungen')
+lv_DisplayNumAddress=$(gettext 'Anzeige numerischer Adressen')
+lv_Timers=$(gettext 'Zeitgeber bestehender Verbindungen')
+lv_Pid=$(gettext 'PID und Programmname')
+lv_RouteTable=$(gettext 'Routingtabellen')
+lv_Statistics=$(gettext 'Statistik')
+lv_Tcp=$(gettext 'nur bestehende tcp Verbindungen')
+lv_Udp=$(gettext 'nur bestehende udp Verbindungen')
+lv_Raw=$(gettext 'nur raw Verbindungen')
+lv_UnixDomainSockets=$(gettext 'nur unix domain Sockets')
+
+
+
+TITLE_MENU=(a $lv_All off C \"$lv_RIvC\" off e \"$lv_ExtraInfo\" off
+	F \"$lv_RIvFIB\" off g \"$lv_IPvGroups\" off i \"$lv_NetTable\" off
+   	l \"$lv_LaunchSocket\" off M \"$lv_NetMask\" off n \"$lv_DisplayNumAddress\" off
+	o \"$lv_Timers\" off p \"$lv_Pid\" off r $lv_RouteTable off s $lv_Statistics off
+   	t \"$lv_Tcp\" off u \"$lv_Udp\" off w \"$lv_Raw\" off x \"$lv_UnixDomainSockets\" off)
+# Funktion Hauptmenue{{{
+haupt_menue() {
+	# Variable U_OPT: Dadurch werden die leerzeichen zwischen den 
+	# Optionen entfernt und dem Programm als eine Einheit uebergeben (-rvf).
+	# Muss nach Gebrauch wieder geloescht werden.
+	U_OPT="-"
+	checklist "$gv_Mainmenu" "$gv_Menupoint" "$TITLE_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		*)	#
+			case $gv_Auswahl in
+				[a-z]*r* | r[a-z]* | [a-z]*s* | s[a-z]*)	no_option_msg
+					;;
+				a*i* | ei[a-z]* | i[a-z]*)	no_option_msg
+					;;
+				*)	#
+					if [ -n "$PAGER" ] ; then
+						netstat -${gv_Auswahl} | $PAGER
+					else
+						no_pager_msg
+					fi
+					;;
+			esac
+			haupt_menue
+			;;
+	esac
+done
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

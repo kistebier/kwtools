@@ -1,0 +1,65 @@
+# Funktion transport_methode{{{
+#
+# usage: transport_methode OLDMETHODE OLDVALUE
+#
+transport_methode() {
+	unset -- WERT MB_TRANS_MENU OldMethode OldValue
+	OldMethode="$1"
+	OldValue="$2"
+	for i in `awk '(/^[^# ][^-]/){print $1}' $MASTER_CF | sort` ; {
+		# Duplikate herausfiltern.
+		if [ -z ${(M)${MB_TRANS_MENU}##${i##*:}} ] ; then
+			MB_TRANS_MENU+=(${i##*:} \"\")
+		fi
+	}
+	#
+	if [ -n "${MB_TRANS_MENU[1]}" ] ; then
+		MB_TRANS_MSG=$(gettext 'Waehlen Sie eine Transport Methode aus.')
+		# Funktion transport_methode_menu# {{{
+		transport_methode_menu() {
+			menubox "$1" "$lv_Transportmethode" "$MB_TRANS_MSG" "$MB_TRANS_MENU"
+		}
+		## }}}
+		if [ -z "$gv_Auswahl" ] ; then
+			WERT=""
+		fi
+		#
+		transport_methode_menu $OldMethode
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help mailbox_transport_help
+					transport_methode_menu $OldMethode
+					;;
+				*)	# uebernehmen
+					Tmp="$gv_Auswahl"
+					case "$HASH_TAB" in
+						*_table)
+							# Wird eine Funktion aufgerufen die die Lookup
+							# Tabellen konfiguriert, wird nur der ausgewaehlte
+							# Wert uebernommen.
+							WERT="$Tmp"
+							;;
+						*)
+							METHODE_MSG=$(gettext 'Falls Sie noch ein paar Einstellungen benoetigen koennen Sie diese hier eintragen. Zum Beispiel bei Auswahl einer Methode zusaetzlich die IP und Portnr. angeben ([127.0.0.1]:10024, \$myhostname).')
+							inputbox "$gv_Configuration" "$METHODE_MSG" "${OldValue//\$/\\\$}"
+							if [[ -n $gv_Auswahl ]] ; then
+								WERT="${Tmp}:${gv_Auswahl//$/\$}"
+							else
+								WERT="$Tmp"
+							fi
+						;;
+					esac
+					break
+					;;
+			esac
+		done
+	else
+		MSG=$(gettext 'Es sind keine Transport Methoden, in $MASTER_CF, definiert.')
+		msgbox "$gv_Attention" "$MSG"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,359 @@
+# Funktion (kwmutt_smime_conf), konfiguriert die gnupg Einstellungen fuer mutt# {{{
+#
+# usage: kwmutt_smime_conf
+#
+kwmutt_smime_conf() {
+	Unset=(smime_ask_cert_label smime_decrypt_use_default_key smime_is_default)
+	unset -- $Unset
+	# Funktion (smime_conf_menu), menu fuer die SMIME/TLS Konfiguration# {{{
+	SMIME_TITLE="$lv_Smime"
+	smime_conf_menu() {
+		SMIME_CONF_MENU=(smime_is_default \"$smime_is_default\"
+		smime_ca_location \"$smime_ca_location\"
+		smime_certificates \"$smime_certificates\"
+		smime_keys \"$smime_keys\"
+		smime_default_key \"$smime_default_key\"
+		smime_decrypt_use_default_key \"$smime_decrypt_use_default_key\"
+		smime_ask_cert_label \"$smime_ask_cert_label\"
+		smime_timeout \"$smime_timeout\"
+		smime_decrypt_command \"$smime_decrypt_command\"
+		smime_encrypt_command \"$smime_encrypt_command\"
+		smime_encrypt_with \"$smime_encrypt_with\"
+		smime_get_cert_command \"$smime_get_cert_command\"
+		smime_get_cert_email_command \"$smime_get_cert_email_command\"
+		smime_get_signer_cert_command \"$smime_get_signer_cert_command\"
+		smime_import_cert_command \"$smime_import_cert_command\"
+		smime_pk7out_command \"$smime_pk7out_command\"
+		smime_sign_command \"$smime_sign_command\"
+		smime_sign_opaque_command \"$smime_sign_opaque_command\"
+		smime_verify_command \"$smime_verify_command\"
+		smime_verify_opaque_command \"$smime_verify_opaque_command\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SMIME_TITLE" "$gv_Menupoint" "$SMIME_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_SMIME" ] ; then
+		create_tmp_conf "$M_SMIME"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	smime_ask_cert_label="${smime_ask_cert_label:-yes}"
+	smime_ca_location="${smime_ca_location:-\\\`for f in $HOME/.smime/ca-certificates.crt $HOME/.smime/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt ; do if [ -f \\\$f ] ; then echo \\\$f ; exit ; fi ; done\\\`}"
+	smime_certificates="${smime_certificates:-~/.smime/certificates}"
+	smime_decrypt_use_default_key="${smime_decrypt_use_default_key:-yes}"
+	smime_decrypt_command="${smime_decrypt_command:-openssl smime -decrypt -passin stdin -inform DER -in %f -inkey %k -recip %c}"
+	#smime_default_key="${smime_default_key}"
+	smime_is_default="${smime_is_default:-no}"
+	smime_encrypt_command="${smime_encrypt_command:-openssl smime -encrypt %a -outform DER -in %f %c}"
+	#smime_encrypt_with="${smime_encrypt_with}"
+	smime_get_cert_command="${smime_get_cert_command:-openssl pkcs7 -print_certs -in %f}"
+	smime_get_cert_email_command="${smime_get_cert_email_command:-openssl x509 -in %f -noout -email}"
+	smime_get_signer_cert_command="${smime_get_signer_command:-openssl smime -verify -in %f -noverify -signer %c -out /dev/null}"
+	smime_import_cert_command="${smime_import_cert_command:-smime_keys add_cert %f}"
+	smime_keys="${smime_keys:-~/.smime/keys}"
+	smime_pk7out_command="${smime_pk7out_command:-openssl smime -verify -in %f -noverify -pk7out}"
+	smime_sign_command="${smime_sign_command:-openssl smime -sign -signer %c -inkey %k -passin stdin -in %f -certfile %i -outform DER}"
+	#smime_sign_opaque_command="${smime_sign_opaque_command}"
+	smime_timeout="${smime_timeout:-300}"
+	smime_verify_command="${smime_verify_command:-openssl smime -verify -inform DER -in %s %C -content %f}"
+	smime_verify_opaque_command="${smime_verify_opaque_command:-openssl smime -verify -inform DER -in %s %C || openssl smime -verify -inform DER -in %s -noverify 2>/dev/null}"
+	## }}}
+	smime_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_smime_help
+				smime_conf_menu
+				;;
+			smime_ask_cert_label)
+				# Soll Mutt nach der Eingabe eines Labels fuer ein Zertifikat fragen (ja/nein)?# {{{
+				MSG=$(gettext 'Soll Mutt nach der Eingabe eines Labels fuer ein Zertifikat fragen (ja/nein)?')
+				yesno "$GPG_TITLE" "$MSG" "$smime_ask_cert_label"
+				if [ "$gv_Auswahl" = yes ] ; then
+					smime_ask_cert_label=yes
+				else
+					smime_ask_cert_label=no
+				fi
+				#}}}
+				smime_conf_menu smime_ask_cert_label
+				;;
+			smime_ca_location)
+				# S/MIME Zertifikat Dateien eingeben.# {{{
+				MSG=$(gettext 'Geben Sie die S/MIME Zertifikat Dateien ein.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_ca_location"
+				if [ -n "$gv_Auswahl" ] ; then
+					# Das quoten ist notwendig fuer die Anzeige.
+					smime_ca_location="${${gv_Auswahl//\$/\\\$}//\`/\\\`}"
+				else
+					smime_ca_location=""
+				fi
+				#}}}
+				smime_conf_menu smime_ca_location
+				;;
+			smime_certificates)
+				# Auswahl: Pfad zum Verzeichnis in der die Zertifikate gespeichert und gehandelt werden.# {{{
+				Smime_Old="$smime_certificates"
+				dselect "$smime_certificates"
+				if [ -n "$VERZ" ] ; then
+					dselect_check -c "$VERZ"
+					if [ -n "$VERZ" ] ; then
+						smime_certificates="$VERZ"
+					else
+						smime_certificates="$Smime_Old"
+					fi
+				fi
+				## }}}
+				smime_conf_menu smime_certificates
+				;;
+			smime_decrypt_command)
+				# Kommando um Anhaenge zu entschluesseln (application/x-pkcs7-mime).# {{{
+				Smime_Old="$smime_decrypt_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um Anhaenge vom Typ application/x-pkcs7-mime zu entschluesseln.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_decrypt_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_decrypt_command="$gv_Auswahl"
+				else
+					smime_decrypt_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_decrypt_command
+				;;
+			smime_decrypt_use_default_key)
+				# Soll Mutt den Standard Schluessel fuer die Entschluesselung benutzen (ja/nein)?# {{{
+				MSG=$(gettext 'Soll Mutt den Standard Schluessel fuer die Entschluesselung benutzen (ja/nein)?')
+				yesno "$GPG_TITLE" "$MSG" "$smime_decrypt_use_default_key"
+				if [ "$gv_Auswahl" = yes ] ; then
+					smime_decrypt_use_default_key=yes
+				else
+					smime_decrypt_use_default_key=no
+				fi
+				#}}}
+				smime_conf_menu smime_decrypt_use_default_key
+				;;
+			smime_default_key)
+				# Geben Sie das Standard Schluesselpaar zum signieren ein# {{{
+				MSG=$(gettext 'Geben Sie das Standard Schluesselpaar zum signieren ein.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_default_key"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_default_key="$gv_Auswahl"
+				else
+					smime_default_key=""
+				fi
+				## }}}
+				smime_conf_menu smime_default_key
+				;;
+			smime_encrypt_command)
+				# Kommando um das eine S/MIME verschluesselte Nachricht zu erstellen.# {{{
+				Smime_Old="$smime_encrypt_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME verschluesselte Nachricht zu erstellen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_encrypt_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_encrypt_command="$gv_Auswahl"
+				else
+					smime_encrypt_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_encrypt_command
+				;;
+			smime_encrypt_with)
+				# Auswahl des Verschluesselungsverfahren.# {{{
+				ENCRYPT_WITH_MENU=($gv_None \"\" des \"\"
+					des3 \"\" rc2-40 \"\" rc-64 \"\"
+					rc-128 \"\")
+				menubox "$smime_encrypt_with" "$SMIME_TITLE" "$gv_Menupoint" "$ENCRYPT_WITH_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_smime_help
+							menubox "$smime_encrypt_with" "$TREE_TITLE" "$gv_Menupoint" "$ENCRYPT_WITH_MENU"
+							;;
+						$gv_None)
+							# nichts speichern und abbrechen
+							unset -- smime_encrypt_with
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							smime_encrypt_with="$gv_Auswahl"
+							break
+					esac
+				done
+				## }}}
+				smime_conf_menu smime_encrypt_with
+				;;
+			smime_get_cert_command)
+				# Kommando um das x509 Zertifikat einer PKCS7 Struktur zu extrahieren.# {{{
+				Smime_Old="$smime_get_cert_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um das X509 Zertifikat einer PKCS7 Struktur zu extrahieren.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_get_cert_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_get_cert_command="$gv_Auswahl"
+				else
+					smime_get_cert_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_get_cert_command
+				;;
+			smime_get_cert_email_command)
+				# Kommando um die Mailadresse zu extrahieren fuer Speicherung des X509 Zertifikats.# {{{
+				Smime_Old="$smime_get_cert_email_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um die Mailadresse zu extrahieren fuer die Speicherung des X509 Zertifikats.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_get_cert_email_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_get_cert_email_command="$gv_Auswahl"
+				else
+					smime_get_cert_email_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_get_cert_email_command
+				;;
+			smime_get_signer_cert_command)
+				# Kommando um nur das x509 Zertifikat zu extrahieren und vergleichen # {{{
+				# mit dem From Feld im Header.
+				Smime_Old="$smime_get_signer_cert_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um nur das X509 Zertifikat des Unterzeichners zu extrahieren. Dieses wird mit dem From Feld im Header verglichen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_get_signer_cert_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_get_signer_cert_command="$gv_Auswahl"
+				else
+					smime_get_signer_cert_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_get_signer_cert_command
+				;;
+			smime_import_cert_command)
+				# Kommando um via der Variablen smime_keys Schluessel zu importieren# {{{
+				Smime_Old="$smime_import_cert_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um mittels der Variablen smime_keys Zertifikate zu importieren.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_import_cert_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_import_cert_command="$gv_Auswahl"
+				else
+					smime_import_cert_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_import_cert_command
+				;;
+			smime_is_default)
+				# Soll OpenSSL zur Verschluesselung genutzt werden?# {{{
+				MSG=$(gettext 'Soll OpenSSL zur Verschluesselung genutzt werden (ja/nein)?')
+				yesno "$GPG_TITLE" "$MSG" "$smime_is_default"
+				if [ "$gv_Auswahl" = yes ] ; then
+					smime_is_default=yes
+				else
+					smime_is_default=no
+				fi
+				#}}}
+				smime_conf_menu smime_is_default
+				;;
+			smime_keys)
+				# Pfad zum Verzeichnis in der die Schluessel gespeichert und gehandelt werden.# {{{
+				Smime_Old="$smime_keys"
+				dselect "$smime_keys"
+				if [ -n "$VERZ" ] ; then
+					dselect_check -c "$VERZ"
+					if [ -n "$VERZ" ] ; then
+						smime_keys="$VERZ"
+					else
+						smime_keys="$Smime_Old"
+					fi
+				fi
+				## }}}
+				smime_conf_menu smime_keys
+				;;
+			smime_pk7out_command)
+				# Kommando um PKCS7 Struktur Signaturen extrahieren# {{{
+				Smime_Old="$smime_pk7out_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um PKCS7 Strukturen von S/MIME Signaturen zu extrahieren (oeffentliches X509 Zertifikat).')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_pk7out_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_pk7out_command="$gv_Auswahl"
+				else
+					smime_pk7out_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_pk7out_command
+				;;
+			smime_sign_command)
+				# Kommando um eine S/MIME Signatur zu erzeugen (multipart/signed).# {{{
+				Smime_Old="$smime_sign_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME Signatur vom Typ multipart/signed zu erstellen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_sign_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_sign_command="$gv_Auswahl"
+				else
+					smime_sign_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_sign_command
+				;;
+			smime_sign_opaque_command)
+				# Kommando um eine S/MIME Signatur zu erzeugen (application/x-pkcs7-signature).# {{{
+				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME Signatur vom Typ application/x-pkcs7-signature zu erstellen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_sign_opaque_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_sign_opaque_command="$gv_Auswahl"
+				else
+					smime_sign_opaque_command=""
+				fi
+				#}}}
+				smime_conf_menu smime_sign_opaque_command
+				;;
+			smime_timeout)
+				# Timeout von S/MIME Passphrasen# {{{
+				MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die Passphrase aus dem Speicher geloescht werden soll.')
+				number_input "$SMIME_TITLE" "$MSG" "$smime_timeout"
+				if [ -n "$NUMBER" ] ; then
+					smime_timeout="$NUMBER"
+				else
+					smime_timeout="300"
+				fi
+				## }}}
+				smime_conf_menu smime_timeout
+				;;
+			smime_verify_command)
+				# Kommando um eine S/MIME Signatur zu ueberpruefen (multipart/signed).# {{{
+				Smime_Old="$smime_verify_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME Signatur vom Typ multipart/signed zu ueberpruefen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_verify_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_verify_command="$gv_Auswahl"
+				else
+					smime_verify_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_verify_command
+				;;
+			smime_verify_opaque_command)
+				# Kommando um eine S/MIME Signatur zu ueberprufen (application/x-pkcs7-signature).# {{{
+				Smime_Old="$smime_verify_opaque_command"
+				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME Signatur vom Typ application/x-pkcs7-signature zu ueberpruefen.')
+				inputbox "$SMIME_TITLE" "$MSG" "$smime_verify_opaque_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					smime_verify_opaque_command="$gv_Auswahl"
+				else
+					smime_verify_opaque_command="$Smime_Old"
+				fi
+				#}}}
+				smime_conf_menu smime_verify_opaque_command
+				;;
+			$gv_Save)
+				# Einstellungen speichern
+				kwmutt_smime_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

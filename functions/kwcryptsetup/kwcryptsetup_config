@@ -1,0 +1,128 @@
+# Funktion kwcryptsetup Konfiguration speichern{{{
+#
+# usage: kwcryptsetup_config
+#
+kwcryptsetup_config() {
+#
+# Konfiguration schreiben.
+#
+> ${gv_HomePath}/.kwtools/kwcryptsetuprc <<< "# Beginn ~/.kwtools/kwcryptsetuprc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Geben Sie ein vielfaches von 512 Byte Sektoren ein (8 = 4096 Byte).
+ALIGN=\"$ALIGN\"
+
+# Script, prueft den Inhalt des Ziellaufwerks, z.B. auf Dateisysteme.
+# Liefert das Script einen Fehler wird das Laufwerk entfernt.
+CHECK=\"$CHECK\"
+
+# Argumente fuer das Pruef-Script (CHECK).
+CHECKARGS=\"$CHECKARGS\"
+
+# Script fuer die Pruefung bevor ein Laufwerk geoeffnet wird.
+# Liefert das Script einen Fehler wird das Laufwerk nicht geoeffnet.
+# Notiz: Benoetigt man nicht bei Laufwerken mit LUKS Erweiterung,
+# dafuer gibt es die Option "isLuks".
+PRECHECK=\"$PRECHECK\"
+
+# Verschluesselungs-Algorithmus.
+CIPHER=\"$CIPHER\"
+
+# Soll die Benutzung von Discards bei Anforderung an ein Device erlaubt
+# werden (yes/no)?
+DISCARD=\"$DISCARD\"
+
+# Groesse des Laufwerks (Bsp. 1G=1GByte, 20M=20MByte). Es gehen die Masseinheiten
+# k, K, m, M, g, G, t, T. 
+SIZE=\"$SIZE\"
+
+# Angabe des Hashwertes der fuer die Passphrase verwendet werden soll
+# (Standard ist sha512).
+HASH=\"$HASH\"
+
+# Zeit fuer den Passwort Prozess, in Mikrosekunden. Standard ist 1.
+ITERATION_TIME=\"$ITERATION_TIME\"
+
+# Schluesselgroesse (128, 192, 256). Standard ist 256.
+KEY_SIZE=\"$KEY_SIZE\"
+
+# Script, benutzt die Schluesseldatei als Argument dessen Output
+# als Schluessel fuer die Entschluesselung benutzt wird.
+KEYSCRIPT=\"$KEYSCRIPT\"
+
+# Standard Schluessel Slot der benutzt werden soll (0-7).
+KEYSLOT=\"$KEYSLOT\"
+
+# Soll beim starten des Laufwerks eine Warnung ausgegeben werden,
+# wenn dieses nicht existiert (yes/no)?
+LOUD=\"$LOUD\"
+
+# Erstellt ein verschluesseltes Swap-Laufwerk (yes/no).
+MAKESWAP=\"$MAKESWAP\"
+
+# Mountverzeichnis(se) fuer externe Laufwerke (USBstick), getrennt
+# durch ein Leerzeichen.
+MOUNT_PATH=\"$MOUNT_PATH\"
+
+# Soll das Laufwerk nicht beim starten des Rechners erstellt
+# werden, sondern spaeter manuell (yes/no)?
+NOAUTO=\"$NOAUTO\"
+
+# Soll das Laufwerk verzoegert erstellt werden, zum Beispiel
+# nachdem RAID Arrays oder LVMs erstellt worden sind (yes/no)?
+NOEARLY=\"$NOEARLY\"
+
+# Geben Sie eine Zahl ein um wieviele Sektoren der 1. Sektor
+# verschoben werden soll. Also ab welchem Sektor das original
+# Laufwerk auf das verschluesselte Laufwerk abgebildet werden soll.
+OFFSET=\"$OFFSET\"
+
+# Soll beim starten des Laufwerks eine Warnung unterdrueckt werden,
+# wenn dieses nicht existiert (yes/no)? Dies ueberschreibt die Option
+# LOUD.
+QUIET=\"$QUIET\"
+
+# Soll das Laufwerk im Nur Lesemodus erstellt werden (yes/no)?
+READONLY=\"$READONLY\"
+
+# Anzahl der Sektoren die zur Berechnung des
+# Initialisierungsverktor uebersprungen werden sollen.
+SKIP=\"$SKIP\"
+
+# Timeout fuer die Passwort-Abfrage (Standard ist 5 Sekunden).
+TIMEOUT=\"$TIMEOUT\"
+
+# Mit welchem Dateisystem Soll ein temporaeres Laufwerk erstellt
+# werden (ext2, ext3,...).
+TMPFS=\"$TMPFS\"
+
+# Wiederholungen der Passwort-Abfrage (Standard ist 3).
+TRIES=\"$TRIES\"
+
+# Soll die Erweiterung "Luks" verwendet werden (yes/no)?
+USELUKS=\"$USELUKS\"
+
+# Datei oder Laufwerk auf dem der LUKS Header seperat gespeichert
+# werden soll.
+LUKSHEADER=\"$LUKSHEADER\"
+
+# Soll die Erweiterung "Tcrypt" (TrueCrypt) verwendet werden (yes/no)?
+USETCRYPT=\"$USETCRYPT\"
+
+#############################
+# TODO:
+TCRYPTHIDDEN=\"$TCRYPTHIDDEN\"
+
+# Soll die Passphrase nochmal ueberprueft werden (ja/nein)?
+VERIFY=\"$VERIFY\"
+
+# End ~/.kwtools/kwcryptsetuprc"
+
+read_file kwcryptsetuprc
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

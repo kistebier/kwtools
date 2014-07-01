@@ -1,0 +1,75 @@
+# Fuktion um die logrotate Dateien zu schreiben{{{
+#
+# usage: kwlogrotate_config
+#
+kwlogrotate_config() {
+	local Anz L_Anz 
+	integer Anz L_Anz
+	#
+	rm -f ${NAME} &>/dev/null
+	create_file ${NAME}
+	Anz="${#LOGDATEI[@]}"
+	L_Anz=1
+	# kann mehrfache Logdatei anlegen{{{
+	while [ "$L_Anz" -le "$Anz" ] ; do
+		for l in ${(ws: :)${LOGDATEI[L_Anz]}} ; {
+			>> ${NAME} <<< "$l"
+		}
+		>> ${NAME} <<< "{"
+		#
+		if [ "${ANZAHL[L_Anz]}" ] ; then
+			>> ${NAME} <<< "	rotate ${ANZAHL[L_Anz]}"
+		else
+			>> ${NAME} <<< "	rotate ${ANZAHL[1]}"
+		fi
+		# Uebersetzung in eine logrotate verstaendliche Sprache.
+		if [ "${ROTATE[L_Anz]}" ] ; then
+			case ${ROTATE[L_Anz]} in
+				$DAILY)	ROTATE[L_Anz]=daily
+						;;
+				$WEEKLY)	ROTATE[L_Anz]=weekly
+						;;
+				$MONTHLY)	ROTATE[L_Anz]=monthly
+						;;
+			esac
+		else
+			ROTATE[L_Anz]="${ROTATE[1]}"
+		fi
+		>> ${NAME} <<< "	${ROTATE[L_Anz]}
+	missingok
+	notifempty"
+		if [ "${CREATE[L_Anz]}" ] ; then
+			>> ${NAME} <<< "	create ${CREATE[L_Anz]}"
+		fi
+		if [ "${U_MAIL[L_Anz]}" ] ; then
+			>> ${NAME} <<< "	mail ${U_MAIL[L_Anz]}"
+		fi
+		if [ "${SIZE[L_Anz]}" ] ; then
+			>> ${NAME} <<< "	size ${SIZE[L_Anz]}"
+		fi
+		if [ "${COMPRESSART[L_Anz]}" ] ; then
+			case "${COMPRESSART[L_Anz]##*/}" in
+				gzip)	UNCOMPRESSART[L_Anz]="${COMPRESSART[L_Anz]%/*}/gunzip"
+					;;
+				bzip2)	UNCOMPRESSART[L_Anz]="${COMPRESSART[L_Anz]%/*}/bunzip2"
+					;;
+			esac
+			>> ${NAME} <<< "	compress
+	compresscmd ${COMPRESSART[L_Anz]}
+	uncompresscmd ${UNCOMPRESSART[L_Anz]}"
+		fi
+		if [ "${SCRIPT[L_Anz]}" ] ; then
+			>> ${NAME} <<< "	postrotate
+		${SCRIPT[L_Anz]}
+	endscript"
+		fi
+		>> ${NAME} <<< "}
+"
+		(( L_Anz++ ))
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,1456 @@
+# Funktion (kwmutt_color_conf), Bekannte, Anzeige Konfiguration fuer "mutt"{{{
+#
+# usage: kwmutt_color_conf
+#
+kwmutt_color_conf() {
+	# Uebersetzungs-Variablen# {{{
+	lv_Index=$(gettext 'Index')
+	lv_Body=$(gettext 'Textkoerper')
+	lv_Misc=$(gettext 'gemischte')
+	lv_Type_Color=$(gettext 'Schriftfarbe')
+	lv_Bg_Color=$(gettext 'Hintergrundfarbe')
+	# Index
+	lv_Flag_Msg=$(gettext 'geflagte Nachrichten')
+	lv_New_Msg=$(gettext 'neue Nachrichten')
+	lv_Tag_Msg=$(gettext 'markierte Nachrichten')
+	lv_Reply_Msg=$(gettext 'beantwortete Nachricht')
+	lv_Old_Msg=$(gettext 'alte Nachrichten')
+	lv_Del_Msg=$(gettext 'geloescht markierte Nachrichten')
+	lv_Pgp_Enc_Msg=$(gettext 'PGP verschluesselte Nachricht')
+	lv_Pgp_Sign_Msg=$(gettext 'PGP signierte Nachricht')
+	lv_Tree=$(gettext 'Farbanzeige fuer Threadzusammenhaenge')
+	lv_No_Mail_Msg=$(gettext 'keine Adresse vorhanden')
+	# Standard
+	lv_Dark=$(gettext 'Standard-dunkel')
+	lv_Light=$(gettext 'Standard-hell')
+	lv_Mono_Dark=$(gettext 'Standard-Mono-dunkel')
+	lv_Mono_Light=$(gettext 'Standard-Mono-hell')
+	# gemischte
+	lv_Attachment=$(gettext 'Anhang')
+	lv_Hdrdefault=$(gettext 'Standardheaderzeilen')
+	lv_Indicator=$(gettext 'ausgewaehlte Nachricht')
+	lv_Message=$(gettext 'Informative Nachrichten')
+	lv_Search=$(gettext 'Farbe fuer Suchergebnisse')
+	lv_Signature=$(gettext 'Sender Signaturfarbe')
+	lv_Status=$(gettext 'Statuszeile')
+	# Textkoerper
+	lv_Important_Words=$(gettext 'wichtige Woerter')
+	lv_Normal=$(gettext 'normaler Text')
+	lv_Bold=$(gettext 'hervorgehobener Text')
+	lv_Markers=$(gettext 'Farbe des Zeilenumbruchs')
+	lv_Tilde=$(gettext 'Farbanzeige fuer '~'')
+	lv_Underline=$(gettext 'unterstrichener Text')
+	lv_Quoted=$(gettext 'zitierter Text')
+	lv_Link=$(gettext 'Internet-Links')
+	lv_Mail=$(gettext 'Mailadressen')
+	lv_Mailbegin=$(gettext 'Mail-Einleitung')
+	lv_Abc_Net=$(gettext 'ABC-Netzwerke')
+	lv_Attr_Line=$(gettext 'Zuschreibungs-Zeile')
+	# Farbnamen
+	lv_Black=$(gettext 'schwarz')
+	lv_Blue=$(gettext 'blau')
+	lv_Cyan=$(gettext 'cyan')
+	lv_Default=$(gettext 'Standard')
+	lv_Green=$(gettext 'gruen')
+	lv_Magenta=$(gettext 'magenta')
+	lv_Red=$(gettext 'rot')
+	lv_White=$(gettext 'weiss')
+	lv_Yellow=$(gettext 'gelb')
+	lv_Bright_Black=$(gettext 'grau')
+	lv_Bright_Cyan=$(gettext 'hellcyan')
+	lv_Bright_Blue=$(gettext 'hellblau')
+	lv_Bright_Green=$(gettext 'hellgruen')
+	lv_Bright_Magenta=$(gettext 'hellmagenta')
+	lv_Bright_Red=$(gettext 'hellrot')
+	lv_Bright_White=$(gettext 'hellgrau')
+	lv_Bright_Yellow=$(gettext 'hellgelb')
+	## }}}
+	COLOR_TITLE="$lv_Colors"
+	# Funktion (default_monochrome), erstellt die monochrome Farbeinstellung# {{{
+	# für hell und dunkel.
+	#
+	# usage: default_monochrome FG BG
+	# FG - Vordergrund
+	# BG - Hintergrund
+	#
+	default_monochrome() {
+		if (( ${#argv} == 2 )) ; then
+			FG="$1"
+			BG="$2"
+			for i in $M_COLORS \
+				$M_COLOR_FRIENDS \
+				$M_COLOR_HDR \
+				$M_COLOR_HDR_AGENTS \
+				$M_COLOR_INDEX \
+				$M_COLOR_INDEX_SPAM ; {
+				sed -e "s#\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\|brightblack\|brightblue\|brightcyan\|brightgreen\|brightmagenta\|brightred\|brightwhite\|brightyellow\)[[:space:]]*\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\)#$FG $BG#" $i >${i}.bak &>/dev/null
+				# Datei zurueck verschieben.
+				mv ${i}.bak $i &>/dev/null
+			}
+			# ausgewaehlte Nachricht inverse monochrome Darstellung
+			sed -e "s#color[[:space:]]*indicator[[:space:]]*${FG}.*${BG}*#color indicator $BG $FG# ; 
+				s#color[[:space:]]*status[[:space:]]*${FG}.*${BG}*#color status $BG $FG#" \
+				"$M_COLORS" > ${M_COLORS}.bak &>/dev/null
+			# Datei zurueck verschieben.
+			mv "${M_COLORS}.bak" "$M_COLORS" &>/dev/null
+			# alle Farben neu einlesen.
+			default_color_read
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (read_colors), liest die Farben einer Datei# {{{
+	# ein und ordnet sie zu.
+	#
+	# usage: read_colors [ abook | dark_light | mail | mailbegin | link ] FILE
+	# usage: read_colors [ typ | index ] FILE
+	# abook - Farbe fuer Adressbuch Eintraege
+	# dark_light - Farbe on/off von Standard-hell oder dunkel
+	# mail  - Farbe fuer Mail Adressen
+	# mailbegin - Farbe fuer Mail Adressen Einleitung
+	# link - Farbe fuer Internet-links
+	# typ - Farbe fuer vorbestimmte Typen von "mutt", wie hdrdefault.
+	# index - Farbe fuer Standard Index
+	# FILE - Farbdatei
+	#
+	read_colors() {
+		if [[ ${#argv} == 2 ]] ; then
+			local File Opt
+			Opt="$1"
+			File="$2"
+			case "$Opt" in
+				abook)
+					# Farbeinstellungen der Adressbucheintraege heraussuchen.# {{{
+					if [[ -f $File ]] ; then
+						# Erste gefundene Farbeinstellung wird benutzt.
+						ABOOK_OLD_TYPE_COLOR=${${(ws: :)${(M)${(f)"$(< $File)"}[(fr)color*]}}[3]}
+						inverse_color_name type "$ABOOK_OLD_TYPE_COLOR"
+						ABOOK_TYPE_COLOR="$Type_Color"
+						ABOOK_OLD_BG_COLOR=${${(ws: :)${(M)${(f)"$(< $File)"}[(fr)color*]}}[4]}
+						inverse_color_name "$ABOOK_OLD_BG_COLOR"
+						ABOOK_BG_COLOR="$Bg_Color"
+					else
+						ABOOK_OLD_TYPE_COLOR="brightblue"
+						inverse_color_name type brightblue 
+						ABOOK_TYPE_COLOR="$Type_Color"
+						ABOOK_OLD_BG_COLOR="black"
+						inverse_color_name black
+						ABOOK_BG_COLOR="$Bg_Color"
+					fi
+					#}}}
+					;;
+				link)
+					# Farbeinstellungen der Internet-Links heraussuchen.# {{{
+					# Erste gefundene Farbeinstellung wird benutzt.
+					LINK_OLD_TYPE_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*(finger|ftp|hkp|http|https|telnet|www)*]}}[3]}
+					inverse_color_name type "$LINK_OLD_TYPE_COLOR"
+					LINK_TYPE_COLOR="$Type_Color"
+					LINK_OLD_BG_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*(finger|ftp|hkp|http|https|telnet|www)*]}}[4]}
+					inverse_color_name "$LINK_OLD_BG_COLOR"
+					LINK_BG_COLOR="$Bg_Color"
+					## }}}
+					;;
+				mail)
+					# Farbeinstellungen der Mail Adressen heraussuchen.# {{{
+					# Erste gefundene Farbeinstellung wird benutzt.
+					MAIL_OLD_TYPE_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*\[-a-z_0-9.+\]+@\[-a-z_0-9.\]*]}}[3]}
+					inverse_color_name type "$MAIL_OLD_TYPE_COLOR"
+					MAIL_TYPE_COLOR="$Type_Color"
+					MAIL_OLD_BG_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*\[-a-z_0-9.+\]+@\[-a-z_0-9.\]*]}}[4]}
+					inverse_color_name "$MAIL_OLD_BG_COLOR"
+					MAIL_BG_COLOR="$Bg_Color"
+					## }}}
+					;;
+				mailbegin)
+					# Farbeinstellungen der Mail Adressen Einleitung heraussuchen.# {{{
+					# Erste gefundene Farbeinstellung wird benutzt.
+					MAILBEGIN_OLD_TYPE_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*(file|E-Mail\[-A-Za-z\]+|mailto|news)*]}}[3]}
+					inverse_color_name type "$MAILBEGIN_OLD_TYPE_COLOR"
+					MAILBEGIN_TYPE_COLOR="$Type_Color"
+					MAILBEGIN_OLD_BG_COLOR=${${(ws: :)${(M)${(M)${(f)"$(< $File)"}##color*}[(fr)*(file|E-Mail\[-A-Za-z\]+|mailto|news)*]}}[4]}
+					inverse_color_name "$MAILBEGIN_OLD_BG_COLOR"
+					MAILBEGIN_BG_COLOR="$Bg_Color"
+					## }}}
+					;;
+				dark_light)
+					# Hintergrund Farbeinstellungen fuer Dunkel oder Hell heraussuchen.# {{{
+					OLD_FG_COLOR=${${(ws: :)${(M)${(f)"$(< $File)"}[(fr)color*]}}[3]}
+					OLD_BG_COLOR=${${(ws: :)${(M)${(f)"$(< $File)"}[(fr)color*]}}[4]}
+					if [[ $OLD_FG_COLOR == white ]] && [[ $OLD_BG_COLOR == black ]]; then
+						DARK=off
+						MONO_DARK=on
+						LIGHT=off
+						MONO_LIGHT=off
+					elif [[ $OLD_FG_COLOR == black ]] && [[ $OLD_BG_COLOR == white ]]; then
+						DARK=off
+						MONO_DARK=off
+						LIGHT=off
+						MONO_LIGHT=on
+					elif [[ $OLD_BG_COLOR == white ]] ; then
+						DARK=off
+						MONO_DARK=off
+						LIGHT=on
+						MONO_LIGHT=off
+					elif [[ $OLD_BG_COLOR == black ]] ; then
+						DARK=on
+						MONO_DARK=off
+						LIGHT=off
+						MONO_LIGHT=off
+					else
+						DARK=off
+						MONO_DARK=off
+						LIGHT=off
+						MONO_LIGHT=off
+					fi
+					## }}}
+					;;
+				typ)
+					# Farbeinstellungen nach Typ heraussuchen # {{{
+					while read Col Typ Fg Bg Rest ; do
+						if [[ $Col == color ]] ; then
+							# nach Typ auswaehlen# {{{
+							case "$Typ" in
+								attachment)
+									ATTACHMENT_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$ATTACHMENT_OLD_TYPE_COLOR"
+									ATTACHMENT_TYPE_COLOR="$Type_Color"
+									ATTACHMENT_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$ATTACHMENT_OLD_BG_COLOR"
+									ATTACHMENT_BG_COLOR="$Bg_Color"
+									;;
+								bold)
+									BOLD_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$BOLD_OLD_TYPE_COLOR"
+									BOLD_TYPE_COLOR="$Type_Color"
+									BOLD_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$BOLD_OLD_BG_COLOR"
+									BOLD_BG_COLOR="$Bg_Color"
+									;;
+								hdrdefault)
+									HDRDEFAULT_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$HDRDEFAULT_OLD_TYPE_COLOR"
+									HDRDEFAULT_TYPE_COLOR="$Type_Color"
+									HDRDEFAULT_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$HDRDEFAULT_OLD_BG_COLOR"
+									HDRDEFAULT_BG_COLOR="$Bg_Color"
+									;;
+								indicator)
+									INDICATOR_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$INDICATOR_OLD_TYPE_COLOR"
+									INDICATOR_TYPE_COLOR="$Type_Color"
+									INDICATOR_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$INDICATOR_OLD_BG_COLOR"
+									INDICATOR_BG_COLOR="$Bg_Color"
+									;;
+								markers)
+									MARKERS_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$MARKERS_OLD_TYPE_COLOR"
+									MARKERS_TYPE_COLOR="$Type_Color"
+									MARKERS_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$MARKERS_OLD_BG_COLOR"
+									MARKERS_BG_COLOR="$Bg_Color"
+									;;
+								message)
+									MESSAGE_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$MESSAGE_OLD_TYPE_COLOR"
+									MESSAGE_TYPE_COLOR="$Type_Color"
+									MESSAGE_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$MESSAGE_OLD_BG_COLOR"
+									MESSAGE_BG_COLOR="$Bg_Color"
+									;;
+								normal)
+									NORMAL_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$NORMAL_OLD_TYPE_COLOR"
+									NORMAL_TYPE_COLOR="$Type_Color"
+									NORMAL_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$NORMAL_OLD_BG_COLOR"
+									NORMAL_BG_COLOR="$Bg_Color"
+									;;
+								quoted)
+									QUOTED_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$QUOTED_OLD_TYPE_COLOR"
+									QUOTED_TYPE_COLOR="$Type_Color"
+									QUOTED_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$QUOTED_OLD_BG_COLOR"
+									QUOTED_BG_COLOR="$Bg_Color"
+									;;
+								quoted1)
+									QUOTED1_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$QUOTED1_OLD_TYPE_COLOR"
+									QUOTED1_TYPE_COLOR="$Type_Color"
+									QUOTED1_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$QUOTED1_OLD_BG_COLOR"
+									QUOTED1_BG_COLOR="$Bg_Color"
+									;;
+								quoted2)
+									QUOTED2_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$QUOTED2_OLD_TYPE_COLOR"
+									QUOTED2_TYPE_COLOR="$Type_Color"
+									QUOTED2_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$QUOTED2_OLD_BG_COLOR"
+									QUOTED2_BG_COLOR="$Bg_Color"
+									;;
+								quoted3)
+									QUOTED3_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$QUOTED3_OLD_TYPE_COLOR"
+									QUOTED3_TYPE_COLOR="$Type_Color"
+									QUOTED3_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$QUOTED3_OLD_BG_COLOR"
+									QUOTED3_BG_COLOR="$Bg_Color"
+									;;
+								quoted4)
+									QUOTED4_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$QUOTED4_OLD_TYPE_COLOR"
+									QUOTED4_TYPE_COLOR="$Type_Color"
+									QUOTED4_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$QUOTED4_OLD_BG_COLOR"
+									QUOTED4_BG_COLOR="$Bg_Color"
+									;;
+								search)
+									SEARCH_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$SEARCH_OLD_TYPE_COLOR"
+									SEARCH_TYPE_COLOR="$Type_Color"
+									SEARCH_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$SEARCH_OLD_BG_COLOR"
+									SEARCH_BG_COLOR="$Bg_Color"
+									;;
+								signature)
+									SIGNATURE_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$SIGNATURE_OLD_TYPE_COLOR"
+									SIGNATURE_TYPE_COLOR="$Type_Color"
+									SIGNATURE_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$SIGNATURE_OLD_BG_COLOR"
+									SIGNATURE_BG_COLOR="$Bg_Color"
+									;;
+								status)
+									STATUS_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$STATUS_OLD_TYPE_COLOR"
+									STATUS_TYPE_COLOR="$Type_Color"
+									STATUS_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$STATUS_OLD_BG_COLOR"
+									STATUS_BG_COLOR="$Bg_Color"
+									;;
+								tilde)
+									TILDE_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$TILDE_OLD_TYPE_COLOR"
+									TILDE_TYPE_COLOR="$Type_Color"
+									TILDE_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$TILDE_OLD_BG_COLOR"
+									TILDE_BG_COLOR="$Bg_Color"
+									;;
+								tree)
+									TREE_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$TREE_OLD_TYPE_COLOR"
+									TREE_TYPE_COLOR="$Type_Color"
+									TREE_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$TREE_OLD_BG_COLOR"
+									TREE_BG_COLOR="$Bg_Color"
+									;;
+								underline)
+									UNDERLINE_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$UNDERLINE_OLD_TYPE_COLOR"
+									UNDERLINE_TYPE_COLOR="$Type_Color"
+									UNDERLINE_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$UNDERLINE_OLD_BG_COLOR"
+									UNDERLINE_BG_COLOR="$Bg_Color"
+									;;
+							esac
+							## }}}
+						fi
+					done < $File
+					## }}}
+					;;
+				index)
+					# Farbeinstellungen fuer Standard-Index heraussuchen # {{{
+					# Farben nach Einstellungsnameneinlesen
+					while read Col Typ Fg Bg Rest ; do
+						if [[ $Col == color ]] ; then
+							# Farben nach Einstellungsnameneinlesen# {{{
+							case "$Rest" in
+								\~F*)
+									# geflaggte Nachrichten
+									F_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$F_OLD_TYPE_COLOR"
+									F_TYPE_COLOR="$Type_Color"
+									F_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$F_OLD_BG_COLOR"
+									F_BG_COLOR="$Bg_Color"
+									;;
+								\~N*)
+									# neue Nachrichten
+									N_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$N_OLD_TYPE_COLOR"
+									N_TYPE_COLOR="$Type_Color"
+									N_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$N_OLD_BG_COLOR"
+									N_BG_COLOR="$Bg_Color"
+									;;
+								\~T*)
+									# getaggte Nachrichten
+									T_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$T_OLD_TYPE_COLOR"
+									T_TYPE_COLOR="$Type_Color"
+									T_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$T_OLD_BG_COLOR"
+									T_BG_COLOR="$Bg_Color"
+									;;
+								\~D*)
+									# geloescht markierte Nachrichten
+									D_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$D_OLD_TYPE_COLOR"
+									D_TYPE_COLOR="$Type_Color"
+									D_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$D_OLD_BG_COLOR"
+									D_BG_COLOR="$Bg_Color"
+									;;
+								\~O*)
+									# alte Nachrichten
+									O_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$O_OLD_TYPE_COLOR"
+									O_TYPE_COLOR="$Type_Color"
+									O_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$O_OLD_BG_COLOR"
+									O_BG_COLOR="$Bg_Color"
+									;;
+								\~Q*)
+									# Nachricht beantwortet
+									Q_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$Q_OLD_TYPE_COLOR"
+									Q_TYPE_COLOR="$Type_Color"
+									Q_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$Q_OLD_BG_COLOR"
+									Q_BG_COLOR="$Bg_Color"
+									;;
+								\~g*)
+									# PGP signierte Nachrichten
+									g_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$g_OLD_TYPE_COLOR"
+									g_TYPE_COLOR="$Type_Color"
+									g_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$g_OLD_BG_COLOR"
+									g_BG_COLOR="$Bg_Color"
+									;;
+								\~G*)
+									# PGP verschluesselte Nachrichten
+									G_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$G_OLD_TYPE_COLOR"
+									G_TYPE_COLOR="$Type_Color"
+									G_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$G_OLD_BG_COLOR"
+									G_BG_COLOR="$Bg_Color"
+									;;
+								\"!\ \~C\ .\"*)
+									# PGP verschluesselte Nachrichten
+									NO_C_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$NO_C_OLD_TYPE_COLOR"
+									NO_C_TYPE_COLOR="$Type_Color"
+									NO_C_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$NO_C_OLD_BG_COLOR"
+									NO_C_BG_COLOR="$Bg_Color"
+									;;
+								*10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}*|*172.\[0-9\]{1,2}.\[0-9\]{1,3}.\[0-9\]{1,3}*|*192.168.\[0-9\]{1,3}.\[0-9\]{1,3}*|*127.0.0.\[1-9\]*)
+									# ABC Netze 192.168.0.........
+									ABC_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$ABC_OLD_TYPE_COLOR"
+									ABC_TYPE_COLOR="$Type_Color"
+									ABC_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$ABC_OLD_BG_COLOR"
+									ABC_BG_COLOR="$Bg_Color"
+									;;
+							esac
+							##}}}
+						fi
+					done < $File
+					## }}}
+					;;
+				important_words)
+					# wichtige Woerter# {{{
+					IMPORTANT_OLD_TYPE_COLOR=${${(ws: :)$(grep -A1 '#[[:space:]]*\[IMPORTANTWORDS\]' $File)}[5]}
+					IMPORTANT_WORDS=${${(ws:|:)${${(ws: :)$(grep -A1 '#[[:space:]]*\[IMPORTANTWORDS\]' $File)}[7]}}//[\"()]/}
+					inverse_color_name type "$IMPORTANT_OLD_TYPE_COLOR"
+					IMPORTANT_TYPE_COLOR="$Type_Color"
+					IMPORTANT_OLD_BG_COLOR=${${(ws: :)$(grep -A1 '#[[:space:]]*\[IMPORTANTWORDS\]' $File)}[6]}
+					inverse_color_name "$IMPORTANT_OLD_BG_COLOR"
+					IMPORTANT_BG_COLOR="$Bg_Color"
+					## }}}
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (color_menu), Konfigurationsmenue{{{
+	color_menu() {
+		COLOR_MENU=($lv_Mono_Light \"$MONO_LIGHT\"
+		$lv_Mono_Dark \"$MONO_DARK\"
+		$lv_Light \"$LIGHT\"
+		$lv_Dark \"$DARK\"
+		------$lv_Index------ \"\"
+		$lv_Addressbook \"$ABOOK_TYPE_COLOR $ABOOK_BG_COLOR\"
+		\"$lv_Flag_Msg\" \"$F_TYPE_COLOR $F_BG_COLOR\" 
+		\"$lv_New_Msg\" \"$N_TYPE_COLOR $N_BG_COLOR\" 
+		\"$lv_Tag_Msg\" \"$T_TYPE_COLOR $T_BG_COLOR\" 
+		\"$lv_Reply_Msg\" \"$Q_TYPE_COLOR $Q_BG_COLOR\" 
+		\"$lv_Old_Msg\" \"$O_TYPE_COLOR $O_BG_COLOR\" 
+		\"$lv_Del_Msg\" \"$D_TYPE_COLOR $D_BG_COLOR\"
+		\"$lv_Pgp_Enc_Msg\" \"$G_TYPE_COLOR $G_BG_COLOR\" 
+		\"$lv_Pgp_Sign_Msg\" \"$g_TYPE_COLOR $g_BG_COLOR\" 
+		\"$lv_Tree\" \"$TREE_TYPE_COLOR $TREE_BG_COLOR\"
+		\"$lv_No_Mail_Msg\" \"$NO_C_TYPE_COLOR $NO_C_BG_COLOR\"
+		-----$lv_Misc----- \"\"
+		$lv_Attachment \"$ATTACHMENT_TYPE_COLOR $ATTACHMENT_BG_COLOR\"
+		$lv_Hdrdefault \"$HDRDEFAULT_TYPE_COLOR $HDRDEFAULT_BG_COLOR\"
+		\"$lv_Indicator\" \"$INDICATOR_TYPE_COLOR $INDICATOR_BG_COLOR\"
+		\"$lv_Message\" \"$MESSAGE_TYPE_COLOR $MESSAGE_BG_COLOR\"
+		\"$lv_Search\" \"$SEARCH_TYPE_COLOR $SEARCH_BG_COLOR\"
+		\"$lv_Signature\" \"$SIGNATURE_TYPE_COLOR $SIGNATURE_BG_COLOR\"
+		$lv_Status \"$STATUS_TYPE_COLOR $STATUS_BG_COLOR\"
+		-----$lv_Body----- \"\"
+		\"$lv_Important_Words\" \"$IMPORTANT_TYPE_COLOR $IMPORTANT_BG_COLOR\"
+		\"$lv_Normal\" \"$NORMAL_TYPE_COLOR $NORMAL_BG_COLOR\"
+		\"$lv_Bold\" \"$BOLD_TYPE_COLOR $BOLD_BG_COLOR\"
+		\"$lv_Markers\" \"$MARKERS_TYPE_COLOR $MARKERS_BG_COLOR\"
+		\"$lv_Tilde\" \"$TILDE_TYPE_COLOR $TILDE_BG_COLOR\"
+		\"$lv_Underline\" \"$UNDERLINE_TYPE_COLOR $UNDERLINE_BG_COLOR\"
+		\"$lv_Quoted\" \"$QUOTED_TYPE_COLOR $QUOTED_BG_COLOR\"
+		\"${lv_Quoted}1\" \"$QUOTED1_TYPE_COLOR $QUOTED1_BG_COLOR\"
+		\"${lv_Quoted}2\" \"$QUOTED2_TYPE_COLOR $QUOTED2_BG_COLOR\"
+		\"${lv_Quoted}3\" \"$QUOTED3_TYPE_COLOR $QUOTED3_BG_COLOR\"
+		\"${lv_Quoted}4\" \"$QUOTED4_TYPE_COLOR $QUOTED4_BG_COLOR\"
+		$lv_Link \"$LINK_TYPE_COLOR $LINK_BG_COLOR\"
+		$lv_Mail \"$MAIL_TYPE_COLOR $MAIL_BG_COLOR\"
+		$lv_Mailbegin \"$MAILBEGIN_TYPE_COLOR $MAILBEGIN_BG_COLOR\"
+		\"$lv_Abc_Net\" \"$ABC_TYPE_COLOR $ABC_BG_COLOR\"
+		$gv_Back \"\")
+		menubox "$1" "$COLOR_TITLE" "$gv_Menupoint" "$COLOR_MENU"
+	}
+	#}}}
+	# Funktion (choice_color), Farbauswahl # {{{
+	#
+	# usage: choice_color [ -b ]
+	# -b - Hintergrundfarbe
+	#
+	choice_color() {
+		if [[ $argv == -b ]] ; then
+			# Hintergrundfarbe# {{{
+			CHOICE_COLOR_MENU=($lv_Black \"\"
+			$lv_Blue \"\"
+			$lv_Cyan \"\"
+			$lv_Default \"\"
+			$lv_Green \"\"
+			$lv_Magenta \"\"
+			$lv_Red \"\"
+			$lv_White \"\"
+			$lv_Yellow \"\")
+			## }}}
+		else
+			# Schriftfarbe# {{{
+			CHOICE_COLOR_MENU=($lv_Black \"\"
+			$lv_Cyan \"\"
+			$lv_Blue \"\"
+			$lv_Default \"\"
+			$lv_Green \"\"
+			$lv_Magenta \"\"
+			$lv_Red \"\"
+			$lv_White \"\"
+			$lv_Yellow \"\"
+			$lv_Bright_Black \"\"
+			$lv_Bright_Cyan \"\"
+			$lv_Bright_Blue \"\"
+			$lv_Bright_Green \"\"
+			$lv_Bright_Magenta \"\"
+			$lv_Bright_Red \"\"
+			$lv_Bright_White \"\"
+			$lv_Bright_Yellow \"\")
+			## }}}
+		fi
+		# 
+		menubox "$COLOR" "$COLOR_TITLE" "$gv_Menupoint" "$CHOICE_COLOR_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_colors_help
+					menubox "$COLOR" "$COLOR_TITLE" "$gv_Menupoint" "$CHOICE_COLOR_MENU"
+					;;
+				*)
+					# Auswahl uebernehmen
+					COLOR="$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	}
+	#}}}
+	# Funktion (reverse_color_name) Farbnamen zurueck ins englische# {{{
+	# uebersetzen, fuer die Mutt Konfiguration.
+	#
+	# usage: reverse_color_name [ type ] FARBE
+	# type - Schriftfarbe
+	# gar nichts - Hintergrundfarbe
+	#
+	reverse_color_name() {
+		if [ $# -ge 1 ] ; then
+			if [[ $1 == type ]] ; then
+				case "$2" in
+					$lv_Black)	Type_Color="black"	;;
+					$lv_Blue)	Type_Color="blue"	;;
+					$lv_Cyan)	Type_Color="cyan"	;;
+					$lv_Default)	Type_Color="default"	;;
+					$lv_Green)	Type_Color="green"	;;
+					$lv_Magenta)	Type_Color="magenta"	;;
+					$lv_Red)	Type_Color="red"	;;
+					$lv_White)	Type_Color="white"	;;
+					$lv_Yellow)	Type_Color="yellow"	;;
+					$lv_Bright_Black)	Type_Color="brightblack"	;;
+					$lv_Bright_Cyan)	Type_Color="brightcyan"	;;
+					$lv_Bright_Blue)	Type_Color="brightblue"	;;
+					$lv_Bright_Green)	Type_Color="brightgreen"	;;
+					$lv_Bright_Magenta)	Type_Color="brightmagenta"	;;
+					$lv_Bright_Red)	Type_Color="brightred"	;;
+					$lv_Bright_White)	Type_Color="brightwhite"	;;
+					$lv_Bright_Yellow)	Type_Color="brightyellow"	;;
+				esac
+			else
+				case "$1" in
+					$lv_Black)	Bg_Color="black"	;;
+					$lv_Cyan)	Bg_Color="cyan"	;;
+					$lv_Blue)	Bg_Color="blue"	;;
+					$lv_Default)	Bg_Color="default"	;;
+					$lv_Green)	Bg_Color="green"	;;
+					$lv_Magenta)	Bg_Color="magenta"	;;
+					$lv_Red)	Bg_Color="red"	;;
+					$lv_White)	Bg_Color="white"	;;
+					$lv_Yellow)	Bg_Color="yellow"	;;
+				esac
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (inverse_color_name) Farbnamen zurueck ins englische# {{{
+	# uebersetzen, fuer die Mutt Konfiguration.
+	#
+	# usage: inverse_color_name [ type ] FARBE
+	# type - Schriftfarbe
+	# gar nichts - Hintergrundfarbe
+	#
+	inverse_color_name() {
+		if [ $# -ge 1 ] ; then
+			if [[ $1 == type ]] ; then
+				case "$2" in
+					black)	Type_Color="$lv_Black"	;;
+					cyan)	Type_Color="$lv_Cyan"	;;
+					blue)	Type_Color="$lv_Blue"	;;
+					default)	Type_Color="$lv_Default"	;;
+					green)	Type_Color="$lv_Green"	;;
+					magenta)	Type_Color="$lv_Magenta"	;;
+					red)	Type_Color="$lv_Red"	;;
+					white)	Type_Color="$lv_White"	;;
+					yellow)	Type_Color="$lv_Yellow"	;;
+					brightblack)	Type_Color="$lv_Bright_Black"	;;
+					brightcyan)		Type_Color="$lv_Bright_Cyan"	;;
+					brightblue)		Type_Color="$lv_Bright_Blue"	;;
+					brightgreen)	Type_Color="$lv_Bright_Green"	;;
+					brightmagenta)	Type_Color="$lv_Bright_Magenta"	;;
+					brightred)		Type_Color="$lv_Bright_Red"	;;
+					brightwhite)	Type_Color="$lv_Bright_White"	;;
+					brightyellow)	Type_Color="$lv_Bright_Yellow"	;;
+				esac
+			else
+				case "$1" in
+					black)	Bg_Color="$lv_Black"	;;
+					cyan)	Bg_Color="$lv_Cyan"	;;
+					blue)	Bg_Color="$lv_Blue"	;;
+					default)	Bg_Color="$lv_Default"	;;
+					green)	Bg_Color="$lv_Green"	;;
+					magenta)	Bg_Color="$lv_Magenta"	;;
+					red)	Bg_Color="$lv_Red"	;;
+					white)	Bg_Color="$lv_White"	;;
+					yellow)	Bg_Color="$lv_Yellow"	;;
+				esac
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (color_conf), Farbe von Text, Index, ... einstellen.# {{{
+	#
+	# usage: color_conf [ abook | abc_net | mail | mailbegin | link | ... ] FILE
+	#
+	# Siehe in den Hauptteil der Funktion dieser Funktion (kwmutt_color_conf).
+	color_conf() {
+		if [[ $# == 2 ]] ; then
+			unset -- File Opt
+			local File Opt
+			Opt="$1"
+			File="$2"
+			# Funktion (color_conf_menu)# {{{
+			color_conf_menu() {
+				if [[ $Opt == important_words ]] ; then
+					COLOR_CONF_MENU=($lv_Type_Color \"$TYPE_COLOR\"
+					$lv_Bg_Color \"$BG_COLOR\"
+					\"$lv_Important_Words\" \"$IMPORTANT_WORDS\"
+					$gv_Save \"\" $gv_Back \"\")
+				else
+					COLOR_CONF_MENU=($lv_Type_Color \"$TYPE_COLOR\"
+					$lv_Bg_Color \"$BG_COLOR\"
+					$gv_Save \"\" $gv_Back \"\")
+				fi
+				menubox "$1" "$COLOR_TITLE" "$gv_Menupoint" "$COLOR_CONF_MENU"
+			}
+			## }}}
+			color_conf_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help kwmutt_colors_help
+						color_conf_menu
+						;;
+					$lv_Type_Color)
+						# Schriftfarbe einstellen# {{{
+						OLD_TYPE_COLOR="$TYPE_COLOR"
+						choice_color
+						if [ -n "$COLOR" ] ; then
+							TYPE_COLOR="$COLOR"
+						else
+							TYPE_COLOR="$OLD_TYPE_COLOR"
+						fi
+						## }}}
+						color_conf_menu $lv_Type_Color
+						;;
+					$lv_Bg_Color)
+						# Hintergrundfarbe einstellen# {{{
+						OLD_BG_COLOR="$BG_COLOR"
+						choice_color -b
+						if [ -n "$COLOR" ] ; then
+							BG_COLOR="$COLOR"
+						else
+							BG_COLOR="$OLD_BG_COLOR"
+						fi
+						## }}}
+						color_conf_menu $lv_Bg_Color
+						;;
+					$lv_Important_Words)
+						# Wichtige Woerter einstellen.# {{{
+						MSG=$(gettext 'Geben Sie bitte die Namen Ihrer wichtigen Woerter, getrennt durch ein Leerzeichen, ein (Bsp. mutt kwmutt ...).')
+						inputbox "$COLOR_TITLE" "$MSG" "$IMPORTANT_WORDS"
+						if [[ -n $gv_Auswahl ]] ; then
+							IMPORTANT_WORDS="$gv_Auswahl"
+						else
+							IMPORTANT_WORDS="mutt kwmutt"
+						fi
+						## }}}
+						color_conf_menu $lv_Important_Words
+						;;
+					$gv_Save)
+						# Farbeintrag aendern.#{{{
+						# Farbnamen fuer mutt umschreiben.
+						reverse_color_name type $TYPE_COLOR
+						reverse_color_name $BG_COLOR
+						# aendern
+						case "$Opt" in
+							abc_net)
+								# ABC-Netz Eintraege einfaerben.# {{{
+								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
+								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*172.\[0-9\]{1,2}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"172.\[0-9\]{1,2}.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
+								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*192.168.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"192.168.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
+								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*127.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"127.\[0-9\]{1,3}.\[1-9\]{1,3}.\[1-9\]{1,3}\"#" \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							abook)
+								# Adressbuch Eintraege einfaerben.# {{{
+								sed -e "s#$Value_Old#$Type_Color $Bg_Color#g" "$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							important_words)
+								# Wichtige Woerter aendern
+								awk '/^# \[IMPORTANTWORDS]/ {print; getline; print "color body '"$Type_Color"' '"$Bg_Color"' ('"${IMPORTANT_WORDS//\ /|}"')"; next} 1 ' \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								#
+								;;
+							link)
+								# Internet links einfaerben.# {{{
+								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*http.*#color body $Type_Color $Bg_Color \"(finger|ftp|hkp|http|https|telnet)://[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!]\)?/?\"#g ; s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*www.*#color body $Type_Color $Bg_Color \"www\\\\\\\\.[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!])?/?\"#g" "$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							mail)
+								# Mail Adressen einfaerben.# {{{
+								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*\[-a-z_0-9.+\]+@\[-a-z_0-9.\].*#color body $Type_Color $Bg_Color \"[-a-z_0-9.+]+@[-a-z_0-9.]+\"#g" "$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							mailbegin)
+								# Mail Adressen Einleitung einfaerben.# {{{
+								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*mailto.*#color body $Type_Color $Bg_Color \"(file|E-Mail[-A-Za-z]+|mailto|news):*\"#g" "$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							attachment|bold|hdrdefault|indicator|markers|message)
+								# allgemeine Farben einstellen# {{{
+								sed -e "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							normal|search|signature|status|tilde|tree|underline)
+								# allgemeine Farben einstellen# {{{
+								sed -e "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							quoted*)
+								# quoted1-9 Eintraege einfaerben.# {{{
+								Nr="${Opt##*[a-z]}"
+								case "$Nr" in
+									1)
+										Q_Nr=6
+										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
+										"$File" > $gv_LogFile 2>&1
+										mv "$gv_LogFile" "$File" 2>&1
+										;;
+									2)
+										Q_Nr=7
+										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
+										"$File" > $gv_LogFile 2>&1
+										mv "$gv_LogFile" "$File" 2>&1
+										;;
+									3)
+										Q_Nr=8
+										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
+										"$File" > $gv_LogFile 2>&1
+										mv "$gv_LogFile" "$File" 2>&1
+										;;
+									4)
+										Q_Nr=9
+										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
+										"$File" > $gv_LogFile 2>&1
+										mv "$gv_LogFile" "$File" 2>&1
+										;;
+									*)
+										Q_Nr=5
+										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
+										"$File" > $gv_LogFile 2>&1
+										mv "$gv_LogFile" "$File" 2>&1
+										;;
+								esac
+								## }}}
+								;;
+							\~[DFGgNOQT])
+								# Index Farben einstellen# {{{
+								sed -e "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*${Opt}#color index $Type_Color $Bg_Color $Opt#" \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+							'NO~C')
+								# Index Farben fuer keine richtige mailadresse einstellen# {{{
+								sed -e "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*\"! ~C \.\"#color index $Type_Color $Bg_Color \"! ~C .\"#" \
+								"$File" > $gv_LogFile 2>&1
+								mv "$gv_LogFile" "$File" 2>&1
+								## }}}
+								;;
+						esac
+						## }}}
+						break
+						;;
+					$gv_Back)
+						break
+						;;
+				esac
+			done
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (default_color_read), einlesen nach dem einstellen der Standardfarben.# {{{
+	#
+	# usage: default_color_read
+	#
+	default_color_read() {
+		# Gibt es keine Farbdateien werden die Standard-dunkel
+		# Farbeinstellungen kopiert.
+		if [[ ! -f $M_COLOR_INDEX && ! -f $M_COLORS ]] ; then
+			default_color -d	 
+		fi
+		# Hintergrund einlesen ob black oder white.
+		read_colors dark_light "$M_COLOR_INDEX"
+		# index einlesen
+		read_colors index "$M_COLOR_INDEX"
+		###################################################
+		# NOTIZ:
+		# ABC Netze muessen bei "index"
+		# mit eingelesen werden, da bei "index" die
+		# regulaeren Werte ausgewertet werden.
+		# Anderen Wert als index benutzen?
+		###################################################
+		read_colors important_words "$M_COLORS"
+		read_colors index "$M_COLORS"
+		# Web-Adressen einlesen 
+		read_colors link "$M_COLORS"
+		# Mail Adressen einlesen 
+		read_colors mail "$M_COLORS"
+		# file:, mailto:, news: Adressen Einleitung einlesen 
+		read_colors mailbegin "$M_COLORS"
+		# allgem. Farben einlesen 
+		read_colors typ "$M_COLORS"
+		# Farb-Adressbuch einlesen
+		read_colors abook "$M_COLOR_FRIENDS"
+	}
+	## }}}
+	# alle Farbeinstellungen einlesen.
+	default_color_read
+	#
+	color_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_colors_help
+				color_menu
+				;;
+			--*)
+				# nichts tun, dient nur zur Anzeige/Unterteilung
+				color_menu
+				;;
+			$lv_Light)
+				# helle Farben benutzen# {{{
+				default_color
+				DARK=off
+				MONO_DARK=off
+				LIGHT=on
+				MONO_LIGHT=off
+				default_color_read
+				## }}}
+				color_menu $lv_Light
+				;;
+			$lv_Mono_Light)
+				# Monochrome helle Farben benutzen# {{{
+				default_color
+				default_monochrome black white
+				DARK=off
+				MONO_DARK=off
+				LIGHT=off
+				MONO_LIGHT=on
+				## }}}
+				color_menu $lv_Mono_Light
+				;;
+			$lv_Dark)
+				# dunkle Farben benutzen# {{{
+				default_color -d
+				DARK=on
+				MONO_DARK=off
+				LIGHT=off
+				MONO_LIGHT=off
+				## }}}
+				color_menu $lv_Dark
+				;;
+			$lv_Mono_Dark)
+				# Monochrome dunkle Farben benutzen# {{{
+				default_color -d
+				default_monochrome white black
+				DARK=off
+				MONO_DARK=on
+				LIGHT=off
+				MONO_LIGHT=off
+				## }}}
+				color_menu $lv_Mono_Dark
+				;;
+			$lv_Addressbook)
+				# Farb Adressbuch erstellen/updaten# {{{
+				# Funktion (first_header), Kopf der Datei erstellen.# {{{
+				#
+				first_header() {
+					> "$M_COLOR_FRIENDS" <<< "## ========================================================================
+## File:          $HOME/.kwtools/kwmutt/color.index.friendly
+## Purpose:       Setup file for the Mail program \"Mutt\"
+## Latest change: Thu Apr 02 14:55:04 CEST 2009
+## ========================================================================
+## Author: Kai Wilke - <http://www.netzworkk.de/> - <kiste@netzworkk.de>
+## Size:        ca >1K
+## ========================================================================
+
+### KWMUTT COLOR CONFIGURATION ######################
+
+## ==================================================
+## Mails FROM addressbook addresses
+## =================================================="
+				}
+				## }}}
+				# Funktion (abook_color_conf), konfiguriert die Adressbuch farbe# {{{
+				#
+				abook_color_conf() {
+					# Farbe fuer Eintraege des Adressbuchs einstellen.
+					TYPE_COLOR="$ABOOK_TYPE_COLOR"
+					BG_COLOR="$ABOOK_BG_COLOR"
+					# alten Wert sichern.
+					Value_Old="$ABOOK_OLD_TYPE_COLOR.*$ABOOK_OLD_BG_COLOR"
+					# Farbe einstellen
+					color_conf abook "$M_COLOR_FRIENDS"
+					# Farbe neu einlesen
+					read_color_list abook "$M_COLOR_FRIENDS"
+				}
+				## }}}
+				#
+				if [ -x "$ABOOK_CMD" -a -f ~/.abook/addressbook -a -n "$alias_file" ] ; then
+					# Header der Datei erstellen
+					first_header
+					# Adressbuch Eintraege aus abook fuer mutt erstellen
+					print -l ${${${(M)$(< ~/.abook/addressbook)##(#s)email=*}//,/\'\\nemail=}//email=/color index brightblue black \'~f }\' >> $M_COLOR_FRIENDS
+					abook_color_conf
+				elif [ -x "$ABOOK_CMD" -a -f ~/.abook/addressbook ] ; then
+					# Header der Datei erstellen
+					first_header
+					# Adressbuch Eintraege aus abook fuer mutt erstellen
+					print -l ${${${(M)$(< ~/.abook/addressbook)##(#s)email=*}//,/\'\\nemail=}//email=/color index brightblue black \'~f }\' >> $M_COLOR_FRIENDS
+					abook_color_conf
+				elif [ -f "$alias_file" ] ; then
+					# Header der Datei erstellen
+					first_header
+					print -l ${${${(M)$(< $alias_file)##<*>}//</color index $ABOOK_OLD_TYPE_COLOR $ABOOK_OLD_BG_COLOR \'~f }//>/\'} >> $M_COLOR_FRIENDS
+					abook_color_conf
+				else
+					no_abook_conf_msg
+				fi
+				# Farbe neu einlesen
+				read_colors abook "$M_COLOR_FRIENDS"
+				## }}}
+				color_menu $lv_Addressbook
+				;;
+			$lv_Abc_Net)
+				# ABC-IP-Adressen im Body, Farben # {{{
+				TYPE_COLOR="$ABC_TYPE_COLOR"
+				BG_COLOR="$ABC_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$ABC_OLD_TYPE_COLOR.*$ABC_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf abc_net "$M_COLORS"
+				# Farbe neu einlesen
+				default_color_read
+				## }}}
+				color_menu $lv_Abc_Net
+				;;
+			$lv_Attachment)
+				# Attachment Farben # {{{
+				TYPE_COLOR="$ATTACHMENT_TYPE_COLOR"
+				BG_COLOR="$ATTACHMENT_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$ATTACHMENT_OLD_TYPE_COLOR.*$ATTACHMENT_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf attachment "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Attachment
+				;;
+			$lv_Bold)
+				# hervorgehobener Text im Body, Farben # {{{
+				TYPE_COLOR="$BOLD_TYPE_COLOR"
+				BG_COLOR="$BOLD_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$BOLD_OLD_TYPE_COLOR.*$BOLD_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf bold "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Bold
+				;;
+			$lv_Del_Msg)
+				# Farbe fuer als gelöscht markierte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$D_TYPE_COLOR"
+				BG_COLOR="$D_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$D_OLD_TYPE_COLOR.*$D_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~D "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Del_Msg
+				;;
+			$lv_Flag_Msg)
+				# Farbe fuer als geflaggte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$F_TYPE_COLOR"
+				BG_COLOR="$F_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$F_OLD_TYPE_COLOR.*$F_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~F "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Flag_Msg
+				;;
+			$lv_Hdrdefault)
+				# Farbe fuer Standardheaderzeilen# {{{
+				TYPE_COLOR="$HDRDEFAULT_TYPE_COLOR"
+				BG_COLOR="$HDRDEFAULT_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$HDRDEFAULT_OLD_TYPE_COLOR.*$HDRDEFAULT_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf hdrdefault "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Hdrdefault
+				;;
+			$lv_Important_Words)
+				# hervorgehobener Text im Body, Farben # {{{
+				TYPE_COLOR="$IMPORTANT_TYPE_COLOR"
+				BG_COLOR="$IMPORTANT_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$IMPORTANT_OLD_TYPE_COLOR.*$IMPORTANT_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf important_words "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors important_words "$M_COLORS"
+				## }}}
+				color_menu $lv_Important_Words
+				;;
+			$lv_Indicator)
+				# Farbe fuer Cursor ueber Nachricht# {{{
+				TYPE_COLOR="$INDICATOR_TYPE_COLOR"
+				BG_COLOR="$INDICATOR_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$INDICATOR_OLD_TYPE_COLOR.*$INDICATOR_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf indicator "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Indicator
+				;;
+			$lv_Link)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$LINK_TYPE_COLOR"
+				BG_COLOR="$LINK_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$LINK_OLD_TYPE_COLOR.*$LINK_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf link "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors link "$M_COLORS"
+				## }}}
+				color_menu $lv_Link
+				;;
+			$lv_Mail)
+				# Farbe fuer Eintraege der Mailadressen einstellen.# {{{
+				TYPE_COLOR="$MAIL_TYPE_COLOR"
+				BG_COLOR="$MAIL_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$MAIL_OLD_TYPE_COLOR.*$MAIL_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf mail "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors mail "$M_COLORS"
+				## }}}
+				color_menu $lv_Mail
+				;;
+			$lv_Mailbegin)
+				# Farbe fuer Eintraege der Mailadressen einstellen.# {{{
+				TYPE_COLOR="$MAILBEGIN_TYPE_COLOR"
+				BG_COLOR="$MAILBEGIN_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$MAILBEGIN_OLD_TYPE_COLOR.*$MAILBEGIN_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf mailbegin "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors mailbegin "$M_COLORS"
+				## }}}
+				color_menu $lv_Mailbegin
+				;;
+			$lv_Markers)
+				# Farbe fuer Zeichen (+) bei umgebrochenen Text.# {{{
+				TYPE_COLOR="$MARKERS_TYPE_COLOR"
+				BG_COLOR="$MARKERS_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$MARKERS_OLD_TYPE_COLOR.*$MARKERS_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf markers "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Markers
+				;;
+			$lv_Message)
+				# Farbe fuer Zeichen (+) bei umgebrochenen Text.# {{{
+				TYPE_COLOR="$MESSAGE_TYPE_COLOR"
+				BG_COLOR="$MESSAGE_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$MESSAGE_OLD_TYPE_COLOR.*$MESSAGE_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf message "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Message
+				;;
+			$lv_New_Msg)
+				# Farbe fuer neue Nachrichten einstellen.# {{{
+				TYPE_COLOR="$N_TYPE_COLOR"
+				BG_COLOR="$N_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$N_OLD_TYPE_COLOR.*$N_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~N "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_New_Msg
+				;;
+			$lv_No_Mail_Msg)
+				# Farbe fuer keine richtige Mailadresse einstellen.# {{{
+				TYPE_COLOR="$NO_C_TYPE_COLOR"
+				BG_COLOR="$NO_C_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$NO_C_OLD_TYPE_COLOR.*$NO_C_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf NO~C "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_No_Mail_Msg
+				;;
+			$lv_Normal)
+				# Farbe fuer normalen Text.# {{{
+				TYPE_COLOR="$NORMAL_TYPE_COLOR"
+				BG_COLOR="$NORMAL_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$NORMAL_OLD_TYPE_COLOR.*$NORMAL_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf normal "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Normal
+				;;
+			$lv_Old_Msg)
+				# Farbe fuer als alte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$O_TYPE_COLOR"
+				BG_COLOR="$O_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$O_OLD_TYPE_COLOR.*$O_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~O "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Old_Msg
+				;;
+			$lv_Pgp_Enc_Msg)
+				# Farbe fuer PGP verschluesselte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$G_TYPE_COLOR"
+				BG_COLOR="$G_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$G_OLD_TYPE_COLOR.*$G_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~G "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Pgp_Enc_Msg
+				;;
+			$lv_Pgp_Sign_Msg)
+				# Farbe fuer PGP signierte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$g_TYPE_COLOR"
+				Bg_COLOR="$g_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$g_OLD_TYPE_COLOR.*$g_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~g "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Pgp_Sign_Msg
+				;;
+			$lv_Quoted)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$QUOTED_TYPE_COLOR"
+				BG_COLOR="$QUOTED_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$QUOTED_OLD_TYPE_COLOR.*$QUOTED_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf quoted "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Quoted
+				;;
+			${lv_Quoted}1)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$QUOTED1_TYPE_COLOR"
+				BG_COLOR="$QUOTED1_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$QUOTED1_OLD_TYPE_COLOR.*$QUOTED1_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf quoted1 "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu ${lv_Quoted}1
+				;;
+			${lv_Quoted}2)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$QUOTED2_TYPE_COLOR"
+				BG_COLOR="$QUOTED2_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$QUOTED2_OLD_TYPE_COLOR.*$QUOTED2_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf quoted2 "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu ${lv_Quoted}2
+				;;
+			${lv_Quoted}3)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$QUOTED3_TYPE_COLOR"
+				BG_COLOR="$QUOTED3_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$QUOTED3_OLD_TYPE_COLOR.*$QUOTED3_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf quoted3 "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu ${lv_Quoted}3
+				;;
+			${lv_Quoted}4)
+				# Farbe fuer Eintraege der Internet Links einstellen.# {{{
+				TYPE_COLOR="$QUOTED4_TYPE_COLOR"
+				BG_COLOR="$QUOTED4_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$QUOTED4_OLD_TYPE_COLOR.*$QUOTED4_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf quoted4 "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu ${lv_Quoted}4
+				;;
+			$lv_Reply_Msg)
+				# Farbe fuer beantwortete Nachrichten einstellen.# {{{
+				TYPE_COLOR="$Q_TYPE_COLOR"
+				BG_COLOR="$Q_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$Q_OLD_TYPE_COLOR.*$Q_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~Q "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Reply_Msg
+				;;
+			$lv_Search)
+				# Farbe fuer Suchergebnisse # {{{
+				TYPE_COLOR="$SEARCH_TYPE_COLOR"
+				BG_COLOR="$SEARCH_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$SEARCH_OLD_TYPE_COLOR.*$SEARCH_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf search "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Search
+				;;
+			$lv_Signature)
+				# Farbe fuer die Signatur eines Senders. # {{{
+				TYPE_COLOR="$SIGNATURE_TYPE_COLOR"
+				BG_COLOR="$SIGNATURE_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$SIGNATURE_OLD_TYPE_COLOR.*$SIGNATURE_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf signature "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Signature
+				;;
+			$lv_Status)
+				# Farbe fuer die Statuszeile # {{{
+				TYPE_COLOR="$STATUS_TYPE_COLOR"
+				BG_COLOR="$STATUS_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$STATUS_OLD_TYPE_COLOR.*$STATUS_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf status "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Status
+				;;
+			$lv_Tag_Msg)
+				# Farbe fuer markierte Nachrichten einstellen.# {{{
+				TYPE_COLOR="$T_TYPE_COLOR"
+				BG_COLOR="$T_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$T_OLD_TYPE_COLOR.*$T_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf ~T "$M_COLOR_INDEX"
+				# Farbe neu einlesen
+				read_colors index "$M_COLOR_INDEX"
+				## }}}
+				color_menu $lv_Tag_Msg
+				;;
+			$lv_Tilde)
+				# Farbe wie das "~" Zeichen am Anfang einer Nachricht angezeigt werden soll# {{{
+				TYPE_COLOR="$TILDE_TYPE_COLOR"
+				BG_COLOR="$TILDE_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$TILDE_OLD_TYPE_COLOR.*$TILDE_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf tilde "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Tilde
+				;;
+			$lv_Tree)
+				# Farbe fuer die Pfeile die den Thread zusammen halten # {{{
+				TYPE_COLOR="$TREE_TYPE_COLOR"
+				BG_COLOR="$TREE_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$TREE_OLD_TYPE_COLOR.*$TREE_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf tree "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Tree
+				;;
+			$lv_Underline)
+				# Farbe fuer untersrichenen Text im Body# {{{
+				TYPE_COLOR="$UNDERLINE_TYPE_COLOR"
+				BG_COLOR="$UNDERLINE_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$UNDERLINE_OLD_TYPE_COLOR.*$UNDERLINE_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf underline "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Underline
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, rsync">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2012-03-08">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/net/kwproxy.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0">
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net/kwrsync_backup.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwrsync>kwrsync</a></h2>
+                                <p>Mit diesem Script k&ouml;nnen Sie wahlweise entweder ihre Homverzeichnisse mit 
+				anderen	Rechnern synchronisieren (Laptop) oder Verzeichnisse ihrer Wahl spiegeln. 
+				Sie k&ouml;nnen auch einen crontab Eintrag vornehmen, damit die Verzeichnisse 
+				automatisch gespiegelt werden.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync.html#konf">1 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync.html#dirs">2 Verzeichnisse</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync.html#home_sync">3 Homesync</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync.html#sync">4 Synchronisation </a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=konf>1 Konfiguration</a></h3>
+                                <p>Hier konfiguriert man die Zielrechner, Remote Shell, Bandbreite, ob das
+				Home Verzeichnis per cron synchronisiert werden soll und crontab.
+				Bis auf crontab dient diese Konfiguration haupts&auml;chlich der Synchronisation
+				des Home Verzeichnisses.</p>
+				<p><b>Zielrechner:</b> Eingabe der IP-Nummern oder Namen der Zielrechner,
+				getrennt durch ein Leerzeichen. Name
+				geht nur wenn dieser Rechner auch bekannt ist (z.B. DNS).
+				Die Erreichbarkeit wird nach der Eingabe gepr&uuml;ft.</p>
+				<p><b>Remote_shell:</b> Auswahl der installierten remote Shells (z.B. ssh).</p>
+				<p><b>Bandbreite:</b> Geben Sie hier ein Limit f&uuml;r die Bandbreite, in
+				Kbyte/s, bei der &Uuml;bertragung ein (256=256Kb/s).</p>
+				<p><b>Home_Sync_Cron:</b> Soll das Homeverzeichnis auch per Cron
+				synchronisiert werden (ja/nein)?</p>
+				<p><b>crontab:</b> Das Script kwrsync_cron in die crontab Tabelle des Users
+				einf&uuml;gen oder l&ouml;schen. kwrsync_cron f&uuml;hrt rsync aus und
+				schickt bei Fehlern eine Mail.</p>
+				<p><b>Notiz:</b> Als Programm wird rsync benutzt. F&uuml;r das ssh Protokoll
+				sollten Sie sich eine Datei namens ~/.ssh/authorized_keys anlegen
+				(man 1 ssh).</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=dirs>2 Verzeichnisse</a></h3>
+                                <p>Hier kann man die Datei ~/.kwtools/kwrsynctab konfigurieren. Sie enth&auml;lt
+				alle Parameter f&uuml;r kwrsync um viele verschiedene Verzeichnisse mit anderen
+				Rechnern zu synchronisieren. Sie k&ouml;nnen diese Datei ansehen, anlegen,
+				&auml;ndern und l&ouml;schen.</p>
+				<p><b>Ansicht:</b> Ansicht der Konfigurationsdatei ~/.kwtools/kwrsynctab.</p>
+				<p><b>anlegen/&auml;ndern:</b></p>
+				<p><table cellSpacing=0 cellPadding=0 width="100%" border=0>
+					<tr>
+						<td><img src="../../../images/trans.gif" width="10" border="0"></td>
+						<td><p><b><i>Sourceverz.:</i></b> Auswahl eines lokalen 
+						Verzeichnisses.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>Remoteverz.:</i></b> In welches Verzeichnis 
+						soll syncronisiert werden. Kann lokal wie remote sein.
+						Bei remote m&uuml;ssen Sie auch den Zielrechner angeben.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>Zielrechner:</i></b> Eingabe der IP-Nummern 
+						oder Namen der Zielrechner. Name geht nur wenn dieser Rechner auch 
+						bekannt ist (z.B. DNS). Die Erreichbarkeit wird nach der Eingabe 
+						gepr&uuml;ft.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>rsync Argumente:</i></b> Eingabe von zus&auml;tzlichen 
+						Argumenten f&uuml;r das Programm rsync. Diese m&uuml;ssen mit
+						einem Leerzeichen getrennt sein (man 1 rsync).</p>
+						<p><b>Notiz:</b> Standard rsync Argmunte sind: &quot;-avu 
+						--numeric-ids --delete --delete-excluded --backup
+						--suffix=_&#096;date +%d.%m.%Y&#096;&quot;</p></td>
+					</tr>
+					<tr>
+						<td colspan="3"><br></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>Ausschluss:</i></b> Dateien/Verzeichnisse die 
+						von der Synchronisation ausgeschlossen werden sollen. 
+						Diese m&uuml;ssen relativ zum Pfad des Sourceverz. liegen. Bei einem 
+						Sourceverz. von /home/user/foo dann ist der Ausschluss einer
+						Datei z. B. foo/bar.</p></td>
+					</tr>
+				</table></p>
+
+				<p><b>l&ouml;schen:</b> Ein oder mehrere Eintr&auml;ge l&ouml;schen</p>
+				<p><b>Notiz:</b> Als Programm wird rsync benutzt. F&uuml;r das ssh Protokoll
+				sollten Sie sich eine Datei namens ~/.ssh/authorized_keys anlegen
+				(man 1 ssh).</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=home_sync>3 Homesync</a></h3>
+                                <p>Das eigene Home-Verzeichnis mit anderen Rechnern synchronisieren.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=sync>4 Synchronisation</a></h3>
+                                <p>Remote und/oder lokale Synchronisation der konfigurierten
+				Verzeichnisse.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/net/kwproxy.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0">
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net/kwrsync_backup.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

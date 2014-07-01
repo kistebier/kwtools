@@ -1,0 +1,228 @@
+.\"     Title: CD_DVDRC
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: 
+.\"    Source: Version 0.1.27
+.\"
+.TH "CD_DVDRC" "5" "11/15/2013" "Version 0.1.27" "Benutzer Anleitung"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+cd_dvdrc \- Konfigurationsdatei f\(:ur alle kwtools Scripte die die Funktion cd_dvd_burn zum brennen benutzen.
+.SH "BESCHREIBUNG"
+.PP
+Dies sind ein paar Brennereinstellungen f\(:ur alle Scripte die die Funktion
+\fBcd_dvd_burn\fR
+benutzen\&. Dies sind unter anderem
+\fBkwrecord\fR,
+\fBkwsnd2sndfm\fR,
+und
+\fBkwvcdburn\fR\&.
+Die Variablen werden beim Start der Scripte eingelesen\&. Sind diese nicht belegt, wird vor dem brennen ein Konfigurationsmen\(:u aufgerufen\&. Beginnt eine Zeile mit
+\(lq#\(rq
+oder ist leer wird dies als Kommentar interpretiert\&.
+.PP
+Vor jeder Brennaction wird nochmal ein kleines Men\(:u aufgerufen zum einstellen der Kopieanzahl und weiterer Parameter die nicht in diese Konfiguration geh\(:oren aber n\(:utzlich sein k\(:onnen\&.
+.SH "VARIABELN"
+.PP
+\fBCD_PROG\fR
+.RS 4
+\fICD\fR
+Brennprogramm\&. Ist in diesem Fall
+\fBcdrdao\fR\&.
+\fBkwrecord\fR
+pr\(:uft nicht mehr ob dieses Programm
+\(lqsetuid\(rq
+ausf\(:uhrbar ist\&.
+.RE
+.PP
+\fBDVD_PROG\fR
+.RS 4
+\fIDVD\fR
+Brennprogramm\&. Ist in diesem Fall
+\fBgrowisofs\fR\&.
+\fBkwrecord\fR
+pr\(:uft ob dieses ausf\(:uhrbar ist\&.
+.RE
+.PP
+\fBCD_SIZE\fR
+.RS 4
+\fICD\-R/CD\-RW\fR
+Gr\(:osse angeben (\fB650|680|700|800\fR)\fIMB\fR\&. Wobei
+\fB800\fR
+\fIMB\fR
+nicht jeder Brenner unterst\(:utzt\&.
+.RE
+.PP
+\fBWRITE_SPEED\fR
+.RS 4
+\fICD\fR
+Schreibgeschwindigkeit eingeben, von
+\fB0\-60\fR
+in
+\fI2\fR\-er Schritten\&.
+.RE
+.PP
+\fBDVD_SIZE\fR
+.RS 4
+\fIDVD\fR
+Gr\(:osse in
+\fIGB\fR
+angeben (\fB4,7|9,4|15,9\fR)\&. Zum Beispiel ist
+\fB4,7\fR
+einseitig und
+\fB9,4\fR
+doppelseitig beschreibbar\&. Schauen Sie was Ihr Brenner unterst\(:utzt und nat\(:urlich wie gross der Rohling ist\&.
+.RE
+.PP
+\fBDVD_SPEED\fR
+.RS 4
+\fIDVD\fR
+Brenngeschwindigkeit eingeben, von
+\fB0\-12\fR, kommt halt auf Ihr Medium drauf an\&. Lesen Sie die Dokumentation zu Ihrem Laufwerk\&.
+.RE
+.PP
+\fBWRITE_DEVICE\fR
+.RS 4
+Geben Sie hier das Brenner Laufwerk an (\fIbus\fR,\fIid\fR,\fIlun\fR
+\-
+\fB0\fR,\fB1\fR,\fB0\fR)\&. Bei
+\fIATAPI\fR
+Laufwerken steht dort
+\fIATAPI\fR:\fIbus\fR,\fIid\fR,\fIlun\fR\&.
+.sp
+Mit
+\(lq\fBcdrdao\fR \fBscanbus\fR\(rq
+kann man kontrollieren, welches Laufwerk dies ist\&. Allerdings zeigt dies mit
+\(lq\fBroot\fR\(rq
+Rechten
+\fIATAPI\fR
+und bei normalen Benutzern
+\fIATA\fR
+als Laufwerksbeschreibung an\&.
+.RE
+.PP
+\fBREAD_DEVICE\fR
+.RS 4
+Geben Sie hier das Leselaufwerk an (\fIbus\fR,\fIid\fR,\fIlun\fR
+\-
+\fB0\fR,\fB1\fR,\fB0\fR)\&. Bei
+\fIATAPI\fR
+Laufwerken steht dort
+\fIATAPI\fR:\fIbus\fR,\fIid\fR,\fIlun\fR\&. Weiteres siehe
+\fBWRITE_DEVICE\fR\&.
+.RE
+.PP
+\fBCD_WRITE_DRIVER\fR
+.RS 4
+Treiber f\(:ur den Brenner einstellen\&. Es stehen folgende zur Auswahl:
+\fBcdd2600\fR,
+\fBplextor\fR,
+\fBplextor\-scan\fR,
+\fBgeneric\-mmc\fR,
+\fBgeneric\-mmc\-raw\fR,
+\fBricoh\-mp6200\fR,
+\fByamaha\-cdr10x\fR,
+\fBteac\-cdr55\fR,
+\fBsony\-cdu920\fR,
+\fBsony\-cdu948\fR,
+\fBtaiyo\-yuden\fR,
+\fBtoshiba\fR\&. Der
+\fBgeneric\-mmc\fR
+Treiber sollte eigentlich immer funktionieren\&.
+.RE
+.PP
+\fBCDDB\fR
+.RS 4
+Hier k\(:onnen Sie einen oder mehrere
+\fICD\fR
+Datenbank Server, durch ein Komma getrennt, einstellen\&.
+.sp
+Format ist:
+.sp
+\fB<server>\fR
+benutzt standardm\(:assig das
+\fBcddbp\fR
+Protokoll auf Port
+\fB888\fR\&.
+.sp
+\fB<server>:<port>\fR
+benutzt den angegebenen Port f\(:ur das Protokoll
+\fBcddbp\fR\&.
+.sp
+\fB<server>:<cgi\-bin\-path>\fR
+benutzt standardm\(:assig das
+\fBhttp\fR
+Protokoll auf Port
+\fI80\fR, mit der URL
+\fI<cgi\-bin\-path>\fR\&. Standard ist
+\fI/~cddb/cddb\&.cgi\fR\&.
+.sp
+\fB<server>:<port>:<cgi\-bin\-path>\fR
+benutzt das
+\fBhttp\fR
+Protokoll auf dem angegebenen Port, mit der URL
+\fI<cgi\-bin\-path>\fR\&. Standard ist
+\fI/~cddb/cddb\&.cgi\fR\&.
+.sp
+\fB<server>:<port>:<cgi\-bin\-path><proxy\-server>\fR
+benutzt das
+\fBhttp\fR
+Protokoll auf dem angegebenen Port und benutzt zur Verbindung den angegebenen Proxy Server\&.
+.sp
+\fB<server>:<port>:<cgi\-bin\-path>:<proxy\-server>:<proxy\-port>\fR
+benutzt das
+\fBhttp\fR
+Protokoll auf dem angegebenen Proxy Port zur Verbindung \(:uber den Proxy Server zur
+\fICD\fR
+Datenbank\&.
+.RE
+.PP
+\fBTMP_DIR\fR
+.RS 4
+Tempor\(:ares Verzeichnis das beim
+\fICD/DVD\fR
+kopieren genutzt wird\&. In diesem Verzeichnis werden die Images und Daten (\fBCDDB\fR) zu den
+\fICD/DVD\'s\fR
+gespeichert\&.
+.RE
+.PP
+\fBEJECT\fR
+.RS 4
+Soll die
+\fICD/DVD\fR
+nach dem brennen ausgeworfen werden (\fByes/no\fR)?
+.RE
+.PP
+\fBSIMULATE\fR
+.RS 4
+Soll das Brennen erst einmal nur simuliert werden (\fByes/no\fR)?
+.RE
+.SH "DATEI"
+.PP
+\fI~/\&.kwtools/cd_dvdrc\fR
+.RS 4
+Dies ist die
+\(lqBrenner\(rq
+Konfigurations Datei f\(:ur verschiedene
+\fBkwtools\fR
+Scripte\&.
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBcdrdao\fR(1),
+\fBgenisoimage\fR(1),
+\fBgrowisofs\fR(1),
+\fBkwrecord\fR(1)
+.SH "AUTOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.sp -1n
+.IP "" 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.SH "COPYRIGHT"
+Copyright \(co 2002-2013 Kai Wilke
+.br

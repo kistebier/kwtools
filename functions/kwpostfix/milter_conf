@@ -1,0 +1,148 @@
+# milter (?) Konfiguration einstellen{{{
+
+milter_conf() {
+
+	# Variable
+	MILTER_TITLE="${gv_Configuration}::${lv_Milter}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)milter_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_milter_menu), die Milter-Parameter einstellen# {{{
+	##############################################
+	# TODO: Hilfe etc. vorbereitet
+	# milter_command_timeout = 30s
+	# milter_connect_macros = j {daemon_name} v
+	# milter_connect_timeout = 30s
+	# milter_content_timeout = 300s
+	# milter_data_macros = i
+	# milter_default_action = tempfail
+	# milter_end_of_data_macros = i
+	# milter_end_of_header_macros = i
+	# milter_header_checks =
+	# milter_helo_macros = {tls_version} {cipher} {cipher_bits} {cert_subject} {cert_issuer}
+	# milter_macro_daemon_name = $myhostname
+	# milter_macro_v = $mail_name $mail_version
+	# milter_mail_macros = i {auth_type} {auth_authen} {auth_author} {mail_addr} {mail_host} {mail_mailer}
+	# milter_protocol = 6
+	# milter_rcpt_macros = i {rcpt_addr} {rcpt_host} {rcpt_mailer}
+	# milter_unknown_command_macros =
+	##############################################
+	conf_milter_menu() {
+		MILTER_MENU=(milter_command_timeout \"\$milter_command_timeout\"
+		milter_connect_macros \"\$milter_connect_macros\"
+		milter_connect_timeout \"\$milter_connect_timeout\"
+		milter_content_timeout \"\$milter_content_timeout\"
+		milter_data_macros \"\$milter_data_macros\"
+		milter_default_action \"\$milter_default_action\"
+		milter_end_of_data_macros \"\$milter_end_of_data_macros\"
+		milter_end_of_header_macros \"\$milter_end_of_header_macros\"
+		milter_header_checks \"\$milter_header_checks\"
+		milter_helo_macros \"\$milter_helo_macros\"
+		milter_macro_daemon_name \"\$milter_macro_daemon_name\"
+		milter_macro_v \"\$milter_macro_v\"
+		milter_mail_macros \"\$milter_mail_macros\"
+		milter_protocol \"\$milter_protocol\"
+		milter_rcpt_macros \"\$milter_rcpt_macros\"
+		milter_unknown_command_macros \"\$milter_unknown_command_macros\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$MILTER_TITLE" "$gv_Menupoint" "$MILTER_MENU"
+	}
+	## }}}
+	conf_milter_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help milter_help
+				conf_milter_menu
+				;;
+			milter_command_timeout)
+				# = 30s
+				conf_milter_menu milter_command_timeout
+				;;
+			milter_connect_macros)
+				# = j {daemon_name} v
+				conf_milter_menu milter_connect_macros
+				;;
+			milter_connect_timeout)
+				# Timeout fuer den Aufbau der Verbindung{{{
+				# Standard = 30s
+				default_or_input milter_connect_timeout number_input '-a "$MILTER_TITLE" "$SMTP_CONNECT_TIMEOUT_MSG"' "$milter_connect_timeout"
+				if [[ -n $NUMBER ]] ; then
+					milter_connect_timeout="$NUMBER"
+					postconf -e milter_connect_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_milter_menu milter_connect_timeout
+				;;
+			milter_content_timeout)
+				# = 300s
+				conf_milter_menu milter_content_timeout
+				;;
+			milter_data_macros)
+				# = i
+				conf_milter_menu milter_data_macros
+				;;
+			milter_default_action)
+				# = tempfail
+				conf_milter_menu milter_default_action
+				;;
+			milter_end_of_data_macros)
+				# = i
+				conf_milter_menu milter_end_of_data_macros
+				;;
+			milter_end_of_header_macros)
+				# = i
+				conf_milter_menu milter_end_of_header_macros
+				;;
+			milter_header_checks)
+				# =
+				conf_milter_menu milter_header_checks
+				;;
+			milter_helo_macros)
+				# = {tls_version} {cipher} {cipher_bits} {cert_subject} {cert_issuer}
+				conf_milter_menu milter_helo_macros
+				;;
+			milter_macro_daemon_name)
+				# = $myhostname
+				conf_milter_menu milter_macro_daemon_name
+				;;
+			milter_macro_v)
+				# = $mail_name $mail_version
+				conf_milter_menu milter_macro_v
+				;;
+			milter_mail_macros)
+				# = i {auth_type} {auth_authen} {auth_author} {mail_addr} {mail_host} {mail_mailer}
+				conf_milter_menu milter_mail_macros
+				;;
+			milter_protocol)
+				# = 6
+				conf_milter_menu milter_protocol
+				;;
+			milter_rcpt_macros)
+				# = i {rcpt_addr} {rcpt_host} {rcpt_mailer}
+				conf_milter_menu milter_rcpt_macros
+				;;
+			milter_unknown_command_macros)
+				# =
+				conf_milter_menu milter_unknown_command_macros
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

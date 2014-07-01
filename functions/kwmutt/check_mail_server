@@ -1,0 +1,123 @@
+# Funktion (check_mail_server), Faehigkeiten des Servers testen# {{{
+#
+# usage: check_mail_server [ -a ] SERVER
+# -a - Authentifizierung testen
+#
+check_mail_server() {
+	unset -- Mailserver
+	# Funktion (check_auth_server)# {{{
+	#
+	check_auth_server() {
+		# Was soll an netcat uebergeben werden.
+		case "$PROT" in
+			pop*) Auth="" ;;
+			imap*)	Auth="A001 CAPABILITY" ;;
+		esac
+		# Bei smtp wird ein externes Script aufgerufen,
+		# ansonsten wird netcat benutzt.
+		# ##############################################
+		# TODO: Das Script check-smtp-auth erweitern?
+		# ##############################################
+		case "$PROT" in
+			smtp*)
+				prog_check check-smtp-auth
+				if [ -n "$PROGS" -a "$PROT" = smtp ] ; then
+					check-smtp-auth ${MAIL_HOST}:${PORT} > $gv_LogFile 2>/dev/null
+				elif [ -n "$PROGS" -a "$PROT" = smtps ] ; then
+					check-smtp-auth -s ${MAIL_HOST}:${PORT} > $gv_LogFile 2>/dev/null
+				fi
+				;;
+			imap*)
+				prog_check nc
+				if [ -n "$PROGS" ] ; then
+					print -l ${(M)$(echo "$Auth" | nc -v -w 3 $MAIL_HOST $PORT 2>/dev/null)##*AUTH*} > $gv_LogFile
+				fi
+				;;
+			*)
+				prog_check nc
+				if [ -n "$PROGS" ] ; then
+					echo "$Auth" | nc -v -w 3 $MAIL_HOST $PORT > $gv_LogFile 2>/dev/null
+				fi
+				;;
+		esac
+	}
+	## }}}
+	if [ "$#" -ge 1 ] ; then
+		case "$1" in
+			-a)
+				# AUTH Faehigkeiten des Servers testen
+				parse_mail_host "$2"
+				check_auth_server
+				# Sind die Zeilen in $gv_LogFile > 0 - einlesen der AUTH-Informationen.
+				if [[ -s $gv_LogFile ]] ; then
+					unset -- AUTHENTICATORS
+					while read a b ; do
+						case "$a" in
+							ssl)
+								###########################################
+								# TODO:
+								# Es muessen noch einige Auths aussortiert werden
+								# je nach Server (pop,imap,..)
+								# 1 = "verfuegbare AUTH-Methoden"
+								# (L) - (Flag) Gross- in Kleinschreibung umwandeln.
+								###########################################
+								case "$b" in
+									NTLM|PLAIN)	;;
+									*)	# uebernehmen
+										if [ -n "$AUTHENTICATORS" ] ; then
+											AUTHENTICATORS="${AUTHENTICATORS}:${(L)b}"
+										else
+											AUTHENTICATORS="${(L)b}"
+										fi
+										;;
+								esac
+								;;
+							plain)
+								case "$b" in
+									NTLM|PLAIN)	;;
+									*)	# uebernehmen
+										if [ -n "$AUTHENTICATORS" ] ; then
+											AUTHENTICATORS="${AUTHENTICATORS}:${(L)b}"
+										else
+											AUTHENTICATORS="${(L)b}"
+										fi
+										;;
+								esac
+								;;
+							AUTH*)
+								case "$a" in
+									*=NTLM|*=PLAIN)	;;
+									*)	# uebernehmen
+										if [ -n "$AUTHENTICATORS" ] ; then
+											AUTHENTICATORS="${AUTHENTICATORS}:${(L)a#*=}"
+										else
+											AUTHENTICATORS="${(L)a#*=}"
+										fi
+										;;
+								esac
+								;;
+						esac
+					done < $gv_LogFile
+				else
+					# Login mit plain login belegen, da keine AUTH-Informationen vorliegen
+					MSG=$(gettext 'Konnte keine Authentifizierungs-Methoden herausfinden. Vielleicht falsche Port- oder Rechnerangabe?\n\nAls Authentifizierungs-Methode wird login eingestellt.')
+					msgbox "$gv_Info" "$MSG"
+					AUTHENTICATORS=login
+				fi
+				;;
+			*)
+				parse_mail_host "$1"
+				if [ -n "$MAIL_HOST" ] ; then
+					Mailserver="$MAIL_HOST"
+				fi
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

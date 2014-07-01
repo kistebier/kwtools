@@ -1,0 +1,117 @@
+# Was fuer eine Art Cache soll eingerichtet werden.{{{
+#
+# benoetigt die Funktion dns_check
+#
+# usage: dnscache_conf
+#
+dnscache_conf() {
+	# Programme pruefen und wenn nicht vorhanden beziehungsweise
+	# ausfuehrbar abbrechen.
+	prog_check dnscache-conf
+	if [[ -n $NO_PROGS ]] ; then
+		break
+	fi
+	#################################################
+	#
+	# Es fehlt noch ne Anzeige wo was in die resolv.conf 
+	# eingetragen wird.
+	#
+	####################################################
+	DNSCACHE_TITLE=(${gv_Configuration}::${lv_Dnscache})
+	REMOTE_DNS_MSG=$(gettext 'Geben Sie bitte die IP-Adresse des entfernten DNS-Servers an, (z.B. 192.168.0.1).')
+	# Funktion dnscache_conf_menue{{{
+	lv_Cache=$(gettext 'Cache')
+	lv_External=$(gettext 'external')
+	lv_External_Forward=$(gettext 'external_forwarding')
+	lv_Forward=$(gettext 'forwarding')
+	lv_Ws=$(gettext 'Workstation')
+	DNSCACHE_MENU=($lv_External $lv_Cache $lv_External_Forward $lv_Cache
+	$lv_Forward $lv_Cache $lv_Ws $lv_Cache $gv_Back \"\")
+	dnscache_conf_menue() {
+		menubox "" "$DNSCACHE_TITLE" "$gv_Menupoint" "$DNSCACHE_MENU"
+	}
+	#}}}
+	dnscache_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfe zu dnscache
+				script_help dnscache_help
+				dnscache_conf_menue
+				;;
+			$lv_External)
+				# Erstellung eines Externen DNS Cache
+				inputbox "$DNSCACHE_TITLE" "$IP_LOCAL_MSG"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					if [[ -n $gv_Ip_Adr ]] ; then
+						${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr &>/dev/null
+						ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+						ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+						ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+						dns_status
+					fi
+				else
+					no_input_msg
+				fi
+				break
+				;;
+			$lv_External_Forward)
+				# Erstellung eines Externen forwarding DNS Cache
+				inputbox "$DNSCACHE_TITLE" "$REMOTE_DNS_MSG"
+				if [ -n "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					# In diesem Fall braucht dns_conf eine IP Adresse
+					if [[ -n $gv_Ip_Adr ]] ; then
+						${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr &>/dev/null
+						echo "$gv_Ip_Adr" >${SV_DIR}/${DNS}/root/servers/@
+						echo 1 >${SV_DIR}/${DNS}/env/FORWARDONLY
+						ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+						ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+						ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+						dns_status
+					fi
+				else
+					no_input_msg
+				fi
+				break
+				;;
+			$lv_Forward)
+				# Erstellung eines forwarding DNS Cache
+				inputbox "$DNSCACHE_TITLE" "$REMOTE_DNS_MSG"
+				if [ -n "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					if [[ -n $gv_Ip_Adr ]] ; then
+						${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} &>/dev/null
+						echo "$gv_Ip_Adr" >${SV_DIR}/${DNS}/root/servers/@
+						echo 1 >${SV_DIR}/${DNS}/env/FORWARDONLY
+						ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+						ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+						ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+						dns_status
+					fi
+				else
+					no_input_msg
+				fi
+				break
+				;;
+			$lv_Ws)
+				# Erstellung eines Workstation DNS Cache
+				H_IP="127.0.0.1"
+				${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} &>/dev/null
+				ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+				ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+				ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+				dns_status
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

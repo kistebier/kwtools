@@ -1,0 +1,83 @@
+# Funktion wvdial_config# {{{
+#
+# usage: wvdial_config [ -c | -d | -i ] $DIAL_CONF_CHAPTER
+# -c - change Konfigurationsabschnitt
+# -d - delete Konfigurationsabschnitt
+# -i - create Konfigurationsabschnitt
+#
+wvdial_config() {
+	if [ "$#" -eq 2 ] ; then
+		case "$1" in
+			-d)
+				# loeschen# {{{
+				DIAL_CONF_CHAPTER="${${2/\[/\\[}/\]/\\]}"
+				awk '/^\[Dialer/{if(/'"${DIAL_CONF_CHAPTER}"'/){found=1}else{found=0}}
+					{if(!found){print}}
+					END{print ""}' "$WVDIAL_CONF" >${gv_WorkDir}/new_conf
+                mv ${gv_WorkDir}/new_conf "$WVDIAL_CONF"
+				## }}}
+				;;
+			-i)
+				# neue Konfiguration anlegen# {{{
+				DIAL_CONF_CHAPTER="$2"
+				if [ -n "$INIT" -a -n "$PHONE" -a -n "$MODEM" ] ; then
+					if [ -n "$DIAL_CONF_CHAPTER" ] ; then
+						# addieren
+						>> "$WVDIAL_CONF" <<< "
+[Dialer $DIAL_CONF_CHAPTER]
+Modem = $MODEM
+Baud = $SPEED
+Init = $INIT
+Init1 = $INIT1
+Init2 = $INIT2
+Init3 = $INIT3
+Phone = $PHONE
+Username = $USER_NAME
+Password = $PASS"
+					else
+						MSG=$(gettext 'Es ist kein Konfigurationsabschnitt eingegeben worden.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Init, Modem und Telefon mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				## }}}
+				;;
+			-c)
+				# Konfiguration veraendern# {{{
+				DIAL_CONF_CHAPTER="${${2/\[/\\[}/\]/\\]}"
+				if [ -n "$INIT" -a -n "$PHONE" -a -n "$MODEM" ] ; then
+					if [ -n "$DIAL_CONF_CHAPTER" ] ; then
+						awk '/^\[Dialer/{if(/'"$DIAL_CONF_CHAPTER"'/){found=1}else{found=0}}
+                {if(!found){print}}END{print "'"$2"'\n\
+Modem = '"$MODEM"'\n\
+Baud = '"$SPEED"'\n\
+Init = '"$INIT"'\n\
+Init1 = '"$INIT1"'\n\
+Init2 = '"$INIT2"'\n\
+Init3 = '"$INIT3"'\n\
+Phone = '"$PHONE"'\n\
+Username = '"$USER_NAME"'\n\
+Password = '"$PASS"'"}' "$WVDIAL_CONF" >${gv_WorkDir}/new_config
+						mv ${gv_WorkDir}/new_config "$WVDIAL_CONF"
+					else
+						MSG=$(gettext 'Es ist kein Konfigurationsabschnitt ausgewaehlt worden.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Init, Modem und Telefon mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				## }}}
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

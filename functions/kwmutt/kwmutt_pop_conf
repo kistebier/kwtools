@@ -1,0 +1,107 @@
+# Funktion (kwmutt_pop_conf), konfiguriert POP fuer mutt# {{{
+#
+# usage: kwmutt_pop_conf
+kwmutt_pop_conf() {
+	Unset=(pop_auth_try_all pop_delete pop_last pop_reconnect)
+	unset -- $Unset
+	# Funktion (pop_conf_menu), menu fuer die POP Konfiguration# {{{
+	POP_TITLE="$lv_Pop"
+	pop_conf_menu() {
+		POP_CONF_MENU=(pop_auth_try_all \"$pop_auth_try_all\"
+		pop_delete \"$pop_delete\"
+		pop_last \"$pop_last\"
+		pop_reconnect \"$pop_reconnect\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$POP_TITLE" "$gv_Menupoint" "$POP_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_POP" ] ; then
+		create_tmp_conf "$M_POP"
+		read_file -f $gv_LogFile
+		mailboxes=${(R)${(M)${(f)"$(< $gv_LogFile)"}##mailboxes*}##mailboxes[[:space:]]}
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	pop_auth_try_all="${pop_auth_try_all:-yes}"
+	pop_delete="${pop_delete:-ask-no}"
+	pop_last="${pop_last:-no}"
+	pop_reconnect="${pop_reconnect:-ask-yes}"
+	## }}}
+	pop_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_pop_help
+				pop_conf_menu
+				;;
+			pop_auth_try_all)
+				# Sollen alle verfuegbaren Authentifizierungs Methoden versucht werden (yes/no)?# {{{
+				MSG=$(gettext 'Sollen alle verfuegbaren Authentifizierungs Methoden versucht werden (ja/nein)?')
+				yesno "$POP_TITLE" "$MSG" "$pop_auth_try_all"
+				if [ "$gv_Auswahl" = yes ] ; then
+					pop_auth_try_all="yes"
+				else
+					pop_auth_try_all="no"
+				fi
+				## }}}
+				pop_conf_menu pop_auth_try_all
+				;;
+			pop_delete)
+				# Soll nachdem downloaden der Nachricht nachgefragt werden,# {{{
+				# ob die email auf dem POP Server geloescht werden soll?.
+				MSG=$(gettext 'Soll nachdem downloaden der Nachricht nachgefragt werden, ob die email auf dem POP Server geloescht werden soll?')
+				yesno_select "$POP_TITLE" "$MSG" "$pop_delete"
+				if [ -n "$VALUE" ] ; then
+					pop_delete="$VALUE"
+				else
+					pop_delete="ask-no"
+				fi
+				## }}}
+				pop_conf_menu pop_delete
+				;;
+			pop_last)
+				# Soll das "LAST" POP Kommando zum bergen von ungelesenen mails# {{{
+				# benutzt werden (ja/nein)?
+				MSG=$(gettext 'Soll das "LAST" POP Kommando zum abholen (fetch-mail) von ungelesenen mails benutzt werden (ja/nein)?')
+				yesno_select "$POP_TITLE" "$MSG"
+				if [ "$?" = 0 ] ; then
+					pop_last="yes"
+				else
+					pop_last="no"
+				fi
+				## }}}
+				pop_conf_menu pop_last
+				;;
+			pop_reconnect)
+				# Soll beim Verlust der Verbindung zum POP Server versucht werden# {{{
+				# diese wieder aufzubauen? 
+				MSG=$(gettext 'Soll beim Verlust der Verbindung zum POP Server versucht werden diese wieder aufzubauen?')
+				yesno_select "$POP_TITLE" "$MSG" "$pop_reconnect"
+				if [ -n "$VALUE" ] ; then
+					pop_reconnect="$VALUE"
+				else
+					pop_reconnect="ask-yes"
+				fi
+				## }}}
+				pop_conf_menu pop_reconnect
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_pop_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,1203 @@
+# Hauptkonfiguration{{{
+# Funktion main_conf
+#
+main_conf() {
+	autoload -U netcard
+	netcard
+	#
+	# Hauptkonfiguration einlesen.
+	#
+	read_file -f $MAIN_NARC_CONF
+	TCP_PROBE_MSG=$(gettext 'Geben Sie hier die TCP Ports ein, durch ein Komma getrennt, die erlaubt werden sollen (Bsp. 80,443 - www,https).')
+	UDP_PROBE_MSG=$(gettext 'Geben Sie hier die UDP Ports ein, durch ein Komma getrennt, die erlaubt werden sollen (Bsp. 53,22 - domain,ssh).')
+	# Funktion (check_range), prueft die Zeichen der Eingabe# {{{
+	#
+	# usage: check_range $RANGE
+	check_range() {
+		if [ "$#" -ge 1 ] ; then
+			unset -- RANGE VALUE
+			integer Anz
+			local VALUE
+			Anz=0
+			VALUE="$1"
+			for i in $VALUE ; {
+				case "$i" in
+					*[^a-z,A-Z,üäöÜÄÖ\\\&%/\*\?§\(\)._-\[\]\"\',\;:\`#!+]*:*[^a-z,A-Z,üäöÜÄÖ\\\&%/\*\?§\(\)._-\[\]\"\',\;:\`#!+]*)
+						(( Anz++ ))
+						RANGE[Anz]="$i"
+					;;
+					*[^a-z,A-Z,üäöÜÄÖ\\\&%/\*\?§\(\)._-\[\]\"\',\;:\`#!+]*)
+						(( Anz++ ))
+						RANGE[Anz]="$i"
+					;;
+					*)	no_allow_value_msg "$i"
+					;;
+				esac
+			}
+		fi
+	}
+	## }}}
+	# Funktion no_allow_value_msg{{{
+	no_allow_value_msg() {
+		if [ "$#" = 1 ] ; then
+			MSG=$(gettext 'Der Wert ($1) ist falsch und wird nicht benutzt.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion only_15ports_msg{{{
+	only_15ports_msg() {
+		MSG=$(gettext 'Es duerfen nur 15 Ports pro Zeile eingegeben werden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion main_conf_menue{{{
+	#
+	lv_IPTABLES=$(gettext 'IPTABLES')
+	lv_START_IPTABLES=$(gettext 'START_IPTABLES')
+	lv_LOAD_MODULES=$(gettext 'LOAD_MODULES')
+	lv_ACCEPT_SOURCE_ROUTE=$(gettext 'ACCEPT_SOURCE_ROUTE')
+	lv_ALLOW_ICMP_MESSAGE=$(gettext 'ALLOW_ICMP_MESSAGE')
+	lv_ALLOW_TCP_DMZ=$(gettext 'ALLOW_TCP_DMZ')
+	lv_ALLOW_TCP_DMZ_RANGE=$(gettext 'ALLOW_TCP_DMZ_RANGE')
+	lv_ALLOW_UDP_DMZ=$(gettext 'ALLOW_UDP_DMZ')
+	lv_ALLOW_UDP_DMZ_RANGE=$(gettext 'ALLOW_UDP_DMZ_RANGE')
+	lv_ALLOW_TCP_EXT=$(gettext 'ALLOW_TCP_EXT')
+	lv_ALLOW_TCP_EXT_RANGE=$(gettext 'ALLOW_TCP_EXT_RANGE')
+	lv_ALLOW_UDP_EXT=$(gettext 'ALLOW_UDP_EXT')
+	lv_ALLOW_UDP_EXT_RANGE=$(gettext 'ALLOW_UDP_EXT_RANGE')
+	lv_ALLOW_TCP_LAN=$(gettext 'ALLOW_TCP_LAN')
+	lv_ALLOW_TCP_LAN_RANGE=$(gettext 'ALLOW_TCP_LAN_RANGE')
+	lv_ALLOW_UDP_LAN=$(gettext 'ALLOW_UDP_LAN')
+	lv_ALLOW_UDP_LAN_RANGE=$(gettext 'ALLOW_UDP_LAN_RANGE')
+	lv_ALWAYS_FORWARD=$(gettext 'ALWAYS_FORWARD')
+	lv_ANSWER_PING=$(gettext 'ANSWER_PING')
+	lv_ANSWER_TRACEROUTE=$(gettext 'ANSWER_TRACEROUTE')
+	lv_ANTI_SMURF=$(gettext 'ANTI_SMURF')
+	lv_BIND_IP=$(gettext 'BIND_IP')
+	lv_BROADCAST_NETWORKS=$(gettext 'BROADCAST_NETWORKS')
+	lv_CHECK_SYN_PACKET_LENGTH=$(gettext 'CHECK_SYN_PACKET_LENGTH')
+	lv_CUSTOM_SCRIPT=$(gettext 'CUSTOM_SCRIPT')
+	lv_DMZ_INTERFACE=$(gettext 'DMZ_INTERFACE')
+	lv_DROP_BROADCASTS=$(gettext 'DROP_BROADCASTS')
+	lv_DROP_UNCLEAN_PACKETS=$(gettext 'DROP_UNCLEAN_PACKETS')
+	lv_DYNAMIC_EXTERNAL_IP=$(gettext 'DYNAMIC_EXTERNAL_IP')
+	lv_ENABLE_IPLIMIT=$(gettext 'ENABLE_IPLIMIT')
+	lv_ENABLE_LIMIT_RATE=$(gettext 'ENABLE_LIMIT_RATE')
+	lv_ENABLE_TCP_ECN=$(gettext 'ENABLE_TCP_ECN')
+	lv_EXECUTE_CUSTOM_SCRIPT=$(gettext 'EXECUTE_CUSTOM_SCRIPT')
+	lv_EXTERNAL_INTERFACE=$(gettext 'EXTERNAL_INTERFACE')
+	lv_EXTERNAL_INTERFACE_IP=$(gettext 'EXTERNAL_INTERFACE_IP')
+	lv_FINSCAN=$(gettext 'FINSCAN')
+	lv_FORWARD_LAN_TO_DMZ=$(gettext 'FORWARD_LAN_TO_DMZ')
+	lv_ILLEGAL_TCP_FLAGS=$(gettext 'ILLEGAL_TCP_FLAGS')
+	lv_INGRESS_FILTER=$(gettext 'INGRESS_FILTER')
+	lv_IPLIMIT_MAX_ACCEPT=$(gettext 'IPLIMIT_MAX_ACCEPT')
+	lv_IPLIMIT_NETMASK=$(gettext 'IPLIMIT_NETMASK')
+	lv_LAN_INTERFACE=$(gettext 'LAN_INTERFACE')
+	lv_LIMIT_BURST=$(gettext 'LIMIT_BURST')
+	lv_LIMIT_RATE=$(gettext 'LIMIT_RATE')
+	lv_LOG_MARTIANS=$(gettext 'LOG_MARTIANS')
+	lv_LOOPBACK_ACCEPT=$(gettext 'LOOPBACK_ACCEPT')
+	lv_LOOPBACK_MODE=$(gettext 'LOOPBACK_MODE')
+	lv_MASQUERADE=$(gettext 'MASQUERADE')
+	lv_NAT_MODULES=$(gettext 'NAT_MODULES')
+	lv_NULLSCAN=$(gettext 'NULLSCAN')
+	lv_PACKET_LENGTH=$(gettext 'PACKET_LENGTH')
+	lv_PORT_FORWARD=$(gettext 'PORT_FORWARD')
+	lv_PRELOAD_IP_MODULES=$(gettext 'PRELOAD_IP_MODULES')
+	lv_PRIVATE_NETWORKS=$(gettext 'PRIVATE_NETWORKS')
+	lv_PROTECT_FROM_DMZ=$(gettext 'PROTECT_FROM_DMZ')
+	lv_PROTECT_FROM_LAN=$(gettext 'PROTECT_FROM_LAN')
+	lv_RESERVED_NETWORKS=$(gettext 'RESERVED_NETWORKS')
+	lv_SYNCOOKIES=$(gettext 'SYNCOOKIES')
+	lv_TCP_PROBE=$(gettext 'TCP_PROBE')
+	lv_TCP_PROBE2=$(gettext 'TCP_PROBE2')
+	lv_UDP_PROBE=$(gettext 'UDP_PROBE')
+	lv_UDP_PROBE2=$(gettext 'UDP_PROBE2')
+	lv_XMASSCAN=$(gettext 'XMASSCAN')
+	MAIN_CONF_TITLE=($lv_Main_Conf)
+	main_conf_menue() {
+		MAIN_CONF_MENU=(IPTABLES \"$IPTABLES\" START_IPTABLES \"$START_IPTABLES\"
+		LOAD_MODULES \"$LOAD_MODULES\" ACCEPT_SOURCE_ROUTE \"$ACCEPT_SOURCE_ROUTE\"
+		ALLOW_ICMP_MESSAGE \"$ALLOW_ICMP_MESSAGE\" ALLOW_TCP_DMZ \"$ALLOW_TCP_DMZ\"
+		ALLOW_TCP_DMZ_RANGE \"$ALLOW_TCP_DMZ_RANGE\" ALLOW_UDP_DMZ \"$ALLOW_UDP_DMZ\"
+		ALLOW_UDP_DMZ_RANGE \"$ALLOW_UDP_DMZ_RANGE\" ALLOW_TCP_EXT \"$ALLOW_TCP_EXT\"
+		ALLOW_TCP_EXT_RANGE \"$ALLOW_TCP_EXT_RANGE\" ALLOW_UDP_EXT \"$ALLOW_UDP_EXT\"
+		ALLOW_UDP_EXT_RANGE \"$ALLOW_UDP_EXT_RANGE\" ALLOW_TCP_LAN \"$ALLOW_TCP_LAN\"
+		ALLOW_TCP_LAN_RANGE \"$ALLOW_TCP_LAN_RANGE\" ALLOW_UDP_LAN \"$ALLOW_UDP_LAN\"
+		ALLOW_UDP_LAN_RANGE \"$ALLOW_UDP_LAN_RANGE\" ALWAYS_FORWARD \"$ALWAYS_FORWARD\"
+		ANSWER_PING \"$ANSWER_PING\" ANSWER_TRACEROUTE \"$ANSWER_TRACEROUTE\"
+		ANTI_SMURF \"$ANTI_SMURF\" BIND_IP \"$BIND_IP\"
+		BROADCAST_NETWORKS \"$BROADCAST_NETWORKS\"
+		CHECK_SYN_PACKET_LENGTH \"$CHECK_SYN_PACKET_LENGTH\" CUSTOM_SCRIPT \"$CUSTOM_SCRIPT\"
+		DMZ_INTERFACE \"$DMZ_INTERFACE\" DROP_BROADCASTS \"$DROP_BROADCASTS\"
+		DROP_UNCLEAN_PACKETS \"$DROP_UNCLEAN_PACKETS\"
+		DYNAMIC_EXTERNAL_IP \"$DYNAMIC_EXTERNAL_IP\" ENABLE_IPLIMIT \"$ENABLE_IPLIMIT\"
+		ENABLE_LIMIT_RATE \"$ENABLE_LIMIT_RATE\" ENABLE_TCP_ECN \"$ENABLE_TCP_ECN\"
+		EXECUTE_CUSTOM_SCRIPT \"$EXECUTE_CUSTOM_SCRIPT\"
+		EXTERNAL_INTERFACE \"$EXTERNAL_INTERFACE\"
+		EXTERNAL_INTERFACE_IP \"$EXTERNAL_INTERFACE_IP\" FINSCAN \"$FINSCAN\"
+		FORWARD_LAN_TO_DMZ \"$FORWARD_LAN_TO_DMZ\" ILLEGAL_TCP_FLAGS \"$ILLEGAL_TCP_FLAGS\"
+		INGRESS_FILTER \"$INGRESS_FILTER\" IPLIMIT_MAX_ACCEPT \"$IPLIMIT_MAX_ACCEPT\"
+		IPLIMIT_NETMASK \"$IPLIMIT_NETMASK\" LAN_INTERFACE \"$LAN_INTERFACE\"
+		LIMIT_BURST \"$LIMIT_BURST\" LIMIT_RATE \"$LIMIT_RATE\" LOG_MARTIANS \"$LOG_MARTIANS\"
+		LOOPBACK_ACCEPT \"$LOOPBACK_ACCEPT\" LOOPBACK_MODE \"$LOOPBACK_MODE\"
+		MASQUERADE \"$MASQUERADE\" NAT_MODULES \"$NAT_MODULES\" NULLSCAN \"$NULLSCAN\"
+		PACKET_LENGTH \"$PACKET_LENGTH\" PORT_FORWARD \"$PORT_FORWARD\"
+		PRELOAD_IP_MODULES \"$PRELOAD_IP_MODULES\" PRIVATE_NETWORKS \"$PRIVATE_NETWORKS\"
+		PROTECT_FROM_DMZ \"$PROTECT_FROM_DMZ\" PROTECT_FROM_LAN \"$PROTECT_FROM_LAN\"
+		RESERVED_NETWORKS \"$RESERVED_NETWORKS\" SYNCOOKIES \"$SYNCOOKIES\"
+		TCP_PROBE \"$TCP_PROBE\" TCP_PROBE2 \"$TCP_PROBE2\" UDP_PROBE \"$UDP_PROBE\"
+		UDP_PROBE2 \"$UDP_PROBE2\" XMASSCAN \"$XMASSCAN\" "$gv_Save" \"\" "$gv_Back" \"\")
+		menubox "$1" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$MAIN_CONF_MENU"
+	}
+	#}}}
+	main_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help main_conf_help
+				main_conf_menue
+				;;
+			$lv_IPTABLES)
+				# ip(6)tables Programm{{{
+				FORMAT="ELF"
+				file_choice /sbin only $IPTABLES
+				if [ -n "$WERT" ] ; then
+					IPTABLES="${VERZ}/${WERT}"
+				fi
+				#}}}
+				main_conf_menue $lv_IPTABLES
+				;;
+			$lv_START_IPTABLES)
+				# iptables starten (yes/no){{{
+				MSG=$(gettext 'Soll die Firewall (iptables) beim booten gestartet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$START_IPTABLES"
+				if [ "$gv_Auswahl" = yes ] ; then
+					START_IPTABLES=yes
+				else
+					START_IPTABLES=no
+				fi
+				#}}}
+				main_conf_menue $lv_START_IPTABLES
+				;;
+			$lv_LOAD_MODULES)
+				# Netfilter Module laden?{{{
+				MSG=$(gettext 'Sollen Netfilter Kernel Module geladen werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$LOAD_MODULES"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOAD_MODULES=yes
+				else
+					LOAD_MODULES=no
+				fi
+				#}}}
+				main_conf_menue $lv_LOAD_MODULES
+				;;
+			$lv_ACCEPT_SOURCE_ROUTE)
+				# accept_source_route einschalten{{{
+				# (Kernel_option yes/no)?
+				MSG=$(gettext 'Soll die Kerneloption ACCEPT_SOURCE_ROUTE eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ACCEPT_SOURCE_ROUTE"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ACCEPT_SOURCE_ROUTE=yes
+				else
+					ACCEPT_SOURCE_ROUTE=no
+				fi
+				#}}}
+				main_conf_menue $lv_ACCEPT_SOURCE_ROUTE
+				;;
+			$lv_ALLOW_ICMP_MESSAGE)
+				# Auswahl von ICMP Nachrtichten die erlaubt werden sollen{{{
+				VALID_ICMP=no
+				typeset -a WERT
+				Anz=0
+				$IPTABLES -p icmp -h | while read a ; do
+					case $a in [a-zA-Z]*)
+						if [ "$a" = "Valid ICMP Types:" ] ; then
+							VALID_ICMP=yes
+							continue
+						fi
+						if [ "$VALID_ICMP" = yes ] ; then
+							(( Anz++ ))
+							if [ "`print ${(M)${ALLOW_ICMP_MESSAGE}##*"${a% *}"*}`" ] ; then
+								WERT[Anz]="\"$a\" \"\" on"
+							else
+								WERT[Anz]="\"$a\" \"\" off"
+							fi
+						fi
+						;;
+					esac
+				done
+				#
+				if [ "$WERT" ] ; then
+					ICMP_MSG=$(gettext 'Waehlen Sie hier die ICMP Nachrichten aus, die erlaubt werden sollen.')
+					checklist "$MAIN_CONF_TITLE" "$ICMP_MSG" "$WERT"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help allow_icmp_messages_help
+								checklist "$MAIN_CONF_TITLE" "$ICMP_MSG" "$WERT"
+								;;
+							*)	ALLOW_ICMP_MESSAGE="${gv_Auswahl//\\ \\\(*\) / }"
+								break
+								;;
+						esac
+					done
+				else
+					MSG=$(gettext 'Es sind keine ICMP Nachrichten vorhanden (?).')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_ICMP_MESSAGE
+				;;
+			$lv_ALLOW_TCP_DMZ)
+				# 15 TCP Ports pro Zeile die zur DMZ erlaubt,{{{
+				# werden sollen.
+				ALLOW_TCP_DMZ_OLD="$ALLOW_TCP_DMZ"
+				MSG=$(gettext 'Geben Sie hier die TCP Ports ein, durch ein Komma getrennt, die von der DMZ erlaubt werden sollen (Bsp. 80,443).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_DMZ"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_TCP_DMZ="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_TCP_DMZ="$ALLOW_TCP_DMZ_OLD"
+					fi
+				else
+					ALLOW_TCP_DMZ=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_DMZ
+				;;
+			$lv_ALLOW_TCP_DMZ_RANGE)
+				# TCP Ports/Bereiche die in die DMZ{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_TCP_DMZ_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne TCP Ports ein, getrennt durch ein Leerzeichen, die von der DMZ erlaubt werden sollen (Bsp. 6000:6010 53).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_DMZ_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_TCP_DMZ_RANGE="$RANGE"
+				else
+					ALLOW_TCP_DMZ_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_DMZ_RANGE
+				;;
+			$lv_ALLOW_UDP_DMZ)
+				# 15 UDP Ports pro Zeile die zur DMZ erlaubt,{{{
+				# werden sollen.
+				ALLOW_UDP_DMZ_OLD="$ALLOW_UDP_DMZ"
+				MSG=$(gettext 'Geben Sie hier die UDP Ports ein, durch ein Komma getrennt, die von der DMZ erlaubt werden sollen (Bsp. 53,22).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_DMZ"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_UDP_DMZ="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_UDP_DMZ="$ALLOW_UDP_DMZ_OLD"
+					fi
+				else
+					ALLOW_UDP_DMZ=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_DMZ
+				;;
+			$lv_ALLOW_UDP_DMZ_RANGE)
+				# UDP Ports/Bereiche die in die DMZ{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_UDP_DMZ_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne UDP Ports ein, getrennt durch ein Leerzeichen, die von der DMZ erlaubt werden sollen (Bsp. 6000:6010 53).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_DMZ_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_UDP_DMZ_RANGE="$RANGE"
+				else
+					ALLOW_UDP_DMZ_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_DMZ_RANGE
+				;;
+			$lv_ALLOW_TCP_EXT)
+				# 15 TCP Ports pro Zeile die ans externe Interface,{{{
+				# weitergeleitet werden sollen.
+				ALLOW_TCP_EXT_OLD="$ALLOW_TCP_EXT"
+				MSG=$(gettext 'Geben Sie hier die TCP Ports ein, getrennt durch ein Komma, die vom externen Interface empfangen werden sollen (Bsp. 80,443).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_EXT"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_TCP_EXT="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_TCP_EXT="$ALLOW_TCP_EXT_OLD"
+					fi
+				else
+					ALLOW_TCP_EXT=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_EXT
+				;;
+			$lv_ALLOW_TCP_EXT_RANGE)
+				# TCP Ports/Bereiche die vom externen Interface,{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_TCP_EXT_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne TCP Ports ein, getrennt durch ein Leerzeichen, die vom externen Interface empfangen werden sollen (Bsp. 6000:6010 3128).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_EXT_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_TCP_EXT_RANGE="$RANGE"
+				else
+					ALLOW_TCP_EXT_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_EXT_RANGE
+				;;
+			$lv_ALLOW_UDP_EXT)
+				# 15 UDP Ports pro Zeile die ans externe Interfaces,{{{
+				# weitergeleitet werden sollen.
+				ALLOW_UDP_EXT_OLD="$ALLOW_UDP_EXT"
+				MSG=$(gettext 'Geben Sie hier die UDP Ports ein, getrennt durch ein Komma, die vom externen Interface empfangen werden sollen (Bsp. 53,22).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_EXT"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_UDP_EXT="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_UDP_EXT="$ALLOW_UDP_EXT"
+					fi
+				else
+					ALLOW_UDP_EXT=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_EXT
+				;;
+			$lv_ALLOW_UDP_EXT_RANGE)
+				# UDP Ports/Bereiche die vom externen Interface,{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_UDP_EXT_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne UDP Ports ein, getrennt durch ein Leerzeichen, die vom externen Interface empfangen werden sollen (Bsp. 53,22).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_EXT_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_UDP_EXT_RANGE="$RANGE"
+				else
+					ALLOW_UDP_EXT_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_EXT_RANGE
+				;;
+			$lv_ALLOW_TCP_LAN)
+				# 15 TCP Ports pro Zeile die ins LAN erlaubt{{{
+				# werden sollen.
+				ALLOW_TCP_LAN_OLD="$ALLOW_TCP_LAN"
+				MSG=$(gettext 'Geben Sie hier die TCP Ports ein, durch ein Komma getrennt, die vom LAN erlaubt werden sollen (Bsp. 80,443).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_LAN"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_TCP_LAN="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_TCP_LAN="$ALLOW_TCP_LAN_OLD"
+					fi
+				else
+					ALLOW_TCP_LAN=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_LAN
+				;;
+			$lv_ALLOW_TCP_LAN_RANGE)
+				# TCP Ports/Bereiche die ins LAN{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_TCP_LAN_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne TCP Ports ein, getrennt durch ein Leerzeichen, die vom LAN erlaubt werden sollen (Bsp. 6000:6010 3128).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_TCP_LAN_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_TCP_LAN_RANGE="$RANGE"
+				else
+					ALLOW_TCP_LAN_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_TCP_LAN_RANGE
+				;;
+			$lv_ALLOW_UDP_LAN)
+				# 15 UDP Ports pro Zeile die ins LAN erlaubt{{{
+				# werden sollen.
+				ALLOW_UDP_LAN_OLD="$ALLOW_UDP_LAN"
+				MSG=$(gettext 'Geben Sie hier die UDP Ports ein, durch ein Komma getrennt, die vom LAN erlaubt werden sollen (Bsp. 53,22).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_LAN"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						ALLOW_UDP_LAN="$gv_Auswahl"
+					else
+						only_15ports_msg
+						ALLOW_UDP_LAN="$ALLOW_UDP_LAN"
+					fi
+				else
+					ALLOW_UDP_LAN=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_LAN
+				;;
+			$lv_ALLOW_UDP_LAN_RANGE)
+				# UDP Ports/Bereiche die ins LAN{{{
+				# erlaubt werden sollen.
+				typeset -a ALLOW_UDP_LAN_RANGE
+				MSG=$(gettext 'Geben Sie hier Bereiche oder einzelne UDP Ports ein, getrennt durch ein Leerzeichen, die vom LAN erlaubt werden sollen (Bsp. 6000:6010 53).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ALLOW_UDP_LAN_RANGE"
+				# Eingabe pruefen
+				if [ "$gv_Auswahl" ] ; then
+					check_range $gv_Auswahl
+				fi
+				# Eingabe evtl. uebernehmen
+				if [ -n "$RANGE" ] ; then
+					ALLOW_UDP_LAN_RANGE="$RANGE"
+				else
+					ALLOW_UDP_LAN_RANGE=""
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_UDP_LAN_RANGE
+				;;
+			$lv_ALWAYS_FORWARD)
+				# Sollen Ports immer weitergeleitet werden (yes/no)?{{{
+				MSG=$(gettext 'Sollen Ports immer weitergeleitet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ALWAYS_FORWARD"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ALWAYS_FORWARD=yes
+				else
+					ALWAYS_FORWARD=no
+				fi
+				#}}}
+				main_conf_menue $lv_ALWAYS_FORWARD
+				;;
+			$lv_ANSWER_PING)
+				# Auf Ping antworten (yes/no), Wenn traceroute von Windows{{{
+				# Rechnern eingeschaltet werden soll muss ANSWER_PING
+				# auf yes stehen
+				MSG=$(gettext 'Auf Ping antworten (ja/nein)? Wenn traceroute von Windows Rechnern eingeschaltet werden soll muss "ANSWER_PING" auf ja stehen.')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ANSWER_PING"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ANSWER_PING=yes
+				else
+					ANSWER_PING=no
+				fi
+				#}}}
+				main_conf_menue $lv_ANSWER_PING
+				;;
+			$lv_ANSWER_TRACEROUTE)
+				# Auf Traceroute Anfragen antworten (yes/no){{{
+				MSG=$(gettext 'Soll auf Traceroute Anfragen geantwortet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ANSWER_TRACEROUTE"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ANSWER_TRACEROUTE=yes
+				else
+					ANSWER_TRACEROUTE=no
+				fi
+				#}}}
+				main_conf_menue $lv_ANSWER_TRACEROUTE
+				;;
+			$lv_ANTI_SMURF)
+				# ANTI_SMURF einschalten (Kernel_option yes/no)?{{{
+				MSG=$(gettext 'Soll die Kerneloption "ANTI_SMURF" eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ANTI_SMURF"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ANTI_SMURF=yes
+				else
+					ANTI_SMURF=no
+				fi
+				#}}}
+				main_conf_menue $lv_ANTI_SMURF
+				;;
+			$lv_AUTH_REJECT)
+				# AUTH_REJECT einschalten (yes/no)?{{{
+				MSG=$(gettext 'Sollen Anfragen auf den Auth Port mit einem REJECT beantwortet werden (ja/nein)? Bei nein werden die Anfragen verworfen.')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$AUTH_REJECT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					AUTH_REJECT=yes
+				else
+					AUTH_REJECT=no
+				fi
+				#}}}
+				main_conf_menue $lv_AUTH_REJECT
+				;;
+			$lv_BIND_IP)
+				# Bind IP auswaehlen{{{
+				typeset -a BIND_IP
+				MSG=$(gettext 'Geben Sie hier ein oder mehrere IP Adressen der lokalen Rechner ein, von denen DNS Server kontaktet werden duerfen (Bsp. 192.168.0.5).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$BIND_IP"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse $gv_Auswahl
+					if [ "$gv_Ip_Adr" ] ; then
+						BIND_IP="$gv_Ip_Adr"
+					else
+						BIND_IP=""
+					fi
+				else
+					BIND_IP=""
+				fi
+				#}}}
+				main_conf_menue $lv_BIND_IP
+				;;
+			$lv_BROADCAST_NETWORKS)
+				# Aus welchen Netzen sollen Broadcast Anfragen{{{
+				# weggeschmissen werden?
+				MSG=$(gettext 'Geben Sie hier Netzmasken ein von denen Broadcast Anfragen verworfen werden sollen (Bsp. 0.0.0.0/8 255.255.255.255).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$BROADCAST_NETWORKS"
+				if [ "$gv_Auswahl" ] ; then
+					BROADCAST_NETWORKS="$gv_Auswahl"
+				else
+					BROADCAST_NETWORKS=""
+				fi
+				#}}}
+				main_conf_menue $lv_BROADCAST_NETWORKS
+				;;
+			$lv_CHECK_SYN_PACKET_LENGTH)
+				# Soll die SYN Paketlaenge gecheckt werden (yes/no)?{{{
+				MSG=$(gettext 'Soll die Laenge der SYN Pakete ueberprueft werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$CHECK_SYN_PACKET_LENGTH"
+				if [ "$gv_Auswahl" = yes ] ; then
+					CHECK_SYN_PACKET_LENGTH=yes
+				else
+					CHECK_SYN_PACKET_LENGTH=no
+				fi
+				#}}}
+				main_conf_menue $lv_CHECK_SYN_PACKET_LENGTH
+				;;
+			$lv_CUSTOM_SCRIPT)
+				# Zusatz Einstellungsdatei{{{
+				FORMAT="ASCII"
+				file_choice "$CONF_PATH" create 
+				if [ "$WERT" ] ; then
+					CUSTOM_SCRIPT="$WERT"
+				fi
+				#}}}
+				main_conf_menue $lv_CUSTOM_SCRIPT
+				;;
+			$lv_DMZ_INTERFACE)
+				# DMZ Interface auswaehlen{{{
+				MSG=$(gettext 'Waehlen Sie die Schnittstelle zur DMZ aus.')
+				DMZ_MENU=($gv_None \"\" $DEVICE_LIST)
+				menubox "$DMZ_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$DMZ_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help share/netcard_help
+							menubox "$DMZ_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$DMZ_MENU"
+							;;
+						$gv_None)	unset -- DMZ_INTERFACE
+							break
+							;;
+						*)	# uebernehmen
+							DMZ_INTERFACE=${${${(ws: :)${DEVICE_LIST[gv_Auswahl]}}[2]}%%_*}
+							break
+							;;
+					esac
+				done
+				#}}}
+				main_conf_menue $lv_DMZ_INTERFACE
+				;;
+			$lv_DROP_BROADCASTS)
+				# Broadcast Anfragen wegschmeissen (yes/no)?{{{
+				MSG=$(gettext 'Sollen Broadcast Anfragen verworfen werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$DROP_BROADCASTS"
+				if [ "$gv_Auswahl" = yes ] ; then
+					DROP_BROADCASTS=yes
+				else
+					DROP_BROADCASTS=no
+				fi
+				#}}}
+				main_conf_menue $lv_DROP_BROADCASTS
+				;;
+			$lv_DROP_UNCLEAN_PACKETS)
+				# Pakete die als unclean gekennzeichnet verwerfen (yes/no)?{{{
+				# Experimentell (Sollte man nicht benutzen.)
+				MSG=$(gettext 'Pakete die als unclean gekennzeichnet sind verwerfen (ja/nein)? Experimentell (Sollte man nicht benutzen).')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "${DROP_UNCLEAN_PACKETS:-no}"
+				if [ "$gv_Auswahl" = yes ] ; then
+					DROP_UNCLEAN_PACKETS=yes
+				else
+					DROP_UNCLEAN_PACKETS=no
+				fi
+				#}}}
+				main_conf_menue $lv_DROP_UNCLEAN_PACKETS
+				;;
+			$lv_DYNAMIC_EXTERNAL_IP)
+				# Wird die externe IP dynamisch vergeben (yes/no)?{{{
+				MSG=$(gettext 'Wird Ihre Externe IP Adresse automatisch vergeben (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$DYNAMIC_EXTERNAL_IP"
+				if [ "$gv_Auswahl" = yes ] ; then
+					DYNAMIC_EXTERNAL_IP=yes
+				else
+					DYNAMIC_EXTERNAL_IP=no
+				fi
+				#}}}
+				main_conf_menue $lv_DYNAMIC_EXTERNAL_IP
+				;;
+			$lv_ENABLE_IPLIMIT)
+				# iplimit starten (yes/no){{{
+				MSG=$(gettext 'Soll die TCP basierte Netzwerk Rate limitiert werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ENABLE_IPLIMIT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ENABLE_IPLIMIT=yes
+				else
+					ENABLE_IPLIMIT=no
+				fi
+				#}}}
+				main_conf_menue $lv_ENABLE_IPLIMIT
+				;;
+			$lv_ENABLE_LIMIT_RATE)
+				#  Generelle Limitierung der Rate (yes/no){{{
+				MSG=$(gettext 'Generelle Limitierung der Netzwerk Rate einschalten (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ENABLE_LIMIT_RATE"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ENABLE_LIMIT_RATE=yes
+				else
+					ENABLE_LIMIT_RATE=no
+				fi
+				#}}}
+				main_conf_menue $lv_ENABLE_LIMIT_RATE
+				;;
+			$lv_ENABLE_TCP_ECN)
+				# TCP Congestion Notifikation einschalten{{{
+				# (Kernel_option yes/no)?
+				MSG=$(gettext 'Soll die Kerneloption ECN (TCP Congestion Notification) eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "${ENABLE_TCP_ECN:-no}"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ENABLE_TCP_ECN=yes
+				else
+					ENABLE_TCP_ECN=no
+				fi
+				#}}}
+				main_conf_menue $lv_ENABLE_TCP_ECN
+				;;
+			$lv_EXECUTE_CUSTOM_SCRIPT)
+				# Zusatz-Konfigration mit einbeziehen (yes/no)?{{{
+				MSG=$(gettext 'Zusatzkonfigration mit einbeziehen (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "${EXECUTE_CUSTOM_SCRIPT:-yes}"
+				if [ "$gv_Auswahl" = yes ] ; then
+					EXECUTE_CUSTOM_SCRIPT=yes
+				else
+					EXECUTE_CUSTOM_SCRIPT=no
+				fi
+				#}}}
+				main_conf_menue $lv_EXECUTE_CUSTOM_SCRIPT
+				;;
+			$lv_EXTERNAL_INTERFACE)
+				# External Interfaces eingeben.{{{
+				MSG=$(gettext 'Geben Sie hier Ihre externe Schnittstelle ein (Bsp. ippp0, ppp0, eth0).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$EXTERNAL_INTERFACE"
+				if [ -n "$gv_Auswahl" ] ; then
+					EXTERNAL_INTERFACE="$gv_Auswahl"
+				else
+					EXTERNAL_INTERFACE=""
+				fi
+				#}}}
+				main_conf_menue $lv_EXTERNAL_INTERFACE
+				;;
+			$lv_EXTERNAL_INTERFACE_IP)
+				# External Interfaces IP auswaehlen{{{
+				MSG=$(gettext 'Geben Sie hier bitte die IP Adressen fuer das externe Interface ein (Bsp. 192.168.0.5).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$EXTERNAL_INTERFACE_IP"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse $gv_Auswahl
+					if [ "$gv_Ip_Adr" ] ; then
+						EXTERNAL_INTERFACE_IP="$gv_Ip_Adr"
+					else
+						EXTERNAL_INTERFACE_IP=""
+					fi
+				else
+					EXTERNAL_INTERFACE_IP=""
+				fi
+				#}}}
+				main_conf_menue $lv_EXTERNAL_INTERFACE_IP
+				;;
+			$lv_FINSCAN)
+				# Anfragen mit TCP Flag FIN verwerfen?{{{
+				MSG=$(gettext 'Sollen Anfragen mit dem TCP Flag FIN verworfen werden bzw. als illegal gekennzeichnet weren (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$FINSCAN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					FINSCAN=FIN
+				else
+					FINSCAN=""
+				fi
+				#}}}
+				main_conf_menue $lv_FINSCAN
+				;;
+			$lv_FORWARD_LAN_TO_DMZ)
+				# Sollen Pakete vom LAN zur DMZ weitergeleitet werden (yes/no)?{{{
+				MSG=$(gettext 'Sollen Pakete vom LAN zur DMZ weitergeleitet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$FORWARD_LAN_TO_DMZ"
+				if [ "$gv_Auswahl" = yes ] ; then
+					FORWARD_LAN_TO_DMZ=yes
+				else
+					FORWARD_LAN_TO_DMZ=no
+				fi
+				#}}}
+				main_conf_menue $lv_FORWARD_LAN_TO_DMZ
+				;;
+			$lv_ILLEGAL_TCP_FLAGS)
+				# Illegalle TCP Flags eingeben.{{{
+				MSG=$(gettext 'Geben Sie hier die illegalen TCP Flag Kombinationen, durch ein Leerzeichen getrennt, ein.')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$ILLEGAL_TCP_FLAGS"
+				if [ "$gv_Auswahl" ] ; then
+					ILLEGAL_TCP_FLAGS="$gv_Auswahl"
+				else
+					ILLEGAL_TCP_FLAGS=""
+				fi
+				#}}}
+				main_conf_menue $lv_ILLEGAL_TCP_FLAGS
+				;;
+			$lv_INGRESS_FILTER)
+				# Ingress filtering: 1 for simple, 2 to comply with{{{
+				# RFC1812 section 5.3.8 - see 
+				# http://andrew2.andrew.cmu.edu/rfc/rfc1812.html
+				lv_Simple=$(gettext 'einfach')
+				lv_Rfc1812=$(gettext 'RFC1812')
+				INGRESS_MSG=$(gettext 'Waehlen Sie die Ingress Filterung aus.')
+				INGRESS_MENU=$(gettext '1 \"$lv_Simple\" 2 \"$lv_Rfc1812\" $gv_Back \"\"')
+				menubox "$INGRESS_FILTER" "$MAIN_CONF_TITLE" "$MSG" "$INGRESS_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help ingress_filter_help
+							menubox "$INGRESS_FILTER" "$MAIN_CONF_TITLE" "$INGRESS_MSG" "$INGRESS_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)	INGRESS_FILTER="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#}}}
+				main_conf_menue $lv_INGRESS_FILTER
+				;;
+			$lv_IPLIMIT_MAX_ACCEPT)
+				# akzeptiere nur diese Anzahl an Verbindungen per{{{
+				# untenstehenden Netmask
+				MSG=$(gettext 'Geben Sie hier die Anzahl der Verbindungen an, ab der pro "IPLIMIT_NETMASK" Verbindungen angenommen werden sollen (Bsp. 16).')
+				number_input "$MAIN_CONF_TITLE" "$MSG" "$IPLIMIT_MAX_ACCEPT"
+				if [ "$NUMBER" ] ; then
+					IPLIMIT_MAX_ACCEPT="$NUMBER"
+				fi
+				#}}}
+				main_conf_menue $lv_IPLIMIT_MAX_ACCEPT
+				;;
+			$lv_IPLIMIT_NETMASK)
+				# Netmask Schluessel{{{
+				MSG=$(gettext 'Geben Sie hier den Netmask Schluessel ein (Bsp. 24 = 192.168.0.0/24).')
+				number_input "$MAIN_CONF_TITLE" "$MSG" "$IPLIMIT_NETMASK"
+				if [ "$NUMBER" ] ; then
+					IPLIMIT_NETMASK="$NUMBER"
+				fi
+				#}}}
+				main_conf_menue $lv_IPLIMIT_NETMASK
+				;;
+			$lv_LAN_INTERFACE)
+				# LAN Interfaces auswaehlen{{{
+				MSG=$(gettext 'Waehlen Sie die Schnittstelle zu Ihrem LAN aus.')
+				LAN_MENU=($gv_None \"\" $DEVICE_LIST)
+				menubox "$LAN_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$LAN_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help share/netcard_help
+							menubox "$LAN_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$LAN_MENU"
+							;;
+						$gv_None)	unset -- LAN_INTERFACE
+							break
+							;;
+						*)	# uebernehmen
+							LAN_INTERFACE=${${${(ws: :)${DEVICE_LIST[gv_Auswahl]}}[2]}%%_*}
+							break
+							;;
+					esac
+				done
+				#}}}
+				main_conf_menue $lv_LAN_INTERFACE
+				;;
+			$lv_LIMIT_BURST)
+				# Generelle Limitierung der Rate, ab welcher Initialnr{{{
+				# der Pakete soll, laut Zeit, neu nachgeschaut werden.
+				MSG=$(gettext 'Generelle Limitierung der Paketrate, ab welcher Initialnr. der Pakete soll, laut "LIMIT_RATE", neu nachgeschaut werden.')
+				number_input "$MAIN_CONF_TITLE" "$MSG" "$LIMIT_BURST"
+				if [ "$NUMBER" ] ; then
+					LIMIT_BURST="$NUMBER"
+				fi
+				#}}}
+				main_conf_menue $lv_LIMIT_BURST
+				;;
+			$lv_LIMIT_RATE)
+				# Generelle Limitierung der Rate, wie oft soll nachgeschaut{{{
+				# werden (Zeit)?
+				MSG=$(gettext 'Geben Sie hier die Zeit an, wie oft nachgeschaut werden soll, ob schon wieder Pakete geloggt werden duerfen (Bsp. 30/s).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$LIMIT_RATE"
+				if [ "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[0-9]*/[dhms])
+							LIMIT_RATE="$gv_Auswahl"
+							;;
+						*)	no_input_msg
+							unset -- LIMIT_RATE
+							;;
+					esac
+				else
+					LIMIT_RATE=""
+				fi
+				#}}}
+				main_conf_menue $lv_LIMIT_RATE
+				;;
+			$lv_LOG_MARTIANS)
+				# Log_martians einschalten{{{
+				# (Kernel_option yes/no)?
+				MSG=$(gettext 'Soll die Kerneloption "LOG_MARTIANS" (loggt unmoegliche Quell IP Adressen) eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$LOG_MARTIANS"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_MARTIANS=yes
+				else
+					LOG_MARTIANS=no
+				fi
+				#}}}
+				main_conf_menue $lv_LOG_MARTIANS
+				;;
+			$lv_LOOPBACK_ACCEPT)
+				# Traffic zum Loopback Device erlauben{{{
+				# (Kernel_option yes/no)?
+				MSG=$(gettext 'Soll der Traffic auf das loopback Device erlaubt werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$LOOPBACK_ACCEPT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOOPBACK_ACCEPT=yes
+				else
+					LOOPBACK_ACCEPT=no
+				fi
+				#}}}
+				main_conf_menue $lv_LOOPBACK_ACCEPT
+				;;
+			$lv_LOOPBACK_MODE)
+				# Schluessel fuer den Loopback Traffic{{{
+				lv_Loose=$(gettext 'loose')
+				lv_Normal=$(gettext 'normal')
+				lv_Paranoid=$(gettext 'paranoid')
+				LOOPBACK_MSG=$(gettext 'Waehlen Sie hier den Loopback Modus aus.')
+				LOOPBACK_MENU=($lv_Loose \"\" $lv_Normal \"\" $lv_Paranoid \"\" $gv_Back \"\")
+				menubox "$LOOPBACK_MODE" "$MAIN_CONF_TITLE" "$LOOPBACK_MSG" "$LOOPBACK_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help loopback_mode_help
+							menubox "$LOOPBACK_MODE" "$MAIN_CONF_TITLE" "$LOOPBACK_MSG" "$LOOPBACK_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)	LOOPBACK_MODE="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#}}}
+				main_conf_menue $lv_LOOPBACK_MODE
+				;;
+			$lv_MASQUERADE)
+				# Masquerading einschalten?{{{
+				MSG=$(gettext 'Soll Masquerading (NAT - Network Address Translation) eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$MASQUERADE"
+				if [ "$gv_Auswahl" = yes ] ; then
+					MASQUERADE=yes
+				else
+					MASQUERADE=no
+				fi
+				#}}}
+				main_conf_menue $lv_MASQUERADE
+				;;
+			$lv_NAT_MODULES)
+				# NAT Modules_list{{{
+				# Vorhandene Module min "on" kennzeichnen
+				generate_is_file "$NAT_MODULES" "$gv_K_Suffix"
+				IST_NAT="`print /lib/modules/${gv_K_Release}/kernel/net/**/netfilter/*_nat*${gv_K_Suffix}(:t)`"
+				is_value "$IST_NAT"
+				if [ -n "$VALUE_ARRAY" ] ; then
+					NAT_MENU=($VALUE_ARRAY)
+					checklist "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help main_conf_help
+								checklist "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
+								;;
+							*)	# Wert uebernehmen
+								NAT_MODULES="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				fi
+				#}}}
+				main_conf_menue $lv_NAT_MODULES
+				;;
+			$lv_NULLSCAN)
+				# Anfragen mit TCP Flags NONE verwerfen?{{{
+				MSG=$(gettext 'Sollen Anfragen mit dem TCP Flags NONE verworfen werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$NULLSCAN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					NULLSCAN=NONE
+				else
+					NULLSCAN=""
+				fi
+				#}}}
+				main_conf_menue $lv_NULLSCAN
+				;;
+			$lv_PACKET_LENGTH)
+				# Paketlaengen Bereich eingeben (in bytes).{{{
+				MSG=$(gettext 'Geben Sie hier den Bereich der Paketlaenge, in Bytes, ein (Bsp. 40:68).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$PACKET_LENGTH"
+				if [ "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[1-9]*:[1-9]*)	PACKET_LENGTH="$gv_Auswahl"
+							;;
+						*)	no_input_msg
+							unset -- PACKET_LENGTH
+							;;
+					esac
+				else
+					PACKET_LENGTH=""
+				fi
+				#}}}
+				main_conf_menue $lv_PACKET_LENGTH
+				;;
+			$lv_PORT_FORWARD)
+				# Port Forwarding einschalten (yes/no)?{{{
+				MSG=$(gettext 'Soll die Port Weiterleitung eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$PORT_FORWARD"
+				if [ "$gv_Auswahl" = yes ] ; then
+					PORT_FORWARD=yes
+				else
+					PORT_FORWARD=no
+				fi
+				#}}}
+				main_conf_menue $lv_PORT_FORWARD
+				;;
+			$lv_PRELOAD_IP_MODULES)
+				# Preload Modules_list{{{
+				# Vorhandene Module min "on" kennzeichnen
+				generate_is_file "$PRELOAD_IP_MODULES" "$gv_K_Suffix"
+				IST_MOD="`print /lib/modules/${gv_K_Release}/kernel/net/**/netfilter/*_nat*${gv_K_Suffix}(:t)`"
+				is_value "$IST_MOD"
+				if [ -n "$VALUE_ARRAY" ] ; then
+					PRELOAD_MOD_MENU=($VALUE_ARRAY)
+					checklist "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help main_conf_help
+								;;
+							*)	# Wert uebernehmen
+								PRELOAD_IP_MODULES="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				fi
+				#}}}
+				main_conf_menue $lv_PRELOAD_IP_MODULES
+				;;
+			$lv_PRIVATE_NETWORKS)
+				# Antispoofing options{{{
+				MSG=$(gettext 'Antispoofing Option - Geben Sie hier Ihre privaten Netzwerke ein die geschuetzt werden sollen (Bsp. 192.168.0.0/24).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$PRIVATE_NETWORKS"
+				if [ "$gv_Auswahl" ] ; then
+					unset -- PRIVATE_NETWORKS
+					Anz=0
+					for i in $gv_Auswahl ; {
+						case $i in
+							[0-9.]*/[0-9]*)
+								(( Anz++ ))
+								PRIVATE_NETWORKS[Anz]="$i"
+								;;
+							*)	shift
+								;;
+						esac
+					}
+				else
+					PRIVATE_NETWORKS=""
+				fi
+				#}}}
+				main_conf_menue $lv_PRIVATE_NETWORKS
+				;;
+			$lv_PROTECT_FROM_DMZ)
+				# Vor der DMZ schuetzen (yes/no)?{{{
+				MSG=$(gettext 'Soll der Rechner vor der Demilitarisierten Zone (DMZ) geschuetzt werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$PROTECT_FROM_DMZ"
+				if [ "$gv_Auswahl" = yes ] ; then
+					PROTECT_FROM_DMZ=yes
+				else
+					PROTECT_FROM_DMZ=no
+				fi
+				#}}}
+				main_conf_menue $lv_PROTECT_FROM_DMZ
+				;;
+			$lv_PROTECT_FROM_LAN)
+				# Vor dem LAN schuetzen (yes/no)?{{{
+				MSG=$(gettext 'Soll der Rechner vor dem internen Netzwerk (LAN) geschuetzt werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$PROTECT_FROM_LAN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					PROTECT_FROM_LAN=yes
+				else
+					PROTECT_FROM_LAN=no
+				fi
+				#}}}
+				main_conf_menue $lv_PROTECT_FROM_LAN
+				;;
+			$lv_RESERVED_NETWORKS)
+				# Antispoofing options{{{
+				MSG=$(gettext 'Antispoofing Option - Geben Sie hier Ihre reservierten Netzwerke ein die geschuetzt werden sollen (Bsp. 127.0.0.0/8).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$RESERVED_NETWORKS"
+				if [ "$gv_Auswahl" ] ; then
+					unset -- RESERVED_NETWORKS
+					Anz=0
+					for i in $gv_Auswahl ; {
+						case $i in
+							[0-9.]*/[0-9]*)
+								(( Anz++ ))
+								RESERVED_NETWORKS[Anz]="$i"
+								;;
+							*)	shift
+								;;
+						esac
+					}
+				else
+					RESERVED_NETWORKS=""
+				fi
+				#}}}
+				main_conf_menue $lv_RESERVED_NETWORKS
+				;;
+			$lv_SYNCOOKIES)
+				# Schutz vor Syncookies einschalten (Kernel_option yes/no)?{{{
+				MSG=$(gettext 'Soll die Kerneloption syn-cookies (syn-flooding attacks) eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$SYNCOOKIES"
+				if [ "$gv_Auswahl" = yes ] ; then
+					SYNCOOKIES=yes
+				else
+					SYNCOOKIES=no
+				fi
+				#}}}
+				main_conf_menue $lv_SYNCOOKIES
+				;;
+			$lv_TCP_PROBE)
+				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{
+				TCP_PROBE_OLD="$TCP_PROBE"
+				inputbox "$MAIN_CONF_TITLE" "$TCP_PROBE_MSG" "$TCP_PROBE"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						TCP_PROBE="$gv_Auswahl"
+					else
+						only_15ports_msg
+						TCP_PROBE="$TCP_PROBE_OLD"
+					fi
+				else
+					TCP_PROBE=""
+				fi
+				#}}}
+				main_conf_menue $lv_TCP_PROBE
+				;;
+			$lv_TCP_PROBE2)
+				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{
+				TCP_PROBE_OLD2="$TCP_PROBE2"
+				inputbox "$MAIN_CONF_TITLE" "$TCP_PROBE_MSG" "$TCP_PROBE2"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						TCP_PROBE2="$gv_Auswahl"
+					else
+						only_15ports_msg
+						TCP_PROBE2="$TCP_PROBE_OLD2"
+					fi
+				else
+					TCP_PROBE2=""
+				fi
+				#}}}
+				main_conf_menue $lv_TCP_PROBE2
+				;;
+			$lv_UDP_PROBE)
+				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{
+				UDP_PROBE_OLD="$UDP_PROBE"
+				inputbox "$MAIN_CONF_TITLE" "$UDP_PROBE_MSG" "$UDP_PROBE"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						UDP_PROBE="$gv_Auswahl"
+					else
+						only_15ports_msg
+						UDP_PROBE="$UDP_PROBE_OLD"
+					fi
+				else
+					UDP_PROBE=""
+				fi
+				#}}}
+				main_conf_menue $lv_UDP_PROBE
+				;;
+			$lv_UDP_PROBE2)
+				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{
+				UDP_PROBE_OLD2="$UDP_PROBE2"
+				inputbox "$MAIN_CONF_TITLE" "$UDP_PROBE_MSG" "$UDP_PROBE2"
+				U_OPT=k
+				if [ "$gv_Auswahl" ] ; then
+					if [ "`print ${(s:,:)${gv_Auswahl}} | wc -w`" -le 15 ] ; then
+						UDP_PROBE2="$gv_Auswahl"
+					else
+						only_15ports_msg
+						UDP_PROBE2="$UDP_PROBE_OLD2"
+					fi
+				else
+					UDP_PROBE2=""
+				fi
+				#}}}
+				main_conf_menue $lv_UDP_PROBE2
+				;;
+			$lv_XMASSCAN)
+				# Anfragen mit TCP Flags URG,PSH,FIN verwerfen?{{{
+				MSG=$(gettext 'Sollen die Anfragen mit der TCP Flags Kombination URG,PSH,FIN verworfen werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$XMASSCAN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					XMASSCAN=URG,PSH,FIN
+				else
+					XMASSCAN=""
+				fi
+				#}}}
+				main_conf_menue $lv_XMASSCAN
+				;;
+			$gv_Save)	main_conf_save
+				break
+				;;
+			$gv_Back)	break
+				main_conf_menue
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

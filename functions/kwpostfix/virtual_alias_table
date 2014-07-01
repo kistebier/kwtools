@@ -1,0 +1,330 @@
+# Funktion virtual_alias_table{{{
+#
+virtual_alias_table() {
+	FILE="$1"
+	local Anz Anz1
+	integer Anz Anz1
+
+	# Funktion virtual_alias_menue{{{
+	virtual_alias_menue() {
+		VIRTUAL_ALIAS_MENU=($lv_Domain \"$DOMAIN\" $lv_Address \"$ADR\"
+		$lv_Recipient \"$E_ADR\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_ALIAS_MENU"
+	}
+	#}}}
+	# Funktion virtual_alias_aendern{{{
+	virtual_alias_aendern() {
+	virtual_alias_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help "$TAB_HELP"
+				virtual_alias_menue
+				;;
+			$lv_Domain)
+				# Fuer welche Domain soll Postfix die Mails{{{
+				# annehmen.
+				#
+				VIRTUAL_DOMAIN_MSG=$(gettext 'Geben Sie hier eine virtuelle Domain ein (Bsp. domain.de).')
+				inputbox "$TABLE_TITLE" "$VIRTUAL_DOMAIN_MSG" "$DOMAIN"
+				if [ "${(w)#gv_Auswahl}" = 1 ] ; then
+					case "$gv_Auswahl" in
+						[a-zA-Z0-9]*.*)	DOMAIN="$gv_Auswahl"
+							unset -- ADR E_ADR
+							;;
+						*)	unset -- DOMAIN
+							no_input_msg
+							;;
+					esac
+				else
+					unset -- DOMAIN
+					no_input_msg
+				fi
+				#}}}
+				virtual_alias_menue $lv_Domain
+				;;
+			$lv_Address)
+				# Adresse waehlen{{{
+				#
+				# Funktion check_virtual_domain_msg# {{{
+				check_virtual_domain_msg() {
+					MSG=$(gettext 'Pruefen Sie, ob schon eine virtuelle Domain angelegt wurde, fuer die Postfix Mails annimmt.')
+					msgbox "$gv_Info" "$MSG"
+				}
+				## }}}
+				# Funktion, check_virtual_domain{{{
+				#
+				# checken, ob es eine virtual_alias_domain Tabelle gibt,
+				# und wenn ja pruefen ob die Domain schon eingetragen ist.
+				# Ansonsten wird diese Tabelle geprueft, ob die Domain schon
+				# eingetragen wurde.
+				#
+				check_virtual_domain() {
+					# Funktion no_virtual_domain_msg# {{{
+					no_virtual_domain_msg() {
+						MSG=$(gettext 'Sie muessen erst eine virtuelle Domain, fuer diese Adresse ($ADR) eingeben.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- ADR
+					}
+					## }}}
+					unset -- Tab_Type File
+					print ${${(s,:,)$(postconf -h virtual_alias_domains)}} | \
+						while read a b REST ; do
+							case "$a" in
+								proxy)
+									Tab_Type="$b"
+									File="$REST"
+									;;
+								\$[a-zA-Z0-9]*) # keine Variablen bearbeiten
+									unset -- Tab_Type
+									;;
+								*)
+									Tab_Type="$a"
+									File="$b"
+									;;
+							esac
+						done
+					#
+					if [ -n "$Tab_Type" -a -n "$File" ] ; then
+						case "$Tab_Type" in
+							[sd]bm|btree|cidr|hash|tcp)
+								if [ -z "`grep "^${ADR#*@}" $File`" ] ; then
+									if [ -z "`grep "^${ADR#*@}" $FILE`" ] ; then
+										no_virtual_domain_msg
+									fi
+								fi
+								;;
+							*)
+								check_virtual_domain_msg
+								;;
+						esac
+					else
+						if [ -z "`grep "^${ADR#*@}" $FILE`" ] ; then
+							no_virtual_domain_msg
+						fi
+					fi
+				}
+				#}}}
+				#
+				FIRST_ADR_MSG=$(gettext 'Geben Sie hier bitte eine Mailadresse, User oder eine Domain ein (Bsp. user | @domain.de | user@domain.de).')
+				inputbox "$TABLE_TITLE" "$FIRST_ADR_MSG" "$ADR"
+				if [ "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[a-zA-Z0-9]*[_-.]*@*.*)	ADR="$gv_Auswahl"
+							check_virtual_domain
+							;;
+						@*.*)	ADR="$gv_Auswahl"
+							check_virtual_domain
+							;;
+						[a-zA-Z0-9]*[_-.]*!@*)	ADR="$gv_Auswahl"
+							if [ -z "$DOMAIN" ] ; then
+								check_virtual_domain_msg
+							fi
+							;;
+						*)
+							unset -- ADR
+							no_input_msg
+							;;
+					esac
+				else
+					unset -- ADR
+					no_input_msg
+				fi
+				#}}}
+				virtual_alias_menue $lv_Address
+				;;
+			$lv_Recipient)
+				# Wohin soll die Mail umgeleitet werden? Es koennen{{{
+				# auch mehrere Empfaenger angegeben werden.
+				#
+				RECIPIENT_ADR_MSG=$(gettext 'Geben Sie hier 1 oder mehrere Mailadressen, durch 1 Komma getrennt, ein (Bsp. user1@domain.de, user2@domain.de).')
+				inputbox "$TABLE_TITLE" "$RECIPIENT_ADR_MSG" "$E_ADR"
+				#
+				# Pruefen, ob alle Adressen getrennt durch ein Komma
+				# sind.
+				#
+				if [ "$gv_Auswahl" ] ; then
+					(( Anz1=+${(w)#gv_Auswahl} ))
+					unset -- E_ADR
+					Anz=0
+					for i in ${=gv_Auswahl} ; {
+						case $i in
+							*@*.*)
+								(( Anz++ ))
+								if [ "$Anz" -lt "$Anz1" ] ; then
+									case $i in
+										*@*.*,)
+											E_ADR[Anz]="$i"
+											continue
+											;;
+										*)	unset -- E_ADR
+											no_input_msg
+											break
+											;;
+									esac
+								else
+									E_ADR[Anz]="${i%,}"
+									continue
+								fi
+								;;
+							*)	unset -- E_ADR
+								no_input_msg
+								break
+								;;
+						esac
+					}
+				else
+					unset -- E_ADR
+					no_input_msg
+				fi
+				#}}}
+				virtual_alias_menue $lv_Recipient
+				;;
+			$gv_Save)
+				# Eintraege speichern{{{
+				#
+				if [ "$DOMAIN" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}[[:space:]].*#${DOMAIN}\tanything#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${DOMAIN}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$DOMAIN	anything"
+						mv $FILE$$ $FILE
+					fi
+				elif [ "$ADR" -a "$E_ADR" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						awk '/^('"$AENDERN_ADR"')/{if(/'"$AENDERN_ADR1"'/){found=1}else{found=0}}
+						{if(!found){print}}
+						END{print "'"$ADR"'\t'"$E_ADR"'"}' $FILE >${FILE}$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$ADR	$E_ADR"
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					MSG=$(gettext 'Sie muessen erst eine virtuelle Domain oder eine Adresse und eine Empfaengeradresse eingeben, bevor Sie was speichern koennen.')
+					msgbox "$gv_Attention" "$MSG"
+					virtual_alias_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Eintraege
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- DOMAIN ADR E_ADR AENDERN_ADR AENDERN_ADR1
+				virtual_alias_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Eintraege veraendern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl aendern
+								C_CHOICE="$gv_Auswahl"
+								print "$gv_Auswahl" | \
+								while read ADRESSE REST ; do
+									case "$REST" in
+										*@*.*)
+											unset -- DOMAIN
+											ADR="$ADRESSE"
+											E_ADR="$REST"
+											;;
+										*)	unset -- ADR E_ADR
+											DOMAIN="$ADRESSE"
+											;;
+									esac
+								done
+								#
+								if [ "$DOMAIN" ] ; then
+									AENDERN_ADR="$DOMAIN"
+								elif [ "$ADR" -a "$E_ADR" ] ; then
+									AENDERN_ADR="$ADR"
+									AENDERN_ADR1="$E_ADR"
+								fi
+								virtual_alias_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Eintraege loeschen{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Loeschen
+								while read ADRESS REST ; do
+									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen die
+				# Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

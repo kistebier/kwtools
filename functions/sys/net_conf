@@ -1,0 +1,776 @@
+# Netzwerk Optionen einstellen, net_conf# {{{
+#
+# usage: net_conf
+# conf_hostname [ -a MESSAGE | -f | nichts ] [Old Rechnername]
+# conf_proxy [ -f | -h | -o ]
+# iface_onboot
+# iface_dhcp
+# iface_ip [ -x | --xen | nichts ] OLD-IP-Adresse[n]
+# iface_ip [ --prefix | -p ] [ OLD-IP-PREFIX
+# iface_nameserver [ Adressen ]
+# iface_netmask [ Adresse ]
+# iface_bcast [ Adresse ]
+# iface_gate [ Adresse ]
+# ip_analyse [ IP-Adressen ]
+# mail_address - siehe Header der Funktion
+#
+# globale Variablen:
+# gv_Boot - Interface beim Systemstart starten (ja/nein)
+# gv_Broadcast - Broadcast Adresse
+# gv_Dhcp - Interface per DHCP konfigurieren
+# gv_Gateway - Gateway Adresse
+# gv_Ip - IP Adresse
+# gv_Ip_Adr - ueberpruefte, korrekte, IP-Adressen
+# gv_Mail_Adr - Mail Adressen
+# gv_Nameserver - Nameserver Adresse
+# gv_Netmask - Netzmaske Adresse
+# gv_Hostname - eVoll qualifizierter) (FQDN) Rechnername/IP
+# gv_Http_Proxy - HTTP Proxy
+# gv_Ftp_Proxy - FTP Proxy
+#
+net_conf() {
+	###### Netzwerk Funktionen ###### {{{
+	# Funktion conf_hostname, Eingabe des Rechnernamens# {{{
+	#
+	# usage: conf_hostname [ -a | -f ] RECHNERNAME[N]
+	#
+	# -a - mehrere Rechnernamen eingeben koennen.
+	# -f - voll qualifizierten Rechnernamen eingeben.
+	# nichts - einzelnen Rechnernamen eingeben.
+	#
+	#######################################
+	# NOTIZ:
+	# wird nicht auf Erreichbarkeit geprueft.
+	#######################################
+	#
+	conf_hostname() {
+		unset -- gv_Hostname
+		local Lv_Hostname_Msg
+		case "$1" in
+			-a)
+				# mehrere Rechnernamen/IP Adressen eingeben.# {{{
+				# wenn es keine Mitteilung ($2) gibt wird abgebrochen.
+				if [ -z "$2" ] ; then
+					no_para_msg $0
+				else
+					Lv_Hostname_Msg="$2"
+					inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$3"
+					if [ "$gv_Auswahl" ] ; then
+						gv_Hostname="$gv_Auswahl"
+					else
+						no_input_msg
+						unset -- gv_Hostname
+					fi
+				fi
+				## }}}
+				;;
+			-f)
+				# voll qualifizierten Rechnernamen eingeben.# {{{
+				Lv_Hostname_Msg=$(gettext 'Geben Sie bitte den voll qualifizierten Rechnernamen (FQDN) ein (Bsp.: host.domain.de).')
+				inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$2"
+				if [[ -n $gv_Auswahl ]] ; then
+					gv_Hostname="$gv_Auswahl"
+				else
+					no_input_msg
+					unset -- gv_Hostname
+				fi
+				## }}}
+				;;
+			*)
+				# einzelnen Rechnernamen eingeben# {{{
+				Lv_Hostname_Msg=$(gettext 'Geben Sie bitte den Rechnernamen ein (Bsp.: host1, host1.domain.de).')
+				inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$1"
+				if [ -n "$gv_Auswahl" ] ; then
+					gv_Hostname="$gv_Auswahl"
+				else
+					no_input_msg
+					unset -- gv_Hostname
+				fi
+				## }}}
+				;;
+		esac
+	}
+	## }}}
+	# Funktion conf_proxy, Eingabe der Proxys# {{{
+	#
+	# conf_proxy [ -f | -h | -o ]
+	# -f - ftp Proxy
+	# -h - http Proxy
+	# -o - Proxy ohne Protokoll
+	#
+	conf_proxy() {
+		if [ "$#" = 1 ] ; then
+			unset -- Opt Proxy
+			local Opt
+			Opt="$1"
+			# Funktion proxy_input# {{{
+			proxy_input() {
+				case "$Opt" in
+					-o)
+						# nur Rechnername+Portnummer eingeben# {{{
+						PROXY_MSG=$(gettext 'Tragen Sie bitte ihren Proxy ein (host:port).')
+						inputbox "$gv_Configuration" "$PROXY_MSG" "$Proxy"
+						if [ "$gv_Auswahl" ] ; then
+							case "$gv_Auswahl" in
+								*:[1-9][0-9][0-9][0-9]|*:[0-9][0-9][0-9]|*:[0-9][0-9])
+									Value="$gv_Auswahl"
+									;;
+								*)	no_input_msg
+									unset -- Value
+									;;
+							esac
+						fi
+						## }}}
+						;;
+					*)
+						# Protokoll+Rechner+Portnumer Eingabe# {{{
+						# zur Zeit gehen nur Ports per Zahl.
+						PROXY_MSG=$(gettext 'Tragen Sie bitte ihren Proxy ein (protokoll://host:port).')
+						inputbox "$gv_Configuration" "$PROXY_MSG" "$Proxy"
+						if [ "$gv_Auswahl" ] ; then
+							case "$gv_Auswahl" in
+								(ftp://*:|http://*:)[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9])
+									Value="$gv_Auswahl"
+									;;
+								*)	no_input_msg
+									unset -- Value
+									;;
+							esac
+						fi
+						## }}}
+						;;
+				esac
+			}
+			## }}}
+			case "$Opt" in
+				-f)
+					# ftp Proxy
+					Proxy="$gv_Ftp_Proxy"
+					proxy_input
+					if [ -n "Value" ] ; then
+						gv_Ftp_Proxy="$Value"
+					fi
+					;;
+				-h)
+					# http Proxy
+					Proxy="$gv_Http_Proxy"
+					proxy_input
+					if [ -n "Value" ] ; then
+						gv_Http_Proxy="$Value"
+					fi
+					;;
+				-o)
+					# Proxy ohne Protokoll 
+					Proxy="$gv_Proxy"
+					proxy_input "$Opt"
+					if [ -n "Value" ] ; then
+						gv_Proxy="$Value"
+					fi
+					;;
+				*)
+					# falsche Parameter uebergeben.
+					wrong_parameter_msg "$0"
+					;;
+			esac
+		else
+			no_para_msg "$0"
+		fi
+	}
+	#}}}
+	# Funktion iface_bcast, Broadcast-Adresse eingeben{{{
+	#
+	# usage: iface_bcast
+	iface_bcast() {
+		BCAST_MSG=$(gettext 'Geben Sie bitte die Broadcast Adresse ein (z.B. 192.168.0.255).')
+		inputbox "$gv_Configuration" "$BCAST_MSG" "$1"
+		#
+		if [ "$gv_Auswahl" ] ; then
+			ip_analyse "$gv_Auswahl"
+			case $gv_Auswahl in
+				${IP1}.${IP2}.${IP3}.${IP4})	
+					if [ $IP4 != 0 -a $IP4 = 255 ] ; then
+						# alles OK
+						gv_Broadcast="$gv_Auswahl"
+					else
+						MSG=$(gettext 'Diese Broadcast Adresse ($gv_Auswahl) kann man nicht vergeben.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- gv_Broadcast
+					fi
+					;;
+				*)	no_input_msg
+					;;
+			esac
+		else
+			no_input_msg
+			unset -- gv_Broadcast
+		fi
+	}
+	#}}}
+	# Funktion iface_dhcp, Soll dhcp benutzt werden (ja/nein)?# {{{
+	#
+	# usage: iface_dhcp
+	iface_dhcp() {
+		DHCP_MSG=$(gettext 'Soll das Netzwerk per dhcp konfiguriert werden (ja/nein)?')
+		yesno "$gv_Configuration" "$DHCP_MSG" "$gv_Dhcp"
+		if [ "$gv_Auswahl" = yes ] ; then
+			gv_Dhcp=yes
+			gv_Ip=""
+		else
+			gv_Dhcp=no
+		fi
+	}
+	## }}}
+	# Funktion iface_gate, Gateway eingeben{{{
+	#
+	# usage: iface_gate
+	iface_gate() {
+		GATEWAY_MSG=$(gettext 'Geben Sie bitte die IP-Adresse fuer den Gateway ein (z.B. 192.168.0.10).')
+		inputbox "$gv_Configuration" "$GATEWAY_MSG" "$1"
+		# Eingabe ueberpruefen.
+		if [ -n "$gv_Auswahl" ] ; then
+			ip_analyse "$gv_Auswahl"
+			case $gv_Auswahl in
+				${IP1}.${IP2}.${IP3}.${IP4})	
+					if [ $IP4 != 0 -a $IP4 != 255 ] ; then
+						# alles OK
+						gv_Gateway="$gv_Auswahl"
+					else
+						no_valid_ip_msg -i "$gv_Auswahl"
+						unset -- gv_Gateway
+					fi
+					;;
+				*)	no_input_msg
+					;;
+			esac
+		else
+			no_input_msg
+			unset -- gv_Gateway
+		fi
+	}
+	#}}}
+	# Funktion iface_ip, Eingabe der IP-Adresse# {{{
+	#
+	# usage: iface_ip [ --xen | -x ] [ OLD-IP ]
+	# usage: iface_ip [ --prefix | -p ] [ OLD-IP-PREFIX ]
+	# -x, --xen - bei DomU's unter XEN kann man 3 IP-Adressen vergeben.
+	# -p - nur IP-Prefix eingeben
+	# OLD-IP - alte IP-Adresse[n] mit uebergeben.
+	# OLD-IP-PREFIX - alten IP-Prefix mit uebergeben.
+	# nichts - normale IP-Adress Eingabe
+	#
+	iface_ip() {
+		unset -- gv_Ip
+		case "$1" in
+			--xen|-x)
+				# IP-Adressen fuer XEN Gast Betriebssysteme eingeben# {{{
+				IP_MSG=$(gettext 'Geben Sie bitte bis zu 3 IP Adressen ein.')
+				inputbox "$gv_Configuration" "$IP_MSG" "$2"
+				if [ -n "$gv_Auswahl" ] ; then
+					unset -- gv_Ip Tmp
+					local Ips_Nr Anz Tmp
+					integer Anz
+					typeset -a Ips_Nr
+					Ips_Nr=($gv_Auswahl)
+					if [ "${#Ips_Nr[@]}" -le 3 ] ; then
+						Anz=0
+						for i in $gv_Auswahl ; {
+							Tmp="$i"
+							ip_analyse "$i"
+							case $Tmp in
+								${IP1}.${IP2}.${IP3}.${IP4})	
+									if [ $IP4 != 0 -a $IP4 != 255 ] ; then
+										# alles OK
+										(( Anz++ ))
+										gv_Ip[Anz]="$Tmp"
+										gv_Dhcp="no"
+									else
+										no_valid_ip_msg -i "$Tmp"
+									fi
+									;;
+								*)
+									no_valid_ip_msg -i "$Tmp"
+									;;
+							esac
+						}
+					else
+						ip_gt_three_msg
+					fi
+				else
+					no_input_msg
+					gv_Ip=""
+				fi
+				## }}}
+				;;
+			--prefix|-p)
+				# IP Prefix Eingabe# {{{
+				IP_MSG=$(gettext 'Geben Sie bitte den IP-Prefix ein (z.B. 192.168.0).')
+				inputbox "$gv_Configuration" "$IP_MSG" "$2"
+				#
+				if [ -n "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					case $gv_Auswahl in
+						${IP1}.${IP2}.${IP3}|${IP1}.${IP2}|${IP1})
+								# alles OK
+								gv_Ip="$gv_Auswahl"
+							;;
+						*)	
+							no_valid_ip_msg -p "$gv_Auswahl"
+							;;
+					esac
+				else
+					unset -- gv_Ip
+					no_input_msg
+				fi
+				## }}}
+				;;
+			*)
+				# normale IP Eingabe# {{{
+				IP_MSG=$(gettext 'Geben Sie bitte die IP Adresse ein (z.B. 192.168.0.1).')
+				inputbox "$gv_Configuration" "$IP_MSG" "$1"
+				#
+				if [ -n "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					case $gv_Auswahl in
+						${IP1}.${IP2}.${IP3}.${IP4})	
+							if [ $IP4 != 0 -a $IP4 != 255 ] ; then
+								# alles OK
+								gv_Ip="$gv_Auswahl"
+							else
+								no_valid_ip_msg -i "$gv_Auswahl"
+							fi
+							;;
+						*)
+							no_valid_ip_msg -i "$gv_Auswahl"
+							;;
+					esac
+				else
+					unset -- gv_Ip
+					no_input_msg
+				fi
+				## }}}
+				;;
+		esac
+	}
+	## }}}
+	# Funktion iface_nameserver, Nameserver eingeben{{{
+	#
+	# usage: iface_nameserver
+	iface_nameserver() {
+		NS_MSG=$(gettext 'Geben Sie bitte bis zu 3 Nameserver Adressen ein (z.B. 194.25.2.129).')
+		inputbox "$gv_Configuration" "$NS_MSG" "$1"
+		if [ "$gv_Auswahl" ] ; then
+			unset -- gv_Nameserver
+			local Ns_Nr Anz
+			integer Anz
+			typeset -a Ns_Nr
+			Ns_Nr=($gv_Auswahl)
+			if [ "${#Ns_Nr[@]}" -le 3 ] ; then
+				Anz=0
+				for i in $gv_Auswahl ; {
+					ip_analyse "$i"
+					case $i in
+						${IP1}.${IP2}.${IP3}.${IP4})	
+							if [ $IP4 != 0 -a $IP4 != 255 ] ; then
+								# alles OK
+								(( Anz++ ))
+								gv_Nameserver[Anz]="$i"
+								gv_Dhcp="no"
+							else
+								no_valid_ip_msg -i "$i"
+							fi
+							;;
+						*)	no_input_msg
+							;;
+					esac
+				}
+			else
+				ip_gt_three_msg
+			fi
+		else
+			unset -- gv_Nameserver
+			no_input_msg
+		fi
+	}
+	#}}}
+	# Funktion iface_netmask, Eingabe der Netzmaske# {{{
+	#
+	# usage: iface_netmask
+	iface_netmask() {
+		NETMASK_MSG=$(gettext 'Geben Sie bitte die Netzmaske ein (Bsp.: 255.255.255.0).')
+		inputbox "$gv_Configuration" "$NETMASK_MSG" "$1"
+		if [ -n "$gv_Auswahl" ] ; then
+			ip_analyse "$gv_Auswahl"
+			case $gv_Auswahl in
+				${IP1}.${IP2}.${IP3}.${IP4})	
+					if [ $IP1 != 0 -a $IP1 = 255 ] ; then
+						# alles OK
+						gv_Netmask="$gv_Auswahl"
+					else
+						MSG=$(gettext 'Diese Netzmaske ($gv_Auswahl) kann man nicht vergeben.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- gv_Netmask
+					fi
+					;;
+				*)	no_input_msg
+					;;
+			esac
+		else
+			no_input_msg
+			unset -- gv_Netmask
+		fi
+	}
+	## }}}
+	# Funktion iface_onboot# {{{
+	#
+	# usage: iface_onboot
+	iface_onboot() {
+		# Soll das Interface schon beim Systemstart gestartet werden (ja/nein)?
+		BOOT_MSG=$(gettext 'Soll das Interface beim Systemstart gestartet werden (ja/nein)?')
+		yesno "$gv_Configuration" "$BOOT_MSG" "$gv_Boot"
+		if [ "$gv_Auswahl" = yes ] ; then
+			gv_Boot=yes
+		else
+			gv_Boot=no
+		fi
+	}
+	## }}}
+	# Funktion (ifconfig_check) um einzelne Netzwerkkarten zu pruefen{{{
+	#
+	# usage: ifconfig_check "$ETH"
+	#
+	ifconfig_check() {
+		if [ "$#" -ge 1 ] ; then
+			#
+			# Pruefen ob das Device in $ETH schon laeuft. Wenn ja wird es deaktiviert.
+			#
+			unset -- Eth_Ist Dhclient
+			local Eth_Ist Dhclient
+			for i in $@ ; {
+				Eth_Ist="`ifconfig $i`"
+				if [ "$Eth_Ist" ] ; then
+					Dhclient="$(readlink -f `which dhclient`)"
+					if [ -n "`pidof -x $Dhclient`" ] ; then
+						if [ -f "`print /var/run/dhclient[-.]${i}.pid`" ] ; then
+							kill `print $(< /var/run/dhclient[-.]${i}.pid)` &>/dev/null
+							rm -f /var/run/dhclient[-.]${i}.pid &>/dev/null
+						fi
+					fi
+					prog_exec ifconfig "$i down"
+				fi
+			}
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (ip_analyse), um die IP Adresse zu zerlegen{{{
+	#
+	# Notiz: nicht IPv6 tauglich
+	#
+	# usage: ip_analyse IPs
+	#        IP - IP Adressen
+	#
+	ip_analyse() {
+		unset -- IP1 IP2 IP3 IP4 PTR gv_Ip_Adr
+		if [ "$#" -ge 1 ] ; then
+			local Anz
+			integer Anz
+			Anz=1
+			for i in $@ ; {
+				case "$i" in
+				*:*)	# IPv6
+					####################################
+					# TODO: ipv6
+					####################################
+					hier_ist_noch_nichts IPv6
+					#
+					;;
+				[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*/[0-9]*)	# IPv4 Netze
+					IP1[Anz]="${${(ws:.:)${i%/*}}[1]}"
+					IP2[Anz]="${${(ws:.:)${i%/*}}[2]}"
+					IP3[Anz]="${${(ws:.:)${i%/*}}[3]}"
+					IP4[Anz]="${${(ws:.:)${i%/*}}[4]}"
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)	# IPv4
+					IP1[Anz]="${${(ws:.:)${i}}[1]}"
+					IP2[Anz]="${${(ws:.:)${i}}[2]}"
+					IP3[Anz]="${${(ws:.:)${i}}[3]}"
+					IP4[Anz]="${${(ws:.:)${i}}[4]}"
+					PTR[Anz]=".${IP3}.${IP2}.${IP1}.in-addr.arpa"
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				[1-9][0-9]*.[0-9]*.[0-9]*)	# IPv4
+					IP1[Anz]="${${(ws:.:)${i}}[1]}"
+					IP2[Anz]="${${(ws:.:)${i}}[2]}"
+					IP3[Anz]="${${(ws:.:)${i}}[3]}"
+					PTR[Anz]=".${IP2}.${IP1}.in-addr.arpa"
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				[1-9][0-9]*.[0-9]*)	# IPv4
+					IP1[Anz]="${${(ws:.:)${i}}[1]}"
+					IP2[Anz]="${${(ws:.:)${i}}[2]}"
+					PTR[Anz]=".${IP1}.in-addr.arpa"
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				[1-9][0-9]|[1-9][0-9][0-9])	# IPv4
+					IP1[Anz]="${${(ws:.:)${i}}[1]}"
+					PTR[Anz]=".${IP1}.in-addr.arpa"
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				esac
+			}
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (mail_address), fuer die mailadress Eingabe{{{
+	#
+	# usage: mail_address [ user@mail.de user1@... ]
+	#        mail_address [ MESSAGES ] [ user@mail.de user1@... ]
+	#
+	# MEASSAGE - eigene Nachricht der Funktion uebergeben.
+	#
+	mail_address() {
+		local TITLE MSG VALUE
+		unset -- gv_Mail_Adr
+		TITLE=$(gettext 'Mail')
+		if [ $# -eq 2 ] ; then
+			MSG="$1"
+			VALUE="$2"
+		else
+			MSG=$(gettext 'Geben Sie bitte eine oder mehrere Mail Adressen an, an dem die Action gemailt werden soll (z.B. user@domain.de). Getrennt durch ein Leerzeichen.')
+			VALUE="$1"
+		fi
+		inputbox "$TITLE" "$MSG" "$VALUE"
+		#
+		if [ -n "$gv_Auswahl" ] ; then
+			for i in ${=gv_Auswahl} ; {
+				case "$i" in
+					[a-zA-Z0-9-_.]*@[a-zA-Z0-9-_.]*.[a-z]*)
+						# Mail Adresse annehmen
+						gv_Mail_Adr+=($i)
+						;;
+					\<[a-zA-Z0-9-_.]*@[a-zA-Z0-9-_.]*.[a-z]*\>*)
+						# Mail Adresse mit Klammern annehmen
+						gv_Mail_Adr+=($i)
+						;;
+					[a-zA-Z0-9-_.]*)
+						# Mail adresse annehmen (nur User)
+						gv_Mail_Adr+=($i)
+						;;
+					*)	unset -- gv_Mail_Adr
+						no_input_msg
+						;;
+				esac
+			}
+		else
+			unset -- gv_Mail_Adr
+			no_input_msg
+		fi
+	}
+	#}}}
+	# Funktion (route_check), um die Routen von einzelnen Netzwerkkarten einzustellen{{{
+	# und loeschen
+	#
+	# usage:
+	# route_check -d delete "$ETH"
+	# route_check -d add "$ETH" "$GATEWAY"
+	# route_check -o delete "$ETH" "$IP"
+	# route_check -o add "$ETH" "$IP" "$GATEWAY"
+	# -d - default Gateway
+	# -o - other Gateway
+	#
+	route_check() {
+		unset -- Route_Ist
+		local Route_Ist Act Gw Eth Ip
+		if [ "$#" -ge 3 ] ; then
+			case $1 in
+				-d)
+					# default Gateway Route.# {{{
+					Act="$2"
+					case "$Act" in
+						delete)
+							# default route loeschen
+							Eth="$3"
+							IFSOLD="$IFS"
+							IFS=$'\t'
+							Route_Ist=${${(s: :)${(M)${(M)${(f)"$(route -n)"}##*${Eth}}##(#s)0.0.0.0*}}[2]}
+							IFS="$IFSOLD"
+							if [ "$Route_Ist" ] ; then
+								PROG_OPT="del default gw $Route_Ist dev $Eth"
+								prog_exec route "$PROG_OPT"
+							fi
+							;;
+						add)
+							# default route anlegen
+							if [ "$4" ] ; then
+								Eth="$3"
+								Gw="$4"
+								IFSOLD="$IFS"
+								IFS=$'\t'
+								Route_Ist=${${(s: :)${(M)${(M)${(f)"$(route -n)"}##*${Eth}}##(#s)0.0.0.0*}}[2]}
+								IFS="$IFSOLD"
+								if [ -z "$Route_Ist" ] ; then
+									PROG_OPT="add default gw $Gw dev $Eth"
+									prog_exec route "$PROG_OPT"
+								fi
+							else
+								no_para_msg $0
+							fi
+							;;
+					esac
+					## }}}
+					;;
+				-o)
+					# other Gateway Routen loeschen# {{{
+					Act="$2"
+					case "$Act" in
+						delete)
+							# route loeschen
+							if [ "$4" ] ; then
+								Eth="$3"
+								Ip="$4"
+								IFSOLD="$IFS"
+								IFS=$'\t'
+								Route_Ist=${${(s: :)${(M)${(M)${(f)"$(route -n)"}##*${Eth}}##(#s)${Ip}*}}[2]}
+								IFS="$IFSOLD"
+								if [ "$Route_Ist" ] ; then
+									PROG_OPT="del $Ip gw $Route_Ist dev $Eth"
+									prog_exec route "$PROG_OPT"
+								fi
+							else
+								no_para_msg $0
+							fi
+							;;
+						add)
+							# route anlegen
+							if [ "$5" ] ; then
+								Eth="$3"
+								Ip="$4"
+								Gw="$5"
+								IFSOLD="$IFS"
+								IFS=$'\t'
+								Route_Ist=${${(s: :)${(M)${(M)${(f)"$(route -n)"}##*${Eth}}##(#s)${Ip}*}}[2]}
+								IFS="$IFSOLD"
+								if [ -z "$Route_Ist" ] ; then
+									PROG_OPT="add $Ip gw $Gw dev $Eth"
+									prog_exec route "$PROG_OPT"
+								fi
+							else
+								no_para_msg $0
+							fi
+							;;
+					esac
+					## }}}
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (remote_sh), herrausfinden ob rsh, rsync und ssh installiert sind.{{{
+	# Danach werden sie zur Auswahl bereitgestellt.
+	#
+	# usage: remote_sh
+	#
+	remote_sh() {
+		unset -- R_SHELL
+		local Remote_Shell Tmp_Shell
+		for i in rsh ssh ; {
+			Remote_Shell="${commands[$i]}"
+			if [ -n "$Remote_Shell" ] ; then
+				Tmp_Shell=$(readlink -f $Remote_Shell)
+				# Duplikate nicht mit aufnehmen.
+				if [ -x "$Tmp_Shell" -a -z "${R_SHELL[(rw)${i}*]}" ] ; then
+					R_SHELL+=(${${Tmp_Shell##*/}#*-} \"\")
+				fi
+			fi
+		}
+	}
+	#}}}
+	# Funktion (update_nis), NIS Datenbank updaten# {{{
+	update_nis() {
+		# prufen ob ypserv laeuft
+		if pidof ypserv >/dev/null ; then
+			make -C /var/yp >/dev/null || prog_failure
+		fi
+	}
+	## }}}
+## }}}
+	###### Netzwerk Nachrichten ###### {{{
+	# Funktion (ip_gt_three_msg), Anzahl der IP Adressen ist >3# {{{
+	#
+	# usage: ip_gt_three_msg
+	ip_gt_three_msg() {
+		MSG=$(gettext 'Die Anzahl der IP-Adressen ist groesser als 3.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_ip_address_msg)# {{{
+	#
+	# usage: no_ip_address_msg
+	#
+	no_ip_address_msg() {
+		MSG=$(gettext 'Sie muessen erst eine gueltige IP-Adresse eingeben.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_remote_shell_msg){{{
+	#
+	# usage: no_remote_shell_msg
+	no_remote_shell_msg() {
+		MSG=$(gettext 'Es ist keine Remote Shell installiert (PATH?).')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion (no_valid_ip_msg)# {{{
+	#
+	# usage: no_valid_ip_msg [ -i | -n | -p ] IP
+    # -i - IP Fehlermeldung, weil die letzte Nr nicht zw. 1 und 254 liegt.
+    # -n - IP Fehlermeldung, weil die IP nicht zu einem Netzwerk gehoert.
+    # -p - IP Prefix Fehlermeldung, weil der IP-Prefix nicht stimmt (nur ipv4).
+	# IP - IP-Adresse oder IP-Prefix der nicht vergeben werden darf/kann.)
+	#
+	no_valid_ip_msg() {
+		if [ "$#" -ge 1 ] ; then
+			unset -- Ip_Msg
+            Opt="$1"
+            case "$Opt" in
+                -i) # falsche IP
+                    Ip_Msg=$2
+                    MSG=$(gettext 'Diese IP ($Ip_Msg) kann man nicht vergeben. Die letzte Zahl muss zwischen 1 und 254 liegen.')
+                    ;;
+                -n)
+		            Ip_Msg=$2
+					MSG=$(gettext 'Dies ist keine gueltige IP-Adresse ($Ip_Msg) fuer das Netzwerk.')
+                    ;;
+                -p)
+		            Ip_Msg=$2
+					MSG=$(gettext 'Dies ist kein gueltiger IP-Prefix ($Ip_Msg).')
+                    ;;
+                *)
+		            Ip_Msg=$1
+					MSG=$(gettext 'Dies ist keine gueltige IP-Adresse ($Ip_Msg).')
+                    ;;
+            esac
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+## }}}
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

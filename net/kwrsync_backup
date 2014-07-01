@@ -1,0 +1,298 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke  <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwrsync_backup, erstellt remote Backups mittels dem Programm rsync
+# Version: 1.0.4
+
+# Ausfuehren von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+umask 0022
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+#
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check rsync
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# auf Root pruefen
+root_check
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+autoload -U kwrsync_backup_exec
+
+# Variablen
+lv_Backup=$(gettext 'Backup')
+lv_Rotate=$(gettext 'Rotierung')
+lv_Host_Conf=$(gettext 'Rechner Konfiguration')
+SCRIPT_INPUT_MSG=$(gettext 'Geben Sie einen Befehl oder ein Script mit vollem Pfad, plus optionale Argumente, ein.')
+KWRSYNC_CF=${ETC_PATH}/kwrsync_backup.cf
+KWRSYNC_CF_DIR=${ETC_PATH}/kwrsync_backup.d
+KWRSYNC_EXEC_DIR=${ETC_PATH}/kwrsync_backup.exec.d
+IFSBAK="$IFS"
+#
+# Wenn es eine Konfigurationsdatei gibt einlesen.
+# Ist die Variable MOUNT_POINT beklegt wird dieses Laufwerk
+# von der Funktion read_file eingebunden.
+#
+read_file -f $KWRSYNC_CF
+if [ -z "$BW_LIMIT" ] ; then
+	BW_LIMIT=0
+fi
+if [ -z "$SERVER" ] ; then
+	SERVER=localhost
+fi
+if [ ! -d "$KWRSYNC_CF_DIR" ] ; then
+	create_file -d $KWRSYNC_CF_DIR
+fi
+LOGFILE="${LOGFILE:-/var/log/${gv_ScriptName}.log}"
+
+# Variablen# {{{
+lv_Hourly=$(gettext 'stuendlich')
+lv_Daily=$(gettext 'taeglich')
+lv_Weekly=$(gettext 'woechentlich')
+lv_Mounthly=$(gettext 'monatlich')
+## }}}
+# Funktion haupt_menue{{{
+#
+MAIN_MENU=($gv_Configuration \"\" \"$lv_Host_Conf\" \"\"
+	$gv_Display \"\" $lv_Backup \"\" $gv_Exit \"\")
+#
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+fs_conf
+hw_conf
+net_conf
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration# {{{
+			autoload -U kwrsync_backup_conf kwrsync_backup_config
+			kwrsync_backup_conf
+			## }}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Host_Conf)
+			# Server/Rechner Backup Konfiguration# {{{
+			autoload -U server_conf server_config
+			server_conf
+			## }}}
+			haupt_menue $lv_Host_Conf
+			;;
+		$gv_Display)
+			# Ansicht der belegten Groesse der Snapshots# {{{
+			if [ -n "$BACKUP_PATH" ] ; then
+				# Rechner heraus finden# {{{
+				unset -- HOSTS_M
+				for i in ${BACKUP_PATH}/hourly.0/*~*-log(/N) ; {
+					HOSTS_M+=( ${i##*/} \"\" off)
+				}
+				## }}}
+				# Funktion (hosts_choice_menu), Rechner Auswahl# {{{
+				#
+				hosts_choice_menu() {
+					HOSTS_TITLE="$gv_Display"
+					HOSTS_MENU=($HOSTS_M)
+					checklist "$HOSTS_TITLE" "$gv_Menupoint" "$HOSTS_MENU"
+				}
+				## }}}
+				# Funktion (no_snapshot_msg){{{
+				#
+				# usage: no_snapshots_msg
+				no_snapshots_msg() {
+					MSG=$(gettext 'Es ist kein Backup/Snapshot vorhanden')
+					msgbox "$gv_Attention" "$MSG"
+				}
+				#}}}
+				# Funktion (snapshot_size), ermitteln der Snapshots Groessen# {{{
+				#
+				snapshot_size() {
+					# Datei der Variable gv_LogFile erst einmal loeschen
+					rm -f $gv_LogFile &>/dev/null
+					pushd "$BACKUP_PATH"
+					# Das ermitteln des belegten Platzes der Snapshots kann
+					# etwas dauern.
+					SIZE_INFO_MSG=$(gettext 'Das ermitteln des belegten Platzes des Snapshots vom Rechner $S kann etwas dauern.')
+					infobox "$gv_Info" "$SIZE_INFO_MSG" 2
+					for S in ${=1} ; {
+						print "" >> $gv_LogFile
+						print "#####################################" >> $gv_LogFile
+						print "# $S" >> $gv_LogFile
+						print "#####################################" >> $gv_LogFile
+						# Platz ermitteln
+						du -csh ./**/${S}/* >> $gv_LogFile
+					}
+					popd
+				}
+				## }}}
+				# Das ermitteln des belegten Platzes der Snapshots kann
+				# etwas dauern.
+				if [[ -n ${HOSTS_M[1]} ]] ; then
+					hosts_choice_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								# Hilfe
+								script_help help
+								hosts_choice_menu
+								;;
+							*)
+								# Auswahl uebernehmen
+								snapshot_size "$gv_Auswahl"
+								if [ -s "$gv_LogFile" ] ; then
+									view_file $gv_LogFile
+								else
+									no_snapshots_msg
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_snapshots_msg
+				fi
+			else
+				no_backup_path_msg
+			fi
+			## }}}
+			haupt_menue $gv_Display
+			;;
+		$lv_Backup)
+			# evtl. Backup ausfuehren# {{{
+			if [ -n "$BACKUP_PATH" ] ; then
+				# Funktion (check_space_fp)# {{{
+				#
+				# Pruefen auf freien Plattenplatz. Ist die benutzte
+				# Kilobyte oder Inode Prozentzahl kleiner als die angegebene
+				# minimale Prozentzahl an Plattenplatz ($HDMINFREE), wird ein
+				# ein Return Wert von 0 zurueckgegeben und das Backup kann
+				# ausgefuehrt werden.
+				check_space_fp() {
+					RET=0
+					if [ "$CHECK_HDMINFREE" = yes ] ; then
+						Kb_Is_Free=${${(s: :)${(M)${(f)"$(LC_ALL=C df $BACKUP_PATH)"}##*%}%\%}[10]}
+						Inode_Is_Free=${${(s: :)${(M)${(f)"$(LC_ALL=C df -i $BACKUP_PATH)"}##*%}%\%}[10]}
+						if [ "$Kb_Is_Free" -ge "$HDMINFREE" -o "$Inode_Is_Free" -ge "$HDMINFREE" ] ; then
+							RET=1
+							no_space_fp_msg
+						fi
+					fi
+				}
+				## }}}
+				# Funktion (backup_time_menu)# {{{
+				#
+				backup_time_menu() {
+					TIME_TITLE=$lv_Backup
+					TIME_MENU=($lv_Hourly \"\" $lv_Daily \"\"
+					$lv_Weekly \"\" $lv_Mounthly \"\" $gv_Back \"\")
+					menubox "$1" "$TIME_TITLE" "$gv_Menupoint" "$TIME_MENU"
+				}
+				## }}}
+				#
+				backup_time_menu
+				while [ "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+				    	    # Hilfe
+							script_help backup_time_help
+							backup_time_menu
+							;;
+						$lv_Hourly)
+							check_space_fp
+							if [[ $RET == 0 ]] ; then
+								kwrsync_backup_exec hourly
+							fi
+							backup_time_menu $lv_Hourly
+							;;
+						$lv_Daily)
+							check_space_fp
+							if [[ $RET == 0 ]] ; then
+								kwrsync_backup_exec daily
+							fi
+							backup_time_menu $lv_Daily
+							;;
+						$lv_Weekly)
+							check_space_fp
+							if [[ $RET == 0 ]] ; then
+								kwrsync_backup_exec weekly
+							fi
+							backup_time_menu $lv_Weekly
+							;;
+						$lv_Mounthly)
+							check_space_fp
+							if [[ $RET == 0 ]] ; then
+								kwrsync_backup_exec mounthly
+							fi
+							backup_time_menu $lv_Mounthly
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+			else
+				no_backup_path_msg
+			fi
+			## }}}
+			haupt_menue $lv_Backup
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+#
+# Festplatte unmounten falls MOUNT_PATH belegt ist
+if [ "$MOUNT_PATH" ] ; then
+	mount_check -u "$MOUNT_PATH"
+fi
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

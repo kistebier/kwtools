@@ -1,0 +1,239 @@
+# kwmutt_format_help fuer kwmutt{{{
+TITLE="${lv_Format}::${gv_Help}"
+MSG=$(gettext 'attribution: Diese Zeichenkette wird einer Nachricht, die in
+\teiner Antwort eingefuegt wurde, vorangestellt. Eine vollstaendige
+\tListe der moeglichen printf()-artigen findet man im Abschnitt
+\t$index_format.
+\tDefault ist set attribution="On %d, %n wrote:"
+
+alias_format: Diese Variable definiert das Format, in dem die Daten
+\tim Adressbuch angezeigt werden.  Die folgenden printf(3)-aehnlichen
+\tPlatzhalter sind verfuegbar:
+\t%a - Kurzname 
+\t%f - Markierung - z.Zt. nur ein "d" fuer einen zum Loeschen
+\tmarkierten Alias 
+\t%n - Indexnummer 
+\t%r - Adresse, die dem Kurznamen zugeordnet ist 
+\t%t - Zeichen, das anzeigt, ob der Alias fuer die Benutzung
+\tmarkiert wurde
+\tDefault ist set alias_format="%4n %2f %t %-10a   %r"
+
+attach_format: Diese Variable beschreibt das Format des
+\tAnhaenge-Menues. Die folgenden printf-aehnlichen Platzhalter
+\twerden akzeptiert:
+\t%D - Anhang ist zum Loeschen markiert 
+\t%d - Beschreibung des Anhangs 
+\t%e - MIME content-transfer-encoding 
+\t%f - Dateiname 
+\t%I - Platzierung (I=inline, A=attachment) 
+\t%m - Haupt-MIME-Typ 
+\t%M - MIME-Subtyp 
+\t%n - Nummer des Anhangs 
+\t%s - Groesse 
+\t%t - Anhang ist markiert 
+\t%u - Anzeige der Loeschmarkierung 
+\t%>X - macht den Rest der Zeichenkette rechtsbuendig und fuellt
+\tmit dem Zeichen "X" auf 
+\t%|X - fuellt bis zum Ende der Zeile mit dem Zeichen "X" auf
+\tDefault ist set attach_format="%u%D%I %t%4n %T%.40d%> [%.7m/%.10M, %.6e%?C?, %C?, %s] "
+
+compose_format: Diese Variable kontrolliert das Aussehen der
+\tStatuszeile, die im Compose-Menue angezeigt wird. Diese
+\tZeichenkette aehnelt $status_format, hat aber ihre eigene Auswahl
+\tan printf-aehnlichen Platzhaltern:
+\t%a - Gesamtanzahl der Anhaenge 
+\t%h - Lokaler Rechnername 
+\t%l - Geschaetzte Groesse (in Bytes) der aktuellen Nachricht 
+\t%v - Version von Mutt
+\tDefault ist set compose_format="-- Mutt: Compose  [Approx. msg size: %l   Atts: %a]%>-"
+
+date_format: Diese Variable bestimmt das Format des Datums, das von
+\tdem Platzhalter "%d" in $index_format ausgegeben wird. Es wird an
+\tden Aufruf strftime weitergereicht, um das Datum zu bearbeiten.
+\tSiehe auch die Manpage von strftime(3) fuer die korrekte Syntax.
+\tWenn das erste Zeichen in der Zeichenkette kein Ausrufezeichen
+\t("!") ist, werden der Monat und die Wochentage in der Sprache
+\tausgegeben, die in der Variablen locale angegeben ist. Falls das
+\terste Zeichen in der Zeichenkette ein Ausrufezeichen ist, wird es
+\tdaraus entfernt, und die Namen der Monate und Wochentage in der
+\trestlichen Zeichenkette so ausgegeben, als waere die Sprache C
+\t(US-Englisch) gesetzt.
+\tDefault ist set date_format="!%a, %b %d, %Y at %I:%M:%S%p %Z"
+
+folder_format: Bestimmt die Anzeige des Datei-Browsers. Diese
+\tZeichenkette ist dem $index_format aehnlich, hat aber ihre
+\teigenen printf()-aehnlichen Platzhalter:
+\t%C - Fortlaufende Nummerierung der Dateien 
+\t%d - Datum/Zeit der letzten Aenderung der Mailbox 
+\t%f - Dateiname 
+\t%F - Dateizugriffsrechte 
+\t%g - Gruppenname (oder der numerische Wert der GID, falls der
+\tName fehlt) 
+\t%l - Anzahl der Hardlinks 
+\t%N - N, falls die Mailbox neue Nachrichten hat, ansonsten nichts 
+\t%s - Groesse in Bytes 
+\t%t - enthaelt * wenn die Datei markiert ist, ansonsten nichts 
+\t%u - Besitzername (oder der numerische Wert der UID, falls der
+\tName fehlt) 
+\t%>X - macht den Rest der Zeichenkette rechtsbuendig und fuellt
+\tmit dem Zeichen "X" auf 
+\t%|X - fuellt bis zum Ende der Zeile mit dem Zeichen "X" auf
+\tDefault ist set forward_format="%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f"
+
+forward_format: Diese Variable bestimmt, nach welchem Muster beim
+\tWeiterleiten einer Nachricht eine Betreff-Zeile generiert wird.
+\tSie bietet die gleichen Format-Platzhalter wie die Variable
+\t$index_format.
+\tDefault ist set forward_format="[%a: %s]"
+
+index_format: Bestimmt das Aussehen des Nachrichten-Index.
+\t"Formatierungs-Zeichenketten" aehneln den Zeichenketten, die in
+\tder C-Funktion printf benutzt werden, um die Ausgabe anzupassen
+\t(siehe deren Manpage fuer weitere Details). Die folgenden
+\tPlatzhalter sind in Mutt definiert:
+\t%a - Adresse des Autors 
+\t%b - Dateiname der Originalmailbox (denke an Mailbox) 
+\t%B - Liste, an die der Brief gesendet wurde, oder sonst der
+\tMailboxname (%b) 
+\t%c - Anzahl der Zeichen (Bytes) in der Nachricht 
+\t%C - aktuelle Nachrichtenummer 
+\t%d - Datum und Uhrzeit der Nachricht in dem vom "date_format"
+\tbestimmten Format, umgewandelt in die Zeitzone des Absenders 
+\t%D - Datum und Uhrzeit der Nachricht in dem vom "date_format"
+\tbestimmten Format, umgewandelt in die lokale Zeitzone 
+\t%f - vollstaendige From: Zeile (Adresse und Realname) 
+\t%F - Name des Autors oder des Empfaengers, falls die Nachricht
+\tvon dir ist 
+\t%i - Message-ID der aktuellen Nachricht 
+\t%l - Anzahl der Zeilen der Nachricht 
+\t%L - Wenn eine Adresse im To oder Cc Header-Feld einer Adresse
+\tentspricht, die der Benutzer mit dem Befehl 'lists' angegeben hat,
+\tzeigt dieser Buchstabe "To <listen-name>" an, ansonsten verhaelt
+\ter sich wie %F. 
+\t%m - Gesamtanzahl der Nachrichten in der Mailbox 
+\t%M - Anzahl der versteckten Nachrichten, falls der Thread
+\tzusammengefaltet ist 
+\t%n - Vollstaendiger Name des Autors (oder die Adresse, falls er
+\tfehlt) 
+\t%O - (_O_riginaler Save-Folder) Wo Mutt eigentlich die Nachricht
+\tverstecken wuerde: List- oder Empfaengername, falls es keine Liste
+\tist 
+\t%s - Betreff der Nachricht 
+\t%S - Status der Nachricht (N/D/d/!/*/r) 
+\t%t - Header-Zeile 'To:' (Empfaenger) 
+\t%T - das passende Zeichen aus der Zeichenkette $to_chars
+\t%u - Benutzername (Login) des Autors 
+\t%v - Vorname des Autors oder des Empfaengers, falls die Nachricht
+\tvon Ihnen ist 
+\t%y - Feld "x-label:", falls vorhanden 
+\t%Y - Feld "x-label:", falls vorhanden, und (1) nicht Teil des
+\tThread-Baumes, (2) an der Spitze des Threads oder (3) "x-label"
+\tunterscheidet sich vom "x-label" der Vorgaengernachricht 
+\t%Z - Kennzeichnungen des Nachrichtenstatus 
+\t%{fmt} - Das Datum und die Uhrzeit der Nachricht werden in die
+\tZeitzone des Absenders umgewandelt, und "fmt" wird von dem
+\tSystemaufruf "strftime" ausgewertet; ein fuehrendes Ausrufezeichen
+\tschaltet die Locale-Einstellungen ab
+\t%[fmt] - Das Datum und die Uhrzeit der Nachricht werden in die
+\tlokale Zeitzone umgewandelt, und "fmt" wird von dem Systemaufruf
+\t"strftime" ausgewertet; ein fuehrendes Ausrufezeichen schaltet die
+\tLocale-Einstellungen ab 
+\t%(fmt) - lokales Datum und lokale Uhrzeit vom Empfangszeitpunkt der
+\tNachricht. "fmt" wird von dem Systemaufruf "strftime" ausgewertet;
+\tein fuehrendes Ausrufezeichen schaltet die Locale-Einstellungen ab 
+\t%<fmt> - aktuelle lokale Uhrzeit. "fmt" wird von dem Systemaufruf
+\t"strftime" ausgewertet; ein fuehrendes Ausrufezeichen schaltet die
+\tLocale-Einstellungen ab 
+\t%>X - macht den Rest der Zeichenkette rechtsbuendig und fuellt
+\tmit dem Zeichen "X" auf 
+\t%|X - fuellt bis zum Ende der Zeile mit dem Zeichen "X" auf
+\tDefault ist set index_format="%4C %Z %{%b %d} %-15.15L (%?l?%4l&%4c?) %s"
+
+message_format: Dies ist die Zeichenkette, die im "Anhang"-Menue
+\tfuer die Anzeige von Attachments des Typs message/rfc822 benutzt
+\twird. Der Abschnitt ueber index_format enthaelt eine komplette
+\tListe der erlaubten Platzhalter.
+\tDefault ist set message_format="%s"
+
+mix_entry_format: Diese Variable beschreibt den Aufbau einer
+\tRemailer-Zeile in dem Menue zur Auswahl einer Mixmaster-Kette.
+\tDie folgenden printf-aehnlichen Platzhalter werden unterstuetzt:
+\t%n - Die laufende Nummer im Menue 
+\t%c - Faehigkeiten des Remailers 
+\t%s - Der Kurzname des Remailers 
+\t%a - Die E-Mail-Adresse des Remailers
+\tDefault ist set mix_entry_format_format="%4n %c %-16s %a"
+
+pager_format: Diese Variable kontrolliert wie der "Status" der mail
+\tangezeigt werden soll bevor man die mail mit einem Pager liest.
+\tDie gueltigen Platzhalter sind im Abschnitt index_format
+\taufgelistet.
+\tDefault ist set pager_format="-%Z- %C/%m: %-20.20n   %s%*  -- (%P)"
+
+pgp_entry_format: Diese Variable erlaubt es Ihnen, das Menue fuer
+\tdie PGP-Schluesselauswahl Ihrem persoenlichen Geschmack anzupassen.
+\tDiese Zeichenkette aehnelt dem $index_format, hat aber ihre eigene
+\tAuswahl an printf()-aehnlichen Platzhaltern:
+\t%n - Nummer 
+\t%k - Schluessel-ID 
+\t%u - Benutzer-ID 
+\t%a - Algorithmus 
+\t%l - Schluessellaenge 
+\t%f - Markierungen 
+\t%c - Faehigkeiten 
+\t%t - Vertrauenswuerdigkeit/Gueltigkeit der Zuordnung von
+\tSchluessel zu Benutzer-ID 
+\t%[<s>] - Datum des Schluessels, wobei <s> ein strftime(3)-Ausdruck
+\tist
+\tDefault ist set pgp_entry_format_format="%4n %t%f %4l/0x%k %-4a %2c %u"
+
+query_format: Diese Variable beschreibt das Format des Query-Menues.
+\t Folgende printf()-aehnliche Platzhalter werden unterstuetzt:
+\t%a - Ziel Adresse
+\t%c - laufende Nummer
+\t%e - extra Information *
+\t%n - Ziel Name
+\t%t - "*" falls der Eintrag getaggt ist, sonst ist leer
+\t%>X - richte den Rest der Zeichenkette rechtsbuendig aus und
+\tfuelle mit "X" auf
+\t%|X - fuelle bis zum Ende der Zeile mit "X" auf
+\t%*X - soft-fill mit Zeichen "X"
+\tDefault ist set query_format="%4c %t %-25.25a %-25.25n %?e?(%e)?"
+
+status_format: Bestimmt das Format der Status-Zeile, die im
+\tIndex-Menue angezeigt wird. Diese Zeichenkette aehnelt dem
+\t$index_format, bietet jedoch seine eigenen printf()-aehnlichen
+\tPlatzhalter:
+\t%b - Anzahl der Mailbox-Dateien mit neuen Nachrichten * 
+\t%d - Anzahl der geloeschten Nachrichten * 
+\t%h - Name des lokalen Rechners (local hostname) 
+\t%f - der volle Pfadname der aktuellen Mailbox-Datei 
+\t%F - Anzahl der markierten Nachrichten * 
+\t%l - Groesse (in Byte) der aktuellen Mailbox-Datei * 
+\t%L - Groesse (in Byte) der angezeigten Nachrichten (d.h. auf die
+\tdas aktuelle Begrenzungsmuster zutrifft) * 
+\t%m - Anzahl der Nachrichten in der Mailbox-Datei * 
+\t%M - Anzahl der angezeigten Nachrichten (d.h. auf die das aktuelle
+\tBegrenzungsmuster zutrifft) * 
+\t%n - Anzahl der neuen Nachrichten in der Mailbox-Datei * 
+\t%o - Anzahl der alten ungelesenen Nachrichten 
+\t%p - Anzahl der zurueckgestellten Nachrichten * 
+\t%P - Position des Cursors im Index (in Prozent) 
+\t%r - veraendert/nur-lesen/nicht-schreiben/Nachrichten-anhaengen-
+\tIndikator, gemaess $status_chars
+\t%s - aktueller Sortiermodus ( $sort) 
+\t%S - aktuelle Hilfs-Sortiermethode (ref id="sort_aux" name="$sort_aux">) 
+\t%t - Anzahl der ausgewaehlten Nachrichten * 
+\t%u - Anzahl der ungelesenen Nachrichten * 
+\t%v - Versions-Anzeige von Mutt 
+\t%V - aktuelles Begrenzungsmuster (falls aktiv) * 
+\t%>X - richte den Rest der Zeichenkette rechtsbuendig aus und
+\tfuelle mit "X" auf 
+\t%|X - fuelle bis zum Ende der Zeile mit "X" auf
+\tDefault ist set status_format="-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"
+')
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

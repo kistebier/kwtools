@@ -1,0 +1,399 @@
+# tlsproxy (?) Konfiguration einstellen{{{
+
+tlsproxy_conf() {
+
+	# Variable
+	TLSPROXY_TITLE="${gv_Configuration}::${lv_TlsProxy}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)tlsproxy_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_tlsproxy_menu), die tlsproxy-Parameter einstellen# {{{
+	conf_tlsproxy_menu() {
+		TLSPROXY_MENU=(tlsproxy_enforce_tls \"\$tlsproxy_enforce_tls\"
+		tlsproxy_tls_CAfile \"\$tlsproxy_tls_CAfile\"
+		tlsproxy_tls_CApath \"\$tlsproxy_tls_CApath\"
+		tlsproxy_tls_always_issue_session_ids \"\$tlsproxy_tls_always_issue_session_ids\"
+		tlsproxy_tls_ask_ccert \"\$tlsproxy_tls_ask_ccert\"
+		tlsproxy_tls_ccert_verifydepth \"\$tlsproxy_tls_ccert_verifydepth\"
+		tlsproxy_tls_cert_file \"\$tlsproxy_tls_cert_file\"
+		tlsproxy_tls_ciphers \"\$tlsproxy_tls_ciphers\"
+		tlsproxy_tls_dcert_file \"\$tlsproxy_tls_dcert_file\"
+		tlsproxy_tls_dh1024_param_file \"\$tlsproxy_tls_dh1024_param_file\"
+		tlsproxy_tls_dh512_param_file \"\$tlsproxy_tls_dh512_param_file\"
+		tlsproxy_tls_dkey_file \"\$tlsproxy_tls_dkey_file\"
+		tlsproxy_tls_eccert_file \"\$tlsproxy_tls_eccert_file\"
+		tlsproxy_tls_eckey_file \"\$tlsproxy_tls_eckey_file\"
+		tlsproxy_tls_eecdh_grade \"\$tlsproxy_tls_eecdh_grade\"
+		tlsproxy_tls_exclude_ciphers \"\$tlsproxy_tls_exclude_ciphers\"
+		tlsproxy_tls_fingerprint_digest \"\$tlsproxy_tls_fingerprint_digest\"
+		tlsproxy_tls_key_file \"\$tlsproxy_tls_key_file\"
+		tlsproxy_tls_loglevel \"\$tlsproxy_tls_loglevel\"
+		tlsproxy_tls_mandatory_ciphers \"\$tlsproxy_tls_mandatory_ciphers\"
+		tlsproxy_tls_mandatory_exclude_ciphers \"\$tlsproxy_tls_mandatory_exclude_ciphers\"
+		tlsproxy_tls_mandatory_protocols \"\$tlsproxy_tls_mandatory_protocols\"
+		tlsproxy_tls_protocols \"\$tlsproxy_tls_protocols\"
+		tlsproxy_tls_req_ccert \"\$tlsproxy_tls_req_ccert\"
+		tlsproxy_tls_security_level \"\$tlsproxy_tls_security_level\"
+		tlsproxy_tls_session_cache_timeout \"\$tlsproxy_tls_session_cache_timeout\"
+		tlsproxy_use_tls \"\$tlsproxy_use_tls\"
+		tlsproxy_watchdog_timeout \"\$tlsproxy_watchdog_timeout\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$TLSPROXY_TITLE" "$gv_Menupoint" "$TLSPROXY_MENU"
+	}
+	## }}}
+	conf_tlsproxy_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tlsproxy_help
+				conf_tlsproxy_menu
+				;;
+			tlsproxy_enforce_tls)
+				# Standard = $smtpd_enforce_tls (no)# {{{
+				default_or_input tlsproxy_enforce_tls ja_nein_tausch $TLSPROXY_TITLE $SMTPD_ENFORCE_TLS_MSG
+				if [[ -n $Value ]] ; then
+					tlsproxy_enforce_tls="$Value"
+					postconf -e tlsproxy_enforce_tls="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_enforce_tls
+				;;
+			tlsproxy_tls_CAfile)
+				# Standard = $smtpd_tls_CAfile # {{{
+				# Datei mit den CAs denen dieser Server vertraut, für die Signatur
+				# von Clientzertifikaten.
+				default_or_input tlsproxy_tls_CAfile tls_file_choice 
+				tlsproxy_tls_CAfile="$Value"
+				postconf -e tlsproxy_tls_CAfile="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_CAfile
+				;;
+			tlsproxy_tls_CApath)
+				# Standard = $smtpd_tls_CApath# {{{
+				# Verzeichnis in dem die Zertifikate liegen, fuer
+				# ausgehende Mails. Diese werden dann mit den Rechten des Mail 
+				# Servers gelesen. 
+				dselect "$tlsproxy_tls_CApath"
+				if [ "$VERZ" ] ; then
+					dselect_check "$VERZ"
+					if [ "$VERZ" ] ; then
+						tlsproxy_tls_CApath="$VERZ"
+						postconf -e tlsproxy_tls_CApath="$VERZ"
+					else
+						tlsproxy_tls_CApath=""
+						postconf -e tlsproxy_tls_CApath=""
+					fi
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_CApath
+				;;
+			tlsproxy_tls_always_issue_session_ids)
+				# Soll der Postfix SMTP Server eine TLS Session ID ausstellen, falls das TLS# {{{
+				# Session Caching deaktiviert ist (ja/nein)?
+				# Standard = $smtpd_tls_always_issue_session_ids (yes)
+				default_or_input tlsproxy_tls_always_issue_session_ids ja_nein_tausch $TLSPROXY_TITLE $SMTPD_TLS_ALWAYS_SESSION_ISSUE_IDS_MSG
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_always_issue_session_ids="$Value"
+					postconf -e tlsproxy_tls_always_issue_session_ids="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_always_issue_session_ids
+				;;
+			tlsproxy_tls_ask_ccert)
+				# Standard = $smtpd_tls_ask_ccert# {{{
+				# Muss beim Server explizit nach einem Client Zertifikat
+				# nachgefragt werden (ja/nein)?
+				default_or_input tlsproxy_tls_ask_ccert ja_nein_tausch $TLSPROXY_TITLE $SMTPD_TLS_ASK_CCERT_MSG
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_ask_ccert="$Value"
+					postconf -e tlsproxy_tls_ask_ccert="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_ask_ccert
+				;;
+			tlsproxy_tls_ccert_verifydepth)
+				# Standard = $smtpd_tls_ccert_verifydepth (9)# {{{
+				# Ueberpruefungstiefe von Client Zertifikaten.
+				number_input -i "$smtpd_tls_ccert_verifydepth"
+				if [[ -n $NUMBER ]] ; then
+					smtpd_tls_ccert_verifydepth="$NUMBER"
+					postconf -e smtpd_tls_ccert_verifydepth="$NUMBER"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_ccert_verifydepth
+				;;
+			tlsproxy_tls_cert_file)
+				# Standard = $smtpd_tls_cert_file# {{{
+				default_or_input tlsproxy_tls_cert_file tls_file_choice 
+				tlsproxy_tls_cert_file="$Value"
+				postconf -e tlsproxy_tls_cert_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_cert_file
+				;;
+			tlsproxy_tls_ciphers)
+				# Standard = $smtpd_tls_ciphers# {{{
+				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
+				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				default_or_input tlsproxy_tls_ciphers tls_ciphers "" "$tlsproxy_tls_ciphers"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_ciphers="$Value"
+					postconf -e tlsproxy_tls_ciphers="$Value"
+				else
+					tlsproxy_tls_ciphers="\$smtpd_tls_ciphers"
+					postconf -e tlsproxy_tls_ciphers="\$smtpd_tls_ciphers"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_ciphers
+				;;
+			tlsproxy_tls_dcert_file)
+				# Standard = $smtpd_tls_dcert_file# {{{
+				default_or_input tlsproxy_tls_dcert_file tls_file_choice 
+				tlsproxy_tls_dcert_file="$Value"
+				postconf -e tlsproxy_tls_dcert_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_dcert_file
+				;;
+			tlsproxy_tls_dh1024_param_file)
+				# Standard = $smtpd_tls_dh1024_param_file# {{{
+				# Auswahl der dh* Parameter Datei
+				default_or_input tlsproxy_tls_dh1024_param_file tls_file_choice 
+				tlsproxy_tls_dh1024_param_file="$Value"
+				postconf -e tlsproxy_tls_dh1024_param_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_dh1024_param_file
+				;;
+			tlsproxy_tls_dh512_param_file)
+				# Standard = $smtpd_tls_dh512_param_file# {{{
+				# Auswahl der dh* Parameter Datei
+				default_or_input tlsproxy_tls_dh512_param_file tls_file_choice 
+				tlsproxy_tls_dh512_param_file="$Value"
+				postconf -e tlsproxy_tls_dh512_param_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_dh512_param_file
+				;;
+			tlsproxy_tls_dkey_file)
+				# Standard = $smtpd_tls_dkey_file# {{{
+				default_or_input tlsproxy_tls_dkey_file tls_file_choice 
+				tlsproxy_tls_dkey_file="$Value"
+				postconf -e tlsproxy_tls_dkey_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_dkey_file
+				;;
+			tlsproxy_tls_eccert_file)
+				# = $smtpd_tls_eccert_file# {{{
+				# Datei mit dem Postfix SMTP Server ECDSA
+				# Zertifikat im PEM Format.
+				default_or_input tlsproxy_tls_eccert_file tls_file_choice 
+				tlsproxy_tls_eccert_file="$Value"
+				postconf -e tlsproxy_tls_eccert_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_eccert_file
+				;;
+			tlsproxy_tls_eckey_file)
+				# Standard = $smtpd_tls_eckey_file# {{{
+				# Datei mit dem Postfix SMTP Server ECDSA
+				# privaten Schluessel im PEM Format.
+				default_or_input tlsproxy_tls_eckey_file tls_file_choice 
+				tlsproxy_tls_eckey_file="$Value"
+				postconf -e tlsproxy_tls_eckey_file="$Value"
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_eckey_file
+				;;
+			tlsproxy_tls_eecdh_grade)
+				# Standard ist = $smtpd_tls_eecdh_grade; Parameter sind none strong ultra# {{{
+				# Auswahl der Sicherheit des Postfix SMTP Server fuer den
+				# ephemeral elliptic-curve Diffie-Hellman (EECDH) Schluessel
+				# Austausch.
+				default_or_input tlsproxy_tls_eecdh_grade tls_eecdh_grade "" "$tlsproxy_tls_eecdh_grade"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_eecdh_grade="$Value"
+					postconf -e tlsproxy_tls_eecdh_grade="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_eecdh_grade
+				;;
+			tlsproxy_tls_exclude_ciphers)
+				# Standard = $smtpd_tls_exclude_ciphers# {{{
+				# Liste der Verschluesselung oder Verschluesselungstypen
+				# die von der Postfix SMTP Server Verschluesselungliste
+				# aller TLS Sicherheitslevel ausgeschlossen werden.
+				default_or_input tlsproxy_tls_exclude_ciphers tls_exclude_ciphers "" "$tlsproxy_tls_exclude_ciphers"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_exclude_ciphers="$Value"
+					postconf -e tlsproxy_tls_exclude_ciphers="$Value"
+				else
+					tlsproxy_tls_exclude_ciphers="\$smtpd_tls_exclude_ciphers"
+					postconf -e tlsproxy_tls_exclude_ciphers="\$smtpd_tls_exclude_ciphers"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_exclude_ciphers
+				;;
+			tlsproxy_tls_fingerprint_digest)
+				# Standard = $smtpd_tls_fingerprint_digest (md5)# {{{
+				default_or_input tlsproxy_tls_fingerprint_digest tls_fingerprint_digest "tlsproxy_help" $tlsproxy_tls_fingerprint_digest
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_fingerprint_digest="$Value"
+					postconf -e tlsproxy_tls_fingerprint_digest="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_fingerprint_digest
+				;;
+			tlsproxy_tls_key_file)
+				# Standard ist = $smtpd_tls_key_file#{{{
+				# Datei mit dem Postfix SMTP Server RSA
+				# privaten Schluessel im PEM Format.
+				default_or_input tlsproxy_tls_key_file tls_file_choice 
+				tlsproxy_tls_key_file="$Value"
+				postconf -e tlsproxy_tls_key_file="$Value"
+				#}}}
+				conf_tlsproxy_menu tlsproxy_tls_key_file
+				;;
+			tlsproxy_tls_loglevel)
+				# Standard = $smtpd_tls_loglevel# {{{
+				default_or_input tlsproxy_tls_loglevel loglevel "" $tlsproxy_tls_loglevel
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_loglevel="$Value"
+					postconf -e tlsproxy_tls_loglevel="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_loglevel
+				;;
+			tlsproxy_tls_mandatory_ciphers)
+				# Standard = $smtpd_tls_mandatory_ciphers# {{{
+				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
+				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				default_or_input tlsproxy_tls_mandatory_ciphers tls_ciphers "" "$tlsproxy_tls_mandatory_ciphers"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_mandatory_ciphers="$Value"
+					postconf -e tlsproxy_tls_mandatory_ciphers="$Value"
+				else
+					tlsproxy_tls_mandatory_ciphers="\$smtpd_tls_mandatory_ciphers"
+					postconf -e tlsproxy_tls_mandatory_ciphers="\$smtpd_tls_mandatory_ciphers"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_mandatory_ciphers
+				;;
+			tlsproxy_tls_mandatory_exclude_ciphers)
+				# Standard = $smtpd_tls_mandatory_exclude_ciphers# {{{
+				# Liste der Verschluesselung oder Verschluesselungstypen
+				# die von der Postfix SMTP Server Verschluesselungliste
+				# aller TLS Sicherheitslevel ausgeschlossen werden.
+				default_or_input tlsproxy_tls_mandatory_exclude_ciphers tls_exclude_ciphers "" "$tlsproxy_tls_mandatory_exclude_ciphers"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_mandatory_exclude_ciphers="$Value"
+					postconf -e tlsproxy_tls_mandatory_exclude_ciphers="$Value"
+				else
+					tlsproxy_tls_mandatory_exclude_ciphers="\$smtpd_tls_mandatory_exclude_ciphers"
+					postconf -e tlsproxy_tls_mandatory_exclude_ciphers="\$smtpd_tls_mandatory_exclude_ciphers"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_mandatory_exclude_ciphers
+				;;
+			tlsproxy_tls_mandatory_protocols)
+				# Standard = $smtpd_tls_mandatory_protocols# {{{
+				# SSLv1, SSLv2, TLSv1
+				# bei openssl >=1.0.1
+				# SSLv1, SSLv2, TLSv1, TLSv1.1, TLSv1.2
+				default_or_input tlsproxy_tls_mandatory_protocols tls_protocols "" "${${${tlsproxy_tls_mandatory_protocols}//,/}//;/}"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_mandatory_protocols="$Value"
+					postconf -e tlsproxy_tls_mandatory_protocols="$Value"
+				else
+					tlsproxy_tls_protocols="\$smtpd_tls_mandatory_protocols"
+					postconf -e tlsproxy_tls_protocols="\$smtpd_tls_mandatory_protocols"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_mandatory_protocols
+				;;
+			tlsproxy_tls_protocols)
+				# Standard = $smtpd_tls_protocols# {{{
+				# SSLv1, SSLv2, TLSv1
+				# bei openssl >=1.0.1
+				# SSLv1, SSLv2, TLSv1, TLSv1.1, TLSv1.2
+				default_or_input tlsproxy_tls_protocols tls_protocols "" "${${${tlsproxy_tls_protocols}//,/}//;/}"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_protocols="$Value"
+					postconf -e tlsproxy_tls_protocols="$Value"
+				else
+					tlsproxy_tls_protocols="\$smtpd_tls_protocols"
+					postconf -e tlsproxy_tls_protocols="\$smtpd_tls_protocols"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_protocols
+				;;
+			tlsproxy_tls_req_ccert)
+				# Standard = $smtpd_tls_req_ccert (no)# {{{
+				default_or_input tlsproxy_tls_req_ccert ja_nein_tausch $TLSPROXY_TITLE $SMTPD_TLS_REQ_CCERT_MSG
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_req_ccert="$Value"
+					postconf -e tlsproxy_tls_req_ccert="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_req_ccert
+				;;
+			tlsproxy_tls_security_level)
+				# Standard = $smtpd_tls_security_level# {{{
+				# Legt fest, ob SSL/TLS benutzt werden darf, kann oder muss.
+				default_or_input tlsproxy_tls_security_level tls_security_level "tlsproxy" "$tlsproxy_tls_security_level"
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_security_level="$Value"
+					postconf -e tlsproxy_tls_security_level="$Value"
+				else
+					tlsproxy_tls_security_level="\$smtpd_tls_security_level"
+					postconf -e tlsproxy_tls_security_level="\$smtpd_tls_security_level"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_security_level
+				;;
+			tlsproxy_tls_session_cache_timeout)
+				# = $smtpd_tls_session_cache_timeout# {{{
+				default_or_input tlsproxy_tls_session_cache_timeout number_input -s ${tlsproxy_tls_session_cache_timeout%?}
+				if [[ -n $Value ]] ; then
+					tlsproxy_tls_session_cache_timeout="$Value"
+					postconf -e tlsproxy_tls_session_cache_timeout="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_tls_session_cache_timeout
+				;;
+			tlsproxy_use_tls)
+				# Standard = $smtpd_use_tls (no)# {{{
+				default_or_input tlsproxy_use_tls ja_nein_tausch $TLSPROXY_TITLE $SMTPD_USE_TLS_MSG
+				if [[ -n $Value ]] ; then
+					tlsproxy_use_tls="$Value"
+					postconf -e tlsproxy_use_tls="$Value"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_use_tls
+				;;
+			tlsproxy_watchdog_timeout)
+				# Standard ist = 10s, gehen aber auch Integer Zahlen mit dem Suffix d(days),# {{{
+				# s(seconds), m(minutes), h(hours), w(weeks) .
+				TLSPROXY_WATCHDOG_TIMEOUT_MSG=$(gettext 'Welche Zeit soll sich der tlsproxy Prozess nehmen um lokale oder entfernte I/O Prozesse durch eine built-in Watchdog Uhr beenden soll. Sie koennen eine Integer Zahl in Sekunden, Minuten, Stunden, Tagen oder Wochen eingeben. Benutzen Sie die einzelnen Suffixe \"smhdw\".')
+				number_input -a "$TLSPROXY_TITLE" "$TLSPROXY_WATCHDOG_TIMEOUT_MSG" $tlsproxy_watchdog_timeout
+				if [[ -n $NUMBER ]] ; then
+					tlsproxy_watchdog_timeout="$NUMBER"
+					postconf -e tlsproxy_watchdog_timeout="$NUMBER"
+				fi
+				## }}}
+				conf_tlsproxy_menu tlsproxy_watchdog_timeout
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

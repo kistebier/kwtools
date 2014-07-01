@@ -1,0 +1,160 @@
+# address (?) Konfiguration einstellen{{{
+
+address_conf() {
+
+	# Variable
+	ADDRESS_TITLE="${gv_Configuration}::${lv_Address_Verify}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)address_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_address_menu), die Adresspruefung-Parameter einstellen# {{{
+	##############################################
+	# TODO: Hilfe etc. vorbereitet
+	##############################################
+	# address_verify_cache_cleanup_interval = 12h
+	# address_verify_default_transport = $default_transport
+	# address_verify_local_transport = $local_transport
+	# address_verify_map = btree:$data_directory/verify_cache
+	# address_verify_negative_cache = yes
+	# address_verify_negative_expire_time = 3d
+	# address_verify_negative_refresh_time = 3h
+	# address_verify_poll_count = ${stress?1}${stress:3}
+	# address_verify_poll_delay = 3s
+	# address_verify_positive_expire_time = 31d
+	# address_verify_positive_refresh_time = 7d
+	# address_verify_relay_transport = $relay_transport
+	# address_verify_relayhost = $relayhost
+	# address_verify_sender = $double_bounce_sender
+	# address_verify_sender_dependent_default_transport_maps = $sender_dependent_default_transport_maps
+	# address_verify_sender_dependent_relayhost_maps = $sender_dependent_relayhost_maps
+	# address_verify_sender_ttl = 0s
+	# address_verify_transport_maps = $transport_maps
+	# address_verify_virtual_transport = $virtual_transport
+	##############################################
+	conf_address_menu() {
+		ADDRESS_MENU=(address_verify_cache_cleanup_interval \"\$address_verify_cache_cleanup_interval\"
+		address_verify_default_transport \"\$address_verify_default_transport\"
+		address_verify_local_transport \"\$address_verify_local_transport\"
+		address_verify_map \"\$address_verify_map\"
+		address_verify_negative_cache \"\$address_verify_negative_cache\"
+		address_verify_negative_expire_time \"\$address_verify_negative_expire_time\"
+		address_verify_negative_refresh_time \"\$address_verify_negative_refresh_time\"
+		address_verify_poll_count \"\$address_verify_poll_count\"
+		address_verify_poll_delay \"\$address_verify_poll_delay\"
+		address_verify_positive_expire_time \"\$address_verify_positive_expire_time\"
+		address_verify_positive_refresh_time \"\$address_verify_positive_refresh_time\"
+		address_verify_relay_transport \"\$address_verify_relay_transport\"
+		address_verify_relayhost \"\$address_verify_relayhost\"
+		address_verify_sender \"\$address_verify_sender\"
+		address_verify_sender_dependent_default_transport_maps \"\$address_verify_sender_dependent_default_transport_maps\"
+		address_verify_sender_dependent_relayhost_maps \"\$address_verify_sender_dependent_relayhost_maps\"
+		address_verify_sender_ttl \"\$address_verify_sender_ttl\"
+		address_verify_transport_maps \"\$address_verify_transport_maps\"
+		address_verify_virtual_transport \"\$address_verify_virtual_transport\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$ADDRESS_TITLE" "$gv_Menupoint" "$ADDRESS_MENU"
+	}
+	## }}}
+	conf_address_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help address_help
+				conf_address_menu
+				;;
+			address_verify_cache_cleanup_interval)
+				# = 12h
+				conf_address_menu $address_verify_cache_cleanup_interval
+				;;
+			address_verify_default_transport)
+				# = $default_transport
+				conf_address_menu $address_verify_default_transport
+				;;
+			address_verify_local_transport)
+				# = $local_transport
+				conf_address_menu $address_verify_local_transport
+				;;
+			address_verify_map)
+				# = btree:$data_directory/verify_cache
+				conf_address_menu $address_verify_map
+				;;
+			address_verify_negative_cache)
+				# = yes
+				conf_address_menu $address_verify_negative_cache
+				;;
+			address_verify_negative_expire_time)
+				# = 3d
+				conf_address_menu $address_verify_negative_expire_time
+				;;
+			address_verify_negative_refresh_time)
+				# = 3h
+				conf_address_menu $address_verify_negative_refresh_time
+				;;
+			address_verify_poll_count)
+				# = ${stress?1}${stress:3}
+				conf_address_menu $address_verify_poll_count
+				;;
+			address_verify_poll_delay)
+				# = 3s
+				conf_address_menu $address_verify_poll_delay
+				;;
+			address_verify_positive_expire_time)
+				# = 31d
+				conf_address_menu $address_verify_positive_expire_time
+				;;
+			address_verify_positive_refresh_time)
+				# = 7d
+				conf_address_menu $address_verify_positive_refresh_time
+				;;
+			address_verify_relay_transport)
+				# = $relay_transport
+				conf_address_menu $address_verify_relay_transport
+				;;
+			address_verify_relayhost)
+				# = $relayhost
+				conf_address_menu $address_verify_relayhost
+				;;
+			address_verify_sender)
+				# = $double_bounce_sender
+				conf_address_menu $address_verify_sender
+				;;
+			address_verify_sender_dependent_default_transport_maps)
+				# = $sender_dependent_default_transport_maps
+				conf_address_menu $address_verify_sender_dependent_default_tr
+				;;
+			address_verify_sender_dependent_relayhost_maps)
+				# = $sender_dependent_relayhost_maps
+				conf_address_menu $address_verify_sender_dependent_relayhost_maps
+				;;
+			address_verify_sender_ttl)
+				# = 0s
+				conf_address_menu $address_verify_sender_ttl
+				;;
+			address_verify_transport_maps)
+				# = $transport_maps
+				conf_address_menu $address_verify_transport_maps
+				;;
+			address_verify_virtual_transport)
+				# = $virtual_transport
+				conf_address_menu $address_verify_virtual_transport
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

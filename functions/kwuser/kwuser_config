@@ -1,0 +1,69 @@
+# Funktion kwuser_config, Konfiguration schreiben{{{
+#
+# usage: kwuser_config
+#
+kwuser_config() {
+#
+# Konfiguration schreiben.
+#
+> ${gv_HomePath}/.kwtools/kwuserrc <<< "# Beginn ~/.kwtools/kwuserrc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Gruppe
+KW_NGROUP=\"$KW_NGROUP\"
+
+# Gruppen
+KW_NGROUPS=\"$KW_NGROUPS\"
+
+# Zu Einstellungen (Passwortaenderung)
+# beim 1. Login auffordern (yes/no).
+#
+# Notiz: Benoetigt das Paket \"kwtools-sys-kwpasswd\", ausser Sie
+# benutzen die Sourcen.
+FIRSTLOGIN=\"$FIRSTLOGIN\"
+
+# Passwortlaenge
+PASSWD_LENGTH=\"$PASSWD_LENGTH\"
+
+# default shell
+U_SHELL=\"$U_SHELL\"
+
+# Quota Einstellungen fuer User anlegen
+# Quota - Block Hard- und Softlimit
+BH_LIMIT=\"$BH_LIMIT\"
+BS_LIMIT=\"$BS_LIMIT\"
+
+# End ~/.kwtools/kwuserrc"
+
+read_file kwuserrc
+
+# Datei /etc/login.defs aendern
+if [ -n "$KWUSER_UMASK" ] ; then
+	if [ -n "`print ${(M)$(< /etc/login.defs)##(#s)\#UMASK*}`" ] ; then
+		sed -e "s/^#UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs >${gv_WorkDir}/login
+	else
+		sed -e "s/^UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs >${gv_WorkDir}/login
+	fi
+	if [ "`wc -l < ${gv_WorkDir}/login`" -gt 1 ] ; then
+		mv ${gv_WorkDir}/login /etc/login.defs
+		chmod 644 /etc/login.defs
+	fi
+fi
+if [ -n "$ENCRYPT_METHOD" ] ; then
+	if [ -n "`print ${(M)$(< /etc/login.defs)##(#s)\#ENCRYPT_METHOD*}`" ] ; then
+		sed -e "s/^#ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs >${gv_WorkDir}/login
+	else
+		sed -e "s/^ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs >${gv_WorkDir}/login
+	fi
+	if [ "`wc -l < ${gv_WorkDir}/login`" -gt 1 ] ; then
+		mv ${gv_WorkDir}/login /etc/login.defs
+		chmod 644 /etc/login.defs
+	fi
+fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

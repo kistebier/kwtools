@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, raidtools, raidtools2, raid, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2012-03-05">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="110%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwquota.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwrunlevconf.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=raid>kwraid</a></h2>
+				<p><font color="Red"><b>kwraid mit den neuen Features vergr&ouml;ssern und 
+				&auml;ndern funktioniert erst ab Kernel >=2.6.33 und mdadm >=3.1.1!</b></font></p>
+				<p>Lesen Sie bitte vorher das/die Software-RAID-HOWTO's.
+				<a href="http://www.linuxhaven.de/dlhp/HOWTO/DE-Software-RAID-HOWTO.html" 
+				target="_blank">http://www.linuxhaven.de/dlhp/HOWTO/DE-Software-RAID-HOWTO.html</a>
+				oder<br>
+				<a href="http://unthought.net/Software-RAID.HOWTO" 
+				target="_blank">http://unthought.net/Software-RAID.HOWTO</a></p>
+                                <p><b>Notiz:</b> Ben&ouml;tigt root Rechte. Den Wechsel der Festplatte bei mehreren
+				Ersatzfestplatten kann ich leider nicht testen. <b><font color=#D30229>Also VORSICHT 
+				!</font></b> Als Programm wird "mdadm" benutzt.</td>
+                        <td></td>
+		</tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwraid.html#conf">1 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwraid.html#drives">2 Laufwerke</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwraid.html#monitor">3 Monitor</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwraid.html#status">4 Status</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=conf></a>1 Konfiguration</a></h3>
+				<p>Hier k&ouml;nnen Sie die Datei mdadm.conf einstellen,
+				wie Standardwerte zum erstellen von Arrays oder an wen
+				eine mail, bei Fehlern, geschickt werden soll.</p><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><b>Standard Erstellung:</b> Hier stellt man die Werte 
+				ein die bei der Erstellung eines ARRAY standardm&auml;ssig 
+				benutzt werden sollen.</p>
+				<p><b>Mailadresse:</b> Eingabe der Mailadresse eines Benutzers 
+				an dem das Monitoring gesendet werden soll.</p>
+				<p><b>Mail Absender:</b> Eingabe der Mailadresse eines 
+				Benutzers von dem die mail &uuml;ber das Monitoring
+				gesendet werden soll.</p>
+				<p><b>Rechnername:</b> Sie k&ouml;nnen hier die Werte
+				Rechnername, "system" und "ignore" eingeben. Dieser
+				Wert wird zu den Metadaten hinzugef&uuml;gt.<br>
+				Rechnername - Eingabe des Rechnernamens.<br>
+				system      - In diesm Fall wird der Systemaufruf
+				"gethostname" benutzt.<br>
+				ignore      - In diesem Fall wird beim auto-assembled
+				von Arrays die &Uuml;berpr&uuml;fung von HOMEHOST ausgeschaltet.</p>
+				<p><b>Programm:</b> Eingabe eines Programms, welches bei
+				einem interessanten Monitoring-Ereignis ausgef&uuml;hrt werden 
+				soll.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=drives></a>2 Laufwerke</a></h3>
+				<p>Hier kann man Software RAID Arrays verwalten. Lesen
+				Sie vorher das <a href="http://www.linuxhaven.de/dlhp/HOWTO/DE-Software-RAID-HOWTO.html" target="_blank">Software-RAID-HOWTO</a> 
+				(de).</p><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><b>anlegen:</b> Konfiguriert und erstellt
+				neue RAID Arrays, f&uuml;r die 
+				RAID Level linear, 0, 1, 4, 5, 6 und 10.</p>
+				<p><b>&auml;ndern:</b> Hier k&ouml;nnen Sie RAID Arrays 
+				&auml;ndern. Z. B. von RAID Level 1 zu RAID Level 6, oder
+				von RAID Level 5 zu Level 1. Das ganze ist noch experimental 
+				und noch nicht getestet. <b><font color=#D30229>Also VORSICHT 
+				!</font></b></p></p>
+				<p><b>Notiz:</b> Ben&ouml;tigt "mdadm" >=3.1.1.</p>
+				<p><b>vergr&ouml;ssern:</b> Hier k&ouml;nnen Sie Laufwerke zu 
+				einem Array hinzuf&uuml;gen und die Gr&ouml;sse des 
+				Dateisystems anpassen. Das ganze ist noch experimental und noch 
+				nicht getestet. <b><font color=#D30229>Also VORSICHT 
+				!</font></b></p>
+				<p><b>Partitionswechsel:</b> Hier kann man defekte 
+				Festplatten/Partitionen austauschen. Das ganze geschieht
+				im laufenden Betrieb. Wenn es keine kaputten 
+				Partitionen/Festplatten zum Array gibt werden alle zum wechseln 
+				angezeigt. Sie k&ouml;nnen das Laufwerk 
+				entfernen, das neue partitionieren und wieder 
+				hinzuf&uuml;gen. Es wird f&uuml;r die Partitionierung nach den 
+				Partitionierungs Programmen kwparted, cfdisk und fdisk gesucht 
+				und in der gleichen Reihenfolge, dementsprechend angewendet.</p>
+				<p><b>Notiz:</b> Das ganze funktioniert nur, wenn ihre Hardware 
+				hotplugf&auml;hig ist. Heisst (E)IDE Festplatten gehen garnicht 
+				und bei SCSI erst kontrollieren, ob Sie das unterst&uuml;tzen. 
+				Es kann sonst zu schweren Hardware Fehlern kommen.</p>
+				<p><b>l&ouml;schen:</b> L&ouml;schen von ein oder mehreren Raid 
+				Arrays. Der Superblock der dazugeh&ouml;rigen Partitionen wird 
+				dabei auch gel&ouml;scht.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=monitor></a>3 Monitor</a></h3>
+				<p>Hier kann man einen RAID Monitor einstellen, der per
+				mail einen User benachrichtigt, wenn in einem RAID Array
+				Partitionen/Festplatten ausgefallen/besch&auml;digt sind.</p>
+				<p>Es wird das Distributions speziefische Administrationstool
+				aufgerufen. Bei CentOS, und Fedora gibt es keines dazu. Hier 
+				muss man das Startscript "mdmonitor" aktivieren. Bei OpenSuSE
+				wird "yast2 sysconfig" aufgerufen und bei Debian 
+				"dpkg-reconfigure mdadm".</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=status></a>4 Status</a></h3>
+				<p>Hier kann man 1 oder mehrere Arrays ausw&auml;hlen und sich 
+				sehr ausf&uuml;hrlich &uuml;ber den aktuellen Zustand, der 
+				Arrays, informieren.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwquota.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwrunlevconf.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

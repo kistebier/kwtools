@@ -1,0 +1,174 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwlvm, Konfiguration und Anzeigen von LVMs
+#
+# Version: 0.3.9
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benötigten Funktionen laden.
+autoload -U pv_volumes vg_groups vg_display lv_volumes no_select_vg_msg \
+	no_pv_msg one_pv_msg pv_vgi_auswahl pv_vga_auswahl \
+	search_pv
+
+# Variablen
+lv_Physic_Vol=$(gettext 'Physikalische_Volumes')
+lv_Vol_Groups=$(gettext 'Volume_Groups')
+lv_Logical_Vol=$(gettext 'Logische_Volumes')
+lv_LVM_Typ=$(gettext 'LVM_Typ')
+lv_VG=$(gettext 'VG')
+lv_PV=$(gettext 'PV')
+lv_LV=$(gettext 'LV')
+lv_Rename=$(gettext 'umbenennen')
+
+# Funktion haupt_menue{{{
+MAIN_MENU=($lv_Physic_Vol \"\" $lv_Vol_Groups \"\"
+$lv_Logical_Vol \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion lvm_type_menue{{{
+LVM_TYPE_TITLE=(${lv_Vol_Groups}::${lv_LVM_Typ})
+LVM_TYPE_MSG=$(gettext 'Waehlen Sie den LVM Typ aus, der benutzt werden soll.')
+LVM_TYPE_MENU=(1 \"\" 2 \"\")
+lvm_type_menue() {
+	menubox "$LVM_TYPE" "$LVM_TYPE_TITLE" "$LVM_TYPE_MSG" "$LVM_TYPE_MENU"
+}
+#}}}
+# Funktion, Welcher LVM-Type 1 oder 2, soll benutzt werden.{{{
+#
+lvm_type() {
+	lvm_type_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help lvm_type_help
+				lvm_type_menue
+				;;
+			*)	LVM_TYPE="$gv_Auswahl"
+				break
+				;;
+		esac
+	done
+}
+#}}}
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+fs_conf
+os_check
+# lvm Treiber laden, falls sie nicht fest in den Kernel
+# einkompiliert worden sind und bestimmen welches LVM installiert ist.
+lvm_version
+
+# Backup Verzeichnisse und Dateien.{{{
+if [ "$LVM" = 2 ] ; then
+	if [ -z "$LVM_SYSTEM_DIR" ] ; then
+		if [ -f /etc/lvm/lvm.conf  ] ; then
+			LVM_SYSTEM_DIR=/etc/lvm
+			BAK_DIR=${${(s: :)${(M)${(f)"$(< ${LVM_SYSTEM_DIR}/lvm.conf)"}##*backup_dir*}}[3]}
+		elif [ -f /usr/local/etc/lvm/lvm.conf ] ; then
+			LVM_SYSTEM_DIR=/usr/local/etc/lvm
+			BAK_DIR=${${(s: :)${(M)${(f)"$(< ${LVM_SYSTEM_DIR}/lvm.conf)"}##*backup_dir*}}[3]}
+		else
+			LVM_SYSTEM_DIR=/etc/lvm
+			BAK_DIR=${LVM_SYSTEM_DIR}/backup
+			create_file -d "$BAK_DIR"
+		fi
+	else
+		BAK_DIR="${LVM_SYSTEM_DIR}/backup"
+	fi	
+	if [ -z "$LVM_TYPE" ] ; then
+		LVM_TYPE=$LVM
+	fi	
+elif [ "$LVM" = 1 ] ; then
+	if [ -z "$LVM_SYSTEM_DIR" ] ; then
+		if [ -d /etc/lvmconf  ] ; then
+			LVM_SYSTEM_DIR=/etc
+			BAK_DIR="${LVM_SYSTEM_DIR}/lvmconf"
+		elif [ -d /usr/local/etc/lvmconf  ] ; then
+			LVM_SYSTEM_DIR=/usr/local/etc
+			BAK_DIR="${LVM_SYSTEM_DIR}/lvmconf"
+		else
+			LVM_SYSTEM_DIR=/etc
+			BAK_DIR="${LVM_SYSTEM_DIR}/lvmconf"
+			create_file -d "$BAK_DIR"
+		fi
+	else
+		BAK_DIR="${LVM_SYSTEM_DIR}/lvmconf"
+	fi	
+	if [ -z "$LVM_TYPE" ] ; then
+		LVM_TYPE=$LVM
+	fi	
+fi
+#}}}
+disk
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$lv_Physic_Vol)
+			# Physikalische Volumes
+			pv_volumes
+			haupt_menue $lv_Physic_Vol
+			;;
+		$lv_Vol_Groups)
+			# Volume Groups
+			vg_groups
+			haupt_menue $lv_Vol_Groups
+			;;
+		$lv_Logical_Vol)
+			# Logische Volumes
+			lv_volumes
+			haupt_menue $lv_Logical_Vol
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

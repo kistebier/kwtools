@@ -1,0 +1,424 @@
+# Funktion (kwmutt_pop_serv_conf), konfiguriert POP fuer mutt# {{{
+#
+# usage: kwmutt_pop_serv_conf
+kwmutt_pop_serv_conf() {
+	Unset=(DEFAULT_SERVER pop_host pop_user pop_pass pop_authenticators
+		pop_checkinterval postponed folder spoolfile mailboxes)
+	unset -- $Unset
+	# Funktion (pop_empty_var_fill), leere Variable mit Standardwerten fuellen.# {{{
+	#
+	pop_empty_var_fill() {
+		DEFAULT_SERVER="${DEFAULT_SERVER:-no}"
+		pop_host="${pop_host:-pop://localhost:110}"
+		pop_user="${pop_user:-$USER}"
+		#pop_pass="$pop_pass"
+		#pop_authenticators="$pop_authenticators"
+		pop_checkinterval="${pop_checkinterval:-900}"
+		mailboxes="${mailboxes:-+inbox}"
+		folder="${folder:-~/Mail}"
+		spoolfile="${spoolfile:-/var/mail/${USER}}"
+		postponed="${postponed:-~/postponed}"
+		record="${record:-~/sent}"
+	}
+	## }}}
+	# Funktion (pop_serv_conf_menu), Auswahl Menue# {{{
+	#
+	pop_serv_conf_menu() {
+		menubox "$1" "$POP_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
+	}
+	## }}}
+	# Funktion (pop_conf_serv_menu), menu fuer die Imap Konfiguration# {{{
+	POP_TITLE="$lv_Pop"
+	pop_conf_serv_menu() {
+		POP_CONF_SERV_MENU=(\"$lv_Default_Mailbox\" \"$DEFAULT_SERVER\"
+		pop_host \"$pop_host\"
+		pop_user \"$pop_user\"
+		pop_pass \"$pop_pass\"
+		pop_authenticators \"$pop_authenticators\"
+		folder \"$folder\"
+		mailboxes \"$mailboxes\"
+		spoolfile \"$spoolfile\"
+		postponed \"$postponed\"
+		record \"$record\"
+		pop_checkinterval \"$pop_checkinterval\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$POP_TITLE" "$gv_Menupoint" "$POP_CONF_SERV_MENU"
+	}
+	## }}}
+	# Funktion (pop_conf_serv), konfiguriert POP-Server.#{{{
+	#
+	pop_conf_serv() {
+		pop_conf_serv_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_pop_serv_help
+					pop_conf_serv_menu
+					;;
+				$lv_Default_Mailbox)
+					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
+					yesno "$POP_TITLE" "$DEFAULT_MB_MSG" "$DEFAULT_SERVER"
+					if [ "$gv_Auswahl" = yes ] ; then
+						DEFAULT_SERVER="yes"
+					else
+						DEFAULT_SERVER="no"
+					fi
+					## }}}
+					pop_conf_serv_menu $lv_Default_Mailbox
+					;;
+				pop_host)
+					# Eingabe des POP-Server# {{{
+					Old_Tmp="$pop_host"
+					# POP Server
+					SERVER_MSG=$(gettext 'Tragen Sie bitte ihren POP Server ein (pop[s]://[Benutzer[:Passwort]@]imaphost[:port]).')
+					# Server Eingabe
+					inputbox "$gv_Configuration" "$SERVER_MSG" "$pop_host"
+					if [ "$gv_Auswahl" ] ; then
+						Pop_Host="$gv_Auswahl"
+						check_mail_server "$gv_Auswahl"
+					fi
+					# Falls ein Wert vorhanden ist uebernehmen.
+					if [ -n "$Mailserver" ] ; then
+						pop_host="$Pop_Host"
+					else
+						if [ -z "$Old_Tmp" ] ; then
+							pop_host=""
+						else
+							pop_host="$Old_Tmp"
+						fi
+					fi
+					## }}}
+					pop_conf_serv_menu pop_host
+					;;
+				pop_user)
+					# Eingabe des Benutzers fuer den POP-Server.# {{{
+					MSG=$(gettext 'Geben Sie den Benutzernamen zur Authentifizierung am POP Server ein.')
+					inputbox "$POP_TITLE" "$MSG" "$pop_user"
+					if [ -n "$gv_Auswahl" ] ; then
+						pop_user="$gv_Auswahl"
+					else
+						pop_user="$USER"
+					fi
+					## }}}
+					pop_conf_serv_menu pop_user
+					;;
+				pop_pass)
+					# Passwort des POP-Users# {{{
+					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer Ihr POP Postfach ein.')
+					inputbox "$POP_TITLE" "$PASSWD_MSG" "$pop_pass"
+					if [ -n "$gv_Auswahl" ] ; then
+						pop_pass="$gv_Auswahl"
+					else
+						pop_pass=""
+					fi
+					#
+					## }}}
+					pop_conf_serv_menu pop_pass
+					;;
+				folder)
+					# Standard Verzeichnis fuer die mailboxen auswaehlen.# {{{
+					dselect $folder
+					if [[ -n $VERZ ]] ; then
+						folder="$VERZ"
+					fi
+					## }}}
+					lmb_conf_serv_menu folder
+					;;
+				mailboxes)
+					# mailboxen die nach neuen mails überprüft werden sollen.# {{{
+					if [[ -n $folder ]] ; then
+						# schon markierte mailboxen mit on markieren ansonsten mit off.
+						generate_is_file "$mailboxes"
+						# vorhandene mailboxen mit einem plus markieren zum vergleichen
+						Tmp=${$(print ${folder}/*(/N:t))//(#s)/+}
+						is_value "$Tmp"
+						# Auswahl der mailboxen.
+						if [ -n "$VALUE_ARRAY" ] ; then
+							MAILBOX_MENU=($DF_DIR_ARRAY)
+							checklist "$POP_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help kwmutt_pop_serv_help
+										checklist "$POP_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
+										;;
+									*)
+										# Auswahl uebernehmen
+										integer Anz
+										local Anz Tmp_Mailbox
+										Anz=0
+										unset -- Tmp_Mailbox
+										for i in ${(ws: :)gv_Auswahl} ; {
+											(( Anz++ ))
+											Tmp_Mailbox[Anz]="${VERZ}/${i}"
+										}
+										mailboxes="$Tmp_Mailbox"
+										break
+										;;
+								esac
+							done
+						fi
+					else
+						no_folder_msg
+					fi
+					popd
+					## }}}
+					pop_conf_serv_menu mailboxes
+					;;
+				pop_authenticators)
+					# Auswahl der zu benutzenden Authentifizierungs Methoden.# {{{
+					# Variablen
+					# Funktion (pop_auth_conf)# {{{
+					#
+					pop_auth_conf() {
+						POP_AUTH_MENU=($lv_Choice \"$pop_authenticators\"
+						\"$lv_Serv_Test\" \"\" $gv_Back \"\")
+						menubox "$1" "$POP_TITLE" "$gv_Menupoint" "$POP_AUTH_MENU"
+					}
+					## }}}
+					autoload -U check_auth_server
+					pop_auth_conf
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwmutt_pop_serv_help
+								pop_auth_conf
+								;;
+							$lv_Choice)
+								# Auswahl der Auth-Methoden# {{{
+								# vorhandene Auth-Methoden mit on zum Auflisten markieren# {{{
+								is_auth_methode "$pop_authenticators" "apop cram-md5 digest-md5 gssapi login user"
+								if [ -n "$M_TMP" ] ; then
+									CHOICE_MENU=($M_TMP)
+								else
+									CHOICE_MENU=(apop \"\" off cram-md5 \"\" off
+									digest-md5 \"\" off gssapi \"\" off login \"\" off
+									user \"\" off)
+								fi
+								#
+								## }}}
+								checklist "$POP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help kwmutt_pop_serv_help
+											checklist "$POP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+											;;
+										*)
+											# Werte uebernehmen
+											pop_authenticators="${gv_Auswahl// /:}"
+											break
+											;;
+									esac
+								done
+								## }}}
+								pop_auth_conf $lv_Choice
+								;;
+							$lv_Serv_Test)
+								# Auth Faehigkeiten des Servers testen# {{{
+								if [ -n "$pop_host" ] ; then
+									check_mail_server -a "$pop_host"
+									if [ -n "$AUTHENTICATORS" ] ; then
+										pop_authenticators="$AUTHENTICATORS"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst einen POP-Server im Menuepunkt pop_host einstellen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+								# # }}}
+								pop_auth_conf $lv_Serv_Test
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+					## }}}
+					pop_conf_serv_menu pop_authenticators
+					;;
+				pop_checkinterval)
+					# Wie oft soll nach neuen mails in den angegebenen Mailboxen# {{{
+					# geschaut werden, in Sekunden.
+					# Standard sind alle 15 Minuten.
+					MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die ausgewaehlten Mailboxen nach neuen Mails geprueft werden sollen.')
+					number_input "$POP_TITLE" "$MSG" "$pop_checkinterval"
+					if [ -n "$NUMBER" ] ; then
+						pop_checkinterval="$NUMBER"
+					else
+						pop_checkinterval="900"
+					fi
+					## }}}
+					pop_conf_serv_menu pop_checkinterval
+					;;
+				postponed)
+					# Eingabe der Mailbox wo noch nicht abgeschickte/nicht fertige emails# {{{
+					# zwischen gespeichert werden sollen.
+					fselect "${postponed:-~/postponed}"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							postponed="$FILE"
+						else
+							postponed="${postponed:-~/postponed}"
+						fi
+					fi
+					## }}}
+					pop_conf_serv_menu postponed
+					;;
+				record)
+					# Wo soll eine Kopie der gesendeten mails gespeichert werden.# {{{
+					fselect "$record"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							record="$FILE"
+						else
+							record="${record:-~/sent}"
+						fi
+					fi
+					## }}}
+					pop_conf_serv_menu record
+					;;
+				spoolfile)
+					# Wo sollen die mails zwischen gespeichert werden? Standard# {{{
+					# ist in /var/mail/$USER.
+					fselect "$spoolfile"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							spoolfile="$FILE"
+						else
+							spoolfile=""
+						fi
+					fi
+					## }}}
+					pop_conf_serv_menu spoolfile
+					;;
+				$gv_Save)
+					# Konfiguration speichern# {{{
+					if [ -n "$pop_host" ] ; then
+						# pop_host aufsplitten fuer den Rechnernamen.
+						# rechnername.pop wird die Konfigurationsdatei
+						# genannt.
+						parse_mail_host "$pop_host"
+						if [ -n "$MAIL_HOST" ] ; then
+							M_POP_SERV="${MUTT}/${MAIL_HOST}.pop"
+							kwmutt_pop_serv_config
+							# Default Mailbox einstellen oder nicht.
+							default_serv_link pop "$M_POP_SERV"
+						else
+							no_input_msg
+						fi
+					else
+						MSG=$(gettext 'Sie muessen mindestens den Menuepunkt pop_host mit einem Wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					unset -- $Unset
+					## }}}
+					break
+					;;
+				$gv_Back)
+					# ohne speichern abbrechen
+					unset -- $Unset
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	#
+	pop_serv_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_pop_serv_help
+				pop_serv_conf_menu
+				;;
+			$gv_Display)
+				# Anzeige der POP Konfigurationsdatei{{{
+				read_accounts pop
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					DISPLAY_MSG=$(gettext 'Waehlen Sie ein Postfach aus um seine Einstellungen anzusehen.')
+					mail_account_choice "$gv_Display" "$DISPLAY_MSG"
+					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					if [ -f "$VALUE" ] ; then
+						view_file "$VALUE"
+					fi
+				else
+					no_entry_msg
+				fi
+				#}}}
+				pop_serv_conf_menu $gv_Display
+				;;
+			$gv_Create)
+				# POP Konfigurations Eintraege erstellen{{{
+				unset -- $Unset
+				# Mit Standard Variablen belegen, falls noetig.
+				pop_empty_var_fill
+				# POP Konfiguration
+				pop_conf_serv
+				#}}}
+				pop_serv_conf_menu $gv_Create
+				;;
+			$gv_Change)
+				# POP Konfigurations Eintraege veraendern.# {{{
+				read_accounts pop
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					CHANGE_MENU=($ACCOUNT_TMP)
+					menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_change_help
+								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+								;;
+							*)	# Uebernahme/aendern 
+								unset -- Old_Value
+								Old_Value="$gv_Auswahl"
+								# alte Konfiguration einlesen.
+								read_conf pop "$Old_Value"
+								# Mit Standard Variablen belegen, falls noetig.
+								pop_empty_var_fill
+								# Konfiguration bearbeiten.
+								pop_conf_serv
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#
+				unset -- Old_Value
+				## }}}
+				pop_serv_conf_menu $gv_Change
+				;;
+			$gv_Delete)
+				# POP Kontos loeschen.# {{{
+				read_accounts pop
+				if [ -n "$ACCOUNT_TMP_M" ] ; then
+					DEL_MENU=($ACCOUNT_TMP_M)
+					checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_del_help
+								checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+								;;
+							*)	# Uebernahme (Konfigurationsdateien) loeschen
+								for i in ${=gv_Auswahl} ; {
+									rm "$i" &>/dev/null
+								}
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pop_serv_conf_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

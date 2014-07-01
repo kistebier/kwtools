@@ -1,0 +1,318 @@
+# Funktion Management fuer die Schluessel.{{{
+#
+# usage: key_manage
+#
+key_manage() {
+	PROG="gpg"
+	#
+	lv_Update=$(gettext 'aktualisieren')
+	lv_Export=$(gettext 'export')
+	lv_Import=$(gettext 'import')
+	lv_Revoke=$(gettext 'ungueltig')
+	lv_Upload=$(gettext 'upload')
+	#
+	ALL_PUBLIC_MSG=$(gettext 'Waehlen Sie einen oeffentlichen Schluessel aus.')
+	ALL_PUBLIC_MULTI_MSG=$(gettext 'Waehlen Sie einen oder mehrere oeffentlichen Schluessel aus.')
+	USER_PUBLIC_MSG=$(gettext 'Waehlen Sie einen Ihrer Schluessel aus.')
+	#
+	KEY_TITLE=($lv_Key_Manage)
+	KEY_MENU=($gv_Display \"\" $lv_Update \"\" $gv_Create \"\" $lv_Export \"\"
+	$lv_Import \"\" $lv_Sign \"\" $lv_Revoke \"\" $lv_Upload \"\"
+	$gv_Delete \"\" $gv_Back \"\")
+	#
+	# Funktion key_manage_menue{{{
+	#
+	# usage: key_manage_menue
+	#
+	key_manage_menue() {
+		menubox "$1" "$KEY_TITLE" "$gv_Menupoint" "$KEY_MENU"
+	}
+	#}}}
+	key_manage_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+			 	script_help manage_help
+				key_manage_menue
+				;;
+			$gv_Display)
+				# Ansicht der Schluessel.{{{
+				#
+				if [ "`gpg --homedir $PGP_HOME --list-keys 2>/dev/null`" ] ; then
+					PROG_OPT="--homedir $PGP_HOME --list-keys >${gv_WorkDir}/keys"
+					eval $PROG "${=PROG_OPT}"
+					view_file ${gv_WorkDir}/keys
+				else
+					no_gpg_key_msg
+				fi
+				#}}}
+				key_manage_menue $gv_Display
+				;; 
+			$lv_Update)
+				# Refresh der Schluessel durch Schluessel Server.{{{
+				#
+				if [ -n "$KEY_SERV_ALL" ] ; then
+					PROG_OPT="--homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --refresh-keys"
+					eval $PROG "${=PROG_OPT}"
+				else
+					no_key_serv_msg
+				fi
+				#}}}
+				key_manage $lv_Update
+				;;
+			$gv_Create)
+				# privaten Schluessel erzeugen.
+				pub_create
+				key_manage_menue $gv_Create
+				;;
+			$lv_Import)
+				# oeffentl. Schluessel importieren.{{{
+				#
+				lv_Serv=$(gettext 'Server')
+				lv_File=$(gettext 'Datei')
+				#
+				IMPORT_TITLE=($lv_Key_Manage}::${lv_Import})
+				IMPORT_MENU=($lv_Serv \"\" $lv_File \"\" $gv_Back \"\")
+				menubox "" "$IMPORT_TITLE" "$gv_Menupoint" "$IMPORT_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help import_help
+							menubox "" "$IMPORT_TITLE" "$gv_Menupoint" "$IMPORT_MENU"
+							;;
+						$lv_Serv)
+							if [ -n "$KEY_SERV_ALL" ] ; then
+								MSG=$(gettext 'Geben Sie bitte ein oder mehrere Schluessel IDs, durch ein Leerzeichen getrennt, ein (XXXXXX YYYYYY).')
+								inputbox "$IMPORT_TITLE" "$MSG"
+								if [ "$gv_Auswahl" ] ; then
+									PROG_OPT="--homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --recv-keys "$gv_Auswahl""
+									eval $PROG "${=PROG_OPT}"
+								else
+									no_input_msg
+								fi
+							else
+								no_key_serv_msg
+							fi
+							break
+							;;
+						$lv_File)
+							FORMAT="GPGPUB"
+							file_choice "$PGP_HOME" only
+							if [ "$WERT" ] ; then
+								PROG_OPT="--homedir $PGP_HOME --import "$WERT""
+								eval $PROG "${=PROG_OPT}"
+							fi
+							break
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				#}}}
+				key_manage_menue $lv_Import
+				;;
+			$lv_Export)
+				# oeffentl. Schluessel exportieren.{{{
+				#
+				private_list
+				#
+				# Auswahl des Schluessels
+				#
+				if [ "$I_Menue" ] ; then
+					EXPORT_MENU=($I_Menue)
+					EXPORT_TITLE=(${lv_Key_Manage}::${lv_Export})
+					menubox "" "$EXPORT_TITLE" "$ALL_PUBLIC_MSG" "$EXPORT_MENU"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help key_help
+								menubox "" "$EXPORT_TITLE" "$ALL_PUBLIC_MSG" "$EXPORT_MENU"
+								;;
+							*)	#
+								# Dateinamen eingeben fuer den export des Schluessels
+								#
+								Who="$gv_Auswahl"
+								EXPORT_INPUT_MSG=$(gettext 'Geben Sie bitte einen Dateinamen fuer diesen oeffentlichen Schluessel ein. Dieser Schluessel liegt dann in der Datei ~/.gnupg/Dateiname_pub.txt.')
+								inputbox "$EXPORT_TITLE" "$EXPORT_INPUT_MSG"
+								#
+								if [ "$gv_Auswahl" ] ; then
+									PROG_OPT="--yes --homedir $PGP_HOME --armor --export --output ${PGP_HOME}/${gv_Auswahl}_pub.txt $Who"
+									eval $PROG "${=PROG_OPT}"
+									break
+								else
+									no_input_msg
+								fi
+								;;
+						esac
+					done
+				else
+					no_gpg_key_msg
+				fi
+				#}}}
+				key_manage_menue $lv_Export
+				;;
+			$lv_Sign)
+				# oeffentliche Schluessel signieren.{{{
+				#
+				private_list
+				#
+				# Auswahl des Schluessels
+				#
+				if [ "$I_Menue" ] ; then
+					SIGN_MENU=($I_Menue)
+					SIGN_TITLE=($lv_key__Manage}::${lv_Sign})
+					menubox "" "$SIGN_TITLE" "$ALL_PUBLIC_MSG" "$SIGN_MENU"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help key_help
+								menubox "" "$SIGN_TITLE" "$ALL_PUBLIC_MSG" "$SIGN_MENU"
+								;;
+							*)	#
+								# Schluessel signieren
+								Key_Id="$gv_Auswahl"
+								# Passphrase eingeben 
+								password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
+								gpgcrypt_opt sign-key "$Key_Id"
+								eval $PROG "${=PROG_OPT}"
+								# Passphrase loeschen
+								unset -- PASSPHRASE
+								break
+								;;
+						esac
+					done
+				else
+					no_gpg_key_msg
+				fi
+				#}}}
+				key_manage_menue $lv_Sign
+				;;
+			$lv_Revoke)
+				# Einen Schluessel fuer ungueltig erklaeren.{{{
+				private_list -u
+				if [ "$I_Menue" ] ; then
+					REVOKE_MENU=($I_Menue)
+					REVOKE_TITLE=(${lv_Key_Manage}::${lv_Revoke})
+					menubox "" "$REVOKE_TITLE" "$USER_PUBLIC_MSG" "$REVOKE_MENU"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help key_help
+								menubox "" "$REVOKE_TITLE" "$USER_PUBLIC_MSG" "$REVOKE_MENU"
+								;;
+							*)	#
+								# Ungueltigkeits Zertifikat erstellen.
+								#
+								Who="$gv_Auswahl"
+								REVOKE_MSG=$(gettext 'Geben Sie bitte einen Dateinamen fuer Ihr Ungueltigkeits Zertifikat ein. Diese Datei heisst dann ~/.gnupg/Dateiname_revoke.txt.')
+								inputbox "$REVOKE_TITLE" "$REVOKE_MSG"
+								#
+								if [ "$gv_Auswahl" ] ; then
+									# Passphrase eingeben 
+									password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
+									gpgcrypt_opt revoke "$Who"
+									eval $PROG "${=PROG_OPT}"
+									# Passphrase loeschen
+									unset -- PASSPHRASE
+									break
+								else
+									no_input_msg
+									break
+								fi
+								;;
+						esac
+					done
+				fi
+				#}}}
+				key_manage_menue $lv_Revoke
+				;;
+			$lv_Upload)
+				# Upload der oeffentlichen Schluessel.{{{
+				if [ -n "$KEY_SERV_ALL" ] ; then
+					private_list
+					if [ "$I_Menue_Multi" ] ; then
+						UPLOAD_MENU=($I_Menue_Multi)
+						UPLOAD_TITLE=(${lv_Key_Manage}::${lv_Upload})
+						radiolist "$UPLOAD_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$UPLOAD_MENU"
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+									script_help key_help
+									radiolist "$UPLOAD_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$UPLOAD_MENU"
+									;;
+								*)	#
+									# Dateinamen eingeben fuer den export des Schluessels
+									#
+									if [ "$gv_Auswahl" ] ; then
+										PROG_OPT="--yes --homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --send-keys "$gv_Auswahl""
+										eval $PROG "${=PROG_OPT}"
+										break
+									else
+										no_input_msg
+									fi
+									;;
+							esac
+						done
+					else
+						no_gpg_key_msg
+					fi
+				else
+					no_key_serv_msg
+				fi
+				#}}}
+				key_manage $lv_Upload
+				;;
+			$gv_Delete)
+				# Schluessel loeschen{{{
+				private_list
+				#
+				# Auswahl der Schluessels zum loeschen
+				#
+				if [ "$I_Menue_Multi" ] ; then
+					REMOVE_MENU=($I_Menue_Multi)
+					REMOVE_TITLE=(${lv_Key_Manage}::${gv_Delete})
+					radiolist "$REMOVE_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$REMOVE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help remove_key_help
+								radiolist "$REMOVE_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$REMOVE_MENU"
+								;;
+							*)	#
+								# Schluessel loeschen.
+								# Pruefen, ob der oeffentliche Schluessel auch einen sicheren besitzt.
+								# Wenn ja, werden beide geloescht.
+								for i in $gv_Auswahl ; {
+									if $PROG --quiet --homedir $PGP_HOME --list-secret-keys $i >/dev/null ; then
+										PROG_OPT="--yes --homedir $PGP_HOME --delete-secret-key --command-fd 3 $i 3<<< yes"
+										eval $PROG "${=PROG_OPT}"
+										PROG_OPT="--yes --homedir $PGP_HOME --delete-key --command-fd 3 $i 3<<< yes"
+										eval $PROG "${=PROG_OPT}"
+									else
+										PROG_OPT="--yes --homedir $PGP_HOME --delete-key --command-fd 3 $i 3<<< yes"
+										eval $PROG "${=PROG_OPT}"
+									fi
+								}
+								break
+								;;
+						esac
+					done
+				else
+					no_gpg_key_msg
+				fi
+				#}}}
+				key_manage $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

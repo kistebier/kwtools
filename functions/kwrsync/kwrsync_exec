@@ -1,0 +1,112 @@
+# Funktion kwrsync_exec# {{{
+#
+# usage: kwrsync_exec
+#
+kwrsync_exec() {
+	unset -- S_VERZ R_VERZ RSYNC_ARGS REMOTE_HOST DIR_EXCLUDE KwrsynctabListe
+	NOT_NET=$(gettext 'kein Netz?')
+	setopt localoptions shwordsplit
+	# IFS=Return
+	IFS=$'\r'
+	#
+	read -A KwrsynctabListe <<< "`grep -v "^#" $KWRSYNCTAB | tr "\n" "$IFS"`"
+	# IFS=Tab
+	IFS=$'\t'
+	Anz=1
+	Anz1=0
+	while [ "${KwrsynctabListe[Anz]}" != "" ] ; do
+		set -- ${KwrsynctabListe[Anz]}
+		(( Anz1++ ))
+		S_VERZ[Anz1]="$1"
+		R_VERZ[Anz1]="$2"
+		REMOTE_HOST[Anz1]="$3"
+		RSYNC_ARGS[Anz1]="$4"
+		DIR_EXCLUDE[Anz1]="$5"
+		(( Anz++ ))
+	done
+	unsetopt shwordsplit
+	# IFS
+	IFS="$IFSBAK"
+	#
+	if [ "$Anz1" -gt 0 ] ; then
+		Nr=0
+		while [ "$Nr" -lt "$Anz1" ] ; do
+			(( Nr++ ))
+			# exclude Datei loeschen, falls schon eine angelegt wurde,
+			# in der while Schleife.
+			rm -f ${gv_WorkDir}/exclude &>/dev/null
+			if [ ! -z "${DIR_EXCLUDE[Nr]}" -a "${DIR_EXCLUDE[Nr]}" != - ] ; then
+				print -l "${DIR_EXCLUDE[Nr]}" > ${gv_WorkDir}/exclude
+			fi
+			# Gibt es eine exclude Datei, wird diese mitbenutzt.
+			if [ -f ${gv_WorkDir}/exclude ] ; then
+				EXCLUDE_OPT="--exclude-from=${gv_WorkDir}/exclude"
+			else
+				unset -- EXCLUDE_OPT
+			fi
+			# Gibt es eine exclude Datei, wird diese mitbenutzt.
+			if [ ! -z "${RSYNC_ARGS[Nr]}" -a "${RSYNC_ARGS[Nr]}" != - ] ; then
+				RSYNC_OPT="$RSYNC_ARGS"
+			else
+				unset -- RSYNC_OPT
+			fi
+			#
+			# fuer alle Rechner ausfuehren
+			for h in ${REMOTE_HOST[Nr]} ; {
+				check_remote_sh
+				# komplette rsync Optionen.
+				PROG_OPT=($DEFAULT_ARGS --bwlimit=${BW_LIMIT:-0} $RSYNC_OPT
+					$RSYNC_CONF_RSH $EXCLUDE_OPT
+					${S_VERZ[Nr]} ${h}:${R_VERZ[Nr]})
+				#
+				LOG_START_MSG=$(gettext 'Starte rsync nach $h ...')
+				LOG_ERR_MSG=$(gettext 'Fatal: rsync ($h) mit Fehlern beendet!')
+				LOG_FINISH_MSG=$(gettext 'Beende rsync nach $h ...')
+				FINISH_MSG=$(gettext '${gv_ScriptName}: rsync beendet ($h) ')
+				ERROR_MSG=$(gettext '${gv_ScriptName}: rsync Fehler ($h) ')
+				# Logging beginnen.
+				sys_logger -n syslog "$gv_ScriptName" "$LOG_START_MSG"
+				if [ -n "$gv_Terminal" ] ; then
+					TITLE=$(gettext 'Syncronisation')
+					MSG=$(gettext 'Syncronisiere das Verzeichnis ${S_VERZ[Nr]} mit ${h}:${R_VERZ[Nr]}.')
+					(rsync ${=PROG_OPT} 2>/dev/null || \
+						sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG") | \
+					progressbox "$TITLE" "$MSG"
+					sys_logger -n syslog "$gv_ScriptName" "$LOG_FINISH_MSG"
+					sync
+				else
+					rsync ${=PROG_OPT}
+					# Rueckgabewert pruefen.
+					# 0 = fehlerfrei, 
+					# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
+					# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+					# Alles andere ist fatal -- siehe man (1) rsync
+					if ! [ $? = 24 -o $? = 0 ] ; then
+						sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG"
+						> "${gv_WorkDir}/error" <<< "$NOT_NET"
+						mail -s "$ERROR_MSG" $USER < "${gv_WorkDir}/error"
+					else
+						sys_logger -n syslog "$gv_ScriptName" "$LOG_FINISH_MSG"
+						# Sicher ist sicher...
+						sync
+					fi
+				fi
+			}
+			# exclude Datei loeschen
+			rm -rf ${gv_WorkDir}/exclude &>/dev/null
+		done
+	else
+		MSG=$(gettext 'Es sind keine Eintrage fuer kwrsync vorhanden.')
+		if [[ -n $gv_Terminal ]] ; then
+			msgbox "$gv_Attention" "$MSG"
+		else
+			> ${gv_WorkDir}/kwrsync_cron <<< "$MSG"
+			mail -s "${gv_ScriptName}: kwrsynctab Error" $USER < ${gv_WorkDir}/kwrsync_cron
+		fi
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

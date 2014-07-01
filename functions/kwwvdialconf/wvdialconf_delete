@@ -1,0 +1,32 @@
+# Funktion wvdialconf_delete# {{{
+#
+# benoetigt die Funktion wvdial_config
+#
+# usage: wvdialconf_delete
+wvdialconf_delete() {
+	read_tab_entry
+	if [ -n "$CONF_TAB_MENU_E" ] ; then
+		DEL_MENU=($CONF_TAB_MENU_E $gv_Back \"\")
+		menubox "" "$gv_Configuration" "$CHANGE_MSG" "$DEL_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help delete_help
+					menubox "" "$gv_Configuration" "$CHANGE_MSG" "$DEL_MENU"
+					;;
+				$gv_Back)	break ;;
+				*)
+					# Konfiguragtionen loeschen
+					wvdial_config -d "$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	else
+		no_conf_entry_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

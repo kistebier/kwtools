@@ -1,0 +1,312 @@
+# Funktion kwrsynctab_conf zum eingeben der Konfiguration#{{{
+# um verschiedene Verzeichnisse mit verschiedenen Rechnern
+# zu synchronisieren.
+#
+# usage: kwrsynctab_conf
+#
+kwrsynctab_conf() {
+# Funktion net_conf ausfuehren
+net_conf
+
+# Funktion manage_dir_menu# {{{
+DIR_TITLE=(${gv_Configuration}::${lv_Directories})
+DIR_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Change \"\"
+$gv_Delete \"\" $gv_Back \"\")
+manage_dir_menu() {
+	menubox "$1" "$DIR_TITLE" "$gv_Menupoint" "$DIR_MENU"
+}
+## }}}
+# Funktion kwrsync_conf_choice# {{{
+#
+kwrsynctab_conf_choice() {
+	lv_Exclude=$(gettext 'Ausschluss')
+	lv_Source_Dir=$(gettext 'Sourceverz.')
+	lv_Remote_Dir=$(gettext 'Remoteverz.')
+	lv_Rsync_Args=$(gettext 'rsync Argumente')
+	#
+	# Funktion kwrsynctab_menue{{{
+	#
+	# usage: kwrsynctab_menue
+	kwrsynctab_menue() {
+		CONF_MENU=($lv_Source_Dir \"$S_VERZ\" $lv_Remote_Dir \"$R_VERZ\"
+		$lv_Remote_Host \"$REMOTE_HOST\" \"$lv_Rsync_Args\" \"$RSYNC_ARGS\"
+		$lv_Exclude \"$DIR_EXCLUDE\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$DIR_TITLE" "$gv_Menupoint" "$CONF_MENU"
+	}
+	#}}}
+	kwrsynctab_menue
+	while [ -n "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help kwrsynctab_conf_help
+				kwrsynctab_menue
+				;;
+			$lv_Source_Dir)
+				# Quellverzeichnis auswaehlen{{{
+				dselect "$S_VERZ"
+				if [ "$VERZ" ] ; then
+					dselect_check "$VERZ"
+					if [ -n "$VERZ" ] ; then
+						user_device_check "$VERZ" AE
+						S_VERZ="$VERZ"
+					fi
+				fi
+				#}}}
+				kwrsynctab_menue $lv_Source_Dir
+				;;
+			$lv_Remote_Dir)
+				# entferntes Verzeichnis eingeben{{{
+				R_DIR_MSG=$(gettext 'Geben Sie bitte das Zielverzeichnis ein.')
+				inputbox "$DIR_TITLE" "$R_DIR_MSG" "$R_VERZ"
+				# Ist gv_Auswahl groesser als einn Zeichen
+				# wird der letzte / abgetrennt.
+				if [ "${#gv_Auswahl}" = 1 ] ; then
+					R_VERZ="$gv_Auswahl"
+				elif [ "${#gv_Auswahl}" -gt 1 ] ; then
+					R_VERZ="${gv_Auswahl%/}"
+				else
+					no_input_msg
+				fi
+				#}}}
+				kwrsynctab_menue $lv_Remote_Dir
+				;;
+			$lv_Remote_Host)
+				# Zielrechner eingeben{{{
+				R_HOST_MSG=$(gettext 'Geben Sie bitte die/den Namen oder IP(s) der/des Zielrechner(s) ein.')
+				conf_hostname -a "$R_HOST_MSG" "${REMOTE_HOST:-$R_HOST}"
+				if [ "$gv_Auswahl" ] ; then
+					REMOTE_HOST="$gv_Auswahl"
+				else
+					unset -- REMOTE_HOST
+				fi
+				#}}}
+				kwrsynctab_menue $lv_Remote_Host
+				;;
+			$lv_Rsync_Args)
+	    	    # angeben von zusaetzlichen rsync Argumenten# {{{
+				RSYNC_ARGS_MSG=$(gettext 'Geben Sie zusaetzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) fuer rsync ein.')
+				inputbox "$DIR_TITLE" "$RSYNC_ARGS_MSG" "${RSYNC_ARGS:--}"
+				if [ -n "$gv_Auswahl" ] ; then
+					RSYNC_ARGS="$gv_Auswahl"
+				else
+					RSYNC_ARGS="-"
+				fi
+				## }}}
+				kwrsynctab_menue $lv_Rsync_Args
+				;;
+			$lv_Exclude)
+				# Verzeichnisse/Dateien ausschliessen# {{{
+				EXCLUDE_MSG=$(gettext 'Geben Sie die Verzeichnisse/Dateien mit relativen Pfad an die ausgeschlossen werden sollen. Diese muessen durch ein Leerzeichen getrennt sein.')
+				inputbox "$DIR_TITLE" "$EXCLUDE_MSG" "${DIR_EXCLUDE:-$S_VERZ}"
+				# Ist gv_Auswahl groesser als ein Zeichen
+				# wird der letzte / abgetrennt.
+				if [ -n "$gv_Auswahl" ] ; then
+					DIR_EXCLUDE="$gv_Auswahl"
+				else
+					unset -- DIR_EXCLUDE
+					no_input_msg
+				fi
+				## }}}
+				kwrsynctab_menue $lv_Exclude
+				;;
+			$gv_Save)
+				# speichern# {{{
+				if [ -n "$S_VERZ" -a -n "$R_VERZ" -a -n "$REMOTE_HOST" ] ; then
+					if [ "$CHANGE" = yes ] ; then
+						print -l ${(R)${(R)${(f)"$(< $KWRSYNCTAB)"}##(s#)(\#)*}##${KWRSYNCTAB_OLD}*} > ${gv_WorkDir}/kwrsynctab
+						mv ${gv_WorkDir}/kwrsynctab $KWRSYNCTAB
+					fi
+					setopt shwordsplit
+					# IFS=Tab
+					IFS=$'\t'
+					if [ "`wc -c < $KWRSYNCTAB`" -gt 1 ] ; then
+						>> "$KWRSYNCTAB" <<< "${S_VERZ}${IFS}${R_VERZ}${IFS}${REMOTE_HOST}${IFS}${RSYNC_ARGS:--}${IFS}${DIR_EXCLUDE:--}"
+					else
+						> "$KWRSYNCTAB" <<< "${S_VERZ}${IFS}${R_VERZ}${IFS}${REMOTE_HOST}${IFS}${RSYNC_ARGS:--}${IFS}${DIR_EXCLUDE:--}"
+					fi
+					unsetopt shwordsplit
+					# IFS
+					IFS="$IFSBAK"
+					break
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Sourceverz., Remoteverz. und Zielrechner mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					kwrsynctab_menue
+				fi
+				## }}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+# Funktion read_tab_entry# {{{
+#
+read_tab_entry() {
+	unset -- S_VERZ R_VERZ RSYNC_ARGS REMOTE_HOST DIR_EXCLUDE \
+		KwrsynctabListe Kwrsync_Change_List Kwrsync_Change_List_Multi
+	setopt localoptions shwordsplit
+	# IFS=Return
+	IFS=$'\r'
+	#
+	read -A KwrsynctabListe <<< "`grep -v "^#" $KWRSYNCTAB | tr "\n" "$IFS"`"
+	# IFS=Tab
+	IFS=$'\t'
+	Anz=1
+	Anz1=0
+	while [ "${KwrsynctabListe[Anz]}" != "" ] ; do
+		set -- ${KwrsynctabListe[Anz]}
+		(( Anz1++ ))
+		S_VERZ[Anz1]="$1"
+		R_VERZ[Anz1]="$2"
+		REMOTE_HOST[Anz1]="$3"
+		RSYNC_ARGS[Anz1]="$4"
+		DIR_EXCLUDE[Anz1]="$5"
+		(( Anz++ ))
+	done
+	# IFS
+	IFS="$IFSBAK"
+	unsetopt shwordsplit
+	#
+	Nr=0
+	while [ "$Nr" -lt "$Anz1" ] ; do
+		(( Nr++ ))
+		Kwrsync_Change_List[Nr]="$Nr \"${S_VERZ[Nr]} ${R_VERZ[Nr]} ${REMOTE_HOST[Nr]} ${RSYNC_ARGS[Nr]} ${DIR_EXCLUDE[Nr]}\""
+		Kwrsync_Change_List_Multi[Nr]="$Nr \"${S_VERZ[Nr]} ${R_VERZ[Nr]} ${REMOTE_HOST[Nr]} ${RSYNC_ARGS[Nr]} ${DIR_EXCLUDE[Nr]}\" off"
+	done
+}
+## }}}
+manage_dir_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help kwrsynctab_help
+			manage_dir_menu
+			;;
+		$gv_Display)
+			# Ansicht der Konfiguration# {{{
+			read_tab_entry
+			if [ -n "${S_VERZ[1]}" ] ; then
+				> ${gv_WorkDir}/kwrsynctab <<< "<source dir> <remote dir> <remote host> <rsync Argumete> <exclude>
+" 
+				# leere und Kommantar Zeilen herausfiltern.
+				print -l ${(R)${(f)"$(< $KWRSYNCTAB)"}##(s#)(\#|$)*} >> ${gv_WorkDir}/kwrsynctab
+				if [ "`wc -l < $KWRSYNCTAB`" -gt 2 ] ; then
+					view_file "${gv_WorkDir}/kwrsynctab"
+					rm -rf ${gv_WorkDir}/kwrsynctab &>/dev/null
+					#view_file "$KWRSYNCTAB"
+				else
+					no_entry_msg
+				fi
+			else
+				no_entry_msg
+			fi
+			## }}}
+			manage_dir_menu $gv_Display
+			;;
+		$gv_Create)
+			# Konfiguration erstellen
+			unset -- REMOTE_HOST R_VERZ S_VERZ DIR_EXCLUDE RSYNC_ARGS CHANGE
+			kwrsynctab_conf_choice
+			manage_dir_menu $gv_Create
+			;;
+		$gv_Change)
+			# Eintraege aendern# {{{
+			# Funktion kwrsync_change_menu{{{
+			CHANGE_TITLE=(${lv_Directories}::${gv_Change})
+			CHANGE_MSG=$(gettext 'Waehlen Sie eine Konfiguration zum aendern aus.')
+			kwrsync_change_menu() {
+				CHANGE_MENU=($Kwrsync_Change_List $gv_Back \"\")
+				menubox "$NR" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+			}
+			#}}}
+			# Konfiguration veraendern# {{{
+			read_tab_entry
+			if [ -n "$S_VERZ" ] ; then
+				kwrsync_change_menu
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help share/conf_change_help
+							kwrsync_change_menu
+							;;
+						$gv_Back)	break
+							;;
+						*)
+							# kwrsynctab Eintrage aendern
+							NR="$gv_Auswahl"
+							CHANGE=yes
+							S_VERZ="${S_VERZ[gv_Auswahl]}"
+							R_VERZ="${R_VERZ[gv_Auswahl]}"
+							REMOTE_HOST="${REMOTE_HOST[gv_Auswahl]}"
+							RSYNC_ARGS="${RSYNC_ARGS[gv_Auswahl]}"
+							DIR_EXCLUDE="${DIR_EXCLUDE[gv_Auswahl]}"
+							setopt shwordsplit
+							# IFS=Tab
+							IFS=$'\t'
+							KWRSYNCTAB_OLD="${S_VERZ}${IFS}${R_VERZ}${IFS}${REMOTE_HOST}${IFS}${RSYNC_ARGS}${IFS}${DIR_EXCLUDE}"
+							unsetopt shwordsplit
+							# IFS
+							IFS="$IFSBAK"
+							kwrsynctab_conf_choice
+							# kwrsynctab Eintrage neu einlesen
+							read_tab_entry
+							if [ -n "$KwrsynctabListe" ] ; then
+								kwrsync_change_menu
+							else
+								no_entry_msg
+							fi
+							;;
+					esac
+				done
+			else
+				no_entry_msg
+			fi
+			## }}}
+			## }}}
+			manage_dir_menu $gv_Change
+			;;
+		$gv_Delete)
+			# Eintrage loeschen# {{{
+			# Funktion kwrsync_delete_menu{{{
+			DEL_TITLE=(${lv_Directories}::${gv_Delete})
+			kwrsync_delete_menu() {
+				DEL_MENU=($Kwrsync_Change_List_Multi)
+				checklist "$DEL_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+			}
+			#}}}
+			# Konfiguration loeschen# {{{
+			read_tab_entry
+			if [ -n "$Kwrsync_Change_List_Multi" ] ; then
+				kwrsync_delete_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help share/conf_del_help
+							kwrsync_delete_menu
+							;;
+						$gv_Back)	break
+							;;
+						*)
+							# loeschen der Eintrage
+							Line="${gv_Auswahl//\ /d ; }d"
+							sed -e "$Line" $KWRSYNCTAB > ${gv_WorkDir}/kwrsynctab
+							mv ${gv_WorkDir}/kwrsynctab $KWRSYNCTAB
+							break
+							;;
+					esac
+				done
+			else
+				no_entry_msg
+			fi
+			## }}}
+			## }}}
+			manage_dir_menu $gv_Delete
+			;;
+		$gv_Back)	break
+			;;
+	esac
+done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

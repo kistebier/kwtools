@@ -1,0 +1,130 @@
+# Funktion (kwmutt_pager_conf), konfiguriert den Pager fuer mutt# {{{
+#
+# usage: kwmutt_pager_conf
+kwmutt_pager_conf() {
+	Unset=(pager pager_context pager_index_lines pager_stop)
+	unset -- $Unset
+	# Funktion (pager_conf_menu), menu fuer die Pager Konfiguration# {{{
+	PAGER_TITLE="$lv_Pager"
+	pager_conf_menu() {
+		PAGER_CONF_MENU=(pager \"$pager\"
+		pager_context \"$pager_context\"
+		pager_index_lines \"$pager_index_lines\"
+		pager_stop \"$pager_stop\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$PAGER_TITLE" "$gv_Menupoint" "$PAGER_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_PAGER" ] ; then
+		create_tmp_conf "$M_PAGER"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.
+	pager="${pager:-builtin}"
+	pager_context="${pager_context:-0}"
+	pager_index_lines="${pager_index_lines:-0}"
+	pager_stop="${pager_stop:-no}"
+	#
+	pager_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_pager_help
+				pager_conf_menu
+				;;
+			pager)
+				# Auswahl des Pagers (builtin oder externer Pager wie less/more){{{
+				# zur Zeit werden nur less und more unterstuetzt.
+				# Nach Pager Installationen suchen.{{{
+				integer Anz
+				local Anz
+				Anz=0
+				for i in more less ; {
+					prog_check $i
+					if [ -n "$PROGS_E" ] ; then
+						(( Anz++ ))
+						Progs[Anz]="$i \"\""
+					fi
+				}
+				#}}}
+				# Auswahl zur Verfuegung stellen# {{{
+				if [ -n "$Progs" ] ; then
+					P_MENU=(builtin \"\" $Progs $gv_Back \"\")
+				else
+					P_MENU=(builtin \"\" $gv_Back \"\")
+				fi
+				## }}}
+				menubox "$pager" "$PAGER_TITLE" "$gv_Menupoint" "$P_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_pager_help
+							menubox "$pager" "$PAGER_TITLE" "$gv_Menupoint" "$P_MENU"
+							;;
+						$gv_Back)
+							# ohne speichern abbrechen
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							pager="$gv_Auswahl"
+							break
+					esac
+				done
+				#}}}
+				pager_conf_menu pager
+				;;
+			pager_context)
+				# Zeilen, die bei PgUp/PgDown zweimal angezeigt werden sollen.{{{
+				number_input -i "$pager_context"
+				if [ -n "$NUMBER" ] ; then
+					pager_context="$NUMBER"
+				else
+					pager_context="0"
+				fi
+				#}}}
+				pager_conf_menu pager_context
+				;;
+			pager_index_lines)
+				# Wieviel Zeilen des Index soll der Pager anzeigen (Mini-Vorschau).{{{
+				number_input -i "$pager_index_lines"
+				if [ -n "$NUMBER" ] ; then
+					pager_index_lines="$NUMBER"
+				else
+					pager_index_lines="0"
+				fi
+				#}}}
+				pager_conf_menu pager_index_lines
+				;;
+			pager_stop)
+				# Pager anhalten oder nicht, beim Ende der Nachricht.{{{
+				MSG=$(gettext 'Soll der Pager am Ende einer Nachricht nicht gestoppt werden (ja/nein)?')
+				yesno "$PAGER_TITLE" "$MSG" "$pager_stop"
+				if [ "$gv_Auswahl" = yes ] ; then
+					pager_stop=yes
+				else
+					pager_stop=no
+				fi
+				#}}}
+				pager_conf_menu pager_stop
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_pager_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,45 @@
+# Funktion (kwmutt_smime_config), schreibt die smime Konfigurationsdatei# {{{
+# fuer "mutt".
+#
+# usage: kwmutt_smime_config
+#
+kwmutt_smime_config() {
+#
+# Konfiguration schreiben.
+#
+> $M_SMIME <<< "# Beginn $M_SMIME
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# S/MIME configuration
+set smime_is_default=\"$smime_is_default\"
+set smime_ca_location=\"${smime_ca_location//\\/}\"
+set smime_certificates=\"$smime_certificates\"
+set smime_keys=\"$smime_keys\"
+set smime_default_key=\"$smime_default_key\"
+set smime_decrypt_use_default_key=\"$smime_decrypt_use_default_key\"
+set smime_ask_cert_label=\"$smime_ask_cert_label\"
+set smime_timeout=\"$smime_timeout\"
+set smime_decrypt_command=\"$smime_decrypt_command\"
+set smime_encrypt_command=\"$smime_encrypt_command\"
+set smime_encrypt_with=\"$smime_encrypt_with\"
+set smime_get_cert_command=\"$smime_get_cert_command\"
+set smime_get_cert_email_command=\"$smime_get_cert_email_command\"
+set smime_get_signer_cert_command=\"$smime_get_signer_cert_command\"
+set smime_import_cert_command=\"$smime_import_cert_command\"
+set smime_pk7out_command=\"$smime_pk7out_command\"
+set smime_sign_command=\"$smime_sign_command\"
+# This alternative command does not include the full certificates chain.
+# Be sure to understand RFC 2315 section 9.1 before using it.
+#set smime_sign_command=\"openssl smime -sign -signer %c -inkey %k -passin stdin -in %f -outform DER\"
+set smime_sign_opaque_command=\"$smime_sign_opaque_command\"
+set smime_verify_command=\"$smime_verify_command\"
+set smime_verify_opaque_command=\"$smime_verify_opaque_command\"
+
+# End $M_SMIME"
+}
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,119 @@
+# Funktion filerc_start_stop# {{{
+# Start/Stop Nummer herausbekommen und in welchem Runlevel die
+# Scripts gestartet/gekillt werden sollen.
+#
+# usage: filerc_start_stop
+filerc_start_stop() {
+	unset -- RunLevel
+	local Anz
+	integer Anz
+	#
+	rm -f ${gv_WorkDir}/is_file /dev/null 2>&1
+	touch ${gv_WorkDir}/is_file
+	print -l ${(M)${(f)"$(< $RUNLEVELCONF)"}##*${INITD_PATH}/${Init_Script}} >> ${gv_WorkDir}/is_file
+	if [ -z "$(< ${gv_WorkDir}/is_file)" ] ; then
+		Anz=1
+		for n in {0..6} S ; {
+			RunLevel[Anz]="$n \"- no\""
+			(( Anz++ ))
+		}
+	else
+		setopt shwordsplit
+		local Nr Off On Cmd Opt
+		Anz=1
+		while read Nr Off On Cmd Opt ; do
+			# Start/Stop Nummern
+			if [ "$Off" != - -a "$On" != - ] ; then
+				IFSOLD="$IFS"
+				IFS=,
+				for i in $Off ; {
+					if [ -f ${gv_WorkDir}/filerc ] ; then
+						>> ${gv_WorkDir}/filerc <<< "$i $Nr no"
+					else
+						> ${gv_WorkDir}/filerc <<< "$i $Nr no"
+					fi
+				}
+				for i in $On ; {
+					if [ -f ${gv_WorkDir}/filerc ] ; then
+						>> ${gv_WorkDir}/filerc <<< "$i $Nr yes"
+					else
+						> ${gv_WorkDir}/filerc <<< "$i $Nr yes"
+					fi
+				}
+				IFS="$IFSOLD"
+			fi
+			# Stop Nummern
+			if [ "$Off" != - -a "$On" = - ] ; then
+				IFSOLD="$IFS"
+				IFS=,
+				for i in $Off ; {
+					if [ -f ${gv_WorkDir}/filerc ] ; then
+						>> ${gv_WorkDir}/filerc <<< "$i $Nr no"
+					else
+						> ${gv_WorkDir}/filerc <<< "$i $Nr no"
+					fi
+				}
+				IFS="$IFSOLD"
+			fi
+			# Start Nummern
+			if [ "$Off" = - -a "$On" != - ] ; then
+				IFSOLD="$IFS"
+				IFS=,
+				for i in $On ; {
+					if [ -f ${gv_WorkDir}/filerc ] ; then
+						>> ${gv_WorkDir}/filerc <<< "$i $Nr yes"
+					else
+						> ${gv_WorkDir}/filerc <<< "$i $Nr yes"
+					fi
+				}
+				IFS="$IFSOLD"
+			fi
+		done < ${gv_WorkDir}/is_file
+		unsetopt shwordsplit
+		#
+		# fehlende Eintrage erstellen.
+		#
+		if [ "`wc -l < ${gv_WorkDir}/filerc`" -ne 8 ] ; then
+			local Nr Is
+			for n in S {0..6} ; {
+				Is=${${(s: :)${(M)${(f)"$(< ${gv_WorkDir}/filerc)"}##${n}*}}[3]}
+				Nr=${${(s: :)${(M)${(f)"$(< ${gv_WorkDir}/filerc)"}##${n}*}}[2]}
+				if [ -z "$Is" ] ; then
+					Is="no"
+					Nr="-"
+					if [ -f ${gv_WorkDir}/filerc$$ ] ; then
+						>> ${gv_WorkDir}/filerc$$ <<< "$n $Nr $Is"
+					else
+						> ${gv_WorkDir}/filerc$$ <<< "$n $Nr $Is"
+					fi
+				else
+					if [ -f ${gv_WorkDir}/filerc$$ ] ; then
+						>> ${gv_WorkDir}/filerc$$ <<< "$n $Nr $Is"
+					else
+						> ${gv_WorkDir}/filerc$$ <<< "$n $Nr $Is"
+					fi
+				fi
+			}
+		fi
+		# Runlevel einlesen
+		if [ -f ${gv_WorkDir}/filerc$$ ] ; then
+			Sort_Opt="${gv_WorkDir}/filerc$$"
+		else
+			Sort_Opt="${gv_WorkDir}/filerc"
+		fi
+		#
+		local Rl Nr Yn
+		Anz=1
+		< $Sort_Opt | sort | \
+			while read Rl Nr Yn ; do
+				RunLevel[Anz]="$Rl \"$Nr $Yn\""
+				(( Anz++ ))
+		done
+		rm -f ${gv_WorkDir}/filerc ${gv_WorkDir}/filerc$$ &>/dev/null
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

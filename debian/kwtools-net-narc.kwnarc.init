@@ -1,0 +1,69 @@
+#! /bin/sh -e
+#
+# Copyright (c) 2002-2010 Netzworkk, Germany.
+#
+# Author: Kai Wilke <kiste@netzworkk.de>
+#
+# /etc/init.d/kwnarc
+#
+### BEGIN INIT INFO
+# Provides:          kwnarc
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:      $syslog
+# Should-Stop:       $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts/stops/... your firewall per iptables
+# Description:       starts/stops/reloads the configuration and displays
+#                    the status from your firewall
+### END INIT INFO
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin
+
+DESC="kwtools Netfilter Automatic Rule Configurator"
+NAME="kwnarc"
+# description: 
+
+# lsb-base >=3.0-6
+. /lib/lsb/init-functions
+
+if [ -f /etc/kwtools/kwnarc.conf ] ; then
+	. /etc/kwtools/kwnarc.conf
+elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
+	. /usr/local/etc/kwtools/kwnarc.conf
+fi
+
+test "$START_IPTABLES" = "yes" || exit 0
+
+case "$1" in
+    chains)
+		$NAME chains || log_end_msg 1
+		log_end_msg 0 
+        ;;
+    conntrack)
+		$NAME conntrack || log_end_msg 1
+		log_end_msg 0 
+        ;;
+    start)
+       $NAME start || log_end_msg 1
+		log_end_msg 0
+        ;;
+    stop)
+		$NAME stop || log_end_msg 1
+		log_end_msg 0
+        ;;
+    restart|reload|force-reload)
+        $0 stop
+		sleep 1
+		$0 start
+        ;;
+    status)
+		$NAME status || log_end_msg 1
+		log_end_msg 0 
+        ;;
+    *)
+        echo "Usage: $0 {chains|conntrack|start|stop|reload|force-reload|restart|status}"
+        exit 1
+esac
+exit 0

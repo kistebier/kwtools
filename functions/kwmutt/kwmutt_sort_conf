@@ -1,0 +1,178 @@
+# Funktion (kwmutt_sort_conf), konfiguriert den Pager fuer mutt# {{{
+#
+# usage: kwmutt_sort_conf
+kwmutt_sort_conf() {
+	Unset=(sort sort_alias sort_aux sort_browser strict_threads)
+	unset -- $Unset
+	T_MENU=(date \"\" date-sent \"\" date-received \"\" from \"\"
+	mailbox-order \"\" score \"\" size \"\" spam \"\" subject \"\"
+	threads \"\" to \"\" reverse-date \"\" reverse-date-sent \"\"
+	reverse-date-received \"\" reverse-from \"\" reverse-mailbox-order \"\"
+	reverse-score \"\" reverse-size \"\" reverse-spam \"\"
+	reverse-subject \"\" reverse-threads \"\" reverse-to \"\" $gv_Back \"\")
+	# Funktion (sort_conf_menu), Menue fuer die Verzeichnisbaum Konfiguration# {{{
+	TREE_TITLE="$lv_Tree"
+	sort_conf_menu() {
+		TREE_CONF_MENU=(sort \"$sort\"
+		sort_alias \"$sort_alias\"
+		sort_aux \"$sort_aux\"
+		sort_browser \"$sort_browser\"
+		sort_re \"$sort_re\"
+		strict_threads \"$strict_threads\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$TREE_TITLE" "$gv_Menupoint" "$TREE_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_SORT" ] ; then
+		create_tmp_conf "$M_SORT"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	sort="${sort:-date}"
+	sort_alias="${sort_alias:-alias}"
+	sort_aux="${sort_aux:-date}"
+	sort_browser="${sort_browser:-alpha}"
+	sort_re="${sort_re:-yes}"
+	strict_threads="${strict_threads:-no}"
+	## }}}
+	sort_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_sort_help
+				sort_conf_menu
+				;;
+			sort)
+				# Auswahl der Sortierung im Index Menue# {{{
+				menubox "$sort" "$TREE_TITLE" "$gv_Menupoint" "$T_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_sort_help
+							menubox "$sort" "$TREE_TITLE" "$gv_Menupoint" "$T_MENU"
+							;;
+						$gv_Back)
+							# ohne speichern abbrechen
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							sort="$gv_Auswahl"
+							break
+					esac
+				done
+				#}}}
+				sort_conf_menu sort
+				;;
+			sort_alias)
+				# Auswahl der Alias Sortierung# {{{
+				SORT_ALIAS_MENU=(address \"\" alias \"\" unsorted \"\" $gv_Back \"\")
+				menubox "$sort_alias" "$TREE_TITLE" "$gv_Menupoint" "$SORT_ALIAS_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_sort_help
+							menubox "$sort_alias" "$TREE_TITLE" "$gv_Menupoint" "$SORT_ALIAS_MENU"
+							;;
+						$gv_Back)
+							# ohne speichern abbrechen
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							sort_alias="$gv_Auswahl"
+							break
+					esac
+				done
+				#}}}
+				sort_conf_menu sort_alias
+				;;
+			sort_aux)
+				# Auswahl der Sortierung im Index Menue# {{{
+				menubox "$sort_aux" "$TREE_TITLE" "$gv_Menupoint" "$T_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_sort_help
+							menubox "$sort_aux" "$TREE_TITLE" "$gv_Menupoint" "$T_MENU"
+							;;
+						$gv_Back)
+							# ohne speichern abbrechen
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							sort_aux="$gv_Auswahl"
+							break
+					esac
+				done
+				#}}}
+				sort_conf_menu sort_aux
+				;;
+			sort_browser)
+				# Auswahl der Browser Sortierung# {{{
+				SORT_BROWSER_MENU=(alpha \"\" date \"\" size \"\" unsorted \"\"
+				reverse-alpha \"\" reverse-date \"\" reverse-size \"\"
+				reverse-unsorted \"\" $gv_Back \"\")
+				menubox "$sort_browser" "$TREE_TITLE" "$gv_Menupoint" "$SORT_BROWSER_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_sort_help
+							menubox "$sort_browser" "$TREE_TITLE" "$gv_Menupoint" "$SORT_BROWSER_MENU"
+							;;
+						$gv_Back)
+							# ohne speichern abbrechen
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							sort_browser="$gv_Auswahl"
+							break
+					esac
+				done
+				#}}}
+				sort_conf_menu sort_browser
+				;;
+			sort_re)
+				# Soll das Threading nach dem Subjekt sortiert werden (ja/nein)?# {{{
+				MSG=$(gettext 'Soll das Threading nach dem Subjekt sortiert werden (ja/nein)?')
+				yesno "$TREE_TITLE" "$MSG" "$sort_re"
+				if [ "$gv_Auswahl" = yes ] ; then
+					sort_re=yes
+				else
+					sort_re=no
+				fi
+				#}}}
+				sort_conf_menu sort_re
+				;;
+			strict_threads)
+				# Soll Threading nur auf dem In-Reply-To:-Header und Referenz Feld# {{{
+				# basieren (yes/no)?
+				MSG=$(gettext 'Soll Threading nur auf dem In-Reply-To:-Header und Referenz Feld basieren (ja/nein)?')
+				yesno "$TREE_TITLE" "$MSG" "$strict_threads"
+				if [ "$gv_Auswahl" = yes ] ; then
+					strict_threads=yes
+				else
+					strict_threads=no
+				fi
+				#}}}
+				sort_conf_menu strict_threads
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_sort_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

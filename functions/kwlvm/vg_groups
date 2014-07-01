@@ -1,0 +1,696 @@
+# Funktion um VG's zu erstellen, anzeigen und loeschen{{{
+#
+# usage: vg_groups
+vg_groups() {
+	local S_Vg Vg
+	autoload -U all_pv_in_vg_msg no_select_vg_msg
+	# Variablen
+	lv_Backup=$(gettext 'Sicherung')
+	lv_Convert=$(gettext 'konvertieren')
+	lv_Split=$(gettext 'teilen')
+	lv_Merge=$(gettext 'verbinden')
+	lv_New_VG=$(gettext 'neue VG')
+	VG_NAME_MSG=$(gettext 'Geben Sie bitte hier den Namen ihrer neuen VG, ohne Leerzeichen, ein.')
+	#
+	search_pv
+	# Funktion check_lv_active, zaehlt die# {{{
+	# aktiven und unactiven LVs zusammen.
+	# Danach wird man gefragt ob man die activen
+	# LVs deaktivieren soll oder nicht. Z. Z. nur aktive
+	check_lv_active() {
+		local Anz Lvs
+		integer Anz
+		unset -- LV_ACTIV LV_NO_ACTIV LV_ALL
+		# PVs der VG herraus bekommen und dann den Status der LVs.
+		Lvs=${(M)$(lvdisplay $1)##/dev*}
+		if [[ -n ${Lvs[1]} ]] ; then
+			Anz=1
+			for i in ${=Lvs} ; {
+				if [ "`print ${${(s: :)${(M)${(f)"$(lvdisplay $i)"}##*(LV Status)*}}[3]}`" = available ] ; then
+					LV_ACTIV[Anz]="$i"
+					LV_ALL[Anz]="$i"
+				else
+					LV_NO_ACTIV[Anz]="$i"
+					LV_ALL[Anz]="$i"
+				fi
+				(( Anz++ ))
+			}
+		fi
+	}
+	## }}}
+	# Funktion lv_deactive, zum deaktivieren der LVs# {{{
+	#
+	lv_deactive() {
+		local Anz
+		integer Anz
+		RET=0
+		if [ -n "${LV_ACTIV[1]}" ] ; then
+			# Sollen diese activen LVs beendet werden?
+			# Sonst kann man die VG z. B. nicht splitten.
+			local Anz
+			integer Anz
+			RET=0
+			Anz="${(w)#LV_ACTIV}"
+			Devs=${LV_ACTIV//\ /\\n}
+			MSG=$(gettext 'Diese LVs sind noch aktiv. Sie muessen erst deaktiviert werden.\n$Devs\n\nSoll dies jetzt geschehen (ja/nein)?')
+			yesno "$gv_Attention" "$MSG" "" "$Anz"
+			if [ "$gv_Auswahl" = yes ] ; then
+				lvchange -a n $LV_ACTIV &>/dev/null || prog_failure
+			else
+				RET=1
+			fi
+		fi
+	}
+	## }}}
+	# Funktion keine VGs ausgewaehlt# {{{
+	#
+	no_select_vgs_msg() {
+		MSG=$(gettext 'Sie muessen erst eine VG und eine neue VG auswaehlen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion one_vg_msg# {{{
+	one_vg_msg() {
+		MSG=$(gettext 'Es ist nur eine VG vorhanden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion vg_menue{{{
+	VG_TITLE=($lv_Vol_Groups)
+	vg_menue() {
+		if [ "$LVM" = 2 ] ; then
+			VG_MENU=($gv_Display \"\" $gv_Create \"\" $lv_Backup \"\"
+			$lv_Convert \"\" $lv_Split \"\" $lv_Merge \"\"
+			$lv_Rename \"\" $gv_Delete \"\" $gv_Back \"\")
+		else
+			VG_MENU=($gv_Display \"\" $gv_Create \"\" $lv_Backup \"\"
+			$lv_Split \"\" $lv_Merge \"\" $lv_Rename \"\"
+			$gv_Delete \"\" $gv_Back \"\")
+		fi
+		menubox "$1" "$VG_TITLE" "$gv_Menupoint" "$VG_MENU"
+	}
+	#}}}
+	vg_menue
+	#
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help vg_help
+				vg_menue
+				;;
+			$gv_Display)
+				# Anzeige der gefundenen Volume Groups, in dieser {{{
+				# Funktion wird auch PROG generiert.
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					VG_DISPLAY_MENU=($VG_M)
+					VG_DISPLAY_TITLE=(${lv_Vol_Groups}::${gv_Display})
+					VG_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere VGs zur Anzeige aus.')
+					checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl"  in
+							HELP*)	script_help vg_help
+								checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+								;;
+							[a-z,A-Z]*)
+								# Anzeige der ausgewaehlten VG
+								vgdisplay ${=gv_Auswahl} >${gv_WorkDir}/vgdisplay
+								view_file ${gv_WorkDir}/vgdisplay
+								checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_M"
+								;;
+							*)	break 2
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $gv_Display
+				;;
+			$lv_Backup)
+				# Backup starten{{{
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					VG_BACKUP_CREATE_MENU=($VG_M)
+					lv_Backup_Create=$(gettext 'Sicherung_erstellen')
+					lv_Backup_Back=$(gettext 'Sicherung_zurueck')
+					lv_Backup_Delete=$(gettext 'Sicherung_loeschen')
+					VG_BACKUP_TITLE=(${lv_Vol_Groups}::${lv_Backup})
+					VG_BACKUP_MENU=($lv_Backup_Create \"\" $lv_Backup_Back \"\"
+					$lv_Backup_Delete \"\" $gv_Back \"\")
+					# Funktion vg_backup_menue{{{
+					vg_backup_menue() {
+						menubox "$1" "$VG_BACKUP_TITLE" "$gv_Menupoint" "$VG_BACKUP_MENU"
+					}
+					#}}}
+					vg_backup_menue
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help vg_bak_help
+								vg_backup_menue
+								;;
+							$lv_Backup_Create)
+								# Sicherung erstellen{{{
+								VG_BACKUP_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zur Sicherung aus.')
+								checklist "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
+								#
+								while [ "$gv_Auswahl" ] ; do
+									case $gv_Auswahl in
+										HELP*) script_help vg_auswahl_help
+											checklist "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
+											;;
+										*)	# Auswahl sichern.
+											S_Vg="$gv_Auswahl"
+											# Welches LVM ist am start?
+											if [ "$LVM" = 1 ] ; then
+												vgcfgbackup -v ${=S_Vg} 2>&1 | progressbox $lv_Backup_Create "${=S_Vg}" || prog_failure
+											else
+												vgcfgbackup -v --ignorelockingfailure ${=S_Vg} 2>&1 | progressbox $lv_Backup_Create "${=S_Vg}" || prog_failure
+											fi
+											break
+											;;
+									esac
+								done
+								#}}}
+								vg_backup_menue $lv_Backup_Create
+								;;
+							$lv_Backup_Back)
+								# Sicherung zurueckspielen. Die Option -t, bei der Var. PROG_OPT{{{
+								# ist fuer den Test.
+								#
+								# Welches LVM ist am start, LVM 1 oder 2?
+								if [ "$LVM" = 1 ] ; then
+									# Im ausgewaehltem Verzeichnis nach FORMAT Dateien suchen und bereitstellen.
+									FORMAT="DATA"
+									file_choice "$BAK_DIR" multi
+									if [ "$WERT" ] ; then
+										#
+										# Bei LVM1 muss man den PhysicalVolumePath angeben.
+										#
+										for i in $WERT ; {
+											vgcfgrestore -v -f $i -n ${i%.conf*} ${(M)PV##$i} 2>&1 | progressbox $lv_Backup_Back $i || prog_failure
+										}
+									fi
+								else
+									# Im ausgewaehltem Verzeichnis nach FORMAT Dateien suchen und bereitstellen.
+									FORMAT="ASCII"
+									file_choice "${BAK_DIR//\"/}" only
+									if [ "$WERT" ] ; then
+										lvm_type
+										vgcfgrestore -v -M ${LVM_TYPE:-2} $WERT 2>&1 | progressbox $lv_Backup_Back "$WERT" || prog_failure
+									fi
+								fi
+								#}}}
+								vg_backup_menue $lv_Backup_Back
+								;;
+							$lv_Backup_Delete)
+								# Sicherungen loeschen{{{
+								# Dateien zum loeschen auswaehlen
+								if [ "$LVM" = 1 ] ; then
+									FORMAT="DATA"
+									file_choice "$BAK_DIR" multi
+									if [ "$WERT" ] ; then
+										rm -f "$WERT" &>/dev/null
+									fi
+								else
+									FORMAT="ASCII"
+									file_choice "${BAK_DIR//\"/}" multi
+									if [ "$WERT" ] ; then
+										rm -f "$WERT" &>/dev/null
+									fi
+								fi
+								#}}}
+								vg_backup_menue $lv_Backup_Delete
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $lv_Backup
+				;;
+			$gv_Create)
+				# Volume Groups erstellen{{{
+				unset -- PV_AUSWAHL VG_NAME VG_PE_SIZE
+				# Pruefen ob es noch freie PVs gibt.
+				pv_vgi_auswahl
+				if [ -n "${PV_PARTS_M[1]}" ] ; then
+					# Funktion create_vg_menue{{{
+					lv_VG_Name=$(gettext 'VG_Name')
+					lv_PE_Size=$(gettext 'PE_Groesse')
+					#
+					VG_CREATE_TITLE=(${lv_Vol_Groups}::${gv_Create})
+					create_vg_menue() {
+						if [ "$LVM" = 2 ] ; then
+							VG_CREATE_MENU=($lv_PV \"$PV_AUSWAHL\"
+							$lv_VG_Name \"$VG_NAME\" $lv_PE_Size \"$VG_PE_SIZE\"
+							$lv_LVM_Typ \"$LVM_TYPE\" $gv_Create \"\" $gv_Back \"\")
+						else
+							VG_CREATE_MENU=($lv_PV \"$PV_AUSWAHL\"
+							$lv_VG_Name \"$VG_NAME\" $gv_Create \"\" $gv_Back \"\")
+						fi
+						menubox "$1" "$VG_CREATE_TITLE" "$gv_Menupoint" "$VG_CREATE_MENU"
+					}
+					#}}}
+					create_vg_menue
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help vg_create_help
+								create_vg_menue
+								;;
+							$lv_PV)
+								# Auswahl von noch freien Physiklischen Volumes{{{
+								unset -- PV_AUSWAHL
+								VG_PV_MENU=($PV_PARTS_M)
+								VG_PV_TITLE=(${lv_Vol_Groups}::${lv_Physic_Vol})
+								VG_PV_MSG=$(gettext 'Waehlen Sie eine oder mehrere PVs fuer diese Volume Group aus.')
+								checklist "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
+								while [ "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help share/part_help
+											checklist "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
+											;;
+										*)	PV_AUSWAHL="$gv_Auswahl"
+											break
+											;;
+									esac
+								done
+								#}}}
+								create_vg_menue $lv_PV
+								;;
+							$lv_LVM_Typ)
+								# LVM Type auswaehlen
+								lvm_type
+								create_vg_menue $lv_LVM_Typ
+								;;
+							$lv_VG_Name)
+								# VG Namen eingeben, ohne Leerzeichen{{{
+								VG_NAME_TITLE=(${lv_Vol_Groups}::${lv_VG_Name})
+								U_OPT="-"
+								inputbox "$VG_NAME_TITLE" "$VG_NAME_MSG" "$VG_NAME"
+								#
+								if [ "$gv_Auswahl" ] ; then
+									VG_NAME="$gv_Auswahl"
+								else
+									VG_NAME=""
+								fi
+								#}}}
+								create_vg_menue $lv_VG_Name
+								;;
+							$lv_PE_Size)
+								# VG PE Groesse eingeben, Standard sind 4MByte{{{
+								VG_PE_SIZE_TITLE=(${lv_Vol_Groups}::${lv_PE_Size})
+								VG_PE_SIZE_MSG=$(gettext 'Geben Sie die physikalische Groesse des PV auf der diese VG liegt ein (kKmMgGtT).')
+								number_input -D "$VG_PE_SIZE_TITLE" "$VG_PE_SIZE_MSG" "$VG_PE_SIZE"
+								#
+								if [ "$NUMBER" ] ; then
+									VG_PE_SIZE="$NUMBER"
+								else
+									VG_PE_SIZE="4M"
+								fi
+								#}}}
+								create_vg_menue $lv_PE_Size
+								;;
+							$gv_Create)
+								# Erzeugung der Volume Group{{{
+								#
+								if [ "$VG_NAME" -a "$PV_AUSWAHL" ] ; then
+									if [ "$LVM" = 1 ] ; then
+										vgcreate $VG_NAME -v $PV_AUSWAHL 2>&1 | progressbox $gv_Create $VG_NAME || prog_failure
+										vgchange -a y $VG_NAME &>/dev/null || prog_failure
+										break
+									else
+										vgcreate $VG_NAME -v -s ${VG_PE_SIZE:-4M} -M ${LVM_TYPE:-2} $PV_AUSWAHL 2>&1 | progressbox $gv_Create $VG_NAME || prog_failure
+										vgchange -a y $VG_NAME &>/dev/null || prog_failure
+										break
+									fi
+								else
+									MSG=$(gettext 'Bevor Sie eine VG erzeugen koennen muessen Sie erst die Menuepunkte PV und VG_Name belegen.')
+									msgbox "$gv_Attention" "$MSG"
+									create_vg_menue
+								fi
+								#}}}
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+				else
+					all_pv_in_vg_msg
+				fi
+				#}}}
+				vg_menue $gv_Create
+				;;
+			$lv_Convert)
+				# Konvertierung der Metadaten von gefundenen Volume Groups{{{
+				vg_display
+				if [ -n "$VG" ] ; then
+					VG_CONVERT_MENU=($VG_M)
+					VG_CONVERT_TITLE=(${lv_Vol_Groups}::${lv_Convert})
+					VG_CONVERT_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zum konvertieren aus.')
+					checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl"  in
+							HELP*)	script_help vg_convert_help
+								checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
+								;;
+							[a-z,A-Z]*)
+								# ausgewaehlte VG's konvertieren
+								Vg="$gv_Auswahl"
+								lvm_type
+								vgconvert -v -M ${LVM_TYPE:-2} $Vg 2>&1 | progressbox $lv_Convert $Vg || prog_failure
+								checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_M"
+								;;
+							*)	break 2
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $lv_Convert
+				;;
+			$lv_Split)
+				# Eine VG in 2 VG splitten{{{
+				unset -- S_VG Z_VG PV_AUSWAHL
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					# Funktion vg_split_menue{{{
+					VG_SPLIT_TITLE=(${lv_Vol_Groups}::${lv_Split})
+					vg_split_menue() {
+						VG_SPLIT_MENU=($lv_VG \"$S_VG\" \"$lv_New_VG\" \"$Z_VG\"
+						$lv_PV \"$PV_AUSWAHL\" $lv_Split \"\" $gv_Back \"\")
+						menubox "$1" "$VG_SPLIT_TITLE" "$gv_Menupoint" "$VG_SPLIT_MENU"
+					}
+					#}}}
+					vg_split_menue
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help vg_split_help
+								vg_split_menue
+								;;
+							$lv_VG)
+								# Welche VG soll gesplittet werden{{{
+								VG_SPLIT_MENU=($VG_E)
+								VG_SPLIT_MSG=$(gettext 'Waehlen Sie eine VG die geteilt werden soll aus.')
+								menubox "$S_VG" "$VG_SPLIT_TITLE" "$VG_SPLIT_MSG" "$VG_SPLIT_MENU"
+								#
+								while [ "$gv_Auswahl" ] ; do
+									case $gv_Auswahl in
+										HELP*) script_help vg_auswahl_help
+											menubox "$S_VG" "$VG_SPLIT_TITLE" "$VG_SPLIT_MSG" "$VG_SPLIT_MENU"
+											;;
+										*)	# uebernehmen
+											S_VG="$gv_Auswahl"
+											# ueberpruefen ob die LVs dieser VG noch activ
+											# sind und wenn deaktivieren.
+											check_lv_active "$S_VG"
+											lv_deactive
+											break
+											;;
+									esac
+								done
+								#}}}
+								vg_split_menue $lv_VG
+								;;
+							$lv_New_VG)
+								# Ziel VG eingeben.{{{
+								U_OPT="-"
+								inputbox "$VG_SPLIT_TITLE" "$VG_NAME_MSG" "$VG_NAME"
+								if [ "$gv_Auswahl" ] ; then
+									Z_VG="$gv_Auswahl"
+								else
+									no_input_msg
+								fi
+								#}}}
+								vg_split_menue $lv_New_VG
+								;;
+							$lv_PV)
+								# verschiedene PV dieser VG auswaehlen{{{
+								if [ "$S_VG" ] ; then
+									pv_vga_auswahl "$S_VG"
+									if [ "$ANZ_PV" -gt 0 ] ; then
+										PV_CHOICE_MENU=($PV_IN_VG_M)
+										PV_CHOICE_MSG=$(gettext 'Waehlen Sie eine oder mehrere PVs dieser VG aus.')
+										checklist "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
+										#
+										while [ "$gv_Auswahl" ] ; do
+											case $gv_Auswahl in
+												HELP*) script_help pv_auswahl_help
+													checklist "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
+													;;
+												*)	#
+													PV_AUSWAHL="$gv_Auswahl"
+													break
+													;;
+											esac
+										done
+									else
+										no_pv_msg
+									fi
+								else
+									no_select_vg_msg
+								fi
+								#}}}
+								vg_split_menue $lv_PV
+								;;
+							$lv_Split)
+								# VG splitten{{{
+								if [ "$S_VG" -a "$Z_VG" -a "$PV_AUSWAHL" ] ; then
+									# Pruefen ob LVs der Quell VG noch aktiv sind
+									# und deaktivieren.
+									check_lv_active "$S_VG"
+									lv_deactive
+									if [ "$RET" = 0 ] ; then
+										vgsplit -v $S_VG $Z_VG $PV_AUSWAHL 2>&1 | progressbox $lv_Merge "$S_VG --> $S_VG $Z_VG" || prog_failure
+										vg_display
+									fi
+									break
+								else
+									MSG=$(gettext 'Sie muessen erst eine VG, eine neue VG und eine oder mehrere PVs auswaehlen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+								#}}}
+								vg_split_menue $lv_Split
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $lv_Split
+				;;
+			$lv_Merge)
+				# 2 VG's zu einer verbinden.{{{
+				unset -- S_VG Z_VG
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					if [ "${#VG[@]}" -gt 1 ] ; then
+						# Funktion vg_merge_menue{{{
+						VG_MERGE_TITLE=(${lv_Vol_Groups}::${lv_Merge})
+						#
+						vg_merge_menue() {
+							VG_MERGE_MENU=($lv_VG \"$S_VG\" \"$lv_New_VG\" \"$Z_VG\" $lv_Merge \"\" $gv_Back \"\")
+							menubox "$1" "$VG_MERGE_TITLE" "$gv_Menupoint" "$VG_MERGE_MENU" 
+						}
+						#}}}
+						vg_merge_menue
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)	script_help vg_merge_help
+									vg_merge_menue 
+									;;
+								$lv_VG)
+									# VG auswaehlen die zur neuen VG verbunden werden soll{{{
+									VG_MERGE_MENU=($VG_E)
+									VG_MERGE_MSG=$(gettext 'Waehlen Sie die VG aus die mit einer anderen VG verbunden werden soll.')
+									menubox "$S_VG" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_MENU"
+									#
+									while [ "$gv_Auswahl" ] ; do
+										case $gv_Auswahl in
+											HELP*) script_help vg_auswahl_help
+												menubox "$S_VG" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_MENU"
+												;;
+											*)	# uebernehmen
+												S_VG="$gv_Auswahl"
+												break
+												;;
+										esac
+									done
+									#}}}
+									vg_merge_menue $lv_VG
+									;;
+								$lv_New_VG)
+									# VG auswaehlen zur der die andere VG gehoeren soll{{{
+									VG_MERGE_NEW_MENU=($VG_E)
+									VG_MERGE_NEW_MSG=$(gettext 'Waehlen Sie die VG aus zu der die andere VG verbunden werden soll.')
+									menubox "$Z_VG" "$VG_MERGE_TITLE" "$VG_MERGE_NEW_MSG" "$VG_MERGE_NEW_MENU"
+									#
+									while [ "$gv_Auswahl" ] ; do
+										case $gv_Auswahl in
+											HELP*) script_help vg_auswahl_help
+												menubox "$Z_VG" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_NEW_MENU"
+												;;
+											*)	#
+												Z_VG="$gv_Auswahl"
+												break
+												;;
+										esac
+									done
+									#}}}
+									vg_merge_menue $lv_New_VG
+									;;
+								$lv_Merge)
+									# Erst wird getestet, ob VG's ausgewaehlt wurden.{{{
+									if [ "$Z_VG" -a "$S_VG" ] ; then
+										# Soll die VG sicherheitshalber beendet werden?
+										# Sonst kann man die VGs z. B. nicht verbinden.
+										MSG=$(gettext 'Diese VG $S_VG kann jetzt sicherheitshalber deaktiviert werden. Sonst kann man die VGs nicht verbinden. Soll dies jetzt geschehen (ja/nein)?')
+										yesno "$gv_Attention" "$MSG" "" 2
+										if [ "$gv_Auswahl" = yes ] ; then
+											vgchange -a n $S_VG &>/dev/null || prog_failure
+											# VGs verbinden
+											vgmerge -v $Z_VG $S_VG 2>&1 | progressbox $lv_Merge "$S_VG --> $Z_VG" || prog_failure
+											vg_display
+										fi
+										break
+									else
+										no_select_vgs_msg
+									fi
+									#}}}
+									vg_merge_menue $lv_Merge
+									;;
+								$gv_Back)	break
+									;;
+							esac
+						done
+					else
+						one_vg_msg
+					fi
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $lv_Merge
+				;;
+			$lv_Rename)
+				# umbenennen einer VG{{{
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					# Funktion vg_change_menue{{{
+					#
+					VG_RENAME_MENU=($VG_E)
+					VG_RENAME_TITLE=(${lv_Vol_Groups}::${lv_Rename})
+					VG_RENAME_MSG=$(gettext 'Waehlen Sie eine VG zum umbenennen aus.')
+					vg_change_menue() {
+						menubox "$O_VG" "$VG_RENAME_TITLE" "$VG_RENAME_MSG" "$VG_RENAME_MENU"
+					}
+					#}}}
+					vg_change_menue
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help vg_replace_help
+								vg_change_menue
+								;;
+							*)
+								# neuen Namen fuer die VG eingeben
+								O_VG=$gv_Auswahl
+								VG_NEW_NAME_MSG=$(gettext 'Geben Sie einen neuen Namen fuer die VG $O_VG, ohne Leerzeichen, ein.')
+								U_OPT="-"
+								inputbox "$VG_RENAME_TITLE" "$VG_NEW_NAME_MSG"
+								#
+								if [ "$gv_Auswahl" ] ; then
+									vgrename -v $O_VG $gv_Auswahl 2>&1 | progressbox $lv_Rename "$O_VG --> $gv_Auswahl" || prog_failure
+								else
+									no_input_msg
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $lv_Rename
+				;;
+			$gv_Delete)
+				# loeschen einer VG{{{
+				vg_display
+				if [ -n "${VG[1]}" ] ; then
+					# Funktion vg_delete_menue{{{
+					#
+					VG_DEL_MENU=($VG_M)
+					VG_DEL_TITLE=(${lv_Vol_Groups}::${gv_Delete})
+					VG_DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zum loeschen aus.')
+					vg_delete_menue() {
+						checklist "$VG_DEL_TITLE" "$VG_DEL_MSG" "$VG_DEL_MENU"  
+					}
+					#}}}
+					vg_delete_menue
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help vg_del_help
+								vg_delete_menue
+								;;
+							*)
+								# loeschen leerer VGs
+								Anz=${(w)#gv_Auswahl}
+								DEVS="$gv_Auswahl"
+								Devs=${gv_Auswahl//\ /\\n}
+								MSG=$(gettext 'Jetzt werden alle ausgewaehlten Volume Groups geloescht.\n$Devs\n\nFortfahren (ja/nein)?')
+								yesno "$gv_Attention" "$MSG" "" "$Anz"
+								if [ "$gv_Auswahl" = yes ] ; then
+									for v in ${=DEVS} ; {
+										# pruefen ob die LVs der VG noch aktiv sind.
+										check_lv_active "$v"
+										lv_deactive
+										if [ -n "${LV_ALL[1]}" -a "$RET" = 0 ] ; then
+											for i in ${=LV_ALL} ; {
+												# alle LVs der VG umounten
+												mount_check -u "$i"
+											}
+											lvremove -v -f ${=LV_ALL} 2>&1 | progressbox $gv_Delete "${=LV_ALL}" || prog_failure
+											# VGs deaktivieren
+											vgchange -a n $v &>/dev/null || prog_failure
+											# VGs loeschen
+											vgremove -v $v 2>&1 | progressbox $gv_Delete $v || prog_failure
+										elif [ "$RET" = 0 ] ; then
+											# VGs deaktivieren
+											vgchange -a n $v &>/dev/null || prog_failure
+											# VGs loeschen
+											vgremove -v $v 2>&1 | progressbox $gv_Delete $v || prog_failure
+										fi
+									}
+								fi
+								#
+								break
+								;;
+						esac
+					done
+				else
+					no_vg_msg
+				fi
+				#}}}
+				vg_menue $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	unset -- O_VG Z_VG S_VG PV_AUSWAHL VG_NAME
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

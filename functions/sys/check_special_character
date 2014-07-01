@@ -1,0 +1,31 @@
+# Funktion (check_special_character), die prueft ob der uebergebene Wert{{{
+# Sonderzeichen enthaelt.
+#
+# benoetigt die Funktion no_special_character_msg
+#
+# usage: check_special_character VAR
+# VAR - Variable die den uebergebenen Wert enthaelt.
+# Variable
+# VALUE - Wert der weiter bearbeitet werden kann.
+#
+check_special_character() {
+	unset -- VALUE Var
+	local Var
+	if [ "$#" = 1 ] ; then
+		Var="$1"
+		case "$Var" in
+			*[äöüÜÖÄ/\?.\(\)\\\&%\$§\[\]\*\;:\`\"\'!+#,]*)
+				no_special_character_msg
+				;;
+			*)	VALUE="$Var"
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

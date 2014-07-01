@@ -1,0 +1,111 @@
+.\"     Title: KWUSER
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: Handbuch f\(:ur kwuser
+.\"    Source: Version 1.0.3
+.\"  Language: English
+.\"
+.TH "KWUSER" "8" "11/15/2013" "Version 1.0.3" "Handbuch f\(:ur kwuser"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+kwuser \- ein Zshell Script zur Benutzer Verwaltung\&.
+.SH "SYNTAX"
+.HP \w'\fBkwuser\fR\ 'u
+\fBkwuser\fR \fB[ \-m | \-\-multi ]\fR
+.SH "BESCHREIBUNG"
+.PP
+Mit
+\fBkwuser\fR
+k\(:onnen Sie Benutzer anlegen, ver\(:andern, l\(:oschen und die Datei
+\fI/etc/passwd\fR
+ansehen\&. Beim anlegen eines Benutzers muss immer ein Passwort mit angegeben werden\&. Die Variable die es enth\(:alt wird sofort nach dem Gebrauch gel\(:oscht\&.
+Einen Benutzer anlegen\&. Es wird bei der Auswahl die Benutzer\- und Gruppen\-ID \(:uberpr\(:uft, ob diese schon vergeben ist\&. Falls
+\fB\(lqQuota\(rq\fR
+konfiguriert wurde wird dieses auch gleich f\(:ur den Benutzer eingestellt, falls das Homeverzeichnis auf einer eigenen Partition liegt und
+\fB\(lqQuota\(rq\fR
+Unterst\(:utzung besitzt\&.
+.SH "OPTIONEN"
+.PP
+\fB-m --multi\fR
+.RS 4
+Mit dieser Option k\(:onnen Sie viele Benutzer gleichzeitig anlegen\&. Es erscheint dann eine etwas andere Men\(:uauswahl mit den zus\(:atzlichen Punkten Prefix, Prefix_Homeverz\&. und Anzahl\&. Die Benutzer werden dann mit der Kombination aus Prefix+Anzahl erstellt\&.
+.PP
+Die Passw\(:orter stehen danach in der Datei
+\fI/root/passwd\-prefix\&.txt\fR\&. Es wird ein Hash mittels openssl f\(:ur die Passw\(:orter gebildet\&. Sie sollten diese Datei ordentlich sichern! Die Datei hat das Format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+User Passwort
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+Auch sollten Sie bei der Erstellung von mehr als 10000 Benutzern lieber eine Datenbank benutzen\&. Die Geschwindigkeit ist dann besser\&.
+.RE
+.SH "DATEIEN"
+.PP
+\fI/etc/passwd\fR
+.RS 4
+Datei mit den Benutzer Informationen\&. Siehe
+\fBpasswd\fR(5)
+f\(:ur weitere Details\&.
+.RE
+.PP
+\fI/etc/shadow\fR
+.RS 4
+Datei mit den sicheren Benutzer Informationen\&. Siehe
+\fBshadow\fR(5)
+f\(:ur weitere Details\&.
+.RE
+.PP
+\fI/root/\&.kwtools/kwuserrc\fR
+.RS 4
+Datei mit den Standard Werten zum anlegen von Benutzern\&. Siehe
+\fBkwuserrc\fR(5)
+f\(:ur weitere Details\&.
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBkwuserrc\fR(5),
+\fBlogin.defs\fR(5),
+\fBpasswd\fR(5),
+\fBshadow\fR(5),
+\fBuseradd\fR(8),
+\fBuserdel\fR(8),
+\fBusermod\fR(8)
+.PP
+\fBnewusers\fR(8)
+(nicht bei (Open)SuSE vorhanden)
+.SH "AUTHOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.RS 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2002-2013 Kai Wilke
+.br

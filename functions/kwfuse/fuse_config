@@ -1,0 +1,38 @@
+# Funktion fuse_config - Konfiguration speichern{{{
+#
+# usage: fuse_config
+#
+fuse_config() {
+#
+# check to existed directory /etc.
+#
+if [ ! -d "${FUSE_CONF%/*}" ] ; then
+	create_file -d "${FUSE_CONF%/*}"
+fi	
+#
+# Konfiguration schreiben.
+#
+> $FUSE_CONF <<< "# Beginn $FUSE_CONF
+#
+# Author: Kai Wilke <kiste@netzworkk.de>
+
+# Set the maximum number of FUSE mounts allowed to non-root users.
+# The default is 1000.
+mount_max = $MOUNT_MAX
+
+# Option 'user_allow_other' or none. Option 'user_allow_other'
+# allow non-root users to specify the 'allow_other' or 'allow_root'
+# mount options."
+if [ -n "$USER_ALLOW_OTHER" ] ; then
+	>> $FUSE_CONF <<< "user_allow_other"
+else
+	>> $FUSE_CONF <<< "# user_allow_other"
+fi
+	>> $FUSE_CONF <<< "
+# End $FUSE_CONF"
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

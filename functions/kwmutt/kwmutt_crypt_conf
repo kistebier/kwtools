@@ -1,0 +1,190 @@
+# Funktion (kwmutt_crypt_conf), konfiguriert die gnupg Einstellungen fuer mutt# {{{
+#
+# usage: kwmutt_crypt_conf
+#
+kwmutt_crypt_conf() {
+	Unset=(crypt_autosign crypt_autoencrypt crypt_autopgp crypt_autosmime
+		crypt_replyencrypt crypt_replysign crypt_replysignencrypted
+		crypt_timestamp crypt_verify_sig fcc_clear)
+	unset -- $Unset
+	# Funktion (crypt_conf_menu), menu fuer die CRYPT Konfiguration# {{{
+	CRYPT_TITLE="$lv_Crypt"
+	crypt_conf_menu() {
+		CRYPT_CONF_MENU=(fcc_clear \"$fcc_clear\"
+		crypt_autosign \"$crypt_autosign\"
+		crypt_autoencrypt \"$crypt_autoencrypt\"
+		crypt_autopgp \"$crypt_autopgp\"
+		crypt_autosmime \"$crypt_autosmime\"
+		crypt_replyencrypt \"$crypt_replyencrypt\"
+		crypt_replysign \"$crypt_replysign\"
+		crypt_replysignencrypted \"$crypt_replysignencrypted\"
+		crypt_timestamp \"$crypt_timestamp\"
+		crypt_verify_sig \"$crypt_verify_sig\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$CRYPT_TITLE" "$gv_Menupoint" "$CRYPT_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_CRYPT" ] ; then
+		create_tmp_conf "$M_CRYPT"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	fcc_clear="${fcc_clear:-no}"
+	crypt_autosign="${crypt_autosign:-no}"
+	crypt_autoencrypt="${crypt_autoencrypt:-no}"
+	crypt_autopgp="${crypt_autopgp:-yes}"
+	crypt_autosmime="${crypt_autosmime:-yes}"
+	crypt_replyencrypt="${crypt_replyencrypt:-yes}"
+	crypt_replysign="${crypt_replysign:-no}"
+	crypt_replysignencrypted="${crypt_replysignencrypted:-no}"
+	crypt_timestamp="${crypt_timestamp:-yes}"
+	crypt_verify_sig="${crypt_verify_sig:-yes}"
+	## }}}
+	crypt_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_crypt_help
+				crypt_conf_menu
+				;;
+			fcc_clear)
+				# Soll Mutt FCCs Nachrichten unverschluesselt speichern# {{{
+				MSG=$(gettext 'Soll Mutt FCCs Nachrichten unverschluesselt speichern, wenn sie verschluesselt/signiert sind (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$fcc_clear"
+				if [ "$gv_Auswahl" = yes ] ; then
+					fcc_clear=yes
+				else
+					fcc_clear=no
+				fi
+				#}}}
+				crypt_conf_menu fcc_clear
+				;;
+			crypt_autosign)
+				# automatisch signieren# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu signieren (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autosign"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_autosign=yes
+				else
+					crypt_autosign=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_autosign
+				;;
+			crypt_autoencrypt)
+				# automatisch verschluesseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu verschluesseln (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autoencrypt"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_autoencrypt=yes
+				else
+					crypt_autoencrypt=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_autoencrypt
+				;;
+			crypt_autopgp)
+				# automatisch mit PGP verschluesseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit PGP zu verschluesseln (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autopgp"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_autopgp=yes
+				else
+					crypt_autopgp=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_autopgp
+				;;
+			crypt_autosmime)
+				# automatisch mit S/MIME verschluesseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit S/MIME zu verschluesseln (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autosmime"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_autosmime=yes
+				else
+					crypt_autosmime=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_autosmime
+				;;
+			crypt_replyencrypt)
+				# automatisch mit PGP oder OpenSSL verschluesselt antworten# {{{
+				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschluesselte Nachricht mit PGP oder OpenSSL verschluesseln (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_replyencrypt"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_replyencrypt=yes
+				else
+					crypt_replyencrypt=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_replyencrypt
+				;;
+			crypt_replysign)
+				# automatisch mit PGP oder OpenSSL signiert antworten# {{{
+				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine signierte Nachricht mit PGP oder OpenSSL signieren (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_replysign"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_replysign=yes
+				else
+					crypt_replysign=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_replysign
+				;;
+			crypt_replysignencrypted)
+				# automatisch mit PGP oder OpenSSL verschluesselte Nachrichten signieren# {{{
+				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschluesselte Nachricht mit PGP oder OpenSSL signieren (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_replysignencrypted"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_replysignencrypted=yes
+				else
+					crypt_replysignencrypted=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_replysignencrypted
+				;;
+			crypt_timestamp)
+				# automatisch verschluesseln# {{{
+				MSG=$(gettext 'Soll Mutt einen Zeitstempel in die Ausgabe von PGP oder S/MIME einfuegen (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_timestamp"
+				if [ "$gv_Auswahl" = yes ] ; then
+					crypt_timestamp=yes
+				else
+					crypt_timestamp=no
+				fi
+				#}}}
+				crypt_conf_menu crypt_timestamp
+				;;
+			crypt_verify_sig)
+				# automatisch verschluesseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen PGP oder S/MIME Signaturen zu ueberpruefen (ja/nein)?')
+				yesno_select "$CRYPT_TITLE" "$MSG" "$crypt_verify_sig"
+				if [ -n "$VALUE" ] ; then
+					crypt_verify_sig="$VALUE"
+				else
+					crypt_verify_sig=yes
+				fi
+				#}}}
+				crypt_conf_menu crypt_verify_sig
+				;;
+			$gv_Save)
+				# Einstellungen speichern
+				kwmutt_crypt_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

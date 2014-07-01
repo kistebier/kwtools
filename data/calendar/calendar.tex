@@ -1,0 +1,170 @@
+% [1997-01-06]  calendar.tex
+%               (C) René Scholz  <http://www.thur.de/~Voland/>
+% 
+% Time-stamp:   <2002-12-18  16:31:06, rscholz@jpiros.rnd.j.intershop.de>
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%    This program is free software; you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation; either version 2 of the License, or
+%    (at your option) any later version.
+%
+%    This program is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with this program; if not, write to the Free Software
+%    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Please EDIT this file for your needs (Colors, Fonts, Text)
+
+%%%%%%%%%%%%%%%%%%%
+% Detect, if we are using pdftex to create pdf output. The following
+% code should better be in a LaTeX package...
+%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\newif\ifpdfoutput
+\@ifundefined{pdfoutput}%
+  {\let\pdfoutput\@undefined}%
+  {\ifcase\pdfoutput
+     \let\pdfoutput\@undefined
+   \else
+     \pdfoutputtrue
+  }%
+\makeatother
+
+
+\documentclass[12pt,a4paper]{article}
+\usepackage{graphicx,array,latexsym,color,url}
+\usepackage{times}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+
+\input{YEAR}
+
+%% Define used fonts:
+\font\yearFont=cminch
+% \font\monthFont=cmssbxo10 scaled 4000
+%\newcommand{\monthFont}{\usefont{T1}{cmssbxo}{m}{n}\fontsize{10}{20pt}}
+%\DeclareTextFontCommand{\monthFont}{\monthFamily}
+%\newcommand\monthFont{\renewcommand{\familydefault}{cmss}}
+%\newcommand{\monthFont}   {\usefont{OT1}{pss}{b}{n}}
+\newcommand{\monthFont}   {\usefont{OT1}{ptm}{b}{sl}}
+\newcommand{\weekdayFont} {\usefont{OT1}{pbk}{b}{sl}}
+\newcommand{\TitleFontA}  {\usefont{T1}{pbk}{b}{n}\fontsize{.8in}{3in}\selectfont}
+\newcommand{\TitleFontB}  {\usefont{T1}{pbk}{b}{n}\fontsize{.6in}{3in}\selectfont}
+
+% write this under the last calender page:
+\newcommand{\lastWords}{%
+\begin{center}\tiny
+  Created for the\textbf{\textcolor{titelColor}{...}}
+\end{center}
+}
+
+\ifpdfoutput
+   \usepackage[backref,colorlinks,bookmarks]{hyperref}
+   %\usepackage{ae}
+   %\usepackage[latin1]{inputenc}
+   %\usepackage[T1]{fontenc}
+   \DeclareGraphicsExtensions{.png,.jpg,.eps}
+   \pdfcompresslevel=9
+   \renewcommand{\monthFont}    {\usefont{OT1}{pag}{b}{sl}}
+   %\renewcommand{\monthFont}   {\usefont{OT1}{pbk}{b}{n}}
+   %\renewcommand{\weekdayFont} {\usefont{OT1}{pak}{b}{n}}
+%
+  \pdfinfo{
+     /Title    (???-Calendar \YEAR, by AUTHOR)
+     /Author   (AUTHOR, URL)
+     /Subject  (Calendar)
+     /Keywords (...)
+  }
+\else
+   \DeclareGraphicsExtensions{.eps,.eps.gz,.ps,.ps.gz}
+\fi
+
+\graphicspath{{pics/}}
+
+\advance\textheight by 2.3in
+\textwidth=\paperwidth
+\oddsidemargin=-1in
+\marginparwidth0in
+\marginparsep0in
+\topmargin0in
+\headheight0in
+\headsep0in
+\topskip0in
+\footskip0in
+
+
+\newcommand{\MakeTitle}
+{
+  \begin{center}
+    {\TitleFontB\textcolor{titelColor}{{\TitleFontA K}alender}}
+    \vfill
+    {
+      \includegraphics[width=.9\linewidth,keepaspectratio]{0}   % [height=11cm]
+      %%\rule{0mm}{10cm}
+    }\\
+    \vfill {\yearFont\textcolor{titelColor}\YEAR} \vspace{.4in}
+  \end{center}
+}
+
+
+\newcommand{\MonthTable}[2]        % #1 = file name      (3 for 3.eps.gz)
+{                                  % #2 = printed name   (March / März)
+\begin{center}
+  \yearFont\textcolor{YEAR}{\YEAR}\\
+  \vspace*{2cm}
+    {\hspace{.07\linewidth}\includegraphics[height=11cm,width=\linewidth,keepaspectratio]{#1}   % [height=11cm]
+    \rule{0mm}{10cm}
+    }\\
+  \vfill
+  
+  \hspace{.06\linewidth}{\Huge\monthFont{\textcolor{monthcolor}{#2}}}
+  \vspace*{6mm}
+
+  \large
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\doublerulesep}{0mm}
+  \begin{tabular}{ccccccc}
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\MONDAY}}}     &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\TUESDAY}}}    &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\WEDNESDAY}}}  &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\THURSDAY}}}   &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\FRIDAY}}}     &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\SATURDAY}}}   &
+    \textbf{\normalsize\weekdayFont{\textcolor{ForestGreen}{\SUNDAY}}}
+    \\ \hline\hline\hline\hline\hline
+    \input{#1}    % <-- this file is created by create.cal.pl
+%  \end{tabular}  % <-- created by create.cal.pl
+%\end{center}     % <-- created by create.cal.pl
+}
+
+
+\pagestyle{empty}
+\begin{document}
+\MakeTitle              \newpage
+\MonthTable{1}{\JAN}    \newpage
+\MonthTable{2}{\FEB}    \newpage
+\MonthTable{3}{\MAR}    \newpage
+%% \ifpdfoutput \MonthTable{3}{März} \else \MonthTable{3}{M\"{a}rz} \fi
+\newpage
+\MonthTable{4}{\APR}    \newpage
+\MonthTable{5}{\MAY}    \newpage
+\MonthTable{6}{\JUN}    \newpage
+\MonthTable{7}{\JUL}    \newpage
+\MonthTable{8}{\AUG}    \newpage
+\MonthTable{9}{\SEP}    \newpage
+\MonthTable{10}{\OCT}   \newpage
+\MonthTable{11}{\NOV}   \newpage
+\MonthTable{12}{\DEC}
+\lastWords
+\begin{picture}(0,0)
+\put(35,1) {\tiny made by \textit{\sffamily tex-cal} \copyright 1997--2003 René Scholz (\url{www.thur.de/~Voland/})}
+\end{picture}
+\end{document}

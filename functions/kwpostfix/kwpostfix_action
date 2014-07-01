@@ -1,0 +1,99 @@
+# Funktion kwpostfix_action{{{
+#
+# usage: kwpostfix_action [ -a ] OLDACTION
+# -a        - access Tabellen
+# OLDACTION - vorherige Einstellung von der Variablen $ACTION
+#
+kwpostfix_action() {
+	unset -- OldAction
+	local Opt Menu
+	if [[ $1 == -a ]] ; then
+		Opt="$1"
+		OldAction="$2"
+	else
+		OldAction="$1"
+	fi
+	# AK_MENU und AK_MSG# {{{
+	case "$Opt" in
+		-a)
+			AK_MENU=(all-numeric \"\" BCC \"\" DEFER \"\" DEFER_IF_PERMIT \"\"
+				DEFER_IF_REJECT \"\" DISCARD \"\" DUNNO \"\" FILTER \"\"
+				HOLD \"\" OK \"\" PREPEND \"\" REDIRECT \"\" REJECT \"\"
+				WARN \"\" 4/5XX \"\")
+			;;
+		*)	
+			AK_MENU=(DISCARD \"\" DUNNO \"\" FILTER \"\" HOLD \"\" IGNORE \"\"
+				INFO \"\" OK \"\" PREPEND \"\" REDIRECT \"\" REPLACE \"\"
+				REJECT \"\" WARN \"\" 4/5XX \"\")
+			;;
+	esac
+	AK_MSG=$(gettext 'Waehlen Sie eine Aktion aus.')
+	## }}}
+	# Funktion (ak_menu)# {{{
+	ak_menu() {
+		case "$1" in
+			[45]*)
+				Menu="4/5XX"
+				;;
+			*)
+				Menu="$1"
+				;;
+		esac
+		menubox "$Menu" "$TABLE_TITLE" "$AK_MSG" "$AK_MENU"
+	}
+	## }}}
+	#
+	ak_menu $ACTION
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	# Hilfe
+				if [[ $Opt == -a ]] ; then
+					script_help access_action_help
+				else
+					script_help regexp_pcre_action_help
+				fi
+				ak_menu $ACTION
+				;;
+			4*|5*)
+				# Fehlercode eingeben# {{{
+				#
+				ERROR_CODE_MSG=$(gettext 'Geben Sie bitte einen Fehlercode, der 4XX oder 5XX Serie ein. Lesen Sie dazu bitte die Hilfe.')
+				case "$OldAction" in
+					4[25][0-2]|5[05][0-4])
+						inputbox "$TABLE_TITLE" "$ERROR_CODE_MSG" "$OldAction"
+						;;
+					*)
+						inputbox "$TABLE_TITLE" "$ERROR_CODE_MSG"
+						;;
+				esac
+				if [ -n "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						4[25][0-2]|5[05][0-4])
+							ACTION="$gv_Auswahl"
+							break
+							;;
+						*)	unset -- ACTION
+							no_input_msg
+							break
+							;;
+					esac
+				fi
+				## }}}
+				;;
+			all-numeric|[A-Z]*)	# uebernehmen
+				ACTION="$gv_Auswahl"
+				break
+				;;
+			*)
+				unset -- ACTION
+				no_input_msg
+				break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

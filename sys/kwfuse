@@ -1,0 +1,140 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: Konfiguration, mount und umount von Dateisystemen mit FUSE.
+# Version: 0.1.11
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Variablen
+FSTAB="/etc/fstab"
+
+# Nachdem das Script initialisiert wurde, kann man die anderen
+# benötigten Funktionen laden.
+# autoload -U ...
+autoload -U read_fstab no_tabentry_msg
+
+#
+# Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
+#
+# read_conf DATEIRC
+
+# Kernelversion pruefen, muss >=2.4.21 sein.# {{{
+kernel_release
+if [[ "${gv_K_Release%%-*}" < 2.4.22 ]] ; then
+	msgbox "$gv_Attention" no_kernel_support
+	exit 0
+fi
+## }}}
+# Funktion haupt_menue{{{
+lv_Fusetab=$(gettext 'fusetab_bearbeiten')
+lv_Mount_Drive=$(gettext 'Laufwerk_einbinden')
+lv_Umount_Drive=$(gettext 'Laufwerk_ausbinden')
+#
+MAIN_MENU=(${gv_Configuration} \"\" $lv_Fusetab \"\"
+$lv_Umount_Drive \"\" $lv_Mount_Drive \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+# Modul fuse laden.
+load_module fuse
+
+# Konfigurationsdatei festlegen.# {{{
+prog_check fusermount
+if [ -z "$PROGS_L" ] ; then
+	exit 0
+else
+	FUSERMOUNT="`print ${PROGS_L}(:h)`"
+	FUSE_PREFIX=${FUSERMOUNT%/*}
+	if [ "$FUSE_PREFIX" = /usr ] ; then
+		FUSE_CONF="/etc/fuse.conf"
+	else
+		FUSE_CONF="${FUSE_PREFIX}/etc/fuse.conf"
+	fi
+fi
+## }}}
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+			# Hilfe
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Datei fuse.conf bearbeiten.
+			autoload -U fuse_conf fuse_config
+			fuse_conf
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Fusetab)
+			# Mount Tabelle der Laufwerke
+			autoload -U fusetab_conf
+			# Funktion hw_conf ausführen
+			hw_conf
+			fusetab_conf
+			haupt_menue $lv_Fusetab
+			;;
+		$lv_Umount_Drive)
+			# Laufwerk einbinden ausbinden
+			autoload -U fuse_mount
+			fuse_mount -u
+			haupt_menue $lv_Umount_Drive
+			;;
+		$lv_Mount_Drive)
+			# Laufwerk einbinden ausbinden
+			autoload -U fuse_mount
+			fuse_mount -m
+			haupt_menue $lv_Mount_Drive
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+unset -- gv_Auswahl
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

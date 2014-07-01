@@ -1,0 +1,680 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke  <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwquota, Frontend fuer quota und xfs_quota
+#
+# Version: 0.0.12
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# eventuelle Kernel Module laden
+kernel_release
+load_module 'quota_v1 quota_v2'
+
+# Quota im Kernel pruefen
+if [ ! -d /proc/sys/fs/quota ] ; then
+	MSG=$(gettext 'Ihr Kernel unterstuetzt kein Quota.')
+	msgbox "$gv_Info" "$MSG"
+	exit 0
+fi
+
+# checken, ob quota in der /etc/fstab aktiviert wurde.
+# Funktion (read_fstab_quota), liest alle Quota aus der fstab ein# {{{
+# read_fstab [ usrquota | grpquota | prjquota | quota ]
+#
+# usage: read_fstab_quota
+read_fstab_quota() {
+	read_fstab quota
+	if [ -n "$FSTAB_VALUES" ] ; then
+		unset -- Mountpoint Mountpoint_M Fsystem
+		for i in {1..${#FSTAB_VALUES[@]}} ; {
+			Mp=${${(ws: :)${FSTAB_VALUES[i]}}[2]}
+			Fs=${${(ws: :)${FSTAB_VALUES[i]}}[3]}
+			Mountpoint_E+=($Mp)
+			Mountpoint+=($Mp \"$Fs\")
+			Mountpoint_M+=($Mp \"$Fs\" off)
+			Fsystem+=($Fs)
+		}
+	fi
+}
+## }}}
+# Funktion (no_quota_msg), keine quota vorhanden# {{{
+no_quota_msg() {
+	MSG=$(gettext 'Es ist kein Quota vorhanden. Sie muessen erst welche in der Datei /etc/fstab festlegen. Z. B. durch anhaengen einer Quota Option an die normalen Mount Optionen, siehe man 8 mount.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+read_fstab_quota
+if [ -z "$Mountpoint" ] ; then
+	no_quota_msg
+	exit 0
+fi
+
+# Programme checken, ob verfuegbar
+prog_check quota quotaon quotaoff quotacheck edquota setquota repquota
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+else
+	QUOTA_VERSION=${${${(ws: :)${(M)${(f)"$(quota -V)"}##*version*}}[4]}%.}
+	if [[ "$QUOTA_VERSION" -ge 3.15 ]] ; then
+		REPQUOTA_UOPT="-vusp"
+		REPQUOTA_GOPT="-vgsp"
+	else
+		REPQUOTA_UOPT="-vus"
+		REPQUOTA_GOPT="-vgs"
+	fi
+fi
+
+# (a)quota.user und (a)quota.group erstellen, falls nötig# {{{
+if [ -n "${Mountpoint_E[1]}" ] ; then
+	Anz="${(w)#Mountpoint_E}"
+	for n in {1..${(w)#Mountpoint_E}} ; {
+		if mountpoint ${Mountpoint_E[n]} >/dev/null ; then
+			if [ "${Fsystem[n]}" != xfs ] ; then
+				# xfs FSs werden ausgelassen.
+				if test ! -f ${Mountpoint_E[n]}/*quota.(user|group) ; then
+					MSG=$(gettext 'Es wird jetzt auf dem Quota-Laufwerk ${Mountpoint_E[n]} die Dateien (a)quota.user und (a)quota.group erstellt.\n\nDies koennte etwas Zeit in Anspruch nehmen.')
+					infobox "$gv_Info" "$MSG" 3
+					quotacheck -ugmf ${Mountpoint_E[n]} &>/dev/null || prog_failure
+				fi
+			fi
+		fi
+	}
+fi
+## }}}
+
+# Variablen
+XFS_PROJECTS=/etc/projects
+XFS_PROJID=/etc/projid
+USER_LOGFILE="${gv_WorkDir}/user"
+GROUP_LOGFILE="${gv_WorkDir}/group"
+PROJECT_LOGFILE="${gv_WorkDir}/project"
+lv_Project=$(gettext 'Projekt')
+lv_Status_On=$(gettext 'An')
+lv_Status_Off=$(gettext 'Aus')
+lv_Status_Total_Off=$(gettext 'komplett Aus')
+# Im englischen ist es quota
+lv_Quota=$(gettext 'Quota')
+
+if [ -f /etc/warnquota.conf ] ; then
+	QUOTA_WARN_CF=/etc/warnquota.conf
+elif [ -f /usr/local/etc/warnquota.conf ] ; then
+	QUOTA_WARN_CF=/usr/local/etc/warnquota.conf
+else
+	QUOTA_WARN_CF=/etc/warnquota.conf
+fi
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benötigten Funktionen laden. Die Funktion sys_conf wird bereits
+# von der Funktion script_init ausgefuehrt.
+autoload -U kwquota_conf kwquota_config kwquota_change
+
+CONF_MENU="$gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\""
+# Funktion main_menu# {{{
+#
+lv_Drives=$(gettext 'Laufwerke')
+lv_Warn=$(gettext 'Warnung')
+lv_Project=$(gettext 'Projekt')
+MAIN_MENU=($gv_Display \"\" $gv_Configuration \"\"
+	$lv_Drives \"\" $lv_Warn \"\" $gv_Exit \"\")
+#
+main_menu() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+## }}}
+# Funktion (prog_check_xfs_quota), checkt ob das Programm xfs_quota existiert/ausfuehrbar ist.# {{{
+#
+prog_check_xfs_quota() {
+	prog_check xfs_quota
+	if [ -n "$NO_PROGS" ] ; then
+		break 1
+	fi
+}
+## }}}
+# Funktion (no_quota_user_group_msg), keine User/Gruppen mit quota vorhanden# {{{
+no_quota_user_group_msg() {
+	MSG=$(gettext 'Es sind keine Benutzer/Gruppen/Projekte mit "quota", zum $gv_Create, $gv_Change und $gv_Delete, vorhanden. Falls Sie nebenbei auf einem anderen Terminal Benutzer oder Gruppen erstellt haben muessen Sie kwquota beenden und neu starten.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (read_data), quota Daten einlesen# {{{
+#
+# usage: read_data
+#
+read_data() {
+	if [ $# = 1 ] ; then
+		unset -- User_Qu User_Qu_E User_Qu_M Anz Anz1 Log
+		local Anz Anz1 Log
+		Log="$1"
+		ZNr="`wc -l < $Log`"
+		if [ "$ZNr" -gt 0 ] ; then
+			(( ZNr = ZNr - 7 ))
+			Anz=1
+			Anz1=1
+			sed -n -e "6,${ZNr}p" "$Log" | \
+			while read u b bused bsoft bhard bgrace iused isoft ihard igrace ; do
+				if [ "$u" != root ] ; then
+					if [ -z "$igrace" ] ; then
+						User_Qu[Anz]="$Anz \"$u $bsoft $bhard $iused $isoft\""
+						User_Qu_E[Anz]="$u \"\""
+						(( Anz++ ))
+						if [ "$bsoft" != 0 -o "$bhard" != 0 -o "$iused" != 0 -o "$isoft" != 0 ] ; then
+							User_Qu_M[Anz1]="$u \"\" off"
+							(( Anz1++ ))
+						fi
+					else
+						User_Qu[Anz]="$Anz \"$u $bsoft $bhard $isoft $ihard\""
+						User_Qu_E[Anz]="$u \"\""
+						(( Anz++ ))
+						if [ "$bsoft" != 0 -o "$bhard" != 0 -o "$isoft" != 0 -o "$ihard" != 0 ] ; then
+							User_Qu_M[Anz1]="$u \"\" off"
+							(( Anz1++ ))
+						fi
+					fi
+				fi
+			done
+		fi
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+# Funktion (read_xfs_data), xfs quota Daten einlesen# {{{
+#
+# usage: read_xfs_data
+#
+read_xfs_data() {
+	if [ $# = 1 ] ; then
+		unset -- User_Qu User_Qu_M User_Qu_E Anz Anz1 Log
+		local Anz Anz1 Log
+		Log="$1"
+		ZNr="`wc -l < $Log`"
+		if [ "$ZNr" -gt 0 ] ; then
+			(( ZNr = ZNr - 1 ))
+			Anz=1
+			Anz1=1
+			sed -n -e "5,${ZNr}p" $Log | \
+			while read u bused bsoft bhard bwt bgt \
+				iused isoft ihard iwt igt rused \
+				rsoft rhard rwt rgtp Rest ; do
+				if [ "$u" != root ] ; then
+					User_Qu[Anz]="$Anz \"$u $bsoft $bhard $isoft $ihard $rsoft $rhard\""
+					User_Qu_E[Anz]="$u \"\" off"
+					(( Anz++ ))
+					if [ "$bsoft" != 0 -o "$bhard" != 0 -o "$ihard" != 0 -o "$ihard" != 0 -o "$rsoft" != 0 -o "$rhard" != 0 ] ; then
+						User_Qu_M[Anz1]="$u \"\" off"
+						(( Anz1++ ))
+					fi
+				fi
+			done
+		fi
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+# Funktion (quota_check_fs) FS herrausfinden# {{{
+#
+# usage: quota_check_fs DEVICE
+#
+quota_check_fs() {
+	if [ "$#" = 1 ] ; then
+		unset -- QFS
+		QUOTA_PART="$1"
+		for i in {1..${#FSTAB_VALUES[@]}} ; {
+			if [ "$QUOTA_PART" = "${${(ws: :)${FSTAB_VALUES[i]}}[2]}" ] ; then
+				QFS="${Fsystem[i]}"
+				break
+			fi
+		}
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+	# Funktion (quota_status)# {{{
+	#
+	# usage: quota_status QU_OPT QUOTA_PART
+	# QU_OPT - -u | -g | -p fuer User Group and Project
+	# QUOTA_PART - Quota Laufwerk
+	#
+	quota_status() {
+		if [ $# = 2 ] ; then
+			# Hier benoetigen wir eine englische Ausgabe.
+			LC_ALL=C xfs_quota -x -c "state -v $1" $2 2>/dev/null \
+			   >${gv_WorkDir}/state || prog_failure
+			if [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Accounting:*}}[2]}`" = OFF ] ; then
+				# Quota Status: total ausgeschaltet
+				print "$lv_Status_Total_Off"
+			elif [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Enforcement:*}}[2]}`" = OFF ] ; then
+				# Quota Status: ausgeschaltet
+				print "$lv_Status_Off"
+			else
+				# Quota Status: eingeschaltet
+				print "$lv_Status_On"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+# Funktion (no_quota_fs_msg), Filesystem wird nicht unterstuetzt.# {{{
+#
+# usage: no_quota_fs_msg
+no_quota_fs_msg() {
+	MSG=$(gettext 'Dieses Dateisystem ($QFS) wird nicht unterstuetzt.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (ext_ug_quota_check), prueft welches quota laeuft.# {{{
+#
+# usage: ext_ug_quota_check [ -c | -d ]
+# -d - loeschen
+# -c - anlegen
+#
+ext_ug_quota_check() {
+	unset -- CREATE
+	if [ "$1" = -d ] ; then
+		UG_WHAT_TITLE="$gv_Delete"
+	elif [ "$1" = -c ] ; then
+		UG_WHAT_TITLE="$gv_Create"
+		CREATE=yes
+	else
+		UG_WHAT_TITLE="$gv_Change"
+	fi
+	# User/Group/Project Quota Status herraus finden
+	case "$QFS" in
+		xfs)
+			# xfs logdateien erstellen
+			LC_ALL=C xfs_quota -x -c 'report -u -bir -ht' $QUOTA_PART 2>/dev/null >$USER_LOGFILE
+			if [ "`wc -l < $USER_LOGFILE`" -gt 1 ] ; then
+				QUOTA_STATE="$(quota_status -u $QUOTA_PART)"
+			fi
+			LC_ALL=C xfs_quota -x -c 'report -g -bir -ht' $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE
+			if [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
+				QUOTA_STATE="$(quota_status -g $QUOTA_PART)"
+			fi
+			LC_ALL=C xfs_quota -x -c 'report -p -bir -ht' $QUOTA_PART 2>/dev/null >$PROJECT_LOGFILE
+			if [ "`wc -l < $PROJECT_LOGFILE`" -gt 1 ] ; then
+				QUOTA_STATE="$(quota_status -p $QUOTA_PART)"
+			fi
+			;;
+		ext[23]|reiserfs|jfs)
+			# ext2/3, jfs und reiserfs logdateien erstellen
+			repquota $REPQUOTA_UOPT $QUOTA_PART 2>/dev/null >$USER_LOGFILE
+			if [ "`wc -l < $USER_LOGFILE`" -gt 1 ] ; then
+				QUOTA_STATE=${${(ws: :)$(quotaon -pu ${QUOTA_PART})}[7]}
+			fi
+			# Group Quota herraus finden
+			repquota $REPQUOTA_GOPT $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE
+			if [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
+				QUOTA_STATE=${${(ws: :)$(quotaon -pg ${QUOTA_PART})}[7]}
+			fi
+			;;
+	esac
+}
+## }}}
+# Funktion Hardware herrausfinden 
+#
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+hw_conf
+net_conf
+main_menu
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+			script_help help
+			main_menu
+			;;
+        $gv_Display)
+            # Anzeige von quotas # {{{
+			rm -f $gv_LogFile $USER_LOGFILE $GROUP_LOGFILE $PROJECT_LOGFILE &>/dev/null
+			read_fstab_quota 
+			if [ "${Mountpoint_M[1]}" ] ; then
+				DISPLAY_MENU=($Mountpoint_M)
+				checklist "$gv_Display" "$gv_Menupoint" "$DISPLAY_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help help
+							checklist "$gv_Display" "$gv_Menupoint" "$DISPLAY_MENU"
+							;;
+						*)
+							# uebernehmen
+							for p in ${=gv_Auswahl} ; {
+								for i in {1..${#FSTAB_VALUES[@]}} ; {
+									if [ "$p" = "${${(ws: :)${FSTAB_VALUES[i]}}[2]}" ] ; then
+										QFS="${Fsystem[i]}"
+										# Bei xfs xfs eigene Werkzeuge benutzen, falls vorhanden.
+										if [ "$QFS" = xfs -a -x "${commands[xfs_quota]}" ] ; then
+											if [ ! -s "$gv_LogFile" ] ; then
+												xfs_quota -x -c 'report -bir -th' $p > $gv_LogFile
+											else
+												xfs_quota -x -c 'report -bir -th' $p >> $gv_LogFile
+											fi
+										else
+											# normale tabellarische Anzeige
+											# Benutzer herraus finden
+											if [ ! -s "$USER_LOGFILE" ] ; then
+												repquota ${=REPQUOTA_UOPT} $p 2>/dev/null > $USER_LOGFILE
+											else
+												repquota ${=REPQUOTA_UOPT} $p 2>/dev/null >> $USER_LOGFILE
+											fi
+											# Gruppen herraus finden
+											if [ ! -s "$GROUP_LOGFILE" ] ; then
+												repquota ${=REPQUOTA_GOPT} $p 2>/dev/null > $GROUP_LOGFILE
+											else
+												repquota ${=REPQUOTA_GOPT} $p 2>/dev/null >> $GROUP_LOGFILE
+											fi
+										fi
+										break
+									fi
+								}
+							}
+							# Anzeige zusammenfuegen
+							#
+							if [ -s "$USER_LOGFILE" ] ; then
+								< "$USER_LOGFILE" >> $gv_LogFile
+							fi
+							#
+							if [ -s "$GROUP_LOGFILE" ] ; then
+								< "$GROUP_LOGFILE" >> $gv_LogFile
+							fi
+							#
+							if [ -s "$PROJECT_LOGFILE" ] ; then
+								< "$PROJECT_LOGFILE" >> $gv_LogFile
+							fi
+							#
+							if [ "`wc -l < $gv_LogFile`" -gt 1 ] ; then
+								view_file $gv_LogFile
+							else
+								no_entry_msg
+							fi
+							rm -f $gv_LogFile $USER_LOGFILE $GROUP_LOGFILE $PROJECT_LOGFILE &>/dev/null
+							checklist "$gv_Display" "$gv_Menupoint" "$DISPLAY_MENU"
+							;;
+					esac
+				done
+			else
+				no_quota_msg
+			fi
+			## }}}
+			main_menu $gv_Display
+            ;;
+		$gv_Configuration)
+			kwquota_conf
+			main_menu $gv_Configuration
+			;;
+		$lv_Drives)
+			# Laufwerke starten/stoppen/dump/restore# {{{
+			DRIVE_TITLE=($lv_Drives)
+			DRIVE_STATUS_MSG=$(gettext 'Status des Laufwerks ist: $QUOTA_STATE.')
+			read_fstab_quota
+			if [ "$Mountpoint" ] ; then
+				DRIVE_MENU=($Mountpoint)
+				menubox "$FS_MP" "$DRIVE_TITLE" "$gv_Menupoint" "$DRIVE_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help help
+							menubox "$FS_MP" "$DRIVE_TITLE" "$gv_Menupoint" "$DRIVE_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)
+							# uebernehmen
+							FS_MP="$gv_Auswahl"
+							quota_check_fs $FS_MP
+							#
+							lv_On=$(gettext 'einschalten')
+							lv_Off=$(gettext 'ausschalten')
+							lv_Backup_Create=$(gettext 'Backup_erstellen')
+							lv_Backup_Back=$(gettext 'Backup_zurueck')
+							lv_Clean_Space=$(gettext 'Platz_schaffen')
+							lv_Complete_Off=$(gettext 'komplett_aus')
+							FS_DRIVE_TITLE=$(gettext "${DRIVE_TITLE}::${QFS}::managen")
+							#
+							case "$QFS" in
+								xfs)
+									# xfs Dateisystem# {{{
+									# pruefen, ob xfs_quota ausfuehrbar ist.
+									prog_check_xfs_quota
+									xfs_quota -x -c 'report -bir -ht' $QUOTA_PART 2>/dev/null >$gv_LogFile
+									ZNr="`wc -l < $gv_LogFile`"
+									if [ "$ZNr" -gt 0 ] ; then
+										# welches Quota# {{{
+										WHAT_QUOTA="`print ${${(ws: :)${(M)${(f)"$(< $gv_LogFile)"}##*$lv_Quota*}}[1]}`"
+										case "$WHAT_QUOTA" in
+											$gv_User)
+												QU_OPT=-u
+												QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+												QU_BAK_NAME=user
+												if [ "${FS_MP}" != / ] ; then
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP#/}_${QU_BAK_NAME}_quota.txt"
+												else
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP//\//root}_${QU_BAK_NAME}_quota.txt"
+												fi
+												;;
+											$gv_Group)
+												QU_OPT=-g
+												QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+												QU_BAK_NAME=group
+												if [ "${FS_MP}" != / ] ; then
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP#/}_${QU_BAK_NAME}_quota.txt"
+												else
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP//\//root}_${QU_BAK_NAME}_quota.txt"
+												fi
+												;;
+											$lv_Project)
+												QU_OPT=-p
+												QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+												QU_BAK_NAME=project
+												if [ "${FS_MP}" != / ] ; then
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP#/}_${QU_BAK_NAME}_quota.txt"
+												else
+													Q_BAK_FILE="${ETC_PATH}/${FS_MP//\//root}_${QU_BAK_NAME}_quota.txt"
+												fi
+												;;
+											*)
+												# kann den Quota Typ nicht feststellen
+												unset -- QU_OPT Q_BAK_FILE
+												break
+												;;
+										esac
+										## }}}
+										XFS_DRIVE_MENU=($lv_On \"\" $lv_Backup_Create \"\"
+										$lv_Backup_Back \"\" $lv_Clean_Space \"\"
+										$lv_Off \"\" $lv_Complete_Off \"\" $gv_Back \"\")
+										# Funktion (xfs_drive_menu)# {{{
+										xfs_drive_menu() {
+											menubox "$1" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$FS_DRIVE_MENU"
+										}
+										## }}}
+										xfs_drive_menu
+										while [ -n "$gv_Auswahl" ] ; do
+											case "$gv_Auswahl" in
+												HELP*)	script_help xfs_drive_help
+													xfs_drive_menu
+													;;
+												$lv_On)
+													# Quota auf dem Laufwerk einschalten# {{{
+													xfs_quota -x -c "enable $QU_OPT -v" $FS_MP || prog_failure
+													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+													## }}}
+													xfs_drive_menu $lv_On
+													;;
+												$lv_Backup_Create)
+													# Quota Informationen in einer Datei sichern.# {{{
+													if [ -s "$Q_BAK_FILE" ] ; then
+														BAK_MSG=$(gettext 'Es existiert schon eine Backup Datei. Ueberschreiben (ja/nein)?')
+														yesno "$XFS_DRIVE_TITLE" "$BAK_MSG" ""
+														if [ "$gv_Auswahl" = yes ] ; then
+															xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure
+															# Ist die Datei leer wird sie gleich
+															# wieder geloescht.
+															if [ ! -s "$Q_BAK_FILE" ] ; then
+																rm -rf "$Q_BAK_FILE" &>/dev/null
+															fi
+														fi
+													else
+														xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure
+														# Ist die Datei leer wird sie gleich
+														# wieder geloescht.
+														if [ ! -s "$Q_BAK_FILE" ] ; then
+															rm -rf "$Q_BAK_FILE" &>/dev/null
+														fi
+													fi
+													## }}}
+													xfs_drive_menu $lv_Backup_Create
+													;;
+												$lv_Backup_Back)
+													# Quota Informationen aus einer Datei zurueck# {{{
+													# spielen
+													if [ -s "$Q_BAK_FILE" ] ; then
+														xfs_quota -x -c "restore -f $Q_BAK_FILE" $FS_MP || prog_failure
+													else
+														MSG=$(gettext 'Es ist kein Backup vorhanden.')
+														msgbox "$gv_Info" "$MSG"
+													fi
+													## }}}
+													xfs_drive_menu $lv_Backup_Back
+													;;
+												$lv_Clean_Space)
+													# Platz schaffen auf dem Laufwerk von# {{{
+													# einigen Quota Metadaten.
+													xfs_quota -x -c "remove $QU_OPT -v" $FS_MP || prog_failure
+													## }}}
+													xfs_drive_menu $lv_Clean_Space
+													;;
+												$lv_Off)
+													# Quota auf dem Laufwerk ausschalten# {{{
+													xfs_quota -x -c "disable $QU_OPT -v" $FS_MP || prog_failure
+													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+													## }}}
+													xfs_drive_menu $lv_Off
+													;;
+												$lv_Complete_off)
+													# Quota auf dem Laufwerk permanent ausschalten# {{{
+													# Danach muss man das Laufwerk neueinbinden
+													# bzw. den Rechner neu starten.
+													OFF_MSG=$(gettext ' Das Quota auf dem Laufwerk komplett ausschalten (ja/nein)?\n
+\n
+Notiz: Sie muessen das Laufwerk danach neu einbinden oder den Rechner neu starten.')
+													yesno "$XFS_DRIVE_TITLE" "$OFF_MSG" ""
+													if [ "$gv_Auswahl" = yes ] ; then
+														xfs_quota -x -c "off $QU_OPT -v" $FS_MP || prog_failure
+													fi
+													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
+													## }}}
+													xfs_drive_menu $lv_Complete_Off
+													;;
+												$gv_Back)	break
+													;;
+											esac
+										done
+									else
+										# kein quota an
+										MSG=$(gettext 'Quota wurde komplett ausgestellt. Sie muessen wahrscheinlich den Rechner neu starten. Sie koennen aber auch ein neu einbinden des Laufwerks versuchen.')
+										msgbox "$gv_Attention" "$MSG"
+										break
+									fi
+									## }}}
+									;;
+								ext[23]|reiserfs|jfs)
+									# ext2/3, jfs und reiserfs Dateisysteme# {{{
+									ext_ug_quota_check
+									if [ -s "$USER_LOGFILE" -o -s "$GROUP_LOGFILE" ] ; then
+										DRIVE_ON_OFF_MENU=($lv_On \"\" $lv_Off \"\" $gv_Back \"\")
+										menubox "" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$DRIVE_ON_OFF_MENU"
+										while [ -n "$gv_Auswahl" ] ; do
+											case "$gv_Auswahl" in
+												HELP*)	script_help drive_help
+													menubox "" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$DRIVE_ON_OFF_MENU"
+													;;
+												$lv_On)
+													# Quota einschalten
+													quotaon $QU_OPT $QUOTA_PART 2>/dev/null || prog_failure
+													break 2
+													;;
+												$lv_Off)
+													# Quota ausschalten
+													quotaoff $QU_OPT $QUOTA_PART 2>/dev/null || prog_failure
+													break 2
+													;;
+												$gv_Back)	break 2
+													;;
+											esac
+										done
+									else
+										no_quota_user_group_msg
+										break
+									fi
+									## }}}
+									;;
+								*)
+									# andere Dateisysteme gehen noch nicht.
+									no_quota_fs_msg
+									break
+									;;
+							esac
+							;;
+					esac
+				done
+			else
+				no_quota_msg
+			fi
+			## }}}
+			main_menu $lv_Drives
+			;;
+		$lv_Warn)
+			# Warnungen konfigurieren.# {{{
+			autoload -U kwquota_warn_conf kwquota_warn_config
+			kwquota_warn_conf
+			## }}}
+			main_menu $lv_Warn
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

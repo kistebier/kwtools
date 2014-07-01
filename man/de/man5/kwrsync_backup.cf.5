@@ -1,0 +1,325 @@
+.\"     Title: KWRSYNC_BACKUP.CF
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: Benutzer Anleitung
+.\"    Source: Version 1.0.3
+.\"  Language: English
+.\"
+.TH "KWRSYNC_BACKUP\&.CF" "5" "11/15/2013" "Version 1.0.3" "Benutzer Anleitung"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+kwrsync_backup.cf \- Konfigurationsdatei f\(:ur kwrsync_backup\&.
+.SH "BESCHREIBUNG"
+.PP
+Die Scripts
+\fBkwrsync_backup\fR
+und
+\fBkwrsync_backup_cron\fR
+lesen beim Start die Variablen aus der Konfigurations Datei
+\fI/etc/kwtools/kwrsync_backup\&.cf\fR
+ein\&.
+\fBkwrsync_backup\fR
+zieht ein Snapshot von lokalen und entfernten Rechnern\&.
+\fBkwrsync_backup_cron\fR
+kann vom
+\fBCron\fR
+Daemon gestartet werden und macht das gleiche wie
+\fBkwrsync_backup\fR
+im Hintergrund\&. Beginnt eine Zeile mit
+\(lq#\(rq
+oder ist leer wird dies als Kommentar interpretiert\&.
+.SH "VARIABELN"
+.PP
+\fBBACKUP_PATH\fR
+.RS 4
+Verzeichnis in dem die Backups angelegt werden\&. Diese liegen dann unter Backupverzeichnis/<Backup Level>\&.n\&. Folgende \(lqBackup Level\(rq gibt es; \fBhourly\fR, \fBdaily\fR, \fBweekly\fR und \fBmounthly\fR\&.
+.RE
+.PP
+\fBBW_LIMIT\fR
+.RS 4
+Hier k\(:onnen Sie die Bandbreite der \(:Ubertragung limitieren\&. Diese wird in
+\fIKByte/s\fR
+angegeben,
+\fB100\fR
+=
+\fI100 KByte/s\fR\&. Standard ist keine Limitierung\&.
+.RE
+.PP
+\fBCHECK_HDMINFREE\fR
+.RS 4
+Soll gepr\(:uft werden, ob noch ein gewisser Prozentsatz an Plattenplatz und Inodes (Dateien) frei ist (\fByes/no\fR)?
+.RE
+.PP
+\fBHDMINFREE\fR
+.RS 4
+Geben Sie hier den Prozentsatz ein der maximal an Plattenplatz benutzt werden darf\&. Denken Sie daran das die Rorierung der Daten auch etwas Platz ben\(:otigt\&. Eine Integerzahl zwischen
+\fB0\fR
+und <=\fB100\fR
+(Prozent)\&. Ist die benutzte Kilobyte oder Inode Prozentzahl kleiner als die angegebene maximale Prozentzahl an Plattenplatz (\fBHDMINFREE\fR), wird ein Backup durchgef\(:uhrt\&.
+.RE
+.PP
+\fBMOUNT_PATH\fR
+.RS 4
+Hier wird das Verzeichnis ausgew\(:ahlt, welches ins Dateisystem vorher eingebunden werden muss, wo sich das Backup Verzeichnis befindet\&. Es muss bereits in der Datei
+\fI/etc/fstab\fR
+konfiguriert sein\&.
+.RE
+.PP
+\fBSERVER\fR
+.RS 4
+Rechner/Server die zu sichern sind, getrennt durch ein Leerzeichen\&. Dies koennen IP\-Adressen, Rechnernamen oder Rechnername\&.domain\&.de (\fIFQDN\fR) sein\&.
+.RE
+.PP
+\fBLOGFILE\fR
+.RS 4
+Angabe der Logdatei\&. Standard ist
+\fI/var/log/kwrsync_backup\&.log\&.\fR
+.RE
+.PP
+\fBPREEXEC\fR
+.RS 4
+Angabe eines Script + Argumente (optional)\&. Dieses Sript wird sofort ausgef\(:uhrt bevor die Snapshots erstellt und rotiert werden\&.
+.RE
+.PP
+\fBPOSTEXEC\fR
+.RS 4
+Angabe eines Script + Argumente (optional)\&. Dieses Sript wird sofort ausgef\(:uhrt nachdem die Snapshots erstellt und rotiert wurden\&.
+.RE
+.PP
+\fBUSER_RUN\fR
+.RS 4
+W\(:ahlen Sie einen Benutzer aus, der sich anstelle von
+\(lq\fBroot\fR\(rq
+auf den zu sichernden Rechnern einloggen darf\&. Dieser wird als Vorschlag f\(:ur die Konfiguration der einzelnen Rechner oder falls keiner in der Server Konfiguration angegeben wurde benutzt\&. Dieser Benutzer muss auf dem Backup Rechner wie auf den zu sichernden Rechnern existieren\&. Im Paket
+\fIkwtools\-doc\fR
+ist ein Workshop wie man alles sicherer gestalten kann (\fI/usr/share/doc/kwtools\-doc/html/\&.\&.\&./net/kwrsync_backup\&.html\fR)\&.
+.RE
+.PP
+\fBRSYNC_RSH\fR
+.RS 4
+Welche Shell soll f\(:ur \(:Ubertragung genutzt werden\&. Zur Auswahl stehen
+\fBssh\fR
+und
+\fBrsh\fR, falls sie installiert sind\&. Die
+\fBssh\fR
+besitzt eine Kompression und \(:ubertr\(:agt alles verschl\(:usselt\&.
+.RE
+.PP
+\fBONE_FS\fR
+.RS 4
+Bei yes wird das rekursive Sichern \(:uber Dateisystemgrenzen hinweg ausgeschaltet (\fIyes/no\fR)\&.
+.RE
+.PP
+\fBLINK_DEST\fR
+.RS 4
+Sollen Hardlinks bei identischen Dateien erstellt werden\&. Dies ist der beste Weg um spezielle Dateien, wie FIFO\*(Aqs, zu unterst\(:utzen und nat\(:urlich um Platz zu sparen\&. Schalten Sie dies ein (\fIyes\fR), wenn Ihr
+\fBrsync\fR
+(>=2\&.6\&.4) dies unterst\(:utzt\&.
+.RE
+.PP
+\fBROTATE_COUNT_HOURLY\fR
+.RS 4
+Geben Sie eine Integer Zahl f\(:ur die Anzahl der st\(:undlichen Snapshots ein die behalten werden sollen\&. Standard ist 6\&.
+.RE
+.PP
+\fBROTATE_COUNT_DAILY\fR
+.RS 4
+Geben Sie eine Integer Zahl f\(:ur die Anzahl der t\(:aglichen Snapshots ein die behalten werden sollen\&. Standard ist 7\&.
+.RE
+.PP
+\fBROTATE_COUNT_WEEKLY\fR
+.RS 4
+Geben Sie eine Integer Zahl f\(:ur die Anzahl der w\(:ochentlichen Snapshots ein die behalten werden sollen\&. Standard ist 4\&.
+.RE
+.PP
+\fBROTATE_COUNT_MOUNTHLY\fR
+.RS 4
+Geben Sie eine Integer Zahl f\(:ur die Anzahl der monatlichen Snapshots ein die behalten werden sollen\&. Standard ist 6\&.
+.RE
+.PP
+\fBLVCREATE_CMD\fR
+.RS 4
+Angabe des LVM Programm
+\fBlvcreate\fR
+mit vollem Pfad\&.
+.RE
+.PP
+\fBLVREMOVE_CMD\fR
+.RS 4
+Angabe des LVM Programm
+\fBlvremove\fR
+mit vollem Pfad\&.
+.RE
+.PP
+\fBLV_SIZE\fR
+.RS 4
+Angabe der Gr\(:osse f\(:ur den tempor\(:aren LVM Snapshot\&.
+.RE
+.PP
+\fBSNAPSHOT_NAME\fR
+.RS 4
+Name des LVM Snapshot\&. Standard ist lvmsnapshot\&.
+.RE
+.PP
+\fBVG_PATH\fR
+.RS 4
+Verzeichnis unter dem die Volume Groups (VG) liegen\&. Unter Linux ist dies \fI/dev\fR\&.
+.RE
+.PP
+\fBLVM_MOUNTPOINT\fR
+.RS 4
+Angabe eines Mountpunkts f\(:ur den tempor\(:aren LVM Snapshot\&.
+.RE
+.SH "RECHNER KONFIGURATION"
+.PP
+Die Datei
+\fI/etc/kwtools/kwrsync_backup\&.d/rechnername\&.conf\fR
+besteht aus 3 oder 4 Parametern, die durch ein Tab Zeichen getrennt sein m\(:ussen\&. Wird ein st\(:undlicher Snapshot gemacht werden dieser in
+\fIBACKUP_PATH/hourly\&.0/verzeichnis\fR
+gespeichert\&. Die Syntax der Datei ist:
+.PP
+\fBbackup /verzeichnis verzeichnis options\fR
+.PP
+\fBbackup /verzeichnis/datei verzeichnis options\fR
+.PP
+\fBbackup lvm://vg/lv/verzeichnis verzeichnis options\fR
+.PP
+\fBbackup rechner:/verzeichnis verzeichnis options\fR
+.PP
+\fBbackup user@rechner:/verzeichnis verzeichnis options\fR
+.PP
+\fBbackup rsync://rechner/rsync_modul verzeichnis options\fR
+.PP
+\fBbackup rsync://user@rechner/rsync_modul verzeichnis options\fR
+.PP
+\fBbackup_script Befehl verzeichnis\fR
+.SS "Beispiele:"
+.PP
+\fBbackup /etc localhost\fR
+.PP
+Estellt vom lokalem Rechner einen Snapshot vom Verzeichnis
+\fI/etc\fR\&.
+.PP
+\fBbackup lvm://vg0/lv\-vm lvm\-vm\fR
+.PP
+Estellt vom lokalem Rechner einen LVM Snapshot, von der Volume Group
+\(lq\fIvg0\fR\(rq, dem Logischen Volume
+\(lq\fIlv\-vm\fR\(rq
+und dem Verzeichnis
+\fI/\fR\&.
+.PP
+\fBbackup rechner:/ verzeichnis \-HAX \-\-exclude=core \-\-exclude=\fR\fB\(lq*\&.bak\(rq\fR
+.PP
+Estellt vom entfernten Rechner einen Snapshot vom Verzeichnis
+\fI/\fR
+mit zus\(:atzlichen
+\fBrsync\fR
+Optionen\&.
+.PP
+\fBbackup user@rechner:/ rechner\fR
+.PP
+Dasselbe wie eine Zeile h\(:oher nur ohne zus\(:atzlichen Optionen aber mit Benutzername, der sich anstelle von
+\(lqroot\(rq
+einloggt\&.
+.PP
+\fBbackup rsync://rechner/rsync_modul verzeichnis\fR
+.PP
+Estellt vom entfernten
+\(lq\fBrsync\fR\(rq
+Server einen Snapshot vom
+\fBrsync\fR
+Server Modul
+\(lq\fIrsync_modul\fR\(rq\&.
+.PP
+\fBbackup rsync://user@rechner/rsync_modul verzeichnis\fR
+.PP
+Dasselbe wie eine Zeile h\(:oher nur mit Benutzername, der sich anstelle von
+\(lqroot\(rq
+einloggt\&.
+.PP
+\fBbackup_script ssh user@rechner \fR\fB\(lqpg_dumpall | gzip >/var/lib/postgres/fulldump\&.sql\&.gz\(rq\fR\fB unused1\fR
+.PP
+Erstellt zum Beispiel ein gezipptes komplettes Backup einer postgreSQL Datenbank, bevor ein Snapshot von dem Rechner erstellt wird\&.
+.SH "EX/INCLUDE DATEI"
+.PP
+Mit diesen Dateien kann man gezielt Verzeichnisse und Dateien vom Snapshot ausnehmen beziehungsweise mit einbeziehen\&.
+.PP
+Dazu k\(:onnen Sie die Variable
+\(lq\fBEDITOR\fR\(rq, in der Datei
+\fI/etc/kwtools/main\&.cf\fR, mit einem Editor Ihrer Wahl belegen\&. Ansonsten wird die Dialogbox
+\(lq\fBeditbox\fR\(rq
+verwendet\&. Als In der Exclude Datei sollte man auf jeden Fall Verzeichnisse, wie
+\fI/proc\fR
+und
+\fI/sys\fR
+eintragen, da diese f\(:ur die Wiederherstellung des Backups nicht ben\(:otigt werden\&. Die Datei
+\fI/etc/shadow\fR
+sollte ebenfalls drin stehen, denn falls Ihr Rechner gecrackt wird kann man mit einem Passwortcracker ihre Passw\(:orter herausfinden\&. (Bsp\&.:
+\fBEDITOR\fR=\fB/usr/bin/vim\fR)\&.
+.PP
+Die Syntax der beiden Dateien ist:
+.PP
+\fB/verzeichnis\fR
+.PP
+\fB/verzeichnis/Datei\fR
+.SH "DATEIEN"
+.PP
+\fI/etc/kwtools/kwrsync_backup\&.cf\fR
+.RS 4
+Dies ist die Konfigurations Datei f\(:ur
+\fBkwrsync_backup\fR
+und
+\fBkwrsync_backup_cron\fR\&. F\(:ur weitere Details siehe
+\fBkwrsync_backup\fR(8)
+und
+\fBkwrsync_backup_cron\fR(8)\&.
+.RE
+.PP
+\fI/etc/kwtools/kwrsync_backup\&.d\fR
+.RS 4
+Verzeichnis mit den Rechnereigenen und den
+\fBrsync\fR
+Server Konfigurationsdateien (\fIrsync\&.conf\fR,
+\fIrsync\-exclude\&.conf\fR,
+\fIrsync\-include\&.conf\fR,
+\fIrechner\&.conf\fR,
+\fIrechner\-exclude\&.conf\fR,
+\fIrechner\-include\&.conf\fR)
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBkwrsync_backup\fR(8),
+\fBkwrsync_backup_cron\fR(8),
+\fBrsync\fR(1),
+\fBsudo\fR(8),
+\fBsudoers\fR(5),
+\fBuseradd\fR(8)
+.SH "AUTOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.RS 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2002-2013 Kai Wilke
+.br

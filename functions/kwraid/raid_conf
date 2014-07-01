@@ -1,0 +1,116 @@
+# Funktion (raid_conf), Konfiguration der mdadm.conf#{{{
+#
+# usage: raid_conf
+#
+raid_conf() {
+	unset -- CR_AUTO CR_GROUP CR_META CR_MODE CR_OWNER CR_SYM \
+		HOMEHOST MAILFROM MAILADDR PROGRAM
+	# Funktion (conf_menu)# {{{
+	#
+	conf_menu() {
+		CONF_MENU=(\"$gv_Create\" \"$CREATE_RESULT\" $lv_Mailadr \"$MAILADDR\"
+		\"$lv_Mailfrom\" \"$MAILFROM\" $lv_Hostname \"$HOMEHOST\"
+		$lv_Program \"$PROGRAM\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	read_raid_conf
+	conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help raid_conf_help
+				conf_menu
+				;;
+			$gv_Create)
+				# Standard Erstellungs Einstellung# {{{
+				raid_create_conf -c
+				## }}}
+				conf_menu $gv_Create
+				;;
+			$lv_Mailadr)
+				# Mailadresse eines Users eingeben an dem das Monitoring# {{{
+				# gesendet werden soll.
+				mail_address "$MAILADDR"
+				if [ -n "$gv_Mail_Adr" ] ; then
+					MAILADDR="$gv_Mail_Adr"
+				else
+					unset -- MAILADDR
+				fi
+				## }}}
+				conf_menu $lv_Mailadr
+				;;
+			"$lv_Mailfrom")
+				# Absenderadresse eines Users eingeben von dem die mail ueber das# {{{
+				# Monitoring gesendet werden soll.
+				MAILFROM_MSG=$(gettext 'Geben Sie bitte eine Absender Adresse an, von dem die Action gemailt werden soll (name@domain.de).')
+				mail_address "$MAILFROM_MSG" "$MAILFROM"
+				if [ -n "$gv_Mail_Adr" ] ; then
+					MAILFROM="$gv_Mail_Adr"
+				else
+					unset -- MAILFROM
+				fi
+				## }}}
+				conf_menu "$lv_Mailfrom"
+				;;
+			$lv_Hostname)
+				# Rechnername eingeben# {{{
+				HOMEHOST_MSG=$(gettext 'Sie koennen hier die Werte Rechnername, "system" und "ignore" eingeben. Dieser Wert wird zu den Metadaten hinzugefuegt (s. Hilfe).')
+				inputbox "$gv_Configuration" "$HOMEHOST_MSG" "$HOMEHOST"
+				if [ -n "$gv_Auswahl" ] ; then
+					HOMEHOST="$gv_Auswahl"
+				else
+					unset -- HOMEHOST
+				fi
+				## }}}
+				conf_menu $lv_Hostname
+				;;
+			$lv_Program)
+				# Programm, welches bei einem bestimmten Event ausgefuehrt# {{{
+				# werden soll, eingeben
+				PROG_MSG=$(gettext 'Geben Sie ein Programm ein, welches bei einem interessanten Monitoring-Ereignis ausgefuehrt werden soll.')
+				inputbox "$gv_Configuration" "$PROG_MSG" "$PROGRAM"
+				if [ -x "$gv_Auswahl" ] ; then
+					PROGRAM="$gv_Hostname"
+				else
+					unset -- PROGRAM
+					no_prog_exec_msg "$gv_Auswahl"
+				fi
+				## }}}
+				conf_menu $lv_Program
+				;;
+			$gv_Save)
+				# Konfiguration speichern# {{{
+				# Alten Eintrag loeschen und neuen erstellen.
+				if [ -n "$MAILADDR" ] ; then
+					print -l ${(R)${(f)"$(< $RAIDTAB)"}##MAILADDR*} >${gv_WorkDir}/raidtab.bak
+					print "MAILADDR $MAILADDR" >>${gv_WorkDir}/raidtab.bak
+					mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
+				fi
+				if [ -n "$MAILFROM" ] ; then
+					print -l ${(R)${(f)"$(< $RAIDTAB)"}##MAILFROM*} >${gv_WorkDir}/raidtab.bak
+					print "MAILFROM $MAILFROM" >>${gv_WorkDir}/raidtab.bak
+					mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
+				fi
+				if [ -n "$HOMEHOST" ] ; then
+					print -l ${(R)${(f)"$(< $RAIDTAB)"}##HOMEHOST*} >${gv_WorkDir}/raidtab.bak
+					print "HOMEHOST $HOMEHOST" >>${gv_WorkDir}/raidtab.bak
+					mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
+				fi
+				if [ -n "$PROGRAM" ] ; then
+					print -l ${(R)${(f)"$(< $RAIDTAB)"}##PROGRAM*} >${gv_WorkDir}/raidtab.bak
+					print "PROGRAM $PROGRAM" >>${gv_WorkDir}/raidtab.bak
+					mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
+				fi
+				## }}}
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

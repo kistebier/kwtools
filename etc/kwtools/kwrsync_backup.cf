@@ -1,0 +1,99 @@
+# Beginn /etc/kwtools/kwrsync_backup.cf
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+###########################################
+# globale Optionen
+###########################################
+
+# Unter welchem Pfad wird gesichert?
+BACKUP_PATH="/var/cache/kwrsync_backup"
+
+# Weitere Optionen fuer rsync. Ggf. macht eine Limitierung 
+# der Bandbreite Sinn, Angabe in kbyte/sec:
+# BW_LIMIT=--bwlimit=256
+BW_LIMIT="0"
+#
+# Soll geprueft werden, ob noch ein gewisser Prozentsatz 
+# an Plattenplatz und Inodes frei ist?
+# CHECK_HDMINFREE=yes/no
+# HDMINFREE= Integerzahl zwischen 0 und <100 (Prozent)
+# Ist die benutzte Kilobyte oder Inode Prozentzahl kleiner
+# als die angegebene maximale Prozentzahl an Plattenplatz
+# (90), wird ein Backup durchgefuehrt.
+HDMINFREE="90"
+CHECK_HDMINFREE="yes"
+
+# Partition die gemountet werden soll - auf der die
+# Snapshots gesichert werden.
+MOUNT_PATH=""
+
+# Rechner/Server die gesichert werden sollen, getrennt durch ein Leerzeichen.
+SERVER="localhost"
+
+# Logdatei mit vollem Pfad.
+LOGFILE="/var/log/kwrsync_backup.log"
+
+# voller Pfad, Preexec Script + optionale Argumente.
+# Dieses Sript wird sofort ausgefuehrt bevor das/die Backup(s)
+# erstellt werden.
+PREEXEC=""
+
+# voller Pfad, Preexec Script + optionale Argumente.
+# Dieses Sript wird sofort ausgefuehrt nachdem das/die
+# Backup(s) erstellt wurden.
+POSTEXEC=""
+
+# Fuer welchen User soll der Crontab Eintrag (kwrsync_backup_cron)
+# erstellt werden. Wenn der User nicht root ist benoetigt er einen
+# Eintrag in /etc/sudoers, damit er das Script ausfuehren darf.
+#USER_RUN="kwrsyncbackup"
+USER_RUN=""
+
+# Remote Shell für die Übertragung nutzen (rsh,ssh).
+# ssh ist eine Secure Shell, rsh hat keine Verschluesselung.
+RSYNC_RSH=""
+
+# Bei yes wird das rekursive Sichern ueber Dateisystemgrenzen hinweg
+# ausgeschaltet (yes/no).
+ONE_FS="no"
+
+# Sollen Hardlinks bei identischen Dateien erstellt werden.
+# Dies ist der beste Weg um spezielle Dateien, wie FIFO's, zu
+# unterstuetzen und natuerlich um Platz zu sparen.
+# Schalten Sie dies ein (yes), wenn Ihr rsync (>=2.6.4)
+# dies unterstuetzt.
+LINK_DST="no"
+
+# Anzahl der Rotierung der einzelnen Snapshots.
+ROTATE_COUNT_HOURLY="6"
+
+ROTATE_COUNT_DAILY="7"
+
+ROTATE_COUNT_WEEKLY="4"
+
+ROTATE_COUNT_MOUNTHLY="6"
+
+###########################################
+# LVM Snapshot
+###########################################
+
+# LVM Komandos zum erzeugen und loeschen des
+# LVM Snapshots
+LVCREATE_CMD="/sbin/lvcreate"
+LVREMOVE_CMD="/sbin/lvremove"
+
+# Groesse des LVM Snapshots der angelegt werden soll.
+LV_SIZE="100m"
+
+# Name des LVM Snapshots (snapshot)
+SNAPSHOT_NAME="lvmsnapshot"
+
+# Pfad unter der die Volume Groups liegen (/dev).
+VG_PATH="/dev"
+
+# Mountpunkt unter dem das/die LVM Snapshot(s) temporaer
+# eingehaengt werden soll(en).
+LVM_MOUNTPOINT="/mnt/lvm-snapshot"
+
+# End /etc/kwtools/kwrsync_backup.cf

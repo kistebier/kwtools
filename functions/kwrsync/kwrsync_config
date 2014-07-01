@@ -1,0 +1,37 @@
+# Funktion um die Konfiguration zu schreiben.{{{
+#
+# usage: kwrsync_config
+#
+kwrsync_config() {
+#
+# ~/.kwtools/kwrsyncrc schreiben
+#
+> ${gv_HomePath}/.kwtools/kwrsyncrc <<< "# Beginn ~/.kwtools/kwrsyncrc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Ziel Rechner (IP,Host,Host.Domaine.de), getrennt
+# durch ein Leerzeichen.
+R_HOST=\"$R_HOST\"
+
+# Remote Shell die fuer die Übertragung genutzt
+# werden soll (z.B. ssh).
+RSYNC_RSH=\"$RSYNC_RSH\"
+
+# Weitere Optionen fuer rsync. Ggf. macht eine Limitierung 
+# der Bandbreite Sinn, Angabe in kbyte/sec:
+# BW_LIMIT="--bwlimit=256"
+BW_LIMIT=\"$BW_LIMIT\"
+
+# Soll das Homeverzeichnis auch per Cron synchronisiert werden (yes/no)?
+HOME_SYNC_CRON=\"$HOME_SYNC_CRON\"
+
+# End ~/.kwtools/kwrsyncrc"
+
+read_file kwrsyncrc
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

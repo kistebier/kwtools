@@ -1,0 +1,313 @@
+# Funktion (wlan_opt_conf), Optionen der WLAN Karte einstellen{{{
+#
+# usage: wlan_opt_conf
+#
+wlan_opt_conf() {
+	WL_OPT_TITLE=$(gettext '${gv_Configuration}::WLAN-Optionen')
+	lv_Essid=$(gettext 'ESSID')
+	lv_Network_Id=$(gettext 'Netzwerk_Id')
+	lv_Mode=$(gettext 'Modus')
+	lv_Channel=$(gettext 'Kanal')
+	lv_Freq=$(gettext 'Frequenz')
+	lv_Sensity=$(gettext 'Empfindlichkeit')
+	lv_Bitrate=$(gettext 'Bitrate')
+	lv_Key=$(gettext 'Schluessel')
+	lv_Rts=$(gettext 'RTS_Handshake')
+	lv_Fragment=$(gettext 'Fragment_Groesse')
+	lv_Iwspy=$(gettext 'iwspy_Optionen')
+	lv_Iwpriv=$(gettext 'iwpriv_Optionen')
+	# Funktion fuers manuelle Netzwerkkonfigurationsmenue{{{
+	#
+	# usage: wlan_opt_menue
+	wlan_opt_menu() {
+		WLAN_OPT_MENU=($lv_Essid \"$ESSID\" $lv_Network_Id \"$NWID\"
+		$lv_Mode \"$MODE\" $lv_Channel \"$CHANNEL\" $lv_Freq \"$FREQ\"
+		$lv_Sensity \"$SENS\" $lv_Bitrate \"$RATE\" $lv_Key \"$KEY\"
+		$lv_Rts \"$RTS\" $lv_Fragment \"$FRAG\" $lv_Iwspy \"$IWSPY\"
+		$lv_Iwpriv \"$IWPRIV\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$WLAN_OPT_MENU"
+	}
+	#}}}
+	wlan_opt_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help wlan_opt_help
+				wlan_opt_menu
+				;;
+			$lv_Essid)
+				# ESSID eingeben.# {{{
+				MSG=$(gettext 'Geben Sie die ESSID fuer $ETH ein (Bsp. any, \"Mein Netzwerk\").')
+				inputbox "$WL_OPT_TITLE" "$MSG" "${ESSID:-any}"
+				if [ "$gv_Auswahl" ] ; then
+					ESSID="$gv_Auswahl"
+				else
+					ESSID="any"
+				fi
+				## }}}
+				wlan_opt_menu $lv_Essid
+				;;
+			$lv_Network_Id)
+				# Netzwerk ID eingeben# {{{
+				MSG=$(gettext 'Geben Sie die Netzwerk ID fuer $ETH ein (Zellenname).')
+				inputbox "$WL_OPT_TITLE" "$MSG" "$NWID"
+				if [ "$gv_Auswahl" ] ; then
+					NWID="$gv_Auswahl"
+				else
+					NWID=""
+				fi
+				## }}}
+				wlan_opt_menu $lv_Network_Id
+				;;
+			$lv_Mode)
+				# Modus Einstellen.# {{{
+				lv_Managed=$(gettext 'Managed')
+				lv_Default=$(gettext 'Standard')
+				lv_Ad_Hoc=$(gettext 'Ad-Hoc')
+				lv_Master=$(gettext 'Master')
+				lv_Monitor=$(gettext 'Monitor')
+				lv_Repeater=$(gettext 'Repeater')
+				lv_Second=$(gettext 'Secondary')
+				lv_Auto=$(gettext 'auto')
+				#
+				MODE_MENU=($lv_Managed \"$lv_Default\" $lv_Ad_Hoc \"\" $lv_Monitor \"\" $lv_Repeater \"\" $lv_Second \"\" $lv_Auto \"\" $gv_Back \"\")
+				menubox "$MODE" "$WL_OPT_TITLE" "$gv_Menupoint" "$MODE_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help wlan_opt_mode_help
+							menubox "$MODE" "$WL_OPT_TITLE" "$gv_Menupoint" "$MODE_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)
+							# Wert uebernehmen
+							MODE="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				# mit Standard belegen, falls leer.
+				if [ -z "$MODE" ] ; then
+					MODE=Managed
+				fi
+				## }}}
+				wlan_opt_menu $lv_Mode
+				;;
+			$lv_Channel)
+				# Kanal von 0-16 eingeben.# {{{
+				MSG=$(gettext 'Geben Sie eine Kanal Nummer fuer $ETH ein (0-16).')
+				number_input "$WL_OPT_TITLE" "$MSG" "$CHANNEL"
+				if [ "$NUMBER" -lt 17 ] ; then
+					CHANNEL="$gv_Auswahl"
+					unset -- FREQ
+				else
+					unset -- CHANNEL
+				fi
+				## }}}
+				wlan_opt_menu $lv_Channel
+				;;
+			$lv_Freq)
+				# Frequenz eingeben# {{{
+				MSG=$(gettext 'Geben Sie die Frequenz fuer $ETH ein (Bsp. 2.224G = 2.224GHz).')
+				number_input -D "$WL_OPT_TITLE" "$MSG" "$FREQ"
+				if [ -n "$NUMBER" ] ; then
+					FREQ="$NUMBER"
+					unset -- CHANNEL
+				else
+					FREQ=""
+				fi
+				## }}}
+				wlan_opt_menu $lv_Freq
+				;;
+			$lv_Sensity)
+				# Empfindlichkeit einstellen (sens -80)# {{{
+				MSG=$(gettext 'Geben Sie die Empfindlichkeit der Verbindung ein (Bsp. -80, 2).')
+				inputbox "$WL_OPT_TITLE" "$MSG" "$SENS"
+				if [ -n "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[-][0-9]*|[0-9]*)	SENS="$gv_Auswahl"
+							;;
+						*)	unset -- SENS
+							no_input_msg
+							;;
+					esac
+				else
+					unset -- SENS
+				fi
+				## }}}
+				wlan_opt_menu $lv_Sensity
+				;;
+			$lv_Bitrate)
+				# Bitrate einstellen (rate 5.5M)# {{{
+				MSG=$(gettext 'Geben Sie die Bitrate fuer $ETH ein (Bsp. 5.5M = 5.5 MByte).')
+				number_input -D "$WL_OPT_TITLE" "$MSG" "$RATE"
+				if [ -n "$NUMBER" ] ; then
+					RATE="$NUMBER"
+				else
+					unset -- RATE
+				fi
+				## }}}
+				wlan_opt_menu $lv_Bitrate
+				;;
+			$lv_Key)
+				# Schluessel erstellen# {{{
+				case $IWDRIVER in
+					ath_pci)	WPA_DEV="madwifi"	;;
+					ipw2200|ipw2100|ipw3945)	WPA_DEV="wext"	;;
+					hostap)	WPA_DEV="hostap"	;;
+					*)	WPA_DEV="wext"	;;
+				esac
+				#
+				if [ -z "$WPA_DEV" ]; then
+					if [ -d /proc/net/ndiswrapper/${ETH} ]; then
+						WPA_DEV=ndiswrapper
+					elif [ -d /proc/net/hostap/${ETH} ]; then
+						WPA_DEV=hostap
+					elif [ -e /proc/driver/atmel ]; then
+						WPA_DEV=atmel
+					fi
+				fi
+				#
+				if [ -n "$WPA_DEV" ]; then
+					KEY_MSG=$(gettext 'Soll WPA aktiviert werden (ja/nein)?')
+					yesno "$WL_OPT_TITLE" "$KEY_MSG" ""
+					if [ "$gv_Auswahl" = yes ] ; then
+						# Other wpa options
+						# scan_ssid [0]|1
+						# bssid 00:11:22:33:44:55
+						# priority [0]|Integer
+						# proto [WPA RSN] WPA|RSN
+						# key_mgmt [WPA-PSK WPA-EAP]|NONE|WPA-PSK|WPA-EAP|IEEE8021X
+						# pairwise [CCMP TKIP]|CCMP|TKIP|NONE
+						# group [CCMP TKIP WEP105 WEP40]|CCMP|TKIP|WEP105|WEP40
+						# eapol_flags [3]|1|2
+						KEY=""
+						WPASECRET=$(awk '
+							/iface/{
+								if(found){
+									found=0
+								}
+								else if (/'"$ETH"'/){
+									found=1
+								}
+							}
+							/wpa-psk/{
+								if(found){
+									gsub(/\W*#.*$/,"");
+									if (gsub(/^\W*wpa-psk\W*/,"")){
+										gsub(/\W.*$/,"");
+										print;
+										exit;
+								}
+							}
+						}
+						' /etc/network/interfaces)
+						# Passphrase fuer WPA eingeben 8-63 Zeichen
+						PASS_MSG=$(gettext 'Geben Sie die Passphrase fuer WPA ein. Die Passphrase muss 8-63 Zeichen besitzen.')
+						#############################################
+						# WAPSECRET wird nicht angezeigt.
+						#############################################
+						inputbox "$WL_OPT_TITLE" "$PASS_MSG" "${WPASECRET//\\/\\\\}"
+						if [ -n "$gv_Auswahl" -a "${#gv_Auswahl[@]}" -ge 8 -a "${#gv_Auswahl[@]}" -le 63 ] ; then
+							# make sure backslashes inside passphrase are handled correct
+							#WPASECRET=$(sed -e 's/\\/\\/g' "$TMP") && rm -r "$TMP"
+							WPASECRET="${gv_Auswahl//\\/\\\\}"
+							KEY="$WPASECRET"
+						else
+							unset -- WPASECRET
+							no_input_msg
+						fi
+						
+						# Modus beim Treiber hostap auf Managed setzen.
+						case $WPA_DEV in
+							hostap)	MODE="Managed"	;;
+						esac
+					else
+						WPASECRET=""
+						# No need for a wep key if we are using wpa
+						PASS_MSG=$(gettext 'Geben Sie einen Schluessel fuer die Verschluessellung von $ETH ein.')
+						password "$WL_OPT_TITLE" "$PASS_MSG" 8 63
+						if [ -n "$PASSPHRASE" ] ; then
+							KEY="$PASSPHRASE"
+							unset -- PASSPHRASE
+							# Schluessel in eigenener Datei speichern?
+							SAVE_KEY_MSG=$(gettext 'Soll der Schluessel in einer eigenen Datei gespeichert werden ( $ETH )? Bei nein wird Ihr Schluessel in der Datei $NET_CONF_FILE gespeichert, welche fuer manche System Benutzer lesbar ist. Die Rechte werden auf 0600 gesetzt.')
+							yesno "$WL_OPT_TITLE" "$SAVE_KEY_MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								PUBKEY=1
+							else
+								PUBKEY=0
+							fi
+						fi
+					fi
+				else
+					WPASECRET=""
+				fi
+				## }}}
+				wlan_opt_menu $lv_Key
+				;;
+			$lv_Rts)
+				# RTS einstellen (rts 512)# {{{
+				MSG=$(gettext 'Geben Sie die Groesse des kleinsten Pakets ein, fuer welches ein RTS Handshake gesendet wird (Bsp. 512).')
+				number_input "$WL_OPT_TITLE" "$MSG" "$RTS"
+				if [ -n "$NUMBER" ] ; then
+					RTS="$NUMBER"
+				else
+					unset -- RTS
+				fi
+				## }}}
+				wlan_opt_menu $lv_Rts
+				;;
+			$lv_Fragment)
+				# Fragment_Groesse einstellen (frag 512)# {{{
+				MSG=$(gettext 'Geben Sie die Fragment Groesse ein (Bsp. 512).')
+				number_input "$WL_OPT_TITLE" "$MSG" "$FRAG"
+				if [ -n "$NUMBER" ] ; then
+					FRAG="$NUMBER"
+				else
+					unset -- FRAG
+				fi
+				## }}}
+				wlan_opt_menu $lv_Fragment
+				;;
+			$lv_Iwspy)
+				# iwspy Paramter eingeben, zeigt Statistiken der WLAN Karte an.# {{{
+				MSG=$(gettext 'Geben Sie  die Parameter fuer "iwspy" ein.')
+				inputbox "$WL_OPT_TITLE" "$MSG" "$IWSPY"
+				if [ "$gv_Auswahl" ] ; then
+					IWSPY="$gv_Auswahl"
+				else
+					IWSPY=""
+				fi
+				## }}}
+				wlan_opt_menu $lv_Iwspy
+				;;
+			$lv_Iwpriv)
+				# iwpriv Paramter eingeben, stellt Treiber-speziefische Parameter ein.# {{{
+				MSG=$(gettext 'Geben Sie die Parameter fuer "iwpriv" ein.')
+				inputbox "$WL_OPT_TITLE" "$MSG" "$IWPRIV"
+				if [ "$gv_Auswahl" ] ; then
+					IWPRIV="$gv_Auswahl"
+				else
+					IWPRIV=""
+				fi
+				## }}}
+				wlan_opt_menu $lv_Iwpriv
+				;;
+			$gv_Save)
+				# Konfiguration speichern{{{
+				autoload -U writeiwline
+				writeiwline
+				#}}}
+				break
+				;;
+			$gv_Back)	unset -- IWOURLINE
+				break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

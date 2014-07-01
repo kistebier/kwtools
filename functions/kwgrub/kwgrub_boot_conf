@@ -1,0 +1,439 @@
+# Boot Konfiguration auswählen oder anlegen{{{
+#
+# usage: kwgrub_boot_conf
+kwgrub_boot_conf() {
+	BOOT_CONF_TITLE="$lv_Boot_Conf"
+	unset -- $Unset
+	# Funktion boot_conf# {{{
+	#
+	boot_conf() {
+		# Funktion konf_menue{{{
+		lv_Name=$(gettext 'Name')
+		lv_Kernel=$(gettext 'Kernel')
+		lv_Root_Part=$(gettext 'Root_Partition')
+		lv_Append=$(gettext 'Append')
+		lv_Initrd=$(gettext 'Initrd')
+		lv_Lock=$(gettext 'Lock')
+		lv_Modul=$(gettext 'Module')
+		lv_Modul1=$(gettext 'Module1')
+		lv_Memtest=$(gettext 'Memtest')
+		lv_Makeactive=$(gettext 'Makeactive')
+		#
+		# usage: konf_menue
+		konf_menue() {
+			BOOT_CONF_MENU=($lv_Name \"$TITEL_L\" $lv_Kernel_Part \"$KERNEL_PART\"
+			$lv_Kernel \"$VMLINUZ\" $lv_Root_Part \"$ROOT_PART\"
+			$lv_Append \"$APPEND\" $lv_Initrd \"$INITRD\"
+			$lv_Lock \"$LOCK\" $lv_Modul \"$MODULE\" $lv_Modul1 \"$MODULE1\"
+			$lv_Memtest \"$MEMTEST\" $lv_Makeactive \"$MAKEACTIVE\"
+			$gv_Save \"\" $gv_Back \"\")
+			menubox "$1" "$BOOT_CONF_TITLE" "$gv_Menupoint" "$BOOT_CONF_MENU"
+		}
+		#}}}
+		# Funktion get_root_append# {{{
+		get_root_append() {
+			for i in ${(ws| |)${Rest}} ; {
+				case "$i" in
+					root=*)
+						ROOT_PART="${i##*=}"
+						;;
+					*)
+						if [ -n "$APPEND" ] ; then
+							APPEND="$APPEND $i"
+						else
+							APPEND="$i"
+						fi
+						;;
+				esac
+			}
+		}
+		## }}}
+		# vorhandene Konfiguration uebernehmen{{{
+		#
+		awk '/title/{if(/'"${${${${gv_Auswahl//\//\/}//\,/\\,}//\(/\\(}//\)/\\)}$"'/){found=1}else{found=0}}
+			/^title/{if(found){TITLE_L=$0}}
+			/^root/{if(found){ROOT=$0}}
+			/^kernel/{if(found){KERNEL=$0}}
+			/^initrd/{if(found){INITRD=$0}}
+			/^module.*root.*/{if(found){MODULE=$0}}
+			/^module.*[!root].*/{if(found){MODULE1=$0}}
+			/^savedefault/{if(found){SAVEDEFAULT=$0}}
+			/^makeactive/{if(found){MAKEACTIVE=$0}}
+			/^lock/{if(found){LOCK=$0}}
+			END{print TITLE_L"\n"ROOT"\n"KERNEL"\n"INITRD"\n"MODULE"\n"MODULE1"\n"SAVEDEFAULT"\n"MAKEACTIVE"\n"LOCK}' $Menu_lst >${gv_WorkDir}/menu.lst
+			#
+			while read a Value Rest ; do
+				case "$a" in
+					title)
+						TITEL_L="${Value} ${Rest}"
+						;;
+					root)
+						KERNEL_PART="$Value"
+						;;
+					kernel)
+						# Kernel einlesen# {{{
+						case "${Value##*/}" in
+							memtest*)
+								MEMTEST="${Value##*)}"
+								unset -- VMLINUZ MAKEACTIVE MODULE MODULE1
+								;;
+							*)
+								VMLINUZ="${Value##*)}"
+								unset -- MAKEACTIVE MEMTEST MODULE MODULE1
+								get_root_append
+								;;
+						esac
+						## }}}
+						;;
+					initrd)
+						INITRD="${Value##*)}"
+						;;
+					module)
+						# Module einlesen# {{{
+						case "$Rest" in
+							*root=*)
+								MODULE="${Value##*)}"
+								get_root_append
+								unset -- INITRD MAKEACTIVE MEMTEST
+								;;
+							*)
+								MODULE1="${Value##*)}"
+								unset -- INITRD MAKEACTIVE MEMTEST
+								;;
+						esac
+						## }}}
+						;;
+					makeactive)
+						MAKEACTIVE=makeactive
+						unset -- INITRD APPEND ROOT_PART VMLINUZ MEMTEST MODULE MODULE1
+						;;
+					savedefault)
+						SAVEDEFAULT=savedefault
+						;;
+					lock)
+						LOCK=lock
+						;;
+				esac
+			done < ${gv_WorkDir}/menu.lst
+			#
+		#}}}
+		konf_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help titel_help
+					konf_menue
+					;;
+				$lv_Name)
+					# Titel anlegen {{{
+					CREATE_MSG=$(gettext 'Geben Sie hier bitte eine Namen fuer ihre Konfiguration ein.')
+					inputbox "$BOOT_CONF_NAME_TITLE" "$CREATE_MSG" "$TITEL_L"
+					if [ "$gv_Auswahl" ] ; then
+						TITEL_L="$gv_Auswahl"
+					else
+						unset -- TITEL_L
+						no_input_msg
+					fi
+					#}}}
+					konf_menue $lv_Name
+					;;
+				$lv_Kernel_Part)
+					# Kernel Partition auswählen
+					kernel_part
+					konf_menue $lv_Kernel_Part
+					;;
+				$lv_Kernel)
+					# Kernel Auswahl# {{{
+					kernel_choice
+					if [ -n "$gv_Vmlinuz" ] ; then
+						VMLINUZ="$gv_Vmlinuz"
+						if [ -n "$MAKEACTIVE" ] ; then
+							unset -- MAKEACTIVE MEMTEST MODULE MODULE1
+						fi
+					else
+						unset -- VMLINUZ
+					fi
+					## }}}
+					konf_menue $lv_Kernel
+					;;
+				$lv_Root_Part)
+					# Root Partition auswählen{{{
+					if [ -n "${gv_Vmlinuz##*/}" -a "${gv_Vmlinuz##*/}" = "$MEMTEST" ] ; then
+						memtest_msg
+					elif [ "$MAKEACTIVE" ] ; then
+						makeactive_msg
+					else
+						root_part
+					fi
+					#}}}
+					konf_menue $lv_Root_Part
+					;;
+				$lv_Append)
+					# Append Zeile eingeben{{{
+					if [ "$VMLINUZ" = "$MEMTEST" ] ; then
+						memtest_msg
+					elif [ "$MAKEACTIVE" ] ; then
+						makeactive_msg
+					else
+						APPEND_TITLE=(${lv_Boot_Conf}::${lv_Append})
+						APPEND_MSG=$(gettext 'Geben Sie bitte ihre Kernel Parameter ein (z.B. vga=791, s. kernel Dokumentation).')
+						inputbox "$APPEND_TITLE" "$APPEND_MSG" "$APPEND"
+						if [ "$gv_Auswahl" ] ; then
+							APPEND="$gv_Auswahl"
+							unset -- MAKEACTIVE
+						else
+							unset -- APPEND
+						fi
+					fi
+					#}}}
+					konf_menue $lv_Append
+					;;
+				$lv_Initrd)
+					# Funktion Initrd auswählen{{{
+					initrd_choice
+					if [ -n "$gv_Initrd" ] ; then
+						INITRD="$gv_Initrd"
+						unset -- MAKEACTIVE MEMTEST MODULE MODULE1
+					else
+						unset -- INITRD
+					fi
+					#}}}
+					konf_menue $lv_Initrd
+					;;
+				$lv_Lock)
+					# lock aktivieren (yes/no){{{
+					LOCK_TITLE=(${lv_Boot_Conf}::${lv_Lock})
+					LOCK_MSG=$(gettext 'Hier brauchen Sie nur mit ja zu antworten, wenn Benutzer diesen Menueeintrag nicht ohne Password booten duerfen. Password wird in der Konfiguration erzeugt/geaendert.')
+					yesno "$LOCK_TITLE" "$LOCK_MSG" ""
+					if [ "$gv_Auswahl" = yes ] ; then
+						LOCK=lock
+					else
+						unset -- LOCK
+					fi
+					#}}}
+					konf_menue $lv_Lock
+					;;
+				$lv_Memtest)
+					# Funktion Memtest auswählen{{{
+					memtest_choice
+					#}}}
+					konf_menue $lv_Memtest
+					;;
+				$lv_Modul)
+					# Funktion Module Kernel auswählen{{{
+					kernel_choice
+					if [ -n "$gv_Vmlinuz" ] ; then
+						MODULE="$gv_Vmlinuz"
+						unset -- VMLINUZ INITRD MAKEACTIVE MEMTEST
+					else
+						unset -- MODULE
+					fi
+					#}}}
+					konf_menue $lv_Modul
+					;;
+				$lv_Modul1)
+					# Funktion Module Initrd auswählen{{{
+					initrd_choice
+					if [ -n "$gv_Initrd" ] ; then
+						MODULE1="$gv_Initrd"
+						unset -- VMLINUZ INITRD MAKEACTIVE MEMTEST
+					else
+						unset -- MODULE1
+					fi
+					#}}}
+					konf_menue $lv_Modul1
+					;;
+				$lv_Makeactive)
+					# Makeactive aktivieren fuer andere bootloader (yes/no){{{
+					MAKEACTIVE_TITLE=(${lv_Boot_Conf}::${lv_Makeactive})
+					MAKEACTIVE_MSG=$(gettext 'Hier brauchen Sie nur mit ja zu antworten, wenn sie einen anderen Bootloader beim Start ausfuehren wollen/muessen. Zum Beispiel bei Windows.')
+					yesno "$MAKEACTIVE_TITLE" "$MAKEACTIVE_MSG" ""
+					if [ "$gv_Auswahl" = yes ] ; then
+						MAKEACTIVE=makeactive
+						unset -- INITRD APPEND ROOT_PART VMLINUZ MEMTEST MODULE MODULE1
+					else
+						unset -- MAKEACTIVE
+					fi
+					#}}}
+					konf_menue $lv_Makeactive
+					;;
+				$gv_Save)
+					# Einstellungen speichern{{{
+					# Funktion write_menulst# {{{
+					#
+					write_menulst() {
+						awk '/title/{if(/'"${${${${Title_Name//\//\/}//\,/\\,}//\(/\\(}//\)/\\)}$"'/){found=1}
+							else{found=0}}{if(!found){print}}
+							END{print "'$Option'"}' $Menu_lst >${gv_WorkDir}/menu.lst
+						mv ${gv_WorkDir}/menu.lst $Menu_lst
+						unset -- $Unset
+					}
+					## }}}
+					# entweder aendern oder erstellen ($Title_Name)
+					if [ "$CREATE" = yes ] ; then
+						Title_Name="$TITEL_L"
+						Option="\n"
+					else
+						Title_Name="$TITEL_L_OLD"
+						unset -- Option
+					fi
+					# Titel und/oder lock Option zusammenzaehlen
+					# lock sollte immer nachdem title kommen.
+					if [ -n "$LOCK" ] ; then
+						Option="${Option}title "$TITEL_L"\n"$LOCK"\n"
+					else
+						Option="${Option}title "$TITEL_L"\n"
+					fi
+					# Optionen zusammenzaehlen
+					# mit initrd# {{{
+					if [ "$TITEL_L" -a "$KERNEL_PART" -a "$VMLINUZ" -a "$ROOT_PART" -a "$INITRD" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nkernel ""$VMLINUZ root=${ROOT_PART} $APPEND""\ninitrd "$INITRD""
+					# }}}
+					# ohne initrd# {{{
+					elif [ "$TITEL_L" -a "$KERNEL_PART" -a "$VMLINUZ" -a "$ROOT_PART" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nkernel ""$VMLINUZ root=${ROOT_PART} $APPEND""\nsavedefault"
+					# }}}
+					# mit makeactive und chainloader# {{{
+					elif [ "$TITEL_L" -a "$KERNEL_PART" -a "$MAKEACTIVE" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nchainloader +1\n"$MAKEACTIVE"\nsavedefault"
+					# }}}
+					# mit module und initrd# {{{
+					elif [ "$TITEL_L" -a "$KERNEL_PART" -a "$VMLINUZ" -a "$ROOT_PART" -a "$MODULE" -a "$MODULE1" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nkernel "$VMLINUZ"\nmodule ""$MODULE root=${ROOT_PART} $APPEND""\nmodule "$MODULE1"\nsavedefault"
+					# }}}
+					# mit module ohne initrd# {{{
+					elif [ "$TITEL_L" -a "$KERNEL_PART" -a "$VMLINUZ" -a "$ROOT_PART" -a "$MODULE" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nkernel "$VMLINUZ"\nmodule ""$MODULE root=${ROOT_PART} $APPEND""\nsavedefault"
+					# }}}
+					# mit memtest# {{{
+					elif [ "$TITEL_L" -a "$KERNEL_PART" -a "$MEMTEST" ] ; then
+						Option="${Option}root "$KERNEL_PART"\nkernel "$MEMTEST"\nsavedefault"
+					# }}}
+					# Fehlernachricht# {{{
+					else
+						MSG=$(gettext 'Entweder die Menuepunkte Name, Kernel_Partition, Root_Partition und Kernel oder, Name, Kernel_Partition und Makeactive/Memtest oder, Name, Kernel_Partition, Kernel und Module sind nicht belegt. Initrd, Module1 und Append sind nur wichtig wenn ihr System sie zum booten benoetigt.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- Option
+						konf_menue
+					fi
+					# }}}
+					if [ ! -z "$Option" ] ; then
+						kwgrub_default_notiz
+						write_menulst
+						break 2
+					fi
+					## }}}
+					;;
+				$gv_Back)
+					unset -- TITEL_L
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	# Funktion read_title_menu# {{{
+	#
+	read_title_menu() {
+		unset -- TITLE_LINUX TITLE_LINUX_M
+		print -l ${(R)${(M)${(f)"$(< $Menu_lst)"}##(#s)title*}##(#s)title} | while read a ; do
+			TITLE_LINUX+=( \"$a\" \"\" )
+			TITLE_LINUX_M+=( \"$a\" \"\" off )
+		done
+	}
+	## }}}
+	# Funktion kwgrub_boot_menu# {{{
+	KWGRUB_BOOT_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Change \"\"
+	$gv_Delete \"\" $gv_Back \"\")
+	kwgrub_boot_menu() {
+		menubox "$1" "$BOOT_CONF_TITLE" "$gv_Menupoint" "$KWGRUB_BOOT_MENU"
+	}
+	## }}}
+	kwgrub_boot_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwgrub_boot_conf_help
+				kwgrub_boot_menu
+				;;
+			$gv_Display)
+				# Ansicht der menu.lst
+				view_file $Menu_lst
+				kwgrub_boot_menu $gv_Display
+				;;
+			$gv_Create)
+				unset -- $Unset TITEL_L_OLD
+				# Boot Konfiguration erstellen# {{{
+				BOOT_CONF_NAME_TITLE="${BOOT_CONF_TITLE}::${gv_Create}"
+				CREATE=yes
+				boot_conf
+				#}}}
+				kwgrub_boot_menu $gv_Create
+				;;
+			$gv_Change)
+				# Title einlesen und zur Auswahl bereitstellen# {{{
+				unset -- CREATE $Unset
+				read_title_menu
+				if [ "$TITLE_LINUX" ] ; then
+					BOOT_CONF_NAME_MENU=($TITLE_LINUX $gv_Back \"\")
+					BOOT_CONF_NAME_TITLE="${BOOT_CONF_TITLE}::${gv_Change}"
+					BOOT_CONF_NAME_MSG=$(gettext 'Waehlen Sie eine Konfiguration aus die Sie aendern moechten.')
+					menubox "$TITEL_L_OLD" "$BOOT_CONF_NAME_TITLE" "$BOOT_CONF_NAME_MSG" "$BOOT_CONF_NAME_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_change_help
+								menubox "$TITEL_L_OLD" "$BOOT_CONF_NAME_TITLE" "$BOOT_CONF_NAME_MSG" "$BOOT_CONF_NAME_MENU"
+								;;
+							$gv_Back)	break
+								;;
+							*)
+								TITEL_L_OLD="$gv_Auswahl"
+								boot_conf
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				kwgrub_boot_menu $gv_Change
+				;;
+			$gv_Delete)
+				# Eintraege loeschen# {{{
+				read_title_menu
+				if [ "$TITLE_LINUX_M" ] ; then
+					BOOT_CONF_NAME_MENU=($TITLE_LINUX_M)
+					BOOT_CONF_NAME_TITLE="${BOOT_CONF_TITLE}::${gv_Delete}"
+					U_OPT=no
+					checklist "$BOOT_CONF_NAME_TITLE" "$gv_Delete_MSG" "$BOOT_CONF_NAME_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_del_help
+								U_OPT=no
+								checklist "$BOOT_CONF_NAME_TITLE" "$gv_Delete_MSG" "$BOOT_CONF_NAME_MENU"
+								;;
+							*)
+								# Auswahl loeschen
+								while read i ; do
+									awk '/title/{if(/'"${${${${i//\//\/}//\,/\\,}//\(/\\(}//\)/\\)}$"'/){found=1}else{found=0}}{if(!found){print}}
+									END{print ""}' $Menu_lst >${gv_WorkDir}/menu.lst
+								done < ${gv_LogFile}$$
+								mv ${gv_WorkDir}/menu.lst $Menu_lst
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				kwgrub_boot_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,335 @@
+# default Parameter einstellen{{{
+#
+# usage: default_conf
+#
+default_conf() {
+
+	# Variable
+	DEFAULT_TITLE="${gv_Configuration}::${lv_Default}"
+
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)default_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion conf_default_menue{{{
+	conf_default_menue() {
+	DEFAULT_MENU=(default_database_type \"\$default_database_type\"
+	default_delivery_slot_cost \"\$default_delivery_slot_cost\"
+	default_delivery_slot_discount \"\$default_delivery_slot_discount\"
+	default_delivery_slot_loan \"\$default_delivery_slot_loan\"
+	default_destination_concurrency_failed_cohort_limit \"\$default_destination_concurrency_failed_cohort_limit\"
+	default_destination_concurrency_limit \"\$default_destination_concurrency_limit\"
+	default_destination_concurrency_negative_feedback \"\$default_destination_concurrency_negative_feedback\"
+	default_destination_concurrency_positive_feedback \"\$default_destination_concurrency_positive_feedback\"
+	default_destination_rate_delay \"\$default_destination_rate_delay\"
+	default_destination_recipient_limit \"\$default_destination_recipient_limit\"
+	default_extra_recipient_limit \"\$default_extra_recipient_limit\"
+	default_filter_nexthop \"\$default_filter_nexthop\"
+	default_minimum_delivery_slots \"\$default_minimum_delivery_slots\"
+	default_privs \"\$default_privs\"
+	default_process_limit \"\$default_process_limit\"
+	default_rbl_reply \"\$default_rbl_reply\"
+	default_recipient_limit \"\$default_recipient_limit\"
+	default_recipient_refill_delay \"\$default_recipient_refill_delay\"
+	default_recipient_refill_limit \"\$default_recipient_refill_limit\"
+	default_transport \"\$default_transport\"
+	default_verp_delimiters \"\$default_verp_delimiters\"
+	postfix \"reload\"
+	$gv_Back \"\")
+	menubox "$1" "$DEFAULT_TITLE" "$gv_Menupoint" "$DEFAULT_MENU"
+	}
+	#}}}
+	conf_default_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help default_help
+				conf_default_menue
+				;;
+			default_database_type)
+				# Standard Datenbank Type vergeben.{{{
+				tab_support_choice -s
+				if [[ -n $MAPS ]] ; then
+					default_database_type="$MAPS"
+					postconf -e default_database_type="$MAPS"
+				else
+					default_database_type="hash"
+					postconf -e default_database_type="hash"
+				fi
+				#}}}
+				conf_default_menue default_database_type
+				;;
+			default_delivery_slot_cost)
+				# Standard = 5 {{{
+				number_input -i "$default_delivery_slot_cost"
+				if [[ -n $NUMBER ]] ; then
+					default_delivery_slot_cost="$NUMBER"
+					postconf -e default_delivery_slot_cost="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_delivery_slot_cost
+				;;
+			default_delivery_slot_discount)
+				# Standard = 50 {{{
+				number_input -i "$default_delivery_slot_discount"
+				if [[ -n $NUMBER ]] ; then
+					default_delivery_slot_discount="$NUMBER"
+					postconf -e default_delivery_slot_discount="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_delivery_slot_discount
+				;;
+			default_delivery_slot_loan)
+				# Standard = 3 {{{
+				number_input -i "$default_delivery_slot_loan"
+				if [[ -n $NUMBER ]] ; then
+					default_delivery_slot_loan="$NUMBER"
+					postconf -e default_delivery_slot_loan="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_delivery_slot_loan
+				;;
+			default_destination_concurrency_failed_cohort_limit)
+				# Standard = 1# {{{
+				number_input -i $default_destination_concurrency_failed_cohort_limit
+				if [[ -n $NUMBER ]] ; then
+					default_destination_concurrency_failed_cohort_limit="$NUMBER"
+					postconf -e default_destination_concurrency_failed_cohort_limit="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_destination_concurrency_failed_cohort_limit
+				;;
+			default_destination_concurrency_limit)
+				# Maximalanzahl gleichzeitiger Verbindungen zu einem Ziel{{{
+				number_input -i "$default_destination_concurrency_limit"
+				if [[ -n $NUMBER ]] ; then
+					default_destination_concurrency_limit="$NUMBER"
+					postconf -e default_destination_concurrency_limit="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_destination_concurrency_limit
+				;;
+			default_destination_concurrency_negative_feedback)
+				# Standard = 1# {{{
+				number_input -i $default_destination_concurrency_negative_feedback
+				if [[ -n $NUMBER ]] ; then
+					default_destination_concurrency_negative_feedback="$NUMBER"
+					postconf -e default_destination_concurrency_negative_feedback="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_destination_concurrency_negative_feedback
+				;;
+			default_destination_concurrency_positive_feedback)
+				# Standard = 1# {{{
+				number_input -i $default_destination_concurrency_positive_feedback
+				if [[ -n $NUMBER ]] ; then
+					default_destination_concurrency_positive_feedback="$NUMBER"
+					postconf -e default_destination_concurrency_positive_feedback="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_destination_concurrency_positive_feedback
+				;;
+			default_destination_rate_delay)
+				# Standard = 0s# {{{
+				number_input -a "$DEFAULT_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG" $default_destination_rate_delay
+				if [[ -n $NUMBER ]] ; then
+					default_destination_rate_delay="$NUMBER"
+					postconf -e default_destination_rate_delay="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_destination_rate_delay
+				;;
+			default_destination_recipient_limit)
+				# Maximalanzahl der Empfänger in einer einzigen Mails{{{
+				# Grösser Empfängerlisten werden in mehrere Mails aufgeteilt
+				number_input -i "$default_destination_recipient_limit"
+				if [[ -n $NUMBER ]] ; then
+					default_destination_recipient_limit="$NUMBER"
+					postconf -e default_destination_recipient_limit="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_destination_recipient_limit
+				;;
+			default_extra_recipient_limit)
+				# Maximal Anzahl gleichzeitiger zuzustellender extra Mails{{{
+				number_input -i "$default_extra_recipient_limit"
+				if [[ -n $NUMBER ]] ; then
+					default_extra_recipient_limit="$NUMBER"
+					postconf -e default_extra_recipient_limit="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_extra_recipient_limit
+				;;
+			default_filter_nexthop)
+				# zu welchem Filter (content_filter) springen, <postfix 2.6# {{{
+				# war es $myhostname. Bei leer wird der Domainname des
+				# Empfaengers benutzt.
+				yesno_option "$default_filter_nexthop" "\$myhostname"
+				FILTER_NEXTHOP_MSG=$(gettext 'Filter:\nFuer Postfix Versionen <=2.6 sollte aus Kompalitaetsgruenden \"\$myhostname\" benutzt werden. Bei spaeteren Versionen wird der Domainname des Empfaengers benutzt, falls dieser Wert leer ist. Sie sollten den Parameter \"content_filter\" konfigurieren und \"default_filter_nexthop\" leer lassen.\n\nSoll die Variable \$myhostname aktiviert werden (ja/nein)?')
+				yesno "$DEFAULT_TITLE" "$FILTER_NEXTHOP_MSG" "$YN_OPT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					default_filter_nexthop="\$myhostname"
+					postconf -e default_filter_nexthop="\$myhostname"
+				else
+					default_filter_nexthop=""
+					postconf -e default_filter_nexthop=""
+				fi
+				## }}}
+				conf_default_menue default_filter_nexthop
+				;;
+			default_minimum_delivery_slots)
+				# Minimale Anzahl an Zustell Slots{{{
+				number_input -i "$default_minimum_delivery_slots"
+				if [[ -n $NUMBER ]] ; then
+					default_minimum_delivery_slots="$NUMBER"
+					postconf -e default_minimum_delivery_slots="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_minimum_delivery_slots
+				;;
+			default_privs)
+				# Default Nutzerrechte für nachgeladene Programme und{{{
+				# Dateizugriffe.
+				user_auswahl
+				if [[ -n $WERT ]] ; then
+					default_privs="$WERT"
+					postconf -e default_privs="$WERT"
+				else
+					default_privs="nobody"
+					postconf -e default_privs="nobody"
+				fi
+				#}}}
+				conf_default_menue default_privs
+				;;
+			default_process_limit)
+				# Maximal Anzahl gleichzeitiger Prozesse einer Art,{{{
+				# sofern, in master.cf, nicht anders angegeben.
+				number_input -i "$default_process_limit"
+				if [[ -n $NUMBER ]] ; then
+					default_process_limit="$NUMBER"
+					postconf -e default_process_limit="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_process_limit
+				;;
+			default_rbl_reply)
+				# RBL Einstellungen{{{
+				unset -- RBL_MENU
+				#####################################
+				# INFO:
+				# Immer in der Doku nach veränderten
+				# Optionen nachlesen (man 5 postconf).
+				#####################################
+				print \"${default_rbl_reply}\" >${gv_WorkDir}/default_conf
+				for i in \$client client_address client_name helo_name rbl_class \
+					rbl_code rbl_domain rbl_reason rbl_what recipient recipient_domain \
+					recipient_name sender sender_domain sender_name name\?text name:text ; {
+					# Pruefen ob die Option schon ausgewaehlt wurde
+					if [ "`print ${(M)$(< ${gv_WorkDir}/default_conf)##*\"${i}\"*}`" ] ; then
+						RBL_MENU+=(\\\$"${i}" \"\" on)
+					else
+						RBL_MENU+=(\\\$"${i}" \"\" off)
+					fi
+				}
+				#
+				checklist "$DEFAULT_TITLE" "$gv_Menupoint" "$RBL_MENU" "$default_rbl_reply"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help rbl_help
+							checklist "$DEFAULT_TITLE" "$gv_Menupoint" "$RBL_MENU" "$default_rbl_reply"
+							;;
+						*)	# übernehmen
+							default_rbl_reply="${gv_Auswahl//\\/}"
+							postconf -e default_rbl_reply="${gv_Auswahl//\\/}"
+							break
+							;;
+					esac
+				done
+				check_gv_Auswahl default_rbl_reply "postconf -e default_rbl_reply="
+				#}}}
+				conf_default_menue default_rbl_reply
+				;;
+			default_recipient_limit)
+				# Maximalanzahl Empfänger{{{
+				number_input -i "$default_recipient_limit"
+				if [[ -n $NUMBER ]] ; then
+					default_recipient_limit="$NUMBER"
+					postconf -e default_recipient_limit="$NUMBER"
+				fi
+				#}}}
+				conf_default_menue default_recipient_limit
+				;;
+			default_recipient_refill_delay)
+				# Standard = 5s# {{{
+				number_input -s ${default_recipient_refill_delay%?}
+				if [[ -n $NUMBER ]] ; then
+					default_recipient_refill_delay="$NUMBER"
+					postconf -e default_recipient_refill_delay="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_recipient_refill_delay
+				;;
+			default_recipient_refill_limit)
+				# Standard = 100# {{{
+				number_input -i $default_recipient_refill_limit
+				if [[ -n $NUMBER ]] ; then
+					default_recipient_refill_limit="$NUMBER"
+					postconf -e default_recipient_refill_limit="$NUMBER"
+				fi
+				## }}}
+				conf_default_menue default_recipient_refill_limit
+				;;
+			default_transport)
+				# Standard Transport Methode{{{
+				transport_methode ${default_transport%%:*} ${default_transport##*:}
+				default_transport="$WERT"
+				postconf -e default_transport="$WERT"
+				#}}}
+				conf_default_menue default_transport
+				;;
+			default_verp_delimiters)
+				# Welche Zeichen ersetzen im Return-Path "." und "@"{{{
+				CHAR_MSG=$(gettext 'Waehlen Sie die Zeichen aus die im Return-Path die Zeichen \".\" und \"@\" ersetzen sollen.')
+				# Werte mit on oder off belegen ($VERP_MENU).
+				verp_delimiter "$default_verp_delimiters"
+				#
+				U_OPT=-
+				checklist "$DEFAULT_TITLE" "$CHAR_MSG" "$VERP_MENU" "$default_verp_delimiters"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help default_help
+							U_OPT=-
+							checklist "$DEFAULT_TITLE" "$CHAR_MSG" "$VERP_MENU" "$default_verp_delimiters"
+							;;
+						*)	# übernehmen
+							default_verp_delimiters="$gv_Auswahl"
+							postconf -e default_verp_delimiters="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#
+				if [ -z "$gv_Auswahl" ] ; then
+					default_verp_delimiters="+="
+					postconf -e default_verp_delimiters="+="
+				fi
+				#}}}
+				conf_default_menue default_verp_delimiters
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

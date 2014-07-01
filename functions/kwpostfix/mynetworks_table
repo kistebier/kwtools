@@ -1,0 +1,161 @@
+# Funktion mynetworks_table{{{
+#
+mynetworks_table() {
+	FILE="$1"
+	# Variable fuer das Menue
+	lv_Host_Net=$(gettext 'Rechner/Netz')
+
+	# Funktion mynetworks_menue{{{
+	mynetworks_menue() {
+		MYNETWORK_MENU=($lv_Host_Net \"$ADR\" $gv_Save \"\" $gv_Back \"\")
+		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$MYNETWORK_MENU"
+	}
+	#}}}
+	# Funktion mynetworks_aendern{{{
+	#
+	mynetworks_aendern() {
+	mynetworks_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl"  in
+			HELP*)	script_help "$TAB_HELP"
+				mynetworks_menue
+				;;
+			$lv_Host_Net)
+				# IP-Adresse/Netz eingeben{{{
+				IP_NET_MSG=$(gettext 'Geben Sie hier bitte die IP eines Rechners oder eines Netzes ein (Bsp. 192.168.0.1 | 192.168.0.0/24).')
+				inputbox "$TABLE_TITLE" "$IP_NET_MSG" "$ADR"
+				if [ "$gv_Auswahl" ] ; then
+					# Pruefen ob die EIngabe richtig war.
+					ip_analyse "$gv_Auswahl"
+					if [ "$gv_Ip_Adr" ] ; then
+						ADR="$gv_Ip_Adr"
+					fi
+				else
+					unset -- ADR
+					no_input_msg
+				fi
+				#}}}
+				mynetworks_menue
+				;;
+			$gv_Save)
+				# Einstellungen speichern{{{
+				#
+				if [ "$ADR" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}.*#${ADR}\t:#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$ADR	:"
+						mv $FILE$$ ${FILE}
+					fi
+					break
+				else
+					MSG=$(gettext 'Sie muessen erst eine IP Adresse oder eine IP fuer das Netz eingeben.')
+					msgbox "$gv_Attention" "$MSG"
+					mynetworks_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	#
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Einträge
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- ADR AENDERN_ADR
+				mynetworks_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Einträge verändern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHOICE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHOICE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHOICE_MENU"
+								;;
+							*)
+								# Auswahl verändern
+								C_CHOICE="$gv_Auswahl"
+								ADR=${${=gv_Auswahl}[1]}
+								AENDERN_ADR="$ADR"
+								mynetworks_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Einträge löschen{{{
+				#
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					CHOICE_MULTI_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
+								;;	
+							*)	# Löschen
+								while read ADRESS REST ; do
+									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE > $FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen die
+				# Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

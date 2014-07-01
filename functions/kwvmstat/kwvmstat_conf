@@ -1,0 +1,87 @@
+# Funktion kwvmstat_conf# {{{
+#
+# usage: kwvmstat_conf
+#
+kwvmstat_conf() {
+
+lv_Count=$(gettext 'Anzahl')
+lv_Delay=$(gettext 'Verzoegerung')
+lv_Memunit=$(gettext 'Speichereinheit')
+
+# Funktion conf_menu# {{{
+conf_menu() {
+	K_MENU=($lv_Count \"$COUNTER\" $lv_Delay \"$DELAY\" $lv_Memunit \"$MEM_UNIT\" $gv_Save \"\" $gv_Back \"\")
+	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$K_MENU"
+}
+## }}}
+
+conf_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl"  in
+		HELP*)
+			script_help conf_help
+			conf_menu
+			;;
+		$lv_Count)
+			# Konfiguration, wie oft soll die Anzeige# {{{
+			# erneuert werden.
+			COUNT_TITLE=(${gv_Configuration}::${lv_Count})
+			COUNT_MSG=$(gettext 'Geben Sie eine Nummer fuer die Anzahl der Aktualisierungen ein.')
+			number_input "$COUNT_TITLE" "$COUNT_MSG" "$COUNTER"
+			if [ -n "$NUMBER" ] ; then
+				COUNTER="$NUMBER"
+			else
+				COUNTER=""
+			fi
+			## }}}
+			conf_menu $lv_Count
+			;;
+		$lv_Delay)
+			# Konfiguration, in welchen zeitl. (Sekunde)# {{{
+			# Abstaenden soll die Anzeige erneuert werden.
+			DELAY_TITLE=(${gv_Configuration}::${lv_Delay})
+			DELAY_MSG=$(gettext 'Geben Sie eine Nummer fuer die Verzoegerung der Aktualisierungen ein.')
+			number_input "$DELAY_TITLE" "$DELAY_MSG" "$DELAY"
+			if [ -n "$NUMBER" ] ; then
+				DELAY="$NUMBER"
+			else
+				DELAY=""
+			fi
+			## }}}
+			conf_menu $lv_Delay
+			;;
+		$lv_Memunit)
+			# Speichereinheit auswaehlen (k,K,m,M)# {{{
+			# k=1000, K=1024,...
+			S_TITLE=($lv_Memunit)
+			S_MENU=(k "1Kb=1000b" K "1Kb=1024b" m "1Mb=1000000" M "1Mb=1048576b")
+			menubox "$MEM_UNIT" "$S_TITLE" "$gv_Menupoint" "$S_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)
+						script_help help
+						menubox "$MEM_UNIT" "$S_TITLE" "$gv_Menupoint" "$S_MENU"
+						;;
+					*)	# Anzeige
+						MEM_UNIT="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			conf_menu $lv_Memunit
+			;;
+		$gv_Save)
+			kwvmstat_config
+			break
+			;;
+		$gv_Back)	break
+			;;
+	esac
+done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

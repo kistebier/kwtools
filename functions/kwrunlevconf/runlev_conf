@@ -1,0 +1,211 @@
+# Funktion für die Runlevelkonfiguration{{{
+# Herausfinden in welchem Runlevelverzeichnis schon Symlinks
+# bestehen und wo nicht. So wird dieses jeweils mit nein oder ja belegt.
+# Die Daten werden dann zur Veränderung gespeichert und dann ausgelesen
+# und angezeigt, zur Bearbeitung.
+#
+# usage: runlev_conf
+#
+runlev_conf() {
+START_STOP_MSG=$(gettext 'Soll der Dienst gestartet werden (ja/nein)?')
+local Anz
+integer Anz
+# Funktion Runlevel Menue{{{
+#
+# usage: runlev_menue
+CONF_RL_TITLE=(${gv_Configuration}::${lv_Runlevel}::${Init_Script})
+runlev_menue() {
+	CONF_RL_MENU=(${RunLevel[*]} $gv_Save \"\" $gv_Back \"\")
+	menubox "" "$CONF_RL_TITLE" "$gv_Menupoint" "$CONF_RL_MENU"
+}
+#}}}
+#
+menubox "" "$CONF_TITLE" "$CONF_MSG" "$Script"
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*) script_help daemon_help
+			menubox "" "$CONF_TITLE" "$CONF_MSG" "$Script"
+			;;
+		[a-z,A-Z,0-9]*)
+			# Wurde schon ein INIT Script ausgewählt, wird es 
+			# nicht erneut ausgewählt. 
+			#
+			if [ -z "$Init_Script" ] ; then
+				Init_Script="$gv_Auswahl"
+			fi
+			# Start/Stop Nummer herausbekommen und in welchem Runlevel die
+			# Scripts gestartet/gekillt werden sollen.
+			#
+			if [ "$PACKAGE" = sysv-rc ] ; then
+				sysvrc_start_stop
+			elif [ "$PACKAGE" = file-rc ] ; then
+				filerc_start_stop
+			fi
+			# nur nach dem ersten Wert des Arrays fragen, sonst
+			# sind es zu viele Argumente.
+			if [ -n "${RunLevel[1]}" ] ; then
+				runlev_menue
+				#
+				# Runlevel bearbeiten.
+				#
+				while [ "$gv_Auswahl" ] ; do
+					case ${gv_Auswahl%% *} in
+						HELP*)	script_help runlevconf_help
+							runlev_menue
+							;;
+						[S0-6])
+							# Runlevel bearbeiten# {{{
+							unset -- ALL NR ANSW
+							ALL="$gv_Auswahl"
+							NR=${${${(s: :)${(M)${RunLevel}##${ALL}*}}[2]}//\"/}
+							ANSW=${${${(s: :)${(M)${RunLevel}##${ALL}*}}[3]}//\"/}
+							STARTNR_MSG=$(gettext 'Geben Sie bitte eine Zahl von 01-99 oder einen - fuer dieses Runlevel ein.')
+							# Funktion rc_conf# {{{
+							lv_Nr=$(gettext 'Nr')
+							lv_Start=$(gettext 'Start')
+							#
+							rc_conf() {
+								# sysv-rc >=2.88dsf-42
+								if [[ $PACKAGE == sysv-rc ]] ; then
+									RC_MENU=($lv_Start \"$ANSW\" $gv_Save \"\" $gv_Back \"\")
+								else
+									# file-rc
+									RC_MENU=($lv_Nr \"$NR\" $lv_Start \"$ANSW\" $gv_Save \"\" $gv_Back \"\")
+								fi
+								menubox "$1" "$CONF_RL_TITLE" "$gv_Menupoint" "$RC_MENU"
+							}
+							## }}}
+							rc_conf
+							while [ "$gv_Auswahl" ] ; do
+								case $gv_Auswahl in
+									HELP*)
+										script_help runlevconf_help
+										rc_conf
+										;;
+									$lv_Nr)
+										# Runlevel Nummer eingeben# {{{
+										inputbox "$CONF_RL_TITLE" "$STARTNR_MSG" "${NR/-/}"
+										if [ "$gv_Auswahl" ] ; then
+											case $gv_Auswahl in
+												0[1-9]|[1-9][0-9])
+													NR="$gv_Auswahl"
+													;;
+												-)	# Bei der Nr = - muss die Antwort nein sein.
+													NR="$gv_Auswahl"
+													ANSW="no"
+													;;
+												*)
+													no_input_msg
+													;;
+											esac
+										else
+											no_input_msg
+										fi
+										rc_conf $ALL
+										## }}}
+										;;
+									$lv_Start)
+										# Soll der Dienst gestartet werden (yes/no)?# {{{
+										yesno "$CONF_RL_TITLE" "$START_STOP_MSG" "$ANSW"
+										if [ "$gv_Auswahl" = yes ] ; then
+											if [ "$NR" != - ] ; then
+												ANSW="yes"
+											else
+												ANSW="no"
+												MSG=$(gettext 'Wenn die Start/Stop Nummer ein - ist, kann Start nur mit nein belegt werden.')
+												msgbox "$gv_Attention" "$MSG"
+											fi
+										else
+											ANSW="no"
+										fi
+										rc_conf $ALL
+										## }}}
+										;;
+									$gv_Save)
+										# speichern# {{{
+										Nr=${#RunLevel[@]}
+										for i in {1..$Nr} ; {
+											if [ ${RunLevel[i]%% *} = $ALL ] ; then
+												RunLevel[i]="$ALL \"$NR $ANSW\""
+												break
+											fi
+										}
+										break
+										## }}}
+										;;
+									$gv_Back)	break
+										;;
+								esac
+							done
+							## }}}
+							runlev_menue
+							;;
+						$gv_Save)
+							# Runlevellinks Einstellungen speichern.{{{
+							unset -- START STOP Start Stop
+							#
+							print ${RunLevel// \"/ } | tr '"' '\n' | \
+								while read rl nr yn ; do
+									# Pruefen ob Variable $rl belegt und 
+									# die Variable $nr != - ist.
+									if [ -n "$rl" -a "$nr" != - ] ; then
+										case "$yn" in
+											yes)
+												# Ist die Variable $START nicht belegt
+												# wird sie mit den Variablen $nr und $rl belegt.
+												# Ansonsten mit schon vorhandenen Werten.
+												if [ -z "$START" ] ; then
+													START="$nr $rl"
+												else
+													START="$START $rl"
+												fi
+												;;
+											no)
+												if [ -z "$STOP" ] ; then
+													STOP="$nr $rl"
+												else
+													STOP="$STOP $rl"
+												fi
+												;;
+										esac
+									fi
+								done
+							# START_OPT/STOP_OPT belegen
+							if [ "$START" ] ; then
+								START_OPT="start $START ."
+							else
+								unset -- START_OPT
+							fi
+							if [ "$STOP" ] ; then
+								STOP_OPT="stop $STOP ."
+							else
+								unset -- STOP_OPT
+							fi
+							# Konfigurationsdatei fuer if_conf_file schreiben
+							# Ausfuehren
+							> ${gv_WorkDir}/runlevconf_startstop <<< "$Init_Script $START_OPT $STOP_OPT"
+							# Runlevel Links erstellen
+							if_conf_file "$OS" initrc
+							break 2
+							#}}}
+							;;
+						$gv_Back)
+							# Runlevellinks Einstellungen nicht speichern.
+							break 2
+							;;
+					esac
+				done
+			else
+				no_runlevel_links_msg
+				break
+			fi
+			;;
+	esac
+done
+unset -- Init_Script
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

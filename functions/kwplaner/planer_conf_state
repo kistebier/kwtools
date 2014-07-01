@@ -1,0 +1,42 @@
+# Funktion Staat/Bundesland auswählen{{{
+#
+# benötigt die Funktion menubox
+# usage: planer_conf_state
+#
+planer_conf_state() {
+	DATA_FILE="${PREFIX}/share/kwtools/data/calendar/state_province.list"
+	while read KENNZ b c d BLAND_NOTIZ ; do
+		BL_ARRAY+=(\"$KENNZ\" \"$BLAND_NOTIZ\")
+	done < $DATA_FILE
+	#
+	# Staat/Bundeslandanzeige.
+	#
+	# Funktion planer_conf_state_menue{{{
+	TITLE=(${gv_Configuration}::${lv_State_Bl})
+	MSG=$(gettext 'Waehlen Sie bitte Ihren $lv_State_Bl aus.')
+	planer_conf_state_menue() {
+		MENU=($BL_ARRAY)
+		menubox "$BLAND" "$TITLE" "$MSG" "$MENU"
+	}
+	#}}}
+	planer_conf_state_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				script_help conf_help
+				planer_conf_state_menue
+				;;
+			*)	#
+				# Wird ein Staat/Bundesland ausgesucht, wird die Variable $BLAND damit belegt 
+				#
+				BLAND="$gv_Auswahl"
+				break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,963 @@
+# Funktion (ca_certs_conf), Einstellungen fuer CA Zertifikate# {{{
+#
+# usage: ca_certs_conf [ -n | -r | -s | -u ]
+#
+# -n - normal
+# -r - CA/SubCA erstellen
+# -s - Server Zertifikate konfigurieren
+# -u - User Zertifikate konfigurieren
+#
+ca_certs_conf() {
+	if [[ ${#argv} == 1 ]] ; then
+		unset -- CAOpt
+		local CAOpt
+		CAOpt="$1"
+		#
+		DEFAULT_CONF_CA_TITLE=$(gettext 'Konfiguration der CA')
+		DEFAULT_CONF_CERT_TITLE=$(gettext 'Konfiguration des Zertifikats')
+		DEFAULT_CACERTS_CA_MSG=$(gettext 'Diese Optionen werden fuer die Erstellung dieser CA und fuer die Erstellung aller SubCAs an Openssl weitergeleitet.')
+		# Funktion (default_cacerts_menu)# {{{
+		#
+		default_cacerts_menu() {
+			case $CAOpt in
+				-r)
+					# RootCA/SubCA erstellen# {{{
+					SUBJECT_ALTER_NAME=${SUBJECT_ALTER_NAME:-$lv_CopyMail}
+					NSCERTTYPE=${NSCERTTYPE:-$lv_SMime_SSL_Ca}
+					KEYUSAGE=${KEYUSAGE:-$lv_CertSign_CrlSign_Ca}
+					BASICCONSTRAINTS=${BASICCONSTRAINTS:-critical,CA:true}
+					ISSUERALTNAME=${ISSUERALTNAME:-issuer:copy}
+					AUTHKEYIDENT=${AUTHKEYIDENT:-keyid:always,issuer:always}
+					CRITICAL=${CRITICAL:-$lv_UnCritical}
+					#
+					DEFAULT_CONF_TITLE="$DEFAULT_CONF_CA_TITLE"
+					DEFAULT_CACERTS_MSG="$DEFAULT_CACERTS_CA_MSG"
+					DEFAULT_CACERTS_MENU=(\"$lv_SubjectAlternateName\" \"$SUBJECT_ALTER_NAME\"
+					\"$lv_NsCertType\" \"$NSCERTTYPE\"
+					\"$lv_KeyUsage\" \"$KEYUSAGE\"
+					\"$lv_Critical_Ca\" \"$CRITICAL\"
+					\"$lv_AuthKeyIdent\" \"$AUTHKEYIDENT\"
+					\"$lv_BasicConstraints\" \"$BASICCONSTRAINTS\"
+					\"$lv_IssuerAltName\" \"$ISSUERALTNAME\"
+					\"$lv_NsComment\" \"$NSCOMMENT\"
+					\"$lv_NsCaRevocationUrl\" \"$NSCAREVOKEURL\"
+					\"$lv_NsCaPolicyUrl\" \"$NSCAPOLICYURL\"
+					\"$lv_NsRevocationUrl\" \"$NSREVOKEURL\"
+					\"$lv_NsPolicyUrl\" \"$NSPOLICYURL\"
+					$gv_Save \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-n)
+					# normale CA Konfiguration# {{{
+					SUBJECT_ALTER_NAME=${SUBJECT_ALTER_NAME:-$lv_CopyMail}
+					NSCERTTYPE=${NSCERTTYPE:-$lv_SMime_SSL_Ca}
+					KEYUSAGE=${KEYUSAGE:-$lv_CertSign_CrlSign_Ca}
+					ISSUERALTNAME=${ISSUERALTNAME:-issuer:copy}
+					AUTHKEYIDENT=${AUTHKEYIDENT:-keyid:always,issuer:always}
+					CRITICAL=${CRITICAL:-$lv_Critical}
+					#
+					DEFAULT_CONF_TITLE="$DEFAULT_CONF_CA_TITLE"
+					DEFAULT_CACERTS_MSG="$DEFAULT_CACERTS_CA_MSG"
+					DEFAULT_CACERTS_MENU=(\"$lv_SubjectAlternateName\" \"$SUBJECT_ALTER_NAME\"
+					\"$lv_NsCertType\" \"$NSCERTTYPE\"
+					\"$lv_KeyUsage\" \"$KEYUSAGE\"
+					\"$lv_Critical_Ca\" \"$CRITICAL\"
+					\"$lv_NsRevocationUrl\" \"$NSREVOKEURL\" 
+					\"$lv_NsComment\" \"$NSCOMMENT\"
+					\"$lv_CrlDistributionPoints\" \"$CRLDISTPOINT\"
+					\"$lv_AuthKeyIdent\" \"$AUTHKEYIDENT\"
+					\"$lv_IssuerAltName\" \"$ISSUERALTNAME\"
+					\"$lv_NsBaseUrl\" \"$NSBASEURL\"
+					\"$lv_NsCaPolicyUrl\" \"$NSCAPOLICYURL\"
+					\"$lv_Ssl_Validity\" \"$VALIDITY\"
+					$gv_Save \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-s)
+					# normale Server Zertifikate Konfiguration# {{{
+					SUBJECT_ALTER_NAME=${SUBJECT_ALTER_NAME:-$lv_CopyMail}
+					CRITICAL=${CRITICAL:-$lv_Critical}
+					NSCERTTYPE=${NSCERTTYPE:-$lv_SSL_SERVER}
+					AUTHKEYIDENT=${AUTHKEYIDENT:-keyid,issuer:always}
+					ISSUERALTNAME=${ISSUERALTNAME:-issuer:copy}
+					#
+					DEFAULT_CONF_TITLE="$DEFAULT_CONF_CERT_TITLE"
+					DEFAULT_CACERTS_MSG=$(gettext 'Diese Optionen werden fuer die Erstellung von Server Zertifikaten eingesetzt.')
+					DEFAULT_CACERTS_MENU=(\"$lv_SubjectAlternateName\" \"$SUBJECT_ALTER_NAME\"
+					\"$lv_KeyUsage\" \"$KEYUSAGE\"
+					\"$lv_Critical_Ca\" \"$CRITICAL\"
+					\"$lv_EKeyUsage\" \"$EKEYUSAGE\"
+					\"$lv_NsCertType\" \"$NSCERTTYPE\"
+					\"$lv_Ns_Ssl_ServerName\" \"$NSSSLSERVERNAME\"
+					\"$lv_NsRevocationUrl\" \"$NSREVOKEURL\"
+					\"$lv_NsRenewalUrl\" \"$NSRENEWALURL\"
+					\"$lv_NsComment\" \"$NSCOMMENT\"
+					\"$lv_CrlDistributionPoints\" \"$CRLDISTPOINT\"
+					\"$lv_AuthKeyIdent\" \"$AUTHKEYIDENT\"
+					\"$lv_IssuerAltName\" \"$ISSUERALTNAME\"
+					\"$lv_NsBaseUrl\" \"$NSBASEURL\"
+					\"$lv_NsCaPolicyUrl\" \"$NSCAPOLICYURL\"
+					\"$lv_Ssl_Validity\" \"$VALIDITY\"
+					$gv_Save \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-u)
+					# normale User Zertifikate Konfiguration# {{{
+					SUBJECT_ALTER_NAME=${SUBJECT_ALTER_NAME:-$lv_CopyMail}
+					KEYUSAGE=${KEYUSAGE:-$lv_Crypt_DigiSign}
+					CRITICAL=${CRITICAL:-$lv_UnCritical}
+					NSCERTTYPE=${NSCERTTYPE:-$lv_User_Usr_Email_ObjectSign}
+					AUTHKEYIDENT=${AUTHKEYIDENT:-keyid,issuer:always}
+					ISSUERALTNAME=${ISSUERALTNAME:-issuer:copy}
+					#
+					DEFAULT_CONF_TITLE="$DEFAULT_CONF_CERT_TITLE"
+					DEFAULT_CACERTS_MSG=$(gettext 'Diese Optionen werden fuer die Erstellung von Benutzer Zertifikaten eingesetzt.')
+					DEFAULT_CACERTS_MENU=(\"$lv_SubjectAlternateName\" \"$SUBJECT_ALTER_NAME\"
+					\"$lv_KeyUsage\" \"$KEYUSAGE\"
+					\"$lv_Critical_Ca\" \"$CRITICAL\"
+					\"$lv_EKeyUsage\" \"$EKEYUSAGE\"
+					\"$lv_NsCertType\" \"$NSCERTTYPE\"
+					\"$lv_NsRevocationUrl\" \"$NSREVOKEURL\"
+					\"$lv_NsRenewalUrl\" \"$NSRENEWALURL\"
+					\"$lv_NsComment\" \"$NSCOMMENT\"
+					\"$lv_CrlDistributionPoints\" \"$CRLDISTPOINT\"
+					\"$lv_AuthKeyIdent\" \"$AUTHKEYIDENT\"
+					\"$lv_IssuerAltName\" \"$ISSUERALTNAME\"
+					\"$lv_NsBaseUrl\" \"$NSBASEURL\"
+					\"$lv_NsCaPolicyUrl\" \"$NSCAPOLICYURL\"
+					\"$lv_Ssl_Validity\" \"$VALIDITY\"
+					$gv_Save \"\" $gv_Back \"\")
+					## }}}
+					;;
+			esac
+			menubox "$1" "$DEFAULT_CONF_TITLE" "$DEFAULT_CACERTS_MSG" "$DEFAULT_CACERTS_MENU"
+		}
+		# }}}
+		#
+		default_cacerts_menu
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help ca_certs_conf_help
+					default_cacerts_menu
+					;;
+				"$lv_SubjectAlternateName")
+					# Subject Alternative Name# {{{
+					# Funktion (default_subjectalternatename_menu)# {{{
+					#
+					default_subjectalternatename_menu() {
+						case "$CAOpt" in
+							-r|-n)
+								DEFAULT_SUBJETALTNAME_MENU=($gv_Input \"\"
+								\"$lv_CopyMail\" \"\")
+								;;
+							-s|-u)
+								DEFAULT_SUBJETALTNAME_MENU=($gv_Input \"\"
+								\"$lv_Qestion_User\" \"\" \"$lv_CopyMail\" \"\")
+								;;
+						esac
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_SUBJETALTNAME_MENU"
+					}
+					# }}}
+					#
+					default_subjectalternatename_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_subjectalternatename_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								DEFAULT_SUBJ_ALTNAME_MSG=$(gettext 'Geben Sie einen Namen ein.')
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_SUBJ_ALTNAME_MSG" "$SUBJECT_ALTER_NAME"
+								if [ -n "$gv_Auswahl" ] ; then
+									SUBJECT_ALTER_NAME="$gv_Auswahl"
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								SUBJECT_ALTER_NAME="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_SubjectAlternateName
+					;;
+				"$lv_NsCertType")
+					# Netscape Zertifikatstyp auswaehlen# {{{
+					# Funktion (default_nscerttyp_menu)# {{{
+					#
+					default_nscerttyp_menu() {
+						case "$CAOpt" in
+							-r|-n)
+								DEFAULT_NSCERTTYP_MENU=($gv_Input \"\"
+								\"$lv_SMime_Ca\" \"\" \"$lv_SSL_Ca\" \"\"
+								\"$lv_ObjectSign_Ca\" \"\" \"$lv_SMime_SSL_Ca\" \"\"
+								\"$lv_ObjectSign_SSL_Ca\" \"\" \"$lv_SMime_ObjectSign_Ca\" \"\"
+								\"$lv_SMime_SSL_ObjectSign_Ca\" \"\")
+								;;
+							-s)
+								DEFAULT_NSCERTTYP_MENU=($gv_Input \"\"
+								\"$lv_SSL_SERVER\" \"\" \"$lv_SSL_CLIENT\" \"\"
+								\"$lv_SSL_SERVER_CLIENT\" \"\")
+								;;
+							-u)
+								DEFAULT_NSCERTTYP_MENU=($gv_Input \"\"
+								\"$lv_User_ObjectSign\" \"\" \"$lv_User_Smime\" \"\"
+								\"$lv_SSL_USER\" \"\" \"$lv_User_Usr_Smime\" \"\"
+								\"$lv_User_Usr_ObjectSign\" \"\"
+								\"$lv_User_Usr_Email_ObjectSign\" \"\")
+								;;
+						esac
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCERTTYP_MENU"
+					}
+					# }}}
+					#
+					default_nscerttyp_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_nscerttyp_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								DEFAULT_NSCERTTYP_MSG=$(gettext 'Geben Sie einen Wert fuer $lv_NsCertType ein.')
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_NSCERTTYP_MSG" "$NSCERTTYPE"
+								if [ -n "$gv_Auswahl" ] ; then
+									NSCERTTYPE="$gv_Auswahl"
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								NSCERTTYPE="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_NsCertType
+					;;
+				"$lv_KeyUsage")
+					# Schluesselverwendung auswaehlen# {{{
+					# Funktion (default_keyusage_menu)# {{{
+					#
+					default_keyusage_menu() {
+						case "$CAOpt" in
+							-r|-n)
+								DEFAULT_KEYUSAGE_MENU=($gv_Input \"\"
+								\"$lv_CertSign_Ca\" \"\" \"$lv_CrlSign_Ca\" \"\"
+								\"$lv_CertSign_CrlSign_Ca\" \"\")
+								;;
+							-s|-u)
+								DEFAULT_KEYUSAGE_MENU=($gv_Input \"\"
+								\"$lv_DigitalSign\" \"\" \"$lv_Encrypt\" \"\"
+								\"$lv_Encrypt_DigitalSign\" \"\")
+								;;
+						esac
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_KEYUSAGE_MENU"
+					}
+					# }}}
+					#
+					default_keyusage_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_keyusage_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								DEFAULT_KEYUSAGE_MSG=$(gettext 'Geben Sie einen Wert fuer $lv_KeyUsage ein.')
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_KEYUSAGE_MSG" "$KEYUSAGE"
+								if [ -n "$gv_Auswahl" ] ; then
+									KEYUSAGE="$gv_Auswahl"
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								KEYUSAGE="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_KeyUsage
+					;;
+				"$lv_EKeyUsage")
+					# erweiterte Schluesselverwendung auswaehlen# {{{
+					# Funktion (default_ekeyusage_menu)# {{{
+					DEFAULT_EKEYUSAGE_MENU=($gv_Input \"\"
+					\"$lv_Qestion_User\" \"\")
+					default_ekeyusage_menu() {
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_EKEYUSAGE_MENU"
+					}
+					# }}}
+					#
+					default_ekeyusage_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_ekeyusage_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								DEFAULT_EKEYUSAGE_MSG=$(gettext 'Geben Sie einen Wert fuer $lv_EKeyUsage ein.')
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_EKEYUSAGE_MSG" "$EKEYUSAGE"
+								if [ -n "$gv_Auswahl" ] ; then
+									EKEYUSAGE="$gv_Auswahl"
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								EKEYUSAGE="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_EKeyUsage
+					;;
+				"$lv_Critical_Ca")
+					# kritisch oder unkritisch# {{{
+					# Funktion (default_critical_menu)# {{{
+					DEFAULT_CRITICAL_MENU=($lv_Critical \"\"
+					$lv_UnCritical \"\")
+					default_critical_menu() {
+						menubox "$CRITICAL" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_CRITICAL_MENU"
+					}
+					# }}}
+					#
+					default_critical_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_critical_menu
+								;;
+							*)
+								# Auswahl uebernehmen
+								CRITICAL="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_Critical_Ca
+					;;
+				"$lv_NsRevocationUrl")
+					# Netscape Widerrufs URL eigeben# {{{
+					# Funktion (default_nsrevokeurl_menu)# {{{
+					DEFAULT_NSREVOKEURL_MENU=($gv_Input \"\"
+					\"$lv_Qestion_User\" \"\")
+					default_nsrevokeurl_menu() {
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSREVOKEURL_MENU"
+					}
+					# }}}
+					#
+					default_nsrevokeurl_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_nsrevokeurl_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_URL_MSG" "$NSREVOKEURL"
+								if [ -n "$gv_Auswahl" ] ; then
+									case "$gv_Auswahl" in
+										http://*)
+											NSREVOKEURL="$gv_Auswahl"
+											break
+											;;
+										*)
+											unset -- NSREVOKEURL
+											no_input_msg
+											break
+											;;
+									esac
+								else
+									unset -- NSREVOKEURL
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								NSREVOKEURL="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_NsRevocationUrl
+					;;
+				"$lv_NsCARevocationUrl")
+					# Netscape CA Widerrufs URL eingeben# {{{
+					# Funktion (default_nscarevokeurl_menu)# {{{
+					DEFAULT_NSCAREVOKEURL_MENU=($gv_Input \"\"
+					\"$lv_Qestion_User\" \"\")
+					default_nscarevokeurl_menu() {
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCAREVOKEURL_MENU"
+					}
+					# }}}
+					#
+					default_nscarevokeurl_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_nsrevokeurl_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_URL_MSG" "$NSCAREVOKEURL"
+								if [ -n "$gv_Auswahl" ] ; then
+									case "$gv_Auswahl" in
+										http://*)
+											NSCAREVOKEURL="$gv_Auswahl"
+											break
+											;;
+										*)
+											unset -- NSCAREVOKEURL
+											no_input_msg
+											break
+											;;
+									esac
+								else
+									unset -- NSCAREVOKEURL
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								NSCAREVOKEURL="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_NsCaRevocationUrl
+					;;
+				"$lv_NsRenewalUrl")
+					# Netscape Erneuerungs URL eigeben# {{{
+					# Funktion (default_nsrenewalurl_menu)# {{{
+					DEFAULT_NSRENEWALURL_MENU=($gv_Input \"\"
+					\"$lv_Qestion_User\" \"\")
+					default_nsrenewalurl_menu() {
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSRENEWALURL_MENU"
+					}
+					# }}}
+					#
+					default_nsrenewalurl_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_nsrenewalurl_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_URL_MSG" "$NSRENEWALURL"
+								if [ -n "$gv_Auswahl" ] ; then
+									case "$gv_Auswahl" in
+										http://*)
+											NSRENEWALURL="$gv_Auswahl"
+											break
+											;;
+										*)
+											unset -- NSRENEWALURL
+											no_input_msg
+											break
+											;;
+									esac
+								else
+									unset -- NSRENEWALURL
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								NSRENEWALURL="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_NsRenewalUrl
+					;;
+				"$lv_NsComment")
+					# nsComment eingeben# {{{
+					NSCOMMENT_MSG=$(gettext 'Geben Sie einen Netscape Kommentar ein.')
+					inputbox "$lv_NsComment" "$NSCOMMENT_MSG" "$NSCOMMENT"
+					if [ -n "$gv_Auswahl" ] ; then
+						NSCOMMENT="\\\"$gv_Auswahl\\\""
+					else
+						NSCOMMENT="\\\"kwssl2 Generated Certificate\\\""
+					fi
+					## }}}
+					default_cacerts_menu $lv_NsComment
+					;;
+				"$lv_Ns_Ssl_ServerName")
+					# Netscape SSL Servername auswaehlen# {{{
+					NSSSLSERVERNAME_MSG=$(gettext 'Waehlen Sie einen Wert fuer nsSsLServerName aus.')
+					# Funktion (default_nssslservername_menu_menu)# {{{
+					DEFAULT_NSSSLSERVERNAME_MENU=($gv_Input \"\"
+					\"$lv_Qestion_User\" \"\")
+					default_nssslservername_menu() {
+						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSSSLSERVERNAME_MENU"
+					}
+					# }}}
+					default_nssslservername_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help default_conf_help
+								default_nssslservername_menu
+								;;
+							$gv_Input)
+								# Auswahl uebernehmen
+								DEFAULT_NSSSLSERVNAME_MSG=$(gettext 'Geben Sie einen Wert fuer $lv_Ns_Ssl_ServerName ein.')
+								inputbox "$DEFAULT_CONF_TITLE" "$DEFAULT_NSSSLSERVNAME_MSG" "$NSSSLSERVERNAME"
+								if [ -n "$gv_Auswahl" ] ; then
+									NSSSLSERVERNAME="$gv_Auswahl"
+									break
+								fi
+								;;
+							*)
+								# Auswahl uebernehmen
+								NSSSLSERVERNAME="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					default_cacerts_menu $lv_Ns_Ssl_ServerName
+					;;
+				"$lv_CrlDistributionPoints")
+					# crlDistributionPoints eingeben# {{{
+					CRLDISTPOINT_MSG=$(gettext 'Geben Sie einen Wert fuer crlDistributionPoints ein.')
+					inputbox "$lv_CrlDistributionPoints" "$CRLDISTPOINT_MSG" "$CRLDISTPOINT"
+					if [ -n "$gv_Auswahl" ] ; then
+						CRLDISTPOINT="$gv_Auswahl"
+					else
+						unset -- CRLDISTPOINT
+					fi
+					## }}}
+					default_cacerts_menu $lv_CrlDistributionPoints
+					;;
+				"$lv_AuthKeyIdent")
+					# authorityKeyIdentifier eingeben# {{{
+					AUTHKEYIDENT_MSG=$(gettext 'Geben Sie einen Wert fuer authorityKeyIdentifier ein.')
+					inputbox "$lv_AuthKeyIdent" "$AUTHKEYIDENT_MSG" "$AUTHKEYIDENT"
+					if [ -n "$gv_Auswahl" ] ; then
+						AUTHKEYIDENT="$gv_Auswahl"
+					else
+						AUTHKEYIDENT="keyid:always,issuer:always"
+					fi
+					## }}}
+					default_cacerts_menu $lv_AuthKeyIdent
+					;;
+				"$lv_BasicConstraints")
+					# basicConstraints eingeben# {{{
+					BASICCONSTRAINTS_MSG=$(gettext 'Geben Sie einen Wert fuer basicConstraints ein.')
+					inputbox "$lv_BasicConstraints" "$BASICCONSTRAINTS_MSG" "$BASICCONSTRAINTS"
+					if [ -n "$gv_Auswahl" ] ; then
+						BASICCONSTRAINTS="$gv_Auswahl"
+					else
+						BASICCONSTRAINTS="critical,CA:true"
+					fi
+					## }}}
+					default_cacerts_menu $lv_BasicConstraints
+					;;
+				"$lv_IssuerAltName")
+					# issuerAltName eingeben# {{{
+					ISSUERALTNAME_MSG=$(gettext 'Geben Sie einen Wert fuer issuerAltName ein.')
+					inputbox "$lv_IssuerAltName" "$ISSUERALTNAME_MSG" "$ISSUERALTNAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						ISSUERALTNAME="$gv_Auswahl"
+					else
+						ISSUERALTNAME="issuer:copy"
+					fi
+					## }}}
+					default_cacerts_menu $lv_IssuerAltName
+					;;
+				"$lv_NsBaseUrl")
+					# nsBaseUrl eingeben# {{{
+					NSBASEURL_MSG=$(gettext 'Geben Sie eine URL fuer nsBaseUrl ein.')
+					inputbox "$lv_NsBaseUrl" "$NSBASEURL_MSG" "$NSBASEURL"
+					if [ -n "$gv_Auswahl" ] ; then
+						case "$gv_Auswahl" in
+							http://*)
+								NSBASEURL="$gv_Auswahl"
+								;;
+							*)
+								unset -- NSBASEURL
+								no_input_msg
+								;;
+						esac
+					fi
+					## }}}
+					default_cacerts_menu $lv_NsBaseUrl
+					;;
+				"$lv_NsPolicyUrl")
+					# nsPolicyUrl eingeben# {{{
+					NSPOLICYURL_MSG=$(gettext 'Geben Sie eine URL fuer nsPolicyUrl ein.')
+					inputbox "$lv_NsPolicyUrl" "$NSPOLICYURL_MSG" "$NSPOLICYURL"
+					if [ -n "$gv_Auswahl" ] ; then
+						case "$gv_Auswahl" in
+							http://*)
+								NSPOLICYURL="$gv_Auswahl"
+								;;
+							*)
+								unset -- NSPOLICYURL
+								no_input_msg
+								;;
+						esac
+					fi
+					## }}}
+					default_cacerts_menu $lv_NsPolicyUrl
+					;;
+				"$lv_NsCaPolicyUrl")
+					# nsCaPolicyUrl eingeben# {{{
+					NSCAPOLICYURL_MSG=$(gettext 'Geben Sie eine URL fuer nsCaPolicyUrl ein.')
+					inputbox "$lv_NsCaPolicyUrl" "$NSCAPOLICYURL_MSG" "$NSCAPOLICYURL"
+					if [ -n "$gv_Auswahl" ] ; then
+						case "$gv_Auswahl" in
+							http://*)
+								NSCAPOLICYURL="$gv_Auswahl"
+								;;
+							*)
+								unset -- NSCAPOLICYURL
+								no_input_msg
+								;;
+						esac
+					fi
+					## }}}
+					default_cacerts_menu $lv_NsCaPolicyUrl
+					;;
+				"$lv_Ssl_Validity")
+					# Gueltigkeitseingabe
+					validity_input
+					default_cacerts_menu $lv_Ssl_Validity
+					;;
+				$gv_Save)
+					# speichern# {{{
+					# Funktion (read_var_conf), Konfigurationsvariablen einlesen# {{{
+					# und in Konfigurationsvariablen uebersetzen
+					#
+					read_var_conf() {
+						# kritisch oder unkritisch# {{{
+						# Diese EInstellung wird für die Einstellung von
+						# KEYUSAGE benötigt.
+						case "$CRITICAL" in
+							"$lv_Critical")
+								CONF_CRITICAL="critical, "
+								;;
+							"$lv_UnCritical")
+								CONF_CRITICAL=""
+								;;
+						esac
+						## }}}
+						# SUBJECT_ALTER_NAME# {{{
+						if [ -n "$SUBJECT_ALTER_NAME" ] ; then
+							case "$SUBJECT_ALTER_NAME" in
+								"$lv_CopyMail")
+									CONF_SUBJECT_ALTER_NAME="email:copy"
+									;;
+								"$lv_Qestion_User")
+									CONF_SUBJECT_ALTER_NAME="\$ENV::SUBJECTALTNAMEIP"
+									;;
+								*)
+									CONF_SUBJECT_ALTER_NAME="$SUBJECT_ALTER_NAME"
+									;;
+							esac
+						fi
+						## }}}
+						# NSCERTTYPE# {{{
+						if [ -n "$NSCERTTYPE" ] ; then
+							case "$NSCERTTYPE" in
+								"$lv_ObjectSign_Ca")
+									CONF_NSCERTTYPE="objCA"
+									;;
+								"$lv_ObjectSign_SSL_Ca")
+									CONF_NSCERTTYPE="sslCA, objCA"
+									;;
+								"$lv_SMime_Ca")
+									CONF_NSCERTTYPE="emailCA"
+									;;
+								"$lv_SMime_ObjectSign_Ca")
+									CONF_NSCERTTYPE="emailCA, objCA"
+									;;
+								"$lv_SMime_SSL_Ca")
+									CONF_NSCERTTYPE="sslCA, emailCA"
+									;;
+								"$lv_SMime_SSL_ObjectSign_Ca")
+									CONF_NSCERTTYPE="sslCA, emailCA, objCA"
+									;;
+								"$lv_SSL_Ca")
+									CONF_NSCERTTYPE="sslCA"
+									;;
+								"$lv_SSL_CLIENT")
+									CONF_NSCERTTYPE="client"
+									;;
+								"$lv_SSL_USER")
+									CONF_NSCERTTYPE="client"
+									;;
+								"$lv_SSL_SERVER")
+									CONF_NSCERTTYPE="server"
+									;;
+								"$lv_SSL_SERVER_CLIENT")
+									CONF_NSCERTTYPE="server, client"
+									;;
+								"$lv_SSL_USER")
+									CONF_NSCERTTYPE="client"
+									;;
+								"$lv_User_ObjectSign")
+									CONF_NSCERTTYPE="objsign"
+									;;
+								"$lv_User_Usr_Email_ObjectSign")
+									CONF_NSCERTTYPE="client, email, objsign"
+									;;
+								"$lv_User_Usr_ObjectSign")
+									CONF_NSCERTTYPE="client, objsign"
+									;;
+								"$lv_User_Usr_Smime")
+									CONF_NSCERTTYPE="client, email"
+									;;
+								"$lv_User_Smime")
+									CONF_NSCERTTYPE="email"
+									;;
+								*)
+									CONF_NSCERTTYPE="$NSCERTTYPE"
+									;;
+							esac
+						fi
+						## }}}
+						# KEYUSAGE# {{{
+						if [ -n "$KEYUSAGE" ] ; then
+							# Die Variable CONF_CRITICAL wird weiter oben belegt.
+							case "$KEYUSAGE" in
+								"$lv_CertSign_Ca")
+									CONF_KEYUSAGE="${CONF_CRITICAL}keyCertSign"
+									;;
+								"$lv_CrlSign_Ca")
+									CONF_KEYUSAGE="${CONF_CRITICAL}cRLSign"
+									;;
+								"$lv_CertSign_CrlSign_Ca")
+									CONF_KEYUSAGE="${CONF_CRITICAL}keyCertSign, cRLSign"
+									;;
+								"$lv_DigitalSign")
+									CONF_KEYUSAGE="${CONF_CRITICAL}digitalSignature"
+									;;
+								"$lv_Encrypt")
+									CONF_KEYUSAGE="${CONF_CRITICAL}keyEncipherment"
+									;;
+								"$lv_Encrypt_DigitalSign")
+									CONF_KEYUSAGE="${CONF_CRITICAL}digitalSignature, keyEncipherment"
+									;;
+								*)
+									CONF_KEYUSAGE="${CONF_CRITICAL}${KEYUSAGE}"
+									;;
+							esac
+						fi
+						## }}}
+						# erweiterte KEYUSAGE# {{{
+						if [ -n "$EKEYUSAGE" ] ; then
+							case "$EKEYUSAGE" in
+								"$lv_Qestion_User")
+									CONF_EKEYUSAGE="${CONF_CRITICAL}\$ENV::EKEYUSAGE"
+									;;
+								[a-z]*)
+									CONF_EKEYUSAGE="${CONF_CRITICAL}${EKEYUSAGE}"
+									;;
+								*)
+									CONF_EKEYUSAGE=""
+									;;
+							esac
+						fi
+						## }}}
+						# Netscape Widerrufs URL# {{{
+						if [ -n "$NSREVOKEURL" ] ; then
+							case "$NSREVOKEURL" in
+								"$lv_Qestion_User")
+									CONF_NSREVOKEURL="\$ENV::NSREVOKEURL"
+									;;
+								*)
+									CONF_NSREVOKEURL="$NSREVOKEURL"
+									;;
+							esac
+						fi
+						## }}}
+						# Netscape CA Widerrufs URL# {{{
+						if [ -n "$NSCAREVOKEURL" ] ; then
+							case "$NSCAREVOKEURL" in
+								"$lv_Qestion_User")
+									CONF_NSCAREVOKEURL="\$ENV::NSCAREVOKEURL"
+									;;
+								*)
+									CONF_NSCAREVOKEURL="$NSCAREVOKEURL"
+									;;
+							esac
+						fi
+						## }}}
+						# Netscape Erneuerungs URL# {{{
+						if [ -n "$NSRENEWALURL" ] ; then
+							case "$NSRENEWALURL" in
+								"$lv_Qestion_User")
+									CONF_NSRENEWALURL="\$ENV::NSRENEWALURL"
+									;;
+								*)
+									CONF_NSRENEWALURL="$NSRENEWALURL"
+									;;
+							esac
+						fi
+						## }}}
+						# Netscape SSL Servername# {{{
+						if [ -n "$NSSSLSERVERNAME" ] ; then
+							case "$NSSSLSERVERNAME" in
+								"$lv_Qestion_User")
+									CONF_NSSSLSERVERNAME="\$ENV::NSSSLSERVERNAME"
+									;;
+								*)
+									CONF_NSSSLSERVERNAME="$NSSSLSERVERNAME"
+									;;
+							esac
+						fi
+						## }}}
+					}
+					## }}}
+					# Funktion (write_openssl), schreibt die hauptsaechlichsten# {{{
+					# Konfigurationen in der Konfigurationsdatei.
+					#
+					# usage: write_openssl
+					write_openssl() {
+						if [[ ${#argv} == 1 ]] ; then
+							local Sect Policy
+							Sect="$1"
+							case "$Sect" in
+								v3_ca|server_cert|client_cert)
+									# CA Cert Sektion schreiben# {{{
+									awk '/\[/{if(/'"$Sect"'/){found=1}else{found=0}}
+										{if(!found){print}}
+										END{print "'"[ $Sect ]"'" ; \
+										{print "subjectKeyIdentifier = '"hash"'"} ; \
+										if("'"$AUTHKEYIDENT"'"!=""){print "authorityKeyIdentifier = '"$AUTHKEYIDENT"'"} ; \
+										if("'"$BASICCONSTRAINTS"'"!=""){print "basicConstraints = '"$BASICCONSTRAINTS"'"} ; \
+										if("'"$ISSUERALTNAME"'"!=""){print "issuerAltName = '"$ISSUERALTNAME"'"} ; \
+										if("'"$CONF_EKEYUSAGE"'"!=""){print "extendedKeyUsage = '"$CONF_EKEYUSAGE"'"} ; \
+										if("'"$CONF_KEYUSAGE"'"!=""){print "keyUsage = '"$CONF_KEYUSAGE"'"} ; \
+										if("'"$CONF_NSCAREVOKEURL"'"!=""){print "nsCaRevokeUrl = '"$CONF_NSCAREVOKEURL"'"} ; \
+										if("'"$CONF_NSCERTTYPE"'"!=""){print "nsCertType = '"$CONF_NSCERTTYPE"'"} ; \
+										if("'"$CONF_NSRENEWALURL"'"!=""){print "nsRenewalUrl = '"$CONF_NSRENEWALURL"'"} ; \
+										if("'"$CONF_NSREVOKEURL"'"!=""){print "nsRevokeUrl = '"$CONF_NSREVOKEURL"'"} ; \
+										if("'"$CONF_NSSSLSERVERNAME"'"!=""){print "nsSsLServerName = '"$CONF_NSSSLSERVERNAME"'"} ; \
+										if("'"$CRLDISTPOINT"'"!=""){print "crlDistributionPoints = '"$CRLDISTPOINT"'"} ; \
+										if("'"$NSBASEURL"'"!=""){print "nsBaseUrl = '"$NSBASEURL"'"} ; \
+										if("'"$NSCAPOLICYURL"'"!=""){print "nsCaPolicyUrl = '"$NSCAPOLICYURL"'"} ; \
+										if("'"$NSPOLICYURL"'"!=""){print "nsPolicyUrl = '"$NSPOLICYURL"'"} ; \
+										if("'"$NSCOMMENT"'"!=""){print "nsComment = '"$NSCOMMENT"'"} ; \
+										if("'"$CONF_SUBJECT_ALTER_NAME"'"!=""){print "subjectAltName = '"$CONF_SUBJECT_ALTER_NAME"'"}}' \
+										$KWSSL2RC > ${gv_WorkDir}/opensslconf
+									mv ${gv_WorkDir}/opensslconf $KWSSL2RC &>/dev/null
+									## }}}
+									;;
+								ca_ca|server_ca|client_ca)
+									# CA Sektion schreiben# {{{
+									# default_crl_days herausfinden
+									check_default_revoke_days "$Sect"
+									# Variablen belegen falls leer
+									VALIDITY="${VALIDITY:-365}"
+									DEFAULT_REVOKE_DAYS="${DEFAULT_REVOKE_DAYS:-30}"
+									# CA Sektion schreiben
+									Policy="policy_${Sect%%_*}"
+									awk '/\[/{if(/'"$Sect"'/){found=1}else{found=0}}
+										{if(!found){print}}
+										END{print "\n'"[ $Sect ]"'" ; \
+										{print "dir = '"${KWSSL2RC%/*}"'"} ; \
+										{print "certs = '"\$dir/certs"'"} ; \
+										{print "crl_dir = '"\$dir/crl"'"} ; \
+										{print "database = '"\$dir/index.txt"'"} ; \
+										{print "new_certs_dir = '"\$dir/newcerts"'"} ; \
+										{print "certificate = '"\$dir/cacert.pem"'"} ; \
+										{print "serial = '"\$dir/serial"'"} ; \
+										{print "crl = '"\$dir/crl/crl.pem"'"} ; \
+										{print "crlnumber = '"\$dir/crlnumber"'"} ; \
+										{print "private_key = '"\$dir/cacert.key"'"} ; \
+										{print "RANDFILE = '"\$dir/.rand"'"} ; \
+										{print "x509_extension = '"$CONF_SECTION"'"} ; \
+										if("'"$VALIDITY"'"!=""){print "default_days = '"$VALIDITY"'"} ; \
+										if("'"$DEFAULT_REVOKE_DAYS"'"!=""){print "default_crl_days = '"$DEFAULT_REVOKE_DAYS"'"} ; \
+										{print "default_md = '"sha1"'"} ; \
+										{print "preserve = '"no"'"} ; \
+										{print "policy = '"$Policy"'"} ; \
+										{print "unique_subject = '"yes"'"}}' \
+										$KWSSL2RC > ${gv_WorkDir}/opensslconf
+									mv ${gv_WorkDir}/opensslconf $KWSSL2RC &>/dev/null
+									## }}}
+									;;
+							esac
+						else
+							no_para_msg "$0"
+						fi
+					}
+					## }}}
+					# Variablen einlesen
+					read_var_conf
+					# Pruefen welche Konfigurationssektion# {{{
+					# geaendert werden soll.
+					case "$CAOpt" in
+						-r|-n)
+							# dazugehoerige Section einstellen und
+							# Konfiguration schreiben
+							CONF_SECTION="v3_ca"
+							write_openssl "$CONF_SECTION"
+							write_openssl "ca_ca"
+							;;
+						-s)
+							# Server Sektion
+							CONF_SECTION="server_cert"
+							write_openssl "$CONF_SECTION"
+							write_openssl "server_ca"
+							;;
+						-u)
+							# Client Sektion
+							CONF_SECTION="client_cert"
+							write_openssl "$CONF_SECTION"
+							write_openssl "client_ca"
+							;;
+					esac
+					## }}}
+					break
+					## }}}
+					;;
+				$gv_Back)
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

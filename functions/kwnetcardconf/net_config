@@ -1,0 +1,79 @@
+# Funktion um die Netzwerk Konfiguration zu schreiben{{{
+#
+# usage: net_config
+#
+net_config() {
+	# Funktion (save_dhcp_wlan), WLAN-Einstellungen speichern# {{{
+	#
+	# usage: save_dhcp_wlan
+	save_dhcp_wlan() {
+	}
+	# }}}
+	# Konfiguration Debian{{{
+	if [ "$STARTMODE" = static ] ; then
+		#Statische gv_Ip{{{
+		if [ "$gv_Ip" -a "$gv_Netmask" -a "$gv_Boot" = yes ] ; then
+			awk '/(iface|auto)/{if(/'"$ETH"'/){found=1}else{found=0}}
+			{if(!found){print}}
+			END{print "\nauto '"$ETH"'\niface '"$ETH"' inet '"$STARTMODE"'\n \
+\taddress '"$gv_Ip"'\n\tnetmask	'"${gv_Netmask#*:}"'\n \
+\tnetwork	'"${gv_Ip%.*}.0"'"; \
+if("'"$gv_Broadcast"'"!=""){print "\tbroadcast	'"$gv_Broadcast"'"}; \
+if("'"$gv_Gateway"'"!=""){print "\tgateway	'"$gv_Gateway"'"}; \
+if("'"$gv_Nameserver"'"!=""){print "\tdns-nameservers	'"$gv_Nameserver"'"}; \
+if("'"$IWOURLINE"'"!=""){print "'"$IWOURLINE"'"};print "\n"}' \
+			$NET_CONF_FILE >$NETCONF_TMP
+	 		< $NETCONF_TMP > $NET_CONF_FILE
+		elif [ "$gv_Ip" -a "$gv_Netmask" -a "$gv_Boot" = no ] ; then
+			awk '/(iface|auto)/{if(/'"$ETH"'/){found=1}else{found=0}}
+			{if(!found){print}}
+			END{print "\niface '"$ETH"' inet '"$STARTMODE"'\n \
+\taddress '"$gv_Ip"'\n\tnetmask	'"${gv_Netmask#*:}"'\n \
+\tnetwork	'"${gv_Ip%.*}.0"'"; \
+if("'"$gv_Broadcast"'"!=""){print "\tbroadcast	'"$gv_Broadcast"'"}; \
+if("'"$gv_Gateway"'"!=""){print "\tgateway	'"$gv_Gateway"'"}; \
+if("'"$gv_Nameserver"'"!=""){print "\tdns-nameservers	'"$gv_Nameserver"'"}; \
+if("'"$IWOURLINE"'"!=""){print "'"$IWOURLINE"'"};print "\n"}' \
+			$NET_CONF_FILE >$NETCONF_TMP
+	 		< $NETCONF_TMP > $NET_CONF_FILE
+		else
+			awk '/(iface|auto)/{if(/'"$ETH"'/){found=1}else{found=0}}
+			{if(!found){print}}
+			END{print ""}' $NET_CONF_FILE >$NETCONF_TMP
+	 		< $NETCONF_TMP > $NET_CONF_FILE
+		fi
+		#}}}
+	else
+		# dynamische gv_Ip{{{
+		if [ "$gv_Boot" = yes ] ; then
+			awk '/(iface|auto)/{if(/'"$ETH"'/){found=1}else{found=0}}
+				/^\W$/{if(blank==0){lastblank=1}else{lastblank=0}{blank=1}}
+				/\w/{blank=0;lastblank=0}
+				{if(!(found+lastblank)){print}}
+				END{print "\nauto '"$ETH"'\niface '"$ETH"' inet dhcp\n"}' \
+				$NET_CONF_FILE > "$NETCONF_TMP"
+			if [ -n "$IWOURLINE" ] ; then
+				echo -e "$IWOURLINE" >> $NETCONF_TMP
+			fi
+			< $NETCONF_TMP > $NET_CONF_FILE
+		else
+			awk '/(iface|auto)/{if(/'"$ETH"'/){found=1}else{found=0}}
+				/^\W$/{if(blank==0){lastblank=1}else{lastblank=0}{blank=1}}
+				/\w/{blank=0;lastblank=0}
+				{if(!(found+lastblank)){print}}
+				END{print "iface '"$ETH"' inet dhcp"}' \
+				$NET_CONF_FILE > "$NETCONF_TMP"
+			if [ -n "$IWOURLINE" ] ; then
+				echo -e "$IWOURLINE" >> $NETCONF_TMP
+			fi
+			< $NETCONF_TMP > $NET_CONF_FILE
+		fi
+		## }}}
+	fi
+	#}}}
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

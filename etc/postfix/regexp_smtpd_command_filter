@@ -1,0 +1,18 @@
+# Work around clients that send malformed HELO commands.
+#/^HELO\s*$/ HELO domain.invalid
+
+# Work around clients that send empty lines.
+#/^\s*$/     NOOP
+
+# Work around clients that send RCPT TO:<'user@domain'>.
+# WARNING: do not lose the parameters that follow the address.
+#/^RCPT\s+TO:\s*<'([^[:space:]]+)'>(.*)/     RCPT TO:<$1>$2
+
+# Append XVERP to MAIL FROM commands to request VERP-style delivery.
+# See VERP_README for more information on how to use Postfix VERP.
+#/^(MAIL FROM:<listname@example\.com>.*)/    $1 XVERP
+
+# Bounce-never mail sink. Use notify_classes=bounce,resource,software
+# to send bounced mail to the postmaster (with message body removed).
+#/^(RCPT\s+TO:<.*>.*)\s+NOTIFY=\S+(.*)/  $1 NOTIFY=NEVER$2
+#/^(RCPT\s+TO:.*)/                       $1 NOTIFY=NEVER

@@ -1,0 +1,67 @@
+# Funktion (kwauth_nis_conf), nis Konfiguration# {{{
+#
+# usage: kwauth_nis_conf
+#
+kwauth_nis_conf() {
+	#
+	lv_Nis_Domain=$(gettext 'NIS Domain')
+	lv_Nis_Server=$(gettext 'NIS Server')
+	#
+	# NIS Konfiguration einlesen
+	if_conf_file "$OS" nisclient
+	# Funktion (kwauth_nis_menu)# {{{
+	#
+	kwauth_nis_menu() {
+		KW_CONF_MENU=(\"$lv_Nis_Server\" \"$NIS_CLIENT_SERVER\"
+		\"$lv_Nis_Domain\" \"$NIS_CLIENT_DOMAIN\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$KW_CONF_MENU"
+	}
+	## }}}
+	kwauth_nis_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				# Hilfe Messagebox
+				script_help kwauth_nis_help
+				kwauth_nis_menu
+				;;
+			$lv_Nis_Domain)
+				# Konfiguration NIS Domain# {{{
+				KW_NIS_TITLE=(${gv_Configuration}::${lv_Nis_Domain})
+				MSG=$(gettext 'Geben Sie die NIS Domain ein (z.B. nisdomain.org).')
+				inputbox "$KW_NIS_TITLE" "$MSG" "$NIS_CLIENT_DOMAIN"
+				if [[ -n $gv_Auswahl ]] ; then
+					NIS_CLIENT_DOMAIN="$gv_Auswahl"
+				else
+					NIS_CLIENT_DOMAIN=""
+				fi
+				## }}}
+				kwauth_nis_menu $lv_Nis_Domain
+				;;
+			$lv_Nis_Server)
+				# Konfiguration NIS Server# {{{
+				conf_hostname "$NIS_CLIENT_SERVER"
+				if [[ -n $gv_Hostname ]] ; then
+					NIS_CLIENT_SERVER="$gv_Hostname"
+				else
+					NIS_CLIENT_SERVER=""
+				fi
+				## }}}
+				kwauth_nis_menu $lv_Nis_Server
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwauth_nis_config
+				return 0
+				;;
+			$gv_Back)
+				return 0
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

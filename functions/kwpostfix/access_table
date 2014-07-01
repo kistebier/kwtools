@@ -1,0 +1,520 @@
+# Funktion access_table{{{
+#
+# usage: access_table [ -c ] $FILE
+# -c - Tabellenformat cidr Unterstuetzung
+#
+access_table() {
+	unset -- CIDR
+	autoload -U regexp_pcre_access
+	regexp_pcre_access
+
+	if [[ ${#argv} == 2 ]] ; then
+		FILE="$2"
+		CIDR=Yes
+	elif [[ ${#argv} == 1 ]] ; then
+		FILE="$1"
+	else
+		no_para_msg $0
+		break
+	fi
+
+	# Funktion access_menue{{{
+	access_menue() {
+		case "$ACTION" in
+			FILTER)
+				# mit transport:destination Eingabe
+				TRANS="${TRANS:-$OldTrans}"
+				if [[ $TRANS == error ]] ; then
+					TEXT="${TEXT:-$OldText}"
+					ACCESS_MENU=($lv_Address \"$ADR\" $lv_Action \"$ACTION\"
+					$lv_Transport \"$TRANS\" $lv_Text \"$TEXT\"
+					$gv_Save \"\" $gv_Back \"\")
+				else
+					HOST="${HOST:-$OldHost}"
+					PORT="${PORT:-$OldPort}"
+					ACCESS_MENU=($lv_Address \"$ADR\" $lv_Action \"$ACTION\"
+					$lv_Transport \"$TRANS\" $gv_Host \"$HOST\"
+					$lv_Port \"$PORT\" $gv_Save \"\" $gv_Back \"\")
+				fi
+				;;
+			PREPEND)
+				# mit header:value Eingabe
+				HEADER="${HEADER:-$OldHeader}"
+				TEXT="${TEXT:-$OldText}"
+				ACCESS_MENU=($lv_Address \"$ADR\" $lv_Action \"$ACTION\"
+				$lv_Header \"$HEADER\" $lv_Text \"$TEXT\"
+				$gv_Save \"\" $gv_Back \"\")
+				;;
+			BCC|REDIRECT)
+				# mit Mailadressen Eingabe
+				MAIL="${MAIL:-$OldMail}"
+				ACCESS_MENU=($lv_Address \"$ADR\" $lv_Action \"$ACTION\" $lv_Mail \"$MAIL\"
+				$gv_Save \"\" $gv_Back \"\")
+				;;
+			*)
+				TEXT="${TEXT:-$OldText}"
+				ACCESS_MENU=($lv_Address \"$ADR\" $lv_Action \"$ACTION\" $lv_Text \"$TEXT\"
+				$gv_Save \"\" $gv_Back \"\")
+				;;
+		esac
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$ACCESS_MENU"
+	}
+	#}}}
+	# Funktion access_aendern{{{
+	access_aendern() {
+		access_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help "$TAB_HELP"
+					access_menue
+					;;
+				$lv_Address)
+					# Adresse eingeben{{{
+					U_OPT=regexp
+					ADR_MSG=$(gettext 'Geben Sie bitte eine Mailadresse, User, IP, Domain, ... ein (Bsp. user@ | @domain.de | user@domain.de | 192.168. | 192.168.0.1 ).')
+					inputbox "$TABLE_TITLE" "$ADR_MSG" "$ADR"
+					if [ "$gv_Auswahl" ] ; then
+						if [ "$CIDR" = Yes ] ; then
+							case "$gv_Auswahl" in
+								[0-9]*.[0-9]*.[0-9]*.[0-9]*/[0-9]*)
+									# Netzmaske uebernehmen
+									ADR="$gv_Auswahl"
+									;;
+								*)	no_input_msg
+									unset -- ADR
+									;;
+							esac
+						else
+							case "$gv_Auswahl" in
+								[a-zA-Z0-9]*[@]*|.[a-zA-Z0-9-_]*.*|[0-9]*.|@[a-zA-Z0-9]*.*)
+									# Usernamen/subdomains/alle so beginnenden IP's uebernehmen
+									ADR="$gv_Auswahl"
+									;;
+								[a-zA-Z0-9]*@)
+									# user@ uebernehmen
+									ADR="$gv_Auswahl"
+									;;
+								[0-9]*.[0-9]*.*)
+									# IP Adresse uebernehmen
+									ADR="$gv_Auswahl"
+									;;
+								[a-zA-Z0-9]*[a-zA-Z0-9-_.]*.*)
+									# Host, Domainnamen uebernehmen
+									ADR="$gv_Auswahl"
+									;;
+								*)	no_input_msg
+									unset -- ADR
+									;;
+							esac
+						fi
+					else
+						no_input_msg
+						unset -- ADR
+					fi
+					#}}}
+					access_menue $lv_Address
+					;;
+				$lv_Action)
+					# Aktion auswählen# {{{
+					kwpostfix_action -a "$ACTION"
+					case $ACTION in
+						OK|DUNNO)	unset -- TEXT
+							;;
+					esac
+					## }}}
+					access_menue $lv_Action
+					;;
+				$lv_Header)
+					# Header Kennzeichen eingeben# {{{
+					HEADER_MSG=$(gettext 'Geben Sie hier bitte den Headernamen ein.')
+					inputbox "$TABLE_TITLE" "$HEADER_MSG" "$HEADER"
+					if [[ -n $gv_Auswahl ]] ; then
+						HEADER="$gv_Auswahl"
+						OldHeader="$HEADER"
+						unset -- HOST MAIL PORT TRANS
+					else
+						unset -- HEADER
+					fi
+					## }}}
+					access_menue $lv_Header
+					;;
+				$gv_Host)
+					# Ziel fuer Transport eingeben# {{{
+					regexp_pcre_access_host
+					if [ -n "$HOST" ] ; then
+						unset -- HEADER MAIL TEXT
+					fi
+					## }}}
+					access_menue $gv_Host
+					;;
+				$lv_Mail)
+					# Mailadress eingeben# {{{
+					regexp_pcre_access_mail
+					if [ -n "$MAIL" ] ; then
+						unset -- HEADER HOST PORT TEXT TRANS
+					fi
+					## }}}
+					access_menue $lv_Mail
+					;;
+				$lv_Port)
+					# Port vergeben# {{{
+					regexp_pcre_access_port
+					if [[ -n $PORT ]] ; then
+						unset -- HEADER MAIL TEXT
+					fi
+					## }}}
+					access_menue $lv_Port
+					;;
+				$lv_Transport)
+					# Transportmethode auswählen# {{{
+					transport_methode "${TRANS##:*}" "${TRANS##*:}"
+					if [[ $WERT == error ]] ; then
+						TRANS="$WERT"
+						OldTrans="$TRANS"
+						unset -- HEADER HOST MAIL PORT
+					elif [[ -n $WERT ]] ; then
+						TRANS="$WERT"
+						OldTrans="$TRANS"
+						unset -- HEADER MAIL TEXT
+					else
+						unset -- TRANS
+						no_input_msg
+					fi
+					## }}}
+					access_menue $lv_Transport
+					;;
+				$lv_Text)
+					# Text eingeben.# {{{
+					regexp_pcre_access_text
+					if [[ -n $WERT ]] ; then
+						TEXT="${${gv_Auswahl//\"/\\\"}//\$/\\\$}"
+						OldText="$TEXT"
+						if [[ $TRANS == error ]] ; then
+							unset -- HEADER HOST MAIL PORT
+						elif [[ -n $TRANS ]] ; then
+							unset -- HEADER MAIL
+						else
+							unset -- HOST MAIL PORT TRANS
+						fi
+					else
+						unset -- TEXT
+						no_input_msg
+					fi
+					## }}}
+					access_menue $lv_Text
+					;;
+				$gv_Save)
+					# Einstellungen speichern{{{
+					if [ -n "$ADR" ] ; then
+						case "$ACTION" in
+							OK|DUNNO)
+								# ohne Text# {{{
+								if [ "$AENDERN_ADR" ] ; then
+									grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+									>> $FILE$$ <<< "$ADR $ACTION"
+									mv $FILE$$ $FILE
+								else
+									grep -Fv "$ADR" $FILE >$FILE$$
+									>> $FILE$$ <<< "$ADR $ACTION"
+									mv $FILE$$ $FILE
+								fi
+								break
+								## }}}
+								;;
+							BCC|REDIRECT)
+								# mit Mail# {{{
+								case "$MAIL" in
+									*@*.*)
+										if [ "$AENDERN_ADR" ] ; then
+											grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+											>> $FILE$$ <<< "$ADR $ACTION $MAIL"
+											mv $FILE$$ $FILE
+										else
+											grep -Fv "$ADR" $FILE >$FILE$$
+											>> $FILE$$ <<< "$ADR $ACTION $MAIL"
+											mv $FILE$$ $FILE
+										fi
+										break
+										;;
+									*)
+										# Nachricht das man eine Mailadresse mit angeben muss.
+										MSG=$(gettext 'Sie muessen die Menuepunkte Zeichenkette, Aktion und Mail mit Werten belegen.')
+										msgbox "$gv_Attention" "$MSG"
+										regexp_pcre_menue
+										;;
+								esac
+								## }}}
+								;;
+							FILTER)
+								# mit Transport+Host+Port# {{{
+								if [ "$TRANS" -a "$HOST" -a "$PORT" ] ; then
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${HOST}:${PORT}"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${HOST}:${PORT}"
+										mv $FILE$$ $FILE
+									fi
+									break
+								# Transport+Text
+								elif [ "$TRANS" -a "$TEXT" ] ; then
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${TEXT}"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${TEXT}"
+										mv $FILE$$ $FILE
+									fi
+									break
+								# Transport+Host oder nur Transport
+								elif [ -n "$TRANS" ] ; then
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${HOST}"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${TRANS}:${HOST}"
+										mv $FILE$$ $FILE
+									fi
+									break
+								else
+									# Nachricht das man mind. Transport angegeben werden muss.
+									MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette, Aktion und Transport mit Werten belegen.')
+									msgbox "$gv_Attention" "$MSG"
+									regexp_pcre_menue
+								fi
+								## }}}
+								;;
+							PREPEND)
+								# mit Header+Text# {{{
+								if [ -n "$HEADER" -a -n "$TEXT" ] ; then
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${HEADER}: $TEXT"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION ${HEADER}: $TEXT"
+										mv $FILE$$ $FILE
+									fi
+									break
+								else
+									# Nachricht das man mind. Text (Headerzeile)
+									# angegeben werden muss.
+									MSG=$(gettext 'Sie muessen die Menuepunkte Zeichenkette, Aktion, Header und Text (Headerzeile) mit Werten belegen.')
+									msgbox "$gv_Attention" "$MSG"
+									regexp_pcre_menue
+								fi
+								## }}}
+								;;
+							*)
+								# mit/ohne Text# {{{
+								if [ -n "$TEXT" ] ; then
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION $TEXT"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION $TEXT"
+										mv $FILE$$ $FILE
+									fi
+								else
+									if [ "$AENDERN_ADR" ] ; then
+										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION"
+										mv $FILE$$ $FILE
+									else
+										grep -Fv "$ADR" $FILE >$FILE$$
+										>> $FILE$$ <<< "$ADR $ACTION"
+										mv $FILE$$ $FILE
+									fi
+								fi
+								break
+								## }}}
+								;;
+						esac
+					else
+						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Adresse und Aktion Werten belegen.')
+						msgbox "$gv_Attention" "$MSG"
+						regexp_pcre_menue
+					fi
+					#}}}
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done
+	}
+	#}}}
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Einträge
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- ADR ACTION TEXT MAIL TRANS HOST HEADER AENDERN_ADR \
+					OldHeader OldHost OldMail OldPort OldText OldTrans
+				access_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Eintraege aendern{{{
+				unset -- ADR ACTION TEXT MAIL TRANS HOST HEADER AENDERN_ADR \
+					OldHeader OldHost OldMail OldPort OldText OldTrans
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					U_OPT=regexp
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl verändern
+								C_CHOICE="$gv_Auswahl"
+								print "${gv_Auswahl//\\/\\\\\\}" | \
+									sed -e 's#\\#\\\\\\#g ; 
+									s#\"#\\\\\\"#g ; s#\$#\\\\\\$#g' | \
+								while read Address Action REST ; do
+									ADR="$Address"
+									ACTION="$Action"
+									#
+									case "$ACTION" in
+										PREPEND)
+											# mit Header+Text# {{{
+											HEADER="${REST%%:*}"
+											TEXT="${REST#*: }"
+											OldHeader="$HEADER"
+											OldText="$TEXT"
+											## }}}
+											;;
+										BCC|REDIRECT)
+											## mit Mail {{{
+											case "$REST" in
+												*@*.*)
+													MAIL="$REST"
+													OldMail="$MAIL"
+													;;
+											esac
+											## }}}
+											;;
+										FILTER)
+											## mit Transport+Host+Port {{{
+											case "$REST" in
+												*:*:*)
+													TRANS="${REST%%:*}"
+													OldTrans="$TRANS"
+													if [ "$TRANS" != error ] ; then
+														HOST="${${(ws,:,)${REST}}[2]}"
+														PORT="${REST##*:}"
+														OldHost="$HOST"
+														OldPort="$PORT"
+													else
+														TEXT="${REST#*:}"
+														OldText="$Text"
+													fi
+													;;
+												*:*)
+													TRANS="${REST%:*}"
+													OldTrans="$TRANS"
+													if [ "$TRANS" != error ] ; then
+														HOST="${REST#*:}"
+														OldHost="$HOST"
+													else
+														TEXT="${REST#*:}"
+														OldText="$Text"
+													fi
+													;;
+												*:)
+													TRANS="${REST%:*}"
+													OldTrans="$TRANS"
+													;;
+											esac
+											## }}}
+											;;
+										OK|DUNNO)
+											# ohne alles
+											;;
+										*)
+											# Mit Text
+											TEXT="$REST"
+											OldText="$TEXT"
+											;;
+									esac
+								done
+								AENDERN_ADR="$ADR"
+								access_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Einträge löschen{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Löschen
+								 while read ADRESS ; do
+									grep -Fv "$ADRESS" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done <${gv_LogFile}$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen die Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

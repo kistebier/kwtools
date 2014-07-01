@@ -1,0 +1,180 @@
+# Funktion (kwmutt_imap_conf), konfiguriert IMAP fuer mutt# {{{
+#
+# usage: kwmutt_imap_conf
+kwmutt_imap_conf() {
+	Unset=(imap_servernoise imap_peek imap_passive
+		imap_list_subscribed imap_keepalive
+		imap_delim_chars imap_idle imap_headers imap_check_subscribed)
+	unset -- $Unset
+	# Funktion (imap_conf_menu), menu fuer die Imap Konfiguration# {{{
+	IMAP_TITLE="$lv_Imap"
+	imap_conf_menu() {
+		IMAP_CONF_MENU=(imap_servernoise \"$imap_servernoise\"
+		imap_peek \"$imap_peek\"
+		imap_passive \"$imap_passive\"
+		imap_list_subscribed \"$imap_list_subscribed\"
+		imap_keepalive \"$imap_keepalive\"
+		imap_delim_chars \"$imap_delim_chars\"
+		imap_idle \"$imap_idle\"
+		imap_headers \"$imap_headers\"
+		imap_check_subscribed \"$imap_check_subscribed\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$IMAP_TITLE" "$gv_Menupoint" "$IMAP_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_IMAP" ] ; then
+		create_tmp_conf "$M_IMAP"
+		read_file -f $gv_LogFile
+		mailboxes=${(R)${(M)${(f)"$(< $gv_LogFile)"}##mailboxes*}##mailboxes[[:space:]]}
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	imap_servernoise="${imap_servernoise:-yes}"
+	imap_peek="${imap_peek:-yes}"
+	imap_passive="${imap_passive:-yes}"
+	imap_list_subscribed="${imap_list_subscribed:-no}"
+	imap_keepalive="${imap_keepalive:-900}"
+	imap_delim_chars="${imap_delim_chars:-/.}"
+	imap_idle="${imap_idle:-no}"
+	#imap_headers="$imap_headers"
+	imap_check_subscribed="${imap_check_subscribed:-no}"
+	## }}}
+	imap_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_imap_help
+				imap_conf_menu
+				;;
+			imap_servernoise)
+				# Sollen Warnmeldungen von den Servern als Fehlermeldungen angezeigt werden (ja/nein)?# {{{
+				MSG=$(gettext 'Sollen Warnmeldungen von den Servern als Fehlermeldungen angezeigt werden (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_servernoise"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_servernoise="yes"
+				else
+					imap_servernoise="no"
+				fi
+				## }}}
+				imap_conf_menu imap_servernoise
+				;;
+			imap_peek)
+				# Sollen Mails die vom Server als ungelesen markiert lassen (ja/nein)?# {{{
+				MSG=$(gettext 'Sollen Mails die vom Server geholt werden als ungelesen markiert werden (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_peek"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_peek="yes"
+				else
+					imap_peek="no"
+				fi
+				## }}}
+				imap_conf_menu imap_peek
+				;;
+			imap_passive)
+				# Soll mutt keine neuen IMAP Verbindungen aufbauen (ja/nein)?# {{{
+				MSG=$(gettext 'Soll mutt keine neuen IMAP Verbindungen aufbauen (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_passive"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_passive="yes"
+				else
+					imap_passive="no"
+				fi
+				## }}}
+				imap_conf_menu imap_passive
+				;;
+			imap_list_subscribed)
+				# nach allen Mailboxen suchen oder nur eingetragene (ja/nein)?# {{{
+				MSG=$(gettext 'Sollen beim durchschauen der IMAP-Mailboxen nach allen oder nur nach eingetragenen Mailboxen gesucht werden (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_list_subscribed"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_list_subscribed="yes"
+				else
+					imap_list_subscribed="no"
+				fi
+				## }}}
+				imap_conf_menu imap_list_subscribed
+				;;
+			imap_keepalive)
+				# Geben Sie die maximale Zeit in Sekunden ein mutt warten soll# {{{
+				# bevor er den Server erneut anpollt, bevor die Verbindung bei
+				# Inaktivitaet geschlossen wird, in Sekunden.
+				# Standard sind 15 Minuten.
+				MSG=$(gettext 'Geben Sie die maximale Zeit in Sekunden ein mutt warten soll bevor er den Server erneut anpollt.')
+				number_input "$IMAP_TITLE" "$MSG" "$imap_keppalive"
+				if [ -n "$NUMBER" ] ; then
+					imap_keppalive="$NUMBER"
+				else
+					imap_keppalive="900"
+				fi
+				## }}}
+				imap_conf_menu imap_keepalive
+				;;
+			imap_delim_chars)
+				# Liste von Trennzeichen zur Ansicht# {{{
+				MSG=$(gettext 'Geben Sie eine Liste von Zeichen ein die Sie zum Trennen von Foldern bei der Ansicht von IMAP Pfaden benutzen moechten.')
+				inputbox "$IMAP_TITLE" "$MSG" "$imap_delim_chars"
+				if [ -n "$gv_Auswahl" ] ; then
+					imap_delim_chars="$gv_Auswahl"
+				else
+					imap_delim_chars="/."
+				fi
+				## }}}
+				imap_conf_menu imap_delim_chars
+				;;
+			imap_idle)
+				# Soll mutt versuchen die IMAP IDLE Erweiterung zum checken?# {{{
+				# von neuen mails in selbigen Mailbox zu benutzen (ja/nein)?
+				MSG=$(gettext 'Soll mutt die IMAP IDLE Erweiterung benutzen (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_idle"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_idle="yes"
+				else
+					imap_idle="no"
+				fi
+				## }}}
+				imap_conf_menu imap_idle
+				;;
+			imap_headers)
+				# Zusaetzliche Header die Mutt vom Server holen soll.# {{{
+				MSG=$(gettext 'Geben Sie die zusaetzliche Header ein die Mutt vom Server holen soll.')
+				inputbox "$IMAP_TITLE" "$MSG" "$imap_headers"
+				if [ -n "$gv_Auswahl" ] ; then
+					imap_headers="$gv_Auswahl"
+				else
+					imap_headers=""
+				fi
+				## }}}
+				imap_conf_menu imap_headers
+				;;
+			imap_check_subscribed)
+				# Sollen alle abonnierten Folder vom Server geholt werden (ja/nein)?# {{{
+				MSG=$(gettext 'Sollen alle abonnierten Folder vom Server geholt werden (ja/nein)?')
+				yesno "$IMAP_TITLE" "$MSG" "$imap_check_subscribed"
+				if [ "$gv_Auswahl" = yes ] ; then
+					imap_check_subscribed="yes"
+				else
+					imap_check_subscribed="no"
+				fi
+				## }}}
+				imap_conf_menu imap_check_subscribed
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_imap_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

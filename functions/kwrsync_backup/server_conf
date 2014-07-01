@@ -1,0 +1,813 @@
+# Funktion (server_conf), Konfiguration der einzelnen Server# {{{
+#
+# usage: server_conf
+#
+server_conf() {
+	# RLVM Version herausfinden etc.
+	lvm_version
+	SERVER_CONF_TITLE="$lv_Host_Conf"
+	SERVER_UNSET=(BACKUP DST SRC RLV RLVM R_RSYNC HOSTNAME REMOTE_USER RSYNC_ARGS SCRIPT)
+	# Variablen
+	lv_Exclude_File=$(gettext 'Exclude Datei')
+	lv_Include_File=$(gettext 'Include Datei')
+	# rsync standard Argumente
+	DEFAULT_ARGS=(-av --numeric-ids --delete --delete-excluded --relative)
+	#
+	# Funktion (backup_change_list), liest die Konfigurationsdaten der# {{{
+	# einzelnen Server zeilenweise ein.
+	backup_change_list() {
+		unset -- BackupList Backup_Change_List $SERVER_UNSET
+		local Tmp Tmp1
+		setopt localoptions shwordsplit
+		# IFS=Return
+		IFS=$'\r'
+		#
+		read -A BackupList <<< "`grep -v "^#" $SERVER_CONF_FILE | tr "\n" "$IFS"`"
+		# IFS=Tab
+		IFS=$'\t'
+		Anz=1
+		Anz1=0
+		while [ "${BackupList[Anz]}" != "" ] ; do
+			set -- ${BackupList[Anz]}
+			case "$1" in
+				backup)
+					# Backup Daten
+					case "$2" in
+						lvm://*)
+							(( Anz1++ ))
+							BACKUP[Anz1]="$1"
+							Tmp="${${(ws:/:)${2#lvm://}}[1]}"
+							Tmp1="${${(ws:/:)${2#lvm://}}[2]}"
+							RLV[Anz1]="${VG_PATH}/${Tmp}/${Tmp1}"
+							RLVM[Anz1]="lvm://${Tmp}/${Tmp1}"
+							Src_Tmp="${2#lvm://${Tmp}/${Tmp1}}"
+							SRC[Anz1]="${Src_Tmp:-/}"
+							DST[Anz1]="$3"
+							RSYNC_ARGS[Anz1]="$4"
+							;;
+						rsync://*@*)
+							(( Anz1++ ))
+							BACKUP[Anz1]="$1"
+							Tmp="${${(ws:/:)${2#rsync://}}[1]}"
+							SRC[Anz1]="/${2#*@*/}"
+							REMOTE_USER[Anz1]="${Tmp%@*}"
+							DST[Anz1]="$3"
+							RSYNC_ARGS[Anz1]="$4"
+							HOSTNAME[Anz1]="${Tmp#*@}"
+							R_RSYNC[Anz1]="rsync://${HOSTNAME}"
+							;;
+						rsync://*)
+							(( Anz1++ ))
+							BACKUP[Anz1]="$1"
+							Tmp="${${(ws:/:)${2#rsync://}}[1]}"
+							SRC[Anz1]="/${2#rsync://*/}"
+							DST[Anz1]="$3"
+							RSYNC_ARGS[Anz1]="$4"
+							HOSTNAME[Anz1]="$Tmp"
+							R_RSYNC[Anz1]="rsync://${HOSTNAME}"
+							;;
+						*@*)
+							(( Anz1++ ))
+							BACKUP[Anz1]="$1"
+							Tmp="${${${(ws:/:)${2#*@}}[1]}%:*}"
+							SRC[Anz1]="${2#*@*:}"
+							REMOTE_USER[Anz1]="${2%@*}"
+							DST[Anz1]="$3"
+							RSYNC_ARGS[Anz1]="$4"
+							HOSTNAME[Anz1]="${Tmp%:*}"
+							;;
+						*)
+							(( Anz1++ ))
+							BACKUP[Anz1]="$1"
+							SRC[Anz1]="${2#*:}"
+							REMOTE_USER[Anz1]=""
+							DST[Anz1]="$3"
+							RSYNC_ARGS[Anz1]="$4"
+							# HOSTNAME[Anz1]="${2%:*}"
+							;;
+					esac
+					(( Anz++ ))
+					;;
+				backup_script)
+					# Scripte/Befehle
+					(( Anz1++ ))
+					BACKUP[Anz1]="$1"
+					SCRIPT[Anz1]="${2//\"/\\\"}"
+					DST[Anz1]="$3"
+					(( Anz++ ))
+					;;
+			esac
+		done
+		# IFS
+		IFS="$IFSBAK"
+	}
+	## }}}
+	# Funktion (backup_change_list_menu){{{
+	#
+	backup_change_list_menu() {
+		Nr=0
+		while [ "$Nr" -lt "$Anz1" ] ; do
+			(( Nr++ ))
+			if [[ ${BACKUP[Nr]} == backup ]] ; then
+				# Konfigurationsanzeige mit LVM
+				if [ -n "${RLVM[Nr]}" ] ; then
+					Backup_Change_List[Nr]="$Nr \"${RLVM[Nr]}${SRC[Nr]} ${DST[Nr]} ${RSYNC_ARGS[Nr]}\""
+					Backup_Change_List_M[Nr]="$Nr \"${RLVM[Nr]}${SRC[Nr]} ${DST[Nr]} ${RSYNC_ARGS[Nr]}\" off"
+				# Konfigurationsanzeige mit rsync Rechner
+				elif [ -n "${R_RSYNC[Nr]}" ] ; then
+					Backup_Change_List[Nr]="$Nr \"${R_RSYNC[Nr]}${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\""
+					Backup_Change_List_M[Nr]="$Nr \"${R_RSYNC[Nr]}${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\" off"
+				# Konfigurationsanzeige mit Rechner
+				elif [ -n "${HOSTNAME[Nr]}" ] ; then
+					Backup_Change_List[Nr]="$Nr \"${HOSTNAME[Nr]}:${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\""
+					Backup_Change_List_M[Nr]="$Nr \"${HOSTNAME[Nr]}:${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\" off"
+				else
+					# Konfigurationsanzeige ohne Rechner
+					Backup_Change_List[Nr]="$Nr \"${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\""
+					Backup_Change_List_M[Nr]="$Nr \"${SRC[Nr]} ${DST[Nr]} ${REMOTE_USER[Nr]} ${RSYNC_ARGS[Nr]}\" off"
+				fi
+			else
+				Backup_Change_List[Nr]="$Nr \"${SCRIPT[Nr]} ${DST[Nr]}\""
+				Backup_Change_List_M[Nr]="$Nr \"${SCRIPT[Nr]} ${DST[Nr]}\" off"
+			fi
+		done
+	}
+	#}}}
+	# Funktion (server_change)# {{{
+	#
+	# usage: server_change
+	#
+	server_change() {
+		backup_change_list
+		if [ -n "${BACKUP[1]}" ] ; then
+			backup_change_list_menu
+			# Funktion backup_change_menu{{{
+			CHANGE_MSG=$(gettext 'Waehlen Sie einen Eintrag zum aendern aus.')
+			#
+			backup_change_menu() {
+				CHANGE_MENU=($Backup_Change_List $gv_Back \"\")
+				menubox "$NR" "$SERVER_CONF_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+			}
+			#}}}
+			backup_change_menu
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help share/conf_change_help
+						backup_change_menu
+						;;
+					$gv_Back)	break
+						;;
+					*)
+						# Eintrage aendern# {{{
+						NR="$gv_Auswahl"
+						if [[ ${BACKUP[gv_Auswahl]} == backup ]] ; then
+							if [ -n "${RLVM[gv_Auswahl]}" ] ; then
+								SRC="${SRC[gv_Auswahl]}"
+								DST="${DST[gv_Auswahl]}"
+								RSYNC_ARGS="${RSYNC_ARGS[gv_Auswahl]}"
+								RLVM="${RLVM[gv_Auswahl]}"
+								unset -- REMOTE_USER SCRIPT
+								setopt shwordsplit
+								IFS=$'\t'
+								if [ -n "$RSYNC_ARGS" ] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${RLVM}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								else
+									SERVER_BACKUP_OLD="backup${IFS}${RLVM}${SRC}${IFS}${DST}"
+								fi
+								IFS="$IFSBAK"
+								unsetopt shwordsplit
+							elif [[ $RSYNC_YESNO == yes ]] ; then
+								SRC="${SRC[gv_Auswahl]}"
+								DST="${DST[gv_Auswahl]}"
+								REMOTE_USER="${REMOTE_USER[gv_Auswahl]}"
+								RSYNC_ARGS="${RSYNC_ARGS[gv_Auswahl]}"
+								HOSTNAME="${HOSTNAME[gv_Auswahl]}"
+								unset -- RLVM SCRIPT
+								setopt shwordsplit
+								IFS=$'\t'
+								if [ -n "$RSYNC_ARGS" -a -n "$REMOTE_USER" ] ; then
+									SERVER_BACKUP_OLD="backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								elif [ -n "$REMOTE_USER" ] ; then
+									SERVER_BACKUP_OLD="backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST}"
+								elif [ -n "$RSYNC_ARGS" ] ; then
+									SERVER_BACKUP_OLD="backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								else
+									SERVER_BACKUP_OLD="backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST}"
+								fi
+								IFS="$IFSBAK"
+								unsetopt shwordsplit
+							else
+								SRC="${SRC[gv_Auswahl]}"
+								DST="${DST[gv_Auswahl]}"
+								REMOTE_USER="${REMOTE_USER[gv_Auswahl]}"
+								RSYNC_ARGS="${RSYNC_ARGS[gv_Auswahl]}"
+								HOSTNAME="${HOSTNAME[gv_Auswahl]}"
+								unset -- RLVM SCRIPT
+								setopt shwordsplit
+								IFS=$'\t'
+								if [[ -n $RSYNC_ARGS ]] && \
+									[[ -n $REMOTE_USER ]] && \
+									[[ -n $HOSTNAME ]] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								elif [[ -n $REMOTE_USER ]] && \
+									[[ -n $HOSTNAME ]] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST}"
+								elif [[ -n $RSYNC_ARGS ]] && \
+									[[ -n $HOSTNAME ]] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								elif [[ -n $HOSTNAME ]] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST}"
+								elif [[ -n $RSYNC_ARGS ]] ; then
+									SERVER_BACKUP_OLD="backup${IFS}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+								else
+									SERVER_BACKUP_OLD="backup${IFS}${SRC}${IFS}${DST}"
+								fi
+								IFS="$IFSBAK"
+								unsetopt shwordsplit
+							fi
+						else
+							SCRIPT="${SCRIPT[gv_Auswahl]}"
+							DST="${DST[gv_Auswahl]}"
+							unset -- RLVM SRC REMOTE_USER RSYNC_ARGS
+							setopt shwordsplit
+							IFS=$'\t'
+							SERVER_BACKUP_OLD="backup_script${IFS}${SCRIPT}${IFS}${DST}"
+							IFS="$IFSBAK"
+							unsetopt shwordsplit
+						fi
+						server_input
+						# Konfigurationsdaten neu einlesen
+						backup_change_list
+						if [ -n "$BackupList" ] ; then
+							backup_change_list_menu
+							backup_change_menu
+						else
+							no_entry_msg
+						fi
+						## }}}
+						;;
+				esac
+			done
+		else
+			no_entry_msg
+		fi
+	}
+	## }}}
+	# Funktion (server_input), Eingabe der Konfigurationsdaten# {{{
+	#
+	# usage: server_input
+	#
+	server_input() {
+		# Funktion (server_input_menu)# {{{
+		#
+		lv_Source=$(gettext 'Quelle')
+		lv_Destination=$(gettext 'Ziel')
+		lv_Rsync_Args=$(gettext 'rsync Argumente')
+		lv_Lvm=$(gettext 'LVM')
+		lv_Script=$(gettext 'Script')
+		lv_Input=$(gettext 'Eingabe')
+		lv_Choice=$(gettext 'Auswahl')
+		#
+		server_input_menu() {
+			if [[ $RSYNC_YESNO == yes ]] ; then
+				SERVER_INPUT_MENU=($gv_Host \"$HOSTNAME\" $lv_Source \"$SRC\"
+					$lv_Destination \"$DST\"
+					$gv_User \"$REMOTE_USER\"
+					\"$lv_Rsync_Args\" \"$RSYNC_ARGS\" $gv_Save \"\" $gv_Back \"\")
+			elif [ "`hostname`" = "$SERVER_SRC" -o "$SERVER_SRC" = localhost ] ; then
+				SERVER_INPUT_MENU=($lv_Source \"$SRC\" $lv_Destination \"$DST\"
+					\"$lv_Rsync_Args\" \"$RSYNC_ARGS\" $lv_Lvm \"$RLVM\"
+					$lv_Script \"$SCRIPT\"
+					$gv_Save \"\" $gv_Back \"\")
+			else
+				SERVER_INPUT_MENU=($gv_Host \"$SERVER_SRC\" -------- \"\"
+					$lv_Source \"$SRC\" $lv_Destination \"$DST\"
+					$gv_User \"$REMOTE_USER\" \"$lv_Rsync_Args\" \"$RSYNC_ARGS\"
+					$lv_Script \"$SCRIPT\"
+					$gv_Save \"\" $gv_Back \"\")
+			fi
+			menubox "$1" "$SERVER_CONF_TITLE" "$gv_Menupoint" "$SERVER_INPUT_MENU"
+		}
+		## }}}
+		# Konfiguration aendern yes/no und dadurch Variablen belegen# {{{
+		# oder nicht.
+		if [[ $Backup_Change == no ]] ; then
+			if [ "`hostname`" = "$SERVER_SRC" -o "$SERVER_SRC" = localhost ] ; then
+				SRC="/"
+				DST="${SERVER_SRC}/"
+				REMOTE_USER=""
+				RSYNC_ARGS=""
+				RLVM=""
+				SCRIPT=""
+			else
+				if [[ $RSYNC_YESNO == yes ]] ; then
+					SRC="/"
+					HOSTNAME=""
+				else
+					SRC="/"
+					HOSTNAME="$SERVER_SRC"
+				fi
+				DST="${SERVER_SRC}/"
+				if [ -n "$USER_RUN" ] ; then
+					REMOTE_USER="$USER_RUN"
+				else
+					REMOTE_USER=""
+				fi
+				RSYNC_ARGS=""
+				SCRIPT=""
+			fi
+		fi
+		## }}}
+		server_input_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe
+					script_help server_input_help
+					server_input_menu
+					;;
+				----*)
+					# kein Menuepunkt
+					server_input_menu $gv_Auswahl
+					;;
+				$gv_Host)
+					# Rechner eingeben oder nur eine Anzeige# {{{
+					if [[ $RSYNC_YESNO == yes ]] ; then
+						conf_hostname "$HOSTNAME"
+						if [ -n "$gv_Hostname" ] ; then
+							HOSTNAME="$gv_Hostname"
+						else
+							unset -- HOSTNAME
+						fi
+					else
+						# Nachricht das dies nur eine Anzeige/Info ist.
+						MSG=$(gettext 'In diesem Fall ist $gv_Host nur eine Anzeige')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					server_input_menu $gv_Host
+					;;
+				$lv_Source)
+		    	    # angeben der Quelle# {{{
+					MSG=$(gettext 'Geben Sie das Quellverzeichnis ein das gesichert werden soll.')
+					inputbox "$SERVER_CONF_TITLE" "$MSG" "$SRC"
+					if [ -n "$gv_Auswahl" ] ; then
+						SRC="$gv_Auswahl"
+						unset -- SCRIPT
+					else
+						unset -- SRC
+						no_input_msg
+					fi
+					## }}}
+					server_input_menu $lv_Source
+					;;
+				$lv_Destination)
+		    	    # angeben des Ziel# {{{
+		    	    if [ -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+						dselect "${BACKUP_PATH}/hourly.0/${DST}"
+					else
+						dselect "${BACKUP_PATH}/hourly.0"
+					fi
+					if [ -n "$VERZ" ] ; then
+						dselect_check -c "$VERZ"
+						if [ -n "$VERZ" ] ; then
+							user_device_check "$VERZ" AIE
+							DST="${VERZ#${BACKUP_PATH}/hourly.0/}/"
+							# Auf Dulplikate pruefen
+							if [ -n "$SCRIPT" -a "$Backup_Change" = no ] ; then
+								awk -F '\t' '(/^backup_script*/){print $3}' ${KWRSYNC_CF_DIR}/*.conf \
+									> ${gv_WorkDir}/conftest
+								if grep -q ${DST%/} ${gv_WorkDir}/conftest ; then
+									MSG=$(gettext 'Das Ziel ($DST) existiert schon!')
+									msgbox "$gv_Info" "$MSG"
+									unset -- DST
+								fi
+							fi
+						fi
+					fi
+					## }}}
+					server_input_menu $lv_Destination
+					;;
+				$gv_User)
+		    	    # Login Benutzer fuer den entfernten Rechner eingeben# {{{
+					MSG=$(gettext 'Geben Sie den Benutzer fuer die Verbindung zum entfernten Rechner ein.')
+					inputbox "$SERVER_CONF_TITLE" "$MSG" "$REMOTE_USER"
+					if [ -n "$gv_Auswahl" ] ; then
+						REMOTE_USER="$gv_Auswahl"
+					else
+						unset -- REMOTE_USER
+					fi
+					## }}}
+					server_input_menu $gv_User
+					;;
+				$lv_Rsync_Args)
+		    	    # angeben von zusaetzlichen rsync Argumenten# {{{
+					MSG=$(gettext 'Geben Sie zusaetzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) fuer rsync ein.')
+					inputbox "$SERVER_CONF_TITLE" "$MSG" "$RSYNC_ARGS"
+					if [ -n "$gv_Auswahl" ] ; then
+						RSYNC_ARGS="$gv_Auswahl"
+					else
+						unset -- RSYNC_ARGS
+					fi
+					## }}}
+					server_input_menu $lv_Rsync_Args
+					;;
+				$lv_Script)
+					# Eingeben eines Befehls oder Auswahl# {{{
+					# eines Scripts
+					# Funktion (script_input_menu)# {{{
+					#
+					script_input_menu() {
+						if [ -x "$SCRIPT" ] ; then
+							SCRIPT_INPUT_MENU=($lv_Choice \"$SCRIPT\" $lv_Input \"\"
+							$gv_Back \"\")
+						else
+							SCRIPT_INPUT_MENU=($lv_Choice \"\" $lv_Input \"$SCRIPT\"
+							$gv_Back \"\")
+						fi
+						menubox "$1" "$SERVER_CONF_TITLE" "$gv_Menupoint" "$SCRIPT_INPUT_MENU"
+					}
+					## }}}
+					script_input_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe
+								script_help server_script_help
+								script_input_menu
+								;;
+							$lv_Choice)
+								# Scriptauswahl (Format-executable [ausfuehrbar]
+								FORMAT="executable"
+								file_choice "$KWRSYNC_EXEC_DIR" only "${SCRIPT##*/}"
+								if [ -x "${VERZ}/${WERT}" -a ! -d "${VERZ}/${WERT}" ] ; then
+									SCRIPT="${VERZ}/${WERT}"
+									unset -- RLVM SRC RSYNC_ARGS
+									break
+								else
+									unset -- SCRIPT VERZ WERT
+									script_input_menu $lv_Choice
+								fi
+								;;
+							$lv_Input)
+								# Befehlseingabe# {{{
+								#######################################
+								# Sonderzeichen beachten/quoten
+								#######################################
+								U_OPT=regexp
+								MSG=$(gettext 'Geben Sie einen Befehl oder ein Script mit vollem Pfad ein.')
+								inputbox "$SERVER_CONF_TITLE" "$SCRIPT_INPUT_MSG" "$SCRIPT"
+								if [ -n "$gv_Auswahl" ] ; then
+									SCRIPT="${${${${gv_Auswahl//\"/\\\"}//\`/\\\`}//\$/\\\$}//\\/\\\\}"
+									unset -- RLVM SRC RSYNC_ARGS
+									break
+								else
+									unset -- SCRIPT
+									script_input_menu $lv_Input
+								fi
+								## }}}
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+					## }}}
+					server_input_menu $lv_Script
+					;;
+				$lv_Lvm)
+		    	    # RLVM Snapshots# {{{
+					lv
+					# Sind LVs vorhanden, werden sie zur Auswahl gestellt.
+					if [ "${LV[1]}" ] ; then
+						# Funktion lvm_menu{{{
+						RLVM_MENU=($LV_E)
+						RLVM_MSG=$(gettext 'Waehlen Sie ein LV aus.')
+						lvm_menu() {
+							menubox "" "$SERVER_CONF_TITLE" "$RLVM_MSG" "$RLVM_MENU"
+						}
+						#}}}
+						lvm_menu
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help server_input_help
+									lvm_menu
+									;;
+								*)
+									# Anzeige der LVs
+									RLVM="lvm://${gv_Auswahl#/*/}"
+									unset -- REMOTE_USER SCRIPT R_RSYNC
+									break
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					## }}}
+					server_input_menu $lv_Lvm
+					;;
+				$gv_Save)
+					# Server Konfiguration speichern# {{{
+					#
+					if [ ! -f $SERVER_CONF_FILE ] ; then
+						create_file $SERVER_CONF_FILE
+					fi
+					# IFS
+					IFS=$'\t'
+					# erstmal alten Eintrag loeschen
+					if [ -n "$SERVER_BACKUP_OLD" ] ; then
+						print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##${SERVER_BACKUP_OLD}*} > ${gv_WorkDir}/serverfile
+						mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+					fi
+					# (R)LVM Konfiguration pruefen
+					if [[ -n $RLVM ]] && [[ -n $SRC ]] && [[ -n $DST ]] ; then
+						# erstmal etwas vergleichbares loeschen
+						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${RLVM}/${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+						fi
+						if [ -n "$RSYNC_ARGS" ] ; then
+							>> "$SERVER_CONF_FILE" <<< "backup${IFS}${RLVM}/${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+						else
+							>> "$SERVER_CONF_FILE" <<< "backup${IFS}${RLVM}/${SRC}${IFS}${DST}"
+						fi
+					# Script Konfiguration pruefen
+					elif [[ -n $SCRIPT ]] && [[ -n $DST ]]  ; then
+						# erstmal etwas vergleichbares loeschen
+						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup_script${IFS}${SCRIPT}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+						fi
+						# speichern
+						>> "$SERVER_CONF_FILE" <<< "backup_script${IFS}${SCRIPT}${IFS}${DST}"
+
+					# mit Rsync Daemon pruefen
+					elif [[ $RSYNC_YESNO == yes ]] && \
+						[[ -n $SRC ]] && [[ -n $DST ]] && [[ -n $HOSTNAME ]] ; then
+						if [[ -n $REMOTE_USER ]] ; then
+							# erstmal etwas vergleichbares loeschen
+							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+							fi
+							if [ -n "$RSYNC_ARGS" ] ; then
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+							else
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST}"
+							fi
+						else
+							# erstmal etwas vergleichbares loeschen
+							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+							fi
+							if [ -n "$RSYNC_ARGS" ] ; then
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+							else
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST}"
+							fi
+						fi
+
+					# Konfiguration mit remote Rechner pruefen
+					elif [[ -n $HOSTNAME ]] && [[ -n $SRC ]] && [[ -n $DST ]] ; then
+						if [[ -n $REMOTE_USER ]] ; then
+							# erstmal etwas vergleichbares loeschen
+							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+							fi
+							if [ -n "$RSYNC_ARGS" ] ; then
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+							else
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST}"
+							fi
+						else
+							# erstmal etwas vergleichbares loeschen
+							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+							fi
+							if [ -n "$RSYNC_ARGS" ] ; then
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+							else
+								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST}"
+							fi
+						fi
+					# normale Konfiguration ohne remote Rechner pruefen
+					elif [[ -n $SRC ]] && [[ -n $DST ]] ; then
+						# erstmal etwas vergleichbares loeschen
+						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
+							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
+							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
+						fi
+						if [ -n "$RSYNC_ARGS" ] ; then
+							>> "$SERVER_CONF_FILE" <<< "backup${IFS}${SRC}${IFS}${DST}${IFS}${RSYNC_ARGS}"
+						else
+							>> "$SERVER_CONF_FILE" <<< "backup${IFS}${SRC}${IFS}${DST}"
+						fi
+					else
+						MSG=$(gettext 'Sie haben vergessen einige Menuepunkte mit Werten zu belegen. Lesen Sie bitte die Hilfe.')
+						msgbox "$gv_Info" "$MSG"
+						# zurueck zum Menue
+						server_input_menu $gv_Save
+					fi
+					IFS="$IFSBAK"
+					## }}}
+					unset -- $SERVER_UNSET
+					break
+					;;
+				$gv_Back)
+					unset -- $SERVER_UNSET
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	# Funktion (server_delete), Eintrage loeschen# {{{
+	#
+	# usage: server_delete
+	#
+	server_delete() {
+		backup_change_list
+		if [ -n "${BACKUP[1]}" ] ; then
+			backup_change_list_menu
+			# Funktion backup_change_menu{{{
+			DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Eintraege zum loeschen aus.')
+			#
+			backup_del_menu() {
+				DEL_MENU=($Backup_Change_List_M)
+				checklist "$SERVER_CONF_TITLE" "$DEL_MSG" "$DEL_MENU"
+			}
+			#}}}
+			backup_del_menu
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help share/conf_del_help
+						backup_del_menu
+						;;
+					*)
+						# Auswahl loeschen
+						Anz=0
+						for Nr in ${=gv_Auswahl} ; {
+							(( Anz++ ))
+							Z_Nr[Anz]=${${(s,:,)$(grep -n "${BackupList[Nr]}" $SERVER_CONF_FILE)}[1]}
+						}
+						if [ ! -z "$Z_Nr" ] ; then
+							Line="${Z_Nr//\ /d ; }d"
+							sed -e "$Line" $SERVER_CONF_FILE > "${gv_WorkDir}/serverfile"
+							mv "${gv_WorkDir}/serverfile" $SERVER_CONF_FILE
+						fi
+						# IFS
+						IFS="$IFSBAK"
+						break
+						;;
+				esac
+			done
+		else
+			no_entry_msg
+		fi
+	}
+	## }}}
+	# Funktion (check_server_choice)# {{{
+	#
+	check_server_choice() {
+		unset -- SERV
+		SERV+=( rsync \"\" )
+		for s in ${=SERVER} ; {
+			SERV+=( $s \"\" )
+		}
+	}
+	## }}}
+	# Funktion (check_server_choice_menu)# {{{
+	#
+	check_server_choice_menu() {
+		SERV_CHOICE_MENU=($SERV)
+		menubox "$1" "$SERVER_CONF_TITLE" "$gv_Menupoint" "$SERV_CHOICE_MENU"
+	}
+	## }}}
+	# Funktion (no_server_conf_msg)# {{{
+	no_server_conf_msg() {
+		MSG=$(gettext 'Es gibt keine Konfigurationsdatei (${SERVER_CONF_FILE##*/}). Sie muessen erst eine erstellen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	check_server_choice
+	check_server_choice_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe
+				script_help server_conf_help
+				check_server_choice_menu
+				;;
+			*)
+				# Auswahl uebernehmen
+				if [[ $gv_Auswahl == rsync ]] ; then
+					RSYNC_YESNO=yes
+				else
+					RSYNC_YESNO=no
+				fi
+				SERVER_CONF_FILE="${KWRSYNC_CF_DIR}/${gv_Auswahl}.conf"
+				SERVER_EXCLUDE_FILE="${KWRSYNC_CF_DIR}/${gv_Auswahl}-exclude.conf"
+				SERVER_INCLUDE_FILE="${KWRSYNC_CF_DIR}/${gv_Auswahl}-include.conf"
+				SERVER_SRC="$gv_Auswahl"
+				# Server Konfiguration# {{{
+				# Funktion (server_conf_menu)# {{{
+				#
+				SERVER_CONF_MENU=($gv_Display \"\" \"$lv_Exclude_File\" \"$gv_Change\"
+					\"$lv_Include_File\" \"$gv_Change\"
+					$gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+				#
+				server_conf_menu() {
+					menubox "$1" "$SERVER_CONF_TITLE" "$gv_Menupoint" "$SERVER_CONF_MENU"
+				}
+				## }}}
+				server_conf_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+				    	    # Hilfe
+							script_help server_conf_help
+							server_conf_menu
+							;;
+						$gv_Display)
+							# Konfiguration ansehen# {{{
+							if [ -f "$SERVER_CONF_FILE" -a -f "$SERVER_EXCLUDE_FILE" ] ; then
+								print "############################" > ${gv_WorkDir}/display
+								print "# ${SERVER_EXCLUDE_FILE##*/}" >> ${gv_WorkDir}/display
+								print "############################" >> ${gv_WorkDir}/display
+								< "$SERVER_EXCLUDE_FILE" >> ${gv_WorkDir}/display
+								print "" >> ${gv_WorkDir}/display
+								print "############################" >> ${gv_WorkDir}/display
+								print "# ${SERVER_CONF_FILE##*/}" >> ${gv_WorkDir}/display
+								print "############################" >> ${gv_WorkDir}/display
+								< "$SERVER_CONF_FILE" >> ${gv_WorkDir}/display
+								view_file "$SERVER_CONF_FILE"
+							elif [ -f "$SERVER_CONF_FILE" ] ; then
+								print "############################" > ${gv_WorkDir}/display
+								print "# ${SERVER_CONF_FILE##*/}" >> ${gv_WorkDir}/display
+								print "############################" >> ${gv_WorkDir}/display
+								< "$SERVER_CONF_FILE" >> ${gv_WorkDir}/display
+								view_file "$SERVER_CONF_FILE"
+							else
+								no_server_conf_msg
+							fi
+							## }}}
+							server_conf_menu $gv_Display
+							;;
+						$lv_Exclude_File)
+							# Exclude Datei bearbeiten{{{
+							edit_file "$lv_Exclude_File" "$SERVER_EXCLUDE_FILE"
+							#}}}
+							server_conf_menu $lv_Exclude_File
+							;;
+						$lv_Include_File)
+							# Exclude Datei bearbeiten{{{
+							edit_file "$lv_Include_File" "$SERVER_INCLUDE_FILE"
+							#}}}
+							server_conf_menu $lv_Include_File
+							;;
+						$gv_Create)
+							# Konfigurationseintrag erstellen# {{{
+							Backup_Change=no
+							server_input
+							## }}}
+							server_conf_menu $gv_Create
+							;;
+						$gv_Change)
+							# Konfigurationseintrag aendern# {{{
+							if [ -f "$SERVER_CONF_FILE" ] ; then
+								Backup_Change=yes
+								server_change
+							else
+								no_server_conf_msg
+							fi
+							## }}}
+							server_conf_menu $gv_Change
+							;;
+						$gv_Delete)
+							# Konfigurationseintraege loeschen# {{{
+							if [ -f "$SERVER_CONF_FILE" ] ; then
+								server_delete
+							else
+								no_server_conf_msg
+							fi
+							## }}}
+							server_conf_menu $gv_Delete
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				## }}}
+				check_server_choice_menu $SERVER_SRC
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

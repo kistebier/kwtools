@@ -1,0 +1,36 @@
+# transport_help fuer kwpostfix{{{
+TITLE="${TAB}::${gv_Help}"
+MSG=$(gettext 'Hier kann man die Transportmethoden von Postfix einstellen.
+
+Tabellen:
+transport_maps
+virtual_transport
+
+Format:
+# schickt die Mails per UUCP weiter an den Host uuucpgate
+uucptest.de\tuucp:uucpgate
+# Mails an diese Domain werden direkt auf mail.domain.de
+# eingeliefert (eckige Klammern), allerdings nicht auf Port 25
+# sondern auf Port 10025.
+host.domain.de\tsmtp:[mail.domain.de]:10025
+# Alle Mails an Subdomains von domain.de gehen an den MX-Server von
+# mail.domain.de (keine eckigen Klammern).
+.domain.de\tsmtp:test.domain.de
+# Diese Domain reichen wir per lmtp weiter
+kundendomain.de\tlmtp:
+# Alle Mails dieses Users werden an outbound-relay.my.domain
+# geliefert.
+tux@domain.de\tsmtp:outbound-relay.my.domain
+# Alle Mails werden an host.domain.de geliefert.
+*\tsmtp:host.domain.de
+# Alle Mails von domain.de werden an gateway.domain.de geliefert.
+domain.de\t:gateway.domain.de
+# Und man kann den Postfix-Error-Mailer als Transportweg einsetzen
+# der erzeugt dann ein Bounce mit Erklaerung:
+domain.de\terror:Tippfehler, die korrekte Domain ist domain.com.
+')
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

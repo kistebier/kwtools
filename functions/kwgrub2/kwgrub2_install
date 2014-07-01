@@ -1,0 +1,130 @@
+# Funktion (kwgrub2_install), installiert grub2# {{{
+#
+# usage: kwgrub2_install
+#
+kwgrub2_install() {
+	unset -- DEV_INSTALL
+	# Pruefen, ob die Konfigurationsdatei schon erstellt wurde.
+	if [ -f "$GRUB_CONFFILE" ] ; then
+		if [ -n "${DISK_DEV[1]}" ] ; then
+			if [ -n "${PART[1]}" ] ; then
+				DEV_INSTALL=yes
+			fi
+		fi
+		#
+		lv_Disk=$(gettext 'Festplatte')
+		lv_Part=$(gettext 'Partition')
+		lv_Install=$(gettext 'installieren')
+		#
+		if [ "$DEV_INSTALL" = yes ] ; then
+			unset -- GRUB_PART GRUB_DISKS
+			# Funktion install_grub_menue{{{
+			#
+			INSTALL_TITLE=($lv_Installation)
+			INSTALL_MSG=$(gettext 'Waehlen Sie den Ort der Installation aus.')
+			#
+			install_grub_menue() {
+				INSTALL_MENU=($lv_Disk \"$GRUB_DISKS\" $lv_Part \"$GRUB_PART\"
+				$lv_Install \"\" $gv_Back \"\")
+				menubox "$1" "$INSTALL_TITLE" "$INSTALL_MSG" "$INSTALL_MENU"
+			}
+			#}}}
+			#
+			install_grub_menue
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help install_conf_help
+						install_grub_menue
+						;;
+					$lv_Disk)
+						# In welche Festplatten{{{
+						#
+						GRUB_DISK_MSG=$(gettext 'Waehlen Sie die oder mehrere Festplatten aus in den grub2 installiert werden soll.')
+						checklist "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$DISK_DEV_M"
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help grub2_disk_help
+									checklist "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$DISK_DEV_M"
+									;;
+								*)	# uebernehmen
+									GRUB_DISKS="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						#}}}
+						install_grub_menue $lv_Disk
+						;;
+					$lv_Part)
+						# In den Bootsector einer Partition installieren#{{{
+						#
+						unset -- GRUB_PART_DISK_E Part
+						local Part
+						for i in / /boot /boot/grub /boot/grub2 ; {
+							if mountpoint $i &>/dev/null ; then
+								Part=$(grub-probe -t device $i 2>/dev/null)
+								if [ -n "$Part" ] ; then
+									case $Part in
+										/dev/*)
+											GRUB_PART_DISK_E+=($Part $i off)
+											;;
+									esac
+								fi
+							fi
+						}
+						#
+						if [ -n "${GRUB_PART_DISK_E[1]}" ] ; then
+							part_choice -m "$GRUB_PART_DISK_E"
+							if [ "$WERT" ] ; then
+								GRUB_PART="$WERT"
+							fi
+						else
+							no_part_msg
+						fi
+						#}}}
+						install_grub_menue $lv_Part
+						;;
+					$lv_Install)
+						# grub installieren{{{
+						# Pruefen ob das Laufwerk read-write gemountet ist,
+						# da grub-install auch die *.mod Dateien nach /boot/grub
+						# kopiert.
+						check_write_part
+						if [[ $READ_WRITE == yes ]] ; then
+							if [ -n "${GRUB_DISKS[1]}" -o -n "${GRUB_PART[1]}" ] ; then
+								PROG_OPT="--force --no-floppy"
+								for i in ${=GRUB_DISKS} ${=GRUB_PART} ; {
+									grub-install "${=PROG_OPT}" $i 1>/dev/null || prog_failure
+								}
+								unset -- GRUB_PART GRUB_DISKS
+							else
+								MSG=$(gettext 'Einer der Menuepunkte $lv_Disk oder $lv_Part ist nicht belegt.')
+								msgbox "$gv_Attention" "$MSG"
+							fi
+						else
+							no_read_write_msg
+						fi
+						#}}}
+						break
+						;;
+					$gv_Back)	
+						unset -- GRUB_PART GRUB_DISKS
+						break
+						;;
+				esac
+			done
+		else
+			unset -- DEV_INSTALL
+			MSG=$(gettext 'Es sind keine Laufwerke vorhanden ($lv_Disk, $lv_Partition), um grub2 zu installieren.')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+	else
+		no_conf_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

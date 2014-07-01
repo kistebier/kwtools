@@ -1,0 +1,187 @@
+## =============================================================
+## Filename: $HOME/.kwtools/kwmutt/color.header
+## Purpose:     Setup file for the Mail program "Mutt"
+##              Colorize text within messages headers
+##              when viewed with the *internal* pager.
+## Latest change: Tue Mar 17 23:49:50 CET 2009
+## =============================================================
+## Author: Kai Wilke - <http://www.netzworkk.de/> - <kiste@netzworkk.de>
+## Last-Author: Michael Prokop - <http://www.michael-prokop.at/> - <online@michael-prokop.at>
+## Original-Author: Sven Guckes guckes-mutt@math.fu-berlin.de
+## Comments are very very welcome - please send an email!
+## Size:        ca 7K
+## Availability: This file is available as
+## <URL:http://www.math.fu-berlin.de/~guckes/mutt/mutt.color.header>
+## ========================================================================
+
+## =============================================================
+## SEE ALSO:
+## Mutt Manual, Section "Using color and mono video attributes":
+## http://www.math.fu-berlin.de/~guckes/mutt/doc/manual-3.html#color
+## =============================================================
+
+## =============================================================
+## COLOR for Valid Mails
+## =============================================================
+
+## ========== COLOR for data about the *sender*
+#  Sender.
+#  Info relating to the sender:
+color header       red      black    "date: "
+color header       green    black    "from "
+color header       white    red      "from: "
+color header       green    black    "sender: "
+#
+#  "Organisation:" and "Organization:":
+color header       red      black    "organi[sz]ation: "
+#
+#  Programs involved with creation and sending:
+color header   magenta      black    "user-agent: "
+color header       red      black    "x-editor: "
+color header       red      black    "x-mailer: "
+color header   magenta      black    "x-posting-agent: "
+#
+#  Message Identification.
+#  Message-ID, In-Reply-To, and References:
+color header       red      black    "message-id:"
+color header       red      black     "in-reply-to: "
+color header       red      black     "references: "
+
+#  Public Messages (related to MailLists or News/Usenet):
+color header       white    red      "newsgroups: "
+#  "tin" adds "X-Newsgroups:" on CCs:
+color header       white    red      "x-newsgroups: "
+
+#  Redirection of answers (ie followups and replies):
+#  (using the same color for Reply-To as for From: -
+#   unfortunately you cannot "link" color groups.)
+color header brightgreen    black    "followup-to: "
+color header brightgreen    black    "mail-followup-to: "
+color header       white    red      "reply-to: "
+
+#  Importance:, Precedence: Priority:
+#  Color depends on the value:
+color header       yellow   black    "importance: "
+color header       blue     black    "importance: normal"
+color header       yellow   black    "precedence: "
+color header       yellow   black    "priority: "
+color header       red      white    "priority: high"
+color header       red      white    "priority: urgent"
+color header       blue     black    "priority: normal"
+color header       yellow   black    "x-priority: "
+color header       yellow   black    "X-MSMail-Priority: "
+
+#  Subject:
+#  The most important line.  Make good use of it!
+color header       white    blue     "subject: "
+
+## ========== COLOR for data about the *receivers* (TO/CC)
+#  Address lines (To:, Cc:, Reply-To; Bcc:):
+#  Empty address lines get special color:
+#  BUG:  Anchoring at the end-of-line with '$' does not work!  :-(
+#  color header white          magenta  "bcc: $"
+#  color header white          magenta  "to: ?"
+#
+#  Require at least one non-space character
+#  to differentiate from following rules.
+color header green          black    "^bcc: [^ ]"
+color header green          black    "^cc: [^ ]"
+color header green          black    "^to: [^ ]"
+#
+#  Note:  Some mailers add empty Bcc: lines.
+#  No, I don't know why they do this.  ;-)
+
+#  "Delivered-To:" header - only available with MDAs that add it.
+color header   yellow black     "Delivered-To: "
+
+#  The  following are personal settings -
+#  so please adjust for yourself!
+#
+#  "Delivered-To:" header showing that the message was
+#   delivered to  "guckes-word@math.fu-berlin.de":
+#   color header brightyellow black "delivered-to: guckes-[-a-z]+@math.fu-berlin.de"
+color header brightyellow black "Envelope-to: kiste*"
+#
+#  special color for replies to posts on Usenet:
+#   color header      red    white  "to: guckes-usenet"
+color header      red    white  "to: ng@netzworkk.de"
+
+#  Lines that get added by the MDA 9and when mutt
+#  writes changes back to folder on "sync-mailbox"):
+color header   blue  white      "Content-Length: "
+color header   blue  white      "Lines: "
+
+#  Standard Headers that are usually hidden:
+color header   white black      "Received: "
+color header   white black      "Return-Path: "
+
+## ========== COLOR for special header lines
+#  Other additional headers:
+#  Netscape Mozilla adds this:     "X-Accept-Language: en"
+color header   white green      "X-Accept-Language: "
+#
+#  Some people add info on their OS
+#  so they won't have to mention it every time in the body.
+color header   cyan  white      "X-Operating-System: "
+
+#  The "Status" as added by elm, mutt, and pine:
+color header   blue  white      "Status: "
+color header   blue  white      "X-Status: "
+
+#  MIME headers:
+color header   red   yellow     "MIME-Version: "
+color header   red   yellow     "Content-Type: "
+color header   red   yellow     "Content-Transfer-Encoding: "
+color header   red   yellow     "Content-Disposition: "
+color header   red   yellow     "Content-Encoding: "
+color header   red   yellow     "Content-Language: "
+
+#  Deflected ("Resent") Mails (added by mutt
+#  when using the "bounce" command):
+color header   yellow black     "X-Resent-By: "
+color header   yellow black     "X-Resent-For: "
+color header   yellow black     "X-Resent-To: "
+
+####################################################################
+# TODO: (on some rainy day.. ;-)
+# Content-MD5:
+# Errors-To:
+# Status: RO
+# X-Originating-IP: 
+# X-Pgp-Fingerprint:
+# X-Sun-Charset: US-ASCII
+# X-Keywords:
+# X-UID: 17
+# X-Status: F
+####################################################################
+
+## =============================================================
+## COLOR for SPAM - white on magenta
+## =============================================================
+
+color header   white  magenta   "^(.*spam.*):"
+
+#  "To: <address>" - quite probably SPAM!
+#  color header   white  magenta   "To: <[^ ]+>"
+#  color header   white  magenta   "~C ^<[^ ]+>$"
+#
+#  "To: <Undisclosed Recipients>" - SPAM or proper MailList?
+color header   white  magenta   "To: <Undisclosed Recipients>"
+#
+#  Mails delivered to guckes@host.math.fu-berlin.de
+#  are almost always spam:
+#   color header white  magenta "To: .*guckes@[a-z]+.math.fu-berlin.de"
+#
+#  Mails delivered to guckes@inf.fu-berlin.de are almost always spam,
+#  because I have not used this address for years:
+#   color header white  magenta "To: .*guckes@inf.fu-berlin.de"
+#
+#  Mails to an ever older address which has died long ago:
+#   color header white  magenta "To: .*@fub46.zedat.fu-berlin.de"
+#
+#  Bad To and Reply-To lines (without '@' sign):
+color header white  magenta       "To: [^@]+"
+color header white  magenta        "! ~C @"
+color header white  magenta "Reply-To: [^@]+"
+
+#EOF vim: ft=muttrc

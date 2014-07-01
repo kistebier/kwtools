@@ -1,0 +1,518 @@
+# Funktion, kwrsync_backup_exec - Backup ausfuehren{{{
+#
+# usage: kwrsync_backup_exec
+#
+kwrsync_backup_exec() {
+	if [[ ${#argv} == 1 ]] ; then
+		DATE_OPT="$1"
+		DEFAULT_ARGS=(-av --numeric-ids --delete --delete-excluded --relative)
+		ERROR_MSG=$(gettext '${gv_ScriptName}: Backup Fehler')
+		FINISH_MSG=$(gettext '${gv_ScriptName}: Backup beendet')
+		NOT_NET=$(gettext 'kein Netz?')
+		# ins Backup Verzeichnis wechseln falls z. B.
+		# einige Scripts ihren Output im aktuellen Verzeichnis
+		# speichern.
+		cd "$BACKUP_PATH"
+		# Funktion (no_lvm_conf_msg)# {{{
+		#
+		no_lvm_conf_msg() {
+			MSG=$(gettext 'Sie muessen erst LVM in der Konfiguration einstellen.')
+			if [[ -n $gv_Terminal ]] ; then
+				msgbox "$gv_Info" "$MSG"
+			else
+				sys_logger -n syslog "$gv_ScriptName" "$MSG"
+			fi
+		}
+		## }}}
+		# Funktion (rsync_conf_args)# {{{
+		#
+		rsync_conf_args() {
+			unset -- RSYNC_CONF_ARGS
+			# Dateisystemgrenze
+			if [[ $ONE_FS == yes ]] ; then
+				RSYNC_CONF_ARGS="--one-file-system"
+			fi
+		}
+		## }}}
+		# Funktion (check_rsh), remote-shell Option belegen# {{{
+		check_rsh() {
+			case "$RSYNC_RSH" in
+				[rs]sh)
+					if ! [ "`hostname`" = "$S" -o "$S" = localhost ] ; then
+						RSYNC_RSH_ARGS="-e $RSYNC_RSH"
+					fi
+					;;
+			esac
+		}
+		## }}}
+		# Funktion (check_link_dest)# {{{
+		#
+		check_link_dest() {
+			unset -- LINK_DEST
+			# Hardlinks
+			if [[ $LINK_DST == yes ]] ; then
+				if [ -d "${BACKUP_PATH}/hourly.1/${DST}" ] ; then
+					LINK_DEST="--link-dest=${BACKUP_PATH}/hourly.1/${DST}"
+				fi
+			fi
+		}
+		## }}}
+		# Funktion (check_rotate_count)# {{{
+		#
+		# usage: check_rotate_count hourly | daily | weekly  ROTATE_COUNT_NUMBER
+		#
+		check_rotate_count() {
+			if [[ ${#argv} == 2 ]] ; then
+				local Count Opt Arg Tmp
+				Opt="$1"
+				Tmp="$2"
+				(( Arg = Tmp - 1 ))
+				#
+				Count="0"
+				for d in ${BACKUP_PATH}/${Opt}.*(/N) ; {
+					(( Count++ ))
+				}
+				# Einen Zaehler zurueck zaehlen, da ja alles bei 0 anfaengt.
+				if [ "$Count" -gt 0 ] ; then
+					(( Count-- ))
+				fi
+				# noch kein rotate.n Backup vorhanden, s. Konfiguration.
+				if [ "$Count" != "$Arg" ] ; then
+					MSG=$(gettext 'Es ist noch kein Snapshot (${Opt}.${Arg}) vorhanden.')
+					if [[ -n $gv_Terminal ]] ; then
+						msgbox "$gv_Info" "$MSG"
+					else
+						sys_logger -n syslog "$gv_ScriptName" "$MSG"
+					fi
+				fi
+			fi
+		}
+		## }}}
+		# Funktion (backup_rotate), Backup rotieren{{{
+		#
+		backup_rotate() {
+			local Start_Count
+			echo "################################" >> "$LOGFILE"
+			echo "# Datum: `date +%c`" >> "$LOGFILE"
+			echo "################################" >> "$LOGFILE"
+			LOG_ROTATE_MSG=$(gettext 'Rotiere $DATE_OPT Snapshots ...')
+			# Einen Zaehler zurueck zaehlen, da ja alles bei 0 anfaengt.
+			(( RotateCount = ROTATE_COUNT - 1 ))
+			sys_logger -n syslog "$gv_ScriptName" "$LOG_ROTATE_MSG"
+			if [ -d "${BACKUP_PATH}/${DATE_OPT}.${RotateCount}" ] ; then
+				# Anzeige waehrend des Loeschbefehls
+				if [[ -n $gv_Terminal ]] ; then
+					DEL_TITLE=$gv_Delete
+					DEL_MSG=$(gettext 'Loesche das letzte Backup ${DATE_OPT}.${RotateCount}.')
+					rm -rvf ${BACKUP_PATH}/${DATE_OPT}.${RotateCount} | \
+						progressbox "$DEL_TITLE" "$DEL_MSG"
+				else
+					rm -rf ${BACKUP_PATH}/${DATE_OPT}.${RotateCount} &>/dev/null
+				fi
+			fi
+			#
+			#if [[ $LINK_DST == yes ]] && ! [[ DATE_OPT == hourly ]] ; then
+			if [[ $LINK_DST == yes ]] ;  then
+				Start_Count=0
+			else
+				if ! [[ $DATE_OPT == hourly ]] ; then
+					Start_Count=0
+				else
+					Start_Count=1
+				fi
+			fi
+			# 2 runter zaehlen
+			(( ROTATE_COUNT = ROTATE_COUNT - 2 ))
+			# Alle anderen Snapshots nach oben verschieben
+			for old in {$ROTATE_COUNT..$Start_Count} ; {
+				if [ -d "${BACKUP_PATH}/${DATE_OPT}.${old}" ] ; then
+					(( new = old + 1 ))
+					# Datum sichern
+					touch ${BACKUP_PATH}/.timestamp -r ${BACKUP_PATH}/${DATE_OPT}.${old}
+					mv -v ${BACKUP_PATH}/${DATE_OPT}.${old} \
+					${BACKUP_PATH}/${DATE_OPT}.${new} | \
+					&>> "$LOGFILE"
+					# Datum zurueckspielen
+					touch ${BACKUP_PATH}/${DATE_OPT}.${new} -r ${BACKUP_PATH}/.timestamp
+				fi
+			}
+			# hourly Snapshot von Level-0 per Hardlink-Kopie nach Level-1 kopieren
+			# siehe Option -l in man 1 cp.
+			if ! [[ $LINK_DEST == yes ]] ; then
+				if [ -d ${BACKUP_PATH}/hourly.0 -a $DATE_OPT = hourly ] ; then
+					if [[ -n $gv_Terminal ]] ; then
+						PROG_OPT="-avl ${BACKUP_PATH}/hourly.0 ${BACKUP_PATH}/hourly.1"
+						# ausfuehren
+						R_TITLE=$(gettext 'Backuprotierung')
+						cp ${=PROG_OPT} | tee -a "$LOGFILE" | \
+							progressbox "$R_TITLE" "$LOG_ROTATE_MSG"
+					else
+						cp -al ${BACKUP_PATH}/hourly.0 ${BACKUP_PATH}/hourly.1
+					fi
+				fi
+			elif [ $DATE_OPT = hourly ] ; then
+				mkdir -m 0755 -p ${BACKUP_PATH}/hourly.0
+			fi
+		}
+		#}}}
+		# Funktion (rsync_exec), rsync ohne lvm ausfuehren{{{
+		rsync_exec() {
+			# IFS
+			IFSOLD="$IFS"
+			IFS="$IFSBAK"
+			# ausfuehren mit dialog Anzeige
+			if [[ -n $gv_Terminal ]] ; then
+				P_TITLE=$(gettext 'Ausfuehrung')
+				P_MSG="$LOG_START_MSG (${S}-log)"
+				(rsync ${=RSYNC_OPT} | \
+					tee -a "$LOGFILE" || \ 
+					sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG") | \
+					progressbox "$P_TITLE" "$P_MSG"
+			else
+				rsync ${=RSYNC_OPT} | \
+					tee -a ${BACKUP_PATH}/hourly.0/${S}-log | &>> "$LOGFILE"
+				# Rueckgabewert pruefen.
+				# 0 = fehlerfrei, 
+				# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
+				# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+				# Alles andere ist fatal -- siehe man (1) rsync
+				if ! [ $? = 24 -o $? = 0 ] ; then
+					sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG"
+					> "${gv_WorkDir}/error" <<< "${S}:
+					$NOT_NET"
+					< ${BACKUP_PATH}/hourly.0/${S}-log >> "${gv_WorkDir}/error"
+					mail -s "$ERROR_MSG" root < "${gv_WorkDir}/error"
+				fi
+			fi
+			# IFS
+			IFS="$IFSOLD"
+		}
+		#}}}
+	# Funktion (backup_exec), einlesen der Konfigurationsdaten der# {{{
+	# einzelnen Server und darauf rsync, RLVM, ... ausfuehren.
+	backup_exec() {
+		unset -- BackupList $SERVER_UNSET
+		for S in ${=SERVER} ; {
+			# rsync Argumente aus der globalen Konfiguration belegen
+			rsync_conf_args
+			# Rechner in Logdatei schreiben
+			echo "################################" >> "$LOGFILE"
+			echo "# $S" >> "$LOGFILE"
+			echo "################################" >> "$LOGFILE"
+			# Konfigurationsdateien einlesen
+			if [ -f ${KWRSYNC_CF_DIR}/${S}.conf ] ; then
+				# Logdatei loeschen
+				rm -f ${BACKUP_PATH}/hourly.0/${S}-log &>/dev/null
+				# Exclude Datei
+				if [ -f ${KWRSYNC_CF_DIR}/${S}-exclude.conf ] ; then
+					SERVER_EX_FILE="--exclude-from=${KWRSYNC_CF_DIR}/${S}-exclude.conf"
+				else
+					unset -- SERVER_EX_FILE
+				fi
+				# Include Datei
+				if [ -f ${KWRSYNC_CF_DIR}/${S}-include.conf ] ; then
+					SERVER_IN_FILE="--include-from=${KWRSYNC_CF_DIR}/${S}-include.conf"
+				else
+					unset -- SERVER_IN_FILE
+				fi
+				# Backup
+				LOG_START_MSG=$(gettext 'Starte rsync Backup von ${S} ${DLVM}${SRC%/} ...')
+				LOG_ERR_MSG=$(gettext 'FATAL: rsync Backup ($S) mit Fehlern beendet!')
+				LOG_FINISH_MSG=$(gettext 'Beende rsync Backup von $S ...')
+				# Logging beginnen.
+				sys_logger -n syslog "$gv_ScriptName" "$LOG_START_MSG"
+				#
+				setopt localoptions shwordsplit
+				# IFS=Return
+				IFS=$'\r'
+				#
+				read -A BackupList <<< "`grep -v "^#" ${KWRSYNC_CF_DIR}/${S}.conf | tr "\n" "$IFS"`"
+				# IFS=Tab
+				IFS=$'\t'
+				Nr=1
+				while [ "${BackupList[Nr]}" != "" ] ; do
+					set -- ${BackupList[Nr]}
+					case "$1" in
+						backup)
+							# Backup Daten
+							case "$2" in
+								lvm://*)
+									# LVM Einstellungen checken# {{{
+									if [[ -x $LVCREATE_CMD ]] && [[ -x $LVREMOVE_CMD ]] && \
+										[[ -n $LV_SIZE ]] && [[ -d $VG_PATH ]] && \
+										[[ -d $LVM_MOUNTPOINT ]] ; then
+										# Variablen belegen
+										Tmp="${${(ws:/:)${2#lvm://}}[1]}"
+										Tmp1="${${(ws:/:)${2#lvm://}}[2]}"
+										DLVM="lvm://${Tmp}/${Tmp1}"
+										RLVM="${VG_PATH}/${Tmp}/${Tmp1}"
+										RVG="${VG_PATH}/${Tmp}"
+										SRC="/${2#lvm://${Tmp}/${Tmp1}}"
+										DST="$3"
+										RSYNC_ARGS="$4"
+										# LV erstellen und mounten
+										if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+											mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+										fi
+										#
+										SNAPSHOT_NAME="${SNAPSHOT_NAME:-lvmsnapshot}"
+										RLVM_CREATE_OPT=(--snapshot --size $LV_SIZE 
+											--name $SNAPSHOT_NAME $RLVM)
+										$LVCREATE_CMD ${=RLVM_CREATE_OPT} &>> "$LOGFILE"
+										# Snapshot mounten
+										mount "${RVG}/${SNAPSHOT_NAME}" "$LVM_MOUNTPOINT"
+										# ins Verzeichnis wechseln
+										pushd ${LVM_MOUNTPOINT%/}${SRC}
+										#
+										check_link_dest
+										RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
+											$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST .
+											${BACKUP_PATH}/hourly.0/${DST})
+										# rsync ausfuehren
+										rsync_exec
+										# zurueck ins alte Verzeichnis
+										popd
+										# LV umounten und loeschen
+										umount "$LVM_MOUNTPOINT"
+										#
+										$LVREMOVE_CMD --force "${RVG}/${SNAPSHOT_NAME}" | \
+											&>> "$LOGFILE"
+									else
+										no_lvm_conf_msg
+									fi
+									## }}}
+									;;
+								rsync://*)
+									SRC="$2"
+									DST="$3"
+									RSYNC_ARGS="$4"
+									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+									fi
+									check_link_dest
+									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
+										$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST 
+										$SRC ${BACKUP_PATH}/hourly.0/${DST})
+									# rsync ausfuehren
+									rsync_exec
+									;;
+								*@*:/*|/*)
+									SRC="$2"
+									DST="$3"
+									RSYNC_ARGS="$4"
+									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+									fi
+									check_rsh
+									check_link_dest
+									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
+										$RSYNC_RSH_ARGS $SERVER_EX_FILE
+										$SERVER_IN_FILE $LINK_DEST 
+										$SRC ${BACKUP_PATH}/hourly.0/${DST})
+									# rsync ausfuehren
+									rsync_exec
+									;;
+							esac
+							(( Nr++ ))
+							;;
+						backup_script)
+							# Scripte/Befehle# {{{
+							SCRIPT="${2//\"/\"}"
+							DST="$3"
+							# IFS
+							IFSOLD="$IFS"
+							IFS="$IFSBAK"
+							if [ ! -d "${BACKUP_PATH}/hourly.0/${DST%/*}" ] ; then
+								mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST%/*}" &>/dev/null
+							fi
+							# temporares Verzeichnis erstellen
+							# und hinein wechseln.
+							mkdir -p -m 0755 ${BACKUP_PATH}/tmp
+							pushd ${BACKUP_PATH}/tmp
+							# Script/Befehl ausfuehren mit syslog
+							eval ${=SCRIPT} | &>> "$LOGFILE"
+							if [ "$?" != 0 ] ; then
+								# Fehler Loggen
+								SCRIPT_ERR_MSG=$(gettext 'ERROR: backup_script $SCRIPT returned 1')
+								sys_logger -r syslog "$gv_ScriptNameT" "$SCRIPT_ERR_MSG"
+							fi
+							# hourly Snapshot von Level-1 per Hardlink-Kopie 
+							# nach Level-0 kopieren
+							# siehe Option -l in man 1 cp.
+							# erstmal das Ziel fuer den Link herausfinden
+							if [[ ${DST%/*} == $DST ]] ; then
+								DST_LINK=""
+							else
+								DST_LINK="${DST%/*}"
+							fi
+							if [ -d ${BACKUP_PATH}/hourly.1/${DST} ] ; then
+								if [[ -n $gv_Terminal ]] ; then
+									PROG_OPT="-avl ${BACKUP_PATH}/hourly.1/${DST} ${BACKUP_PATH}/hourly.0/${DST_LINK}"
+									# ausfuehren
+									R_TITLE=$(gettext 'Backuprotierung')
+									cp ${=PROG_OPT} | tee -a "$LOGFILE" | \
+										progressbox "$R_TITLE" "$LOG_ROTATE_MSG"
+								else
+									cp -al ${BACKUP_PATH}/hourly.1/${DST} \
+										${BACKUP_PATH}/hourly.0/${DST_LINK} | \
+										&>> "$LOGFILE"
+								fi
+							else
+								mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" #&>/dev/null
+							fi
+							#
+							# Daten kopieren
+							cd ..
+							cp -av ./tmp/* ${BACKUP_PATH}/hourly.0/${DST} 2>/dev/null | \
+								&>> "$LOGFILE"
+							popd
+							# temporares Verzeichnis loeschen
+							rm -rf ${BACKUP_PATH}/tmp &>/dev/null
+							(( Nr++ ))
+							# IFS
+							IFS="$IFSOLD"
+							## }}}
+							;;
+					esac
+				done
+				# IFS
+				IFS="$IFSBAK"
+				# Fertig!
+				sys_logger -n syslog "$gv_ScriptName" "$LOG_FINISH_MSG"
+				# Verzeichnis anfassen, um Backup-Datum zu speichern
+				touch "${BACKUP_PATH}/hourly.0"
+				# Sicher ist sicher...
+				sync
+			else
+				MSG=$(gettext 'Es ist keine Konfiguration (${S}.conf) vorhanden.')
+				if [[ -n $gv_Terminal ]] ; then
+					msgbox "$gv_Info" "$MSG"
+				else
+					sys_logger -n syslog "$gv_ScriptName" "$MSG"
+				fi
+			fi
+			# Logdatei loeschen
+			rm -f ${BACKUP_PATH}/hourly.0/${S}-log &>/dev/null
+		}
+	}
+	## }}}
+		# Funktion (backup_rot_exec), Rotierung und Backup ausfuehren# {{{
+		#
+		backup_rot_exec() {
+			# Konfigurationen auf multiple Ziel Eintraege pruefen
+			# und gegebenfalls abbrechen
+			awk -F '\t' '(/^backup_script*/){print $3}'  \
+				${KWRSYNC_CF_DIR}/*.conf~*-exclude.conf~*-include.conf(.N) \
+				> ${gv_WorkDir}/conftest
+			while read b ; do 
+				if [ `print -l ${(M)$(< ${gv_WorkDir}/conftest)##${b}*} | wc -l` -gt 1 ] ; then
+					Tmp=${(M)$(< ${gv_WorkDir}/conftest)[(fR)${b}*]}
+					#MSG=$(gettext 'ERROR: destination conflict between \"$b\" and \"$Tmp\" in multiple backup_script entries')
+					MSG=$(gettext 'ERROR: Zielkonflikt zwischen \"$b\" und \"$Tmp\" bei mehrfachen backup_script Eintraegen.')
+					if [[ -n $gv_Terminal ]] ; then
+						msgbox "$gv_Attention" "$MSG"
+					else
+						sys_logger -r syslog "$gv_ScriptName" "$MSG"
+					fi
+					return 1
+				fi
+			done < ${gv_WorkDir}/conftest
+			# Ggf. Verzeichnis anlegen
+			if [ ! -d ${BACKUP_PATH}/hourly.0 ] ; then
+				mkdir -m 0755 -p ${BACKUP_PATH}/hourly.0 &>/dev/null
+			fi
+			# Erst einmal das Dateisystem auf dem localhost
+			# synchronisieren.
+			sync
+			#
+			case "$DATE_OPT" in
+				hourly)
+					#
+					# preexec Script ausfuehren, falls vorhanden.
+					#
+					if [ -x "${PREEXEC%% *}" ] ; then
+						${=PREEXEC} | &>> "$LOGFILE"
+					fi
+					# Rotierung
+					backup_rotate
+					# Snapshot taetigen
+					backup_exec
+					#
+					# postexec Script ausfuehren, falls vorhanden.
+					if [ -x "${POSTEXEC%% *}" ] ; then
+						${=POSTEXEC} | &>> "$LOGFILE"
+					fi
+					;;
+				daily)
+					# Rotierung
+					backup_rotate
+					#
+					check_rotate_count hourly $ROTATE_COUNT_HOURLY
+					(( RotateCount = ROTATE_COUNT_HOURLY - 1 ))
+					if [ -d ${BACKUP_PATH}/hourly.${RotateCount} ] ; then
+						mv -v ${BACKUP_PATH}/hourly.${RotateCount} \
+							${BACKUP_PATH}/${DATE_OPT}.0 | \
+							&>> "$LOGFILE"
+					fi
+					;;
+				weekly)
+					# Rotierung
+					backup_rotate
+					#
+					check_rotate_count daily $ROTATE_COUNT_DAILY
+					(( RotateCount = ROTATE_COUNT_DAILY - 1 ))
+					if [ -d ${BACKUP_PATH}/daily.${RotateCount} ] ; then
+						mv -v ${BACKUP_PATH}/daily.${RotateCount} \
+							${BACKUP_PATH}/${DATE_OPT}.0 | \
+							&>> "$LOGFILE"
+					fi
+					;;
+				mounthly)
+					# Rotierung			
+					backup_rotate
+					#
+					check_rotate_count weekly $ROTATE_COUNT_WEEKLY
+					(( RotateCount = ROTATE_COUNT_WEEKLY - 1 ))
+					if [ -d ${BACKUP_PATH}/weekly.${RotateCount} ] ; then
+						mv -v ${BACKUP_PATH}/weekly.${RotateCount} \
+							${BACKUP_PATH}/${DATE_OPT}.0 | \
+							&>> "$LOGFILE"
+					fi
+					;;
+			esac
+		}
+		## }}}
+		# Option checken# {{{
+		#
+		case $DATE_OPT in
+			hourly)
+				# stuendlich
+				ROTATE_COUNT="${ROTATE_COUNT_HOURLY:-6}"
+				backup_rot_exec
+				;;
+			daily)
+				# check auf hourly Count Snapshot
+				ROTATE_COUNT="${ROTATE_COUNT_DAILY:-7}"
+				backup_rot_exec
+				;;
+			weekly)
+				# check auf daily Count Snapshot
+				ROTATE_COUNT="${ROTATE_COUNT_WEEKLY:-4}"
+				backup_rot_exec
+				;;
+			mounthly)
+				# check auf weekly Count Snapshot
+				ROTATE_COUNT="${ROTATE_COUNT_MOUNTHLY:-6}"
+				backup_rot_exec
+				;;
+		esac
+		## }}}
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

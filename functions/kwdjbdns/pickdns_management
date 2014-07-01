@@ -1,0 +1,461 @@
+# Funktion um den pickdns server zu verwalten{{{
+#
+# usage: pickdns_management
+#
+pickdns_management() {
+	unset -- H_IP DATA ROH
+	#
+	if [[ -d ${SV_DIR}/${DNS} ]] ; then
+		# einige gettext Variablen
+		lv_Ignore=$(gettext 'ignorieren')
+		lv_Exclude=$(gettext 'exclude')
+		lv_Include=$(gettext 'include')
+		lv_Prefix=$(gettext 'IP-Prefix')
+		lv_Host_Add="$gv_Host $lv_Add"
+		lv_Host_Ignore="$gv_Host $lv_Ignore"
+		lv_Location=$(gettext 'Ort')
+		lv_Location_Prefix="$lv_Location $lv_Prefix"
+		lv_Location_Add="$lv_Location $gv_Host $lv_Add"
+		lv_Location_Ignore="$lv_Location $gv_Host $lv_Ignore"
+		PICKDNS_TITLE=(${lv_Administration}::${lv_Pickdns})
+		#
+		# Funktion (sort_entries), Eintraege sortieren.# {{{
+		sort_entries() {
+			if [ -s ${SV_DIR}/${DNS}/root/data ] ; then
+				rm -f ${gv_WorkDir}/data \
+				${gv_WorkDir}/fqdn_ip_lo_plus ${gv_WorkDir}/fqdn_ip_lo_minus \
+				${gv_WorkDir}/host_ip_plus ${gv_WorkDir}/host_ip_minus \
+				${gv_WorkDir}/lo &>/dev/null
+				while read DATA ; do
+					case "$DATA" in
+						+*:[1-9.]*.*:[a-zA-Z][a-zA-Z])
+							# Rechner + Location include
+							>> ${gv_WorkDir}/fqdn_ip_lo_plus <<< $DATA
+							;;
+						-*:[1-9]*.*:[a-zA-Z][a-zA-Z])
+							# Rechner + Location exclude
+							>> ${gv_WorkDir}/fqdn_ip_lo_minus <<< $DATA
+							;;
+						+*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+							# Rechner include
+							>> ${gv_WorkDir}/host_ip_plus <<< $DATA
+							;;
+						-*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+							# Rechner exclude
+							>> ${gv_WorkDir}/host_ip_minus <<< $DATA
+							;;
+						%*:[1-9.]*)
+							# Rechner + Location include
+							>> ${gv_WorkDir}/lo <<< $DATA
+							;;
+					esac
+				done <${SV_DIR}/${DNS}/root/data
+				#
+				if [ -s ${gv_WorkDir}/lo ] ; then
+					< ${gv_WorkDir}/lo >> ${gv_WorkDir}/data
+				fi
+				if [ -s ${gv_WorkDir}/fqdn_ip_lo_plus ] ; then
+					< ${gv_WorkDir}/fqdn_ip_lo_plus >> ${gv_WorkDir}/data
+				fi
+				if [ -s ${gv_WorkDir}/fqdn_ip_lo_minus ] ; then
+					< ${gv_WorkDir}/fqdn_ip_lo_minus >> ${gv_WorkDir}/data
+				fi
+				if [ -s ${gv_WorkDir}/host_ip_plus ] ; then
+					< ${gv_WorkDir}/host_ip_plus >> ${gv_WorkDir}/data
+				fi
+				if [ -s ${gv_WorkDir}/host_ip_minus ] ; then
+					< ${gv_WorkDir}/host_ip_minus >> ${gv_WorkDir}/data
+				fi
+			fi
+		}
+		#}}}
+		# Funktion (is_existed_msg), Nachricht das dieser Eintrag schon vorhanden ist.# {{{
+		is_existed_msg() {
+			if [[ ${#argv} == 1 ]] ; then
+				msgbox "$gv_Attention" "$1"
+			else
+				no_para_msg $0
+			fi
+		}
+		#}}}
+		# Funktion (add_location), Ort/Location angeben{{{
+		#
+		# usage: add_host PREFIX_CHAR
+		# PREFIX_CHAR - + Location wird beruecksichtigt
+		# PREFIX_CHAR - - Location wird ignoriert
+		add_location() {
+			unset -- PREFIX_CHAR HOSTNAME IP LO IP_PREFIX
+			if [ "$argv" = + -o "$argv" = - ] ; then
+				PREFIX_CHAR="$1"
+			fi
+			# Funktion pickdns_location_menu{{{
+			LOADD_TITLE=(${PICKDNS_TITLE}::${lv_Location})
+			#
+			pickdns_location_menu() {
+				if [[ -z $PREFIX_CHAR ]] ; then
+					LOADD_MENU=(\"$lv_Location\" \"$LO\" $lv_Prefix \"$IP_PREFIX\"
+						$gv_Save \"\" $gv_Back \"\")
+				else
+					LOADD_MENU=(\"$lv_Location\" \"$LO\"
+						$gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+						$gv_Save \"\" $gv_Back \"\")
+				fi
+				menubox "$1" "$LOADD_TITLE" "$gv_Menupoint" "$LOADD_MENU"
+			}
+			#}}}
+			pickdns_location_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)
+						script_help pickdns_help
+						pickdns_location_menu
+						;;
+					"$lv_Location")
+						# Auswahl der Location# {{{
+						L_MSG=$(gettext 'Geben Sie den Aufstellungsort (Bsp.: de) ein.')
+						inputbox "$LOADD_TITLE" "$L_MSG" "$LO"
+						if [ -n "$gv_Auswahl" ] ; then
+							LO="$gv_Auswahl"
+						else
+							unset -- LO
+						fi
+						## }}}
+						pickdns_location_menu $lv_Location
+						;;
+					$lv_Prefix)
+						# IP-Prefix der Location.# {{{
+						iface_ip -p "$IP_PREFIX"
+						if [ -n "$gv_Ip" ] ; then
+							IP_PREFIX="$gv_Ip"
+						else
+							unset -- IP_PREFIX
+						fi
+						## }}}
+						pickdns_location_menu $lv_Prefix
+						;;
+					$gv_Host)
+						# Rechnernamen eingeben# {{{
+						conf_hostname -f $HOSTNAME
+						if [ -n "$gv_Hostname" ] ; then
+							HOSTNAME="$gv_Hostname"
+						else
+							unset -- HOSTNAME
+						fi
+						## }}}
+						pickdns_location_menu $gv_Host
+						;;
+					$lv_Ip)
+						# IP-Adresse eingeben# {{{
+						iface_ip $IP
+						if [ -n "$gv_Ip" ] ; then
+							IP="$gv_Ip"
+						else
+							unset -- IP
+						fi
+						## }}}
+						pickdns_location_menu $lv_Ip
+						;;
+					$gv_Save)
+						# speichern# {{{
+						if [ -n "$LO" -a -n "$HOSTNAME" -a -n "$IP" ] ; then
+							IST=no
+							while read DATA ; do
+								case "$DATA" in
+									%*:[1-9.]*)
+										# Rechner + Location include
+										if [ "$DATA" = "%${LO}:${IP_PREFIX}" ] ; then
+											IST=yes
+										fi
+										;;
+									+*:[1-9.]*.*:[a-zA-Z][a-zA-Z])
+										# Rechner + Location include
+										if [ "$DATA" = "${PREFIX_CHAR}${HOSTNAME}:${IP}:${LO}" ] ; then
+											IST=yes
+										fi
+										;;
+									-*:[1-9]*.*:[a-zA-Z][a-zA-Z])
+										# Rechner + Location exclude
+										if [ "$DATA" = "${PREFIX_CHAR}${HOSTNAME}:${IP}:${LO}" ] ; then
+											IST=yes
+										fi
+										;;
+								esac
+							done <${SV_DIR}/${DNS}/root/data
+							#
+							if [[ $IST == no ]] ; then
+								print "${PREFIX_CHAR}${HOSTNAME}:${IP}:${LO}" >> data
+								# fertig
+								unset -- IP HOSTNAME LO IP_PREFIX
+								break
+							else
+								MSG=$(gettext 'Dieser $lv_Location ($LO), $HOSTNAME und die $IP sind schon vorhanden.')
+								is_existed_msg "$MSG"
+							fi
+						elif [ -n "$LO" -a -n "$IP_PREFIX" ] ; then
+							IST=no
+							while read DATA ; do
+								case "$DATA" in
+									%*:[1-9.]*)
+										# Rechner + Location include
+										if [ "$DATA" = "%${LO}:${IP_PREFIX}" ] ; then
+											IST=yes
+										fi
+										;;
+								esac
+							done <${SV_DIR}/${DNS}/root/data
+							#
+							if [[ $IST == no ]] ; then
+								print "%${LO}:${IP_PREFIX}" >> data
+								# fertig
+								unset -- IP HOSTNAME LO IP_PREFIX
+								break
+							else
+								MSG=$(gettext 'Dieser $lv_Location ($LO) und der $lv_Prefix ($IP_PREFIX) sind schon vorhanden.')
+								is_existed_msg "$MSG"
+							fi
+						else
+							MSG=$(gettext 'Sie muessen mindestens die Punkte $lv_Location und $lv_Prefix, oder $lv_Location, $gv_Host und $lv_Ip, mit Werten belegen.')
+							msgbox "$gv_Info" "$MSG"
+						fi
+						## }}}
+						pickdns_location_menu
+						;;
+					$gv_Break)
+						unset -- IP HOSTNAME LO IP_PREFIX
+						break
+						;;
+				esac
+			done
+		}
+		#}}}
+		# Funktion (add_host), Rechner angeben{{{
+		#
+		# usage: add_host PREFIX_CHAR
+		# PREFIX_CHAR - + Rechner wird beruecksichtigt
+		# PREFIX_CHAR - - Rechner wird ignoriert
+		add_host() {
+			unset -- PREFIX_CHAR HOSTNAME IP
+			if [ "$argv" = + -o "$argv" = - ] ; then
+				PREFIX_CHAR="$1"
+				# Funktion pickdns_host_menu{{{
+				HOSTADD_TITLE=(${PICKDNS_TITLE}::${gv_Host})
+				#
+				pickdns_host_menu() {
+					HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+					$gv_Save \"\" $gv_Back \"\")
+					menubox "$1" "$HOSTADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+				}
+				#}}}
+				pickdns_host_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help pickdns_help
+							pickdns_host_menu
+							;;
+						$gv_Host)
+							# Rechnernamen eingeben# {{{
+							conf_hostname -f $HOSTNAME
+							if [ -n "$gv_Hostname" ] ; then
+								HOSTNAME="$gv_Hostname"
+							else
+								unset -- HOSTNAME
+							fi
+							## }}}
+							pickdns_host_menu $gv_Host
+							;;
+						$lv_Ip)
+							# IP-Adresse eingeben# {{{
+							iface_ip $IP
+							if [ -n "$gv_Ip" ] ; then
+								IP="$gv_Ip"
+							else
+								unset -- IP
+							fi
+							## }}}
+							pickdns_host_menu $lv_Ip
+							;;
+						$gv_Save)
+							# speichern# {{{
+							if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+								IST=no
+								while read DATA ; do
+									case "$DATA" in
+										+*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+											# Rechner include
+											if [ "$DATA" = "${PREFIX_CHAR}${HOSTNAME}:${IP}" ] ; then
+												IST=yes
+											fi
+											;;
+										-*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+											# Rechner exclude
+											if [ "$DATA" = "${PREFIX_CHAR}${HOSTNAME}:${IP}" ] ; then
+												IST=yes
+											fi
+											;;
+									esac
+								done <${SV_DIR}/${DNS}/root/data
+								#
+								if [[ $IST == no ]] ; then
+									>> data <<< "${PREFIX_CHAR}${HOSTNAME}:${IP}"
+									# fertig
+									unset -- IP HOSTNAME
+									break
+								else
+									MSG=$(gettext 'Dieser $gv_Host (${HOSTNAME}:${IP}) ist schon vorhanden.')
+									is_existed_msg "$MSG"
+								fi
+							else
+								MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+							## }}}
+							pickdns_host_menu
+							;;
+						$gv_Back)
+							unset -- IP HOSTNAME
+							break
+							;;
+					esac
+				done
+			else
+				no_para_msg $0
+			fi
+		}
+		#}}}
+		# Funktion pickdns_conf_menue{{{
+		pickdns_conf_menue() {
+			CONF_MENU=($gv_Display \"\" \"$lv_Host_Add\" \"\" \"$lv_Host_Ignore\" \"\"
+				\"$lv_Location_Prefix\" \"\" \"$lv_Location_Add\" \"\"
+				\"$lv_Location_Ignore\" \"\" $gv_Delete \"\"
+				$lv_Database \"$lv_New_Create\" $gv_Back \"\")
+			menubox "$1" "$PICKDNS_TITLE" "$gv_Menupoint" "$CONF_MENU"
+		}
+		#}}}
+		#
+		cd ${SV_DIR}/${DNS}/root
+		pickdns_conf_menue
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+					# Hilfetext fuer pickdns
+					#
+					script_help pickdns_help
+					pickdns_conf_menue
+					;;
+				$gv_Display)
+					# Konfigurationsanzeige{{{
+					if [ -s data ] ; then
+						view_file data
+					else
+						no_entry_msg 
+					fi
+					#}}}
+					pickdns_conf_menue $gv_Display
+					;;
+				"$lv_Location_Prefix")
+					# Location/Ort plus IP-Prefix angeben
+					add_location
+					sort_entries
+					pickdns_conf_menue "$lv_Location_Prefix"
+					;;
+				"$lv_Location_Add")
+					# Location/Ort+Rechner+IP-Adresse angeben
+					add_location +
+					sort_entries
+					pickdns_conf_menue "$lv_Location_Add"
+					;;
+				"$lv_Location_Ignore")
+					# Location/Ort plus IP-Prefix angeben
+					add_location -
+					sort_entries
+					pickdns_conf_menue "$lv_Location_Ignore"
+					;;
+				"$lv_Host_Add")
+					# Rechner angeben, die beruecksichtigt werden sollen
+					add_host +
+					sort_entries
+					pickdns_conf_menue "$lv_Host_Add"
+					;;
+				"$lv_Host_Ignore")
+					# Rechner angeben, die ignoriert werden sollen
+					add_host -
+					sort_entries
+					pickdns_conf_menue "$lv_Host_Ignore"
+					;;
+				$gv_Delete)
+					# Datenbank Eintraege loeschen{{{
+					unset -- E_Menue
+					ANZ=1
+					while read DATA ; do
+						case $DATA in
+							-*:[1-9]*.*:[a-zA-Z][a-zA-Z])
+								# Rechner + Location exclude
+								E_Menue[ANZ]="$DATA $lv_Exclude off"
+								;;
+							+*:[1-9.]*.*:[a-zA-Z][a-zA-Z])
+								# Rechner + Location include
+								E_Menue[ANZ]="$DATA $lv_Include off"
+								;;
+							-*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+								# Rechner exclude
+								E_Menue[ANZ]="$DATA \"$gv_Host $lv_Exclude\" off"
+								;;
+							+*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
+								# Rechner include
+								E_Menue[ANZ]="$DATA \"$gv_Host $lv_Include\" off"
+								;;
+							%*:[1-9.]*)
+								# Rechner + Location include
+								E_Menue[ANZ]="$DATA $lv_Location off"
+								;;
+						esac
+						(( ANZ++ ))
+					done <data
+					#
+					if [ -n "${E_Menue[1]}" ] ; then
+						DEL_MENU=($E_Menue)
+						DEL_TITLE=(${PICKDNS_TITLE})
+						checklist "$PICKDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help share/conf_del_help
+									checklist "$PICKDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
+									;;
+								*)
+									# Eintraege loeschen
+									for i in ${=gv_Auswahl} ; {
+										ROH="${i//\"}" 
+										grep -v $ROH data >data.$$
+										mv data.$$ data
+									}
+									break
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+					#}}}
+					pickdns_conf_menue $gv_Delete
+					;;
+				$lv_Database)
+					# Datenbank neu erstellen
+					make &>/dev/null
+					break
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done	
+	else
+		no_dns_msg $DNS
+	fi
+	#
+	unset -- H_IP DATA ROH
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

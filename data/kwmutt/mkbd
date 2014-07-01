@@ -1,0 +1,187 @@
+## ========================================================================# {{{
+## File:          $HOME/.kwtools/kwmutt/mkbd
+## Purpose:       Setup file for the Mail program "Mutt".
+##                keybindings
+## Latest change: Mon Jun 15 22:30:54 CET 2009
+## ========================================================================
+## Author: Kai Wilke - <http://www.netzworkk.de/> - <kiste@netzworkk.de>
+## ========================================================================
+## Size:        ca. 10K
+## ========================================================================
+#}}}
+
+# NOTIZ: Ist alles noch in Entwicklung.
+
+## ========================================================================
+## Beschreibung der Tasten# {{{
+## ========================================================================
+#
+# \e - ESC
+# \c - CTRL
+# <Fn> - F-Tasten, n - 1-12.
+
+# Wichtige Tastenbelegung von Mutt die sie so lassen sollten.
+#
+# ?		(?: Fragen) Zeigt eine Liste aller Tastenbelegungen an, die momentan
+# 		verfügbar sind. Funktioniert so ziemlich überall.
+# F1	(Hilfetaste) Die Taste F1 öffnet das Handbuch, leider in englischer Sprache. 
+# F2	(Hilfetaste) Die Taste F2 öffnet die Hilfe zu Smileys & Co. 
+# m		(mail) Neue Mail schreiben beziehungsweise erstellen. 
+# r		(reply: antworten) Auf die aktuell markierte Mail antworten. 
+# g		(group-reply: an Gruppe antworten) Die aktuelle markierte Mail
+# 		beantworten, dabei alle ursprünglichen Empfänger in Kopie setzen. 
+# s		(save: speichern) Die ausgewählte Nachricht in einen anderen Folder
+# 		verschieben (abspeichern). 
+# d		(delete: löschen) Die ausgewählte Nachricht löschen. 
+# D		(DELETE pattern: nach muster löschen) Löscht viele Mails,
+# 		die einem bestimmten Muster genügen. Hier kann man alle neuen
+# 		(ungelesenen) Mails löschen oder alle von einem bestimmten Absender.
+# u		(undelete: nicht löschen) Als gelöscht markierte Mails doch nicht löschen. 
+# o		(order: Reihenfolge) Sortierreihenfolge der Nachrichten im Index
+# 		auswählen. Folgende Optionen stehen danach zur Auswahl: (D)atum,
+# 		(A)bsender, Ei(n)gang, (B)etreff, (E)mpfänger, (F)aden, (u)nsortiert,
+# 		(G)röße, Be(w)ertung (Scoring/Punkte). 
+# O		(reverseOrder: Rückwärts) Sortiert wie "o" (order), nur in
+# 		umgekehrter Reihenfolge. 
+# l		(limit: Begrenzung) Es werden nur Nachtichten angezeigt, die ein
+# 		bestimmtes Muster beinhalten. 
+# t		(tag: Markierung) Markiert die ausgewählte Nachricht. Es können
+# 		viele Nachrichten auf diese Art markiert werden. 
+# T		(TAG pattern: Markierung nach Muster) Markiert Nachrichten, die
+# 		auf ein bestimmtes Muster passen. 
+# ;		Das folgende Kommando bezieht sich nicht auf die Nachricht, die
+# 		mit dem Leuchtbalken markiert ist, sondern auf alle momentan
+# 		markierten Nachrichen. So kann man beispielsweise viele Mails
+# 		mit einem Mal abspeichern oder löschen. 
+# Tabulator		(automatische Vervollständigung, wie in einer Shell)
+# 		Mit der Tabulatortaste wird auf der Eingabeaufforderungen eine
+# 		automatische Vervollständigung durchgeführt, wie man das von
+# 		Shells gewohnt ist. In der Index und der Pager Ansicht springt
+# 		man mit der Tabulatortaste zur nächsten neuen (noch nicht gelesenen)
+# 		Mail. Diese Taste funktioniert sogar bei der Abfrage nach
+# 		E-Mail-Empfängern (und benutzt hier die Aliasliste). 
+# c		(change: wechseln) In eine andere Mailbox (Folder) wechseln.
+# 		Man wird nach dem Pfad gefragt. Mit "?" bekommt man eine Liste angezeigt. 
+# a		(add: hinzufügen) Absenderadresse der E-Mail zum Adressbuch (Aliasdatei)
+# 		hinzufügen. Die Werte kann man vor dem Speichern noch bearbeiten. 
+# STRG+g	Die aktuelle Funktion wird abgebrochen. Anschließend kann man
+# 		eine neue Funktion per Knopfdruck ausführen. 
+# q		(quit: Beenden) Beendet das Programm.
+## }}}
+
+##======================================================================
+## Miscellaneous# {{{
+##======================================================================
+
+# Show documentation when pressing F1
+macro generic,pager <F1> '<shell-escape> zcat /usr/share/doc/mutt/manual.txt.gz | sensible-pager<enter>' 'show Mutt documentation'
+
+# Show smiley documentation when pressing F2
+macro generic,pager <F2> '<shell-escape> zcat /usr/share/doc/kwtools-net-mutt/akronym_emotion_tag_smiley.txt.gz | sensible-pager<enter>' 'show akronym, emotions, tags and smiley documentation'
+
+# besondere Farbe auf Nachrichten die mit mir zu tun haben
+macro index <F3> ':color index brightyellow blue "!~f kiste@netzworkk.de ~b kiste"'^M 'Highlight auf Antworten an mich ein'
+macro pager <F3> ':color index brightyellow blue "!~f kiste@netzworkk.de ~b kiste"'^M 'Highlight auf Antworten an mich ein'
+macro index <F4> ':uncolor index brightyellow blue "!~f kiste@netzworkk.de ~b kiste"'^M 'Highlight auf Antworten an mich aus'
+macro pager <F4> ':uncolor index brightyellow blue "!~f kiste@netzworkk.de ~b kiste"'^M 'Highlight auf Antworten an mich aus'
+macro pager <F5> "|ungeek -rm > /tmp/ungeek; less /tmp/ungeek" 'Geek-Code entchluesseln'
+
+# Mails holen
+# macro generic <F6> "!/usr/bin/fetchmail -av -f ~/.fetchmailrc" 'Mails abholen'
+# macro index <F6> "!/usr/bin/fetchmail -av -f ~/.fetchmailrc" 'Mails abholen'
+# macro pager <F6> "!/usr/bin/fetchmail -av -f ~/.fetchmailrc" 'Mails abholen'
+#
+# # Mails versenden
+# macro generic <F7> "!sudo /usr/sbin/exim -qf -v" 'Mails versenden'
+# macro index <F7> "!sudo /usr/sbin/exim -qf -v" 'Mails versenden'
+# macro pager <F7> "!sudo /usr/sbin/exim -qf -v" 'Mails versenden'
+#
+# # Vim aufrufen
+# macro generic <F8> "!vim muttoutput-`date +%Y-%m-%d-%H`"
+# macro index <F8> "!vim muttoutput-`date +%Y-%m-%d-%H`"
+# macro pager <F8> "!vim muttoutput"
+#
+# # Online-gehen
+# macro generic <F9> "!wvdial" 'Modemverbindung oeffnen'
+# macro index <F9> "!wvdial" 'Modemverbindung oeffnen'
+# macro pager <F9> "!wvdial" 'Modemverbindung oeffnen'
+
+# Spamassassin
+macro index <F10> "|sa-learn --ham --single\n"   'Nachricht als HAM an Spamassassin verfuettern'
+macro pager <F10> "|sa-learn --ham --single\n"   'Nachricht als HAM an Spamassassin verfuettern'
+macro index <F11> "|sa-learn --spam --single\n" 'Nachricht als SPAM an Spamassassin verfuettern'
+macro pager <F11> "|sa-learn --spam --single\n" 'Nachricht als SPAM an Spamassassin verfuettern'
+
+# noch freie F-Tasten
+# macro index <F12> ""
+# macro pager <F12> ""
+
+# Adressbuch Abook
+macro generic \eA "!abook\n" 'Adressbuch oeffnen'
+macro index \eA "!abook\n" 'Adressbuch oeffnen'
+macro pager \eA "!abook\n" 'Adressbuch oeffnen'
+macro pager A |'abook --add-email'\n 'Email-Adresse ins Adressbuch eintragen'
+# macro generic,index,pager \ca "<shell-escape>abook<return>" "launch abook"
+# macro index,pager A "<pipe-message>abook --add-email<return>" "add the sender address to abook"
+#
+# muttrc editieren und einlesen
+macro generic \em "!vim ~/.muttrc\n:source ~/.muttrc\n" 'mit vim .muttrc oeffnen und neu einlesen'
+macro index \em "!vim ~/.muttrc\n:source ~/.muttrc\n" 'mit vim .muttrc oeffnen und neu einlesen'
+macro pager \em "!vim ~/.muttrc\n:source ~/.muttrc\n" 'mit vim .muttrc oeffnen und neu einlesen'
+#}}}
+
+##======================================================================
+## Pager# {{{
+##======================================================================
+macro pager \e1 ":set pager_index_lines=1\n" 'Fenstergroesse veraendern 1'
+macro pager \e2 ":set pager_index_lines=2\n" 'Fenstergroesse veraendern 2'
+macro pager \e3 ":set pager_index_lines=3\n" 'Fenstergroesse veraendern 3'
+macro pager \e4 ":set pager_index_lines=4\n" 'Fenstergroesse veraendern 4'
+macro pager \e5 ":set pager_index_lines=5\n" 'Fenstergroesse veraendern 5'
+macro pager \e6 ":set pager_index_lines=6\n" 'Fenstergroesse veraendern 6'
+macro pager \e7 ":set pager_index_lines=7\n" 'Fenstergroesse veraendern 7'
+macro pager \e8 ":set pager_index_lines=8\n" 'Fenstergroesse veraendern 8'
+macro pager \e9 ":set pager_index_lines=9\n" 'Fenstergroesse veraendern 9'
+macro pager \e0 ":set pager_index_lines=0\n" 'Fenstergroesse veraendern 0'
+
+# MIME auto_view ein/ausschalten
+macro pager \ea ":source ~/.kwtools/kwmutt/autoview\n<exit><display-message>"  "Ansicht der Anhaenge mit mutts auto_view"
+macro pager \eua ":source ~/.kwtools/kwmutt/un_autoview\n<exit><display-message>"  "normale Ansicht von Anhaengen"
+
+# Show trace of mail routing
+macro   pager   \et ":unset weed\n|mailhops|less -c\n" "Zeigt den Weg einer Mail"
+
+#}}}
+
+##======================================================================
+## Index# {{{
+##======================================================================
+
+# Anzeige von Nachrichten
+macro index \ea "l~A\n" 'Alle Nachrichten anzeigen'
+macro index \en "l~N\n" 'Nur neue Nachrichten anzeigen'
+macro index \ei "l~P\n" 'Nur Nachrichten von mir anzeigen'
+macro index \eo "l!~f kiste@netzworkk.de ~b kiste ~N\n" 'Neue Antworten an mich anzeigen'
+macro index \ed "l~d `date +%d`\n" 'Nur Nachrichten von heute anzeigen'
+
+# Suche in gesamten Nachrichten, nicht nur in den Headern
+macro index \e/ "/~B " "Suche Nachricht im Kopf und Text"
+
+# Alle New Messages als gelesen markieren (,ar)
+# ar=all read
+macro index ,ar "<tag-pattern>~N<enter><tag-prefix><clear-flag>N<tag-prefix><clear-flag>*" 'Alle neuen Nachrichten als gelesen markieren'
+# Alle Messages die als wichtig markiert (!) sind das Flag entfernen (,uf),
+# uf=undelete flag
+# Fehlerberichtigung beim arbeiten mit Tags.
+macro index ,uf "<tag-pattern>~!<enter><tag-prefix><clear-flag>!<tag-prefix><clear-flag>*" 'Alle Nachrichten mit ! Indikator zum Ursprung markieren'
+
+# cool feature of mutt, sort messages by:
+macro index ",r"  "c=INBOX\nOc="    "Mapping: reverse Sortierung nach Auswahl"
+macro index ",s"  "c=INBOX\noc="    "Mapping: Sortierung nach Auswahl"
+## }}}
+
+bind  alias   <space>   select-entry
+bind  alias   x         exit
+bind  attach  x         exit
+
+#EOF vim: ft=muttrc

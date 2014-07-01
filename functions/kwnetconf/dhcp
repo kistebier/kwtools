@@ -1,0 +1,26 @@
+# Funktion dhcp um die Netzwerkkarten einzustellen{{{
+#
+# benötigt die Funktion ifconfig_check und route_check
+#
+# usage: dhcp
+#
+dhcp()
+{
+	#
+	route_check $ETH
+	ifconfig_check $ETH
+	#
+	dhclient -e $ETH
+	if [ $? != 0 ] ; then
+		nachricht_box title_achtung no_dhcp
+		break
+	else
+		HWADDR="`print ${${$(LC_ALL=de_DE ; /sbin/ifconfig $ETH )[5]}#Adresse:}`"
+	fi
+	unset -- ETH_IST 
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

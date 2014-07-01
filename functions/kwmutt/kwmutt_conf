@@ -1,0 +1,235 @@
+# Funktion (kwmutt_conf), Konfiguration fuer "mutt"{{{
+#
+kwmutt_conf() {
+	# Hook-Optionen# {{{
+	SELECT_HOOK_OPT_MENU=(~A \"\" ~B \"\" ~b \"\" ~C \"\" ~c \"\" ~D \"\"
+	~d \"\" ~E \"\" ~e \"\" ~F \"\" ~f \"\" ~G \"\" ~g \"\" ~h \"\" ~k \"\"
+	~i \"\" ~L \"\" ~l \"\" ~m \"\" ~N \"\" ~n \"\" ~O \"\" ~P \"\" ~p \"\"
+	~Q \"\" ~R \"\" ~r \"\" ~S \"\" ~s \"\" ~T \"\" ~t \"\" ~U \"\"
+	~v \"\" ~x \"\" ~y \"\" ~z \"\" ~= \"\")
+	## }}}
+	# Translation Variablen# {{{
+	lv_Alias=$(gettext 'Alias')
+	lv_Default=$(gettext 'Standard')
+	lv_Default_Mailbox=$(gettext 'Standard-Mailbox')
+	lv_Default_Smtp=$(gettext 'Standard-Versand')
+	lv_Colors=$(gettext 'Farben')
+	lv_Format=$(gettext 'Format')
+	lv_Imap=$(gettext 'IMAP-Server')
+	lv_Imap_Cf=$(gettext 'IMAP')
+	lv_Kbd=$(gettext 'Tastenbelegung')
+	lv_Local_Mailbox=$(gettext 'lokale Mailbox')
+	lv_Pager=$(gettext 'Pager')
+	lv_Pop=$(gettext 'POP-Server')
+	lv_Pop_Cf=$(gettext 'POP')
+	lv_Security=$(gettext 'Sicherheit')
+	lv_Sendmail=$(gettext 'Sendmail')
+	lv_Server=$(gettext 'Server')
+	lv_Sign=$(gettext 'Signatur')
+	lv_Smtp=$(gettext 'SMTP-Server')
+	lv_Smtp_Sendmail=$(gettext 'SMTP-Sendmail')
+	lv_Sort=$(gettext 'Sortierung')
+	lv_Urlview=$(gettext 'urlview')
+	#
+	lv_Choice=$(gettext 'Auswahl')
+	lv_Serv_Test=$(gettext 'Server testen')
+	## }}}
+	# Funktion (is_auth_methode), vorhandene Auth-Methoden mit on zum Auflisten markieren# {{{
+	#
+	# usage: is_auth_methode PROTOCOL_AUTH AUTH_METHODEN
+	# PROTOCOL_AUTH - Protokoll, wie smtp-, pop- oder imap_authenticators
+	# AUTH_METHODEN - auf welche Auth-Methoden soll geprueft werden
+	#
+	is_auth_methode() {
+		if [ "$#" = 2 ] ; then
+			unset -- Auth_pro Auth_Methode CHOICE_MENU
+			local Auth_Prot Auth_Methode
+			Auth_Prot="$1"
+			Auth_Methode="$2"
+			#
+			if [ -n "$Auth_Prot" ] ; then
+				unset -- M_TMP
+				integer Anz
+				Anz=0
+				# Die Ueberpruefung in der for-Schleife muss den gleichen
+				# Inhalt haben und Reihenfolge wie in der normalen
+				# Auswahl (CHOICE_MENU) in der Funktion kwmutt_smtp_serv_conf.
+				for i in ${(ws: :)Auth_Methode} ; {
+					Is=${(M)${${Auth_Prot}}##*${i}*}
+					if [ -n "$Is" ] ; then
+						(( Anz++ ))
+						M_TMP[Anz]="$i \"\" on"
+					else
+						(( Anz++ ))
+						M_TMP[Anz]="$i \"\" off"
+					fi
+				}
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (conf_menu), Konfigurationsmenue# {{{
+	CONF_MENU=($lv_Default \"\" $lv_Server \"\" $lv_Imap_Cf \"\" $lv_Pop_Cf \"\"
+		$lv_Print \"\" $lv_Sign \"\" $lv_Kbd \"\" $lv_Security \"\"
+		$lv_Colors \"\" $lv_Format \"\" $lv_Pager \"\"
+		$lv_Sort \"\" $lv_Urlview \"\" $gv_Back \"\")
+	#
+	conf_menu() {
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_conf_help
+				conf_menu
+				;;
+			$lv_Default)
+				# Haupt Konfiguration ~/.muttrc einstellen# {{{
+				autoload -U kwmutt_muttrc_conf kwmutt_muttrc_config
+				kwmutt_muttrc_conf
+				# Mutt Dateien in ~/.mutt/* zum einlesen aktivieren oder deaktivieren.
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Default
+				;;
+			$lv_Colors)
+				# Farben konfigurieren.# {{{
+				autoload -U kwmutt_color_conf
+				kwmutt_color_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Colors
+				;;
+			$lv_Format)
+				# Formatierung der Anzeige, Datum etc. konfigurieren.# {{{
+				autoload -U kwmutt_format_conf kwmutt_format_config
+				kwmutt_format_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Format
+				;;
+			$lv_Imap_Cf)
+				# Konfiguration fuer IMAP# {{{
+				autoload -U kwmutt_imap_conf kwmutt_imap_config
+				kwmutt_imap_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Imap_Cf
+				;;
+			$lv_Kbd)
+				# Konfiguration der Tastatur.# {{{
+				# Falls es noch keine Datei gibt wird eine Beispieldatei
+				# kopiert.
+				if [ ! -f "$M_KBD" ] ; then
+					cp "${DATA_PATH}/${gv_ScriptName}/mkbd" "$M_KBD" &>/dev/null
+				fi
+				# editieren
+				edit_file "$lv_Kbd" "$M_KBD"
+				read_mutt_files
+				# # }}}
+				conf_menu $lv_Kbd
+				;;
+			$lv_Pager)
+				# Konfiguration des Pagers# {{{
+				autoload -U kwmutt_pager_conf kwmutt_pager_config
+				kwmutt_pager_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Pager
+				;;
+			$lv_Pop_Cf)
+				# Konfiguration fuer POP# {{{
+				autoload -U kwmutt_pop_conf kwmutt_pop_config
+				kwmutt_pop_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Pop_Cf
+				;;
+			$lv_Print)
+				# Druckereinstellung# {{{
+				autoload -U kwmutt_print_conf kwmutt_print_config
+				kwmutt_print_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Print
+				;;
+			$lv_Security)
+				# Sicherheit konfigurieren, wie gpg, ssl, smime.# {{{
+				autoload -U kwmutt_sec_conf
+				kwmutt_sec_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Security
+				;;
+			$lv_Server)
+				# Konfiguration der IMAP/POP/SMTP Server# {{{
+				autoload -U kwmutt_serv_conf
+				kwmutt_serv_conf
+				#
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Server
+				;;
+			$lv_Sign)
+				# Signatur einstellen# {{{
+				if [ -f "$MUTTCONF" ] ; then
+					M_SIGN=${${${(ws:=:)${(M)${(f)"$(< $MUTTCONF)"}##(#s)set[[:space:]]signature*}}[2]}//\"/}
+				fi
+				# Die Signatur Datei schreiben/aendern etc..
+				if [ ! -z "$M_SIGN" ] ; then
+					# Falls diese nicht existiert erstellen,
+					# da editbox sonst meckert.
+					create_file "$M_SIGN"
+					if [ "$EDITOR" = dialog ] ; then
+						editbox "$lv_Sign" "$M_SIGN"
+					else
+						"$EDITOR" "$M_SIGN"
+					fi
+				else
+					MSG=$(gettext 'Sie muessen erst die Variable "signature" mit einem Wert belegen ($lv_Main).')
+					msgbox "$gv_Info" "$MSG"
+				fi
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Sign
+				;;
+			$lv_Sort)
+				# Ansicht des Verzeichnisbaums - Einstellungen# {{{
+				autoload -U kwmutt_sort_conf kwmutt_sort_config
+				kwmutt_sort_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Sort
+				;;
+			$lv_Urlview)
+				# URLs aus einer mails mittels urlview an einem Browser senden/darstellen.# {{{
+				# Erst checken, ob urlview installiert ist
+				prog_check $lv_Urlview
+				if [ -n "$PROGS" ] ; then
+					autoload -U kwmutt_urlview_conf kwmutt_urlview_config
+					kwmutt_urlview_conf
+				else
+					MSG=$(gettext '$lv_Urlview ist nicht (mehr) vorhanden. Soll die Tastenkombination deaktiviert werden (ja/nein)?')
+					yesno "$lv_Urlview" "$MSG" ""
+					if [ "$gv_Auswahl" = yes ] ; then
+						autoload -U kwmutt_urlview_config
+						kwmutt_urlview_config -d
+					fi
+				fi
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Urlview
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

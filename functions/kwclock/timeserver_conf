@@ -1,0 +1,108 @@
+# Funktion timeserver_conf{{{
+timeserver_conf() {
+	# Funktion timeserver_menue{{{
+	TIMESERV_TITLE=(${gv_Configuration}::${lv_Time_Serv})
+	lv_Server=$(gettext 'Server')
+	lv_Option=$(gettext 'Option')
+	lv_Update=$(gettext 'aktualisieren')
+	#
+	timeserver_menue() {
+		TIMESERV_MENU=($lv_Server \"$NTPSERVERS\" $lv_Option \"$NTPOPTIONS\"
+		$lv_Update \"\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$TIMESERV_TITLE" "$gv_Menupoint" "$TIMESERV_MENU"
+	}
+	#}}}
+	timeserver_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	
+				if [ "$OS" = Debian ] ; then
+					script_help timeserver-debian_help
+				else
+					script_help timeserver_help
+				fi
+				timeserver_menue
+				;;
+			$lv_Server)
+				# Zeitserver angeben, getrennt durch ein Leerzeichen{{{
+				HOSTNAME_MSG=$(gettext 'Geben Sie bitte die/den Namen oder IP(s) der/des Zeitserver(s) ein.')
+				conf_hostname -a "$HOSTNAME_MSG" "$NTPSERVERS"
+				if [ -n "$gv_Hostname" ] ; then
+					NTPSERVERS="$gv_Hostname"
+				else
+					unset -- NTPSERVERS
+				fi
+				#}}}
+				timeserver_menue $lv_Server
+				;;
+			$lv_Option)	
+				# NTPDATE Options auswaehlen.# {{{
+				OPT_MSG=$(gettext 'Geben Sie die Optionen fuer ntpdate an (man 1 ntpdate).')
+				inputbox "$TIMESERV_TITLE" "$OPT_MSG" "$NTPOPTIONS"
+				if [ "$gv_Auswahl" ] ; then
+					NTPOPTIONS="$gv_Auswahl"
+				else
+					no_input_msg
+				fi
+				## }}}
+				timeserver_menue $lv_Option
+				;;
+			$lv_Update)
+				# Zeit aktualisieren{{{
+				if [ "$NTPSERVERS" ] ; then
+					$NTPDATE ${=NTPOPTIONS} ${=NTPSERVERS} || prog_failure
+					hwclock --systohc
+				else
+					MSG=$(gettext 'Es sind keine Zeitserver konfiguriert/angegeben.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				#}}}
+				timeserver_menue $lv_Update
+				;;
+			$gv_Save)
+				# Zeitserver-Einstellung speichern.# {{{
+				case "$OS" in
+					centos|fedora)
+						rm -f "$NTPDATE_FILE" &>/dev/null
+						for i in $NTPSERVERS ; {
+							>> "$NTPDATE_FILE" <<< "$i"
+						}
+						# ntpdate Optionen einstellen
+						sed -e "s#NTPDATE_OPTIONS=.*#NTPDATE_OPTIONS=$NTPOPTIONS#" "$NTPDATE_OPTION_FILE" >${gv_WorkDir}/ntpdate 2>/dev/null && \
+						mv ${gv_WorkDir}/ntpdate "$NTPDATE_OPTION_FILE"
+						;;
+					*)	# Debian, ab ntpdate 4.2.2
+						if [ -f "$NTPDATE_FILE" -a "`grep -q NTPSERVERS $NTPDATE_FILE`" ] ; then
+							sed -e "s#NTPSERVERS=.*#NTPSERVERS=\"$NTPSERVERS\"# ;
+								s#NTPOPTIONS=.*#NTPOPTIONS=\"$NTPOPTIONS\"#" "$NTPDATE_FILE" >"$NTPDATE_FILE$$" 2>/dev/null && \
+							mv "$NTPDATE_FILE$$" "$NTPDATE_FILE"
+						else
+							> "$NTPDATE_FILE" <<< "# The settings in this file are used by the program ntpdate-debian, but not
+# by the upstream program ntpdate.
+
+# Set to \"yes\" to take the server list from /etc/ntp.conf, from package ntp,
+# so you only have to keep it in one place.
+NTPDATE_USE_NTP_CONF=no
+
+# List of NTP servers to use  (Separate multiple servers with spaces.)
+# Not used if NTPDATE_USE_NTP_CONF is yes.
+NTPSERVERS=\"$NTPSERVERS\"
+
+# Additional options to pass to ntpdate
+NTPOPTIONS=\"$NTPOPTIONS\""
+						fi
+						;;
+				esac
+				break
+				## }}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

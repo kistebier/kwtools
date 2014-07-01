@@ -1,0 +1,231 @@
+# Funktion Scriptinitialisierung{{{
+#
+# usage: script_init [ -o (ohne terminal) ]
+# -o wird nur von Cron-Scripts benoetigt.
+#
+script_init() {
+# um mit der Variablen $lfs (beschreibt wie die shell Strings trennt) arbeiten zu koennen,
+# brauchen man shwordsplit. extendedglob ist fuer "globbing Flags"  von erweiterten 
+# Suchmusterangaben in der zsh ( ls ./(*/)#*(.) ==> ls ./  alle Textdateien in diesem und
+# allen Unterverzeichnissen.
+#
+# bad_pattern - if a pattern or glob is badly formed, print out an error
+# bg_nice - run background jobs at highly priority
+# brace_ccl - echo {abc.}file :: .file afile bfile cfile
+# clobber - allow '>' to truncate, and '>>' to create files
+# equals - the mighty =command expansion :)
+# extended_glob - the force is strong with this one...
+# glob_complete - #enable globbing in completions
+# no_magic_equal_subst - do expansions on everything the looks like an 'name=express' assignment.
+# no_nomatch - print no error if a glob didn't return a result
+# no_nullglob - is a glob does not return matches, remove the glob from the
+#       argumentlist instead of reporting an error
+# numeric_glob_sort - sort filenames lexicographically rather than numerically, if possible.
+# posix_builtins - the command 'builtin' can be used to execute shell builtins
+# rc_expand_param - array expansions of the form `foo${xx}bar', where the parameter
+#       'xx' is set to (a b c), are substituted with `fooabar foobbar foocbar'
+#
+# nomatch wird ausgeschaltet, da die zsh trotz &>/dev/null (&>/dev/null),
+# Fehlerausgaben anzeigt und sich die Scripts beenden.
+# Ausserdem sind die Meldungen dann auch in deutsch (locale).
+setopt bad_pattern \
+	bg_nice \
+	brace_ccl \
+	clobber \
+	equals \
+	extended_glob \
+	glob_complete \
+	no_magic_equal_subst \
+	no_nomatch \
+	no_nullglob \
+	numeric_glob_sort \
+	posix_builtins \
+	rc_expand_param
+
+# Variable PATH mit Standardwerten belegen
+path=(/bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin)
+
+# gettext.sh einlesen
+command source /usr/bin/gettext.sh
+#
+# Standard System Funktionen laden, die von jedem Script gebraucht werden.
+#
+autoload -U fs_conf hw_conf net_conf multi_conf sys_conf
+	
+# Funktion sys_conf ausfuehren, Funktionen die von den meisten
+# Scripts benoetigt werden.
+sys_conf
+
+# Builtin Programme
+echo="builtin echo"
+which="builtin which"
+print="builtin print"
+
+#
+# Hauptkonfigutation einlesen.
+#
+check_home_conf_dir
+if [ -f /etc/kwtools/main.cf ] ; then
+	SHARE_PATH=/usr/share/kwtools
+	ETC_PATH=/etc/kwtools
+	CONF_FILE=${ETC_PATH}/main.cf
+	source $CONF_FILE
+elif [ -f /usr/local/etc/kwtools/main.cf ] ; then
+	SHARE_PATH=/usr/local/share/kwtools
+	ETC_PATH=/usr/local/etc/kwtools
+	CONF_FILE=${ETC_PATH}/main.cf
+	source $CONF_FILE
+fi
+
+HELP_PATH="${SHARE_PATH}/help"
+FUNC_PATH="${SHARE_PATH}/functions"
+DATA_PATH="${SHARE_PATH}/data"
+
+#
+# Verzeichnis in denen nach Funktionen gesucht wird. $FUNC_PATH/sys wird
+# schon in den einzelnen Scripts dazu gefuehrt.
+fpath=( ${FUNC_PATH}/${gv_ScriptName} $fpath )
+
+if [ -z "$KWTOOLS_PATH" ] ; then	
+	KWTOOLS_PATH="/usr/lib/kwtools"
+fi	
+if [ -z "$LANGUAGE" ] ; then
+    LANGUAGE="de"
+fi
+
+if [ -z "$TMP_PATH" ] ; then
+    TMP_PATH="/var/tmp"
+	if [ ! -d "$TMP_PATH" ] ; then
+		mkdir -p "$TMP_PATH"
+	fi
+fi
+#
+# Temporaeres Verzeichnis fuer log und kurzzeitige Berechnungen/Ausgaben
+#
+if [ ! -d "$TMP_PATH" ] ; then
+	mkdir -p "$TMP_PATH"
+fi
+
+# Sprache einstellen
+# erst die Locale
+case $LANGUAGE in
+	de*|at*|ch*)
+		LC_ALL=de_DE
+		LC_MESSAGES=de_DE
+		LANGUAGE=deutsch
+		export LC_ALL LC_MESSAGES LANGUAGE
+		;;
+	*)
+		LC_ALL=en_US
+		LC_MESSAGES=en_US
+		LANGUAGE=english
+		export LC_ALL LC_MESSAGES LANGUAGE
+		;;
+esac
+
+# Temporaere Verzeichnisse loeschen die aelter als 2 Tage sind.
+rm -rf ${TMP_PATH}/script_init*(N/Dch+48) &>/dev/null
+#
+# Terminal Einstellungen und generelle Uebersetzungen.
+#
+export gv_Terminal
+if [ "$1" != -o ] ; then
+	# Pager einstellen
+	export gv_Terminal=yes
+	# und dann einige Standard Variablen
+	gv_Attention=$(gettext 'Achtung')
+	gv_Back=$(gettext 'zurueck')
+	gv_Change=$(gettext 'aendern')
+	gv_Check=$(gettext 'pruefen')
+	gv_Configuration=$(gettext 'Konfiguration')
+	gv_Copy=$(gettext 'kopieren')
+	gv_Create=$(gettext 'anlegen')
+	gv_Delete=$(gettext 'loeschen')
+	gv_Delete_MSG=$(gettext 'Waehlen Sie ein oder mehrere Eintraege zum loeschen aus.')
+	gv_Directory=$(gettext 'Verzeichnis')
+	gv_Display=$(gettext 'Ansicht')
+	gv_Edit=$(gettext 'bearbeiten')
+	gv_English=$(gettext 'englisch')
+	gv_Enlarge=$(gettext 'vergroessern')
+	gv_Exit=$(gettext 'beenden')
+	gv_Firm=$(gettext 'Firma')
+	gv_Filename=$(gettext 'Dateiname')
+	gv_German=$(gettext 'deutsch')
+	gv_Group=$(gettext 'Gruppe')
+	gv_Help=$(gettext 'Hilfe')
+	gv_Host=$(gettext 'Rechner')
+	gv_Info=$(gettext 'Info')
+	gv_Input=$(gettext 'Eingabe')
+	gv_Mainmenu=$(gettext 'Hauptmenue')
+	gv_Menupoint=$(gettext 'Waehlen Sie bitte einen Menuepunkt aus.')
+	gv_Network=$(gettext 'Netzwerk')
+	gv_MyName=$(gettext 'Kai Wilke')
+	gv_No=$(gettext 'Nein')
+	gv_None=$(gettext 'nichts')
+	gv_Off=$(gettext 'aus')
+	gv_On=$(gettext 'an')
+	gv_New_Passwd=$(gettext 'neues Passwort :')
+	gv_Old_Passwd=$(gettext 'altes Passwort :')
+	gv_Passwd=$(gettext 'Passwort')
+	gv_Passwd_Group=$(gettext 'Gruppe		:')
+	gv_Passwd_TITLE=$(gettext 'Passwort::eingeben')
+	gv_Passwd_User=$(gettext 'Benutzer		:')
+	gv_Reduce=$(gettext 'verkleinern')
+	gv_Save=$(gettext 'speichern')
+	gv_Start=$(gettext 'start')
+	gv_Stop=$(gettext 'stop')
+	gv_Unknown=$(gettext 'unbekannt')
+	gv_User=$(gettext 'Benutzer')
+	gv_Yes=$(gettext 'Ja')
+	#
+	No_Dialog_Msg1=$(gettext '"Sie benoetigen dialog, um dieses Programm"')
+	No_Dialog_Msg2=$(gettext '"benutzen zu koennen. Druecken Sie jetzt ENTER."')
+	terminal
+	#
+	# Hintergrundanzeige von dialog und dem angegebenen Script.
+	#
+	script_backtitle
+	#
+	# dialog Einstellungen.
+	#
+	check_home_conf_dir
+	if [[ -x ${commands[dialog]} ]]; then
+		Dialog="${commands[dialog]}"
+		gv_WorkDir="`mktemp -d ${TMP_PATH}/script_init_XXXXXX`"
+		DialogReDirect="2>${gv_WorkDir}/auswahl"
+		# Dialog Versionscheck fuer die Widgets progressbox und dselect
+        # Version von dialog muss >= 1.1-20070227
+		dialog_version
+        # Dialog einstellen
+        if [ ! -f ${gv_HomePath}/.dialogrc ] ; then
+            $Dialog --create-rc ${gv_HomePath}/.dialogrc
+            sed -e 's#^use_colors.*#use_colors = ON# ;
+				s#^title_color.*#title_color = (RED,WHITE,ON)# ;
+				s#^tag_color.*#tag_color = (BLUE,WHITE,ON)# ;
+			 	s#^tab_len.*#tab_len = 4#' ${gv_HomePath}/.dialogrc > ${gv_HomePath}/dialogrc$$
+            mv ${gv_HomePath}/dialogrc$$ ${gv_HomePath}/.dialogrc
+        fi
+	else
+		$ERROR	
+		print
+		print "$No_Dialog_Msg1"
+		print "$No_Dialog_Msg2"
+		print
+	  	$NORMAL
+		read
+		exit 1
+	fi
+else
+	unset -- gv_Terminal
+	check_home_conf_dir
+	gv_WorkDir="`mktemp -d ${TMP_PATH}/script_init_XXXXXX`"
+fi
+# Logfile
+gv_LogFile="${gv_WorkDir}/logfile"
+
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

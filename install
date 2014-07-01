@@ -1,0 +1,412 @@
+#!/bin/zsh
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.05.2014
+#
+# Script: install, installiert die kwtools Scripts und kompiliert,
+# wenn angegeben alle Funktionen.
+#
+# Version: 0.2.7
+#
+setopt shwordsplit extendedglob
+NAME=kwtools
+
+# Prüfung
+if [ "`id -u`" != 0 ] ; then
+	echo ""
+	echo "Please become root before running install."
+	echo ""
+	exit 1
+fi
+
+INSTALL="`which install`"
+if [[ ! -x $INSTALL ]] ; then
+	echo ""
+	echo "Please install \"install\" or \"coreutils\""
+	echo "before running install."
+	echo ""
+	exit 1
+fi
+
+# Optionen
+if [ $# -gt 0 ] ; then
+	for i in $@ ; do
+		case $i in
+			-h | --help)	echo ""
+							echo "usage:"
+							echo "./install -h | --help --> this view"
+							echo "./install --prefix=PATH --> change install PATH"
+							echo "./install --compile=yes --> compile funktions"
+							echo "./install --> copy files only"
+							echo ""
+							exit 0
+				;;
+			--prefix*)	PREFIX="${i##*=}"
+						shift
+						;;
+			--compile*)	COMPILE="${i##*=}"
+						shift
+						;;
+			*)	unset -- PREFIX COMPILE
+				echo ""
+				echo "Es wird nur ./install ausgefuehrt."
+				echo "Entweder wurde keine Parameter uebergeben oder falsche."
+				echo ""
+				;;
+		esac
+	done
+else 
+	unset -- PREFIX COMPILE
+fi
+
+# Prüfung, wohin installiert werden soll.
+if [ -z "$PREFIX" ] ; then
+	PREFIX="/usr/local"
+elif [ "$PREFIX" != /usr -a "$PREFIX" != /usr/local ] ; then
+	echo ""
+	echo "PREFIX: /usr & /usr/local only"
+	echo ""
+	exit 1
+fi
+
+#
+# Variablen belegen
+#
+SHARE_PATH="${PREFIX}/share/kwtools"
+KWRSYNC_BACKUP_PATH="${SHARE_PATH}/kwrsync_backup/utils"
+EXEC_PATH="${PREFIX}/lib/kwtools"
+FUNC_PATH="${SHARE_PATH}/functions"
+DOC_PATH="${PREFIX}/share/doc"
+MAN_PATH="${PREFIX}/share/man"
+SBIN_PATH="${PREFIX}/sbin"
+BIN_PATH="${PREFIX}/bin"
+LOCALE_PATH="${PREFIX}/share/locale"
+LINTIAN_PATH="${PREFIX}/share/lintian/overrides"
+INITD_PATH="/etc/init.d"
+CROND_PATH="/etc/cron.d"
+LOGROTATED_PATH="/etc/logrotate.d"
+GRUB_PATH="/etc/grub.d"
+PPP_PATH="/etc/ppp"
+SKEL_DIR="/etc/skel"
+AUTO_KDE_FILE="${SKEL_DIR}/.kde/Autostart/firstlogin.desktop"
+AUTO_GNOME_FILE="${SKEL_DIR}/.config/autostart/firstlogin.desktop"
+# install Optionen
+INSTALL_DIR_OPT=" -d -m 0755 -o root -g root"
+INSTALL_EXEC_OPT="-m 0755 -o root -g root"
+INSTALL_FILE_OPT="-m 0644 -o root -g root"
+
+if [ "$PREFIX" = /usr ] ; then
+	ETC_PATH=/etc/kwtools
+else
+	ETC_PATH="${PREFIX}/etc/kwtools"
+fi
+
+#
+# Falls nicht vorhanden, Verzeichnisse erstellen
+#
+if [ -d "$FUNC_PATH" ] ; then
+	rm -rf $FUNC_PATH &>/dev/null
+	$INSTALL $INSTALL_DIR_OPT $FUNC_PATH
+else	
+	$INSTALL $INSTALL_DIR_OPT $FUNC_PATH
+fi
+if [ -d "$EXEC_PATH" ] ; then
+	rm -rf $EXEC_PATH &>/dev/null
+	$INSTALL $INSTALL_DIR_OPT $EXEC_PATH
+else	
+	$INSTALL $INSTALL_DIR_OPT $EXEC_PATH
+fi
+if [ -d "$ETC_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $ETC_PATH
+else	
+	$INSTALL $INSTALL_DIR_OPT $ETC_PATH
+fi
+# Manpages
+for i in {1..8} ; {
+	if [ ! -d "${MAN_PATH}/de/man${i}" ] ; then
+		$INSTALL $INSTALL_DIR_OPT ${MAN_PATH}/de/man${i}
+	fi
+	if [ ! -d "${MAN_PATH}/man${i}" ] ; then
+		$INSTALL $INSTALL_DIR_OPT ${MAN_PATH}/man${i}
+	fi
+}
+
+if [ ! -d "$DOC_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $DOC_PATH
+fi
+if [ ! -d "$SBIN_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $SBIN_PATH
+fi
+if [ ! -d "$BIN_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $BIN_PATH
+fi
+if [ ! -d "$INITD_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $INITD_PATH
+fi
+if [ ! -d "$CROND_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $CROND_PATH
+fi
+if [ ! -d "$LOGROTATED_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $LOGROTATED_PATH
+fi
+if [ ! -d "$GRUB_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $GRUB_PATH
+fi
+if [ ! -d "$LOCALE_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $LOCALE_PATH
+fi
+if [ ! -d "$LINTIAN_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $LINTIAN_PATH
+fi
+if [ ! -d "$PPP_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT ${PPP_PATH}/ip-up.d
+	$INSTALL $INSTALL_DIR_OPT ${PPP_PATH}/ip-down.d
+fi
+if [ ! -d "$KWRSYNC_BACKUP_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $KWRSYNC_BACKUP_PATH
+fi
+#
+# Alle Dateien kopieren
+#
+echo ""
+echo "copy all files."
+echo ""
+sleep 2
+if [ "$OSTYPE" = linux -o "$OSTYPE" = linux-gnu ] ; then
+	CP_OPT="-av"
+else
+	CP_OPT="-Rp"
+fi
+
+# share Dateien installieren
+cp $CP_OPT ./{data,help,functions} $SHARE_PATH
+chmod -R 0755 ${SHARE_PATH}/**/*(/N)
+chmod 0644 ${SHARE_PATH}/**/*(.N)
+chown -R root:root $SHARE_PATH
+
+# Programme der 2. Ebene installieren
+for i in graphic multi net sys utils ; {
+	$INSTALL $INSTALL_DIR_OPT ${EXEC_PATH}/${i}
+	$INSTALL $INSTALL_EXEC_OPT ./${i}/*(.xN) ${EXEC_PATH}/${i}
+}
+
+# Programme der 1. Ebene installieren
+$INSTALL $INSTALL_EXEC_OPT ./{create.cal.pl,kwholiday,kwtex-cal,kwadmin,kwrsync_cron} $EXEC_PATH
+$INSTALL $INSTALL_EXEC_OPT ./{kwnetcardconf,skeleton-dialog.zsh,kwtermin*} $EXEC_PATH
+$INSTALL $INSTALL_EXEC_OPT ./{kwcryptsetup,kwecryptfs,kwlosetup,kwrsync_backup_cron} $EXEC_PATH
+
+# Programme der System Ebene installieren
+$INSTALL $INSTALL_EXEC_OPT ./usr/sbin/*(.xN) $SBIN_PATH
+$INSTALL $INSTALL_EXEC_OPT ./usr/bin/*(.xN) $BIN_PATH
+
+# Manpages installieren
+cp $CP_OPT ./man/* ${MAN_PATH}
+chmod -R 0755 ${MAN_PATH}/**/*(/N)
+chmod 0644 ${MAN_PATH}/**/*(.N)
+chown -R root:root $MAN_PATH
+
+# Dokumentation installieren
+cp $CP_OPT ./doc/kwtools* $DOC_PATH
+chmod -R 0755 ${DOC_PATH}/kwtools-*(/N)
+chmod -R 0755 ${DOC_PATH}/kwtools-*/**/*(/N)
+chmod 0644 ${DOC_PATH}/kwtools-*/**/*(.N)
+# kwrsync_backup examples
+$INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-net/examples
+$INSTALL $INSTALL_FILE_OPT ./etc/kwtools/kwrsync_backup.d/* ${DOC_PATH}/kwtools-net/examples
+# kwpostfix examples
+$INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-net-postfix/examples
+$INSTALL $INSTALL_FILE_OPT ./etc/postfix/* ${DOC_PATH}/kwtools-net-postfix/examples
+# kwcryptsetup examples
+$INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-sys-crypt/examples
+$INSTALL $INSTALL_FILE_OPT ./usr/lib/kwcryptsetup/scripts/* \
+	${DOC_PATH}/kwtools-sys-crypt/examples
+
+# Dokumentation Links erstellen
+echo ""
+echo "Jetzt werden vorhandene Dokumentations Verzeichnisse gelöscht,"
+echo "beziehungsweise durch Links zu kwtools-common ersetzt."
+echo ""
+pushd $DOC_PATH
+for i in kwtools-{bin,graphic,multi,sys,utils} \
+	kwtools-multi-{xmms2,xmms2d} kwtools-net-djbdns \
+	kwtools-sys-{fuse,grub,grub2,kwpasswd,parted,quota,raid,lvm} \
+	kwtools-utils-ssl ; do
+	if [ -d ${DOC_PATH}/${i} ] ; then
+		rm -rfv ${DOC_PATH}/${i}
+	fi
+	if [ ! -L ${DOC_PATH}/${i} ] ; then
+		ln -sf kwtools-common ${i}
+	fi
+done
+popd
+
+# HTML Dokumentation kopieren
+cp $CP_OPT ./doc/html ${DOC_PATH}/kwtools-doc
+chmod -R 0755 ${DOC_PATH}/kwtools-doc/**/*(/N)
+chmod 0644 ${DOC_PATH}/kwtools-doc/**/*(.N)
+chown -R root:root $DOC_PATH
+
+# Programme/Scripts installieren
+$INSTALL $INSTALL_EXEC_OPT ./usr/sbin/*(.xN) $SBIN_PATH
+$INSTALL $INSTALL_EXEC_OPT ./usr/bin/*(.xN) $BIN_PATH
+$INSTALL $INSTALL_EXEC_OPT ./etc/grub.d/*(.xN) $GRUB_PATH
+$INSTALL $INSTALL_EXEC_OPT ./usr/share/kwrsync_backup/*(.xN) $KWRSYNC_BACKUP_PATH
+
+# Konfiguration installieren
+cp $CP_OPT -ub ./etc/kwtools/* $ETC_PATH
+cp $CP_OPT -ub ./etc/skel/* $SKEL_DIR
+cp $CP_OPT -ub ./etc/skel/.* $SKEL_DIR
+chmod 0644 ${ETC_PATH}/*(.N)
+chmod 0600 ${ETC_PATH}/kwnarc*(.N)
+chown -R root:root $ETC_PATH
+for d in `ls -d ${AUTO_KDE_FILE%/*}(/N) ${AUTO_GNOME_FILE%/*}(/N) \
+	${AUTO_KDE_FILE%/*/*}(/N) ${AUTO_GNOME_FILE%/*/*}(/N)` ; {
+	chmod 0755 $d
+}
+chmod 0644 $AUTO_KDE_FILE $AUTO_GNOME_FILE
+chmod 0644 ${SKEL_DIR}/.bash_login(.N)
+chmod 0644 ${SKEL_DIR}/.firstlogin(.N)
+chown -R root:root $SKEL_DIR
+
+# Lintian Dateien installieren
+for i in ./debian/*.lintian-overrides(:t) ; {
+	cp $CP_OPT ./debian/${i} ${LINTIAN_PATH}/${i%.lintian-overrides}
+	chmod 0644 ${LINTIAN_PATH}/${i%.lintian-overrides}
+}
+chown -R root:root $LINTIAN_PATH
+
+# Links anlegen
+echo ""
+echo "create Links (PATH)."
+echo ""
+sleep 2
+for P in ${EXEC_PATH}/*(N.x) ; {
+	LINK="`basename $P`"
+	case $LINK in
+		kwauth|kwnetcardconf|kwcryptsetup|kwecryptfs|kwlosetup|kwrsync_backup_cron)
+			ln -sf $P ${SBIN_PATH}/${LINK}
+			;;
+		create.cal.pl|kw*)
+			ln -sf $P ${BIN_PATH}/${LINK}
+			;;
+	esac
+}
+
+for f in ${EXEC_PATH}/{graphic,multi,net,sys,utils}/*(N.x) ; {
+	if [ -n "`grep root_check "$f"`" ] ; then
+		ln -sf $f $SBIN_PATH
+	else
+		ln -sf $f $BIN_PATH
+	fi
+}
+
+# kwrsync_backup
+ln -sf $KWRSYNC_BACKUP_PATH ${ETC_PATH}/kwrsync_backup.exec.d
+
+# *.po Dateien erstellen.
+if [ -d debian/po ] ; then
+	pushd ./debian/po
+	./update-and-compile clean
+	./update-and-compile
+	# *.mo Dateien kopieren
+	for i in *~*old ; {
+		if [ -d $i ] ; then
+			if [ -d ${i}/usr/share/locale ] ; then
+				cp $CP_OPT ./${i}/usr/share/locale/* $LOCALE_PATH
+				chmod 0755 ${LOCALE_PATH}/**/*(/N)
+				chmod 0644 ${LOCALE_PATH}/**/${i}.mo(.N)
+			fi
+		fi
+	}
+	popd
+fi
+
+# kwnarc ip_(up,down) Script kopieren
+if [ -x ./etc/ppp/1kwnarc.ip-up ] ; then
+	$INSTALL $INSTALL_EXEC_OPT ./etc/ppp/1kwnarc.ip-up ${PPP_PATH}/ip-up.d/1kwnarc
+fi
+if [ -x ./etc/ppp/kwnarc.ip-down ] ; then
+	$INSTALL $INSTALL_EXEC_OPT ./etc/ppp/kwnarc.ip-down ${PPP_PATH}/ip-down.d/kwnarc
+fi
+# kwrsync_backup (cron) kopieren
+$INSTALL $INSTALL_FILE_OPT ./etc/cron.d/kwrsync_backup ${CROND_PATH}
+
+# kwrsync_backup (logrotate) kopieren
+$INSTALL $INSTALL_FILE_OPT ./etc/logrotate.d/kwrsync_backup ${LOGROTATED_PATH}
+
+
+# kwnarc Init Script kopieren
+if [ -e /etc/debian_version ] ; then
+	if [ -e ./etc/init.d/kwnarc.debian ] ; then
+		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.debian ${INITD_PATH}/kwnarc
+		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	fi
+elif [ -e /etc/SuSE-release ] ; then
+	if [ -e ./etc/init.d/kwnarc.suse ] ; then
+		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.suse ${INITD_PATH}/kwnarc
+		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	fi
+else 
+	# Rest ist RedHat basiert (CentOS und Fedora)
+	if [ -e ./etc/init.d/kwnarc.rh ] ; then
+		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.rh ${INITD_PATH}/kwnarc
+		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	fi
+fi
+
+sed	-e "s#KWTOOLS.*#KWTOOLS_PATH="$EXEC_PATH"#" \
+	-e "s#HELP.*#HELP_PATH="${SHARE_PATH}/help"#" ${ETC_PATH}/main.cf >/tmp/main.cf$$
+mv /tmp/main.cf$$ ${ETC_PATH}/main.cf
+chmod 0644 ${ETC_PATH}/main.cf
+#
+# Ist das OS Debian, werden auch die Menu-Dateien kopiert.
+#
+if [ -f /etc/debian-version ] ; then
+	for i in ./debian/kwtools-*.menu(.N) ; {
+		cp $CP_OPT $i /usr/share/menu/${i%.menu}
+		chmod 0644 /usr/share/menu/${i%.menu}
+	}
+	if [ -x "`which update-menus 2>/dev/null`" ] ; then
+		update-menus
+	fi
+fi
+#
+# Manpages zippen
+#
+echo ""
+echo "compress the manpages."
+echo ""
+sleep 2
+for n in {1..8} ; {
+	for i in ${MAN_PATH}/**/*.${n}(N.) ; {
+		if [[ -d ${i%/*} ]] ; then
+			if [ "`pwd`" != "${i%/*}" ] ; then
+				cd ${i%/*}
+				gzip -vf9 ${i}(:t)
+			else
+				gzip -vf9 ${i}(:t)
+			fi
+		fi
+	}
+}
+
+# Funktionen kompilieren (yes/no)
+#
+if [ "$COMPILE" = yes ] ; then
+	echo ""
+	echo "compile the functions."
+	echo ""
+	sleep 2
+	#
+	cd $FUNC_PATH
+	#
+	/bin/zsh -fc 'setopt extendedglob 
+	for i in *(/N) ; { 
+		echo "zcompile -U -M $i.zwc ${i}/*~*.zwc(^/)"
+		zcompile -U -M $i.zwc ${i}/*~*.zwc(^/)
+		chmod 0644 ${i}.zwc
+	}'
+fi
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

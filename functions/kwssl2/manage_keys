@@ -1,0 +1,112 @@
+# Funktion (manage_keys), Verwaltung von privaten Schluesseln# {{{
+#
+# usage: manage_keys
+#
+manage_keys() {
+	# Pruefen ob eine CA geoeffnet ist.
+	if [ -n "$CA_OPEN_NAME" ] ; then
+		# Funktion (key_menu)# {{{
+		KEY_TITLE="${CA_OPEN_NAME}::${lv_Key}"
+    	KEY_MENU=(\"$lv_Export\" \"\"
+		$gv_Delete \"\" $gv_Back \"\")
+		key_menu() {
+			menubox "$1" "$KEY_TITLE" "$gv_Menupoint" "$KEY_MENU"
+		}
+		# }}}
+		# Funktion (no_keys_msg)# {{{
+		no_keys_msg() {
+			MSG=$(gettext 'Es sind keine Schluessel vorhanden.')
+			msgbox "$gv_Info" "$MSG"
+		}
+		## }}}
+		key_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					script_help key_help
+					key_menu
+					;;
+				$lv_Export)
+					# Schluessel exportieren# {{{
+					autoload -U export_files
+					EXPORT_TITLE="${lv_Key}::${lv_Export}"
+					#
+					# Funktion (key_choice_menu)# {{{
+					key_choice_menu() {
+						KEY_EXPORT_MENU=($KEYS_ALL_M)
+						radiolist "$EXPORT_TITLE" "$gv_Menupoint" "$KEY_EXPORT_MENU"
+					}
+					## }}}
+					get_req_key_files
+					if [[ -n ${KEYS_ALL_M[1]} ]] ; then
+						key_choice_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)
+						    	    # Hilfe Messagebox
+									script_help export_key_help
+									key_choice_menu
+									;;
+								*)
+									# Auswahl uebernehmen
+									Ex_File="${KEYS_FILE[gv_Auswahl]}"
+									export_files -keys "$Ex_File" "export_key_help"
+									break
+									;;
+							esac
+						done
+					else
+						no_keys_msg
+					fi
+					## }}}
+					key_menu $lv_Export
+					;;
+				$gv_Delete)
+					# Schluessel loeschen# {{{
+					# Funktion (del_key_choice_menu)# {{{
+					KEY_DEL_TITLE="${lv_Key}::${gv_Delete}"
+					del_key_choice_menu() {
+						KEY_DEL_MENU=($KEYS_ALL_M)
+						checklist "$KEY_DEL_TITLE" "$gv_Menupoint" "$KEY_DEL_MENU"
+					}
+					## }}}
+					get_req_key_files
+					if [ -n "${KEYS_ALL_M[1]}" ] ; then
+						del_key_choice_menu
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+						    	    # Hilfe Messagebox
+									script_help key_del_help
+									del_key_choice_menu
+									;;
+								*)
+									# Auswahl uebernehmen
+									for i in ${=gv_Auswahl} ; {
+										rm -rf "${KEYS_FILE[i]}" &>/dev/null
+									}
+									#
+									break
+									;;
+							esac
+						done
+					else
+						no_keys_msg
+					fi
+					## }}}
+					key_menu $gv_Delete
+					;;
+				$gv_Back)
+					break
+					;;
+			esac
+		done
+	else
+		no_open_ca_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

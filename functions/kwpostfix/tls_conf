@@ -1,0 +1,336 @@
+# tls Parameter einstellen{{{
+#
+# usage: tls_conf
+#
+tls_conf() {
+
+	# Variable
+	TLS_TITLE="${gv_Configuration}::${lv_Tls}"
+	
+	# Funktion (read_openssl_curves)# {{{
+	#
+	read_openssl_curves() {
+		unset -- LIST_CURVES
+		print -l i${(o)${${(M)${(f)"$(openssl ecparam -list_curves)"}#*:}%( :|:)}} | \
+			while read a ; do
+				LIST_CURVES+=($a \"\")
+			done
+	}
+	## }}}
+	# Funktion (tls_level_ciphers), Sicherheitsanforderung.# {{{
+	tls_level_ciphers() {
+		unset -- WERT OldVar
+		OldVar="$1"
+		TLS_LEVEL_CIPHERS_MSG=$(gettext 'Tragen Sie hier die Sicherheitsanforderung fuer diese Stufe der Verschluesselung ein (Bsp.: ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH).')
+		inputbox "$TITLE" "$TLS_LEVEL_CIPHERS_MSG" "$OldVar"
+		if [[ -n $gv_Auswahl ]] ; then
+			WERT="$gv_Auswahl"
+		fi
+	}
+	## }}}
+	# Funktion (openssl_curves), Curves auswählen{{{
+	openssl_curves() {
+		unset -- WERT Curves_Value
+		local OPENSSL_CURVES_MSG OPENSSL_CURVES_MENU
+		OPENSSL_CURVES_MSG=$(gettext 'Waehlen Sie eine elliptische Kurve fuer den sensible fluechtigen ECDH Schluesselaustausch aus.')
+		OPENSSL_CURVES_MENU=($LIST_CURVES)
+		Curves_Value="$1"
+		# Funktion (openssl_curves_menu)# {{{
+		openssl_curves_menu() {
+			menubox "$1" "$TLS_TITLE" "$OPENSSL_CURVES_MSG" "$OPENSSL_CURVES_MENU" $Curves_Value
+		}
+		## }}}
+		openssl_curves_menu $Curves_Value
+		if [ -n "$gv_Auswahl" ] ; then
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help tls_openssl_curves_help
+						openssl_curves_menu $Curves_Value
+						;;
+					*)	WERT="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+		fi
+	}
+	#}}}
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)tls_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	
+	## }}}
+	# Funktion conf_tls_menue{{{
+	conf_tls_menue() {
+		TLS_MENU=(tls_append_default_CA \"\$tls_append_default_CA\"
+		tls_daemon_random_bytes \"\$tls_daemon_random_bytes\"
+		tls_disable_workarounds \"\$tls_disable_workarounds\"
+		tls_eecdh_strong_curve \"\$tls_eecdh_strong_curve\"
+		tls_eecdh_ultra_curve \"\$tls_eecdh_ultra_curve\"
+		tls_export_cipherlist \"\$tls_export_cipherlist\"
+		tls_high_cipherlist \"\$tls_high_cipherlist\"
+		tls_low_cipherlist \"\$tls_low_cipherlist\"
+		tls_medium_cipherlist \"\$tls_medium_cipherlist\"
+		tls_null_cipherlist \"\$tls_null_cipherlist\"
+		tls_preempt_cipherlist \"\$tls_preempt_cipherlist\"
+		tls_random_bytes \"\$tls_random_bytes\"
+		tls_random_exchange_name \"\$tls_random_exchange_name\"
+		tls_random_prng_update_period \"\$tls_random_prng_update_period\"
+		tls_random_reseed_period \"\$tls_random_reseed_period\"
+		tls_random_source \"\$tls_random_source\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$TLS_TITLE" "$gv_Menupoint" "$TLS_MENU"
+	}
+	#}}}
+	read_openssl_curves
+	conf_tls_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tls_help
+				conf_tls_menue
+				;;
+			tls_append_default_CA)
+				# Standard = no# {{{
+				TLS_APPEND_DEFAULT_CA_MSG=$(gettext 'Sollen die Standard Zertifikate des Servers mit angehaengt werden? Standard ist nein.')
+				ja_nein_tausch "$TLS_TITLE" "$TLS_APPEND_DEFAULT_CA_MSG"
+				if [[ -n $WERT ]] ; then
+					tls_append_default_CA="$WERT"
+					postconf -e tls_append_default_CA="$WERT"
+				fi
+				## }}}
+				conf_tls_menue tls_append_default_CA
+				;;
+			tls_daemon_random_bytes)
+				# Wieviel Bytes sollen jedesmal eingelesen werden?# {{{
+				# Standard = 32
+				number_input -b "$tls_daemon_random_bytes"
+				if [[ -n $NUMBER ]] ; then
+					tls_daemon_random_bytes="$NUMBER"
+					postconf -e tls_daemon_random_bytes="$NUMBER"
+				fi
+				## }}}
+				conf_tls_menue tls_daemon_random_bytes
+				;;
+			tls_disable_workarounds)
+				# Schaltet Bug Workarounds aus.# {{{
+				generate_is_file "${tls_disable_workarounds//,/}"
+				is_value "DONT_INSERT_EMPTY_FRAGMENTS CRYPTOPRO_TLSEXT_BUG MICROSOFT_BIG_SSLV3_BUFFER MICROSOFT_SESS_ID_BUG MSIE_SSLV2_RSA_PADDING NETSCAPE_CHALLENGE_BUG NETSCAPE_REUSE_CIPHER_CHANGE_BUG LEGACY_SERVER_CONNECT SSLEAY_080_CLIENT_DH_BUG SSLREF2_REUSE_CERT_TYPE_BUG TLS_BLOCK_PADDING_BUG TLS_D5_BUG TLS_ROLLBACK_BUG"
+				#
+				U_OPT=k
+				TLS_DISABLE_WORKAROUND_MSG=$(gettext 'Waehlen Sie ein oder mehrere OpenSSL Bug Workarounds aus die abgeschaltet werden sollen (Siehe man 3 SSL_CTX_set_options.')
+				checklist "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
+				#
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help tls_help
+							U_OPT=k
+							checklist "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
+							;;
+						*)	# uebernehmen
+							tls_disable_workarounds="$gv_Auswahl"
+							postconf -e tls_disable_workarounds="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#
+				check_gv_Auswahl tls_disable_workarounds "postconf -e tls_disable_workarounds="""
+				## }}}
+				conf_tls_menue tls_disable_workarounds
+				;;
+			tls_eecdh_strong_curve)
+				# Standard = prime256v1# {{{
+				openssl_curves $tls_eecdh_strong_curve
+				if [[ -n $WERT ]] ; then
+					tls_eecdh_strong_curve="$WERT"
+					postconf -e tls_eecdh_strong_curve="$WERT"
+				fi
+				## }}}
+				conf_tls_menue tls_eecdh_strong_curve
+				;;
+			tls_eecdh_ultra_curve)
+				# Standard = secp384r1# {{{
+				openssl_curves $tls_eecdh_ultra_curve
+				if [[ -n $WERT ]] ; then
+					tls_eecdh_ultra_curve="$WERT"
+					postconf -e tls_eecdh_ultra_curve="$WERT"
+				fi
+				## }}}
+				conf_tls_menue tls_eecdh_ultra_curve
+				;;
+			tls_export_cipherlist)
+				# Standard = aNULL:-aNULL:ALL:+RC4:@STRENGTH# {{{
+				tls_level_ciphers "$tls_export_cipherlist"
+				if [[ -n $WERT ]] ; then
+					tls_export_cipherlist="$WERT"
+					postconf -e tls_export_cipherlist="$WERT"
+				else
+					tls_export_cipherlist="aNULL:-aNULL:ALL:+RC4:@STRENGTH"
+					postconf -e tls_export_cipherlist="aNULL:-aNULL:ALL:+RC4:@STRENGTH"
+				fi
+				## }}}
+				conf_tls_menue tls_export_cipherlist
+				;;
+			tls_high_cipherlist)
+				# Standard = aNULL:-aNULL:ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH# {{{
+				tls_level_ciphers "$tls_high_cipherlist"
+				if [[ -n $WERT ]] ; then
+					tls_high_cipherlist="$WERT"
+					postconf -e tls_high_cipherlist="$WERT"
+				else
+					tls_high_cipherlist="aNULL:-aNULL:ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH"
+					postconf -e tls_high_cipherlist="aNULL:-aNULL:ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH"
+				fi
+				## }}}
+				conf_tls_menue tls_high_cipherlist
+				;;
+			tls_low_cipherlist)
+				# Standard = aNULL:-aNULL:ALL:!EXPORT:+RC4:@STRENGTH# {{{
+				tls_level_ciphers "$tls_low_cipherlist"
+				if [[ -n $WERT ]] ; then
+					tls_low_cipherlist="$WERT"
+					postconf -e tls_low_cipherlist="$WERT"
+				else
+					tls_low_cipherlist="aNULL:-aNULL:ALL:!EXPORT:+RC4:@STRENGTH"
+					postconf -e tls_low_cipherlist="aNULL:-aNULL:ALL:!EXPORT:+RC4:@STRENGTH"
+				fi
+				## }}}
+				conf_tls_menue tls_low_cipherlist
+				;;
+			tls_medium_cipherlist)
+				# Standard = aNULL:-aNULL:ALL:!EXPORT:!LOW:+RC4:@STRENGTH# {{{
+				tls_level_ciphers "$tls_medium_cipherlist"
+				if [[ -n $WERT ]] ; then
+					tls_medium_cipherlist="$WERT"
+					postconf -e tls_medium_cipherlist="$WERT"
+				else
+					tls_medium_cipherlist="aNULL:-aNULL:ALL:!EXPORT:!LOW:+RC4:@STRENGTH"
+					postconf -e tls_medium_cipherlist="aNULL:-aNULL:ALL:!EXPORT:!LOW:+RC4:@STRENGTH"
+				fi
+				## }}}
+				conf_tls_menue tls_medium_cipherlist
+				;;
+			tls_null_cipherlist)
+				# Standard = eNULL:!aNULL# {{{
+				tls_level_ciphers "$tls_null_cipherlist"
+				if [[ -n $WERT ]] ; then
+					tls_null_cipherlist="$WERT"
+					postconf -e tls_null_cipherlist="$WERT"
+				else
+					tls_null_cipherlist="eNULL:!aNULL"
+					postconf -e tls_null_cipherlist="eNULL:!aNULL"
+				fi
+				## }}}
+				conf_tls_menue tls_null_cipherlist
+				;;
+			tls_preempt_cipherlist)
+				# Standard = no# {{{
+				TLS_PREEMPT_CIPHERLIST_MSG=$(gettext 'Soll das Verschluesselungverfahren des Postfix SMTP Servers benutzt werden oder das des Clients? Standard ist nein.')
+				ja_nein_tausch "$TLS_TITLE" "$TLS_PREEMPT_CIPHERLIST_MSG"
+				if [[ -n $WERT ]] ; then
+					tls_preempt_cipherlist="$WERT"
+					postconf -e tls_preempt_cipherlist="$WERT"
+				fi
+				## }}}
+				conf_tls_menue tls_preempt_cipherlist
+				;;
+			tls_random_bytes)
+				# Wieviel Bytes sollen jedesmal eingelesen werden?# {{{
+				# Standard = 32
+				number_input -b "$tls_random_bytes"
+				if [[ -n $NUMBER ]] ; then
+					tls_random_bytes="$NUMBER"
+					postconf -e tls_random_bytes="$NUMBER"
+				fi
+				## }}}
+				conf_tls_menue tls_random_bytes
+				;;
+			tls_random_exchange_name)
+				# Soll prng_exch fuer tlsmgr aktiviert werden, eine Datei welche {{{
+				# er von Zeit zu Zeit neu schreibt.
+				# Standard = ${data_directory}/prng_exch
+				yesno_option "$tls_random_exchange_name" "\${data_directory}/prng_exch"
+				TLS_EXCHANGE_MSG=$(gettext 'Soll pseudo random number generator (PRNG) (\$data_directory/prng_exch) aktiviert werden (ja/nein)?')
+				yesno "$TLS_TITLE" "$TLS_EXCHANGE_MSG" "$YN_OPT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					tls_random_exchange_name="\${data_directory}/prng_exch"
+					postconf -e tls_random_exchange_name="\${data_directory}/prng_exch"
+				else
+					tls_random_exchange_name=""
+					postconf -e tls_random_exchange_name=""
+				fi
+				#}}}
+				conf_tls_menue tls_random_exchange_name
+				;;
+			tls_random_prng_update_period)
+				# Nach welcher Zeit (s) soll prng_exch neu generiert werden.# {{{
+				# Standard = 3600s
+				number_input -s "${tls_random_prng_update_period%?}"
+				if [[ -n $NUMBER ]] ; then
+					tls_random_prng_update_period="$NUMBER"
+					postconf -e tls_random_prng_update_period="$NUMBER"
+				fi
+				## }}}
+				conf_tls_menue tls_random_prng_update_period
+				;;
+			tls_random_reseed_period)
+				# Nach welcher Zeit (Sekunden) sollen die Werte neu ermittelt werden?# {{{
+				# Standard = 3600s
+				number_input -s "${tls_random_reseed_period%?}"
+				if [[ -n $NUMBER ]] ; then
+					tls_random_reseed_period="$NUMBER"
+					postconf -e tls_random_reseed_period="$NUMBER"
+				fi
+				## }}}
+				conf_tls_menue tls_random_reseed_period
+				;;
+			tls_random_source)
+				# Device um Zufallszahlen zu generieren{{{
+				# Standard = dev:/dev/urandom
+				RANDOM_DEV_MENU=(dev:/dev/random \"\" dev:/dev/urandom \"\")
+				RANDOM_DEV_MSG=$(gettext 'Waehlen Sie ein Device aus.')
+				# Funktion (tls_random_source_menu)# {{{
+				tls_random_source_menu() {
+					menubox "$tls_random_source" "$TLS_TITLE" "$RANDOM_DEV_MSG" "$RANDOM_DEV_MENU"
+				}
+				## }}}
+				tls_random_source_menu $tls_random_source
+				if [[ -n $gv_Auswahl ]] ; then
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tls_help
+								tls_random_source_menu $tls_random_source
+								;;
+							*)	# Wert uebernehmen
+								tls_random_source="$gv_Auswahl"
+								postconf -e tls_random_source="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					tls_daemon_random_source=""
+					postconf -e tls_daemon_random_source=""
+				fi
+				#}}}
+				conf_tls_menue tls_random_source
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

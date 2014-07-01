@@ -1,0 +1,46 @@
+# lock Art wählen{{{
+#
+# usage: lock_art "$VAR"
+# VAR - VAR ist die Variable fuer die
+# die Lock Art geaendert werden soll.
+#
+lock_art() {
+	if [ "$#" = 1 ] ; then
+		# wird unter anderem fuer die Hilfe Datei benoetigt.
+		lv_Lock=$(gettext 'Lock')
+		L_MSG=$(gettext 'Waehlen Sie eine oder mehrere Lock Arten aus.')
+		# Variablen
+		unset -- WERT L_MENU Pre_tmp
+		local Pre_tmp L_MENU
+		Pre_tmp="$1"
+		U_OPT=k
+		#
+		for i in `postconf -l` ; {
+			L_MENU+=($i)
+		}
+		generate_is_file "${Pre_tmp//,/}"
+		is_value "$L_MENU"
+		#
+		checklist "$gv_Configuration" "$L_MSG" "$VALUE_ARRAY" "$Pre_tmp"
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	
+					script_help lock_help
+					U_OPT=k
+					checklist "$gv_Configuration" "$L_MSG" "$VALUE_ARRAY" "$Pre_tmp"
+					;;
+				*)	# uebernehmen
+					WERT="$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

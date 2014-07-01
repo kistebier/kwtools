@@ -1,0 +1,337 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, kwcryptsetup, cryptsetup, dmsetup, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2010-03-11">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwcrypt.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwecryptfs.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwcryptsetup>kwcryptsetup</a></h2>
+                                <p>kwcryptsetup ist ein Fontend f&uuml;r cryptsetup und verschl&uuml;sselt Container
+				(Datei mit Dateisystem), Partitionen (auch Swap Partitionen), RAID Arrays und
+				Logische Volumes.</p>
+                                <p><b>Notiz:</b> Ben&ouml;tigt root Rechte.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#conf">1 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#status">2 Status</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#luks">3 LUKS</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#laufwerke">4 Laufwerke</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#keys">5 Schl&uuml;ssel</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#start">6 start</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwcryptsetup.html#stop">7 stop</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=conf></a>1 Konfiguration</a></h3>
+				<p>Hier kann man einige Standardwerte f&uuml;r verschl&uuml;sselte Laufwerke 
+				konfigurieren.</p>
+				<p><b>Ausrichtung:</b> Geben Sie ein vielfaches von 512 Byte Sektoren ein
+				(8 = 4096 Byte). Das dient f&uuml;r die "stripe" Option auf
+				RAID Laufwerken oder Logischen Volumes (LVM). Lesen Sie
+				dazu auch man 8 mkfs.xfs.</p>
+				<p><b>Gr&ouml;sse:</b> Geben Sie die Gr&ouml;sse des Containers ein. Standard 
+				Blockgr&ouml;sse ist 1 MByte. Die Gr&ouml;sse der zu erstellenden verschl&uuml;sselten 
+				Datei (Container) muss gr&ouml;sser als 2 MByte sein (ben&ouml;ntigt der LUKS-Header).
+				Sie k&ouml;nnen als Masseinheit folgende Zeichen benutzen, k|K-KiloByte,
+				m|M-MegaByte, g|G-GigaByte, t|T-TerraByte oder p|P-PetaByte.</p>
+				<p><b>gnupg:</b> Soll gnupg zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
+				werden (ja/nein)? Geht nicht zusammen mit der Option "ssl".</p>
+				<p><b>Hash:</b> Auswahl des Hashwertes der f&uuml;r die Passphrase verwendet werden
+				soll (Standard ist ripemd160)?</p>
+				<p><b>LUKS verwenden:</b> Soll die Erweiterung LUKS (Linux Unified Key Setup) verwendet 
+				werden (ja/nein)? Standard ist ja. Dies sollten Sie eigentlich immer ausw&auml;hlen.
+				Es ist die sicherste Methode.</p>
+				<p><b>Mountverz.:</b> Muss ein externes oder internes Device gemountet werden, 
+				w&auml;hlen Sie dies hier aus. Es muss in der Datei /etc/fstab stehen.
+				Zum Beispiel kann der Schl&uuml;ssel f&uuml;r das verschl&uuml;sselte Device
+				auf einem USBstick liegen.</p>
+				<p><b>nur lesen:</b> Soll das Laufwerk im Nur Lesemodus erstellt werden
+				(ja/nein)? Kann man z.B. nutzen um eine verschl&uuml;sselte
+				CD/DVD's zu erstellen.</p>
+				<p><b>Noauto:</b> Soll das verschl&uuml;sselte Laufwerk beim Start
+				des Rechners manuell erstellt werden (ja/nein)? Also nicht 
+				automatisch.</p>
+				<p><b>NOTIZ:</b> Bei Benutzung von pam-mount sollten Sie immer &quot;nein&quot;
+				benutzen, da es sonst zu Fehlern beim mounten/login des Laufwerks kommt. Das
+				verschl&uuml;sselte Laufwerk darf noch nicht gestartet sein.</p>
+				<p><b>Offset:</b> Geben Sie eine Zahl ein um wieviele Sektoren der
+				1. Sektor verschoben werden soll. Ab diesem Sektor wird das Laufwerk
+				auf das verschl&uuml;sselte Laufwerk abgebildet. Hat das original
+				Laufwerk 10000 Sektoren und &quot;Offset&quot; ist 300 wird das
+				original Laufwerk ab Sektor 300 bis zum Ende auf das verschl&uuml;sselte
+				Laufwerk abgebildet. Siehe auch die Option &quot;Skip&quot;.</p>
+				<p><b>Passwort &uuml;berpr&uuml;fen:</b> Soll die Passwort-Eingabe nochmal 
+				&uuml;berpr&uuml;ft werden (ja/nein)?</p>
+				<p><b>Passwort-Zeit:</b> Geben Sie die Zeit, in Mikrosekunden, f&uuml;r den
+				Passwort Prozess ein (Standard ist 1).</p>
+				<p><b>Schl&uuml;sseldatei:</b> W&auml;hlen Sie hier die Datei aus, die den/die 
+				Schl&uuml;ssel enth&auml;lt. Wenn Sie keine Datei ausw&auml;hlen wird "none"
+				genommen und Sie m&uuml;ssen die Passphrase interactiv eingeben.</p>
+				<p><b>NOTIZ:</b> Bei Verwendung der LUKS Erweiterung k&ouml;nnen Sie bis zu 8 
+				Passphrasen in der Schl&uuml;sseldatei verwenden. Soll beim Login
+				das Laufwerk automatisch aktiviert werden, muss die
+				Passphrase gleich dem Login Passwort des Benutzers sein, und Sie ben&ouml;tigen dazu 
+				pam-mount. Schauen Sie nach dem richtigen Paketnamen in Ihrer Distribution nach.
+				Wenn Sie bei diesem Szenario das Login Passwort &auml;ndern m&uuml;ssen Sie auch die
+				Passphrase des Laufwerks &auml;ndern.</p>
+				<p><b>Schl&uuml;sselgr&ouml;sse:</b> Auswahl der Schl&uuml;sselgr&ouml;sse. Zur Auswahl 
+				stehen 128, 192 und 256 Bit &#040;Standard ist 256&#041;.</p>
+				<p><b>Skip:</b> Geben Sie eine Zahl ein wieviele Sektoren am Anfang des
+				verschl&uuml;sselten Laufwerks zur Berechnung des Initialisierungsvektor
+				(IV) &uuml;bersprungen werden sollen. Die Berechnung des IV behandelt Sektor 0
+				des verschl&uuml;sselten Laufwerks als w&auml;re es Sektor Skip=n.
+				Dadurch kann man aus der Mitte eines verschl&uuml;sselten Laufwerks ein
+				St&uuml;ck rausschneiden und es mit dem Schl&uuml;ssel des original
+				Laufwerks immer noch korrekt ver- und vor allem entschl&uuml;sseln, so
+				dass dasselbe rauskommt, als h&auml;tte man Sektor n+Skip vom original
+				Laufwerk ver- bzw. entschl&uuml;sselt.</p>
+				<p><b>ssl:</b> Soll openssl zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
+				werden (ja/nein)? Geht nicht zusammen mit der Option "gnupg".</p>
+				<p><b>swap:</b> Soll ein verschl&uuml;sseltes Swap-laufwerk erstellt werden 
+				(ja/nein)?</b>
+				<p><b>NOTIZ:</b> Suspend-to-RAM und Suspend-to-Disk funtionieren mit einer
+				verschl&uuml;sselten SWAP-Partition noch nicht. Die Community
+				arbeitet jedoch an diesem Problem.</p>
+				<p><b>tempor&auml;r:</b> Soll ein verschl&uuml;sseltes tempor&auml;res Laufwerk erstellt werden (ja/nein)? Bei ja kann man ausw&auml;hlen
+				wie das Laufwerk formatiert werden soll. Dient unter anderem zum
+				testen.</p>
+				<p><b>Timeout:</b> Geben Sie den Timeout, in Sekunden, f&uuml;r die Passwortabfrage ein
+				(Standard ist 5).</p>
+				<p><b>Verz&ouml;gerung:</b> Soll das verschl&uuml;sselte Laufwerk beim
+				Start des Rechners verz&ouml;gert erstellt werden, zum Beispiel nach
+				dem erstellen von RAID Arrays (ja/nein)?</p>
+				<p><b>Warnung:</b> Soll beim starten des Laufwerks eine Warnung ausgegeben
+				werden, wenn dieses nicht existiert (ja/nein)?</p>
+				<p><b>Wiederholungen:</b> Geben Sie ein, wie oft die Passphrasenabfrage
+				versucht werden soll zu wiederholen (Standard ist 3).</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=status>2 Status</a></h3>
+                                <p>Status der verschl&uuml;sselten Laufwerke anzeigen.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=luks>3 LUKS</a></h3>
+                                <p><b>LUKSinfo:</b> Hier wird ein Dump f&uuml;r jedes verschl&uuml;sselte Laufwerk
+				mit LUKS Erweiterung angezeigt. So kann man z.B. herrausfinden wieviele und 
+				welche Slots im LUKS Header schon vergeben sind.</p>
+                                <p><b>Schl&uuml;ssel_addieren:</b> Solange noch freie Schl&uuml;ssel Slots vorhanden
+				sind kann man Passphrasen dazu addieren. Es wird dabei eine
+				schon vorhandene Passphrase abgefragt, bevor die neue angelegt wird.</p>
+                                <p><b>Schl&uuml;ssel_l&ouml;schen:</b> Wenn der LUKS Header mehr als eine Passphrase
+				besitzt werden hier die benutzten Schl&uuml;ssel Slots (Zahlen)
+				angeboten, um deren Passphrase zu l&ouml;schen. Dabei wird eine
+				vorhandene Passphrase abgefragt, bevor dies geschieht.</p>
+				<p><b>NOTIZ:</b> Achten Sie darauf das dies nicht die gleiche ist wie eine
+				derer die gel&ouml;scht werden sollen. Die Passphrase wird nachdem beenden,
+				des addieren oder l&ouml;schen Prozesses sofort wieder gel&ouml;scht.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=laufwerke>4 Laufwerke</a></h3>
+                                <p>Verschl&uuml;sselte Laufwerke bearbeiten. Man kann hier verschl&uuml;sselte
+				Laufwerke erstellen, l&ouml;schen, vergr&ouml;ssern, verkleinern und deren Optionen 
+				ver&auml;ndern. Dabei werden meist die Konfigurationsparameter der Konfiguration
+				(s. 1.5.2.1.0) ber&uuml;cksichtigt.</p>
+				<p><b>anlegen:</b> Erstellen von verschl&uuml;sselten Laufwerken. Dabei wird die
+				Konfiguration in die Datei /etc/crypttab (Debian) eingetragen, damit diese
+				auch automatisch (Boot) aktiviert werden k&ouml;nnen.</p>
+				<p><table cellSpacing=0 cellPadding=0 width="100%" border=0>
+					<tr>
+						<td><img src="../../../images/trans.gif" width="10" border="0"></td>
+						<td><p><b><i>Container:</i></b> Ein verschl&uuml;sseltes Datei-Image 
+						(Datei mit Dateisystem) erstellen.</p>
+						<p><b><font color="Red">Achtung:</font></b> Erstellen Sie kein 
+						Journaling Dateisystem auf dem
+						Container, wenn der Container auf einem Journaling Dateisystem 
+						liegt. Dies k&ouml;nnte zu Fehlern f&uuml;hren.</p></td>
+					</tr>
+						<td><img src="../../../images/trans.gif" height="15" border="0"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>Partition:</i></b> Eine verschl&uuml;sselte Partition, 
+						Logisches Volume (LV) oder RAID Laufwerk erstellen.</p>
+						<p><b>Notiz:</b> Wenn das Laufwerk schon vorhanden ist, wird 
+						nachgefragt ob es &uuml;berschrieben werden soll. F&uuml;er
+						das Einlesen der Optionen des Laufwerks wird die Datei "/etc/crypttab" 
+						hergenommen.</p></td>
+					</tr>
+				</table></p>
+				<p><b>&auml;ndern:</b> Ver&auml;ndern von ein oder mehreren verschl&uuml;sselten 
+				Laufwerken. Dabei werden die Eintr&auml;ge der Konfigurationsdatei /etc/crypttab
+				benutzt.</p>
+				<p><b>Notiz:</b> Es k&ouml;nnen nicht alle Optionen wie beim erstellen ge&auml;ndert 
+				werden.</p>
+				<p><b>vergr&ouml;ssern:</b> Vergr&ouml;sserung von verschl&uuml;sselten
+				Laufwerken oder Containern.</p>
+				<p><b>verkleinern:</b> Verkleinerung von verschl&uuml;sselten
+				Laufwerken oder Containern.</p>
+				<p><b>Notiz:</b> Zur Zeit wird nur die Vergr&ouml;sserung und Verkleinerung von 
+				verschl&uuml;sselten Logischen Volumes unterst&uuml;tzt. Das Dateisystem spielt nat. 
+				auch eine Rolle.</p>
+				<p><b>l&ouml;schen:</b> L&ouml;schen von ein oder mehreren Laufwerken. Heisst,
+				verschl&uuml;sselte Laufwerke werden gestoppt und vorhandene Container (Dateien) 
+				gel&ouml;scht. In der Datei /etc/crypttab werden die dementsprechenden Eintr&auml;ge 
+				gel&ouml;scht.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=keys>5 Schl&uuml;ssel</a></h3>
+                                <p>Hier kann man Schl&uuml;sseldateien erstellen und vorhandene l&ouml;schen.
+				Zur Verschl&uuml;sselung stehen "gnupg", "openssl" oder "keine" zur Verf&uuml;gung.</p>
+				<p><b>anlegen:</b></p>
+				<p><table cellSpacing=0 cellPadding=0 width="100%" border=0>
+					<tr>
+						<td><img src="../../../images/trans.gif" width="10" border="0"></td>
+						<td><p><b><i>Dateiname:</i></b> Auswahl des Dateinamens und in welchem 
+						Verzeichis er gespeichert werden soll.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b><i>Verschl&uuml;ssellung:</i></b> Zur Erzeugung der 
+						Schl&uuml;sseldatei wird<br>
+						"dd if=/dev/urandom of=$KEY_FILE_NAME bs=1c count=256"<br>
+						benutzt (/dev/urandom - Erzeugung zuf&auml;lliger 
+						Zahlen/Werte/Zeichen)<br>
+						Diese wird verschl&uuml;sselt bei Auswahl von "gnupg" oder 
+						"ssl", ansonsten nicht.<br></p>
+						<p><b>Notiz:</b> F&uuml;r die Erstellung der Schl&uuml;sseldatei, mit
+						"gnupg" muss der Benutzer "root" den/die dementsprechenden 
+						Schl&uuml;essel 
+						besitzen. Man muss ja nicht den "root" Schl&uuml;ssel verteilen, zur 
+						Aktivierung der Laufwerke/Container.</p></td>
+					</tr>
+				</table></p>
+				<p><b>l&ouml;schen:</b> L&ouml;schen von ein oder mehreren Schl&uuml;sseldateien.
+				Diese sollten Sie mit Namen kennen, bei der Auswahl.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=start>6 start</a></h3>
+                                <p>Verschl&uuml;sselte Laufwerke starten, dabei wird die Datei /etc/crypttab 
+				ber&uuml;cksichtigt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=stop>7 stop</a></h3>
+                                <p>Verschl&uuml;sselte Laufwerke stoppen, dabei wird die Datei /etc/crypttab 
+				ber&uuml;cksichtigt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwcrypt.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwecryptfs.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

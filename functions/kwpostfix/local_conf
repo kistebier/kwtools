@@ -1,0 +1,284 @@
+# local Konfiguration einstellen{{{
+
+local_conf() {
+	# Variable
+	LOCAL_TITLE="${gv_Configuration}::${lv_Local}"
+
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)local_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_local_menu), die Fehler-Parameter einstellen# {{{
+	# local_header_rewrite_clients = permit_inet_interfaces
+	conf_local_menu() {
+		LOCAL_MENU=(local_command_shell \"\$local_command_shell\"
+		local_delivery_slot_cost \"\$local_delivery_slot_cost\"
+		local_delivery_slot_discount \"\$local_delivery_slot_discount\"
+		local_delivery_slot_loan \"\$local_delivery_slot_loan\"
+		local_destination_concurrency_failed_cohort_limit \"\$local_destination_concurrency_failed_cohort_limit\"
+		local_destination_concurrency_limit \"\$local_destination_concurrency_limit\"
+		local_destination_concurrency_negative_feedback \"\$local_destination_concurrency_negative_feedback\"
+		local_destination_concurrency_positive_feedback \"\$local_destination_concurrency_positive_feedback\"
+		local_destination_rate_delay \"\$local_destination_rate_delay\"
+		local_destination_recipient_limit \"\$local_destination_recipient_limit\"
+		local_extra_recipient_limit \"\$local_extra_recipient_limit\"
+		local_header_rewrite_clients \"\$local_header_rewrite_clients\"
+		local_initial_destination_concurrency \"\$local_initial_destination_concurrency\"
+		local_minimum_delivery_slots \"\$local_minimum_delivery_slots\"
+		local_recipient_limit \"\$local_recipient_limit\"
+		local_recipient_maps \"\$local_recipient_maps\"
+		local_recipient_refill_delay \"\$local_recipient_refill_delay\"
+		local_recipient_refill_limit \"\$local_recipient_refill_limit\"
+		local_transport \"\$local_transport\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$LOCAL_TITLE" "$gv_Menupoint" "$LOCAL_MENU"
+	}
+	## }}}
+	conf_local_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help local_help
+				conf_local_menu
+				;;
+			local_command_shell)
+				# Lokale Shell auswaehlen{{{
+				list_shell $local_command_shell
+				if [ -n "$gv_Shell" ] ; then
+					local_command_shell="$gv_Shell"
+					postconf -e local_command_shell="$gv_Shell"
+				else
+					local_command_shell=""
+					postconf -e local_command_shell=""
+				fi
+				#}}}
+				conf_local_menu local_command_shell
+				;;
+			local_delivery_slot_cost)
+				# Standard = $default_delivery_slot_cost# {{{
+				default_or_input local_delivery_slot_cost number_input -i $local_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					local_delivery_slot_cost="$Value"
+					postconf -e local_delivery_slot_cost="$Value"
+				fi
+				# }}}
+				conf_local_menu local_delivery_slot_cost
+				;;
+			local_delivery_slot_discount)
+				# Standard = $default_delivery_slot_discount# {{{
+				default_or_input local_delivery_slot_discount number_input -i $local_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					local_delivery_slot_discount="$Value"
+					postconf -e local_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_delivery_slot_discount
+				;;
+			local_delivery_slot_loan)
+				# Standard = $default_delivery_slot_loan# {{{
+				default_or_input local_delivery_slot_loan number_input -i $local_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					local_delivery_slot_loan="$Value"
+					postconf -e local_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_delivery_slot_loan
+				;;
+			local_destination_concurrency_failed_cohort_limit)
+				# Standard = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input local_destination_concurrency_failed_cohort_limit number_input -i $local_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					local_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e local_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_destination_concurrency_failed_cohort_limit
+				;;
+			local_destination_concurrency_limit)
+				# Standard = 2# {{{
+				number_input -i $local_destination_concurrency_limit
+				if [[ -n $NUMBER ]] ; then
+					local_destination_concurrency_limit="$NUMBER"
+					postconf -e local_destination_concurrency_limit="$NUMBER"
+				fi	
+				## }}}
+				conf_local_menu local_destination_concurrency_limit
+				;;
+			local_destination_concurrency_negative_feedback)
+				# Standard = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input local_destination_concurrency_negative_feedback number_input -i $local_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					local_destination_concurrency_negative_feedback="$Value"
+					postconf -e local_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_destination_concurrency_negative_feedback
+				;;
+			local_destination_concurrency_positive_feedback)
+				# Standard = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input local_destination_concurrency_positive_feedback number_input -i $local_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					local_destination_concurrency_positive_feedback="$Value"
+					postconf -e local_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_destination_concurrency_positive_feedback
+				;;
+			local_destination_rate_delay)
+				# Standard = $default_destination_rate_delay# {{{
+				default_or_input local_destination_rate_delay number_input '-a "$LOCAL_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' $local_destination_rate_delay
+				if [[ -n $Value ]] ; then
+					local_destination_rate_delay="$Value"
+					postconf -e local_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_destination_rate_delay
+				;;
+			local_destination_recipient_limit)
+				# Standard = 1# {{{
+				number_input -i $local_destination_recipient_limit
+				if [[ -n $NUMBER ]] ; then
+					local_destination_recipient_limit="$NUMBER"
+					postconf -e local_destination_recipient_limit="$NUMBER"
+				fi	
+				## }}}
+				conf_local_menu local_destination_recipient_limit
+				;;
+			local_extra_recipient_limit)
+				# Standard = $default_extra_recipient_limit# {{{
+				default_or_input local_extra_recipient_limit number_input -i $local_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					local_extra_recipient_limit="$Value"
+					postconf -e local_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_extra_recipient_limit
+				;;
+			local_header_rewrite_clients)
+				# Standard = permit_inet_interfaces# {{{
+				generate_is_file ${local_header_rewrite_clients//,/}
+				is_value "permit_inet_interfaces permit_mynetworks permit_sasl_authenticated permit_tls_clientcerts permit_tls_all_clientcerts check_address_map"
+				#
+				LOCAL_HEADER_REWRITE_CLIENTS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
+				U_OPT=k
+				checklist "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
+				if [[ -n $gv_Auswahl ]] ; then
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help local_header_rewrite_clients_help
+								U_OPT=k
+								checklist "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
+								;;
+							*)	# uebernehmen oder auf check_address_map
+								# pruefen
+								REWRITE="$gv_Auswahl"
+								case "$gv_Auswahl" in
+									*check_address_map)
+										tab_support_choice check_address_map
+										local_header_rewrite_clients="$REWRITE $MAPS"
+										postconf -e local_header_rewrite_clients="$REWRITE $MAPS"
+										;;
+									*)
+										local_header_rewrite_clients="$gv_Auswahl"
+										postconf -e local_header_rewrite_clients="$gv_Auswahl"
+										;;
+								esac
+								break
+								;;
+						esac
+					done
+				fi
+				# 
+				if [[ -z $local_header_rewrite_clients ]] ; then
+					local_header_rewrite_clients="permit_inet_interfaces"
+					postconf -e local_header_rewrite_clients="permit_inet_interfaces"
+				fi
+				## }}}
+				conf_local_menu local_header_rewrite_clients
+				;;
+			local_initial_destination_concurrency)
+				# Standard = $initial_destination_concurrency# {{{
+				default_or_input local_initial_destination_concurrency number_input -i $local_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					local_initial_destination_concurrency="$Value"
+					postconf -e local_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_local_menu local_initial_destination_concurrency
+				;;
+			local_minimum_delivery_slots)
+				# Standard = $default_minimum_delivery_slots# {{{
+				default_or_input local_minimum_delivery_slots number_input -i $local_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					local_minimum_delivery_slots="$Value"
+					postconf -e local_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_minimum_delivery_slots
+				;;
+			local_recipient_limit)
+				# Standard = $default_recipient_limit# {{{
+				default_or_input local_recipient_limit number_input -i $local_recipient_limit
+				if [[ -n $Value ]] ; then
+					local_recipient_limit="$Value"
+					postconf -e local_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_recipient_limit
+				;;
+			local_recipient_maps)
+				# Tabelle mit lokalen Mailadressen, fuer die postfix Mails annehmen soll{{{
+				# Unzustellbare werden dann gar nicht erst angenommen.
+				# Standard = proxy:unix:passwd.byname $alias_maps
+				tab_support_choice "$gv_Auswahl"
+				local_recipient_maps="$MAPS"
+				postconf -e local_recipient_maps="$MAPS"
+				#}}}
+				conf_local_menu local_recipient_maps
+				;;
+			local_recipient_refill_delay)
+				# Standard = $default_recipient_refill_delay# {{{
+				default_or_input local_recipient_refill_delay number_input -s ${local_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					local_recipient_refill_delay="$Value"
+					postconf -e local_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_recipient_refill_delay
+				;;
+			local_recipient_refill_limit)
+				# Standard = $default_recipient_refill_limit# {{{
+				default_or_input local_recipient_refill_limit number_input -i $local_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					local_recipient_refill_limit="$Value"
+					postconf -e local_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_local_menu local_recipient_refill_limit
+				;;
+			local_transport)
+				# Transport Methode fuer lokale Mails{{{
+				transport_methode ${local_transport%%:*} ${local_transport##*:}
+				local_transport="$WERT"
+				postconf -e local_transport="$WERT"
+				#}}}
+				conf_local_menu local_transport
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

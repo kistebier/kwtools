@@ -1,0 +1,203 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>, 13.05.2014
+#
+# Script: kwtex-cal, zum ausdrucken von Jahreskalendern mit Bundesland-
+# spezifischen Feiertagen und eigenen. Die eigenen Feiertage werden aus
+# dem Terminkalender (kwtermin) extrahiert.
+# Datei: ~/.kwtools/kwplaner/termin.
+#
+# Version: 0.2.14
+#
+#######################################################################
+# Es benutzt die Scripte und Dateien von Rene Scholz 
+# http://www.thur.de/~Voland
+#######################################################################
+#
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Wenn es eine Konf.-Datei gibt einlesen.
+#
+read_file kwplanerrc
+if [ -z "$BLAND" ] ; then
+	BLAND="DE_HA"
+fi	
+if [ -z "$JAHR" ] ; then
+	JAHR="`date +%Y`"
+fi
+
+# Variablen
+Kwplaner_Path="${gv_HomePath}/.kwtools/kwplaner"
+TerminFile="${Kwplaner_Path}/termin"
+Holiday_File="${Kwplaner_Path}/holidays"
+
+# Pruefen ob Verzeichnis existiert, ansonsten anlegen.
+create_file -d $Kwplaner_Path
+create_file "$Holiday_File"
+
+lv_Extra=$(gettext 'Extra')
+MAIN_MENU=($lv_Extra \"\" $gv_Create \"\" $gv_Exit \"\")
+# Funktion (main_menu), Hauptmenue# {{{
+main_menu() {
+	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+## }}}
+# Funktion (read_holiday), Geburtstage und Feiertage einlesen# {{{
+#
+# Pruefen ob es eine Termin Datei gibt. Wenn ja Geburtstage und Ferien
+# extrahieren.
+read_holiday() {
+	JAHR="`date +%Y`"
+	if [ -r "$TerminFile" ] ; then
+		setopt localoptions shwordsplit
+		IFS=$'\r'
+		read -A TerminListe <<< "`grep -v "^#" $TerminFile | tr "\n" "$IFS"`"
+		IFS=$'\t'
+		Anz=1
+		while [ "${TerminListe[Anz]}" != "" ] ; do
+			set -- ${TerminListe[Anz]}
+			case "$6" in
+				h|b)
+					Mouth="${1[5,6]}"
+					Day="${1[7,8]}"
+					Date_Format="${JAHR}-${Mouth}-${Day}"
+					Is=`print ${(M)${(f)"$(< $Holiday_File)"}##${4}}`
+					if [ -n "$Is" ] ; then
+						Extra_M[Anz]="\"$4 + $Date_Format\" \"\" on"
+					else
+						Extra_M[Anz]="\"$4 + $Date_Format\" \"\" off"
+					fi
+					;;
+			esac
+			(( Anz++ ))
+		done
+		IFS=$' '
+	fi
+}
+## }}}
+# Funktion (create_calendar), erstellt den Kalender# {{{
+create_calendar() {
+	if [ "`wc -l < $Holiday_File`" -gt 0 ] ; then
+		create.cal.pl -y $JAHR -b $BLAND -d -o $Holiday_File || prog_failure
+	else
+		create.cal.pl -y $JAHR -b $BLAND -d || prog_failure
+	fi
+	print_file calendar.pdf
+}
+## }}}
+main_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)
+			script_help help
+			main_menu
+			;;
+		$lv_Extra)
+			# Geburtstage und Feiertage fuer den Kalender auswaehlen.# {{{
+			read_holiday
+			if [ -n "${Extra_M[1]}" ] ; then
+				U_OPT=no
+				EXTRA_MENU=($Extra_M)
+				EXTRA_TITLE=($lv_Extra)
+				EXTRA_MSG=$(gettext 'Waehlen Sie ein oder mehrere Geburtstage/Feiertage fuer Ihren Kalender aus.')
+				checklist "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl"  in
+						HELP*)	script_help extra_help
+							U_OPT=no
+							checklist "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
+							;;
+						*)
+							# Auswahl uerbenommen
+							if [ "`wc -l < $gv_LogFile$$`" -gt 0 ] ; then
+								cp -au $gv_LogFile$$ $Holiday_File
+							fi
+							break
+					esac
+				done
+			else
+				MSG=$(gettext 'Es sind keine Geburtstage oder Feiertage in Ihren Terminen vorhanden.')
+				msgbox "$gv_Info" "$MSG"
+				# Holiday Datei löschen, da ja in $TerminFile keine
+				# Werte dafuer angelegt sind.
+				rm $Holiday_File &>/dev/null
+			fi
+			## }}}
+			main_menu
+			;;
+		$gv_Create)
+			# Kalender erstellen# {{{
+			# Auswahl des Jahres
+			calendarbox 
+			#
+			# Wurde ein richtiges Jahr ausgewaehlt gehts weiter sonst gibts eine Nachricht.
+			#
+			if [ "$gv_Auswahl" ] ; then
+				JAHR="${${(s,/,)${gv_Auswahl}}[3]}"
+				cd $Kwplaner_Path
+				# Pruefen, ob der Link existiert und wenn ja, ob er nicht ins Leere zeigt.
+				if [ ! -L calendar.tex -o -z `ls -L calendar.tex &>/dev/null` ] ; then
+					rm -f calendar.tex &>/dev/null
+					ln -sf ${PREFIX}/share/kwtools/data/calendar/calendar.tex calendar.tex
+				fi
+				# Soll das aktelle Jahr gedruckt werden, wird geprueft ob diese
+				# pdf Datei schon existiert. Ansonsten wird eine kreiert und
+				# gedruckt.
+				if [ -f calendar.pdf  ] ; then
+					if grep -n0 "Calendar $JAHR" calendar.pdf &>/dev/null ; then
+						# Jetzt wird nochmal gefragt, ob eine neue calendar.pdf
+						# kreiert werden soll, falls die alte das selbe Jahr
+						# besitzt. Manchmal hat man ja trotzdem was veraendert.
+						MSG=$(gettext 'Es ist schon ein Kalender fuer das Jahr $JAHR vorhanden. Soll der Kalender neu erstellt werden (ja/nein)?')
+						yesno "$gv_Attention" "$MSG" "no"
+						if [ "$gv_Auswahl" != no ] ; then
+							create_calendar
+						fi
+					else
+						create_calendar
+					fi
+				else
+					create_calendar
+				fi
+			fi
+			## }}}
+			main_menu
+			;;
+		$lv_Exit)	break
+			;;
+	esac
+done
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

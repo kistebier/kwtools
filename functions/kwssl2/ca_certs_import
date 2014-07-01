@@ -1,0 +1,382 @@
+# Funktion (ca_certs_import), import CAs und Zertifikate# {{{
+#
+# usage: ca_certs_import
+#
+ca_certs_import() {
+	# Variablen die nach dem speichern/zurueck geloescht werden sollen.
+	IMPORT_UNSET=(CA_CAPASSWD CA_CAPASSWORD CAPASSWD CAPASSWORD
+		CERTS_DIR NEW_CA_NAME INDEX_FILE PRIV_KEY CACERT_FILE)
+	# Variablen# {{{
+	lv_Ssl_Priv_Pass=$(gettext 'privater Schluessel (Passwort)')
+	lv_Ca_Cert=$(gettext 'CA Zertifikat')
+	lv_Priv_Key=$(gettext 'privater CA Schluessel')
+	lv_Index_File=$(gettext 'openssl index Datei')
+	lv_Certs_Dir=$(gettext 'Verzeichnis mit Zertifikaten')
+	## }}}
+	# Funktion (import_menu)# {{{
+	#
+	IMPORT_TITLE="${CA_OPEN_NAME}::${lv_CA_Import}"
+	#
+	import_menu() {
+		IMPORT_MENU=(\"$lv_Ssl_Priv_Pass\" \"$CA_CAPASSWORD\"
+		\"$lv_Ssl_Name\" \"$NEW_CA_NAME\"
+		\"$lv_CA_Password\" \"$CAPASSWORD\"
+		\"$lv_Ssl_Password_Generate\" \"\"
+		\"$lv_Ca_Cert\" \"$CACERT_FILE\"
+		\"$lv_Priv_Key\" \"$PRIV_KEY\"
+		\"$lv_Index_File\" \"$INDEX_FILE\"
+		\"$lv_Certs_Dir\" \"$CERTS_DIR\"
+		$gv_Create \"\" $gv_Back \"\")
+		menubox "$1" "$IMPORT_TITLE" "$gv_Menupoint" "$IMPORT_MENU"
+	}
+	## }}}
+	# Funktion (check_import_cacert), ueberprueft die zu importierende# {{{
+	# CA Certificate Dateien
+	#
+	# usage: check_import_cacert X509_CERT_FILE
+	#
+	check_import_cacert() {
+		if [[ ${#argv} == 1 ]] ; then
+			# Funktion (no_basic_constraints_msg)# {{{
+			#
+			no_basic_constraints_msg() {
+				MSG=$(gettext 'Kann die Zeile \"X509v3 Basic Constraints\" nicht finden.')
+				msgbox "$gv_Info" "$MSG"
+			}
+			## }}}
+			local File Tmp
+			unset -- File Tmp IMPORT_ALG
+			File="$1"
+			# Bestimmen des Formates.
+			get_format_file -c "$File"
+			# Temporaere Dateien mit allen Werten erstellen.
+			# Daraus werden dann die bestimmten Kriterien ueberprueft.
+			PROG_OPT="x509 $INFORM_FORMAT -in $File -text -noout"
+			openssl ${=PROG_OPT} > ${gv_WorkDir}/cacert_import
+			# Fehler Nachrichten
+			if ! grep -q 'X509v3 Basic Constraints: critical' ${gv_WorkDir}/cacert_import ; then
+				if ! grep -q 'X509v3 Basic Constraints' ${gv_WorkDir}/cacert_import ; then
+					no_basic_constraints_msg
+					return 1
+				fi
+			fi
+			#
+			if grep -q 'CA:TRUE' ${gv_WorkDir}/cacert_import ; then
+				# RSA oder DSA Algotrithmus herrausfinden.
+				Alg_Tmp=${${(ws,: ,)${(M)${(f)"$(< ${gv_WorkDir}/cacert_import)"}##*Public Key Algorithm*}}[2]}
+				if [[ $Alg_Tmp == rsaEncryption ]] ; then
+					IMPORT_ALG=rsa
+				elif [[ $Alg_Tmp == dsaEncryption ]] ; then
+					IMPORT_ALG=dsa
+				else
+					unset -- IMPORT_ALG
+					return 1
+				fi
+			else
+				MSG=$(gettext 'Das ausgewaehlte CA Zertifikat ist nicht gueltig.')
+				msgbox "$gv_Info" "$MSG"
+				unset -- CACERT_FILE
+				return 1
+			fi
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
+	# Funktion (check_import_cakey), ueberprueft die zu importierende# {{{
+	# Key Datei
+	#
+	# benoetigt zuvor die Funktion check_import_cacert
+	#
+	# usage: check_import_cakey ALGORITHM FORMAT PRIVKEY_FILE
+	#
+	check_import_cakey() {
+		if [[ ${#argv} == 3 ]] ; then
+			local File Alg InForm
+			unset -- File Alg InForm
+			Alg="$1"
+			InForm="$2"
+			File="$3"
+			PROG_OPT="$Alg $InForm -in $File"
+			# Fehler Nachrichten
+			if ! openssl ${=PROG_OPT} &>/dev/null ; then
+				MSG=$(gettext 'Der private Schluessel kann nicht gelesen werden.')
+				msgbox "$gv_Info" "$MSG"
+				unset -- PRIV_KEY
+				return 1
+			fi
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
+	# Funktion (import_files)# {{{
+	#
+	import_files() {
+		if [[ -n $CA_CAPASSWORD ]] && \
+			[[ -n $NEW_CA_NAME ]] && \
+			[[ -n $CAPASSWORD ]] && \
+			[[ -n $CACERT_FILE ]] && \
+			[[ -n $PRIV_KEY ]] && \
+			[[ -n $CERTS_DIR ]] ; then
+			check_import_cacert "$CACERT_FILE"
+			if [ $? -eq 0 ] ; then
+				# Die Variablen $IMPORT_ALG und $INFORM_FORMAT werden
+				# von der Funktion check_import_cacert belegt.
+				check_import_cakey "$IMPORT_ALG" "$INFORM_FORMAT" "$PRIV_KEY"
+				if [ $? -eq 0 ] ; then
+					# einlesen vom Subject des Zertifikates
+					read_ca_data "$CACERT_FILE"
+					# Frage ob wirklich importiert werden soll
+					IMPORT_CA_MSG=$(gettext 'Soll diese CA wirklich importiert werden (ja/nein)?\n\n${lv_Ssl_CommonName}: $COMMONNAME\n${lv_Ssl_Land_Code}: $COUNTRYCODE\n${lv_Ssl_Bundesstaat}: $COUNTRY\n${lv_Ssl_Location}: $LOCATION\n${lv_Ssl_Organisation}: $ORGANISATION\n${lv_Ssl_Organisation_Unit}: $ORGANISATIONUNIT\n${lv_Ssl_Email}: $MAIL')
+					yesno "$IMPORT_TITLE" "$IMPORT_CA_MSG" "yes"
+					if [ "$gv_Auswahl" != no ] ; then
+						# Verzeichnisstruktur erstellen
+						create_pki "$NEW_CA_NAME"
+						# Grundkonfiguration/Sektion einlesen
+						read_openssl_conf v3_ca
+						# Digest umwandeln
+						convert_digest $DIGEST
+						# aktuelle Serial Nr. herausbekommen
+						NR=$(< ${KWSSL_DIR}/${CA_OPEN_NAME}/serial)
+						# Dateinamen aus den Werten vom Subject erstellen
+						# Basis: CN EMAIL OU O L ST C
+						gen_name
+						# Standard Variablen belegen
+						lv_Digest=${lv_Digest:--sha1}
+						VALIDITY=${VALIDITY:-3650}
+						# preserveDN Variable belegen
+						PRESERVEDN_YES="-preserveDN"
+						# ins Verzeichnis wechseln
+						cd $KWSSL_DIR
+						# Key Datei importieren
+						openssl $IMPORT_ALG ${=INFORM_FORMAT} -outform PEM \
+							-in $PRIV_KEY -aes256 \
+							-out ${NEW_CA_NAME}/cacert.key \
+							-passout env:CAPASSWD || prog_failure
+						#
+						if [ "$RET" != 1 ] ; then
+							# Certificate Request erstellen
+							create_request "$NEW_CA_NAME" cacert.key "$lv_Digest"
+							# CA Zertifikat erzeugen und mit CA signieren
+							if [ "$RET" != 1 ] ; then
+								sign_ca_request "$NEW_CA_NAME" "$VALIDITY"
+								if [ "$RET" != 1 ] ; then
+									# Dateien in die CA-Struktur kopieren und CA-Kette erstellen.
+									integrate_files_to_ca "$NEW_CA_NAME" "$GEN_NAME" "$NR"
+									###############################
+									# INFO:
+									# - certs finden, pruefen ob ist
+									# - subject, enddate und serial lesen
+									# - base64 codierten Namen erstellen
+									# - CERTFILE schreiben
+									# - index.txt kopieren oder
+									#   neu mit Daten fuellen.
+									# - serial erstellen
+									################################
+									# INDEX_FILE kopieren
+									if [ -s "$INDEX_FILE" ] ; then
+										cp -a "$INDEX_FILE" ${NEW_CA_NAME}/index.txt
+										CreateIndex=no
+									else
+										CreateIndex=yes
+										rm -rf ${gv_WorkDir}/index &>/dev/null
+									fi
+									# CRL erstellen
+									create_crl "$NEW_CA_NAME" ca_ca
+									# Zertifikate bearbeiten
+									CERTDIR="${KWSSL_DIR}/${NEW_CA_NAME}/certs"
+									Count=0
+									for i in ${CERTS_DIR}/*.(pem|der)(.N) ; {
+										case "$i" in
+											$CACERT_FILE|$PRIV_KEY)
+												;;
+											*)
+												# Anzahl der Zertifikate um 1 hochzaehlen.
+												(( Count++ ))
+												read_cert_data "$i"
+												# base64-codierten Dateinamen herausfinden
+												gen_name
+												CERTFILE="${GEN_NAME}.pem"
+												# Zertifikat importieren
+												openssl x509 ${=INFORM_FORMAT} \
+													-in "$i" -outform PEM \
+													-out ${CERTDIR}/${CERTFILE} || \
+													prog_failure
+												# temporaere index Datei mit Daten fuellen
+												############################################
+												# INFO:
+												# Widerrufene Zertifikate werden nicht
+												# beruecksichtigt.
+												############################################
+												if [[ $CreateIndex == yes ]] && \
+													[ "$RET" != 0 ] ; then
+													print "V\t${EXPDATE}\t\t${SERIAL}\tunknown\t${SUBJECT}" >> ${gv_WorkDir}/index
+												fi
+												;;
+										esac
+									}
+									# Datei serial erstellen
+									if (( $Count > 0 )) ; then
+										# Sortierung der index Datei
+										if [[ $CreateIndex == yes ]] ; then
+											< ${gv_WorkDir}/index | sort -k 3 > ${KWSSL_DIR}/${NEW_CA_NAME}/index.txt
+										fi
+										# Anzahl der Zertifikate um 1 hochzaehlen.
+										(( Count++ ))
+										if (( $Count < 10 )) ; then
+											Count="0${Count}"
+										fi
+										# serial Datei erstellen
+										print "$Count" > ${KWSSL_DIR}/${NEW_CA_NAME}/serial
+									fi
+									# Hauptmenue Option
+									MAIN_MENU_OPT="-subca"
+									# CA oeffnen
+									CA_OPEN_NAME="$NEW_CA_NAME"
+								fi
+							fi
+						fi
+					fi
+				else
+					import_menu
+				fi
+			fi
+		else
+			MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Ssl_Priv_Pass, $lv_Ssl_Name, $lv_Ssl_Password, $lv_Ca_Cert, $lv_Priv_Key und $lv_Certs_Dir mit Werten belegen.')
+			msgbox "$gv_Info" "$MSG"
+			import_menu
+		fi
+		return 0
+	}
+	## }}}
+	import_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help ca_certs_import_help
+				import_menu
+				;;
+			"$lv_Ssl_Priv_Pass")
+				# Password des privaten Schluessel eingeben
+				ca_passwd_input -keys
+				import_menu $lv_Ssl_Priv_Pass
+				;;
+			$lv_Ssl_Name)
+				# Name fuer lokale Speicherung eingeben.# {{{
+				inputbox "$lv_Ssl_Name" "$SAVE_MSG" "$NEW_CA_NAME"
+				if [ -n "$gv_Auswahl" ] ; then
+					if [ ! -d "${KWSSL_DIR}/${gv_Auswahl}" ] ; then
+						# dementsprechende Variablen fuer die SubCA belegen
+						NEW_CA_NAME="$gv_Auswahl"
+					else
+						unset -- NEW_CA_NAME
+						ca_existed_msg "$gv_Auswahl"
+					fi
+				else
+					unset -- NEW_CA_NAME
+				fi
+				## }}}
+				import_menu $lv_Ssl_Name
+				;;
+			"$lv_CA_Password")
+				# Passwort eingeben# {{{
+				PASSWD_MSG=$(gettext 'Geben Sie bitte eine neues Passwort fuer die CA ein (mindestens $PASSWD_LENGTH Zeichen lang) die importiert werden soll und wiederholen diese im Feld darunter.')
+				mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" "$PASSWD_LENGTH"
+				if [[ -n $gv_Pass ]] ; then
+					password_display "$gv_Pass"
+					if [ -n "$gv_Star_Passphrase" ] ; then
+						CAPASSWORD="$gv_Star_Passphrase"
+						export CAPASSWD="$gv_Pass"
+						unset -- gv_Pass
+					else
+						unset -- CAPASSWORD CAPASSWD gv_Pass
+					fi
+				else
+					unset -- CAPASSWORD CAPASSWD gv_Pass
+				fi
+				## }}}
+				import_menu $lv_CA_Password
+				;;
+			"$lv_Ssl_Password_Generate")
+				# Passord generieren# {{{
+				# Standard Passphrasen Laenge ist 10 Zeichen lang
+				# wenn keine Passphrase manuell eingegeben wurde.
+				gv_Pass=${${${(ws: :)$(head -c 256 /dev/urandom | uuencode -m -)}[4]}[1,$PASSWD_LENGTH]}
+				if [[ -n $gv_Pass ]] ; then
+					CAPASSWORD="$gv_Pass"
+					export CAPASSWD="$gv_Pass"
+					unset -- gv_Pass
+				fi
+				## }}}
+				import_menu $lv_CA_Password
+				;;
+			"$lv_Ca_Cert")
+				# CA Zertifikat auswaehlen# {{{
+				FORMAT="SSLCACERT"
+				SUFFIX=".pem .der"
+				file_choice "${CACERT_FILE%/*}" only "$CACERT_FILE"
+				if [ -n "$WERT" ] ; then
+					CACERT_FILE="${VERZ}/${WERT}"
+				fi
+				## }}}
+				import_menu $lv_Ca_Cert
+				;;
+			"$lv_Priv_Key")
+				# privaten Schluessel auswaehlen# {{{
+				FORMAT=""
+				SUFFIX=".key .pem .der"
+				file_choice "${PRIV_KEY%/*}" only "$PRIV_KEY"
+				if [ -n "$WERT" ] ; then
+					PRIV_KEY="${VERZ}/${WERT}"
+				fi
+				## }}}
+				import_menu $lv_Priv_Key
+				;;
+			"$lv_Index_File")
+				# index.txt Datei auswaehlen# {{{
+				FORMAT="text"
+				SUFFIX=".txt"
+				file_choice "$CERTS_DIR" only "$INDEX_FILE"
+				if [ -n "$WERT" ] ; then
+					INDEX_FILE="${VERZ}/${gv_Auswahl}"
+				fi
+				## }}}
+				import_menu $lv_Index_File
+				;;
+			"$lv_Certs_Dir")
+				# Verzeichnis mit Zertifikaten auswaehlen# {{{
+				dselect "$CERTS_DIR"
+				if [ -n "$VERZ" ] ; then
+					dselect_check "$VERZ"
+					if [ -n "$VERZ" ] ; then
+						CERTS_DIR="$VERZ"
+					fi
+				fi
+				## }}}
+				import_menu $lv_Certs_Dir
+				;;
+			$gv_Create)
+				# importieren# {{{
+				import_files
+				# Passwoerter/etc. loeschen
+				unset -- $IMPORT_UNSET
+				break
+				## }}}
+				;;
+			$gv_Back)	# abbrechen
+				unset -- $IMPORT_UNSET
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

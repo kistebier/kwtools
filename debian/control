@@ -1,0 +1,411 @@
+Source: kwtools
+Section: utils
+Priority: optional
+Maintainer: Kai Wilke <kiste@netzworkk.de>
+Build-Depends: debhelper (>= 7.0.50), zsh (>= 4.2.0), gettext (>= 0.14.5-3), po-debconf (>= 1.0.12)
+Standards-Version: 3.9.2
+
+Package: kwtools-common
+Section: shells
+Architecture: all
+Priority: optional
+Pre-Depends: zsh (>= 4.2.0)
+Depends: dialog (>= 1.1-20070227-1), coreutils (>= 8.13), file (>= 4.10), gettext (>= 0.14.5-3), hwinfo, udev, util-linux (>= 2.17.2), sharutils
+Suggests: less, ddrescue
+Description: General functions for kwtools scripts
+ These are general functions which are required by every kwtools script.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-full
+Architecture: all
+Pre-Depends: zsh (>= 4.2.0)
+Depends: ${misc:Depends},
+ kwtools-bin (>= ${source:Version}),
+ kwtools-common (>= ${source:Version}),
+ kwtools-doc (>= ${source:Version}),
+ kwtools-graphic (>= ${source:Version}),
+ kwtools-multi (>= ${source:Version}),
+ kwtools-multi-xmms2 (>= ${source:Version}),
+ kwtools-multi-xmms2d (>= ${source:Version}),
+ kwtools-net (>= ${source:Version}),
+ kwtools-net-djbdns (>= ${source:Version}),
+ kwtools-net-mutt (>= ${source:Version}),
+ kwtools-net-narc (>= ${source:Version}),
+ kwtools-net-postfix (>= ${source:Version}),
+ kwtools-sys (>= ${source:Version}),
+ kwtools-sys-crypt (>= ${source:Version}),
+ kwtools-sys-fuse (>= ${source:Version}),
+ kwtools-sys-grub2 (>= ${source:Version}),
+ kwtools-sys-kwpasswd (>= ${source:Version}),
+ kwtools-sys-lvm (>= ${source:Version}),
+ kwtools-sys-parted (>= ${source:Version}),
+ kwtools-sys-quota (>= ${source:Version}),
+ kwtools-sys-raid (>= ${source:Version}),
+ kwtools-utils (>= ${source:Version}),
+ kwtools-utils-pim (>= ${source:Version}),
+ kwtools-utils-ssl (>= ${source:Version})
+Provides: kwtools-software-compilation
+Description: complete kwtools Software Compilation
+ This metapackage includes all the official modules released with kwtools
+ Software Compilation that are not specific to development.
+Homepage: http://www.netzworkk.org
+ 
+Package: kwtools-bin
+Section: admin
+Architecture: all
+Priority: optional
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), zsh (>= 4.2.0)
+Description: Includes kwadmin, combines kwtools scripts
+ Includes kwadmin, a script which combines all kwtools scripts.
+ Is divided up into the categories service programmes, graphics, multimedia,
+ network and system.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-doc
+Section: doc
+Architecture: all
+Priority: optional
+Description: Documentation
+ Documentation regarding kwtools scripts and their functions which
+ are used by almost all scripts.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-graphic
+Section: graphics
+Architecture: all
+Priority: optional
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), gphoto2 (>= 2.0), zgv, zsh (>= 4.2.0)
+Suggests: kwtools-bin
+Description: Graphics scripts
+ Graphics scripts to operate digital cameras, etc.
+ .
+ kwcamera: Operation of digital camera
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-multi
+Section: utils
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), cddb, cd-discid, cdparanoia, cdrdao (>=1.1.9), dvd+rw-tools, lame, genisoimage (>= 1.1.8), vcdimager, zsh (>= 4.2.0)
+Suggests: kwtools-bin, vorbis-tools (>=1.0.0), wodim 
+Description: Multimedia scripts
+ Multimedia scripts to create VCD's, audio CD's, etc.
+ .
+ kwrecord: Burns audio, video, data CD's and ISO images, etc., onto CD-R(W) and
+        DVD-+R(W).
+ kwrip: Rips a complete CD into a certain directory. Video and audio.
+ kwsnd2sndfm: Transforms different audio formats into different formats
+        (raw,mp3,ogg,wav).
+ kwvcdburn: Creates and burns video CD's.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-multi-xmms2
+Section: sound
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), xmms2-client-nycli, xmms2-client-cli, zsh (>= 4.2.0)
+Suggests: kwtools-bin
+Description: Frontend for xmms2 client
+ Frontend script to use xmms2 client.
+ .
+ kwxmms2: This is a simple frontend to configures and manage the XMMS2
+          (X-Music-Multiplexing-System2) client.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-multi-xmms2d
+Section: sound
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), xmms2, xmms2-plugin-m3u, xmms2-plugin-pls, zsh (>= 4.2.0)
+Suggests: kwtools-bin, xmms2-plugin-cdda, xmms2-plugin-curl, xmms2-plugin-all
+Description: Frontend for xmms2d server
+ Frontend script to use xmms2d server.
+ .
+ kwxmms2d: This is a simple frontend to configures and manage the XMMS2
+          (X-Music-Multiplexing-System2) server.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-net
+Priority: optional
+Architecture: all
+Section: net
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), rsync, zsh (>= 4.2.0) 
+Suggests: kwtools-bin, openssh-client | ssh-client, sudo
+Description: Network scripts
+ Includes several network scripts.
+ .
+ kwnetstat: Displays information regarding your network's current state.
+ kwproxy: To set the http_ - and ftp_proxy variables.
+        These are saved in /etc/[default|sysconfig]/proxy. To be able to use
+        these variables you must enter the file to read into /etc/profile
+        or /etc/(zsh/)zprofile (zsh).
+ kwrsync: Synchronises your home directory, directories of choice
+        and can edit the user crontab table for rsync.
+ kwrsync_backup: Make a snapshot from local and remote hosts.It's an
+        rsync-based filesystem snapshot utility. It can take incremental
+        backups of local and remote filesystems for any number of machines.
+        kwrsync_backup makes extensive use of hard links, so disk space is
+        only used when absolutely necessary.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-net-djbdns
+Priority: optional
+Architecture: all
+Section: net
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), daemontools, djbdns (>=1.05), ucspi-tcp, zsh (>= 4.2.0)
+Suggests: kwtools-bin, kwdjbdns-update, sudo
+Description: Network script kwdjbdns
+ kwdjbdns script plus help files and functions.
+ .
+ kwdjbdns: Configures and administrates your DNS server, only
+        D.J.Bernstein's <djb@cr.yp.to>
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-net-mutt
+Priority: optional
+Architecture: all
+Section: net
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), mutt, zsh (>= 4.2.0)
+Suggests: kwtools-bin, antiword
+Description: Mutt Configurations script
+ Includes a script to configures your mail client mutt.
+ .
+ kwmutt: Configures your mail client mutt.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-net-narc
+Priority: optional
+Architecture: all
+Section: net
+Depends: debconf, ethtool, iptables, ${misc:Depends}, kwtools-common (>= ${source:Version}), lsb-base (>= 3.0-6), zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Conflicts: narc , kwtools-net-firewall
+Description: Firewall network script
+ The kwnarcconf script plus help files and functions configures your firewall.
+ .
+ kwnarcconf: Configures your firewall (kwnarc - kwtools Netfilter Automatic
+        Rule Configurator) per iptables. It starts, stops, reloads the
+        configuration and displaying the single chains rules and the
+        current connection tracking infos.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-net-postfix
+Priority: optional
+Architecture: all
+Section: net
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), postfix (>= 2.10), zsh (>= 4.2.0)
+Suggests: kwtools-bin, postfix-ldap, postfix-mysql, postfix-pcre, postfix-pgsql, sudo
+Description: Network script kwpostfix
+ Includes a script which enables management of MTA postfix.
+ .
+ kwpostfix: Configures and administrates your Postfix Mail Server.
+        Is still beta.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ethtool, ${misc:Depends}, kwtools-common (>= ${source:Version}), libpam-runtime (>=1.0.1-6), logrotate, sysv-rc (>= 2.88dsf-42)| file-rc, zsh (>= 4.2.0)
+Suggests: kwtools-bin, dhcp-client (>=2.0) | dhcp3-client, isdnutils-base, ntpdate | ntp, pppoeconf, sudo, wvdial
+Description: System scripts
+ Includes several scripts for system administration.
+ .
+ kwauth: Configures your login. So far only support for local and NIS.
+ kwclock: Shows the PC's clock and date settings and can set time and date.
+        This can be done manually or per ntpdate, if this is installed.
+ kwgroup: Generates, deletes and changes groups.
+ kwnetcardconf: Configures your network cards, either per dhcp or manually.
+ kwnetconf: Frontend to varous connection tools.
+ kwlogrotate: An administration script for log files. It uses logrotate for
+        this purpose.
+ kwrunlevconf: Can configure your runlevel scripts in a very sophisticated
+        manner. It generates and also deletes /usr/sbin/rcinitscriptname links.
+        This is intended to save the administrator time and effort typing.
+        It supported the systems file-rc and sysv-rc.
+ kwuser: Can be used to create, change and delete users.
+ kwwvdialconf: Configures the file wvdial.conf from program wvdial.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-crypt
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), gnupg, cryptsetup (>= 1.6.4), zsh (>= 4.2.0)
+Suggests: kwtools-bin, kwtools-sys-lvm, kwtools-sys-raid, loop-aes-utils, openssl (>= 1.0.1e), ecryptfs-utils, sudo
+Description: Script for encrypted devices
+ Includes three scripts which enables management of encrypted devices.
+ .
+ kwcrypt: A wrapper for cryptsetup, loop-aes-utils and ecryptfs-utils.
+ kwcryptsetup: A frontend for cryptsetup and dmsetup, with which one can
+        encrypted discs and containers (files with file system), respectively.
+        It can enlarge and reduce drives with luks extension, create gnupg
+        and ssl keys and delete this.
+ kwecryptfs: A frontend for the ecryptfs-utils (cryptographic filesystem).
+ kwlosetup: A frontend for losetup, with which one can generate encrypted
+        discs and containers (files with file system), respectively.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-fuse
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), fuse-utils, zsh (>= 4.2.0)
+Suggests: kwtools-bin, ntfsprogs, sudo
+Recommends: fuse-source
+Description: System script
+ Include a frontend script for filesystem administration (FUSE).
+ .
+ kwfuse: Generates, deletes and changes Entrys in /etc/fstab and
+        /etc/fuse.conf. See also Documentation in /usr/share/doc/fuse-utils
+        and /usr/share/doc/kwtools-sys-fuse.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-grub
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), grub-legacy, zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Description: System script
+ Include a frontend script for bootloader administration (grub).
+ .
+ kwgrub: Configures and installs the bootloader grub.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-grub2
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), expect, grub-pc (>= 1.98) | grub-coreboot (>= 1.98) | grub-efi-amd64 (>= 1.98) | grub-efi-ia32 (>= 1.98) | grub-ieee1275 (>= 1.98), zsh (>= 4.2.0)
+Suggests: kwtools-bin, grub-rescue-pc, sudo
+Conflicts: grub-legacy, kwtools-sys-grub
+Description: System script
+ Include a frontend script for bootloader administration (grub2).
+ .
+ kwgrub2: Configures and installs the bootloader grub2.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-kwpasswd
+Section: utils
+Architecture: all
+Priority: optional
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), expect, zsh (>= 4.2.0)
+Suggests: kwtools-bin
+Description: Change user password.
+ Script and files force to change the User password by first login.
+ .
+ kwpasswd: Change the User Password over the programs passwd or yppasswd.
+           Only for Bash, Zsh, KDE and Gnome.
+Homepage: http://www.netzworkk.org
+ 
+Package: kwtools-sys-lvm
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), lvm10 | lvm2, zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Description: Script to manage LVMs
+ Includes a script (kwlvm) to manage LVMs.
+ .
+ kwlvm: Can display logical volumes, volume groups and physical volumes,
+        generate, delete, enlargen, minimise, rename, split,
+        join..... It can deal with lvm10 and lvm2.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-parted
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), parted (>= 1.7.1-3), zsh (>= 4.2.0)
+Suggests: kwtools-bin, jfsutils, ntfs-3g, reiserfsprogs, reiser4progs, sudo, xfsprogs 
+Description: System script kwparted
+ Include a frontend script for parted.
+ .
+ kwparted: Uses parted to detect and manipulate devices and partition
+        tables while several (optional) filesystem tools provide support for
+        filesystems not included in parted.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-quota
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), quota (>= 3.15), zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Description: Script to manage quota
+ Includes a script (kwquota) to manage quota.
+ .
+ kwquota: Can display actual quota and manage quota on disk. It
+        supported for ext2/3/4, and reiserfs user- and group-quota.
+        At the xfs filesystem also supported project-quota.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-raid
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), mdadm (>= 3.1.1), zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Conflicts: mdctl (<< 0.7.2), raidtools2 (<< 1.00.3-12.1)
+Description: Script for software RAID administration
+ Includes a script to manage software RAID arrays.
+ .
+ kwraid: Shows the status of arrays and one can create RAID arrays
+        (linear,0,1,4,5,6,10), add and delete partitions to or from
+        an array, while system is running. RAID levels
+        6 and 10 are only available from Kernel >=2.5 onwards.
+ .
+ NOTE: may not work with several spare discs. I am afraid I couldn't check this.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-utils
+Section: utils
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), bzip2, expect, gnupg | gpg, muttprint, pwsafe, zsh (>= 4.2.0)
+Suggests: kwtools-bin, gpm
+Description: Scripts for general tasks
+ Includes several scripts for general tasks.
+ .
+ kwgpgcrypt: De-, encodes and signs whole directories or single files.
+        Management of keys and configuration of gnupg.
+ kwmuttprintcf: Configures the program muttprint.
+ kwpwsafe: A frontend for pwsafe. pwsafe is a unix commandline program that
+        manages encrypted password databases.
+ kwvmstat: Displays the current processor load.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-utils-pim
+Section: utils
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), bsdmainutils, bzip2, gcal, gnupg | gpg, texlive-latex-base, texlive-latex-extra, zsh (>= 4.2.0)
+Suggests: kwtools-bin
+Description: Scripts for the Personal Information Management (PIM)
+ Includes several scripts for the Personal Information Management (PIM).
+ .
+ kwholiday: Displays public holidays per date.
+ kwplaner: A script which communicates with create.cal.pl, gcal and calendar.
+        kwholiday, kwtex-cal and kwtermin can be operated with kwplaner.
+ kwtermin: A schedule planner.
+ kwtex-cal: Generates a calendar with images and public holidays.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-utils-ssl
+Section: utils
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), openssl (>= 1.0.1e), zsh (>= 4.2.0)
+Suggests: kwtools-bin, zip
+Description: Script kwssl2 to manage CAs (is ALPHA).
+ Includes a very simple script to manage CAs (Certification Authorities).
+ .
+ kwssl2: Generates x509 and S/MIME server and client certificates. You
+ can choose between RSA and DSA keys, as well as between different
+ digest algorithms.
+ .
+ The certificates can be exported as PEM, DER, TXT and PKCS#12 or as a
+ convenient archive containing both key and certificate. Certificates
+ can be revoked by adding them to a certificate revocation list.
+Homepage: http://www.netzworkk.org

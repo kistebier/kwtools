@@ -1,0 +1,160 @@
+# Funktion (kwauth_nis_config), nis Konfiguration schreiben# {{{
+#
+# usage: kwauth_nis_config [ -r ]
+# -r - remove
+#
+kwauth_nis_config() {
+	OPT="$1"
+	# Funktion (change_passwd_files), Password Dateien fuer/ohne nis einstellen# {{{
+	#
+	# usage: change_passwd_files [ -r ]
+	# -r - remove NIS entrys
+	#
+	change_passwd_files() {
+		FILES="passwd shadow group gshadow"
+		if [[ $1 = -r ]] ; then
+			for f in ${=FILES} ; {
+				if grep -q '^+:::*' /etc/${f} ; then
+					print -l ${(R)${(f)"$(< /etc/${f})"}##(#s)+:::*} > ${gv_WorkDir}/nis_passwd
+					mv ${gv_WorkDir}/nis_passwd /etc/${f}
+				fi
+			}
+		else
+			for f in ${=FILES} ; {
+				case "$f" in
+					passwd)
+						if grep -vq '^+::::::' /etc/${f} ; then
+							>> /etc/${f} <<< "+::::::"
+						fi
+						;;
+					shadow)
+						if grep -vq '^+::::::::' /etc/${f} ; then
+							>> /etc/${f} <<< "+::::::::"
+						fi
+						;;
+					*)
+						if grep -vq '^+:::' /etc/${f} ; then
+							>> /etc/${f} <<< "+:::"
+						fi
+						;;
+				esac
+			}
+		fi
+	}
+	## }}}
+	# Funktion (change_defaultdomain), default nis domain einstellen/loeschen# {{{
+	#
+	# usage: change_defaultdomain
+	change_defaultdomain() {
+		if [ -n "$NIS_CLIENT_DOMAIN" ] ; then
+			> /etc/defaultdomain <<< "$NIS_CLIENT_DOMAIN"
+		fi
+	}
+	## }}}
+	# Funktion (change_nsswitch), /etc/nsswitch.conf fuer/ohne nis einstellen# {{{
+	#
+	# usage: change_nsswitch [ -r ]
+	# -r - remove NIS entrys
+	#
+	change_nsswitch() {
+		rm ${gv_WorkDir}/nsswitch &>/dev/null
+		if [[ $1 = -r ]] ; then
+			while read line ; do
+				case ${line%% *} in
+					passwd:|group:|shadow:)
+						# NIS Eintraege entfernen
+						>> ${gv_WorkDir}/nsswitch <<< "`print ${(R)${=line}##(compat|nis)} compat`"
+						;;
+					*)
+						# nicht zu aendernde Werte normal zurueck schreiben
+						>> ${gv_WorkDir}/nsswitch <<< "$line"
+						;;
+				esac
+			done </etc/nsswitch.conf
+			# veraenderte Datei zurueck verschieben
+			mv ${gv_WorkDir}/nsswitch /etc/nsswitch.conf
+			chmod 644 /etc/nsswitch.conf
+		else
+			while read line ; do
+				case ${line%% *} in
+					passwd:|group:|shadow:)
+						# NIS Eintraege hinzufuegen
+						>> ${gv_WorkDir}/nsswitch <<< "`print ${(R)${=line}##(compat|nis)} compat nis`"
+						;;
+					*)
+						# nicht zu aendernde Werte normal zurueck schreiben
+						>> ${gv_WorkDir}/nsswitch <<< "$line"
+						;;
+				esac
+			done </etc/nsswitch.conf
+			# veraenderte Datei zurueck verschieben
+			mv ${gv_WorkDir}/nsswitch /etc/nsswitch.conf
+			chmod 644 /etc/nsswitch.conf
+		fi
+	}
+	## }}}
+	case "$OS" in
+		Debian)
+			if [ "$OPT" = -r ] ; then
+				# Netzwerk NIS Einstellungen loeschen# {{{
+				#
+				# NIS stoppen
+				/etc/init.d/nis stop &>/dev/null
+				#
+				if [ -f "$NIS_YPCONF" ] ; then
+					print -l ${(R)${(f)"$(< $NIS_YPCONF)"}##(#s)ypserver*} >${gv_WorkDir}/nis
+					mv ${gv_WorkDir}/nis $NIS_YPCONF
+				fi
+				# Password Dateien fuer ohne NIS einstellen
+				change_passwd_files $OPT
+				
+				# /etc/nsswitch.conf ohne NIS einstellen
+				change_nsswitch $OPT
+				
+				# /etc/defaultdomain einstellen.
+				change_defaultdomain
+				
+				# /etc/host.conf einstellen ?????
+
+				## }}}
+			else
+				# Netzwerk NIS Einstellungen speichern# {{{
+				if [ -f "$NIS_YPCONF" ] ; then
+					print -l ${(R)${(f)"$(< $NIS_YPCONF)"}##(#s)ypserver*} >${gv_WorkDir}/nis
+					>> ${gv_WorkDir}/nis <<< "ypserver $NIS_CLIENT_SERVER"
+					mv ${gv_WorkDir}/nis $NIS_YPCONF
+				else
+					> $NIS_YPCONF <<< "ypserver $NIS_CLIENT_SERVER"
+				fi
+				# Variable NISSERVER auf false setzen
+				if [ -f $DEFAULT_NIS_CONF ] ; then
+					sed -e 's/^\(NISSERVER\)=.*$/\1='"$NISSERVER/" \
+					$DEFAULT_NIS_CONF > ${gv_WorkDir}/nis
+					mv ${gv_WorkDir}/nis $DEFAULT_NIS_CONF
+				else
+					> $DEFAULT_NIS_CONF <<< "NISSERVER=false"
+				fi
+				# Password Dateien fuer NIS einstellen
+				change_passwd_files
+				
+				# /etc/nsswitch.conf einstellen
+				change_nsswitch
+				
+				# /etc/defaultdomain einstellen.
+				change_defaultdomain
+				
+				# /etc/host.conf einstellen ?????
+
+				# NIS restart
+				/etc/init.d/nis restart >/dev/null || prog_failure
+				#
+			fi
+			## }}}
+			;;
+	esac
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

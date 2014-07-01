@@ -1,0 +1,158 @@
+# Funktion manage_keys Schluessel erstellen/loeschen# {{{
+#
+# usage: manage_keys
+#
+manage_keys() {
+# Funktionen manage_key_menu# {{{
+KEY_TITLE=($lv_Key)
+KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
+manage_key_menu() {
+	menubox "" "$KEY_TITLE" "$gv_Menupoint" "$KEY_MENU"
+}
+## }}}
+manage_key_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help manage_key_help
+			manage_key_menu
+			;;
+		$gv_Create)
+			# Schluessel anlegen# {{{
+			# Funktion create_key_menu# {{{
+			#
+			lv_Encryption=$(gettext 'Verschluesselung')
+			#
+			CREATE_KEY_TITLE=(${lv_Key}::${gv_Create})
+			create_key_menu() {
+				CREATE_KEY_MENU=($gv_Filename \"$KEY_FILE_NAME\"
+				$lv_Encryption \"$KEY_CRYPT\" $gv_Create \"\" $gv_Back \"\")
+				menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+			}
+			## }}}
+			create_key_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help manage_key_help
+						create_key_menu
+						;;
+					$gv_Filename)
+						# Dateinamen vergeben# {{{
+						dselect ${KEY_FILE%/*}
+						if [ -n "$VERZ" ] ; then
+							KEYNAME_TITLE=(${lv_Key}::${gv_Filename})
+							KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen fuer die Schluesseldatei ein. Bedenken Sie das bei "gpg" Verschluesselung die Dateiendung .gpg mit angegeben werden muss.')
+							inputbox "$KEYNAME_TITLE" "$KEYNAME_MSG" "${KEY_FILE_NAME##*/}"
+							if [ -n "$gv_Auswahl" ] ; then
+								KEY_FILE_NAME="${VERZ}/${gv_Auswahl}"
+							else
+								no_input_msg
+								unset -- KEY_FILE_NAME
+							fi
+						fi
+						## }}}
+						create_key_menu $gv_Filename
+						;;
+					$lv_Encryption)
+						# Verschluesselung auswaehlen# {{{
+						# Funktion choice_encrypt_menu# {{{
+						#
+						choice_encrypt_menu() {
+							local ENCRYPT_PROG
+							for i in "$GNUPG" "$OPENSSL" ; {
+								if [ -x "$i" ] ; then
+									ENCRYPT_PROG+=(${i##*/} \"\")
+								fi
+							}
+							#
+							ENCRYPT_TITLE=(${lv_Key}::${lv_Encryption})
+							ENCRYPT_MENU=($gv_None \"\" $ENCRYPT_PROG $gv_Back \"\")
+							menubox "$KEY_CRYPT" "$ENCRYPT_TITLE" "$gv_Menupoint" "$ENCRYPT_MENU"
+						}
+						## }}}
+						choice_encrypt_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help manage_key_help
+									choice_encrypt_menu
+									;;
+								$gv_None)
+									unset -- KEY_CRYPT
+									break
+									;;
+								$gv_Back)	break
+									;;
+								*)	# uebernehmen
+									KEY_CRYPT="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						## }}}
+						create_key_menu $lv_Encryption
+						;;
+					$gv_Create)
+						# Keyfile anlegen# {{{
+						if [ -n "$KEY_FILE_NAME" ] ; then
+							tmpkey=${gv_WorkDir}/tempfile
+							PASSWD_MSG=$(gettext 'Geben Sie eine $KEY_CRYPT Passphrase zum verschluesseln der Schluesseldatei ein und wiederholen es im Feld darunter. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+							if [ -z "$KEY_CRYPT" ] ; then
+								# ohne Verschluesselung
+								dd if=/dev/urandom of=$KEY_FILE_NAME bs=1c count=256
+								# Mit GPG verschluesseln
+							elif [ "$KEY_CRYPT" = gpg ] ; then
+								mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" 8 21
+								if [[ -n "$gv_Pass" ]] ; then
+									dd if=/dev/urandom of=$tmpkey bs=1c count=256
+									$GNUPG --no-options --no-random-seed-file \
+										--no-default-keyring --keyring /dev/null \
+										--secret-keyring /dev/null \
+										--trustdb-name /dev/null --symmetric \
+										--passphrase-fd 3 3<<< "$gv_Pass" < $tmpkey > ${KEY_FILE_NAME}.gpg
+									chmod 600 ${KEY_FILE_NAME}.gpg
+									unset -- gv_Pass
+								fi
+							# Mit SSL verschluesseln
+							elif [ "$KEY_CRYPT" = openssl ] ; then
+								mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" 8 21
+								if [[ -n "$gv_Pass" ]] ; then
+									dd if=/dev/urandom of=$tmpkey bs=1c count=256
+									$OPENSSL enc -aes-256-cbc -e -salt -in $tmpkey -out $KEY_FILE_NAME -k "$gv_Pass"
+									chmod 600 $KEY_FILE_NAME
+									unset -- gv_Pass
+								fi
+							fi
+							rm -f $tmpkey &>/dev/null
+						else
+							no_entry_msg
+						fi
+						## }}}
+						break
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			## }}}
+			manage_key_menu
+			;;
+		$gv_Delete)
+			# Schluessel loeschen# {{{
+			file_choice "${KEY_FILE%/*}" multi
+			if [ -n "$WERT" ] ; then
+				for i in "$WERT" ; {
+					rm "${VERZ}/${i}" &>/dev/null
+				}
+			fi
+			## }}}
+			manage_key_menu
+			;;
+		$gv_Back)	break
+			;;
+	esac
+done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

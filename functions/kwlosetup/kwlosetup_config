@@ -1,0 +1,48 @@
+# Funktion kwlosetup Konfiguration speichern{{{
+#
+# usage: kwlosetup_config
+#
+kwlosetup_config() {
+#
+# Konfiguration schreiben.
+#
+> ${gv_HomePath}/.kwtools/kwlosetuprc <<< "# Beginn ~/.kwtools/kwlosetuprc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Geben sie hier die Blockgroesse an, die Ihr
+# verschluesselter Container haben soll. Diese
+# muss ein vielfaches von 512 sein.
+BLOCK_SIZE=\"$BLOCK_SIZE\"
+
+# Name des Containers mit Pfad.
+CONTAINER=\"$CONTAINER\"
+
+# Geben Sie hier die Grosse des verschluesselten
+# Containers, in Kilobyte, an (4096=4Mb).
+COUNT_SIZE=\"$COUNT_SIZE\"
+
+# Verschluesselungsverfahren (AES*, twofish*, ...). Lesen
+# Sie dazu (man 8 losetup).
+ENCRYPT=\"$ENCRYPT\"
+
+# Multi_Key aktivieren (yes/no)? Bei MULTI_KEY=yes werden die Passwoerter aus
+# einer verschluesselten gpg-Datei gelesen. Bei MULTI_KEY=no muss eine
+# mindestens 20 Zeichen lange Passphrase uebergeben werden.
+MULTI_KEY=\"$MULTI_KEY\"
+
+# Verzeichnis welches gemountet werden muss, wenn der Schluessel
+# z.B. auf einem externen Medium liegt, wie einem USBstick.
+MOUNT_PATH=\"$MOUNT_PATH\"
+
+# Verzeichnis, in dem die verschluesselte Schluesseldatei liegt.
+KEY_FILE_PATH=\"$KEY_FILE_PATH\"
+# End ~/.kwtools/kwlosetuprc"
+
+read_file kwlosetuprc
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

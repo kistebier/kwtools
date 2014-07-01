@@ -1,0 +1,102 @@
+# Funktion Netzwerkarte manuell einstellen{{{
+#
+# usage: manual_netconf
+#
+manual_netconf ()
+{
+	# Funktion fürs manuelle Netzwerkkonfigurationsmenue{{{
+	#
+	# usage: net_man_menue
+	net_man_menue ()
+	{
+		menue konfiguration konf_menue
+	}
+	#}}}
+	STARTMODE=static
+	#
+	net_man_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help conf_help
+				net_man_menue
+				;;
+			IP_*)
+				# IP-Adresse eingeben{{{
+				#
+				text_eingabe kwnetconf_ip ip_adr "$IP"
+				#
+				if [ "$gv_Auswahl" ] ; then
+					h_ip_zerlegung "$gv_Auswahl"
+					case $gv_Auswahl in
+						${IP1}.${IP2}.${IP3}.${IP4})	
+								if [ $IP4 != 0 -a $IP4 != 255 ] ; then
+									# alles OK
+									IP="$gv_Auswahl"
+								else
+									nachricht_box -s title_achtung no_ip_adr
+									unset -- IP
+								fi
+								;;
+						*)	no_auswahl_msg
+					esac
+				else
+					no_auswahl_msg
+				fi
+				#}}}
+				net_man_menue
+				;;
+			Gateway)
+				# Gateway eingeben{{{
+				text_eingabe kwnetconf_gate ip_gate "$GATE"
+				#
+				# Erreichbarkeit des Gateway testen, falls es
+				# nicht die selbe IP Adresse ist.
+				#
+				if [ -n "$IP" -a "$gv_Auswahl" != "$IP" ] ; then
+					z_host -i "$gv_Auswahl"
+					if [ "$H_IP" ] ; then
+						GATE="$H_IP"
+					fi
+				elif [ -n "$gv_Auswahl" ] ; then
+					GATE="$gv_Auswahl"
+				else
+					unset -- GATE
+					no_auswahl_msg
+				fi
+				#}}}
+				net_man_menue
+				;;
+			speichern|save)
+				# Konfiguration speichern{{{
+				#
+				if [ "$IP" ] ; then
+					ifconfig_check "$ETH"
+					PROG=ifconfig
+					PROG_OPT="$ETH $IP up"
+					prog_exec $PROG "$PROG_OPT"
+					BC="`print ${${$(LC_ALL=de_DE ; /sbin/ifconfig $ETH )[8]}#Bcast:}`"
+					NM="`print ${${$(LC_ALL=de_DE ; /sbin/ifconfig $ETH )[9]}#Maske:}`"
+					HWADDR="`print ${${$(LC_ALL=de_DE ; /sbin/ifconfig $ETH )[5]}#Adresse:}`"
+					#
+					net_config
+				else
+					nachricht_box title_achtung no_ip
+				fi
+				# default Gateway
+				if [ -n "$GATE" ] ; then
+					route_check "$ETH"
+					prog_exec route "add default gw $GATE"
+				fi
+				#}}}
+				break 2
+				;;
+			zurueck|back)	break 2
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

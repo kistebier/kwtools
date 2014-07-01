@@ -1,0 +1,185 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwrunlevconf, konfiguriert ihre Runlevel
+# Version: 0.2.15
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# automatisch deren Funktionen.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Konfigurationssystem fuer Init herraus bekommen.# {{{
+if [ "`print ${(M)$(< /etc/init.d/README)[(r)*sysv-rc]}`" ] ; then
+	PACKAGE=sysv-rc
+elif [ "`print ${(M)$(< /etc/init.d/README)[(r)*file-rc]}`" ] ; then
+	PACKAGE=file-rc
+	RUNLEVELCONF=/etc/runlevel.conf
+else
+	MSG=$(gettext 'Kann das Konfigurationssystem fuer Init nicht finden. Also nehmen wir an das es sysv-rc ist.')
+	msgbox "$gv_Attention" "$MSG"
+	PACKAGE=sysv-rc
+fi
+## }}}
+#
+# Standard Runlevel herausfiltern und Variablen belegen
+#
+INITTAB=${${(s,:,)${(M)${(f)"$(< /etc/inittab)"}##(s#)id*}}[2]}
+INITTAB_BAK="$INITTAB"
+SYSTEM=$(gettext 'System')
+MANUELL=$(gettext 'manuell')
+lv_InitScript=$(gettext 'Init-Script')
+lv_Default=$(gettext 'Standard-Runlevel')
+lv_Runlevel=$(gettext 'Runlevel')
+lv_Runlevelkonfiguration=$(gettext 'Runlevelkonfiguration')
+#
+# Funktion Hauptmenue{{{
+#
+main_menu() {
+	MAIN_MENU=($lv_InitScript \"\" $lv_Default \"$INITTAB\" $gv_Exit \"\")
+	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+#############################
+#
+# Hauptprogramm
+#
+#############################
+#
+os_check
+main_menu
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			main_menu
+			;;
+		$lv_InitScript)
+			# Runlevel Konfigurations{{{
+			# Funktion (rl_script_status), Status der Startscripts herrausfinden# {{{
+			# usage: rl_script_status
+			rl_script_status() {
+			unset -- Script
+			local Anz
+			integer Anz
+			cd $INITD_PATH
+			Anz=1
+			# sysv-rc - Systemstart oder manuell
+			if [ "$PACKAGE" = sysv-rc ] ; then
+				for i in *~*.dpkg*(x.) ; {
+					Ist=(${RCD_PATH}/rc?.d/S??${i}(@N))
+					if [ ! -z ${Ist[1]} ] ; then
+						Script[Anz]="$i \"$SYSTEM\""
+					else
+						Script[Anz]="$i \"$MANUELL\""
+					fi
+					(( Anz++ ))
+				}
+			else
+				# file-rc - Systemstart oder manuell
+				for i in *~*.dpkg*(x.) ; {
+					print -l ${(M)${(f)"$(< $RUNLEVELCONF)"}##*${i}} | \
+						while read Nr Off On Rest ; do
+							if [ "$Off" != "$On" ] ; then
+								Script[Anz]="$i \"$SYSTEM\""
+							else
+								if [ -z "${Script[Anz]}" ] ; then
+									Script[Anz]="$i \"$MANUELL\""
+								fi
+							fi
+						done
+					(( Anz++ ))
+				}
+			fi
+			#
+			# Menüdatei schreiben
+			#
+			if [ "${Script[1]}" ] ; then
+				#
+				# Start/Stopnummern herausfinden und in welchen Runlevel das 
+				# Init-Script bisher gestartet wurde. Für die jeweiligen Runlevel 
+				# wird dann ja oder nein gesetzt. Danach wird alles zur Bearbeitung
+				# angezeigt.
+				#
+				runlev_conf
+			fi
+			}
+			## }}}
+			autoload -U no_runlevel_links_msg runlev_conf sysvrc_start_stop \
+				filerc_start_stop
+			CONF_TITLE=(${gv_Configuration}::${lv_Runlevel})
+			CONF_MSG=$(gettext 'Waehlen Sie ein Runlevel Script aus.')
+			# sysvrc, file-rc konfigurieren
+			if_conf_file "$OS" init
+			rl_script_status
+			#}}}
+			main_menu
+			;;
+		$lv_Default)
+			# Standard Boot-Runlevel ändern.{{{
+			#
+			INITTAB_BAK=$INITTAB
+			DEFAULT_RL_TITLE=$(gettext 'Standard Boot Runlevel')
+			DEFAULT_RL_MSG=$(gettext 'Waehlen Sie ihr Standard Boot Runlevel aus.')
+			DEFAULT_RL_MENU=(1 \"\" 2 \"\" 3 \"\" 4 \"\" 5 \"\")
+			menubox "$INITTAB" "$DEFAULT_RL_TITLE" "$DEFAULT_RL_MSG" "$DEFAULT_RL_MENU"
+			#
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)
+						# Hilfe für Einstellung des Standard Start Runlevels
+						script_help default_inithelp
+						menubox "$INITTAB" "$DEFAULT_RL_TITLE" "$DEFAULT_RL_MSG" "$DEFAULT_RL_MENU"
+						;;
+					*)
+						# Auswahl der Runlevel von 1-5
+						INITTAB=$gv_Auswahl
+						# Standard Start-Runlevel Einstellung schreiben.
+						if [ $INITTAB -a $INITTAB -ne $INITTAB_BAK ] ; then
+							sed "s/id:${INITTAB_BAK}:initdefault:/id:${INITTAB}:initdefault:/" /etc/inittab >${gv_WorkDir}/inittab$$
+							mv ${gv_WorkDir}/inittab$$ /etc/inittab
+						fi
+						break
+						;;
+				esac
+			done
+			#}}}
+			main_menu
+			;;
+		$gv_Exit) break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

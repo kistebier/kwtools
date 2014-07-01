@@ -1,0 +1,37 @@
+# Funktion (pv_vga_auswahl), um PV's aus einer VG heraus zu finden{{{
+#
+# usage: pv_vga_auswahl $VG
+#
+pv_vga_auswahl() {
+	unset -- PV_IN_VG_M PV_IN_VG_E PV_IN_VG
+	local Anz Vg_Ist
+	integer Anz Alloc_Size Total_Size
+	# Funktion (count_vg)# {{{
+	#
+	count_vg() {
+		for i in ${=Vg_Ist} ; do
+			(( Anz++ ))
+			PV_IN_VG_M[Anz]="$i \"Volume Group\" off"
+			PV_IN_VG_E[Anz]="$i \"Volume Group\""
+			PV_IN_VG[Anz]="$i"
+			ANZ_PV=$Anz
+		done
+	}
+	## }}}
+	if [ "$LVM" = 2 ] ; then
+		Anz=0
+		vgdisplay -v $1 2>/dev/null | awk '/PV Name/{print $3}' | while read Vg_Ist ; do
+			count_vg
+		done
+	else
+		Anz=0
+		vgdisplay -v $1 2>/dev/null | awk '/PV Name/{print $4}' | while read Vg_Ist ; do
+			count_vg
+		done
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

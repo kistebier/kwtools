@@ -1,0 +1,318 @@
+# Funktion error_codes_conf{{{
+#
+# benoetigt die Funktion error_codes
+#
+error_codes_conf() {
+
+	# Variable
+	ERROR_TITLE="${gv_Configuration}::${lv_ErrorCodes}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##*(reject|defer|injection)_code*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion error_codes_conf_menue{{{
+	error_codes_conf_menue() {
+	ERROR_MENU=(access_map_defer_code \"$access_map_defer_code\"
+		access_map_reject_code \"$access_map_reject_code\"
+		defer_code \"$defer_code\"
+		fault_injection_code \"$fault_injection_code\"
+		invalid_hostname_reject_code \"$invalid_hostname_reject_code\"
+		maps_rbl_reject_code \"$maps_rbl_reject_code\"
+		multi_recipient_bounce_reject_code \"$multi_recipient_bounce_reject_code\"
+		non_fqdn_reject_code \"$non_fqdn_reject_code\"
+		plaintext_reject_code \"$plaintext_reject_code\"
+		reject_code \"$reject_code\"
+		relay_domains_reject_code \"$relay_domains_reject_code\"
+		unknown_address_reject_code \"$unknown_address_reject_code\"
+		unknown_client_reject_code \"$unknown_client_reject_code\"
+		unknown_hostname_reject_code \"$unknown_hostname_reject_code\"
+		unknown_local_recipient_reject_code \"$unknown_local_recipient_reject_code\"	
+		unknown_relay_recipient_reject_code \"$unknown_relay_recipient_reject_code\"
+		unknown_virtual_alias_reject_code \"$unknown_virtual_alias_reject_code\"	
+		unknown_virtual_mailbox_reject_code \"$unknown_virtual_mailbox_reject_code\"
+		unverified_recipient_defer_code \"$unverified_recipient_defer_code\"
+		unverified_recipient_reject_code \"$unverified_recipient_reject_code\"
+		unverified_sender_defer_code \"$unverified_sender_defer_code\"
+		unverified_sender_reject_code \"$unverified_sender_reject_code\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$ERROR_TITLE" "$gv_Menupoint" "$ERROR_MENU"
+	}
+	#}}}
+# Funktion error-codes{{{
+#
+# usage: error_codes
+error_codes() {
+	unset -- WERT
+	ERROR_NR_MSG=$(gettext 'Waehlen Sie einen Fehlercode aus.')
+	ERROR_NR_MENU=(0 \"\" 211 \"\" 214 \"\" 220 \"\" 221 \"\" 250 \"\" 251 \"\"
+		354 \"\" 421 \"\" 450 \"\" 451 \"\" 452 \"\" 500 \"\" 501 \"\"
+		502 \"\" 503 \"\" 504 \"\" 550 \"\" 551 \"\" 552 \"\" 553 \"\"
+		554 \"\")
+	# Funktion (error_codes_menu)# {{{
+	#
+	error_codes_menu() {
+		menubox "$WERT" "$ERROR_TITLE" "$ERROR_NR_MSG" "$ERROR_NR_MENU"
+	}
+	## }}}
+	error_codes_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help error_codes_help
+				error_codes_menu
+				;;
+			*)	# Wert übernehmen
+				WERT="$gv_Auswahl"	
+				break
+				;;
+		esac
+	done
+}
+#}}}
+	error_codes_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help error_conf_help
+				error_codes_conf_menue
+				;;
+			access_map_defer_code)
+				# Standard = 450# {{{
+				error_codes $access_map_defer_code
+				if [[ -n $WERT ]] ; then
+					access_map_defer_code="$WERT"
+					postconf -e	access_map_defer_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue access_map_defer_code
+				;;
+			access_map_reject_code)
+				# Standard = 211# {{{
+				# error_code ausführen, für die einzelne Zahlenauswahl.
+				error_codes $access_map_reject_code
+				if [[ -n $WERT ]] ; then
+					access_map_reject_code="$WERT"
+					postconf -e	access_map_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue access_map_reject_code
+				;;
+			defer_code)
+				# Standard = 450# {{{
+				error_codes $defer_code
+				if [[ -n $WERT ]] ; then
+					defer_code="$WERT"
+					postconf -e	defer_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue defer_code
+				;;
+			fault_injection_code)
+				# aktiviert einen Testmodus# {{{
+				# Standard = 0
+				error_codes $fault_injection_code
+				if [[ -n $WERT ]] ; then
+					fault_injection_code="$WERT"
+					postconf -e	fault_injection_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue fault_injection_code
+				;;
+			invalid_hostname_reject_code)
+				# Standard = 501# {{{
+				error_codes $invalid_hostname_reject_code
+				if [[ -n $WERT ]] ; then
+					invalid_hostname_reject_code="$WERT"
+					postconf -e	invalid_hostname_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue invalid_hostname_reject_code
+				;;
+			maps_rbl_reject_code)
+				# Standard = 554# {{{
+				error_codes $maps_rbl_reject_code
+				if [[ -n $WERT ]] ; then
+					maps_rbl_reject_code="$WERT"
+					postconf -e	maps_rbl_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue maps_rbl_reject_code
+				;;
+			multi_recipient_bounce_reject_code)
+				# Standard = 550# {{{
+				error_codes $multi_recipient_bounce_reject_code
+				if [[ -n $WERT ]] ; then
+					multi_recipient_bounce_reject_code="$WERT"
+					postconf -e	multi_recipient_bounce_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue multi_recipient_bounce_reject_code
+				;;
+			non_fqdn_reject_code)
+				# Standard = 504# {{{
+				error_codes $non_fqdn_reject_code
+				if [[ -n $WERT ]] ; then
+					non_fqdn_reject_code="$WERT"
+					postconf -e	non_fqdn_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue non_fqdn_reject_code
+				;;
+			plaintext_reject_code)
+				# Standard = 450# {{{
+				error_codes $plaintext_reject_code
+				if [[ -n $WERT ]] ; then
+					plaintext_reject_code="$WERT"
+					postconf -e	plaintext_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue plaintext_reject_code
+				;;
+			reject_code)
+				# Standard = 554# {{{
+				error_codes $reject_code
+				if [[ -n $WERT ]] ; then
+					reject_code="$WERT"
+					postconf -e	reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue reject_code
+				;;
+			relay_domains_reject_code)
+				# Standard = 554# {{{
+				error_codes $relay_domains_reject_code
+				if [[ -n $WERT ]] ; then
+					relay_domains_reject_code="$WERT"
+					postconf -e	relay_domains_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue relay_domains_reject_code
+				;;
+			unknown_address_reject_code)
+				# Standard = 450# {{{
+				error_codes $unknown_address_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_address_reject_code="$WERT"
+					postconf -e unknown_address_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_address_reject_code
+				;;
+			unknown_client_reject_code)
+				# Standard = 450# {{{
+				error_codes $unknown_client_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_client_reject_code="$WERT"
+					postconf -e	unknown_client_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_client_reject_code
+				;;
+			unknown_hostname_reject_code)
+				# Standard = 450# {{{
+				error_codes $unknown_hostname_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_hostname_reject_code="$WERT"
+					postconf -e	unknown_hostname_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_hostname_reject_code
+				;;
+			unknown_local_recipient_reject_code)
+				# Standard = 550# {{{
+				error_codes $unknown_local_recipient_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_local_recipient_reject_code="$WERT"
+					postconf -e	unknown_local_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_local_recipient_reject_code
+				;;
+			unknown_relay_recipient_reject_code)
+				# Standard = 550# {{{
+				error_codes $unknown_relay_recipient_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_relay_recipient_reject_code="$WERT"
+					postconf -e	unknown_relay_recipient_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_relay_recipient_reject_code
+				;;
+			unknown_virtual_alias_reject_code)
+				# Standard = 550# {{{
+				error_codes $unknown_virtual_alias_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_virtual_alias_reject_code="$WERT"
+					postconf -e	unknown_virtual_alias_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_virtual_alias_reject_code
+				;;
+			unknown_virtual_mailbox_reject_code)
+				# Standard = 211# {{{
+				error_codes $unknown_virtual_mailbox_reject_code
+				if [[ -n $WERT ]] ; then
+					unknown_virtual_mailbox_reject_code="$WERT"
+					postconf -e	unknown_virtual_mailbox_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unknown_virtual_mailbox_reject_code
+				;;
+			unverified_recipient_defer_code)
+			   # Standard = 450# {{{
+				error_codes $unverified_recipient_defer_code
+				if [[ -n $WERT ]] ; then
+					unverified_recipient_defer_code="$WERT"
+					postconf -e	unverified_recipient_defer_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unverified_recipient_defer_code
+			   ;;
+			unverified_recipient_reject_code)
+			   # Standard = 450# {{{
+				error_codes $unverified_recipient_reject_code
+				if [[ -n $WERT ]] ; then
+					unverified_recipient_reject_code="$WERT"
+					postconf -e	unverified_recipient_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unverified_recipient_reject_code
+				;;
+			unverified_sender_defer_code)
+				# Standard = 450# {{{
+				error_codes $unverified_sender_defer_code
+				if [[ -n $WERT ]] ; then
+					unverified_sender_defer_code="$WERT"
+					postconf -e	unverified_sender_defer_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unverified_sender_defer_code
+				;;
+			unverified_sender_reject_code)
+				# Standard = 450# {{{
+				error_codes $unverified_sender_reject_code
+				if [[ -n $WERT ]] ; then
+					unverified_sender_reject_code="$WERT"
+					postconf -e	unverified_sender_reject_code="$WERT"
+				fi
+				## }}}
+				error_codes_conf_menue unverified_sender_reject_code
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

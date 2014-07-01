@@ -1,0 +1,466 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwtermin, zum anzeigen, verändern und löschen von Terminen.
+# Version: 0.1.3
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check calendar date
+if [ ! -z "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Nachdem das Script initialliert wurde, kann man die anderen
+# benötigten Funktionen laden.
+autoload -U no_termin_msg termin_change termin_delete termin_input
+
+#
+# Wenn eine ~/.kwtools/kwplanerrc Datei vorhanden ist einlesen.
+#
+read_file kwplanerrc
+
+# Variablen
+PlanerPath="${gv_HomePath}/.kwtools/kwplaner"
+TerminFile="${PlanerPath}/termin"
+DATE="`date +%Y%m%d`"
+Termin_Date="$DATE"
+DAY="${DATE[7,8]}"
+MONTH="${DATE[5,6]}"
+YEAR="${DATE[1,4]}"
+START_TIME="`date +%H%M`"
+VW_TIME=15
+SUBJECT=""
+TEXT=""
+REPEAT="-"
+CC=""
+lv_Termin=$(gettext 'Termine')
+lv_State_Cal=$(gettext 'feste_Kalenderdaten')
+lv_Holiday=$(gettext 'Ferien')
+lv_Birthday=$(gettext 'Geburtstage')
+lv_Daily=$(gettext 'taeglich')
+lv_Weekly=$(gettext 'woechentlich')
+lv_Monthly=$(gettext 'monatlich')
+lv_Yearly=$(gettext 'jaehrlich')
+lv_Actual=$(gettext 'aktuelle')
+
+# Verzeichnisse und Datei anlegen.
+create_file -d $PlanerPath
+create_file $TerminFile
+
+# Funktion cal_view_check{{{
+#
+# usage: cal_view_check
+cal_view_check() {
+	if [ "$1" = -c ] ; then
+		if [ -z "$CAL_VIEW" ] ; then
+			CAL_VIEW="7"
+		else
+			case "$CAL_VIEW" in
+				"0 days")
+					CAL_VIEW="0"
+					;;
+				"1 weeks")
+					CAL_VIEW="6"
+					;;
+				"1 months")
+					CAL_VIEW="30"
+					;;
+				"1 years")
+					CAL_VIEW="364"
+					;;
+			esac
+		fi
+	else
+		if [ -z "$CAL_VIEW" ] ; then
+			CAL_VIEW="1 weeks"
+		fi
+	fi
+}
+#}}}
+# Funktion haupt_menue{{{
+MAIN_MENU=($lv_Termin \"\" $lv_State_Cal \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion crontab Aktivierung{{{
+#
+crontab_act() {
+	Cron_File="${USER}_cron"
+	crontab -u $USER -l > ${gv_WorkDir}/${Cron_File}
+	Ist=${(M)${(f)"$(< ${gv_WorkDir}/${Cron_File})"}##*kwtermin_cron*}
+	if [ -z "$Ist" ] ; then
+		MSG=$(gettext 'Es ist kein Crontab Eintrag vorhanden. Soll dies jetzt geschehen, damit die Termine auch per mail vorgewarnt werden koennen?')
+		yesno "$gv_Info" "$MSG" ""
+		if [ "$gv_Auswahl" = yes ] ; then
+			print ${(R)${(f)"$(< ${gv_WorkDir}/${Cron_File})"}##*kwtermin_cron*} >${gv_WorkDir}/${Cron_File}$$
+			mv ${gv_WorkDir}/${Cron_File}$$ ${gv_WorkDir}/${Cron_File}
+			if [ -x /usr/lib/kwtools/kwtermin_cron ] ; then
+				print "0-59/1 * * * * test -x /usr/lib/kwtools/kwtermin_cron && /usr/lib/kwtools/kwtermin_cron" >> "${gv_WorkDir}/${Cron_File}"
+			elif [ -x /usr/local/lib/kwtools/kwtermin_cron ] ; then
+				print "0-59/1 * * * * test -x /usr/local/lib/kwtools/kwtermin_cron && /usr/local/lib/kwtools/kwtermin_cron" >> "${gv_WorkDir}/${Cron_File}"
+			fi
+		fi
+	else
+		print ${(R)${(f)"$(< ${gv_WorkDir}/${Cron_File})"}##*kwtermin_cron*} >${gv_WorkDir}/${Cron_File}$$
+		mv ${gv_WorkDir}/${Cron_File}$$ ${gv_WorkDir}/${Cron_File}
+		if [ -x /usr/lib/kwtools/kwtermin_cron ] ; then
+			print "0-59/1 * * * * test -x /usr/lib/kwtools/kwtermin_cron && /usr/lib/kwtools/kwtermin_cron" >> "${gv_WorkDir}/${Cron_File}"
+		elif [ -x /usr/local/lib/kwtools/kwtermin_cron ] ; then
+			print "0-59/1 * * * * test -x /usr/local/lib/kwtools/kwtermin_cron && /usr/local/lib/kwtools/kwtermin_cron" >> "${gv_WorkDir}/${Cron_File}"
+		fi
+	fi
+	crontab -u $USER ${gv_WorkDir}/${Cron_File}
+}
+#}}}
+# Funktion (sort_termin), sortiert alle Termine nach Spalte 4.# {{{
+sort_termin() {
+	< $TerminFile | sort - -k 4 >${TerminFile}.bak
+	mv ${TerminFile}.bak $TerminFile
+}
+## }}}
+######################################################################
+#
+# Hauptprogramm
+#
+######################################################################
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$lv_Termin)
+			# Termine eingeben, aendern und loeschen{{{
+			#
+			crontab_act
+			TERMIN_TITLE="$lv_Termin"
+			TERMIN_MSG="$gv_Menupoint"
+			TERMIN_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Change \"\"
+			$gv_Delete \"\" $gv_Back \"\")
+			# Funktion (termin_menu)# {{{
+			termin_menu() {
+				menubox "$1" "$TERMIN_TITLE" "$TERMIN_MSG" "$TERMIN_MENU"
+			}
+			## }}}
+			termin_menu
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)	script_help termin_help
+						termin_menu
+						;;
+					$gv_Display)
+						# Terminansicht{{{
+						rm -rf $gv_LogFile &>/dev/null
+						# gv_LogFile neu erzeugen
+						create_file $gv_LogFile
+						cal_view_check
+  						TerminCalc="`date -d \"$Termin_Date $CAL_VIEW\" +%Y%m%d`"
+						# IFS=Return
+						IFS=$'\r'
+						#
+						read -A TerminListe <<< "`grep -v "^#" $TerminFile | tr "\n" "$IFS"`"
+						# IFS=Tab
+						IFS=$'\t'
+						Anz=1
+						while [ "${TerminListe[Anz]}" != "" ] ; do
+							set -- ${=${TerminListe[Anz]}}
+							# extra Einstellungen, Wiederholung/Geburtstag/Ferien
+							case $6 in
+								[by])
+									# jaehrliche und Geburtstags - Wiederholungen# {{{
+									# anzeigen
+									Act_Termin_Month="${1[5,6]}"
+									Act_Termin_Day="${1[7,8]}"
+									Update_Termin_Day="${YEAR}${Act_Termin_Month}${Act_Termin_Day}"
+									if [ "$Update_Termin_Day" -le "$TerminCalc" -a "$Update_Termin_Day" -ge "$Termin_Date" ]; then
+										print "`date -d $Update_Termin_Day +%d.%m.%Y` $2 `date -d $3 +%H:%M` $4 $5 $7" >>$gv_LogFile
+									fi
+									## }}}
+									;;
+								t)
+									# taegliche Wiederholungen# {{{
+									# anzeigen
+									Update_Termin_Day="${YEAR}${MONTH}${DAY}"
+									if [ "$Update_Termin_Day" -le "$TerminCalc" -a "$Update_Termin_Day" -ge "$Termin_Date" ]; then
+										print "`date -d $Update_Termin_Day +%d.%m.%Y` $2 `date -d $3 +%H:%M` $4 $5 $7" >>$gv_LogFile
+									fi
+									## }}}
+									;;
+								w)
+									# woechentliche Wiederholungen# {{{
+									# anzeigen
+									Act_Termin_Day="${1[7,8]}"
+									Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
+									while [ "$Act_Termin_Day" -le 31 ] ; do
+										if [ "$Update_Termin" -le "$TerminCalc" -a "$Update_Termin" -ge "$Termin_Date" ]; then
+											print "`date -d $Update_Termin +%d.%m.%Y` $2 `date -d $3 +%H:%M` $4 $5 $7" >>$gv_LogFile
+											break
+										else
+											(( Act_Termin_Day = Act_Termin_Day + 7 ))
+											Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
+										fi
+									done
+									## }}}
+									;;
+								m)
+									# monatliche Wiederholungen# {{{
+									# anzeigen
+									Act_Termin_Month="${1[5,6]}"
+									Act_Termin_Day="${1[7,8]}"
+									Update_Termin="${YEAR}${Act_Termin_Month}${Act_Termin_Day}"
+									Update_Termin_Day="`date -d \"${YEAR}${MONTH}${Act_Termin_Day} 1 months\"  +%Y%m%d`"
+									if [ "$Update_Termin_Day" -le "$TerminCalc" -a "$Update_Termin" -ge "$Termin_Date" ]; then
+										print "`date -d $Update_Termin_Day +%d.%m.%Y` $2 `date -d $3 +%H:%M` $4 $5 $7" >>$gv_LogFile
+									fi
+									## }}}
+									;;
+								*)
+									# andere Termine anzeigen# {{{
+									if [ "$1" -le "$TerminCalc" -a "$1" -ge "$Termin_Date" ]; then
+										print "`date -d $1 +%d.%m.%Y` $2 `date -d $3 +%H:%M` $4 $5 $7" >>$gv_LogFile
+									fi
+									## }}}
+									;;
+							esac
+							(( Anz++ ))
+						done
+						# IFS=space
+						IFS=$'\ '
+						#
+						unsetopt shwordsplit
+						if [ "`wc -l < $gv_LogFile`" -gt 0 ] ; then
+							< $gv_LogFile | sort -n -t '.' -k 2 >$gv_LogFile$$
+							View_Header_Termin=$(gettext '# Datum Vorwarnzeit(min) Startzeit Betreff Text CC')
+							print "$View_Header_Termin" >$gv_LogFile
+							< "$gv_LogFile$$" >> $gv_LogFile
+							view_file $gv_LogFile
+						else
+							no_termin_msg
+						fi
+						#}}}
+						termin_menu $gv_Display
+						;;
+					$gv_Create)
+						# termine eingeben# {{{
+						Termin_aendern=no
+						termin_input
+						## }}}
+						termin_menu $gv_Create
+						;;
+					$gv_Change)
+						# termine aendern# {{{
+						# Funktion termin_choice_menu# {{{
+						CHANGE_TITLE=(${lv_Termin}::${gv_Change})
+						CHANGE_MSG=$(gettext 'Waehlen Sie einen Termin aus.')
+						THEME_CHOICE_MENU=($lv_Holiday \"\" $lv_Birthday \"\"
+						$lv_Daily \"\" $lv_Weekly \"\" $lv_Monthly \"\"
+						$lv_Yearly \"\" $lv_Actual \"\" $gv_Back \"\")
+						termin_choice_menu() {
+							menubox "$1" "$CHANGE_TITLE" "$CHANGE_MSG" "$THEME_CHOICE_MENU"
+						}
+						## }}}
+						#
+						termin_choice_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help termin_change_help
+									termin_choice_menu
+									;;
+								$lv_Holiday)
+									Termin_aendern=yes
+									termin_change -h
+									termin_choice_menu $lv_Holiday
+									;;
+								$lv_Birthday)
+									Termin_aendern=yes
+									termin_change -b
+									termin_choice_menu $lv_Birthday
+									;;
+								$lv_Daily)
+									cal_view_check
+									Termin_aendern=yes
+									termin_change -t
+									termin_choice_menu $lv_Daily
+									;;
+								$lv_Weekly)
+									cal_view_check
+									Termin_aendern=yes
+									termin_change -w
+									termin_choice_menu $lv_Weekly
+									;;
+								$lv_Monthly)
+									cal_view_check
+									Termin_aendern=yes
+									termin_change -m
+									termin_choice_menu $lv_Monthly
+									;;
+								$lv_Yearly)
+									cal_view_check
+									Termin_aendern=yes
+									termin_change -y
+									termin_choice_menu $lv_Yearly
+									;;
+								$gv_Back)	break
+									;;
+								*)
+									cal_view_check
+									Termin_aendern=yes
+									TerminCalc="`date -d \"$Termin_Date $CAL_VIEW\" +%Y%m%d`"
+									termin_change
+									termin_choice_menu $lv_Actual
+									;;
+							esac
+						done
+						## }}}
+						termin_menu $gv_Change
+						;;
+					$gv_Delete)
+						# Termine loeschen von{{{
+						# Heute, der letzten Wo, Mon. Jahr, alle
+						#
+						lv_Today=$(gettext 'Heute')
+						lv_Week=$(gettext 'Woche')
+						lv_Month=$(gettext 'Monat')
+						lv_Year=$(gettext 'Jahr')
+						lv_All=$(gettext 'alle')
+						#
+						DELETE_TITLE=(${lv_Termin}::${gv_Delete})
+						DELETE_MSG=$(gettext 'Auswahl des Loeschzeitraums')
+						DELETE_MENU=($lv_Today \"\" $lv_Week \"\" $lv_Month \"\"
+						$lv_Year \"\" $lv_All \"\" $gv_Back \"\")
+						menubox "" "$DELETE_TITLE" "$DELETE_MSG" "$DELETE_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help delete_help
+									menubox "" "$DELETE_TITLE" "$DELETE_MSG" "$DELETE_MENU"
+									;;
+								$lv_Today)
+									unset -- TerminCalc
+									termin_delete
+									break
+									;;
+								$lv_Week)
+									VIEW=weeks
+									TerminCalc="`date -d \"$Termin_Date 1 $VIEW ago\" +%Y%m%d`"
+									termin_delete
+									break
+									;;
+								$lv_Month)
+									VIEW=months
+									TerminCalc="`date -d \"$Termin_Date 1 $VIEW ago\" +%Y%m%d`"
+									termin_delete
+									break
+									;;
+								$lv_Year)
+									VIEW=years
+									TerminCalc="`date -d \"$Termin_Date 1 $VIEW ago\" +%Y%m%d`"
+									termin_delete
+									break
+									;;
+								$lv_All)
+									rm -rf $TerminFile &>/dev/null
+									create_file $TerminFile
+									break
+									;;
+							esac
+						done
+						#}}}
+						termin_menu $gv_Delete
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue
+			;;
+		$lv_State_Cal)
+			# Anzeige von festen Kalenderdaten{{{
+			# nach calendar.dateien in der Variable $CAL suchen
+			# und zur Auswahl zur Verfuegung stellen.
+			#
+			if [ "$CAL" ] ; then
+				Anz=1
+				for i in ${(ws: :)${CAL}} ; {
+					F_Cal[Anz]="$i \"\""
+					(( Anz++ ))
+				}
+				#
+				FIXED_MENU=($F_Cal)
+				FIXED_TITLE=($lv_State_Cal)
+				FIXED_MSG=$(gettext 'Waehlen Sie eine oder alle Kalenderdateien aus.')
+				# calenderdateien zur Auswahl stellen.
+				menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+							# Hilfe Text
+							#
+							script_help fixed_cal_help
+							menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
+							;;
+						*)	#
+							# fixed Kalenderdaten anzeigen.
+							# 
+							DATEI="$gv_Auswahl"
+							cal_view_check -c
+							calendar -t today -A $CAL_VIEW -f $DATEI >$gv_LogFile
+							if [ `wc -l <"$gv_LogFile"` -gt 0 ] ; then
+								view_file "$gv_LogFile"
+							else
+								MSG=$(gettext 'Es sind keine Kalenderdaten fuer die naechsten $CAL_VIEW Tage vorhanden.')
+								msgbox "$gv_Attention" "$MSG"
+							fi
+							menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
+							;;
+					esac
+				done
+			else
+				MSG=$(gettext 'Sie muessen erst mindestens 1 Kalender vorher auswaehlen. Tun Sie dies Bitte in der Konfiguration von kwplaner.')
+				msgbox "$gv_Attention" "$MSG"
+			fi
+			#}}}
+			haupt_menue
+			;;
+		$gv_Exit) break
+			;;
+	esac
+done	
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

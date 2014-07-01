@@ -1,0 +1,702 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 28.06.2014
+#
+# Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
+# zu managen.
+#
+# Version: 0.0.4
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Pruefen ob nyxmms2 installiert ist.
+prog_check nyxmms2 xmms2
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Variablen
+lv_Server_Plugins=$(gettext 'Plugins')
+lv_Playlist=$(gettext 'Playliste')
+lv_Playlists=$(gettext 'Playlisten')
+lv_Player=$(gettext 'Player')
+
+
+# Funktion (read_conf), Konf.-Datei einlesen.# {{{
+read_conf() {
+	read_file kwxmms2rc
+	if [[ -z $XMMS_PATH ]] ; then
+		unset -- XMMS_PATH
+	else
+		export XMMS_PATH
+	fi
+}
+## }}}
+# Funktion haupt_menue{{{
+#
+haupt_menue() {
+	MAIN_MENU=($gv_Configuration \"\" $lv_Player \"\" $lv_Playlists \"\"
+	\"$lv_Server_Plugins\" \"\" $gv_Exit \"\")
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion (check_status), Server Status herausfinden{{{
+#
+check_status() {
+	echo q | nyxmms2 status >${gv_WorkDir}/state
+	#State_Entry=${(M)${(f)$(< ${gv_WorkDir}/state)}##[a-zA-Z]*}
+	State_Entry=${$(< ${gv_WorkDir}/state)##[(fr)[a-zA-Z]*]}
+	case "$State_Entry" in
+		*"not connect"*)
+			no_connect_msg
+			SRV_ONLINE=no
+			;;
+		*)
+			SRV_ONLINE=yes
+			;;
+	esac
+}
+#}}}
+# Funktion (del_listsongs), Songliste loeschen# {{{
+#
+del_listsongs (){
+	if [ -f ${gv_WorkDir}/listsongs ] ; then
+		rm -f ${gv_WorkDir}/listsongs &>/dev/null
+	fi
+}
+## }}}
+# Funktion (list_pls), Playlisten herausfinden{{{
+#
+list_pls() {
+	unset -- PLS_LIST_E PLS_LIST_M DEFAULT_ITEM PLS_CURRENT
+	nyxmms2 playlist list | sort | while read Pls ; do
+		if [ "${Pls%%?[a-zA-Z0-9]*}" = "*" ] ; then
+			PLS_LIST_E+=(\"${Pls#* }\" \"on\")
+			PLS_LIST_M+=(\"${Pls#* }\" \"\" on)
+			DEFAULT_ITEM=(\"${Pls#* }\")
+			PLS_CURRENT=(\"${Pls#* }\")
+		else
+			PLS_LIST_E+=(\"$Pls\" \"off\")
+			PLS_LIST_M+=(\"$Pls\" \"\" off)
+		fi
+	done
+}
+#}}}
+# Funktion (list_songs), Lieder der Playliste herausfinden{{{
+#
+list_songs() {
+	local Tmp Tmp1 Anz
+	unset -- Songs SONG_LIST_E SONG_LIST_E_M SONG_LIST_M DEFAULT_ITEM
+	SONG_FROM_PLS_MSG=$(gettext 'suche Lieder der Playliste $PLS_CURRENT:')
+	# Funktion (read_songlists), liest die Lieder der geoeffneten Playliste# {{{
+	# ein
+	#
+	# usage: read_songlists [ -r ]
+	# -r - ohne die Variable SONG_LIST_E_M belegen
+	#
+	read_songlists() {
+		while read Anz Song ; do
+			case "$Anz" in
+				default)
+					SONG_LIST_E+=(\"${Song%% *} ${Song#* }\" \"\")
+					SONG_LIST_M+=(\"${Song#* }\" \"\" on)
+					DEFAULT_ITEM=("${Song%% *} ${Song#* }")
+					case "$1" in
+						-r)	;;
+						*)
+							SONG_LIST_E_M+=(${Song%% *} \"${Song#* }\" off)
+							;;
+					esac
+					;;
+				*)
+					SONG_LIST_E+=(\"$Anz $Song\" \"\")
+					SONG_LIST_M+=(\"$Song\" \"\" off)
+					case "$1" in
+						-r)	;;
+						*)
+							SONG_LIST_E_M+=($Anz \"$Song\" off)
+							;;
+					esac
+					;;
+			esac
+		done < ${gv_WorkDir}/listsongs
+	}
+	## }}}
+	Anz=1
+	if [ "$argv" = -r ] ; then
+		if [ -f "${gv_WorkDir}/listsongs" ] ; then
+			rm -rf "${gv_WorkDir}/listsongs" &>/dev/null
+		fi
+	fi
+	if [ ! -f "${gv_WorkDir}/listsongs" ] ; then
+		nyxmms2 list 2>/dev/null | egrep -v "^($|Total|Failed)" | \
+		while read Songs ; do
+			case $Songs in
+				'->'*)
+					# letzter abgespielter Song
+					Tmp="${Songs#->\[*\ }"
+					if [ "${Tmp[1,2]}" = " -" ] ; then
+						Tmp1="${${Tmp#\ -\ }//\`/}"
+					else
+						Tmp1="${Tmp//\`/}"
+					fi
+					# Anzeige fuer die die Funktion progressbox
+					print "$Anz $Tmp1"
+					#
+					if [ -f "${gv_WorkDir}/listsongs" ] ; then
+						print "default $Anz $Tmp1" >> ${gv_WorkDir}/listsongs
+					else
+						print "default $Anz $Tmp1" > ${gv_WorkDir}/listsongs
+					fi
+					(( Anz++ ))
+					;;
+				*)
+					Tmp="${Songs#\[*\ }"
+					if [ "${Tmp[1,2]}" = " -" ] ; then
+						Tmp1="${${Tmp#\ -\ }//\`/}"
+					else
+						Tmp1="${Tmp//\`/}"
+					fi
+					# Anzeige fuer die die Funktion progressbox
+					print "$Anz $Tmp1"
+					#
+					if [ -f "${gv_WorkDir}/listsongs" ] ; then
+						print "$Anz $Tmp1" >> ${gv_WorkDir}/listsongs
+					else
+						print "$Anz $Tmp1" > ${gv_WorkDir}/listsongs
+					fi
+					(( Anz++ ))
+					;;
+			esac
+		done | progressbox "$lv_Player_Choice" "$SONG_FROM_PLS_MSG"
+		read_songlists
+	else
+		read_songlists -r
+	fi
+}
+#}}}
+# Funktion (current_song), z. Zeit korrekten Song herraus finden.# {{{
+#
+current_song() {
+	local Tmp
+	PLAYING_SONG="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[1]}"
+	CURRENT_SONG="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[2]}"
+	CURRENT_SONG="${CURRENT_SONG//\`/\\\`}"
+	STATUS_SONG="$PLAYING_SONG"
+	Tmp="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[3]}"
+	CURRENT_TIME="${Tmp% of*}"
+}
+## }}}
+# Funktion (no_connect_msg), Nachricht das Server nicht erreichbar ist.# {{{
+#
+no_connect_msg() {
+	MSG=$(gettext 'Der Server ist nicht erreichbar.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_songs_msg), Nachricht das keine Songs in der Playliste verfuegbar sind.# {{{
+#
+no_songs_msg() {
+	MSG=$(gettext 'Es sind keine Lieder verfuegbar.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_current_songs_msg), Nachricht das kein Song ausgewaehlt wurde.# {{{
+#
+no_current_songs_msg() {
+	MSG=$(gettext 'Es wurde kein Lieder ausgewaehlt.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+	# Funktion (server_config), Server Konfiguration# {{{
+	#
+	server_config() {
+		nyxmms2 server config > ${gv_WorkDir}/config
+	}
+	## }}}
+	# Funktion (plugin_support), vorhandene plugins speichern# {{{
+	#
+	plugin_support() {
+		nyxmms2 server plugins > ${gv_WorkDir}/plugins
+	}
+	## }}}
+	# Funktion (read_equal_config), einlesen der Equalizer Einstellungen # {{{
+	#
+	read_equal_config() {
+		if [ -f ${gv_WorkDir}/config ] ; then
+			while read Var Char Value ; do
+				case "$Var" in
+					equalizer.preamp)
+						Equal_Preamp="$Value"
+						Equal_Preamp_Var="$Var"
+						Equal_Preamp_Hertz="PREAMP"
+						;;
+					equalizer.legacy0)
+						Equal0="$Value"
+						Equal0_Var="$Var"
+						Equal0_Hertz="60"
+						;;
+					equalizer.legacy1)
+						Equal1="$Value"
+						Equal1_Var="$Var"
+						Equal1_Hertz="170"
+						;;
+					equalizer.legacy2)
+						Equal2="$Value"
+						Equal2_Var="$Var"
+						Equal2_Hertz="310"
+						;;
+					equalizer.legacy3)
+						Equal3="$Value"
+						Equal3_Var="$Var"
+						Equal3_Hertz="600"
+						;;
+					equalizer.legacy4)
+						Equal4="$Value"
+						Equal4_Var="$Var"
+						Equal4_Hertz="1K"
+						;;
+					equalizer.legacy5)
+						Equal5="$Value"
+						Equal5_Var="$Var"
+						Equal5_Hertz="3K"
+						;;
+					equalizer.legacy6)
+						Equal6="$Value"
+						Equal6_Var="$Var"
+						Equal6_Hertz="6K"
+						;;
+					equalizer.legacy7)
+						Equal7="$Value"
+						Equal7_Var="$Var"
+						Equal7_Hertz="12K"
+						;;
+					equalizer.legacy8)
+						Equal8="$Value"
+						Equal8_Var="$Var"
+						Equal8_Hertz="14K"
+						;;
+					equalizer.legacy9)
+						Equal9="$Value"
+						Equal9_Var="$Var"
+						Equal9_Hertz="16K"
+						;;
+					*)
+						;;
+				esac
+			done < ${gv_WorkDir}/config
+			#
+			EQUAL_MENU=($Equal_Preamp_Var \"$Equal_Preamp\"
+		   	\"$Equal0_Var $Equal0_Hertz\" \"$Equal0\"
+		   	\"$Equal1_Var $Equal1_Hertz\" \"$Equal1\"
+		   	\"$Equal2_Var $Equal2_Hertz\" \"$Equal2\"
+		   	\"$Equal3_Var $Equal3_Hertz\" \"$Equal3\"
+		   	\"$Equal4_Var $Equal4_Hertz\" \"$Equal4\"
+		   	\"$Equal5_Var $Equal5_Hertz\" \"$Equal5\"
+		   	\"$Equal6_Var $Equal6_Hertz\" \"$Equal6\"
+		   	\"$Equal7_Var $Equal7_Hertz\" \"$Equal7\"
+		   	\"$Equal8_Var $Equal8_Hertz\" \"$Equal8\"
+		   	\"$Equal9_Var $Equal9_Hertz\" \"$Equal9\")
+		else
+			MSG=$(gettext 'Die Datei ${gv_WorkDir}/config ist nicht vorhanden.')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+	}
+	## }}}
+	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
+	read_plugins() {
+		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
+		while read Plugin Char Desc ; do
+			case $Plugin in
+				asx)	# asx playlist Plugin
+					PLS_SUFFIX+=(.asx .ASX)
+					;;
+				cdda)	# CDDA Plugin
+					PLUGIN_CDDA=yes
+					;;
+				curl)	# CDDA Plugin
+					PLUGIN_CURL=yes
+					;;
+				html)	# html playlist Plugin
+					PLS_SUFFIX+=(.html .HTML)
+					;;
+				m3u)	# M3U playlist Plugin
+					PLS_SUFFIX+=(.m3u .M3U)
+					;;
+				pls)	# PLS playlist Plugin
+					PLS_SUFFIX+=(.pls .PLS)
+					;;
+				rss)	# rss playlist Plugin
+					PLS_SUFFIX+=(.rss .rss)
+					;;
+				xspf)	# xspf playlist Plugin
+					PLS_SUFFIX+=(.xspf .XSPF)
+					;;
+			esac
+		done < ${gv_WorkDir}/plugins
+	}
+	## }}}
+	# Funktion (check_local_remote), pruefen ob der xmms2d Server lokal oder remote laeuft# {{{
+	#
+	check_local_remote() {
+		# -I alle Ip-Adressen
+		# -a Alias Rechnernamen
+		if [[ -n $XMMS_PATH ]] ; then
+			LOCAL_IP_ADRESSES="127.0.0.1 `hostname -I`"
+			LOCAL_HOSTNAMES=$(hostname -a)
+			XMMS_HOST=${${XMMS_PATH//*\//}%:*}
+			Ist="`print ${(M)$(print $LOCAL_IP_ADRESSES $LOCAL_HOSTNAMES)##$XMMS_HOST}`"
+			if [[ -n $Ist ]] ; then
+				REMOTE=no
+			else
+				REMOTE=yes
+			fi
+		else
+			REMOTE=no
+		fi
+	}
+	## }}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+
+# Wenn es eine Konf.-Datei gibt einlesen.
+read_conf
+os_check
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration# {{{
+			set +x
+			read_conf
+			autoload -U kwxmms2_conf kwxmms2_config
+			kwxmms2_conf
+			set +x
+			## }}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Player)
+			# Player bedienen# {{{
+			check_local_remote
+			check_status
+			if [[ $SRV_ONLINE == yes ]] ; then
+				list_pls
+				# neue Konfigurationsdatei zum einlesen erstellen
+				server_config
+				# Funktion player_menu{{{
+				#
+				# usage: player_menu [ -o ]
+				# -o - ohne einlesen des Status vom Server
+				#
+				PLAYER_TITLE="$lv_Player"
+				lv_Song=$(gettext 'Lied')
+				lv_Time=$(gettext 'Zeit')
+				lv_Act=$(gettext 'aktualisieren')
+				lv_Player_Choice=$(gettext 'Auswahl')
+				lv_Player_Start=$(gettext 'Start')
+				lv_Player_Pause=$(gettext 'Pause')
+				lv_Player_Stop=$(gettext 'Stop')
+				lv_Player_Next=$(gettext 'naechstes')
+				lv_Player_Prev=$(gettext 'vorheriges')
+				lv_Player_Equalizer=$(gettext 'Equalizer')
+				PLAYER_MENU=($lv_Act \"\" $lv_Player_Equalizer \"\" $lv_Player_Choice \"\"
+			   	$lv_Player_Start \"\" $lv_Player_Pause \"\" $lv_Player_Stop \"\"
+			   	$lv_Player_Next \"\" $lv_Player_Prev \"\" $gv_Back \"\")
+				#
+				player_menu() {
+					if [[ ${argv[1]} == -o ]] ; then
+						PLAYER_MSG="${lv_Playlist}: ${PLS_CURRENT}\n${lv_Song}: $CURRENT_SONG\n$lv_Time: $CURRENT_TIME"
+					else
+						current_song
+						PLAYER_MSG="${lv_Playlist}: ${PLS_CURRENT}\n${lv_Song}: $CURRENT_SONG\n$lv_Time: $CURRENT_TIME"
+					fi
+					if [[ ${#argv} == 2 ]] ; then
+						menubox "$2" "$PLAYER_TITLE" "$PLAYER_MSG" "$PLAYER_MENU"
+					else
+						menubox "$1" "$PLAYER_TITLE" "$PLAYER_MSG" "$PLAYER_MENU"
+					fi
+				}
+				#}}}
+				# Funktion (change_default), aendert den default Wert# {{{
+				# in einer evtl. Datei listsongs
+				change_default() {
+					if [ -f ${gv_WorkDir}/listsongs ] ; then
+						sed -e "s#^default.## ; s#.*$CURRENT_SONG#default $CURRENT_SONG#" ${gv_WorkDir}/listsongs > ${gv_WorkDir}/listsongs_new
+						mv ${gv_WorkDir}/listsongs_new ${gv_WorkDir}/listsongs
+					fi
+				}
+				## }}}
+				#
+				player_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+				    	    # Hilfe Messagebox
+							script_help player_help
+							player_menu
+							;;
+						$lv_Act)
+							# Zeit und Song aktualisieren
+							player_menu $lv_Act
+							;;
+						$lv_Player_Choice)
+							# Musik auswaehlen# {{{
+							list_songs
+							if [ -n "${SONG_LIST_E[1]}" ] ; then
+								# Funktion (songs_menu), Songauswahl# {{{
+								songs_menu() {
+									SONGS_MENU=($SONG_LIST_E)
+									menubox "$DEFAULT_ITEM" "$PLAYER_TITLE" "$gv_Menupoint" "$SONGS_MENU"
+								}
+								## }}}
+								songs_menu
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help player_help
+											songs_menu
+											;;
+										*)
+											# alte Songauswahl erstmal sichern
+											Current_Song_Tmp="${${gv_Auswahl#[0-9]*\ }% *}"
+											if [ "$CURRENT_SONG" != "$Current_Song_Tmp" ] ; then
+												CURRENT_SONG_OLD="$CURRENT_SONG"
+												CURRENT_SONG="$Current_Song_Tmp"
+												CURRENT_SONG_NR="${gv_Auswahl%% *}"
+											else
+												CURRENT_SONG="$Current_Song_Tmp"
+												CURRENT_SONG_NR="${gv_Auswahl%% *}"
+												unset -- CURRENT_SONG_OLD
+											fi
+											break
+											;;
+									esac
+								done
+							else
+								no_songs_msg
+							fi
+							## }}}
+							player_menu -o $lv_Player_Choice
+							;;
+						$lv_Player_Equalizer)
+							# Einstellungen des Equalizer# {{{
+							read_equal_config
+							if [ -n "${EQUAL_MENU[1]}" ] ; then
+								# Funktion player_equal_menu{{{
+								#
+								# usage: player_equal_menu
+								EQUAL_TITLE="$lv_Player_Equalizer"
+								EQUAL_MSG=$(gettext 'Waehlen Sie einen Menuepunkt und geben Sie einen wert von -20 bis 20 ein.')
+								player_equal_menu() {
+									inputmenu "$1" "$PLAYER_TITLE" "$EQUAL_MSG" "$EQUAL_MENU"
+								}
+								#}}}
+								# Funktion (change_equal), zum einstellen des Equalizers# {{{
+								#
+								change_equal() {
+									local Nr
+									Nr=${gv_Auswahl##[a-z.]* }
+									#Nr=${gv_Auswahl##[a-z.]* }
+									if [[ $Nr -le 20 ]] && [[ $Nr -ge -20 ]] ; then
+										nyxmms2 server config ${gv_Auswahl%% *} $Nr || prog_failure
+										# neue Konfigurationsdatei zum einlesen erstellen
+										server_config
+										read_equal_config
+									else
+										no_input_msg
+									fi
+								}
+								## }}}
+								player_equal_menu
+								while [ -n "$gv_Auswahl" ] ; do
+									case $gv_Auswahl in
+										HELP*)
+								    	    # Hilfe Messagebox
+											script_help player_help
+											player_equal_menu
+											;;
+										$Equal_Preamp_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal0_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal1_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal2_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal3_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal4_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal5_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal6_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal7_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal8_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										$Equal9_Var*)
+											# Preamp einstellen
+											change_equal
+											player_equal_menu "${gv_Auswahl% *}"
+											;;
+										*)
+											break
+											;;
+									esac
+								done
+							fi
+							## }}}
+							player_menu $lv_Player_Equalizer
+							;;
+						$lv_Player_Start)
+							# Musik abspielen# {{{
+							if [ -n "$CURRENT_SONG" ] ; then
+								# Status checken und dementsprechend die einzelnen
+								# nyxmms2 Befehle ausfuehren.
+								case "$STATUS_SONG" in
+									Paused|Playing|Stopped)
+										if [ ! -z "$CURRENT_SONG_OLD" ] ; then
+											nyxmms2 jump "$CURRENT_SONG_NR" || prog_failure
+											nyxmms2 play "$CURRENT_SONG_NR" || prog_failure
+											# default in listsongs aendern
+											change_default
+											# CURRENT_SONG_OLD wieder loeschen, wird nicht
+											# mehr benoetigt
+											unset -- CURRENT_SONG_OLD
+										else
+											nyxmms2 play || prog_failure
+										fi
+										;;
+								esac
+							else
+								no_current_songs_msg
+							fi
+							## }}}
+							player_menu $lv_Player_Start
+							;;
+						$lv_Player_Pause)
+							# Musik - Pause
+							nyxmms2 pause || prog_failure
+							player_menu $lv_Player_Pause
+							;;
+						$lv_Player_Stop)
+							# Musik stoppen
+							nyxmms2 stop || prog_failure
+							player_menu $lv_Player_Stop
+							;;
+						$lv_Player_Prev)
+							# vorheriges Lied
+							nyxmms2 prev || prog_failure
+							player_menu $lv_Player_Prev
+							;;
+						$lv_Player_Next)
+							# naechstes Lied
+							nyxmms2 next || prog_failure
+							player_menu $lv_Player_Next
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+			fi
+			## }}}
+			haupt_menue $lv_Player
+			;;
+		$lv_Playlists)
+			# Playlisten bearbeiten# {{{
+			autoload -U kwxmms2_manage_pls
+			kwxmms2_manage_pls
+			## }}}
+			haupt_menue $lv_Playlists
+			;;
+		$lv_Server_Plugins)
+			# vorhandene Plugins anzeigen# {{{
+			check_status
+			if [[ $SRV_ONLINE == yes ]] ; then
+				plugin_support
+				if [ "`wc -l < ${gv_WorkDir}/plugins`" -gt 1 ] ; then
+					PLUGIN_TITLE=$(gettext 'installierte Server Plugins')
+					textbox "$PLUGIN_TITLE" ${gv_WorkDir}/plugins
+				else
+					MSG=$(gettext 'Es sind keine Plugins installiert.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+			fi
+			## }}}
+			haupt_menue $lv_Server_Plugins
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

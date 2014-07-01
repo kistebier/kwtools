@@ -1,0 +1,57 @@
+# Funktion table_conf{{{
+#
+# usage: table_conf FILE
+#
+table_conf() {
+	if [[ ${#argv} == 1 ]] ; then
+		local FILE
+		FILE="$1"
+
+		TABLE_MENU=($gv_Display \"\" $gv_Edit \"\"
+			$lv_Db \"$lv_Db_Create_Reload\" $gv_Back \"\")
+
+		# Funktion tabellen_menue{{{
+		tabellen_menue() {
+			TABLE_TITLE="${lv_Tabs}::${TAB}"
+			menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$TABLE_MENU"
+		}
+		#}}}
+		tabellen_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					# Hilfe	
+					script_help $TAB_HELP
+					tabellen_menue
+					;;
+				$gv_Display)
+					# Ansicht der Eintraege
+					tab_ansicht
+					tabellen_menue $gv_Display
+					;;
+				$gv_Edit)
+					# Eintraege bearbeiten# {{{
+					edit_file "$TABLE_TITLE" "$FILE"
+					## }}}
+					tabellen_menue $gv_Edit
+					;;
+				$lv_Db)
+					# Datenbank neu erzeugen und Postfix anweisen
+					# die Einstellungen neu einzulesen
+					db_new_reread "$TAB_FM" "$FILE"
+					break
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done
+	else
+		no_para_msg "$0"
+	fi
+
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

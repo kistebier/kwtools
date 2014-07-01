@@ -1,0 +1,1348 @@
+# smtp Parameter einstellen{{{
+
+smtp_conf() {
+
+	# Variable
+	SMTP_TITLE="${gv_Configuration}::${lv_Smtp}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)smtp_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion conf_smtp_menu{{{
+	conf_smtp_menu() {
+		SMTP_MENU=(smtp_address_preference \"\$smtp_address_preference\"
+		smtp_always_send_ehlo \"\$smtp_always_send_ehlo\"
+		smtp_bind_address \"\$smtp_bind_address\"
+		smtp_bind_address6 \"\$smtp_bind_address6\"
+		smtp_body_checks \"\$smtp_body_checks\"
+		smtp_cname_overrides_servername \"\$smtp_cname_overrides_servername\"
+		smtp_connect_timeout \"\$smtp_connect_timeout\"
+		smtp_connection_cache_destinations \"\$smtp_connection_cache_destinations\"
+		smtp_connection_cache_on_demand \"\$smtp_connection_cache_on_demand\"
+		smtp_connection_cache_time_limit \"\$smtp_connection_cache_time_limit\"
+		smtp_connection_reuse_time_limit \"\$smtp_connection_reuse_time_limit\"
+		smtp_data_done_timeout \"\$smtp_data_done_timeout\"
+		smtp_data_init_timeout \"\$smtp_data_init_timeout\"
+		smtp_data_xfer_timeout \"\$smtp_data_xfer_timeout\"
+		smtp_defer_if_no_mx_address_found \"\$smtp_defer_if_no_mx_address_found\"
+		smtp_delivery_slot_cost \"\$smtp_delivery_slot_cost\"
+		smtp_delivery_slot_discount \"\$smtp_delivery_slot_discount\"
+		smtp_delivery_slot_loan \"\$smtp_delivery_slot_loan\"
+		smtp_destination_concurrency_failed_cohort_limit \"\$smtp_destination_concurrency_failed_cohort_limit\"
+		smtp_destination_concurrency_limit \"\$smtp_destination_concurrency_limit\"
+		smtp_destination_concurrency_negative_feedback \"\$smtp_destination_concurrency_negative_feedback\"
+		smtp_destination_concurrency_positive_feedback \"\$smtp_destination_concurrency_positive_feedback\"
+		smtp_destination_rate_delay \"\$smtp_destination_rate_delay\"
+		smtp_destination_recipient_limit \"\$smtp_destination_recipient_limit\"
+		smtp_discard_ehlo_keyword_address_maps \"\$smtp_discard_ehlo_keyword_address_maps\"
+		smtp_discard_ehlo_keywords \"\$smtp_discard_ehlo_keywords\"
+		smtp_dns_resolver_options \"\$smtp_dns_resolver_options\"
+		smtp_enforce_tls \"\$smtp_enforce_tls\"
+		smtp_extra_recipient_limit \"\$smtp_extra_recipient_limit\"
+		smtp_fallback_relay \"\$smtp_fallback_relay\"
+		smtp_generic_maps \"\$smtp_generic_maps\"
+		smtp_header_checks \"\$smtp_header_checks\"
+		smtp_helo_name \"\$smtp_helo_name\"
+		smtp_helo_timeout \"\$smtp_helo_timeout\"
+		smtp_host_lookup \"\$smtp_host_lookup\"
+		smtp_initial_destination_concurrency \"\$smtp_initial_destination_concurrency\"
+		smtp_line_length_limit \"\$smtp_line_length_limit\"
+		smtp_mail_timeout \"\$smtp_mail_timeout\"
+		smtp_mime_header_checks \"\$smtp_mime_header_checks\"
+		smtp_minimum_delivery_slots \"\$smtp_minimum_delivery_slots\"
+		smtp_mx_address_limit \"\$smtp_mx_address_limit\"
+		smtp_mx_session_limit \"\$smtp_mx_session_limit\"
+		smtp_nested_header_checks \"\$smtp_nested_header_checks\"
+		smtp_never_send_ehlo \"\$smtp_never_send_ehlo\"
+		smtp_per_record_deadline \"\$smtp_per_record_deadline\"
+		smtp_pix_workaround_delay_time \"\$smtp_pix_workaround_delay_time\"
+		smtp_pix_workaround_maps \"\$smtp_pix_workaround_maps\"
+		smtp_pix_workaround_threshold_time \"\$smtp_pix_workaround_threshold_time\"
+		smtp_pix_workarounds \"\$smtp_pix_workarounds\"
+		smtp_quit_timeout \"\$smtp_quit_timeout\"
+		smtp_quote_rfc821_envelope \"\$smtp_quote_rfc821_envelope\"
+		smtp_randomize_addresses \"\$smtp_randomize_addresses\"
+		smtp_rcpt_timeout \"\$smtp_rcpt_timeout\"
+		smtp_recipient_limit \"\$smtp_recipient_limit\"
+		smtp_recipient_refill_delay \"\$smtp_recipient_refill_delay\"
+		smtp_recipient_refill_limit \"\$smtp_recipient_refill_limit\"
+		smtp_reply_filter \"\$smtp_reply_filter\"
+		smtp_rset_timeout \"\$smtp_rset_timeout\"
+		smtp_sasl_auth_cache_name \"\$smtp_sasl_auth_cache_name\"
+		smtp_sasl_auth_cache_time \"\$smtp_sasl_auth_cache_time\"
+		smtp_sasl_auth_enable \"\$smtp_sasl_auth_enable\"
+		smtp_sasl_auth_soft_bounce \"\$smtp_sasl_auth_soft_bounce\"
+		smtp_sasl_mechanism_filter \"\$smtp_sasl_mechanism_filter\"
+		smtp_sasl_password_maps \"\$smtp_sasl_password_maps\"
+		smtp_sasl_path \"\$smtp_sasl_path\"
+		smtp_sasl_security_options \"\$smtp_sasl_security_options\"
+		smtp_sasl_tls_verified_security_options \"\$smtp_sasl_tls_security_options\"
+		smtp_sasl_type \"\$smtp_sasl_type\"
+		smtp_send_dummy_mail_auth \"\$smtp_send_dummy_mail_auth\"
+		smtp_send_xforward_command \"\$smtp_send_xforward_command\"
+		smtp_sender_dependent_authentication \"\$smtp_sender_dependent_authentication\"
+		smtp_skip_5xx_greeting \"\$smtp_skip_5xx_greeting\"
+		smtp_skip_quit_response \"\$smtp_skip_quit_response\"
+		smtp_starttls_timeout \"\$smtp_starttls_timeout\"
+		smtp_tls_CAfile \"\$smtp_tls_CAfile\"
+		smtp_tls_CApath \"\$smtp_tls_CApath\"
+		smtp_tls_block_early_mail_reply \"\$smtp_tls_block_early_mail_reply\"
+		smtp_tls_cert_file \"\$smtp_tls_cert_file\"
+		smtp_tls_ciphers \"\$smtp_tls_ciphers\"
+		smtp_tls_dcert_file \"\$smtp_tls_dcert_file\"
+		smtp_tls_dkey_file \"\$smtp_tls_dkey_file\"
+		smtp_tls_eccert_file \"\$smtp_tls_eccert_file\"
+		smtp_tls_eckey_file \"\$smtp_tls_eckey_file\"
+		smtp_tls_enforce_peername \"\$smtp_tls_enforce_peername\"
+		smtp_tls_exclude_ciphers \"\$smtp_tls_exclude_ciphers\"
+		smtp_tls_fingerprint_cert_match \"\$smtp_tls_fingerprint_cert_match\"
+		smtp_tls_fingerprint_digest \"\$smtp_tls_fingerprint_digest\"
+		smtp_tls_key_file \"\$smtp_tls_key_file\"
+		smtp_tls_loglevel \"\$smtp_tls_loglevel\"
+		smtp_tls_mandatory_ciphers \"\$smtp_tls_mandatory_ciphers\"
+		smtp_tls_mandatory_exclude_ciphers \"\$smtp_tls_mandatory_exclude_ciphers\"
+		smtp_tls_mandatory_protocols \"\$smtp_tls_mandatory_protocols\"
+		smtp_tls_note_starttls_offer \"\$smtp_tls_note_starttls_offer\"
+		smtp_tls_per_site \"\$smtp_tls_per_site\"
+		smtp_tls_policy_maps \"\$smtp_tls_policy_maps\"
+		smtp_tls_protocols \"\$smtp_tls_protocols\"
+		smtp_tls_scert_verifydepth \"\$smtp_tls_scert_verifydepth\"
+		smtp_tls_secure_cert_match \"\$smtp_tls_secure_cert_match\"
+		smtp_tls_security_level \"\$smtp_tls_security_level\"
+		smtp_tls_session_cache_database \"\$smtp_tls_session_cache_database\"
+		smtp_tls_session_cache_timeout \"\$smtp_tls_session_cache_timeout\"
+		smtp_tls_verify_cert_match \"\$smtp_tls_verify_cert_match\"
+		smtp_use_tls \"\$smtp_use_tls\"
+		smtp_xforward_timeout \"\$smtp_xforward_timeout\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SMTP_MENU"
+	}
+	#}}}
+	conf_smtp_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help smtp_help
+				conf_smtp_menu
+				;;
+			smtp_address_preference)
+				# ipv4, ipv6 oder any, Standard ist = any.# {{{
+				ADDRESS_PREF_MENU=(any \"\" ipv4 \"\" ipv6 \"\")
+				ADDRESS_PREF_MSG=$(gettext 'Waehlen Sie das Internet Protokoll aus.')
+				# Funktion (conf_address_pref)# {{{
+				conf_address_pref() {
+					menubox "$1" "$SMTP_TITLE" "$ADDRESS_PREF_MSG" "$ADDRESS_PREF_MENU"
+				}
+				## }}}
+				conf_address_pref $smtp_address_preference
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*) script_help smtp_help
+							conf_address_pref $smtp_address_preference
+							;;
+						*)	# Auswahl uebernehmen
+							smtp_address_preference="$gv_Auswahl"
+							postconf -e smtp_address_preference="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				check_gv_Auswahl smtp_address_preference "postconf -e smtp_address_preference="any""
+				## }}}
+				conf_smtp_menu smtp_address_preference
+				;;
+			smtp_always_send_ehlo)
+				# Soll sich postfix immer als ESMTP-faehiger Server{{{
+				# indentifizieren?
+				SMTP_ALWAYS_SEND_EHLO_MSG=$(gettext 'Soll sich postfix immer als ESMTP-faehiger Server indentifizieren (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_ALWAYS_SEND_EHLO_MSG"
+				smtp_always_send_ehlo="$WERT"
+				postconf -e smtp_always_send_ehlo="$WERT"
+				#}}}
+				conf_smtp_menu smtp_always_send_ehlo
+				;;
+			smtp_bind_address)
+				# Welche IPv4 Adresse soll fuer ausgehende{{{
+				# Verbindungen genutzt werden
+				SMTP_BIND_ADDRESS_MSG=$(gettext 'Geben Sie die IPv4 Adresse ein, die fuer ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 192.168.0.1).')
+				inputbox "$SMTP_TITLE" "$SMTP_BIND_ADDRESS_MSG" "$smtp_bind_address"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse $gv_Auswahl
+					if [ -n "$gv_Ip_Adr" ] ; then
+						smtp_bind_address="$gv_Ip_Adr"
+						postconf -e smtp_bind_address="$smtp_bind_address"
+					else
+						smtp_bind_address=""
+						postconf -e smtp_bind_address=""
+					fi
+				else
+					smtp_bind_address=""
+					postconf -e smtp_bind_address=""
+				fi
+				#}}}
+				conf_smtp_menu smtp_bind_address
+				;;
+			smtp_bind_address6)
+				# Welche IPv6 Adresse soll fuer ausgehende{{{
+				# Verbindungen genutzt werden
+				SMTP_BIND_ADDRESS6_MSG=$(gettext 'Geben Sie die IPv6 Adresse ein, die fuer ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 2001:240:5c7:0:250:56ff:fe89:1).')
+				inputbox "$SMTP_TITLE" "$SMTP_BIND_ADDRESS6_MSG" "$smtp_bind_address6"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse $gv_Auswahl
+					if [ -n "$gv_Ip_Adr" ] ; then
+						smtp_bind_address6="$gv_Ip_Adr"
+						postconf -e smtp_bind_address6="$smtp_bind_address6"
+					else
+						smtp_bind_address6=""
+						postconf -e smtp_bind_address6=""
+					fi
+				else
+					smtp_bind_address6=""
+					postconf -e smtp_bind_address6=""
+				fi
+				#}}}
+				conf_smtp_menu smtp_bind_address6
+				;;
+			smtp_body_checks)
+				# Tabelle, eine Filterung des Bodies beim versenden einer mail# {{{
+				default_or_input smtp_body_checks tab_support_choice "$gv_Auswahl" $smtp_body_checks
+				smtp_body_checks="$Value"
+				postconf -e smtp_body_checks="$Value"
+				## }}}
+				conf_smtp_menu smtp_body_checks
+				;;
+			smtp_cname_overrides_servername)
+				# Ueberschreiben von Servernamen bei CNAME records erlauben{{{
+				SMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das ueberschreiben der Servernamen, die der SMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_CNAME_OVERRIDES_SERVERNAME_MSG"
+				smtp_cname_overrides_servername="$WERT"
+				postconf -e smtp_cname_overrides_servername="$WERT"
+				## }}}
+				conf_smtp_menu smtp_cname_overrides_servername
+				;;
+			smtp_connect_timeout)
+				# Timeout fuer den Aufbau der Verbindung{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_CONNECT_TIMEOUT_MSG" "$smtp_connect_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_connect_timeout="$NUMBER"
+					postconf -e smtp_connect_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_connect_timeout
+				;;
+			smtp_connection_cache_destinations)
+				# permanentes SMTP Verbindungscaching einschalten{{{
+				SMTP_CONNECTION_CACHE_DESTINATION_MSG=$(gettext 'Soll die SMTP Verbindung permanent gecacht werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_CONNECTION_CACHE_DESTINATION_MSG"
+				smtp_connection_cache_destinations="$WERT"
+				postconf -e smtp_connection_cache_destinations="$WERT"
+				## }}}
+				conf_smtp_menu smtp_connection_cache_destinations
+				;;
+			smtp_connection_cache_on_demand)
+				# Zeitweiliges SMTP Verbindungscaching einschalten{{{
+				SMTP_CONNECTION_CACHE_ON_DEMAND_MSG=$(gettext 'Soll die SMTP Verbindung zeitweilig gecacht werden, wenn ein Ziel ein hohes Mail Aufkommen in der \"active\" Warteschlange hat (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_CONNECTION_CACHE_ON_DEMAND_MSG"
+				smtp_connection_cache_on_demand="$WERT"
+				postconf -e smtp_connection_cache_on_demand="$WERT"
+				## }}}
+				conf_smtp_menu smtp_connection_cache_on_demand
+				;;
+			smtp_connection_cache_time_limit)
+				# Zeit die ein unbenutzter SMTP Client Socket offen gelassen werden soll{{{
+				number_input -s "${smtp_connection_cache_time_limit%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_connection_cache_time_limit="$NUMBER"
+					postconf -e smtp_connection_cache_time_limit="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_connection_cache_time_limit
+				;;
+			smtp_connection_reuse_time_limit)
+				# Zeit zum neubenutzen des Cache bevor die SMTP Sitzung geschlossen wird{{{
+				number_input -s "${smtp_connection_reuse_time_limit%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_connection_reuse_time_limit="$NUMBER"
+					postconf -e smtp_connection_reuse_time_limit="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_connection_reuse_time_limit
+				;;
+			smtp_data_done_timeout)
+				# Timeout nach Übertragung der mail {{{
+				number_input -a "$SMTP_TITLE" "$SMTP_DATA_DONE_TIMEOUT_MSG" "$smtp_data_done_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_data_done_timeout="$NUMBER"
+					postconf -e smtp_data_done_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_data_done_timeout
+				;;
+			smtp_data_init_timeout)
+				# Timeout nach Absendung des SMTP Komandos DATA{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_DATA_INIT_TIMEOUT_MSG" "$smtp_data_init_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_data_init_timeout="$NUMBER"
+					postconf -e smtp_data_init_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_data_init_timeout
+				;;
+			smtp_data_xfer_timeout)
+				# Timeout bei Übertragung einer mail{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_DATA_XFER_TIMEOUT_MSG" "$smtp_data_xfer_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_data_xfer_timeout="$NUMBER"
+					postconf -e smtp_data_xfer_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_data_xfer_timeout
+				;;
+			smtp_defer_if_no_mx_address_found)
+				# Zurueckstellung von mails wenn ein MX record nicht aufgeloest werden kann# {{{
+				SMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurueckgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgeloest werden kann (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
+				smtp_defer_if_no_mx_address_found="$WERT"
+				postconf -e smtp_defer_if_no_mx_address_found="$WERT"
+				## }}}
+				conf_smtp_menu smtp_defer_if_no_mx_address_found
+				;;
+			smtp_delivery_slot_cost)
+				# Standard = $default_delivery_slot_cost# {{{
+				default_or_input smtp_delivery_slot_cost number_input -i $smtp_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					smtp_delivery_slot_cost="$Value"
+					postconf -e smtp_delivery_slot_cost="$Value"
+				fi
+				#	# }}}
+				conf_smtp_menu smtp_delivery_slot_cost
+				;;
+			smtp_delivery_slot_discount)
+				# Standard = $default_delivery_slot_discount# {{{
+				default_or_input smtp_delivery_slot_discount number_input -i $smtp_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					smtp_delivery_slot_discount="$Value"
+					postconf -e smtp_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_delivery_slot_discount
+				;;
+			smtp_delivery_slot_loan)
+				# Standard = $default_delivery_slot_loan# {{{
+				default_or_input smtp_delivery_slot_loan number_input -i $smtp_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					smtp_delivery_slot_loan="$Value"
+					postconf -e smtp_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_delivery_slot_loan
+				;;
+			smtp_destination_concurrency_failed_cohort_limit)
+				# Standard = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input smtp_destination_concurrency_failed_cohort_limit number_input -i $smtp_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					smtp_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e smtp_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_concurrency_failed_cohort_limit
+				;;
+			smtp_destination_concurrency_limit)
+				# Standard = $default_destination_concurrency_limit# {{{
+				default_or_input smtp_destination_concurrency_limit number_input -i $smtp_destination_concurrency_limit
+				if [[ -n $Value ]] ; then
+					smtp_destination_concurrency_limit="$Value"
+					postconf -e smtp_destination_concurrency_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_concurrency_limit
+				;;
+			smtp_destination_concurrency_negative_feedback)
+				# Standard = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input smtp_destination_concurrency_negative_feedback number_input -i $smtp_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					smtp_destination_concurrency_negative_feedback="$Value"
+					postconf -e smtp_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_concurrency_negative_feedback
+				;;
+			smtp_destination_concurrency_positive_feedback)
+				# Standard = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input smtp_destination_concurrency_positive_feedback number_input -i $smtp_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					smtp_destination_concurrency_positive_feedback="$Value"
+					postconf -e smtp_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_concurrency_positive_feedback
+				;;
+			smtp_destination_rate_delay)
+				# Standard = $default_destination_rate_delay# {{{
+				default_or_input smtp_destination_rate_delay number_input '-a "$SMTP_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' $smtp_destination_rate_delay
+				if [[ -n $Value ]] ; then
+					smtp_destination_rate_delay="$Value"
+					postconf -e smtp_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_rate_delay
+				;;
+			smtp_destination_recipient_limit)
+				# max. Anzahl der Empfaenger in einer mail{{{
+				# Standard = $default_destination_recipient_limit
+				default_or_input smtp_destination_recipient_limit number_input -i $smtp_destination_recipient_limit
+				if [[ -n $Value ]] ; then
+					smtp_destination_recipient_limit="$Value"
+					postconf -e smtp_destination_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_destination_recipient_limit
+				;;
+			smtp_discard_ehlo_keyword_address_maps)
+				# Tabelle EHLO Schluesselwoertern{{{
+				tab_support_choice "$gv_Auswahl"
+				smtp_discard_ehlo_keyword_address_maps="$MAPS"
+				postconf -e smtp_discard_ehlo_keyword_address_maps="$MAPS"
+				#}}}
+				conf_smtp_menu smtp_discard_ehlo_keyword_address_maps
+				;;
+			smtp_discard_ehlo_keywords)
+				# EHLO Schluesselwoertern{{{
+				SMTP_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schluesselwoertern (starttls, auth, ...) die der SMTP Client ignorieren soll, bei einer EHLO Antwort von einem entfernten SMTP Server.')
+				inputbox "$SMTP_TITLE" "$SMTP_DISCARD_EHLO_KEYWORDS_MSG" "$smtp_discard_ehlo_keywords"
+				if [ "$gv_Auswahl" ] ; then
+					smtp_discard_ehlo_keywords="$gv_Auswahl"
+					postconf -e smtp_discard_ehlo_keywords="$gv_Auswahl"
+				else
+					smtp_discard_ehlo_keywords=""
+					postconf -e smtp_discard_ehlo_keywords=""
+				fi
+				#}}}
+				conf_smtp_menu smtp_discard_ehlo_keywords
+				;;
+			smtp_dns_resolver_options)
+				# DNS Resolver Optionen# {{{
+				generate_is_file ${smtp_dns_resolver_options//,/}
+				is_value "res_defnames res_dnsrch"
+				#
+				SMTP_DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
+				U_OPT=k
+				checklist "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+				if [[ -n $gv_Auswahl ]] ; then
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help dns_resolver_options_help
+								U_OPT=k
+								checklist "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+								;;
+							*)	# uebernehmen
+								smtp_dns_resolver_options="$gv_Auswahl"
+								postconf -e smtp_dns_resolver_options="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				fi
+				# 
+				check_gv_Auswahl smtp_dns_resolver_options "postconf -e smtp_dns_resolver_options="""
+				## }}}
+				conf_smtp_menu smtp_dns_resolver_options
+				;;
+			smtp_enforce_tls)
+				# SSL/TLS fuer den Versand erzwingen{{{
+				SMTP_ENFORCE_TLS_MSG=$(gettext 'SSL/TLS fuer den Versand erzwingen (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_ENFORCE_TLS_MSG"
+				smtp_enforce_tls="$WERT"
+				postconf -e smtp_enforce_tls="$WERT"
+				#}}}
+				conf_smtp_menu smtp_enforce_tls
+				;;
+			smtp_extra_recipient_limit)
+				# = $default_extra_recipient_limit# {{{
+				default_or_input smtp_extra_recipient_limit number_input -i $smtp_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					smtp_extra_recipient_limit="$Value"
+					postconf -e smtp_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_extra_recipient_limit
+				;;
+			smtp_fallback_relay)
+				# Unzustellbare/fehlerhafte Mails werden an diesen Host geschickt{{{
+				FALLBACK_RELAY_MSG=$(gettext 'Geben Sie eine optionale Liste von Rechnern an, an die fehlerhafte, unzustellbare Mails weitergeleitet werden sollen.')
+				inputbox "$MAINCF_TITLE" "$FALLBACK_RELAY_MSG" "${smtp_fallback_relay//\$/\\\$}"
+				if [ -n "$gv_Auswahl" ] ; then
+					smtp_fallback_relay="$gv_Auswahl"
+					postconf -e smtp_fallback_relay="$gv_Auswahl"
+				else
+					smtp_fallback_relay=""
+					postconf -e smtp_fallback_relay=""
+				fi
+				#}}}
+				conf_smtp_menu smtp_fallback_relay
+				;;
+			smtp_generic_maps)
+				# Tabelle zum umschreiben von lokalen zu globalen Adressen# {{{
+				tab_support_choice "$gv_Auswahl"
+				smtp_generic_maps="$MAPS"
+				postconf -e smtp_generic_maps="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_generic_maps
+				;;
+			smtp_header_checks)
+				# Tabelle, eine Filterung des Header beim versenden einer mail# {{{
+				default_or_input smtp_header_checks tab_support_choice "$gv_Auswahl" $smtp_header_checks
+				smtp_header_checks="$Value"
+				postconf -e smtp_header_checks="$Value"
+				## }}}
+				conf_smtp_menu smtp_header_checks
+				;;
+			smtp_helo_name)
+				# Rechnername der in einem SMTP_EHLO oder HELO Kommando gesendet werden soll.{{{
+				SMTP_HELO_NAME_MSG=$(gettext 'Geben Sie den Rechnenamen ein der in einem EHLO oder HELO Kommando gesendet werden soll. Dies kann auch eine Variable sein (z.B.: \$myhostname).')
+				inputbox "$SMTP_TITLE" "$SMTP_HELO_NAME_MSG" "${smtp_helo_name//\$/\\\$}"
+				if [ -n "$gv_Auswahl" ] ; then
+					smtp_helo_name="$gv_Auswahl"
+					postconf -e smtp_helo_name="$gv_Auswahl"
+				else
+					smtp_helo_name=""
+					postconf -e smtp_helo_name=""
+				fi
+				#}}}
+				conf_smtp_menu smtp_helo_name
+				;;
+			smtp_helo_timeout)
+				# Timeout nach Absendung des SMTP Komandos EHLO/HELO{{{
+				SMTP_HELO_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Absenden des Kommandos EHLO/HELO ein (Standard 300s).')
+				number_input -a "$SMTP_TITLE" "$SMTP_HELO_TIMEOUT_MSG" "$smtp_helo_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_helo_timeout="$NUMBER"
+					postconf -e smtp_helo_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_helo_timeout
+				;;
+			smtp_host_lookup)
+				# Welchen Mechanismus soll der Client zum nachschauen von Rechner{{{
+				# IP Adressen benutzen (Bsp. dns).
+				# Funktion (smtp_host_lookup_menu)# {{{
+				SMTP_HOST_LOOKUP_MSG=$(gettext 'Welchen Mechanismus soll der Client zum nachschauen von Rechner IP Adressen benutzen (Bsp. dns)')
+				SMTP_HOST_LOOKUP_MENU=(dns \"\" native \"\" dns,native \"\")
+				smtp_host_lookup_menu() {
+					menubox "$1" "$SMTP_TITLE" "$SMTP_HOST_LOOKUP_MSG" "$SMTP_HOST_LOOKUP_MENU" "$smtp_host_lookup"
+				}
+				## }}}
+				smtp_host_lookup_menu "$smtp_host_lookup"
+				while "$gv_Auswahl" ; do
+					case "$gv_Auswahl" in
+						HELP*)
+								# Hilfe
+								script_help smtp_host_lookup_help
+								smtp_host_lookup_menu "$smtp_host_lookup"
+								;;
+							*)
+								# Auswahl uebernehmen.
+								smtp_host_lookup="$gv_Auswahl"
+								postconf -e smtp_host_lookup="$gv_Auswahl"
+								break
+								;;
+					esac
+				done
+				#}}}
+				conf_smtp_menu smtp_host_lookup
+				;;
+			smtp_initial_destination_concurrency)
+				# = $initial_destination_concurrency# {{{
+				default_or_input smtp_initial_destination_concurrency number_input -i $smtp_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					smtp_initial_destination_concurrency="$Value"
+					postconf -e smtp_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_smtp_menu smtp_initial_destination_concurrency
+				;;
+			smtp_line_length_limit)
+				# SMTP Line Laenge einstellen{{{
+				number_input -i "$smtp_line_length_limit"
+				if [ "$NUMBER" ] ; then
+					smtp_line_length_limit="$NUMBER"
+					postconf -e smtp_line_length_limit="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_line_length_limit
+				;;
+			smtp_mail_timeout)
+				# Timeout nach Absendung des SMTP Komandos MAIL FROM:{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_MAIL_TIMEOUT_MSG" "$smtp_mail_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_mail_timeout="$NUMBER"
+					postconf -e smtp_mail_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_mail_timeout
+				;;
+			smtp_mime_header_checks)
+				# Tabelle mit Filtermustern fuer den Mime Header beim versenden einer mail# {{{
+				default_or_input smtp_mime_header_checks tab_support_choice "$gv_Auswahl" $smtp_mime_header_checks
+				smtp_mime_header_checks="$Value"
+				postconf -e smtp_mime_header_checks="$Value"
+				## }}}
+				conf_smtp_menu smtp_mime_header_checks
+				;;
+			smtp_minimum_delivery_slots)
+				# Standard = $default_minimum_delivery_slots# {{{
+				default_or_input smtp_minimum_delivery_slots number_input -i $smtp_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					smtp_minimum_delivery_slots="$Value"
+					postconf -e smtp_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_minimum_delivery_slots
+				;;
+			smtp_mx_address_limit)
+				# Max. Anzahl von MX IP Adressen{{{
+				number_input -i "$smtp_mx_address_limit"
+				if [ "$NUMBER" ] ; then
+					smtp_mx_address_limit="$NUMBER"
+					postconf -e smtp_mx_address_limit="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_mx_address_limit
+				;;
+			smtp_mx_session_limit)
+				# Max. Anzahl von MX IP Adressen{{{
+				number_input -i "$smtp_mx_session_limit"
+				if [ "$NUMBER" ] ; then
+					smtp_mx_session_limit="$NUMBER"
+					postconf -e smtp_mx_session_limit="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_mx_session_limit
+				;;
+			smtp_nested_header_checks)
+				# Tabelle mit Filtermustern der Mailanhaenge Header, beim versenden einer mail# {{{
+				default_or_input smtp_nested_header_checks tab_support_choice "$gv_Auswahl" $smtp_nested_header_checks
+				smtp_nested_header_checks="$Value"
+				postconf -e smtp_nested_header_checks="$Value"
+				## }}}
+				conf_smtp_menu smtp_nested_header_checks
+				;;
+			smtp_never_send_ehlo)
+				# Soll postfix sich nie als ESMTP-faehiger Server{{{
+				# identifizieren?
+				SMTP_NEVER_SEND_EHLO_MSG=$(gettext 'Soll postfix sich nie als ESMTP-faehiger Server identifizieren (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_NEVER_SEND_EHLO_MSG"
+				smtp_never_send_ehlo="$WERT"
+				postconf -e smtp_never_send_ehlo="$WERT"
+				#}}}
+				conf_smtp_menu smtp_never_send_ehlo
+				;;
+			smtp_per_record_deadline)
+				# Standard = no# {{{
+				SMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie koennen das Verhalten der smtp_*_timeout Limits veraendern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_PER_RECORD_DEADLINE_MSG"
+				smtp_per_record_deadline="$WERT"
+				postconf -e smtp_per_record_deadline="$WERT"
+				## }}}
+				conf_smtp_menu smtp_per_record_deadline
+				;;
+			smtp_pix_workaround_delay_time)
+				# Wartezeit fuer einen Fehler in CISCO PIX Firewalls{{{
+				number_input -s "${smtp_pix_workaround_delay_time%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_pix_workaround_delay_time="$NUMBER"
+					postconf -e smtp_pix_workaround_delay_time="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_pix_workaround_delay_time
+				;;
+			smtp_pix_workaround_maps)
+				# Standard ist leer. Tabelle fuer die PIX Workarounds# {{{
+				# (CISCO) PIX Firewall Bugs.
+				tab_support_choice "$gv_Auswahl"
+				smtp_pix_workaround_maps="$MAPS"
+				postconf -e smtp_pix_workaround_maps="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_pix_workaround_maps
+				;;
+			smtp_pix_workaround_threshold_time)
+				# Wartezeit einer mail in der Queue, bevor postfix{{{
+				# davon ausgeht das die CISCO PIX Firewall fehlerhaft ist
+				number_input -s "${smtp_pix_workaround_threshold_time%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_pix_workaround_threshold_time="$NUMBER"
+					postconf -e smtp_pix_workaround_threshold_time="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_pix_workaround_threshold_time
+				;;
+			smtp_pix_workarounds)
+				# Standard = disable_esmtp,delay_dotcrlf# {{{
+				# Aktiviert einzelne PIX Workarounds, um Bugs in (CISCO)
+				# PIX-Proxys auszugleichen.
+				autoload -U pix_workarounds
+				pix_workarounds "$SMTP_TITLE" "$smtp_pix_workarounds"
+				smtp_pix_workarounds="$VALUE"
+				postconf -e smtp_pix_workarounds="$VALUE"
+				## }}}
+				conf_smtp_menu smtp_pix_workarounds
+				;;
+			smtp_quit_timeout)
+				# Timeout nach Übertragung des SMTP Komandos QUIT{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_QUIT_TIMEOUT_MSG" "$smtp_quit_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_quit_timeout="$NUMBER"
+					postconf -e smtp_quit_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_quit_timeout
+				;;
+			smtp_quote_rfc821_envelope)
+				# Sollen die Adressen im SMTP MAIL FROM und RCPT TO Kommando gequotet werden# {{{
+				SMTP_QUOTE_RFC821_ENVELOPE_MSG=$(gettext 'Sollen die Adressen im SMTP MAIL FROM und RCPT TO Kommando gequotet werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_QUOTE_RFC821_ENVELOPE_MSG"
+				smtp_quote_rfc821_envelope="$WERT"
+				postconf -e smtp_quote_rfc821_envelope="$WERT"
+				## }}}
+				conf_smtp_menu smtp_quote_rfc821_envelope
+				;;
+			smtp_randomize_addresses)
+				# Reihenfolge der envelope Adressen mixen?{{{
+				SMTP_RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_RANDOMIZE_ADDRESSES_MSG"
+				smtp_randomize_addresses="$WERT"
+				postconf -e smtp_randomize_addresses="$WERT"
+				#}}}
+				conf_smtp_menu smtp_randomize_addresses
+				;;
+			smtp_rcpt_timeout)
+				# Timeout nach Übertragung des SMTP Komandos RCPT TO:{{{
+				number_input -a "$SMTP_TITLE" "$SMTP_RCPT_TIMEOUT_MSG" "$smtp_rcpt_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_rcpt_timeout="$NUMBER"
+					postconf -e smtp_rcpt_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_rcpt_timeout
+				;;
+			smtp_recipient_limit)
+				# Standard = $default_recipient_limit# {{{
+				default_or_input smtp_recipient_limit number_input -i $smtp_recipient_limit
+				if [[ -n $Value ]] ; then
+					smtp_recipient_limit="$Value"
+					postconf -e smtp_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_recipient_limit
+				;;
+			smtp_recipient_refill_delay)
+				# Standard = $default_recipient_refill_delay# {{{
+				default_or_input smtp_recipient_refill_delay number_input -s ${smtp_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					smtp_recipient_refill_delay="$Value"
+					postconf -e smtp_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_recipient_refill_delay
+				;;
+			smtp_recipient_refill_limit)
+				# Standard = $default_recipient_refill_limit# {{{
+				default_or_input smtp_recipient_refill_limit number_input -i $smtp_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					smtp_recipient_refill_limit="$Value"
+					postconf -e smtp_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_smtp_menu smtp_recipient_refill_limit
+				;;
+			smtp_reply_filter)
+				# Tabelle, eine Filterung zum korrigieren des Reply Headers# {{{
+				# Standard ist = nichts
+				tab_support_choice $gv_Auswahl
+				smtp_reply_filter="$MAPS"
+				postconf -e smtp_reply_filter="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_reply_filter
+				;;
+			smtp_rset_timeout)
+				# Timeout nach Übertragung des SMTP Komandos RSET TO:{{{
+				number_input -s "${smtp_rset_timeout%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_rset_timeout="$NUMBER"
+					postconf -e smtp_rset_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_rset_timeout
+				;;
+			smtp_sasl_auth_cache_name)
+				# Einstellung muss mit proxy: beginnen.# {{{
+				# Standard ist nichts.
+				tab_support_choice $gv_Auswahl
+				if [[ -n $MAPS ]] ; then
+					case "$MAPS" in
+						[!proxy:]*)
+							MAPS="proxy:${MAPS}"
+							;;
+						*)	# nichts tun
+							;;
+					esac
+				fi
+				smtp_sasl_auth_cache_name="$MAPS"
+				postconf -e smtp_sasl_auth_cache_name="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_sasl_auth_cache_name
+				;;
+			smtp_sasl_auth_cache_time)
+				# Maximale Alter der smtp_sasl_auth_cache_name Eintraegen# {{{
+				# bis sie geloescht werden. Standard = 90d.
+				number_input -d "${smtp_sasl_auth_cache_time%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_sasl_auth_cache_time="$NUMBER"
+					postconf -e smtp_sasl_auth_cache_time="$NUMBER"
+				fi
+				## }}}
+				conf_smtp_menu smtp_sasl_auth_cache_time
+				;;
+			smtp_sasl_auth_enable)
+				# SMTP-Auth Identifierzierung bei ausgehenden{{{
+				# Verbindungen aktivieren
+				SMTP_SASL_AUTH_ENABLE_MSG=$(gettext 'SMTP-AUTH Identifierzierung aktivieren (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SASL_AUTH_ENABLE_MSG"
+				smtp_sasl_auth_enable="$WERT"
+				postconf -e smtp_sasl_auth_enable="$WERT"
+				#}}}
+				conf_smtp_menu smtp_sasl_auth_enable
+				;;
+			smtp_sasl_auth_soft_bounce)
+				# Standard = yes# {{{
+				SMTP_SASL_AUTH_SOFT_BOUNCE_MSG=$(gettext 'Falls eine SMTP-AUTH Identifierzierung mit dem Fehlercode 535 abgelehnt wird kann die Mailzustellung aufgeschoben werden oder die Mail als unzustellbar gekennzeichnet werden.\n\nSoll die Mailzustellung aufgeschoben werden (ja/nein)?.')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SASL_AUTH_SOFT_BOUNCE_MSG"
+				smtp_sasl_auth_soft_bounce="$WERT"
+				postconf -e smtp_sasl_auth_soft_bounce="$WERT"
+				## }}}
+				conf_smtp_menu smtp_sasl_auth_soft_bounce
+				;;
+			smtp_sasl_mechanism_filter)
+				# Auswahl der zu beruecksichtigen SASL Mechanismen# {{{
+				generate_is_file "${smtp_sasl_mechanism_filter//,/}"
+				is_value "anonymous plain login cram-md5 digest-md5 ntlm"
+				#
+				SMTP_SASL_MECHANISM_MSG=$(gettext 'Waehlen Sie bitte die Mechanismen die erlaubt werden sollen')
+				U_OPT=k
+				checklist "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help smtp_help
+							U_OPT=k
+							checklist "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+							;;
+						*)
+							smtp_sasl_mechanism_filter="$gv_Auswahl"
+							postconf -e smtp_sasl_mechanism_filter="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#
+				check_gv_Auswahl smtp_sasl_mechanism_filter "postconf -e smtp_sasl_mechanism_filter="""
+				## }}}
+				conf_smtp_menu smtp_sasl_mechanism_filter
+				;;
+			smtp_sasl_password_maps)
+				# Tabelle mit Passwoertern fuer ausgehende{{{
+				# SMTP_AUTH Verbindungen.
+				tab_support_choice "$gv_Auswahl"
+				smtp_sasl_password_maps="$MAPS"
+				postconf -e smtp_sasl_password_maps="$MAPS"
+				#}}}
+				conf_smtp_menu smtp_sasl_password_maps
+				;;
+			smtp_sasl_path)
+				# Standard = # {{{
+				#############################
+				# INFO:
+				# Konfigurationsdatei oder Treffpunkt
+				#############################
+				SMTPD_SASL_PATH_MSG=$(gettext 'Geben Sie den Pfad zum SASL-Socket fuer bestimmete SASL-Implementationen wie Dovecot ein. Siehe auch dem Punkt smtp_sasl_type.')
+				inputbox "$SMTPD_TITLE" "$SMTPD_SASL_PATH_MSG" "$smtp_sasl_path"
+				if [ -n "$gv_Auswahl" ] ; then
+					smtp_sasl_path="$gv_Auswahl"
+					postconf -e smtp_sasl_path="$gv_Auswahl"
+				else
+					smtp_sasl_path=""
+					postconf -e smtp_sasl_path=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_sasl_path
+				;;
+			smtp_sasl_security_options)
+				# zulaessige SMTP-AUTH Identifierzierungsmethoden{{{
+				# Standard = noplaintext, noanonymous
+				mail_mechanism
+				if [ "$WERT" ] ; then
+					smtp_sasl_security_options="$WERT"
+					postconf -e smtp_sasl_security_options="$WERT"
+				else
+					smtp_sasl_security_options="noplaintext, noanonymous"
+					postconf -e smtp_sasl_security_options="noplaintext, noanonymous"
+				fi
+				#}}}
+				conf_smtp_menu smtp_sasl_security_options
+				;;
+			smtp_sasl_tls_security_options)
+				# zulaessige SMTP-AUTH Identifierzierungsmethoden,{{{
+				# bei TLS.
+				# Standard = $smtp_sasl_security_options
+				mail_mechanism
+				if [ "$WERT" ] ; then
+					smtp_sasl_tls_security_options="$WERT"
+					postconf -e smtp_sasl_tls_security_options="$WERT"
+				else
+					smtp_sasl_tls_security_options="\$smtp_sasl_security_options"
+					postconf -e smtp_sasl_tls_security_options="\$smtp_sasl_security_options"
+				fi
+				#}}}
+				conf_smtp_menu smtp_sasl_tls_security_options
+				;;
+			smtp_sasl_tls_verified_security_options)
+				# Standard = $smtp_sasl_tls_security_options# {{{
+				mail_mechanism
+				if [ "$WERT" ] ; then
+					smtp_sasl_tls_verified_security_options="$WERT"
+					postconf -e smtp_sasl_tls_verified_security_options="$WERT"
+				else
+					smtp_sasl_tls_verified_security_options="\$smtp_sasl_tls_security_options"
+					postconf -e smtp_sasl_tls_verified_security_options="\$smtp_sasl_tls_security_options"
+				fi
+				## }}}
+				conf_smtp_menu smtp_sasl_tls_verified_security_options
+				;;
+			smtp_sasl_type)
+				# Standard = cyrus, siehe postconf -A# {{{
+				SMTP_SASL_TYPE_MSG=$(gettext 'Waehlen Sie ein SASL Plugin mit der sich der Postfix SMTP Client authentifizieren soll aus.')
+				sasl_types -A "$SMTP_TITLE" "$SMTP_SASL_TYPE_MSG" "$smtp_sasl_type"
+				if [[ -n $WERT ]] ; then
+					smtp_sasl_type="$WERT"
+					postconf -e smtp_sasl_type="$WERT"
+				else
+					smtp_sasl_type="cyrus"
+					postconf -e smtp_sasl_type="cyrus"
+				fi
+				## }}}
+				conf_smtp_menu smtp_sasl_type
+				;;
+			smtp_send_dummy_mail_auth)
+				# Standard = no# {{{
+				SMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der SMTP-AUTH Identifierzierung die AUTH=<> Optionen anhaengen.\n\nSoll dies geschehen(ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SEND_DUMMY_MAIL_AUTH_MSG"
+				smtp_send_dummy_mail_auth="$WERT"
+				postconf -e smtp_send_dummy_mail_auth="$WERT"
+				## }}}
+				conf_smtp_menu smtp_send_dummy_mail_auth
+				;;
+			smtp_send_xforward_command)
+				# XFORWARD Komando senden{{{
+				SMTP_SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SEND_XFORWARD_CMD_MSG"
+				smtp_send_xforward_command="$WERT"
+				postconf -e smtp_send_xforward_command="$WERT"
+				#}}}
+				conf_smtp_menu smtp_send_xforward_command
+				;;
+			smtp_sender_dependent_authentication)
+				# Standard ist = no.# {{{
+				SMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier koennen Sie die Authentifizierung des Postfix Clients mittels SMTP_AUTH aktivieren. Dabei wird der SMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SENDER_DEP_AUTH_MSG"
+				smtp_sender_dependent_authentication="$WERT"
+				postconf -e smtp_sender_dependent_authentication="$WERT"
+				## }}}
+				conf_smtp_menu smtp_sender_dependent_authentication
+				;;
+			smtp_skip_5xx_greeting)
+				# Begruessungstext bei SMTP_Code 5xx{{{
+				# (dauerhafter Fehler) ignorieren?
+				SMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begruessungstext bei SMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SKIP_5XX_GREETING_MSG"
+				smtp_skip_5xx_greeting="$WERT"
+				postconf -e smtp_skip_5xx_greeting="$WERT"
+				#}}}
+				conf_smtp_menu smtp_skip_5xx_greeting
+				;;
+			smtp_skip_quit_response)
+				# Trennung ohne warten auf Antwort nach dem{{{
+				# SMTP Kommando QUIT
+				SMTP_SKIP_QUIT_RESPONSE_MSG=$(gettext 'Trennung ohne warten auf Antwort nach dem SMTP Kommando QUIT (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SKIP_QUIT_RESPONSE_MSG"
+				smtp_skip_quit_response="$WERT"
+				postconf -e smtp_skip_quit_response="$WERT"
+				#}}}
+				conf_smtp_menu smtp_skip_quit_response
+				;;
+			smtp_starttls_timeout)
+				# Timeout von starttls{{{
+				number_input -s "${smtp_starttls_timeout%?}"
+				if [ "$NUMBER" ] ; then
+					smtp_starttls_timeout="$NUMBER"
+					postconf -e smtp_starttls_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_starttls_timeout
+				;;
+			smtp_tls_CAfile)
+				# Datei mit den CAs denen dieser Server vertraut, für die Signatur#{{{
+				# von Clientzertifikaten.
+				tls_file_choice 
+				smtp_tls_CAfile="$WERT"
+				postconf -e smtp_tls_CAfile="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_CAfile
+				;;
+			smtp_tls_CApath)
+				# Verzeichnis in dem die Zertifikate liegen, fuer#{{{
+				# eingehende Mails. Diese werden dann mit den Rechten des Mail 
+				# Servers gelesen. 
+				dselect "$smtp_tls_CApath"
+				if [ "$VERZ" ] ; then
+					dselect_check "$VERZ"
+					if [ "$VERZ" ] ; then
+						smtp_tls_CApath="$VERZ"
+						postconf -e smtp_tls_CApath="$VERZ"
+					else
+						smtp_tls_CApath=""
+						postconf -e smtp_tls_CApath=""
+					fi
+				fi
+				#}}}
+				conf_smtp_menu smtp_tls_CApath
+				;;
+			smtp_tls_block_early_mail_reply)
+				# Standard = no# {{{
+				SMTP_TLS_BLOCK_EMR_MSG=$(gettext 'Soll der SMTP Server versuchen eine Mail Hjacking Attacke zu erkennen (ja/nein)? Dies basiert auf der Schwachstelle im TLS Protokoll (CVE-2009-3555).')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_TLS_BLOCK_EMR_MSG"
+				smtp_tls_block_early_mail_reply="$WERT"
+				postconf -e smtp_tls_block_early_mail_reply="$WERT"
+				## }}}
+				conf_smtp_menu smtp_tls_block_early_mail_reply
+				;;
+			smtp_tls_cert_file)
+				# Auswahl der TLS Schluessel Dateien{{{
+				tls_file_choice 
+				smtp_tls_cert_file="$WERT"
+				postconf -e smtp_tls_cert_file="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_cert_file
+				;;
+			smtp_tls_ciphers)
+				# Standard = export# {{{
+				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
+				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				tls_ciphers "$smtp_tls_ciphers"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_ciphers="$WERT"
+					postconf -e smtp_tls_ciphers="$WERT"
+				else
+					smtp_tls_ciphers="export"
+					postconf -e smtp_tls_ciphers="export"
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_ciphers
+				;;
+			smtp_tls_dcert_file)
+				# Auswahl der TLS Schluessel Dateien{{{
+				tls_file_choice 
+				smtp_tls_dcert_file="$WERT"
+				postconf -e smtp_tls_dcert_file="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_dcert_file
+				;;
+			smtp_tls_dkey_file)
+				# Auswahl der TLS Schluessel Dateien{{{
+				default_or_input smtp_tls_dkey_file tls_file_choice 
+				smtp_tls_dkey_file="$WERT"
+				postconf -e smtp_tls_dkey_file="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_dkey_file
+				;;
+			smtp_tls_eccert_file)
+				# Datei mit dem Postfix SMTP client ECDSA Zertifikat im PEM Format.# {{{
+				# Diese Datei beinhaltet den Postfix SMTP Client ECDSA privaten Schluessel.
+				# Bsp.: /etc/postfix/ecdsa-ccert.pem
+				tls_file_choice 
+				smtp_tls_eccert_file="$WERT"
+				postconf -e smtp_tls_eccert_file="$WERT"
+				## }}}
+				conf_smtp_menu smtp_tls_eccert_file
+				;;
+			smtp_tls_eckey_file)
+				# Standard ist = $smtp_tls_eccert_file# {{{
+				default_or_input smtp_tls_eckey_file tls_file_choice 
+				smtp_tls_eckey_file="$WERT"
+				postconf -e smtp_tls_eckey_file="$WERT"
+				## }}}
+				conf_smtp_menu smtp_tls_eckey_file
+				;;
+			smtp_tls_enforce_peername)
+				# smtp_tls_enforce_peername aktivieren{{{
+				SMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte SMTP Server die Informationen, fuer Rechnernamen im Zertifikat suchen (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_TLS_ENFORCE_PEERNAME_MSG"
+				smtp_tls_enforce_peername="$WERT"
+				postconf -e smtp_tls_enforce_peername="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_enforce_peername
+				;;
+			smtp_tls_exclude_ciphers)
+				# Standard = # {{{
+				# Liste der Verschluesselung oder Verschluesselungstypen
+				# die von der Postfix SMTP Client Verschluesselungliste
+				# aller TLS Sicherheitslevel ausgeschlossen werden.
+				tls_exclude_ciphers "$smtp_tls_exclude_ciphers"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_exclude_ciphers="$WERT"
+					postconf -e smtp_tls_exclude_ciphers="$WERT"
+				else
+					smtp_tls_exclude_ciphers=""
+					postconf -e smtp_tls_exclude_ciphers=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_exclude_ciphers
+				;;
+			smtp_tls_fingerprint_cert_match)
+				# Eingabe von Fingerprints# {{{
+				autoload -U tls_fingerprint_cert_match
+				tls_fingerprint_cert_match "$SMTP_TITLE" "$smtp_tls_fingerprint_cert_match"
+				if [ -n "$Value" ] ; then
+					smtp_tls_fingerprint_cert_match="$Value"
+				else
+					smtp_tls_fingerprint_cert_match=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_fingerprint_cert_match
+				;;
+			smtp_tls_fingerprint_digest)
+				# Client Fingerprint auswaehlen (md5)# {{{
+				# Die Nachricht ueber den Algorithmus zum einrichten eines
+				# entfernten Client-Zertifikates Fingerprints oder den Fingerprint
+				# des oeffentlichen Schluessel fuer die Parameter
+				# check_ccert_access and permit_tls_clientcerts. Der Standard Algorithmus
+				# \"md5\" ist fuer die Rueckwaertskompalitaet mit Postfix Release <=2.5.
+				# Standard = md5
+				tls_fingerprint_digest smtp_help $smtp_tls_fingerprint_digest
+				smtp_tls_fingerprint_digest="$WERT"
+				postconf -e smtp_tls_fingerprint_digest="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_fingerprint_digest
+				;;
+			smtp_tls_key_file)
+				# Auswahl der TLS Schluessel Dateien{{{
+				# Standard = $smtp_tls_cert_file
+				default_or_input smtp_tls_key_file tls_file_choice
+				smtp_tls_key_file="$WERT"
+				postconf -e smtp_tls_key_file="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_key_file
+				;;
+			smtp_tls_loglevel)
+				# Loglevel auswaehlen{{{
+				# Standard = 0
+				loglevel $smtp_tls_loglevel
+				smtp_tls_loglevel="$WERT"
+				postconf -e smtp_tls_loglevel="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_loglevel
+				;;
+			smtp_tls_mandatory_ciphers)
+				# Standard = medium# {{{
+				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
+				# Postfix Client benutzt soll.
+				tls_ciphers "$smtp_tls_mandatory_ciphers"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_mandatory_ciphers="$WERT"
+					postconf -e smtp_tls_mandatory_ciphers="$WERT"
+				else
+					smtp_tls_mandatory_ciphers="medium"
+					postconf -e smtp_tls_mandatory_ciphers="medium"
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_mandatory_ciphers
+				;;
+			smtp_tls_mandatory_exclude_ciphers)
+				# Standard = # {{{
+				# Liste der Verschluesselung oder Verschluesselungstypen
+				# die von der Postfix SMTP Client Verschluesselungliste
+				# aller TLS Sicherheitslevel ausgeschlossen werden.
+				tls_exclude_ciphers "$smtp_tls_mandatory_exclude_ciphers"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_mandatory_exclude_ciphers="$WERT"
+					postconf -e smtp_tls_mandatory_exclude_ciphers="$WERT"
+				else
+					smtp_tls_mandatory_exclude_ciphers=""
+					postconf -e smtp_tls_mandatory_exclude_ciphers=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_mandatory_exclude_ciphers
+				;;
+			smtp_tls_mandatory_protocols)
+				# Standard = SSLv3, TLSv1# {{{
+				# SSLv1, SSLv2, TLSv1
+				# bei openssl >=1.0.1
+				# SSLv1, SSLv2, TLSv1, TLSv1.1, TLSv1.2
+				tls_protocols "${${${smtp_tls_mandatory_protocols}//,/}//;/}"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_mandatory_protocols="$WERT"
+					postconf -e smtp_tls_mandatory_protocols="$WERT"
+				else
+					smtp_tls_mandatory_protocols=""
+					postconf -e smtp_tls_mandatory_protocols=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_mandatory_protocols
+				;;
+			smtp_tls_note_starttls_offer)
+				# smtp_tls_note_starttls_offer aktivieren{{{
+				SMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten SMTP Server geloggt werden, falls TLS nicht fuer diesen Server aktiviert ist (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_TLS_NOTE_STARTTLS_OFFER_MSG"
+				smtp_tls_note_starttls_offer="$WERT"
+				postconf -e smtp_tls_note_starttls_offer="$WERT"
+				#}}}
+				conf_smtp_menu smtp_tls_note_starttls_offer
+				;;
+			smtp_tls_per_site)
+				# Tabelle fuer die Regeln der TLS Benutzung{{{
+				tab_support_choice "$gv_Auswahl"
+				smtp_tls_per_site="$MAPS"
+				postconf -e smtp_tls_per_site="$MAPS"
+				#}}}
+				conf_smtp_menu smtp_tls_per_site
+				;;
+			smtp_tls_policy_maps)
+				# Tabelle mit den Policies fuer das Versenden von mails# {{{
+				# (SMTP_AUTH)
+				tab_support_choice "$gv_Auswahl"
+				smtp_tls_policy_maps="$MAPS"
+				postconf -e smtp_tls_policy_maps="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_tls_policy_maps
+				;;
+			smtp_tls_protocols)
+				# Standard = !SSLv2# {{{
+				# SSLv1, SSLv2, TLSv1
+				# bei openssl >=1.0.1
+				# SSLv1, SSLv2, TLSv1, TLSv1.1, TLSv1.2
+				tls_protocols "${${${smtp_tls_protocols}//,/}//;/}"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_protocols="$WERT"
+					postconf -e smtp_tls_protocols="$WERT"
+				else
+					smtp_tls_protocols=""
+					postconf -e smtp_tls_protocols=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_protocols
+				;;
+			smtp_tls_scert_verifydepth)
+				# smtp_tls_scert_verifydepth{{{
+				number_input -i "$smtp_tls_scert_verifydepth"
+				if [ "$NUMBER" ] ; then
+					smtp_tls_scert_verifydepth="$WERT"
+					postconf -e smtp_tls_scert_verifydepth="$WERT"
+				fi
+				#}}}
+				conf_smtp_menu smtp_tls_scert_verifydepth
+				;;
+			smtp_tls_secure_cert_match)
+				# Wie soll der Client die Server Zertifikate überprüfen# {{{
+				# Standard = nexthop, dot-nexthop
+				cert_match "$smtp_tls_secure_cert_match"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_secure_cert_match="$WERT"
+					postconf -e smtp_tls_secure_cert_match="$WERT"
+				else
+					smtp_tls_secure_cert_match="nexthop, dot-nexthop"
+					postconf -e smtp_tls_secure_cert_match="nexthop, dot-nexthop"
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_secure_cert_match
+				;;
+			smtp_tls_security_level)
+				# Standard ist = leer# {{{
+				tls_security_level smtp "$smtp_tls_security_level"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_security_level="$WERT"
+					postconf -e smtp_tls_security_level="$WERT"
+				else
+					smtp_tls_security_level=""
+					postconf -e smtp_tls_security_level=""
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_security_level
+				;;
+			smtp_tls_session_cache_database)
+				# Tabelle des Session Cache# {{{
+				tab_support_choice "$gv_Auswahl"
+				smtp_tls_session_cache_database="$MAPS"
+				postconf -e smtp_tls_session_cache_database="$MAPS"
+				## }}}
+				conf_smtp_menu smtp_tls_session_cache_database
+				;;
+			smtp_tls_session_cache_timeout)
+				# smtp_tls_session_cache_timeout{{{
+				number_input -s "${smtp_tls_session_cache_timeout%?}"
+				if [ -n "$NUMBER" ] ; then
+					smtp_tls_session_cache_timeout="$NUMBER"
+					postconf -e smtp_tls_session_cache_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_tls_session_cache_timeout
+				;;
+			smtp_tls_verify_cert_match)
+				# Wie soll der Client die Server Zertifikate überprüfen# {{{
+				# Standard = hostname
+				cert_match "$smtp_tls_verifiy_cert_match"
+				if [[ -n $WERT ]] ; then
+					smtp_tls_verifiy_cert_match="$WERT"
+					postconf -e smtp_tls_verifiy_cert_match="$WERT"
+				else
+					smtp_tls_verifiy_cert_match="hostname"
+					postconf -e smtp_tls_verifiy_cert_match="hostname"
+				fi
+				## }}}
+				conf_smtp_menu smtp_tls_verify_cert_match
+				;;
+			smtp_use_tls)
+				# tls fuer eingehende Verbindungen aktivieren{{{
+				SMTP_USE_TLS_MSG=$(gettext 'Soll TLS benutzt werden, falls ein entfernter SMTP Server STARTTLS anbietet (ja/nein)?')
+				ja_nein_tausch "$SMTP_TITLE" "$SMTP_USE_TLS_MSG"
+				smtp_use_tls="$WERT"
+				postconf -e smtp_use_tls="$WERT"
+				#}}}
+				conf_smtp_menu smtp_use_tls
+				;;
+			smtp_xforward_timeout)
+				# Timeout fuer das senden eines XFORWARD Kommandos {{{
+				number_input -a "$SMTP_TITLE" "$SMTP_XFORWARD_TIMEOUT_MSG" "$smtp_xforward_timeout"
+				if [ "$NUMBER" ] ; then
+					smtp_xforward_timeout="$NUMBER"
+					postconf -e smtp_xforward_timeout="$NUMBER"
+				fi
+				#}}}
+				conf_smtp_menu smtp_xforward_timeout
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

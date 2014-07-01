@@ -1,0 +1,159 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwnetcardconf, Konfiguriert ihre Netzwerkkarten und deren
+#	      IP Adressen. Zur Zeit nur WLAN und Ethernet. DSL wird noch
+#	      nicht konfiguriert, dazu ist pppoeconf zustaendig.
+#
+# Version: 0.1.14
+
+trap 'setterm -inversescreen off ; setterm -reset ; rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+autoload -U dhcp manual_netconf net_config
+
+# Funktion Hauptmenue{{{
+haupt_menue() {
+	MAIN_MENU=($DEVICE_LIST $gv_Exit \"\")
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+
+##################################################################
+#
+# Hauptprogramm
+#
+###################################################################
+#
+# Ist keine Karte vorhanden wird abgebrochen.
+hw_conf
+netcard
+if [ -z "$DEVICE_LIST" ] ; then
+	no_netcard_msg
+	exit 0
+fi
+#
+# Variablen
+NETCONF_TMP="${gv_WorkDir}/netconf"
+
+os_check
+case "$OS" in
+	centos|fedora|SUSE)
+		if_conf_prog "$OS" net
+		exit 0
+		;;
+esac
+#
+net_conf
+haupt_menue "$NR"
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+	        #
+			script_help help
+			haupt_menue "$NR"
+			;;
+		[0-9]*)
+			# Karte konfigurieren# {{{
+			NR="$gv_Auswahl"
+			unset -- STARTMODE
+			lv_Manual=$(gettext 'manuell')
+			lv_Dhcp=$(gettext 'dhcp')
+			#
+			ETH=${${${(ws: :)${DEVICE_LIST[gv_Auswahl]}}[2]}%%_*}
+			MAC_ADR=${MAC[gv_Auswahl]}
+			# Konfigurationsdateien herraus finden
+			if_conf_file "$OS" net
+			#
+			# Wireless Lan Option konfigurieren?# {{{
+			#
+			if [ "${ETH%%[0-9]}" = wlan ] ; then
+				autoload -U read_wlan_option wlan_opt_conf
+				IWDRIVER=${DRIVER[gv_Auswahl]}
+				# Frage soll oder nicht.
+				WLOPT_MSG=$(gettext 'Wollen Sie die Optionen ihrer WLAN-Karte einstellen (ja/nein)?')
+				yesno "$gv_Configuration" "$WLOPT_MSG" "yes"
+				if [ "$gv_Auswahl" != no ] ; then
+					read_wlan_option
+					wlan_opt_conf
+				fi
+			fi
+			## }}}
+			# Über dhcp (falls installiert) oder manuell konfigurieren
+			#
+			unset -- CONF_MENU
+			DHCLIENT="$(readlink -f `which dhclient`)"
+			if [ -x "$DHCLIENT" ] ; then
+				CONF_MENU=($lv_Dhcp \"\" $lv_Manual \"\" $gv_Back \"\")
+			else
+				unset -- CONF_MENU
+			fi
+			#
+			if [ -z "$CONF_MENU" ] ; then
+				manual_netconf
+			else
+				CONF_MSG=$(gettext 'Waehlen Sie eine Konfigurationsart aus.')
+				menubox "" "$gv_Configuration" "$CONF_MSG" "$CONF_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)	script_help netartauswahl_help
+							menubox "" "$gv_Configuration" "$CONF_MSG" "$CONF_MENU"
+							;;
+						$lv_Dhcp)
+							# ueber dhcp einstellen
+							dhcp
+							STARTMODE=dhcp
+							net_config
+							break
+							;;
+						$lv_Manual)
+							# manuell einstellen
+							manual_netconf
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+			fi
+			haupt_menue "$NR"
+			# }}}
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

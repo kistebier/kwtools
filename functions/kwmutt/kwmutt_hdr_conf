@@ -1,0 +1,1263 @@
+# Funktion (kwmutt_hdr_conf), erweiterte Konfiguration fuer "mutt"{{{
+#
+# usage: kwmutt_hdr_conf
+#
+kwmutt_hdr_conf() {
+	# Hook-Optionen# {{{
+	SELECT_HOOK_OPT_MENU=(~A \"\" ~B \"\" ~b \"\" ~C \"\" ~c \"\" ~D \"\"
+	~d \"\" ~E \"\" ~e \"\" ~F \"\" ~f \"\" ~G \"\" ~g \"\" ~h \"\" ~k \"\"
+	~i \"\" ~L \"\" ~l \"\" ~m \"\" ~N \"\" ~n \"\" ~O \"\" ~P \"\" ~p \"\"
+	~Q \"\" ~R \"\" ~r \"\" ~S \"\" ~s \"\" ~T \"\" ~t \"\" ~U \"\"
+	~v \"\" ~x \"\" ~y \"\" ~z \"\" ~= \"\")
+	## }}}
+	# Translation Variablen# {{{
+	lv_Alias=$(gettext 'Alias')
+	lv_Fcchooks=$(gettext 'Kopie')
+	lv_Fccsavehooks=$(gettext 'Kopie-Speichern')
+	lv_Folderhooks=$(gettext 'Mailbox')
+	lv_Header=$(gettext 'Header')
+	lv_KeyId=$(gettext 'Schluessel-ID')
+	lv_Mboxhooks=$(gettext 'Mbox')
+	lv_Messagehooks=$(gettext 'Nachrichten Anzeige')
+	lv_Option=$(gettext 'Option')
+	lv_Patter=$(gettext 'Muster')
+	lv_Pgphooks=$(gettext 'PGP')
+	lv_Push=$(gettext 'Befehls-Optionen')
+	lv_Savehooks=$(gettext 'Speichern')
+	lv_Score=$(gettext 'Bewertung')
+	lv_Sendhooks="$lv_Send"
+	lv_Set=$(gettext 'Set-Variablen')
+	lv_Unignore=$(gettext 'Header Anzeige')
+	## }}}
+	# Funktion (read_file_headers), liest die Hooks Dateien ein.{{{
+	# oder erstellt eine neue Datei mit eventuell einigen Vorgaben.
+	#
+	# usage: read_file_headers [ charset-hook | fcc-hook | fcc-save-hook ] ,
+	# usage: [ folder-hook | pgp-hook | mbox-hook | message-hook ] oder
+	# usage: read_file_headers [ save-hook | score | send-hook | unignore ]
+	#
+	read_file_headers() {
+		# Funktion (read_header), einlesen der Hooks# {{{
+		#
+		read_header() {
+			if [ -f "$Hook_File" ] ; then
+				integer Anz
+				Anz=0
+				while read -r a b Rest ; do
+					if [[ $a == $Hook ]] ; then
+						(( Anz++ ))
+						Tmp_Header_Menue[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\""
+						Tmp_Header_Menue_M[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\" off"
+					fi
+				done < $Hook_File
+			else
+				first_hook_file
+			fi
+		}
+		## }}}
+		unset -- Tmp_Header_Menue Tmp_Header_Menue_M Hook Hook_File
+		# Wenn es eine $M_HOOKS Datei gibt einlesen.
+		# Ansonsten wird eine Beispiel-Datei erstellt.
+		if [ $# = 1 ] ; then
+			Opt="$1"
+			case "$Opt" in
+				charset-hook)
+					# Einstellungen fuer charset-hook einlesen
+					Hook_File="$M_CHARSETHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				fcc-hook)
+					# Einstellungen fuer fcc-hook einlesen
+					Hook_File="$M_FCCHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				fcc-save-hook)
+					# Einstellungen fuer fcc-save-hook einlesen
+					Hook_File="$M_FCCSAVEHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				folder-hook)
+					# Einstellungen fuer folder-hook einlesen
+					Hook_File="$M_FOLDERHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				pgp-hook)
+					# Einstellungen fuer pgp-hook einlesen
+					Hook_File="$M_PGPHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				mbox-hook)
+					# Einstellungen fuer mbox-hook einlesen
+					Hook_File="$M_MBOXHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				message-hook)
+					# Einstellungen fuer message-hook einlesen
+					Hook_File="$M_MESSAGEHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				save-hook)
+					# Einstellungen fuer save-hook einlesen
+					Hook_File="$M_SAVEHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				score)
+					# Einstellungen fuer score einlesen
+					Hook_File="$M_SCORE"
+					Hook="$Opt"
+					read_header
+					;;
+				send-hook)
+					# Einstellungen fuer send-hook einlesen
+					Hook_File="$M_SENDHOOKS"
+					Hook="$Opt"
+					read_header
+					;;
+				unignore)
+					# Einstellungen fuer send-hook einlesen
+					Hook_File="$M_UNIGNORE"
+					Hook="$Opt"
+					read_header
+					;;
+				*)
+					# falsche Option/Parameter.
+					no_para_msg $0
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (kwmutt_hook_conf), konfiguriert die Hook-Dateien# {{{
+	#
+	# usage: kwmutt_hook_conf HOOKTITLE HOOKDATEI
+	#
+	kwmutt_hook_conf() {
+		if [ "$#" = 2 ] ; then
+			Unset_Hook=(HDR_ALIAS HDR_CHARSET HDR_HEADER HDR_MAILBOX
+				HDR_MAILBOX1 HDR_OPTION HDR_PATTER
+				HDR_PUSH HDR_SCORE HDR_SET HDR_UNIGNORE HDR_KEYID)
+			#
+			HOOK_TITLE="$1"
+			M_HOOK="$2"
+			# Hook/Score Name fuer die Konfiguration einstellen.# {{{
+			case "${M_HOOK##*/}" in
+				charsethooks)
+					Hook_Name="charset-hook"
+					Un_Set="unhook charset-hook"
+					;;
+				fcchooks)
+					Hook_Name="fcc-hook"
+					Un_Set="unhook fcc-hook"
+					;;
+				fccsavehooks)
+					Hook_Name="fcc-save-hook"
+					Un_Set="unhook fcc-save-hook"
+					;;
+				folderhooks)
+					Hook_Name="folder-hook"
+					Un_Set="unhook folder-hook"
+					;;
+				pgphooks)
+					Hook_Name="pgp-hook"
+					Un_Set="unhook pgp-hook"
+					;;
+				mboxhooks)
+					Hook_Name="mbox-hook"
+					Un_Set="unhook mbox-hook"
+					;;
+				messagehooks)
+					Hook_Name="message-hook"
+					Un_Set="unhook message-hook"
+					;;
+				savehooks)
+					Hook_Name="save-hook"
+					Un_Set="unhook save-hook"
+					;;
+				score)
+					Hook_Name="score"
+					Un_Set="unscore *"
+					;;
+				sendhooks)
+					Hook_Name="send-hook"
+					Un_Set="unhook send-hook"
+					;;
+				unignore_headers)
+					Hook_Name="unignore"
+					Un_Set="ignore *"
+					;;
+				*)
+					no_para_msg $0
+					return 1
+					;;
+			esac
+			## }}}
+			# Funtion (first_hook_file), erstellt den Header der Header Datei# {{{
+			#
+			first_hook_file() {
+				# Wenn es kein $M_HOOK Datei gibt eine erstellen.
+				# Bei der charsethooks Datei gibt es einen extra Header mit
+				# vorgegeben Werten.
+				if [ ! -f "$M_HOOK" ] ; then
+					if [[ ${M_HOOK##*/} == charsethooks ]] ; then
+						> "$M_HOOK" <<< "#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+## ============================================================================
+## $Hook_Name Einstellungen
+## ============================================================================
+$Un_Set
+
+# Some GB18030 traditional Chinese mails are wrongly labelled GB2312.
+# The first charset is a superset of the second. Let's alias it, so
+# that Mutt displays such mails as if they were correctly labelled.
+charset-hook ^gb2312$ gb18030
+
+# Some mailers send EUC-JP-MS Japanese mails wrongly labelled EUC-JP.
+# The first charset is a superset of the second. Let's also alias it.
+charset-hook ^euc-jp$ euc-jp-ms
+
+# (define charset aliases)"
+					else
+						> "$M_HOOK" <<< "#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+## ============================================================================
+## $Hook_Name Einstellungen
+## ============================================================================
+$Un_Set
+
+# Hier wird das Muster eingestellt, auf was reagiert werden soll."
+					fi
+				fi
+			}
+			## }}}
+			# Funktion (hook_choice_menu), Konfigurationsmenue{{{
+			hook_choice_menu() {
+				HOOK_CHOICE_MENU=($gv_Display \"\" $gv_Create \"\"
+				$gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+				menubox "$1" "$HOOK_TITLE" "$gv_Menupoint" "$HOOK_CHOICE_MENU"
+			}
+			#}}}
+			# Funktion (hook_conf) konfiguriert die Header Einstellungen# {{{
+			#
+			hook_conf() {
+				# Funktion (select_hook_option_menu), Auswahl der Optionen fuer Hooks# {{{
+				#
+				select_hook_option_menu() {
+					menubox "$HDR_OPTION" "$HOOK_TITLE" "$gv_Menupoint" "$SELECT_HOOK_OPT_MENU"
+				}
+				## }}}
+				# Funktion (hook_conf_menu), Konfigurationsmenue# {{{
+				#
+				##########################################################
+				# folder-hook und send-hook ueberarbeiten, wegen Header
+				# und sign --> input.
+				##########################################################
+				hook_conf_menu() {
+					case "$Hook_Name" in
+						charset-hook)
+							HOOK_CONF_MENU=($lv_Alias \"$HDR_ALIAS\"
+							$lv_Charset \"$HDR_CHARSET\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						folder-hook)
+							HOOK_CONF_MENU=($lv_Mailbox \"$HDR_MAILBOX\"
+							$lv_Header \"$HDR_HEADER\"
+							$lv_Push \"$HDR_PUSH\"
+							$lv_Set \"$HDR_SET\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						pgp-hook)
+							HOOK_CONF_MENU=($lv_Patter \"$HDR_PATTER\"
+							$lv_KeyId \"$HDR_KEYID\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						mbox-hook)
+							HOOK_CONF_MENU=($lv_Mailbox \"$HDR_MAILBOX\"
+							${lv_Mailbox}1 \"$HDR_MAILBOX1\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						message-hook)
+							HOOK_CONF_MENU=($lv_Option \"$HDR_OPTION\"
+							$lv_Patter \"$HDR_PATTER\"
+							$lv_Set \"$HDR_SET\"
+							\"$lv_Unignore\" \"$HDR_UNIGNORE\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						(fcc|fcc-save|save)-hook)
+							HOOK_CONF_MENU=($lv_Option \"$HDR_OPTION\"
+							$lv_Patter \"$HDR_PATTER\"
+							$lv_Mailbox \"$HDR_MAILBOX\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						score)
+							HOOK_CONF_MENU=($lv_Option \"$HDR_OPTION\"
+							$lv_Patter \"$HDR_PATTER\"
+							$lv_Score \"$HDR_SCORE\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						send-hook)
+							HOOK_CONF_MENU=($lv_Option \"$HDR_OPTION\"
+							$lv_Patter \"$HDR_PATTER\"
+							$lv_Header \"$HDR_HEADER\"
+							$lv_Set \"$HDR_SET\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+						unignore)
+							# Bestimmte Auswahl 
+							HOOK_CONF_MENU=(\"$lv_Unignore\" \"$HDR_UNIGNORE\"
+							$gv_Save \"\" $gv_Back \"\")
+							;;
+					esac
+					menubox "$1" "$HOOK_TITLE" "$gv_Menupoint" "$HOOK_CONF_MENU"
+				}
+				## }}}
+				hook_conf_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
+							hook_conf_menu
+							;;
+						$lv_Alias)
+							# Alias fuer den Zeichensatz eingeben.# {{{
+							MSG=$(gettext 'Geben Sie einen Alias fuer den eingegebenen Zeichensatz ein (z.B. ^gb2312$).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_ALIAS"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_ALIAS="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+							else
+								unset -- HDR_ALIAS
+							fi
+							## }}}
+							hook_conf_menu $lv_Alias
+							;;
+						$lv_Charset)
+							# Zeichensatz eingeben.# {{{
+							MSG=$(gettext 'Geben Sie den Zeichensatz ein der einen Alias bekommen soll (z.B. gb18030).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_CHARSET"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_CHARSET="$gv_Auswahl"
+							else
+								unset -- HDR_CHARSET
+							fi
+							## }}}
+							hook_conf_menu $lv_Charset
+							;;
+						$lv_Header)
+							# Header fuer die mailbox eingeben.# {{{
+							MSG=$(gettext 'Geben Sie den Header ein der fuer das Muster benutzt werden soll. (z.B. From: Name <name@domain.de>).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_HEADER"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_HEADER="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+								unset -- HDR_SET HDR_PUSH
+							else
+								unset -- HDR_HEADER
+							fi
+							## }}}
+							hook_conf_menu $lv_Header
+							;;
+						$lv_KeyId)
+							# Standard_Schluessel_ID auswaehlen, mit der unterschrieben wird.# {{{
+							# belegt die Variablen TRUSTED_KEY und DEFAULT_KEY.
+							autoload -U gpg_getkeys_id
+							gpg_getkeys_id
+							if [ -n "$DEFAULT_KEY" ] ; then
+								HDR_KEYID="0x${DEFAULT_KEY}"
+							else
+								unset -- HDR_KEYID
+							fi
+							## }}}
+							hook_conf_menu $lv_KeyId
+							;;
+						$lv_Option)
+							# Option fuer die Speicherung unterschiedlicher Nachrichten.# {{{
+							select_hook_option_menu
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help kwmutt_hdr_opt_help
+										select_hook_option_menu
+										;;
+									*)
+										# Auswahl uebernehmen
+										HDR_OPTION="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+							## }}}
+							hook_conf_menu $lv_Option
+							;;
+						$lv_Push)
+							# Befehl an den Tastaturpuffer auf die jeweilige Mailbox.# {{{
+							MSG=$(gettext 'Geben Sie den Befehl fuer den Tastaturpuffer ein der auf die Mailbox angewendet werden soll.')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_PUSH"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_PUSH="$gv_Auswahl"
+								unset -- HDR_SET HDR_HEADER
+							else
+								unset -- HDR_PUSH
+							fi
+							## }}}
+							hook_conf_menu $lv_Push
+							;;
+						$lv_Patter)
+							# Muster auf das die Speicherung zutreffen soll.# {{{
+							MSG=$(gettext 'Geben Sie das Muster ein auf das die Speicherung greifen soll.')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_PATTER"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_PATTER="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+							else
+								unset -- HDR_PATTER
+							fi
+							## }}}
+							hook_conf_menu $lv_Patter
+							;;
+						$lv_Score)
+							# Bewertung von Nachrichten festlegen.# {{{
+							MSG=$(gettext 'Geben Sie eine psitive oder negative ganze Zahl fuer die Bewertung ein (z.B. +10).')
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_SCORE"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_SCORE="$gv_Auswahl"
+							else
+								unset -- HDR_SCORE
+							fi
+							## }}}
+							hook_conf_menu $lv_Score
+							;;
+						$lv_Set)
+							# Befehl/Variable der ausgefuehrt werden soll, falls das Muster passt.# {{{
+							MSG=$(gettext 'Geben Sie die Variable plus Wert welche auf das Muster angewendet werden soll (z.B. signature=~/.mutt/signature).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_SET"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_SET="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+								unset -- HDR_PUSH HDR_HEADER HDR_UNIGNORE
+							else
+								unset -- HDR_SET
+							fi
+							## }}}
+							hook_conf_menu $lv_Set
+							;;
+						$lv_Mailbox)
+							# mailboxen fuer die der Header erstellt werden soll.# {{{
+							MSG=$(gettext 'Geben Sie die Mailbox ein fuer die die Einstellung gemacht werden soll. (z.B. +INBOX.save-\`date +%Y-%m\`).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_MAILBOX"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_MAILBOX="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+							else
+								unset -- HDR_MAILBOX
+							fi
+							## }}}
+							hook_conf_menu $lv_Mailbox
+							;;
+						${lv_Mailbox}1)
+							# mailbox in der die andere Mailbox gespeichert werden soll.# {{{
+							MSG=$(gettext 'Geben Sie die Mailbox ein in der die Nachrichten der anderen Mailbox gespeichert werden sollen. (z.B. +INBOX.save-\`date +%Y-%m\`).')
+							U_OPT="regexp"
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_MAILBOX1"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_MAILBOX1="${${${gv_Auswahl//\$/\\\$}//\`/\\\`}//\"/\\\"}"
+							else
+								unset -- HDR_MAILBOX1
+							fi
+							## }}}
+							hook_conf_menu ${lv_Mailbox}1 
+							;;
+						$lv_Unignore)
+							# Eingabe der Header die angezeigt werden sollen.# {{{
+							MSG=$(gettext 'Geben Sie den Header, mit einem Leerzeichen getrennt, ein der angezeigt werden soll (Z.B. from: to:) Beachten Sie dabei die Reihenfolge.')
+							inputbox "$HOOK_TITLE" "$MSG" "$HDR_UNIGNORE"
+							if [ -n "$gv_Auswahl" ] ; then
+								HDR_UNIGNORE="$gv_Auswahl"
+								unset -- HDR_SET
+							else
+								unset -- HDR_UNIGNORE
+							fi
+							## }}}
+							hook_conf_menu $lv_Unignore
+							;;
+						$gv_Save)
+							# Speichern der Einstellungen# {{{
+							############################################
+							# TODO:
+							# Sortierung fehlt noch.
+							# Eintrag vorhanden - nur Info
+							############################################
+							case "$Hook_Name" in
+								charset-hook)
+									# Einstellungen fuer charset-hook speichern.# {{{
+									if [ -n "$HDR_ALIAS" -a -n "$HDR_CHARSET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_ALIAS}[[:space:]]*${HDR_CHARSET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											# charset Eintrag erstellen
+											>> $M_HOOK <<< "$Hook_Name ${HDR_ALIAS//\\/} $HDR_CHARSET"
+										else
+											sed -e "s#$Value_Old#$Hook_Name ${HDR_ALIAS//\\/} $HDR_CHARSET#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Alias und $lv_Charset mit einem Wert belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								folder-hook)
+									# Einstellungen fuer folder-hook speichern.# {{{
+									if [ -n "$HDR_MAILBOX" -a -n "$HDR_HEADER" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_MAILBOX}[[:space:]]*my_hdr[[:space:]]*${HDR_HEADER}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											# Header Eintrag erstellen
+											>> $M_HOOK <<< "$Hook_Name $HDR_MAILBOX my_hdr ${HDR_HEADER//\\/}"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_MAILBOX my_hdr ${HDR_HEADER//\\/}#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+										# Set Variable Eintrag erstellen
+									elif [ -n "$HDR_MAILBOX" -a -n "$HDR_SET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_MAILBOX}[[:space:]]*set[[:space:]]*${HDR_SET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_MAILBOX 'set $HDR_SET'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_MAILBOX 'set $HDR_SET'#g" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+										# Push Befehl Eintrag erstellen
+									elif [ -n "$HDR_MAILBOX" -a -n "$HDR_PUSH" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_MAILBOX}[[:space:]]*push[[:space:]]*${HDR_PUSH}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_MAILBOX 'push $HDR_PUSH'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_MAILBOX 'push $HDR_PUSH'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Mailbox und $lv_Header oder $lv_Set oder $lv_Push mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								mbox-hook)
+									# Einstellungen fuer mbox-hook speichern.# {{{
+									if [ -n "$HDR_MAILBOX" -a -n "$HDR_MAILBOX1" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_MAILBOX}[[:space:]]*${HDR_MAILBOX1}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											# Header Eintrag erstellen
+											>> $M_HOOK <<< "$Hook_Name $HDR_MAILBOX $HDR_MAILBOX1"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_MAILBOX $HDR_MAILBOX1#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Mailbox und ${lv_Mailbox}1 mit einem Wert belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								message-hook)
+									# Einstellungen fuer message-hook speichern.# {{{
+									# Header-Option + Patter + Set-Variable Eintrag erstellen
+									if [ -n "$HDR_OPTION" -a -n "$HDR_PATTER" -a -n "$HDR_SET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*set[[:space:]]*${HDR_SET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' 'set $HDR_SET'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' 'set $HDR_SET'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + Patter + unignore Eintrag erstellen
+									elif [ -n "$HDR_OPTION" -a -n "$HDR_PATTER" -a -n "$HDR_UNIGNORE" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*unignore[[:space:]]*${HDR_UNIGNORE}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' 'unignore $HDR_UNIGNORE'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' 'unignore $HDR_UNIGNORE'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + Set-Variable erstellen
+									elif [ -n "$HDR_OPTION" -a -n "$HDR_SET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*set[[:space:]]*${HDR_SET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_OPTION set $HDR_SET"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_OPTION set $HDR_SET#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + unignore-Variable erstellen
+									elif [ -n "$HDR_OPTION" -a -n "$HDR_UNIGNORE" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*unignore[[:space:]]*${HDR_UNIGNORE}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_OPTION 'unignore $HDR_UNIGNORE'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_OPTION 'unignore $HDR_UNIGNORE'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Option und $lv_Set oder $lv_Unignore mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								(fcc|fcc-save|save)-hook)
+									# Einstellungen fuer save-hook speichern.# {{{
+									# Je nachdem ob auch HDR_OPTION belegt wurde speichern.
+									if [ -n "$HDR_MAILBOX" -a -n "$HDR_OPTION" -a -n "$HDR_PATTER" ] ; then
+										# Header Eintrag erstellen
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*${HDR_MAILBOX}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' ${HDR_MAILBOX//\\/}"
+										else
+											# Header Eintrag aendern
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' ${HDR_MAILBOX//\\/}#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									elif [ -n "$HDR_MAILBOX" -a -n "$HDR_PATTER" ] ; then
+										# Header Eintrag erstellen
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_PATTER}[[:space:]]*${HDR_MAILBOX}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_PATTER ${HDR_MAILBOX//\\/}"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_PATTER ${HDR_MAILBOX//\\/}#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Patter und $lv_Mailbox mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								pgp-hook)
+									# Einstellungen fuer PGP Schluessel.# {{{
+									if [ -n "$HDR_KEYID" -a -n "$HDR_PATTER" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_KEYID}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_PATTER $HDR_KEYID"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_PATTER $HDR_KEYID#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_KeyId und $lv_Patter mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								score)
+									# Einstellungen fuer die Punktebewertung.# {{{
+									# Bewertungen erstellen, mit Muster
+									if [ -n "$HDR_SCORE" -a -n "$HDR_OPTION" -a -n "$HDR_PATTER" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*${HDR_SCORE}} > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' $HDR_SCORE"
+										else
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' $HDR_SCORE#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Bewertungen erstellen, ohne Muster
+									elif [ -n "$HDR_SCORE" -a -n "$HDR_OPTION" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_SCORE}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_OPTION $HDR_SCORE"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_OPTION $HDR_SCORE#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Score und $lv_Option oder $lv_Patter mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								send-hook)
+									# Einstellungen fuer send-hook speichern.# {{{
+									# Header-Option + Patter + Set-Variable Eintrag erstellen
+									if [ -n "$HDR_OPTION" -a -n "$HDR_PATTER" -a -n "$HDR_SET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*set[[:space:]]*${HDR_SET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' 'set $HDR_SET'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' 'set $HDR_SET'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + Patter + Header Eintrag erstellen
+									elif [ -n "$HDR_OPTION" -a -n "$HDR_PATTER" -a -n "$HDR_HEADER" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_OPTION}[[:space:]]*${HDR_PATTER}[[:space:]]*my_hdr[[:space:]]*${HDR_HEADER}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name '$HDR_OPTION $HDR_PATTER' 'my_hdr $HDR_HEADER'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name '$HDR_OPTION $HDR_PATTER' 'my_hdr $HDR_HEADER'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + Set-Variable erstellen
+									elif [ -n "$HDR_PATTER" -a -n "$HDR_SET" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_PATTER}[[:space:]]*set[[:space:]]*${HDR_SET}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_PATTER 'set $HDR_SET'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_PATTER 'set $HDR_SET'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									# Header-Option + Set-Variable erstellen
+									elif [ -n "$HDR_PATTER" -a -n "$HDR_HEADER" ] ; then
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_PATTER}[[:space:]]*my_hdr[[:space:]]*${HDR_HEADER}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_PATTER 'my_hdr $HDR_HEADER'"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_PATTER 'my_hdr $HDR_HEADER'#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Patter und $lv_Header oder $lv_Set mit Werten belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+								unignore)
+									# Einstellungen fuer unignore speichern.# {{{
+									if [ -n "$HDR_UNIGNORE" ] ; then
+										# Header Eintrag erstellen
+										if [ -z "$Value_Old" ] ; then
+											# Pruefen, ob schon eine Datei vorhanden ist,
+											# ansonsten eine erstellen.
+											first_hook_file
+											# evtl. vorhandene Werte loeschen.
+											#print -l ${(R)${(f)"$(< ${M_HOOK})"}##${Hook_Name}[[:space:]]*${HDR_UNIGNORE}} > $gv_LogFile 2>&1
+											#mv "$gv_LogFile" "$M_HOOK" 2>&1
+											>> $M_HOOK <<< "$Hook_Name $HDR_UNIGNORE"
+										else
+											sed -e "s#$Value_Old#$Hook_Name $HDR_UNIGNORE#" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+										fi
+									else
+										MSG=$(gettext 'Sie muessen erst den Menuepunkt $lv_Unignore mit einem Wert belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									break
+									;;
+							esac
+							## }}}
+							break
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+			}
+			#}}}
+			hook_choice_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
+						hook_choice_menu
+						;;
+					$gv_Display)
+						# Anzeige der $M_HOOK Datei{{{
+						if [ -f "$M_HOOK" ] ; then
+							view_file "$M_HOOK"
+						else
+							no_file_msg "$M_HOOK"
+						fi
+						#}}}
+						hook_choice_menu $gv_Display
+						;;
+					$gv_Create)
+						# Header Eintraege erstellen{{{
+						# erstmal alle vorhandenen Konfigurationsvariablen loeschen
+						unset -- $Unset_Hook
+						# Header erstellen.
+						hook_conf
+						#}}}
+						hook_choice_menu $gv_Create
+						;;
+					$gv_Change)
+						# Header Eintraege veraendern{{{
+						# erstmal alle vorhandenen Konfigurationsvariablen loeschen
+						unset -- $Unset_Hook
+						if [ -f "$M_HOOK" ] ; then
+							# Header Datei einlesen.
+							read_file_headers $Hook_Name
+							if [ -n "${Tmp_Header_Menue[1]}" ] ; then
+								# vorhandene Header zur Auswahl (aendern) anbieten.
+								CHANGE_MENU=($Tmp_Header_Menue)
+								menubox "$HOOK_CHOICE" "$HOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
+											menubox "$HOOK_CHOICE" "$HOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
+											;;
+										*)	# Auswahl uebernehmen
+											HOOK_CHOICE="$gv_Auswahl"
+											# Funktion (read_hook_list), liest die vorhandene Werte ein.# {{{
+											#
+											read_hook_list() {
+												if [ "$#" = 1 ] ; then
+													Opt="$1"
+													case "$Opt" in
+														charset-hook)
+															# charset-hook Werte einlesen# {{{
+															unset -- HDR_ALIAS HDR_CHARSET
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c Rest ; do
+																HDR_ALIAS="${${c//\$/\\\$}//\`/\\\`}"
+																HDR_CHARSET="${Rest//\"/}"
+															done
+															## }}}
+															;;
+														folder-hook)
+															# folder-hook Werte einlesen# {{{
+															unset -- HDR_MAILBOX HDR_HEADER HDR_SET
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c d Rest ; do
+																HDR_MAILBOX="$c"
+																# Pruefen ob eine Set Variable, push Befehl
+																# oder ein Header ausgewaehlt wurde.
+																# Ansonsten ist es ein Header.
+																if [ "${d//\'}" = set ] ; then
+																	HDR_SET="${${${${Rest//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}"
+																elif [ "${d//\'}" = push ] ; then
+																	HDR_PUSH="${${${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																else
+																	HDR_HEADER="${${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}"
+																fi
+															done
+															## }}}
+															;;
+														pgp-hook)
+															# pgp-hook Werte einlesen# {{{
+															unset -- HDR_PATTER HDR_KEYID
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c Rest ; do
+																HDR_PATTER="$c"
+																HDR_KEYID="${${Rest%\"}%\'}"
+															done
+															## }}}
+															;;
+														mbox-hook)
+															# mbox-hook Werte einlesen# {{{
+															unset -- HDR_MAILBOX HDR_MAILBOX1
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c Rest ; do
+																HDR_MAILBOX="$c"
+																HDR_MAILBOX1="${${${Rest//\$/\\\$}//\`/\\\`}//\"/}"
+															done
+															## }}}
+															;;
+														message-hook)
+															# message-hook Wert einlesen# {{{
+															unset -- HDR_OPTION HDR_PATTER HDR_SET
+															print ${${Tmp_Header_Menue[gv_Auswahl]}//\\/} | \
+															while read a b c d e Rest ; do
+																case "${c#\'}" in
+																	\~*)
+																		# Ist eine Option angegeben, wird
+																		# nach den Variablen/Befehlen set
+																		# und (un)ignore gesucht, damit
+																		# das Menue weiss was es darstellen
+																		# soll.
+																		HDR_OPTION="${c#\'}"
+																		case "${d#\'}" in
+																			set)
+																				unset -- HDR_PATTER
+																				HDR_SET="${${${${${${e//\'[a-z]\w+[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																				;;
+																			*ignore)
+																				unset -- HDR_PATTER
+																				HDR_UNIGNORE="${${${${${${e//\'[a-z]\w+[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																				;;
+																			*)
+																				HDR_PATTER="${d%\'}"
+																				case "${e#\'}" in
+																					set)
+																						HDR_SET="${${${${${${Rest//\'[a-z]\w+[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																						;;
+																					*ignore)
+																						HDR_UNIGNORE="${${${${${${Rest//\'[a-z]\w+[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																						;;
+																				esac
+																				;;
+																		esac
+																		;;
+																esac
+															done
+															## }}}
+															;;
+														(fcc|fcc-save|save)-hook)
+															# save-hook Wert einlesen# {{{
+															unset -- HDR_MAILBOX HDR_OPTION HDR_PATTER
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c d Rest ; do
+																case "${c#\'}" in
+																	\~*)
+																		HDR_OPTION="${c#\'}"
+																		HDR_PATTER="${d%\'}"
+																		HDR_MAILBOX="${${${Rest//\$/\\\$}//\`/\\\`}//\"/}"
+																		;;
+																	*)
+																		unset -- HDR_OPTION
+																		HDR_PATTER="$c"
+																		HDR_MAILBOX="${${${d//\$/\\\$}//\`/\\\`}//\"/} ${${${Rest//\$/\\\$}//\`/\\\`}//\"/}"
+																		;;
+																esac
+															done
+															## }}}
+															;;
+														score)
+															# score Werte einlesen# {{{
+															unset -- HDR_OPTION HDR_PATTER HDR_SCORE
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c d Rest ; do
+																case "${c#\'}" in
+																	\~*)
+																		HDR_OPTION="${c#\'}"
+																		case "${${d%\"}%\'}" in
+																			[=+-]<->*|<->*)
+																				HDR_SCORE="${${d%\"}%\'}"
+																				unset -- HDR_PATTER
+																				;;
+																			*)
+																				HDR_PATTER="${${d%\"}%\'}"
+																				HDR_SCORE="${${Rest%\"}%\'}"
+																				;;
+																		esac
+																		;;
+																	*)
+																		unset -- HDR_OPTION
+																		HDR_PATTER="$c"
+																		HDR_SCORE="$d"
+																		;;
+																esac
+															done
+															## }}}
+															;;
+														send-hook)
+															# send-hook Wert einlesen# {{{
+															unset -- HDR_OPTION HDR_PATTER HDR_SET
+															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															while read -r a b c d e Rest ; do
+																case "${c#\'}" in
+																	\~*)
+																		HDR_OPTION="${c#\'}"
+																		HDR_PATTER="${d%\'}"
+																		# Pruefen ob eine Set Variable oder ein Header
+																		# ausgewaehlt wurde.
+																		if [ "${e//\'}" = set ] ; then
+																			HDR_SET="${${${${${${Rest//\'set[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																		else
+																			HDR_HEADER="${${${${${${Rest//\'my_hdr[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																		fi
+																		;;
+																	*)
+																		unset -- HDR_OPTION
+																		HDR_PATTER="$c"
+																		# Pruefen ob eine Set Variable oder ein Header
+																		# ausgewaehlt wurde.
+																		if [ "${d//\'}" = set ] ; then
+																			HDR_SET="${${${${${${e//\'set[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																		else
+																			HDR_HEADER="${${${${${${e//\'my_hdr[[:space:]]/}//\$/\\\$}//\`/\\\`}%\"}//\"/\\\"}%\'}"
+																		fi
+																		;;
+																esac
+															done
+															## }}}
+															;;
+														unignore)
+															# unignore Header Werte einlesen.# {{{
+															unset -- HDR_UNIGNORE
+															HDR_UNIGNORE="${${${Tmp_Header_Menue[gv_Auswahl]}//<->* \"${Opt}[[:space:]]/}%\"}"
+															## }}}
+															;;
+													esac
+												else
+													no_para_msg $0
+												fi
+											}
+											## }}}
+											unset -- Value_Old
+											Value_Old="${${${${${Tmp_Header_Menue[gv_Auswahl]}//<->* \"/}//\\/}%\"}//\ /[[:space:]]*}"
+											read_hook_list "$Hook_Name"
+											hook_conf
+											break
+											;;
+									esac
+								done
+							else
+								# kein Eintrag vorhanden
+								no_entry_msg
+							fi
+						else
+							no_file_msg "$M_HOOK"
+						fi
+						#}}}
+						hook_choice_menu $gv_Change
+						;;
+					$gv_Delete)
+						# Header Eintraege loeschen{{{
+						if [ -f "$M_HOOK" ] ; then
+							# Header Datei einlesen.
+							read_file_headers "$Hook_Name"
+							if [ -n "${Tmp_Header_Menue_M[1]}" ] ; then
+								# vorhandene Header zur Auswahl (loeschen) anbieten.
+								DEL_MENU=($Tmp_Header_Menue_M)
+								checklist "$HOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help share/conf_del_help
+											checklist "$HOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+											;;
+										*)	# Auswahl uebernehmen
+											unset -- Tmp Anz Line
+											local Tmp Anz
+											integer Anz
+											# ausgewaehlte Eintraege und dazugehoerige Zeilen 
+											# fuer "sed" zusammen zaehlen.
+											Anz=0
+											for i in ${=gv_Auswahl} ; {
+												(( Anz++ ))
+												Tmp=${${${${${${Tmp_Header_Menue[i]}//*${Hook_Name}/\"${Hook_Name}}#\"}%\"}//\\\`/\`}//\ /[[:space:]]*}
+												Line[Anz]=${${(ws,:,)$(grep -n "^${Tmp}" $M_HOOK)}[1]}d
+											}
+											#
+											sed -e "${Line//\ / ;}" "$M_HOOK" > $gv_LogFile 2>&1
+											mv "$gv_LogFile" "$M_HOOK" 2>&1
+											break
+											;;
+									esac
+								done
+							else
+								# kein Eintrag vorhanden
+								no_entry_msg
+							fi
+						else
+							no_file_msg "$M_HOOK"
+						fi
+						#}}}
+						hook_choice_menu $gv_Delete
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (conf_hdr_menu), Konfigurationsmenue# {{{
+	# lv_Charset ist eine Ausnahme und wird schon im Hauptscript deklariert.
+	CONF_HDR_MENU=($lv_Pgphooks \"\" $lv_Folderhooks \"\"
+		$lv_Mboxhooks \"\" $lv_Savehooks \"\"
+		$lv_Fcchooks \"\" $lv_Fccsavehooks \"\" $lv_Sendhooks \"\"
+		\"$lv_Messagehooks\" \"\" $lv_Score \"\" $lv_Charset \"\"
+		\"$lv_Unignore\" \"\" $gv_Back \"\")
+	#
+	conf_hdr_menu() {
+		menubox "$1" "$lv_Ext_Configuration" "$gv_Menupoint" "$CONF_HDR_MENU"
+	}
+	## }}}
+	conf_hdr_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_hdr_help
+				conf_hdr_menu
+				;;
+			$lv_Charset)
+				# Konfiguration der charset-hooks.# {{{
+				kwmutt_hook_conf "$lv_Charset" "$M_CHARSETHOOKS"
+				read_mutt_files
+				#}}}
+				conf_hdr_menu $lv_Charset
+				;;
+			$lv_Fcchooks)
+				# Konfiguration der fcc-hooks.# {{{
+				kwmutt_hook_conf "$lv_Fcchooks" "$M_FCCHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Fcchooks
+				;;
+			$lv_Fccsavehooks)
+				# Konfiguration der fcc-save-hooks.# {{{
+				kwmutt_hook_conf "$lv_Fccsavehooks" "$M_FCCSAVEHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Fccsavehooks
+				;;
+			$lv_Folderhooks)
+				# Konfiguration der folder-hooks.# {{{
+				kwmutt_hook_conf "$lv_Folderhooks" "$M_FOLDERHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Folderhooks
+				;;
+			$lv_Pgphooks)
+				# Konfiguration der pgp-hooks.# {{{
+				kwmutt_hook_conf "$lv_Pgphooks" "$M_PGPHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Pgphooks
+				;;
+			$lv_Mboxhooks)
+				# Konfiguration der mbox-hooks.# {{{
+				kwmutt_hook_conf "$lv_Mboxhooks" "$M_MBOXHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Mboxhooks
+				;;
+			$lv_Messagehooks)
+				# Konfiguration der message-hooks.# {{{
+				kwmutt_hook_conf "$lv_Messagehooks" "$M_MESSAGEHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Messagehooks
+				;;
+			$lv_Savehooks)
+				# Konfiguration der save-hooks.# {{{
+				kwmutt_hook_conf "$lv_Savehooks" "$M_SAVEHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Savehooks
+				;;
+			$lv_Score)
+				# Konfiguration der Wichtigkeit.# {{{
+				kwmutt_hook_conf "$lv_Score" "$M_SCORE"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Score
+				;;
+			$lv_Sendhooks)
+				# Konfiguration der send-hooks.# {{{
+				kwmutt_hook_conf "$lv_Sendhooks" "$M_SENDHOOKS"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Sendhooks
+				;;
+			$lv_Unignore)
+				# Konfiguration der unignorierten Headers.# {{{
+				kwmutt_hook_conf "$lv_Unignore" "$M_UNIGNORE"
+				read_mutt_files
+				# # }}}
+				conf_hdr_menu $lv_Unignore
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

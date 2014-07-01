@@ -1,0 +1,77 @@
+# This function (writeiwline) produces the IWOURLINE for interfaces# {{{
+#
+# usage: writeiwline
+#
+writeiwline()
+{
+	# Netzwerk ID einstellen
+	unset -- IWOURLINE IWPREUPLINE IWCONFIG IWSPY IWPRIV
+	if [ -n "$NWID" ]; then
+		IWOURLINE="$IWOURLINE wireless-nwid $NWID\n"
+	fi
+	# Modus einstellen
+	if [ -n "$MODE" ]; then
+		IWOURLINE="$IWOURLINE wireless-mode $MODE\n"
+	fi
+	# Kanal einstellen
+	if [ -n "$CHANNEL" ]; then
+		IWOURLINE="$IWOURLINE wireless-channel $CHANNEL\n"
+	fi
+	# Frequenz einstellen
+	if [ -n "$FREQ" ]; then
+		IWOURLINE="$IWOURLINE wireless-freq $FREQ\n"
+	fi
+	# Schluessel speichern
+	if [ -n "$KEY" ]; then
+		if [ "$PUBKEY" -eq 0 ]; then
+			# Store the key in $NET_CONF_FILE in wireless-key
+			# set root readable only
+			IWOURLINE="$IWOURLINE wireless-key $KEY\n"
+		else
+			# Store the key in ${NET_CONF_PATH}/wep.${ETH} which is root readable only
+		 	# Use pre-up in interfaces to read and set it
+			> ${NET_CONF_PATH}/wep.${ETH} <<< "$KEY" && \
+			chmod 600 ${NET_CONF_PATH}/wep.${ETH} && \
+			IWOURLINE="$IWOURLINE pre-up KEY=\$(< ${NET_CONF_PATH}/wep.${ETH}) && iwconfig $ETH key \$KEY\n"
+		fi
+	fi
+	#
+	[ -d /sys/module/rt2??0/ ] && IWPREUPLINE="$IWPREUPLINE pre-up /sbin/ifconfig $ETH up\n"
+	# Optionen fuer iwconfig
+	if [ -n "$SENS" ] ; then
+		IWCONFIG="$IWCONFIG sens $SENS"
+	fi
+	if [ -n "$RTS" ]; then
+		IWCONFIG="$IWCONFIG rts $RTS"
+	fi
+	if [ -n "$FRAG" ]; then
+		IWCONFIG="$IWCONFIG frag $FRAG"
+	fi
+	if [ -n "$RATE" ]; then
+		IWCONFIG="$IWCONFIG rate $RATE"
+	fi
+	# Optionen fuer iwspy
+	if [ -n "$IWSPY" ]; then
+		IWPREUPLINE="$IWPREUPLINE iwspy $IWSPY\n"
+	fi
+	# Optionen fuer iwpriv
+	if [ -n "$IWPRIV" ]; then
+		IWPREUPLINE="$IWPREUPLINE iwpriv $IWPRIV\n"
+	fi
+	# execute ESSID last, but make sure that it is written as first option
+	if [ -n "$ESSID" ]; then
+		IWOURLINE="$IWOURLINE wireless-essid $ESSID\n"
+	fi
+	
+	if [ -n "$WPASECRET" ]; then
+		IWOURLINE="$IWOURLINE wpa-ssid $ESSID\n wpa-psk $WPASECRET\n"
+	fi
+	# alles zusammenfassen
+	IWOURLINE="$IWOURLINE $IWPREUPLINE"
+	#echo "DEBUG: for interfaces $IWOURLINE"
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

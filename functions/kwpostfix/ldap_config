@@ -1,0 +1,21 @@
+# Funktion ldap_config zum speichern
+#
+# usage: ldap_config
+#
+ldap_config() {
+	> "$FILE" <<< "query_filter = $Ldap_Filter
+search_base = "$Search_Base"
+server_host = "$DB_Host"
+server_port = "$Port"
+result_attribute = "$Attribute"
+timeout = "$Timeout""
+	if [ -n "$DB_User" -a -n "$Pass" ] ; then
+		>> "$FILE" <<< "bind_pw = "$Pass"
+bind_dn = "$DB_User""
+	fi
+}
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

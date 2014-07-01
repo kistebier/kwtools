@@ -1,0 +1,2537 @@
+# Funktion multi_conf# {{{
+#
+# usage: multi_conf
+#
+multi_conf() {
+	# ###### Multimedia Funktionen ###### {{{
+	#
+	Unset=(CREATE_IMAGE_ONLY VOLID APPID PUBLISHER PREPARER ON_THE_FLY
+	SYSID SYMLINKS MULTISESSION WRITEMODE DATAMODE COPYNR)
+	##########################################
+	# TODO:
+	# Brennen mit wodim,
+	# Multisession,
+	# andere Platzberechnung (Sessions, msinfo)
+	# cdrdao bei Sessions andere TOC Datei erstellen
+	# (CD_ROM_XA), berechnung mit msinfo /device
+	#
+	# Code komplett ueberarbeiten?
+	##########################################
+	#
+	# Variablen
+	gv_Audio_Cd=$(gettext 'Audio-CD')
+	gv_Audio_Dvd=$(gettext 'Audio-DVD')
+	gv_Cdcopy=$(gettext 'CD-kopieren')
+	gv_Dvdcopy=$(gettext 'DVD-kopieren')
+	gv_Data_Cd=$(gettext 'Daten-CD')
+	gv_Data_Dvd=$(gettext 'Daten-DVD')
+	gv_Iso_Cd=$(gettext 'ISO-CD')
+	gv_Iso_Dvd=$(gettext 'ISO-DVD')
+	gv_Photo_Cd=$(gettext 'Photo-CD')
+	gv_Photo_Dvd=$(gettext 'Photo-DVD')
+	gv_Video_Cd=$(gettext 'Video-CD')
+	gv_Video_Dvd=$(gettext 'Video-DVD')
+	gv_Del_Cd=$(gettext 'CD-loeschen')
+	gv_Format_Dvd=$(gettext 'DVD-formatieren')
+
+	# Funktion (audio_burn), um Audio Datei zu brennen{{{
+	#
+	# Es werden nur Audio Dateien zum Brennen zur Verfuegung gestellt.
+	# Es gehen z.Z. nur wav,mp3 und ogg Dateien.
+	#
+	# usage: audio_burn [ CD | DVD ]
+	audio_burn() {
+		unset -- Opt
+		local Opt
+		if [ "$#" = 1 ] ; then
+			Opt="$1"
+			BURN_TITLE=$(gettext 'Audio_brennen')
+			BURN_MSG=$(gettext 'Waehlen Sie ein Audio Format aus. Nur diese Dateien werden zum brennen angezeigt.')
+			BURN_MENU="ogg \"\" mp3 \"\" wav \"\" $gv_Back \"\""
+			case "$Opt" in
+				CD)
+					menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help share/audio_help
+								menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+								;;
+							o*)	#
+								cd_dvd_burn --oggcd
+								;;
+							m*)	#
+								cd_dvd_burn --mp3cd
+								;;
+							w*)	#
+								cd_dvd_burn --wavcd
+								;;
+							$gv_Back) break
+								;;
+						esac
+					done
+					;;
+				DVD)
+					menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help share/audio_help
+								menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+								;;
+							o*)	#
+								cd_dvd_burn --oggdvd
+								;;
+							m*)	#
+								cd_dvd_burn --mp3dvd
+								;;
+							w*)	#
+								cd_dvd_burn --wavdvd
+								;;
+							$gv_Back) break
+								;;
+						esac
+					done
+					;;
+				*)
+					# falscher Parameter
+					wrong_parameter_msg "$0"
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (cd_device), Laufwerke Auswahl {{{
+	#
+	# benoetigt die Funktion no_dev_cd
+	#
+	# usage: cd_device
+	#
+	cd_device() {
+		#
+		# Gibt es CD/DVD Laufwerke werden sie zur Auswahl gestellt.
+		# Die Variable/Array STL_CD_DEV wird von der Funktion cdrom erstellt.
+		#
+		if [ -n "${STL_CD_DEV_E[1]}" ] ; then
+			DEV_TITLE=$(gettext 'Konfiguration::Laufwerke')
+			DEV_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus.')
+			DEV_MENU=($STL_CD_DEV_E)
+			menubox "$DEVICE" "$DEV_TITLE" "$DEV_MSG" "$DEV_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*) script_help share/cdrom_help
+						menubox "$DEVICE" "$DEV_TITLE" "$DEV_MSG" "$DEV_MENU"
+						;;
+					*)	# Auf Leserechte testen
+						user_device_check $gv_Auswahl A
+						DEVICE="$gv_Auswahl"
+						unset -- gv_Auswahl
+						;;
+				esac
+			done
+		else
+			no_dev_cd
+		fi
+	}
+	#}}}
+	# Funktion (cd_driver), fuer CD-R/CD-RW Brenner Treiber von cdrdao, plus Flags{{{
+	#
+	# usage: cd_driver [ Driver:Flags ]
+	# Driver - CD Treiber
+	# Flags - Flags fuer den CD Treiber
+	#
+	cd_driver() {
+		unset -- DRIVER_MENU
+		local Anz
+		integer Anz
+		#
+		if [ "$#" -eq 1 ] ; then
+			if [ "`print $1 | grep :`" ] ; then
+				CD_DRIVER_FLAGS="${1##*:}"
+			else
+				unset -- CD_DRIVER_FLAGS
+			fi
+		fi
+		#
+		DRIVER_TITLE=$(gettext 'Konfiguration::CD-Treiber')
+		DRIVER_MENU="cdd2600 \"\" generic-mmc \"\" generic-mmc-raw \"\" plextor \"\" plextor-scan \"\" ricoh-mp6200 \"\" sony-cdu-920 \"\" sony-cdu-948 \"\" taiyo-yuden \"\" teac-cdr55 \"\" toshiba \"\" yamaha-cdr10x \"\""
+		menubox "$CD_DRIVER" "$DRIVER_TITLE" "$gv_Configuration" "$DRIVER_MENU"
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	# Hilfe fuer die Konfiguration des Brenner Treibers
+					script_help share/cd_driver_help
+					menubox "$CD_DRIVER" "$DRIVER_TITLE" "$gv_Configuration" "$DRIVER_MENU"
+					;;
+				*)	#
+					CD_DRIVER="$gv_Auswahl"
+					DRIVER_FLAGS_TITLE=$(gettext 'Konfiguration::CD-Treiber::Flags')
+					DRIVER_FLAGS_MSG=$(gettext 'Konfiguration der Flags fuer den CD/DVD Treiber (siehe README von cdrdao).')
+					inputbox "$DRIVER_FLAGS_TITLE" "$DRIVER_FLAGS_MSG" "$CD_DRIVER_FLAGS"
+					if [ -n "$gv_Auswahl" ] ; then
+						CD_DRIVER_FLAGS="$gv_Auswahl"
+					else
+						unset -- CD_DRIVER_FLAGS
+					fi
+					#
+					if [ ! -z "$CD_DRIVER_FLAGS" ] ; then
+						CD_DRIVER="${CD_DRIVER}:${CD_DRIVER_FLAGS}"
+					else
+						CD_DRIVER="$CD_DRIVER"
+					fi
+					break
+					;;
+			esac
+		done
+	}
+	#}}}
+	# Funktion (cd_dvd_burn), um CD/DVD's zu brennen# {{{
+	#
+	# usage:
+	# cd_dvd_burn [ --copycd | --datacd | --isocd | --mp3cd | --oggcd | --photocd | --wavcd ]
+	# cd_dvd_burn [ --vcd | --vdvd ]
+	# cd_dvd_burn [ --datadvd | --isodvd | --mp3dvd | --oggdvd | --photodvd | --wavdvd ]
+	#
+	cd_dvd_burn() {
+	# Konfiguration einlesen
+	read_file cd_dvdrc
+	
+	unset -- gv_Format VERZ CDROM
+	local Anz
+	integer Anz
+	
+	CDRDAO_TOC="${gv_WorkDir}/cdrdao.toc"
+	IST_FILE="${gv_WorkDir}/burn_auswahl"
+	BURN_PROGRESS_TITLE=$(gettext 'Brennen')
+	BURN_CD_PROGRESS_MSG=$(gettext 'brenne CD.')
+	BURN_CD_PROGRESS1_MSG=$(gettext 'brenne kopierte CD: ${TMP_DIR}/cddata$$.bin.')
+	COPY_CD_PROGRESS_MSG=$(gettext 'kopiere CD.')
+	COPY_CD_PROGRESS1_MSG=$(gettext 'kopiere CD: --> ${TMP_DIR}/cddata$$.bin.')
+	BURN_DVD_PROGRESS_MSG1=$(gettext 'brenne DVD.')
+	BURN_DVD_PROGRESS1_MSG=$(gettext 'brenne kopierte DVD: ${TMP_DIR}/dvd$$.iso.')
+	COPY_DVD_PROGRESS_MSG=$(gettext 'kopiere DVD.')
+	COPY_DVD_PROGRESS1_MSG=$(gettext 'kopiere DVD: --> ${TMP_DIR}/dvd$$.iso.')
+	FILE_CHOICE_MSG=$(gettext 'Waehlen Sie eine oder mehrere Dateien aus.')
+
+    if [ ! -d "$TMP_DIR" ] ; then
+        TMP_DIR="$HOME"
+    fi
+	#
+	# Funktion (burn_opt), mkisofs und andere Brennoptionen# {{{
+	#
+	# usage: burn_opt
+	#
+	burn_opt() {
+		RET=1
+		# bestehende Konfiguration erfassen
+		if [ -z "$VOLID" ] ; then
+		    VOLID="none"
+		fi
+		if [ -z "$APPID" ] ; then
+		    Now_Year=$(date +%Y)
+		    APPID="$gv_ScriptName, $gv_Firm Netzworkk - $gv_MyName (C) 2002-$Now_Year"
+		fi
+		if [ -z "$WRITEMODE" ] ; then
+		    WRITEMODE="auto"
+		fi
+		if [ -z "$CREATE_IMAGE_ONLY" ] ; then
+		    CREATE_IMAGE_ONLY="no"
+		fi
+		if [ -z "$ON_THE_FLY" ] ; then
+		    ON_THE_FLY="no"
+		fi
+		if [ -z "$SYSID" ] ; then
+		    SYSID="LINUX/UNIX"
+		fi
+		if [ -z "$SYMLINKS" ] ; then
+		    SYMLINKS="none"
+		fi
+		if [ -z "$DATAMODE" ] ; then
+		    DATAMODE="MODE1"
+		fi
+		if [ -z "$MULTISESSION" ] ; then
+		    MULTISESSION="auto"
+		fi
+		if [ -z "$COPYNR" ] ; then
+		    COPYNR="1"
+		fi
+		
+		# Translation Variablen
+		lv_Copynr=$(gettext 'Kopienanzahl')
+		lv_Volid=$(gettext 'Volume Name')
+		lv_Appid=$(gettext 'Programm')
+		lv_Publisher=$(gettext 'Veroeffentlicher')
+		lv_Preparer=$(gettext 'Vorbereiter')
+		lv_WriteMode=$(gettext 'Schreib-Modus')
+		lv_CreateImageOnly=$(gettext 'nur Image erstellen')
+		lv_Sysid=$(gettext 'Dateisystem')
+		lv_Symlinks=$(gettext 'symbolische Links')
+		lv_DatatrackMode=$(gettext 'Datentrack-Modus')
+		lv_Multisession=$(gettext 'Multisession')
+		lv_Burn=$(gettext 'brennen')
+		lv_On_The_Fly=$(gettext 'on-the-fly')
+		lv_Burn_Opt=$(gettext 'Brennoptionen')
+		#
+		BURN_OPT_MSG=$(gettext 'Wenn die Konfiguration in Ordnung ist waehlen Sie den Menuepunkt \"brennen\" aus, ansonsten aendern Sie vorher Ihre Einstellungen.')
+		
+		# Funktion burn_opt_menu# {{{
+		#
+		burn_opt_menu() {
+			case "$PROJECT_TITLE" in
+				$gv_Audio_Cd)
+			   		BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+			    	$lv_WriteMode \"$WRITEMODE\"
+			    	$gv_Back \"\")
+					;;
+				$gv_Cdcopy|$gv_Dvdcopy)
+					if [ "$READ_DEVICE" != "$WRITE_DEVICE" ] ; then
+						BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+						$lv_On_The_Fly \"$ON_THE_FLY\"
+					 	\"$lv_CreateImageOnly\" \"$CREATE_IMAGE_ONLY\"
+						$lv_WriteMode \"$WRITEMODE\"
+						$gv_Back \"\")
+					else
+						BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+					 	\"$lv_CreateImageOnly\" \"$CREATE_IMAGE_ONLY\"
+						$lv_WriteMode \"$WRITEMODE\"
+						$gv_Back \"\")
+					fi
+					;;
+				$gv_Video_Dvd)
+					BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+					$lv_On_The_Fly \"$ON_THE_FLY\"
+				 	\"$lv_CreateImageOnly\" \"$CREATE_IMAGE_ONLY\"
+					$lv_WriteMode \"$WRITEMODE\"
+					$gv_Back \"\")
+					;;
+				$gv_Iso_Cd|$gv_Iso_Dvd|$gv_Video_Cd)
+			   		BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+			    	$lv_WriteMode \"$WRITEMODE\"
+			    	$gv_Back \"\")
+					;;
+				*)
+				    BURN_OPT_MENU=($lv_Burn \"\" $lv_Copynr \"$COPYNR\"
+				    \"$lv_Volid\" \"$VOLID\" $lv_Appid \"$APPID\" 
+				    $lv_Publisher \"$PUBLISHER\"
+					$lv_Preparer \"$PREPARER\"
+					$lv_On_The_Fly \"$ON_THE_FLY\"
+				    \"$lv_CreateImageOnly\" \"$CREATE_IMAGE_ONLY\"
+				    $lv_WriteMode \"$WRITEMODE\"
+				    $lv_Sysid \"$SYSID\" \"$lv_Symlinks\" \"$SYMLINKS\"
+				    $lv_DatatrackMode \"$DATAMODE\"
+				    $lv_Multisession \"$MULTISESSION\"
+				    $gv_Back \"\")
+					;;
+			esac
+			menubox "$1" "$PROJECT_TITLE" "$BURN_OPT_MSG" "$BURN_OPT_MENU"
+		}
+		## }}}
+		burn_opt_menu
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help share/burn_opt_help
+					burn_opt_menu
+					;;
+				$lv_Copynr)
+					# Anzahl der Kopien# {{{
+		            COPYNR_MSG=$(gettext 'Geben Sie bitte die Anzahl der Kopien an.')
+		            number_input "$PROJECT_TITLE" "$COPYNR_MSG" "$COPYNR"
+		            if [ -n "$NUMBER" -a "$NUMBER" -gt 1 ] ; then
+		                COPYNR="$NUMBER"
+						CREATE_IMAGE_ONLY=no
+		            else
+		                COPYNR="1"
+		            fi
+		            ## }}}
+					burn_opt_menu $lv_Copynr
+					;;
+				$lv_Volid)
+		            # Volume ID eingeben# {{{
+		            VOLID_MSG=$(gettext 'Geben Sie bitte einen Namen fuer den Index an.')
+		            inputbox "$PROJECT_TITLE" "$VOLID_MSG" "$VOLID"
+		            if [ -n "$gv_Auswahl" ] ; then
+		                VOLID="$gv_Auswahl"
+		            else
+		                VOLID="none"
+		            fi
+		            ## }}}
+					burn_opt_menu $lv_Volid
+					;;
+				$lv_Appid)
+		            # Programm eingeben mit dem alles erstellt bzw. gebrannt wird.# {{{
+		            APPID_MSG=$(gettext 'Geben Sie bitte einen Namen fuer das verwendete Programm ein.')
+		            inputbox "$PROJECT_TITLE" "$APPID_MSG" "$APPID"
+		            if [ -n "$gv_Auswahl" ] ; then
+		                APPID="$gv_Auswahl"
+		            else
+		                APPID=""
+		            fi
+		            ## }}}
+					burn_opt_menu $lv_Appid
+					;;
+				$lv_Publisher)
+		            # Publisher eingeben# {{{
+		            PUBLISHER_MSG=$(gettext 'Geben Sie bitte einen Namen fuer den Veroeffentlicher ein.')
+		            inputbox "$PROJECT_TITLE" "$PUBLISHER_MSG" "$PUBLISHER"
+		            if [ -n "$gv_Auswahl" ] ; then
+		                PUBLISHER="$gv_Auswahl"
+		            else
+		                PUBLISHER=""
+		            fi
+		            ## }}}
+					burn_opt_menu $lv_Publisher
+					;;
+				$lv_Preparer)
+		            # Vorbereiter eingeben# {{{
+		            PREPARER_MSG=$(gettext 'Geben Sie bitte einen Namen fuer den Vorbereiter ein.')
+		            inputbox "$PROJECT_TITLE" "$PREPARER_MSG" "$PREPARER"
+		            if [ -n "$gv_Auswahl" ] ; then
+		                PREPARER="$gv_Auswahl"
+		            else
+		                PREPARER=""
+		            fi
+		            ## }}}
+					burn_opt_menu $lv_Preparer
+					;;
+				$lv_On_The_Fly)
+					# CD/DVD on the fly kopieren (yes/no)?{{{
+					ONTHEFLY_MSG=$(gettext 'Soll die CD/DVD ohne temporaere Datei kopiert werden (ja/nein)?')
+					yesno "$PROJECT_TITLE" "$ONTHEFLY_MSG" "$ON_THE_FLY"
+					if [ "$gv_Auswahl" = yes ] ; then
+						ON_THE_FLY=yes
+						CREATE_IMAGE_ONLY=no
+					else
+						ON_THE_FLY=no
+					fi
+					#}}}
+					burn_opt_menu $lv_On_The_Fly
+					;;
+				$lv_WriteMode)
+		            # Schreib-Modus auswaehlen# {{{
+		            ##############################
+		            # TODO:
+		            # wird noch nicht unterstuetzt
+		            ##############################
+		            WRITE_MODE_MENU=(auto \"\" DAO \"\" TAO \"\" RAW \"\")
+		            WRITE_MODE_MSG=$(gettext 'Waehlen Sie Ihren Modus zum schreiben der Daten aus.')
+			        menubox "$WRITEMODE" "$PROJECT_TITLE" "$WRITE_MODE_MSG" "$WRITE_MODE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help share/burn_opt_help
+			        			menubox "$WRITEMODE" "$PROJECT_TITLE" "$WRITE_MODE_MSG" "$WRITE_MODE_MENU"
+								;;
+		                    *)
+								# Auswahl uebernehmen
+								WRITEMODE="$gv_Auswahl"
+								break
+		                        ;;
+		                esac
+		            done
+					# falls die Var. WRITEMODE leer ist mit dem Wert "auto"
+					# belegen.
+					WRITEMODE="${WRITEMODE:-auto}"
+					## }}}
+					burn_opt_menu $lv_WriteMode
+					;;
+				$lv_CreateImageOnly)
+		            # Nur ein Image erstellen# {{{
+		            CREATE_IMAGE_ONLY_MSG=$(gettext 'Moechten Sie nur ein Image erstellen (ja/nein)?')
+			        yesno "$PROJECT_TITLE" "$CREATE_IMAGE_ONLY_MSG" "$CREATE_IMAGE_ONLY"
+					if [ "$gv_Auswahl" = yes ] ; then
+						CREATE_IMAGE_ONLY=yes
+						ON_THE_FLY=no
+		                COPYNR=1
+					else
+						CREATE_IMAGE_ONLY=no
+					fi
+					## }}}
+					burn_opt_menu $lv_CreateImageOnly
+					;;
+				$lv_Sysid)
+		            # Dateissystem einstellen# {{{
+		            SYSID_MENU=(LINUX/UNIX \"\" LINUX/UNIX+WINDOWS \"\"
+				   	ROCKRIDGE/JOILET \"\" UDF \"\")
+		            SYSID_MSG=$(gettext 'Waehlen Sie ein Dateisystem aus.')
+			        menubox "$SYSID" "$PROJECT_TITLE" "$SYSID_MSG" "$SYSID_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help share/burn_opt_help
+			        			menubox "$SYSID" "$PROJECT_TITLE" "$SYSID_MSG" "$SYSID_MENU"
+								;;
+		                    *)
+								# Auswahl uebernehmen
+								SYSID="$gv_Auswahl"
+								break
+		                        ;;
+		                esac
+		            done
+					# falls die Var. SYSID leer ist mit dem Wert "LINUX/UNIX"
+					# belegen.
+					SYSID="${SYSID:-LINUX/UNIX}"
+					## }}}
+					burn_opt_menu $lv_Sysid
+					;;
+				$lv_Symlinks)
+		            # Behandlung von Symlinks einstellen# {{{
+		            ##############################
+		            # TODO:
+		            # wird noch nicht unterstuetzt
+		            ##############################
+		            SYMLINKS_MENU=(none \"\" \"discard broken links\" \"\"
+				   	\"discard all symlinks\" \"\" \"follow symlinks\" \"\")
+		            SYMLINKS_MSG=$(gettext 'Waehlen Sie einen Menuepunkt zur Behandlung von symbolischen Links aus.')
+			        menubox "$SYMLINKS" "$PROJECT_TITLE" "$SYMLINKS_MSG" "$SYMLINKS_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help share/burn_opt_help
+			        			menubox "$SYMLINKS" "$PROJECT_TITLE" "$SYMLINKS_MSG" "$SYMLINKS_MENU"
+								;;
+		                    *)
+								# Auswahl uebernehmen
+								SYMLINKS="$gv_Auswahl"
+								break
+		                        ;;
+		                esac
+		            done
+					# falls die Var. SYMLINKS leer ist mit dem Wert "none"
+					# belegen.
+					SYMLINKS="${SYMLINKS:-none}"
+					## }}}
+					burn_opt_menu $lv_Symlinks
+					;;
+				$lv_DatatrackMode)
+		            # Schreib-Modus einstellen# {{{
+		            DATATRACK_MODE_MENU=(MODE1 \"\" MODE2 \"\")
+		            DATATRACK_MODE_MSG=$(gettext 'Waehlen Sie einen Datentrack Modus aus.')
+			        menubox "$DATAMODE" "$PROJECT_TITLE" "$DATATRACK_MODE_MSG" "$DATATRACK_MODE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help share/burn_opt_help
+			        			menubox "$DATAMODE" "$PROJECT_TITLE" "$DATATRACK_MODE_MSG" "$DATATRACK_MODE_MENU"
+								;;
+		                    *)
+								# Auswahl uebernehmen
+								DATAMODE="$gv_Auswahl"
+								break
+		                        ;;
+		                esac
+		            done
+					# falls die Var. DATAMODE leer ist mit dem Wert "MODE1"
+					# belegen.
+					DATAMODE="${DATAMODE:-MODE1}"
+					## }}}
+					burn_opt_menu $lv_DatatrackMode
+					;;
+				$lv_Multisession)
+		            # Multisession einstellen# {{{
+		            ##############################
+		            # TODO:
+		            # wird noch nicht unterstuetzt
+		            ##############################
+		            MULTISESSION_MENU=(auto  \"\" \"no Multissesion\"  \"\"
+				   	\"start Multisession\"  \"\" \"continue Multisession\" \"\"
+					\"finish Multisession\" \"\")
+		            MULTISESSION_MSG=$(gettext 'Waehlen Sie einen Multisession Typ aus.')
+			        menubox "$MULTISESSION" "$PROJECT_TITLE" "$MULTISESSION_MSG" "$MULTISESSION_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help share/burn_opt_help
+			        			menubox "$MULTISESSION" "$PROJECT_TITLE" "$MULTISESSION_MSG" "$MULTISESSION_MENU"
+								;;
+		                    *)
+								# Auswahl uebernehmen
+								MULTISESSION="$gv_Auswahl"
+								break
+		                        ;;
+		                esac
+		            done
+					# falls die Var. MULTISESSION leer ist mit dem Wert "auto"
+					# belegen.
+					MULTISESSION="${MULTISESSION:-auto}"
+					## }}}
+					burn_opt_menu $lv_Multisession
+					;;
+				$lv_Burn)
+					# Optionen sammeln# {{{
+					unset -- MKISOFS_OPT
+					case "$PROJECT_TITLE" in
+						$gv_Audio_Cd)	# keine Optionen
+							if [ "$SIMULATE" = yes -o "$CREATE_IMAGE_ONLY" = yes ] ; then
+								COPYNR=1
+							fi
+							;;
+						*)
+							MKISOFS_OPT="-U -R -J -joliet-long -gui -graft-points"
+							if [ -n "VOLID" ] ; then
+								MKISOFS_OPT="$MKISOFS_OPT -volid=\"$VOLID\" -volset=\"$VOLID\""
+							else
+								MKISOFS_OPT="$MKISOFS_OPT -volid=none -volset=none"
+							fi
+							# Programm
+							if [ -n "APPID" ] ; then
+								MKISOFS_OPT="$MKISOFS_OPT -appid=\"$APPID\""
+							else
+								MKISOFS_OPT="$MKISOFS_OPT -appid=${gv_ScriptName}"
+							fi
+							# und der Rest
+							MKISOFS_OPT="$MKISOFS_OPT -publisher=\"$PUBLISHER\" -preparer=\"$PREPARER\" -sysid=\"$SYSID\" -volset-size 1 -volset-seqno 1 -no-cache-inodes -max-iso9660-filenames -iso-level 2 -path-list"
+							;;
+					esac
+					## }}}
+					RET=0
+					break
+					;;
+				$gv_Back)
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	# Funktion (calc_medium_size), Berechnung der Mediumgroesse# {{{
+	#
+	# usage: calc_medium_size CD/DVD-PROGRAMM
+	# CD/DVD-PROGRAMM - cdrdao oder growisofs
+	#
+	calc_medium_size() {
+		if [ "$#" = 1 ] ; then
+			unset -- MEDIUM_SIZE Opt
+			local Opt
+			Opt="$1"
+			case "$Opt" in
+				cdrdao)	# CD in KByte umrechnen
+					case "$CD_SIZE" in
+						650|680|700|800)
+							MEDIUM_SIZE="$[CD_SIZE*1024]"
+							;;
+						*)	# Standard einstellen (650 MB).
+							MEDIUM_SIZE=665600
+						;;
+					esac
+					;;
+				growisofs)	# DVD in KByte umrechnen
+					case "$DVD_SIZE" in
+						4*)	# DVD
+							#MEDIUM SI Konform=4,7GB=4.700.000.000Byte
+							# in BI umrechnen
+		                    #MEDIUM_Bi Konform=4,7GB=4.700.000.000Byte/1.073.741.824=4.377GB
+							# SI - Standard definition 1k=1Kilo=1000
+							# BI - Binaer definition 1k=1024Byte
+							# in KByte
+							MEDIUM_SIZE=4589843
+							;;
+						9*)	MEDIUM_SIZE=9179587
+							;;
+						15*)	MEDIUM_SIZE=15527343
+							;;
+						*)	# Standard einstellen (4,7 GB).
+							MEDIUM_SIZE=4589843
+							;;
+					esac
+					;;
+				*)	# Programm wird nicht unterstuetzt.
+					no_para_msg $0
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (check_empty_writecd), pruefen ob der Rohling leer ist.# {{{
+	check_empty_writecd() {
+		check_cd_state "$WRITE_DEVICE"
+		while [ "$CD_R_EMPTY" != yes ] ; do
+			no_empty_medium1_msg
+			if [ "$gv_Auswahl" = yes ] ; then
+				check_cd_state "$WRITE_DEVICE"
+			else
+				unset -- $Unset
+				break 2
+			fi
+		done
+	}
+	## }}}
+	# Funktion (check_empty_writedvd), DVD Rohling pruefen.# {{{
+	check_empty_writedvd(){
+		if [ "$#" = 2 ] ; then
+			local Dev Dev_Size
+			Dev="$1"
+			# uebergebene Groesse wieder in Byte umrechnen
+			(( Dev_Size = $2 * 1024 ))
+			check_dvd_state "$Dev"
+			while [ "$DVD_LEGACY" != "$DVD_CAP" ] ; do
+				# Medium ist nicht leer
+				no_empty_medium1_msg
+				if [ "$?" = 0 ] ; then
+					check_dvd_state "$Dev"
+				else
+					unset -- $Unset
+					break 2
+				fi
+			done
+			# Groessen pruefen Dvd_Size + DVD Rohling
+			while [[ $Dev_Size -ge $DVD_LEGACY ]] ; do
+				# Datengroesse überschreitet die Mediumgroesse
+				over_medium1_size_msg "$Dev_Size" "$DVD_LEGACY"
+				if [ "$?" = 0 ] ; then
+					check_dvd_state "$Dev"
+				else
+					cp -a $gv_LogFile$$ "$IST_FILE" &>/dev/null
+					unset -- $Unset
+					break 2
+				fi
+			done
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (check_exec_dd), nach dd(_rescue) suchen und ausfuehren - nur DVD# {{{
+	# Mit dd(_rescue) eine temporaere Datei erstellen (1:1 Kopie).
+	# usage: check_exec_dd
+	check_exec_dd() {
+	if [[ -x ${commands[dd_rescue]} ]] ; then
+		BREAK=1
+		dd_rescue -b 1024 -m $Dvd_Size $R_DVD ${TMP_DIR%/}/dvd$$.iso 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$COPY_DVD_PROGRESS1_MSG" || (print ; prog_failure)
+	else
+		###################################
+		# besser waere mounten und kopieren
+		# schon alleine wegen der korrekten
+		# Groessenberechnung.
+		###################################
+		# Nachricht das das rippen mittels dd etwas dauern kann,
+		# da keine Ausgabe (in Sek.).
+		MSG=$(gettext 'Das kopieren der DVD kann je nach Groesse etwas dauern.')
+		infobox "$gv_Info" "$MSG" 3
+		BREAK=1
+		dd if=${R_DVD} of=${TMP_DIR%/}/dvd$$.iso bs=2k count=$Dvd_Size_Block &>/dev/null
+	fi
+	}
+	## }}}
+	# Funktion (check_on_the_fly), fuer pruefen von on-the-fly# {{{
+	#
+	check_on_the_fly() {
+		unset -- CDRDAO_TMP_OPT
+		if [ "$ON_THE_FLY" != yes -a -d "$TMP_DIR" ] ; then
+			CDRDAO_TMP_OPT="--datafile ${TMP_DIR%/}/cddata$$.bin"
+		else
+			CDRDAO_TMP_OPT="--on-the-fly"
+		fi
+	}
+	## }}}
+	# Funktion (check_size_to_dir), uebergebenen Platz (in Byte)# {{{
+	# und benoetigten Platz (in Byte) des Verzeichnisses berechnen.
+	#
+	# usage: check_size_to_dir SIZE DIR
+	# SIZE - muss eine Groesse in Byte sein. 
+	# DIR - Verzeichnis in dem die Daten gespeichert werden sollen.
+	#
+	check_size_to_dir() {
+		if [ "$#" = 2 ] ; then
+			unset -- Size Dir
+			local Size Dir
+			Size="$1"
+			Dir="$2"
+			check_size "$Dir"
+			# gv_Size wird von der Funktion check_size erzeugt.
+			if [[ $Size -ge $gv_Size ]] ; then
+				over_tmp_size_msg "$Size" "$gv_Size"
+				if [ -n "$BREAK" ] ; then
+					break "$BREAK"
+				else
+					break
+				fi
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (simulate_eject_check), Simulieren und/oder CD/DVD auswerfen?{{{
+	#
+	simulate_eject_check() {
+		if [ "$SIMULATE" = yes ] ; then
+			Write="simulate"
+		else
+			Write="write"
+		fi
+		# Eject
+		if [ "$EJECT" = yes ] ; then
+			if [ "$PROG" = cdrdao ] ; then
+				Eject="--eject"
+			else
+				eject $1
+			fi
+		else
+			unset -- Eject
+		fi
+	}
+	#}}}
+	# Funktion (check_cddb), fuer eine CD-Datenbank# {{{
+	#
+	check_cddb() {
+		if [ -n "$CDDB" ] ; then
+			CDRDAO_CDDB_OPT="--with-cddb --cddb-servers $CDDB"
+		else
+			unset -- CDRDAO_CDDB_OPT
+		fi
+	}
+	## }}}
+	# Funktion (create_image), iso8660 image erstellen{{{
+	#
+	# Erzeugen des ISO9660 Dateisytsem erstellen.
+	# vorher muss check_size $TMP_DIR ausgefuehrt werden, um
+	# den Platz des Tmp Verzeichnisses zu ueberpruefen.
+	#
+	# usage: create_image
+	create_image() {
+		# Groesse des Temporaeren Verzeichnisses ueberpruefen
+		check_size "$TMP_DIR"
+		if [ "$ALL_FILE_SIZE" -lt "$gv_Size" ] ; then
+			# create mkisofs filelist
+			#
+			rm -f ${gv_WorkDir}/filelist.tmp &>/dev/null
+			while read file ; do
+				if [ -f "$file" ] ; then
+					print "${file#/}=${DIR}/${file}" >>${gv_WorkDir}/filelist.tmp
+					# Volid belegen mit der 1. gefundenen Datei/Verzeichnis
+					if [ -z "$VOLID" ] ; then
+						VOLID="${file%.*}"
+					fi
+				else
+					# sort directories (a-z)
+					print -ol ${file}/**/(/N) >${gv_WorkDir}/testdir
+					while read Dir ; do
+						# Volid belegen mit der 1. gefundenen Datei/Verzeichnis
+						if [ -z "$VOLID" ] ; then
+							VOLID="${Dir%/}"
+						fi
+						#
+						DummmyDir="`mktemp -d ${gv_WorkDir}/dummydir_XXXXXX`"
+						print "${Dir}=${DummmyDir}" >>${gv_WorkDir}/filelist.tmp
+				   		for i in ${Dir}*(.N) ; {
+				        	print "${i}=${DIR}/${i#/}" >>${gv_WorkDir}/filelist.tmp
+				    	}
+					done < ${gv_WorkDir}/testdir
+				fi
+			done < $gv_LogFile$$
+			#
+			# Optionen fuer "mkisofs" einstellen
+			unset -- ON_THE_FLY_OPT ON_THE_FLY_DVD_OPT
+			CREATE_PROGRESS_ISO_MSG=$(gettext 'erstelle iso9660 Dateisystem (${TMP_DIR%/}/${VOLID}.iso).')
+			burn_opt
+			if [ "$RET" = 0 -a "$CREATE_IMAGE_ONLY" = yes ] ; then
+				# image erstellen
+				eval nice -n 0 genisoimage $MKISOFS_OPT ${gv_WorkDir}/filelist.tmp -o ${TMP_DIR%/}/${VOLID}.iso 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$CREATE_PROGRESS_ISO_MSG" || (print ; prog_failure)
+			# on-the-fly geht nur mit wodim
+			elif [ "$RET" = 0 -a "$ON_THE_FLY" = yes -a -x "${commands[wodim]}" ] ; then
+				ON_THE_FLY_OPT="$MKISOFS_OPT ${gv_WorkDir}/filelist.tmp 2>&1"
+				ON_THE_FLY_DVD_OPT="$MKISOFS_OPT ${gv_WorkDir}/filelist.tmp 2>&1"
+			elif [ "$RET" = 0 ] ; then
+				# image erstellen
+				eval nice -n 0 genisoimage $MKISOFS_OPT ${gv_WorkDir}/filelist.tmp -o ${TMP_DIR%/}/${VOLID}.iso 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$CREATE_PROGRESS_ISO_MSG" || (print ; prog_failure)
+			else
+				unset -- $Unset
+				return 1
+			fi
+		else
+			over_tmp_size_msg "$ALL_FILE_SIZE" "$gv_Size"
+			# Brenndevice entsperren
+			lock -r $DEVICES
+			return 1
+		fi
+		return 0
+	}
+	#}}}
+	# Funktion (data_burn), Daten CD/DVD brennen{{{
+	#
+	# usage: data_burn
+	#
+	data_burn() {
+		MSG=$(gettext 'Die Berechnung des Platzes koennte einige Zeit in Anspruch nehmen.')
+		infobox "$gv_Info" "$MSG" 3
+		# Es wird ausgerechnet ob die Auswahl nicht die 
+		# Groesse der CD-R/CD-RW ueberschreitet
+		#
+		# Bytes der files zusammen zaehlen
+		ALL_FILE_SIZE=""
+		while read i ; do
+		    a=${$(du -sb "${i}")[1]}
+            (( ALL_FILE_SIZE = a+ALL_FILE_SIZE ))
+		done<$gv_LogFile$$
+		# Bytes der files in Kbyte umrechnen 
+		(( ALL_FILE_SIZE = ALL_FILE_SIZE / 1024 ))
+		#
+		eject -t "$CDROM" &>/dev/null
+		sleep 1
+		# cdrdao{{{
+		if [ "$PROG" = cdrdao ] ; then
+			# Medium berechnen
+			calc_medium_size "$PROG"
+			if [ $ALL_FILE_SIZE -le $MEDIUM_SIZE ] ; then
+				DEVICES="$WRITE_DEVICE"
+				#
+				if [ "$gv_Format" = iso ] ; then
+					#
+					burn_opt
+					if [ "$RET" != 0 ] ; then
+						unset -- $Unset
+						return 1
+					fi
+					# cdrdao.toc schreiben
+					> $CDRDAO_TOC <<< "CD_ROM"
+					while read f ; do
+						>> $CDRDAO_TOC <<<  "TRACK $DATAMODE
+DATAFILE \"`pwd`/${f}\"
+ZERO 00:02:00 // post-gap"
+					done < $gv_LogFile$$
+					# Brenn Optionen
+					simulate_eject_check $CDROM
+					PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $CDRDAO_TOC"
+					# wieviel Kopien brennen
+					Anz=$COPYNR
+					while [ "$Anz" -ge 1 ] ; do
+						check_empty_writecd
+						# Brenndevice sperren
+						lock $DEVICES
+	                    # ausfuehren
+						eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_CD_PROGRESS_MSG" || (print ; prog_failure)
+						# Brenndevice entsperren
+						lock -r $DEVICES
+						# Ist Anz groesser als 1 wird zum wechseln
+						# des Mediums aufgefordert.
+						if [ "$Anz" -gt 1 ] ; then
+							# CD wechseln
+							change_cd_msg
+						fi
+						(( Anz-- ))
+					done
+					rm -f $CDRDAO_TOC &>/dev/null
+				else
+					# Joilet + Rockridge Erweiterung - Image erzeugen
+					create_image
+					if [ "$?" != 0 ] ; then
+						return 1
+					fi
+					# Nachdem erstellen des Image ist alles
+					# abgeschlossen
+					if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+						# fertig
+						unset -- $Unset
+						return 0
+					fi
+					# Brennoptionen
+					simulate_eject_check $CDROM
+					# pruefen auf die Variable ON_THE_FLY_OPT
+					if [ ! -z "$ON_THE_FLY_OPT" ] ; then
+						# geht nur mit wodim
+						EXEC_PROG=genisoimage
+						PROG_OPT="$ON_THE_FLY_OPT | wodim -v ${Eject#-} dev=${WRITE_DEVICE} driver=mmc_cdr speed=${WRITE_SPEED:-12} -overburn -force -"
+					else
+						# cdrdao.toc schreiben
+						> $CDRDAO_TOC <<< "CD_ROM
+TRACK $DATAMODE
+DATAFILE \"${TMP_DIR%/}/${VOLID}.iso\"
+ZERO 00:02:00 // post-gap"
+						EXEC_PROG=$PROG
+						PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $CDRDAO_TOC"
+					fi
+					#
+					# wieviel Kopien brennen
+					Anz=$COPYNR
+					while [ "$Anz" -ge 1 ] ; do
+						check_empty_writecd
+						# Brenndevice sperren
+						lock $DEVICES
+	                    # ausfuehren
+						eval $EXEC_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_CD_PROGRESS_MSG" || (print ; prog_failure)
+						# Brenndevice entsperren
+						lock -r $DEVICES
+						# Ist Anz groesser als 1 wird zum wechseln
+						# des Mediums aufgefordert.
+						if [ "$Anz" -gt 1 ] ; then
+							# CD wechseln
+							change_cd_msg
+						fi
+						(( Anz-- ))
+					done
+					rm -f $CDRDAO_TOC &>/dev/null
+					if [ -f "${TMP_DIR%/}/${VOLID}.iso" ] ; then
+						del_file -s "${TMP_DIR%/}/${VOLID}.iso"
+					fi
+				fi
+			else
+				cp -a $gv_LogFile$$ "$IST_FILE"
+				over_medium_size_msg "$ALL_FILE_SIZE" "$MEDIUM_SIZE"
+			fi
+			#}}}
+		# growisofs{{{
+		elif [ "$PROG" = growisofs ] ; then
+			#
+			# dvd, Dateien und iso-images brennen
+			#
+			if [ "$gv_Format" = iso ] ; then
+				# Brennoptionen
+				burn_opt
+				if [ "$RET" != 0 ] ; then
+					unset -- $Unset
+					return 1
+				fi
+				# Kopien
+				unset -- M_IST
+				DEVICES="$CDROM"
+				# wieviel Kopien brennen
+				Anz=$COPYNR
+				while [ "$Anz" -ge 1 ] ; do
+					check_empty_writedvd $CDROM $ALL_FILE_SIZE
+					# Brenndevice sperren
+					lock $DEVICES
+                    # ausfuehren
+					#
+					M_IST=0
+					while read f ; do
+						if [ "$M_IST" = 0 ] ; then
+							# Initial Session
+							PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z ${CDROM}=${f}"
+							BURN_DVD_PROGRESS_MSG="${BURN_DVD_PROGRESS_MSG1/./: ${f}.}"
+							eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_DVD_PROGRESS_MSG" || (print ; prog_failure)
+							(( M_IST++ ))
+						else
+							# Dateien hinzufuegen - multisession
+							PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -M ${CDROM}=${f}"
+							BURN_DVD_PROGRESS_MSG="${BURN_DVD_PROGRESS_MSG1/./: ${f}.}"
+							eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_DVD_PROGRESS_MSG" || (print ; prog_failure)
+						fi
+					done < $gv_LogFile$$
+					# To finalize the multisession DVD maintaining maximum compatibility:
+					if [ "$M_IST" -gt 1 ] ; then
+		            	eval $PROG -M ${CDROM}=/dev/zero
+					fi
+					unset -- M_IST
+					# Brenndevice entsperren
+					lock -r $DEVICES
+					# Rohling auswerfen?
+					simulate_eject_check $CDROM
+					# Ist Anz groesser als 1 wird zum wechseln
+					# des Mediums aufgefordert.
+					if [ "$Anz" -gt 1 ] ; then
+						# CD wechseln
+						change_cd_msg
+					fi
+					(( Anz-- ))
+				done
+			else
+				# image erzeugen
+				create_image
+				if [ "$?" != 0 ] ; then
+					return 1
+				fi
+				# Nachdem erstellen des Image ist alles
+				# abgeschlossen
+				if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+					# fertig
+					unset -- $Unset
+					return 0
+				fi
+				# pruefen auf die Variable ON_THE_FLY_OPT
+				if [ ! -z "$ON_THE_FLY_DVD_OPT" ] ; then
+					PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z $CDROM $ON_THE_FLY_DVD_OPT"
+					BURN_DVD_PROGRESS_MSG="$BURN_DVD_PROGRESS_MSG1"
+				else
+					PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z ${CDROM}=${TMP_DIR%/}/${VOLID}.iso"
+					BURN_DVD_PROGRESS_MSG="${BURN_DVD_PROGRESS_MSG1/./: ${TMP_DIR%/}/${VOLID}.iso.}"
+				fi
+				#
+				# ausfuehren
+				# wieviel Kopien brennen
+				Anz=$COPYNR
+				while [ "$Anz" -ge 1 ] ; do
+					check_empty_writedvd $CDROM $ALL_FILE_SIZE
+					# Brenndevice sperren
+					lock $DEVICES
+                    # ausfuehren
+					eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_DVD_PROGRESS_MSG" || (print ; prog_failure)
+					# Brenndevice entsperren
+					lock -r $DEVICES
+					# Rohling auswerfen?
+					simulate_eject_check $CDROM
+					# Ist Anz groesser als 1 wird zum wechseln
+					# des Mediums aufgefordert.
+					if [ "$Anz" -gt 1 ] ; then
+						# CD wechseln
+						change_cd_msg
+					fi
+					(( Anz-- ))
+				done
+				if [ -f "${TMP_DIR%/}/${VOLID}.iso" ] ; then
+					del_file -s "${TMP_DIR%/}/${VOLID}.iso"
+				fi
+			fi
+		fi
+		#}}}
+	}
+	#}}}
+	# Funktion (image_burn), image brennen{{{
+	#
+	# usage: image_burn
+	#
+	image_burn() {
+		#
+		# Verzeichnis auswaehlen in dem die zu brennenden 
+		# Dateien/Verzeichnisse liegen.
+		#
+		if [ -z "$DIR" ] ; then
+			if [ "$gv_Format" = Video-CD -o "$gv_Format" = Video-DVD ] ; then
+				read_file kwvcdburnrc
+				DIR="$FILM_DIR"
+			elif [ "$gv_Format" = mp3 -o "$gv_Format" = wav -o "$gv_Format" = ogg ] ; then
+				read_file kwsnd2sndfmrc
+				DIR="$SND_DIR"
+			fi
+		fi
+		if [ -z "$DIR" ] ; then
+			DIR="$(pwd)"
+		fi
+		#
+		cd_dvd_conf -W
+		device_convert -i $WRITE_DEVICE
+		user_device_check $CDROM AI
+		#
+		dselect "$DIR"
+		if [ "$VERZ" ] ; then
+			dselect_check "$VERZ"
+			if [ "$VERZ" ] ; then
+				DIR="$VERZ"
+				cd "$VERZ"
+				# iso Images{{{
+				#
+				if [ "$gv_Format" = iso ] ; then
+					file_filter "$FORMAT" "$SUFFIX"
+					if [ "$DF_ARRAY" ] ; then
+						U_OPT=no
+						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	#
+									script_help share/data_help
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+								*)	#
+									data_burn
+									#
+									file_filter "$FORMAT" "$SUFFIX"
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+							esac
+						done
+					else
+						no_file_msg "${FORMAT#\^}"
+					fi
+					unset -- gv_Auswahl U_OPT
+					#}}}
+				# Video-CD{{{
+				#
+				elif [ "$gv_Format" = Video-CD ] ; then
+					file_filter "$FORMAT" "$SUFFIX"
+					if [ "$DF_ARRAY" ] ; then
+						# Film Images haben meist die Groesse einer CD, so das hier nur 1
+						# Datei zur Zeit zur Verfuegung gestellt wird.
+						#
+						VCD_MSG=$(gettext 'Waehlen Sie einen Film aus.')
+						radiolist "$BURN_PROGRESS_TITLE" "$VCD_MSG" "$DF_ARRAY"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	#
+									script_help share/data_help
+									radiolist "$BURN_PROGRESS_TITLE" "$VCD_MSG" "$DF_ARRAY"
+									;;
+								*)	#
+									BR_DATEI="$gv_Auswahl"
+									ALL_FILE_SIZE=${$(du -sb "$BR_DATEI")[1]}
+									# Bytes der file in Kbyte umrechnen 
+									(( ALL_FILE_SIZE = ALL_FILE_SIZE / 1024 ))
+									#################################
+									# TODO:
+									# calc_medium_size in check_empty_writecd
+									# einbauen
+									#################################
+									# Medium berechnen
+									calc_medium_size "$PROG"
+									#
+									if [ $ALL_FILE_SIZE -le $MEDIUM_SIZE ] ; then
+										# Brennoptionen
+										burn_opt
+										if [ "$RET" != 0 ] ; then
+											unset -- $Unset
+											return 1
+										fi
+										# cdrdao Brennoption
+										# CDD rauswerfen
+										simulate_eject_check $CDROM
+										PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $BR_DATEI"
+										#
+										# wieviel Kopien brennen
+										Anz=$COPYNR
+										while [ "$Anz" -ge 1 ] ; do
+											# Laufwerk einfahren, falls draussen.
+											eject -t "$CDROM" &>/dev/null
+											sleep 1	
+											# Rohling pruefen
+											check_empty_writecd
+											# Device locken
+											DEVICES="$WRITE_DEVICE"
+											lock $DEVICES
+											# ausfuehren
+											eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_CD_PROGRESS_MSG" || (print ; prog_failure)
+											lock -r $DEVICES
+											if [ "$Anz" -gt 1 ] ; then
+												# CD wechseln
+												change_cd_msg
+											fi
+											(( Anz-- ))
+										done
+									else
+										over_medium_size_msg "$ALL_FILE_SIZE" "$MEDIUM_SIZE"
+									fi
+									radiolist "$BURN_PROGRESS_TITLE" "$VCD_MSG" "$DF_ARRAY"
+									;;
+							esac
+						done
+					else
+						no_file_msg "${FORMAT#\^}"
+					fi
+					unset -- gv_Auswahl U_OPT
+					#}}}
+				# Video-DVD{{{
+				#
+				elif [ "$gv_Format" = Video-DVD ] ; then
+					if [ "`ls -C ./VIDEO_TS/VIDEO_TS.IFO`" ] ; then
+						# Groesse berechnen
+						ALL_FILE_SIZE=${$(du -sb ./)[1]}
+						# Bytes der file in Kbyte umrechnen 
+						(( ALL_FILE_SIZE = ALL_FILE_SIZE / 1024 ))
+						# Brennoptionen
+						burn_opt
+						if [ "$RET" != 0 ] ; then
+							return 1
+						fi
+						# Nachdem erstellen des Image ist alles
+						# abgeschlossen
+						if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+							# vorhandenen und benoetigten DVD Platz berechnen.
+							check_size_to_dir "$ALL_FILE_SIZE" "$TMP_DIR"
+							# Info Video Iso Image erstellen
+							infobox video_create iso_info 3
+                                # ausfuehren
+							nice -n 0 genisoimage -udf -dvd-video -o ${TMP_DIR%/}/dvd$$.iso ./ 2>&1 | progressbox create create_isofs || (print ; prog_failure)
+							# fertig
+							unset -- $Unset
+							return 0
+						fi
+						#
+						if [ "$ON_THE_FLY" = yes ] ; then
+							PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z $CDROM -udf -dvd-video"
+						else
+							# vorhandenen und benoetigten DVD Platz berechnen.
+							check_size_to_dir "$ALL_FILE_SIZE" "$TMP_DIR"
+							nice -n 0 genisoimage -udf -dvd-video -o ${TMP_DIR%/}/dvd$$.iso ./ 2>&1 | progressbox create create_isofs || (print ; prog_failure)
+							BURN_DVD_PROGRESS_MSG="${BURN_DVD_PROGRESS_MSG1/./ dvd$$.iso.}"
+							PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z ${CDROM}=${TMP_DIR%/}/dvd$$.iso"
+						fi
+						# wieviel Kopien brennen
+						Anz=$COPYNR
+						while [ "$Anz" -ge 1 ] ; do
+							# Laufwerk einfahren, falls draussen.
+							eject -t "$CDROM" &>/dev/null
+							sleep 1	
+							#
+							check_empty_writedvd $CDROM $ALL_FILE_SIZE
+							# brennen
+							DEVICES="$WRITE_DEVICE"
+							lock $DEVICES
+                                # ausfuehren
+							eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_DVD_PROGRESS_MSG" || (print ; prog_failure)
+							lock -r $DEVICES
+							# DVD rauswerfen
+							simulate_eject_check $CDROM
+							# Ist Anz groesser als 1 wird zum wechseln
+							# des Mediums aufgefordert.
+							if [ "$Anz" -gt 1 ] ; then
+								# CD wechseln
+								change_cd_msg
+							fi
+							(( Anz-- ))
+						done
+						if [ -f "${TMP_DIR%/}/dvd$$.iso" ] ; then
+							del_file -s ${TMP_DIR%/}/dvd$$.iso
+						fi
+						unset -- $Unset
+					else
+						MSG=$(gettext 'Es gibt keine Inhalts Tabelle fuer diese DVD oder Sie sind im falschen Verzeichnis ($VERZ). Benutzen Sie kwvdvdburn um die Inhalts Tabelle zu erstellen.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+					unset -- gv_Auswahl U_OPT
+					#}}}
+				# ausgewaehlte ogg | mp3 | photo Dateien{{{
+				#
+				elif [ "$gv_Format" = ogg -o "$gv_Format" = mp3 -o "$gv_Format" = photo ] ; then
+					# nur im lokalen Verzeichnis suchen.
+					file_filter "$FORMAT" "$SUFFIX"
+					if [ "$DF_ARRAY" ] ; then
+						U_OPT=no
+						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	#
+									script_help share/data_help
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+								*)	#
+									data_burn
+									#
+									file_filter "$FORMAT" "$SUFFIX"
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+							esac
+						done
+					else
+						no_file_msg "${FORMAT#\^}"
+					fi
+					unset -- gv_Auswahl U_OPT
+					#}}}
+				# ausgewaehlte wav Dateien{{{
+				#
+				elif [ "$gv_Format" = wav ] ; then
+					file_filter "$FORMAT" "$SUFFIX"
+					if [ "$DF_ARRAY" ] ; then
+						U_OPT=no
+						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	#
+									script_help share/data_help
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+								*)	#
+									case "$PROG" in
+										cdrdao)
+											# cdrdao{{{
+											# Es wird ausgerechnet ob die Auswahl nicht die 
+											# Groesse der CD-R(W)/DVD-+R(W) ueberschreitet.
+											#
+											# Es werden normale Audio CD's gebrannt mit 2 Sekunden Pause
+											# zwischen den Titeln gebrannt.
+											#
+											ALL_FILE_SIZE=""
+											> $CDRDAO_TOC <<< "CD_DA" 
+											while read i ; do
+												a=${$(du -sb "$i")[1]}
+												(( ALL_FILE_SIZE = a+ALL_FILE_SIZE ))
+												>> $CDRDAO_TOC <<< "TRACK AUDIO
+SILENCE 00:02:00 // pre-gap
+FILE \"`pwd`/${i}\" 0"
+											done<$gv_LogFile$$
+											# Bytes der files in Kbyte umrechnen 
+											(( ALL_FILE_SIZE = ALL_FILE_SIZE / 1024 ))
+											# Medium berechnen in KByte
+											calc_medium_size "$PROG"
+											if [ $ALL_FILE_SIZE -le $MEDIUM_SIZE ] ; then
+												eject -t "$CDROM" &>/dev/null
+												sleep 1	
+												# Brennoptionen
+												burn_opt
+												if [ "$RET" != 0 ] ; then
+													unset -- $Unset
+													return 1
+												fi
+												#
+												simulate_eject_check $CDROM
+												PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $CDRDAO_TOC"
+												# ausfuehren
+												DEVICES="$WRITE_DEVICE"
+												# wieviel Kopien brennen
+												Anz=$COPYNR
+												while [ "$Anz" -ge 1 ] ; do
+													# check CD Rohling
+													check_empty_writecd
+													#
+													lock $DEVICES
+                                                    # ausfuehren
+													eval $PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_CD_PROGRESS_MSG" || (print ; prog_failure)
+													lock -r $DEVICES
+													# Ist Anz groesser als 1 wird zum wechseln
+													# des Mediums aufgefordert.
+													if [ "$Anz" -gt 1 ] ; then
+														# CD wechseln
+														change_cd_msg
+													fi
+												 	(( Anz-- ))
+												done
+												rm -f $CDRDAO_TOC &>/dev/null
+											else
+												cp $gv_LogFile$$ "$IST_FILE"
+												over_medium_size_msg "$ALL_FILE_SIZE" "$MEDIUM_SIZE"
+											fi
+											rm -rf $gv_LogFile$$ &>/dev/null
+											#}}}
+											;;
+										growisofs)
+											# growisofs
+											data_burn
+											#
+											;;
+									esac
+								;;
+							esac
+							#
+							file_filter "$FORMAT" "$SUFFIX"
+							U_OPT=no
+							checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+						done
+					else
+						no_file_msg "${FORMAT#\^}"
+					fi
+					unset -- gv_Auswahl
+				#}}}
+				# alle Dateien und Verzeichnisse zur Auswahl anbieten{{{
+				#
+				else
+					unset -- DF_ARRAY
+					Anz=0
+					for i in * ; {
+						if [ -d "$i" ] ; then
+							(( Anz++ ))
+							if [ -f "$IST_FILE" ] ; then
+								IST=`print ${(M)${(f)"$(< $IST_FILE)"}##*"${i}"*}`
+								if [ "$IST" ] ; then
+									DF_ARRAY[Anz]="${(qq)i} \"$VERZEICHNIS\" on"
+								else
+									DF_ARRAY[Anz]="${(qq)i} \"$VERZEICHNIS\" off"
+								fi
+							else
+								DF_ARRAY[Anz]="${(qq)i} \"$VERZEICHNIS\" off"
+							fi
+						elif [ -f "$i" ] ; then
+							(( Anz++ ))
+							if [ -f "$IST_FILE" ] ; then
+								IST=`print ${(M)${(f)"$(< $IST_FILE)"}##*"${i}"*}`
+								if [ "$IST" ] ; then
+									DF_ARRAY[Anz]="${(qq)i} \"$DATEI\" on"
+								else
+									DF_ARRAY[Anz]="${(qq)i} \"$DATEI\" off"
+								fi
+							else
+								DF_ARRAY[Anz]="${(qq)i} \"$DATEI\" off"
+							fi
+						else
+							unset -- DF_ARRAY
+						fi
+					}
+					#
+					if [ "$DF_ARRAY" ] ; then
+						U_OPT=no
+						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	#
+									script_help share/data_help
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+								*)	#
+									data_burn
+									U_OPT=no
+									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									;;
+							esac
+						done
+					else
+						no_file_msg "*"
+					fi
+				fi
+				unset -- gv_Auswahl
+				#}}}
+			fi
+		else
+			unset -- gv_Auswahl
+		fi
+	}
+	#}}}
+	case $1 in
+		--copy*)
+			# CD/DVD kopieren{{{
+			local Anz
+			integer Anz
+			if [ "$1" = --copycd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Cdcopy"
+				# CD kopieren (cdrdao){{{
+				PROG="$CD_PROG"
+				cd_dvd_conf -a
+				if [ "$READ_DEVICE" -a "$WRITE_DEVICE" ] ; then
+					# Brennoptionen
+					burn_opt
+					if [ "$RET" != 0 ] ; then
+						unset -- $Unset
+						return 1
+					fi
+					# Brennen mit nur 1 Laufwerk. # {{{
+					if [ "$READ_DEVICE" = "$WRITE_DEVICE" ] ; then
+						device_convert -i $READ_DEVICE
+						# AI = Lese- und Schreibrechte der Gruppe pruefen
+						user_device_check $CDROM AI
+						# cd checken ob was drauf
+						check_cd_state "$READ_DEVICE"
+						if [ "$CD_R_EMPTY" != yes ] ; then
+							DEVICES="$READ_DEVICE"
+							# Temporaeres Verzeichnis pruefen.
+							if [ ! -d "$TMP_DIR" ] ; then
+								TMP_DIR=/var/tmp
+							fi
+							# Groessen pruefen TMP_DIR/CD
+							# CD Capacity wird leider nicht angezeigt
+							# also wird MEDIUM_SIZE als Grundlage benutzt
+							#
+							# vorhandenen und benoetigten CD Platz und
+							# Laufwerkplatz berechnen.
+							check_size_to_dir "$[MEDIUM_SIZE/1024]" "$TMP_DIR"
+							# Laufwerk sperren
+							lock "$DEVICES"
+							simulate_eject_check "$CDROM"
+							# da nur ein Laufwerk vorhanden ist
+							# wird uber eine temp-Datei kopiert
+							CDRDAO_TMP_OPT="--datafile ${TMP_DIR}/cddata$$.bin"
+							# CD rippen -> TMP_DIR
+							###########################################
+							# TODO:
+							#check_cddb (alt)
+							#PROG_OPT="read-cd -v 2 $Eject --device $READ_DEVICE --driver $CD_SOURCE_DRIVER $CDRDAO_TMP_OPT $CDRDAO_CDDB_OPT $CDRDAO_TOC"
+							###########################################
+							PROG_OPT="read-cd -v 2 $Eject --device $READ_DEVICE --driver $CD_SOURCE_DRIVER $CDRDAO_TMP_OPT $CDRDAO_TOC"
+	                        # ausfuehren
+							BREAK=1
+							eval $CD_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$COPY_CD_PROGRESS1_MSG" || (print ; prog_failure)
+							# cd tauschen
+							lock -r "$DEVICES"
+							# Nachdem erstellen des Image ist alles
+							# abgeschlossen
+							if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+								# fertig
+								unset -- $Unset
+								return 0
+							fi
+							# wieviel Kopien brennen
+							Anz=$COPYNR
+							while [ "$Anz" -ge 1 ] ; do
+							 	# Kopien brennen
+								change_cd_msg
+								# pruefen ob der Rohling leer ist.
+								check_empty_writecd
+								# cd brennen
+								DEVICES="$WRITE_DEVICE"
+								lock "$DEVICES"
+								# Brennoptionen
+								PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $CDRDAO_TOC"
+		                        # ausfuehren
+								eval $CD_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_CD_PROGRESS1_MSG" || (print ; prog_failure)
+		
+								lock -r "$DEVICES"
+								# Ist Anz groesser als 1 wird zum wechseln
+								# des Mediums aufgefordert.
+								if [ "$Anz" -gt 1 ] ; then
+									# CD wechseln
+									change_cd_msg
+								fi
+							 	(( Anz-- ))
+							done
+							#
+							unset -- $Unset
+							# Sollen die cdrdao.toc und das Image geloescht werden.
+							rm -f $CDRDAO_TOC &>/dev/null
+							if [ -f "${CDRDAO_TMP_OPT##--datafile }" ] ; then
+								del_file -s "${CDRDAO_TMP_OPT##--datafile }"
+							fi
+						else
+							no_data_medium_msg
+						fi
+						## }}}
+					else
+						# Brennen mit mehreren Laufwerken.# {{{
+						device_convert -i $READ_DEVICE
+						# A = Leserechte der Gruppe pruefen
+						user_device_check $CDROM A
+						# cd checken ob was drauf ist.
+						check_cd_state "$READ_DEVICE"
+						if [ "$CD_R_EMPTY" != yes ] ; then
+							device_convert -i $WRITE_DEVICE
+							# AI = Lese- und Schreibrechte der Gruppe pruefen
+							user_device_check $CDROM AI
+							eject -t "$CDROM" &>/dev/null
+							sleep 1	
+							# On the Fly prüfen, bei nein muss das TMD_DIR
+							# auf genuegend Platz geprueft werden.
+							check_on_the_fly
+							case "$CDRDAO_TMP_OPT" in
+								--datafile*)
+									# Groessen pruefen TMP_DIR/CD
+									# CD Capacity wird leider nicht angezeigt
+									# also wird MEDIUM_SIZE als Grundlage benutzt
+									#
+									# vorhandenen und benoetigten CD Platz und
+									# Laufwerkplatz berechnen.
+									check_size_to_dir "$[MEDIUM_SIZE/1024]" "$TMP_DIR"
+									;;
+							esac
+							# Brennoptionen
+							simulate_eject_check "$CDROM"
+							#
+							Anz=$COPYNR
+							while [ "$Anz" -ge 1 ] ; do
+								# pruefen ob der Rohling leer ist.
+								check_empty_writecd
+								# brennen
+								DEVICES="$READ_DEVICE $WRITE_DEVICE"
+								lock $DEVICES
+								#########################
+								# TODO:
+								#check_cddb (alt)
+								#########################
+								# Temporaere Datei wird nach dem brennen automatisch geloescht.
+								#PROG_OPT="copy -v 2 $Eject --source-device $READ_DEVICE --source-driver $CD_SOURCE_DRIVER --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed $WRITE_SPEED $CDRDAO_TMP_OPT $CDRDAO_CDDB_OPT --overburn --force"
+								PROG_OPT="copy -v 2 $Eject --source-device $READ_DEVICE --source-driver $CD_SOURCE_DRIVER --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} $CDRDAO_TMP_OPT --overburn --force"
+		                        # ausfuehren
+								eval $CD_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$COPY_CD_PROGRESS_MSG" || (print ; prog_failure)
+								lock -r $DEVICES
+								# Ist Anz groesser als 1 wird zum wechseln
+								# des Mediums aufgefordert.
+								if [ "$Anz" -gt 1 ] ; then
+									# CD wechseln
+									change_cd_msg
+								fi
+							 	(( Anz-- ))
+							done	
+							# Sollen die cdrdao.toc und das Image geloescht werden.
+							rm -f $CDRDAO_TOC &>/dev/null
+							if [ -f "${CDRDAO_TMP_OPT##--datafile }" ] ; then
+								del_file -s "${CDRDAO_TMP_OPT##--datafile }"
+							fi
+						else
+							no_data_medium_msg
+						fi
+						## }}}
+					fi
+				else
+					MSG=$(gettext 'Fuer CD-kopieren muessen Sie ein Lese- und Schreiblaufwerk konfiguriert haben.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			#}}}
+			elif [ "$1" = --copydvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Dvdcopy"
+				# DVD kopieren (growisofs){{{
+				PROG="$DVD_PROG"
+				cd_dvd_conf -a
+				if [ "$READ_DEVICE" -a "$WRITE_DEVICE" ] ; then
+					# Brennoptionen
+					burn_opt
+					if [ "$RET" != 0 ] ; then
+						unset -- $Unset
+						return 1
+					fi
+					# Brennen mit nur 1 Laufwerk. # {{{
+					if [ "$READ_DEVICE" = "$WRITE_DEVICE" ] ; then
+						device_convert -i $READ_DEVICE
+						# AI = Lese- und Schreibrechte der Gruppe pruefen
+						user_device_check $CDROM AI
+						R_DVD="$CDROM"
+						# dvd checken ob was drauf
+						check_dvd_state "$R_DVD"
+		            	if [ "$DVD_LEGACY" != "$DVD_CAP" ] ; then
+							# Device locken
+							DEVICES="$READ_DEVICE"
+							lock "$DEVICES"
+							# Temporaeres Verzeichnis pruefen.
+							if [ ! -d "$TMP_DIR" ] ; then
+								TMP_DIR=/var/tmp
+							fi
+							# vorhandenen und benoetigten DVD Platz berechnen.
+							check_size_to_dir "$DVD_LEGACY" "$TMP_DIR"
+							# Variablenwert sichern fuer check_exec_dd
+							Dvd_Size="$DVD_LEGACY"
+							Dvd_Size_Block="$DVD_LEGACY_BLOCK"
+							# Mit dd(_rescue) eine temporaere Datei erstellen (1:1 Kopie).
+							check_exec_dd
+							# dvd tauschen
+							lock -r "$DEVICES"
+							# Nachdem erstellen des Image ist alles
+							# abgeschlossen
+							if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+								# fertig
+								unset -- $Unset
+								return 0
+							fi
+							# wieviel Kopien brennen
+							Anz=$COPYNR
+							while [ "$Anz" -ge 1 ] ; do
+								eject "$R_DVD" &>/dev/null
+								W_DVD="$R_DVD"
+								change_cd_msg
+								# DVD Rohling pruefen
+								check_empty_writedvd "$W_DVD" "$Dvd_Size"
+								# Device locken
+								DEVICES="$WRITE_DEVICE"
+								lock "$DEVICES"
+	                        	# ausfuehren
+								PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z $W_DVD=${TMP_DIR%/}/dvd$$.iso"
+								eval $DVD_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$BURN_DVD_PROGRESS1_MSG" || (print ; prog_failure)
+								lock -r $DEVICES
+								# wenn gewuenscht dvd auswerfen.
+								simulate_eject_check "$W_DVD"
+								# Ist Anz groesser als 1 wird zum wechseln
+								# des Mediums aufgefordert.
+								if [ "$Anz" -gt 1 ] ; then
+									# CD wechseln
+									change_cd_msg
+								fi
+							 	(( Anz-- ))
+							done
+							# Temporaere Datei wieder loeschen.
+							if [ -f "${TMP_DIR%/}/dvd$$.iso" ] ; then
+								del_file -s ${TMP_DIR%/}/dvd$$.iso
+							fi
+							unset -- $Unset
+						else	
+							no_data_medium_msg
+						fi
+						#}}}
+					else
+						# Brennen mit mehreren Laufwerken.# {{{
+						device_convert -i $READ_DEVICE
+						# A = Leserechte der Gruppe pruefen
+						user_device_check $CDROM A
+						R_DVD="$CDROM"
+						# dvd checken ob was drauf ist.
+						check_dvd_state "$R_DVD"
+						if [ "$DVD_LEGACY" != "$DVD_CAP" ] ; then
+							# Variablenwerte sichern
+							Dvd_Size="$DVD_LEGACY"
+							Dvd_Size_Block="$DVD_LEGACY_BLOCK"
+							# Nachdem erstellen des Image ist alles
+							# abgeschlossen
+							if [ "$CREATE_IMAGE_ONLY" = yes ] ; then
+								check_size_to_dir "$Dvd_Size" "$TMP_DIR"
+								# Mit dd(_rescue) eine temporaere Datei erstellen (1:1 Kopie).
+								DEVICES="$READ_DEVICE"
+								lock $DEVICES
+								check_exec_dd
+								lock -r $DEVICES
+								# fertig
+								unset -- $Unset
+								return 0
+							fi
+							#
+							device_convert -i $WRITE_DEVICE
+							# AI = Lese- und Schreibrechte der Gruppe pruefen
+							user_device_check $CDROM AI
+							W_DVD="$CDROM"
+							eject -t "$W_DVD" &>/dev/null
+							sleep 1	
+							# Pruefen ob on-the-fly kopiert wird oder nicht
+							if [ "$ON_THE_FLY" != yes ] ; then
+								check_size_to_dir "$Dvd_Size" "$TMP_DIR"
+								# Mit dd(_rescue) eine temporaere Datei erstellen (1:1 Kopie).
+								DEVICES="$READ_DEVICE"
+								lock $DEVICES
+								check_exec_dd
+								lock -r $DEVICES
+								DEVICES="$WRITE_DEVICE"
+								COPY_DVD_PROGRESS_MSG="$BURN_DVD_PROGRESS1_MSG"
+								PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z $W_DVD=${TMP_DIR%/}/dvd$$.iso"
+							else
+								DEVICES="$READ_DEVICE $WRITE_DEVICE"
+								# Leselaufwerk wird wie eine Datei behandelt.
+								COPY_DVD_PROGRESS_MSG="$COPY_DVD_PROGRESS_MSG"
+								PROG_OPT="-speed=${DVD_SPEED:-$DVD_SPEED1} -dvd-compat -Z ${W_DVD}=${R_DVD}"
+							fi
+							#
+							# Ab jetzt wird wirklich kopiert
+							#
+							# wieviel Kopien brennen
+							Anz=$COPYNR
+							while [ "$Anz" -ge 1 ] ; do
+								# DVD Rohling pruefen
+								check_empty_writedvd "$W_DVD" "$Dvd_Size"
+								# Laufwerke locken
+								lock $DEVICES
+								eval $DVD_PROG $PROG_OPT 2>&1 | progressbox "$BURN_PROGRESS_TITLE" "$COPY_DVD_PROGRESS_MSG" || (print ; prog_failure)
+								lock -r $DEVICES
+								# wenn gewuenscht dvd auswerfen.
+								simulate_eject_check "$W_DVD"
+								# Ist Anz groesser als 1 wird zum wechseln
+								# des Mediums aufgefordert.
+								if [ "$Anz" -gt 1 ] ; then
+									# CD wechseln
+									change_cd_msg
+								fi
+								(( Anz-- ))
+							done
+							# Temporaere Datei wieder loeschen.
+							if [ -f "${TMP_DIR%/}/dvd$$.iso" ] ; then
+								del_file -s ${TMP_DIR%/}/dvd$$.iso
+							fi
+							unset -- $Unset
+						else
+							no_data_medium_msg
+						fi
+						## }}}
+					fi
+				else
+					MSG=$(gettext 'Fuer DVD-kopieren muessen Sie ein Lese- und Schreiblaufwerk konfiguriert haben.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			#}}}
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--data*)
+			# Daten brennen{{{
+			if [ "$1" = --datacd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			elif [ "$1" = --datadvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Dvd"
+			    #gv_Format=data
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--iso*)
+			# Iso Images brennen{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			FORMAT="ISO"
+			gv_Format=iso
+			SUFFIX=".iso .Iso .ISO"
+			#
+			if [ "$1" = --isocd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Iso_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			elif [ "$1" = --isodvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Iso_Dvd"
+				# DVD brennen
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--mp3*)
+			# Hier werden MP3 Dateien gebrannt{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			FORMAT="MP3"
+			gv_Format="mp3"
+			SUFFIX=".mp3 .Mp3 .MP3"
+			#
+			if [ "$1" = --mp3cd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			elif [ "$1" = --mp3dvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Dvd"
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--ogg*)
+			# Hier werden OGG Dateien gebrannt{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			FORMAT="OGG"
+			gv_Format="ogg"
+			SUFFIX=".ogg .Ogg .OGG"
+			#
+			if [ "$1" = --oggcd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			elif [ "$1" = --oggdvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Data_Dvd"
+				# DVD brennen
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--photo*)
+			# Bilder brennen{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			FORMAT="IMAGE"
+			gv_Format="photo"
+			#
+			if [ "$1" = --photocd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Photo_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			elif [ "$1" = --photodvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Photo_Dvd"
+				# DVD brennen
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--vcd)
+			# Video CDs brennen{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			FORMAT="VCD"
+			gv_Format="Video-CD"
+			SUFFIX=".cue .Cue .CUE .ccd .Ccd .CCD"
+			#
+			if [ "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Video_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+		--vdvd)
+			# Video DVDs brennen{{{
+			#
+			##############################################
+			# gv_Format ueberpruefen.
+			##############################################
+			gv_Format="Video-DVD"
+			#
+			if [ "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Video_Dvd"
+				# CD brennen
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#
+			#}}}
+			;;
+		--wav*)
+			# WAV Dateien brennen{{{
+			#
+			##############################################
+			# FORMAT, gv_Format und SUFFIX ueberpruefen.
+			##############################################
+			#
+			FORMAT="WAVE"
+			gv_Format="wav"
+			SUFFIX=".wav .Wav .WAV"
+			#
+			if [ "$1" = --wavcd -a "$CD_PROG" = cdrdao ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Audio_Cd"
+				# CD brennen
+				PROG="$CD_PROG"
+				image_burn 
+			elif [ "$1" = --wavdvd -a "$DVD_PROG" = growisofs ] ; then
+				# Dialog Title erstellen
+				PROJECT_TITLE="$gv_Audio_Dvd"
+				# DVD brennen
+				PROG="$DVD_PROG"
+				image_burn
+			else
+				wrong_parameter_msg "$0"
+			fi
+			#}}}
+			;;
+	esac
+	rm -rf $gv_LogFile$$ &>/dev/null
+	return 0
+	}
+	## }}}
+	# Funktion (cd_dvd_conf), Brenneinstellung{{{
+	#
+	# usage: cd_dvd_conf [ -a | -R | -W ]
+	# -a - alles konfigurieren.
+	# -R - nur Leselaufwerk konigurieren.
+	# -W - nur was zum brennen benoetigt wird konfigurieren.
+	#
+	cd_dvd_conf() {
+		if [ "$#" = 1 ] ; then
+			#
+			# Falls es keine ~/.kwtools/cd_dvdrc gibt oder die Umgebungs Variabeln 
+			# leer sind, muessen noch einige Brennparameter eingestellt werden.
+			#
+			# Funktion check_write_driver{{{
+			#
+			check_write_driver() {
+				if [ "$CD_DRIVER" ] ; then
+					CD_WRITE_DRIVER="$gv_Auswahl"
+				else
+					case "$CD_PROG" in
+						cdrdao)
+							# Standard cdrdao CD Treiber
+							CD_WRITE_DRIVER=generic-mmc
+							no_input_msg
+							;;
+						cdrecord)
+							# Standard cdrecord CD Treiber
+							CD_WRITE_DRIVER=mmc-cd
+							no_input_msg
+							;;
+					esac
+				fi
+			}
+			#}}}
+			# Funktion check_source_driver{{{
+			#
+			check_source_driver() {
+				if [ "$CD_DRIVER" ] ; then
+					CD_SOURCE_DRIVER="$gv_Auswahl"
+				else
+					case "$CD_PROG" in
+						cdrdao)
+							# Standard cdrdao CD Treiber
+							CD_SOURCE_DRIVER=generic-mmc
+							no_input_msg
+							;;
+						cdrecord)
+							# Standard cdrecord CD Treiber
+							CD_SOURCE_DRIVER=mmc-cd
+							no_input_msg
+							;;
+					esac
+				fi
+			}
+			#}}}
+			# Funktion check_write_device{{{
+			check_write_device() {
+				if [ "$DEVICE" ] ; then
+					WRITE_DEVICE="$DEVICE"
+					device_convert -i "$WRITE_DEVICE"
+					user_device_check $CDROM AI
+				else
+					no_input_msg
+					break
+				fi
+			}
+			#}}}
+			# Funktion check_read_device{{{
+			check_read_device() {
+				if [ "$DEVICE" ] ; then
+					READ_DEVICE="$DEVICE"
+					device_convert -i "$READ_DEVICE"
+					user_device_check $CDROM A
+				else
+					no_input_msg
+					break
+				fi
+			}
+			#}}}
+			# Funktion check_speed_dvd{{{
+			check_speed_dvd() {
+				if [ "$NUMBER" ] ; then
+					DVD_SPEED="$NUMBER"
+				else
+					DVD_SPEED="4"
+				fi
+			}
+			#}}}
+			# Funktion check_speed_cd{{{
+			check_speed_cd() {
+				if [ "$NUMBER" ] ; then
+					WRITE_SPEED="$NUMBER"
+				else
+					WRITE_SPEED="12"
+				fi
+			}
+			#}}}
+			
+			OPT="$1"
+			case "$OPT" in
+				-a)	#
+					# alles konfigurieren{{{
+					#
+					# Lesedevice
+					if [ -z "$READ_DEVICE" ] ; then
+						cd_device
+						check_read_device
+					fi
+					# Brenndevice
+					if [ -z "$WRITE_DEVICE" ] ; then
+						cd_device
+						check_write_device
+					fi
+					# CD Brenngeschwindigkeit
+					if [ -z "$WRITE_SPEED" ] ; then
+						cd_dvd_speed
+						check_speed_cd
+					fi	
+					# Leselaufwerkstreiber
+					if [ -z "$CD_SOURCE_DRIVER" ] ; then
+						cd_driver
+						check_source_driver
+					fi		
+					# CD Rohling Groesse
+					if [ -z "$CD_SIZE" ] ; then
+						cd_size
+						if [ -z "$CD_SIZE" ] ; then
+							CD_SIZE=650
+							no_input_msg
+						fi
+					fi		
+					# Brenner Laufwerkstreiber
+					if [ -z "$CD_WRITE_DRIVER" ] ; then
+						cd_driver
+						check_write_driver
+					fi		
+					# DVD-Groesse
+					if [ -z "$DVD_SIZE" ] ; then
+						dvd_size
+						if [ -z "$DVD_SIZE" ] ; then
+							DVD_SIZE=4,7
+							no_input_msg
+						fi
+					fi
+					# Brenngeschwindigkeit fuer DVD eingeben{{{
+					#
+					if [ -z "$DVD_SPEED" ] ; then
+						cd_dvd_speed
+						check_speed_dvd
+					fi
+					#}}}
+					#}}}
+					;;
+				-R)
+					# Bei (Video)CD rippen wird nur das Lese Laufwerk benoetigt{{{
+					#
+					if [ -z "$READ_DEVICE" ] ; then
+						cd_device
+						check_read_device
+					fi
+					#}}}
+					;;
+				-W)
+					# Beim schreiben wird nur das Brenn Laufwerk, Speed,{{{
+					# Treiber und die CD/DVD Groesse benoetigt.
+					#
+					# Schreib-Geraet
+					if [ -z "$WRITE_DEVICE" ] ; then
+						cd_device
+						check_write_device
+					fi
+#					# CD Brenngeschwindigkeit
+#					if [ -z "$WRITE_SPEED" ] ; then
+#						cd_dvd_speed
+#						check_speed_cd
+#					fi	
+					# CD-Groesse
+					if [ -z "$CD_SIZE" ] ; then
+						cd_size
+						if [ -z "$CD_SIZE" ] ; then
+							CD_SIZE=650
+							no_input_msg
+						fi
+					fi		
+					# CD-Treiber
+					if [ -z "$CD_WRITE_DRIVER" ] ; then
+						cd_driver
+						check_write_driver
+					fi		
+					# DVD-Groesse
+					if [ -z "$DVD_SIZE" ] ; then
+						dvd_size
+						if [ -z "$DVD_SIZE" ] ; then
+							DVD_SIZE=4,7
+							no_input_msg
+						fi
+					fi
+					#
+#					# Brenngeschwindigkeit fuer DVD eingeben{{{
+#					#
+#					if [ -z "$DVD_SPEED" ] ; then
+#						cd_dvd_speed
+#						check_speed_dvd
+#					fi
+#					#}}}
+					#}}}
+					;;
+				*)	# falsche Parametereingabe
+					wrong_parameter_msg "$0"
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (cd_dvd_config), um die Konfiguration zu schreiben{{{
+	#
+	# usage: cd_dvd_config
+	#
+	cd_dvd_config() {
+	#
+	# ~/.kwtools/cd_dvdrc schreiben
+	#
+	> ${gv_HomePath}/.kwtools/cd_dvdrc <<< "# Beginn ~/.kwtools/cd_dvdrc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Dies sind ein paar Brennereinstellungen fuer alle Programme
+# die die Funktion cd_dvd_burn benutzen. Dies sind unter anderem
+# kwrecord, kwsnd2sndfm, kwvcdburn und kwvdvdburn.
+
+# Es konfiguriert CD wie DVD Brenner.
+
+# CD Brennprogramm angeben.
+CD_PROG=\"$CD_PROG\"
+
+# DVD Brennprogramm angeben.
+DVD_PROG=\"$DVD_PROG\"
+
+# CD-R/CD-RW Groesse angeben (650|680|700|800)Mb
+# wobei 800MB nicht jeder Brenner unterstuetzt.
+CD_SIZE=\"$CD_SIZE\"
+
+# Speed angeben, von 0-32 in 2-er Schritten
+WRITE_SPEED=\"$WRITE_SPEED\"
+
+# DVD-Groesse angeben in Gb (Bsp. 4,7)
+DVD_SIZE=\"$DVD_SIZE\"
+
+# DVD-SPEED angeben, von 0-12, kommt halt auf ihr
+# Medium drauf an.
+DVD_SPEED=\"$DVD_SPEED\"
+
+# Brenner Device (bus,id,lun - 0,1,0)
+WRITE_DEVICE=\"$WRITE_DEVICE\"
+
+# Leselaufwerk (bus,id,lun - 0,1,0)
+READ_DEVICE=\"$READ_DEVICE\"
+
+# Treiber fuer den Brenner einstellen
+CD_WRITE_DRIVER=\"$CD_WRITE_DRIVER\"
+
+# Treiber fuer das Leselaufwerk einstellen (in einigen Faellen wichtig, wie Copy_CD)
+CD_SOURCE_DRIVER=\"$CD_SOURCE_DRIVER\"
+
+# CDDB - CD-Datenbank eingeben, getrennt durch ein Komma.
+# Suntax siehe Hilfe oder man 1 cdrdao.
+CDDB=\"$CDDB\"
+
+# Soll die CD/DVD ohne Zwischenspeicherung auf der Festplatte
+# kopiert werden (yes/no)? Bei "yes" wird die CD/DVD "on-the-fly"
+# kopiert. Ansonsten sollten Sie TMP_DIR konfigurieren. Dort werden
+# die Images abgelegt und auch dir Infos der CD-Datenbank.
+ON_THE_FLY=\"$ON_THE_FLY\"
+
+# Temporaeres Standard Verzeichnis zur Erstellung der Image-Dateien.
+TMP_DIR=\"$TMP_DIR\"
+
+# Soll die CD/DVD nach dem brennen ausgeworfen werden (yes/no)?
+EJECT=\"$EJECT\"
+
+# Soll das brennen erstmal nur simuliert werden (yes/no)?
+SIMULATE=\"$SIMULATE\"
+
+# End ~/.kwtools/cd_dvdrc"
+	#
+	read_file cd_dvdrc
+	}
+	#}}}
+	# Funktion (cd_dvd_speed), Brenngeschwindigkeit eingeben#{{{
+	#
+	# benoetigt die Funktion number_input
+	# usage: cd_dvd_speed [ WERT ]
+	#
+	cd_dvd_speed() {
+		TITLE=$(gettext 'Konfiguration::Brenngeschwindigkeit')
+		MSG=$(gettext 'Geben Sie bitte die Geschwindigkeit an (0-52). Standart ist 12-fache Geschwindigkeit bei CD-R(W), 4-fache bei DVD-+R(W)/RAM.')
+		number_input "$TITLE" "$MSG" "$1"
+	}
+	#}}}
+	# Funktion (cd_size), fuer CD-R/CD-RW Groesse{{{
+	#
+	# usage: cd_size
+	#
+	cd_size() {
+		CD_SIZE_TITLE=$(gettext 'Konfiguration::CD-R/CD-RW::Groesse')
+		CD_SIZE_MSG=$(gettext 'Waehlen Sie bitte die Groesse Ihres CD Rohlings aus.')
+		CD_SIZE_MENU="650 MByte 680 MByte 700 MByte 800 MByte"
+		menubox "$CD_SIZE" "$CD_SIZE_TITLE" "$CD_SIZE_MSG" "$CD_SIZE_MENU"
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	# Hilfe fuer die Konfiguration der CD-R/CD-RW Groesse
+					script_help share/cd_size_help
+					menubox "$CD_SIZE" "$CD_SIZE_TITLE" "$CD_SIZE_MSG" "$CD_SIZE_MENU"
+					;;
+				*)	#
+					CD_SIZE="$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	}
+	#}}}
+	# Funktion (check_cd_state), CD Status pruefen# {{{
+	#
+	# Zur Zeit wird nur cdrdao unterstuetzt
+	#
+	# usage: check_cd_state CD_DEVICE
+	check_cd_state() {
+		if [ "$#" = 1 ] ; then
+			local Dev
+			Dev="$1"
+			unset -- CD_RW CD_R_EMPTY CD_CAP
+			eject -t "$CDROM" &>/dev/null
+			$CD_PROG disk-info --device $Dev 2>/dev/null >${gv_WorkDir}/cd_state
+			CD_RW=${${(s,: ,)${(M)${(f)"$(< ${gv_WorkDir}/cd_state)"}##CD-RW*}}[2]}
+			CD_R_EMPTY=${${(s,: ,)${(M)${(f)"$(< ${gv_WorkDir}/cd_state)"}##*empty*}}[2]}
+			CD_CAP=${${(s, ,)${(M)${(f)"$(< ${gv_WorkDir}/cd_state)"}##*Capacity*}}[4]}
+			#
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (check_dvd_state), DVD Status pruefen# {{{
+	#
+	# Zur Zeit werden nur die dvd+rw-tools unterstuetzt
+	#
+	# usage: check_dvd_state DVD_DEVICE
+	check_dvd_state() {
+		if [ "$#" = 1 ] ; then
+			local Dev
+			Dev="$1"
+			unset -- DVD_RW DVD_R DVD_CAP DVD_LEGACY DVD_LEGACY_BLOCK DVD_SPEED1
+			integer DVD_SPEED1
+			eject -t "$Dev" &>/dev/null
+			dvd+rw-mediainfo $Dev >${gv_WorkDir}/dvd_state
+			DVD_RW=${${(s:, :)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(Mounted Media)*}}[2]}
+			DVD_CAP=${${(s,=,)${${(s,:,)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(READ CAPACITY)*}}[2]}}[2]}
+			DVD_LEGACY=${${(s,=,)${${(s,:,)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(Legacy lead-out at)*}}[2]}}[2]}
+			DVD_LEGACY_BLOCK=${${${${(s,:,)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(Legacy lead-out at)*}}[2]}%\**}##*\ }
+	        DVD_R=${${${(s,:,)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(Disc status)*}}[2]}##* }
+	        DVD_SPEED1=${${${${(s,:,)${(M)${(f)"$(< ${gv_WorkDir}/dvd_state)"}##*(Write Speed *)*}}[2]}##* }%%.*}
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (dvd_size), fuer DVD-+R/DVD-+RW Groesse{{{
+	#
+	# usage: dvd_size
+	#
+	dvd_size() {
+		DVD_SIZE_TITLE=$(gettext 'Konfiguration::DVD-+R/RW/RAM::Groesse')
+		DVD_SIZE_MSG=$(gettext 'Waehlen Sie bitte die Groesse Ihres DVD Rohlings aus.')
+		DVD_SIZE_MENU="4,7 GByte 9,4 GByte 15,9 GByte"
+		menubox "$DVD_SIZE" "$DVD_SIZE_TITLE" "$DVD_SIZE_MSG" "$DVD_SIZE_MENU"
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	# Hilfe fuer die Konfiguration der DVD-+R/DVD-+RW Groesse
+					script_help share/dvd_size_help
+					menubox "$DVD_SIZE" "$DVD_SIZE_TITLE" "$DVD_SIZE_MSG" "$DVD_SIZE_MENU"
+					;;
+				*)	#
+					DVD_SIZE=$gv_Auswahl
+					break
+					;;
+			esac
+		done
+	}
+	#}}}
+# Funktion (split_size), fuer Datei Groesse ab der{{{
+# die Datei gesplittet werden soll.
+#
+# usage: split_size
+#
+split_size() {
+	C_Menue=(650 \"Mbyte\" 680 \"Mbyte\" 700 \"Mbyte\" 800 \"Mbyte\"
+		1000 \"Mbyte\" 2000 \"Mbyte\" 4000 \"Mbyte\" 64000 \"Mbyte\")
+	SPLIT_SIZE_TITLE=$(gettext 'Konfiguration::Dateigroesse')
+	menubox "$SPLIT_SIZE" "$SPLIT_SIZE_TITLE" "$gv_Menupoint" "$C_Menue"
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	# Hilfe fuer die Konfiguration der Datei Groesse
+				script_help share/split_size_help
+				menubox "$SPLIT_SIZE" "$SPLIT_SIZE_TITLE" "$gv_Menupoint" "$C_Menue"
+				;;
+			*)	#
+				SPLIT_SIZE="$gv_Auswahl"
+				break
+				;;
+		esac
+	done
+}
+#}}}
+## }}}
+	###### Multimedia Nachrichten ###### {{{
+	# Funktion (change_cd_msg), CD wechseln# {{{
+	#
+	change_cd_msg() {
+		MSG=$(gettext 'Legen Sie nun einen neuen leeren Rohling in Ihr Brennlaufwerk.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# function (no_cddvd_prog_msg), kein Brennprogramm konfiguriert{{{
+	#
+	# usage: no_cddvd_prog_msg
+	no_cddvd_prog_msg() {
+		MSG=$(gettext 'Sie muessen erst ein Brennprogramm (CD/DVD) mit kwrecord konfigurieren. Es werden zur Zeit nur cdrdao und growisofs unterstuetzt.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion (no_data_medium_msg), Rohling ist leer# {{{
+	no_data_medium_msg() {
+		MSG=$(gettext 'Sie muessen ein Medium mit Daten einlegen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_empty_medium_msg), Rohling ist nicht leer# {{{
+	#############################################
+	# INFO: gerade nicht in Funktion
+	#############################################
+	no_empty_medium_msg() {
+		MSG=$(gettext 'Sie muessen einen leeren Rohling einlegen oder den vorhanden erst loeschen/formatieren.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_empty_medium1_msg), Rohling ist nicht leer + Frage auf Wiederholung# {{{
+	no_empty_medium1_msg() {
+		MSG=$(gettext 'Sie muessen einen leeren Rohling einlegen oder den vorhanden erst loeschen/formatieren. Wollen Sie einen neuen leeren Rohling einlegen oder abbrechen (ja/nein)?')
+		yesno "$gv_Attention" "$MSG" ""
+	}
+	## }}}
+	# Funktion (over_medium_size_msg), Fehlernachricht wenn die Auswahl die CD/DVD{{{
+	# Groesse uebersteigt.
+	#
+	# usage: over_medium_size_msg CHOICE_SIZE MEDIUM_SIZE
+	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in KByte.
+	# MEDIUM_SIZE - Groesse des Medium in KByte
+	#
+	over_medium_size_msg() {
+		if [ "$#" -eq 2 ] ; then
+			unset -- Size Size1
+			local Size Size1
+			Size=$1
+			Size1=$2
+			convert_over_size $Size $Size1
+	   		MSG=$(gettext 'Die Groesse der Auswahl ($DATA_SIZE) ueberschreitet die Groesse ($IS_SIZE) der CD-R(W)/DVD-+R(W)/RAM.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (over_medium1_size_msg), Fehlernachricht wenn die Auswahl die CD/DVD{{{
+	# Groesse uebersteigt.
+	#
+	# usage: over_medium1_size_msg CHOICE_SIZE MEDIUM_SIZE
+	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in KByte.
+	# MEDIUM_SIZE - Groesse des Medium in KByte
+	#
+	over_medium1_size_msg() {
+		if [ "$#" -eq 2 ] ; then
+			unset -- Size Size1
+			local Size Size1
+			Size=$1
+			Size1=$2
+			convert_over_size $Size $Size1
+	   		MSG=$(gettext 'Die Groesse der Auswahl ($DATA_SIZE) ueberschreitet die Groesse ($IS_SIZE) der CD-R(W)/DVD-+R(W)/RAM. Wollen Sie einen neuen leeren Rohling einlegen oder abbrechen (ja/nein)?')
+			yesno "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (over_tmp_size_msg), Fehlernachricht wenn die Auswahl{{{
+	# die Groesse des Tmp Dirs uebersteigt.
+	#
+	# usage: over_tmp_size_msg CHOICE_SIZE TMP_SIZE
+	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in Byte.
+	# TMP_SIZE - Groesse des temporaeren Verzeichnisses in Byte.
+	#
+	over_tmp_size_msg() {
+		if [ "$#" -eq 2 ] ; then
+			unset -- Size Size1
+			local Size Size1
+			(( Size = $1 / 1024 ))
+			(( Size1 = $2 / 1024 ))
+			convert_over_size $Size $Size1
+		    MSG=$(gettext 'Die Groesse der Auswahl ($DATA_SIZE) ueberschreitet die Groesse ($IS_SIZE) des temporaeren Verzeichnisses.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+## }}}
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

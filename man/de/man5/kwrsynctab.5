@@ -1,0 +1,114 @@
+.\"     Title: KWRSYNCTAB
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: Benutzer Anleitung
+.\"    Source: Version 1.0.0
+.\"  Language: English
+.\"
+.TH "KWRSYNCTAB" "5" "11/15/2013" "Version 1.0.0" "Benutzer Anleitung"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+kwrsynctab \- Konfigurations Datei f\(:ur kwrsync und kwrsync_cron\&.
+.SH "BESCHREIBUNG"
+.PP
+In der Datei
+\fI~/\&.kwtools/kwrsynctab\fR
+stehen alle Parameter damit
+\fBkwrsync\fR
+und
+\fBkwrsync_cron\fR
+Verzeichnisse mit verschiedenen Rechnern synchronisieren kann\&. Beginnt eine Zeile mit
+\(lq#\(rq
+oder ist leer wird dies als Kommentar interpretiert\&.
+.PP
+Die Datei besitzt folgendes Format:
+.PP
+\fB<Sourceverz\&.>\fR<TAB>\fB<Remoteverz\&.>\fR<TAB>\fB<Zielrechner>\fR<TAB>\fB<rsync Argumente>\fR<TAB>\fB<Ausschluss>\fR
+.SH "FORMAT"
+.PP
+\fBTAB\fR
+.RS 4
+Tabulator zwischen den Eintr\(:agen\&.
+.RE
+.PP
+\fBSourceverz\&.\fR
+.RS 4
+Verzeichnis welches syncronisiert werden soll (voller Pfad)\&.
+.RE
+.PP
+\fBRemoteverz\&.\fR
+.RS 4
+In welches entfernte Verzeichnis soll syncronisiert werden (voller Pfad)\&. Kann lokal wie remote sein\&. Bei remote m\(:ussen Sie auch den Zielrechner angeben\&.
+.RE
+.PP
+\fBZielrechner\fR
+.RS 4
+Eingabe der IP\-Nummern oder Namen der Zielrechner\&. Name geht nur wenn der Rechner auch bekannt ist (z\&.B\&.
+\fIDNS\fR)\&. Die Erreichbarkeit wird nach der Eingabe gepr\(:uft\&.
+.RE
+.PP
+\fBrsync Argumente\fR
+.RS 4
+Eingabe von zus\(:atzlichen Argumenten f\(:ur das Programm
+\fBrsync\fR\&. Diese m\(:ussen mit einem Leerzeichen getrennt sein (
+\fBrsync\fR(1)
+)\&.
+.sp
+\fBNotiz\fR: Standard rsync Argmunte sind:
+\(lq\-avu \-\-numeric\-ids \-\-delete \-\-delete\-excluded \-\-backup \-\-suffix=_`date +%d\&.%m\&.%Y`\(rq
+.RE
+.PP
+\fBAusschluss\fR
+.RS 4
+Welche Dateien/Verzeichnisse sollen von der Synchronisation ausgenommen werden\&. Diese m\(:ussen relativ zum Pfad des
+\fBSourceverz\&.\fR
+liegen\&. Bei einem
+\fBSourceverz\&.\fR
+von
+\fI/home/user/foo\fR
+ist dann der Ausschluss einer Datei z\&. B\&.
+\fIfoo/bar\fR\&.
+.RE
+.SH "DATEI"
+.PP
+\fI~/\&.kwtools/kwrsynctab\fR
+.RS 4
+Dies ist die Konfigurations Datei f\(:ur
+\fBkwrsync\fR
+F\(:ur weitere Details siehe
+\fBkwrsync\fR(1)\&.
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBkwrsync\fR(1),
+\fBkwrsync_cron\fR(1),
+\fBrsync\fR(1)
+.SH "AUTOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.RS 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2002-2013 Kai Wilke
+.br

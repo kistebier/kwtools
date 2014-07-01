@@ -1,0 +1,89 @@
+# Funktion fuse_mount{{{
+#
+# usage: fuse_mount
+#
+fuse_mount() {
+	if [ "$#" = 1 ] ; then
+		Opt="$1"
+		# Funktion read_fusetab_mnt_List{{{
+		read_fusetab_mnt_list() {
+			unset -- Read_Fusetab_Mnt_List Read_Fusetab_No_Mnt_List
+			integer Nr
+			Nr=0
+	        while [ "$Nr" -lt "${#FSTAB_VALUES[@]}" ] ; do
+	            (( Nr++ ))
+				if [ -z "`print ${(M)$(< /proc/mounts)##${MOUNT_POINT[Nr]}}`" ] ; then
+	            	Read_Fusetab_No_Mnt_List[Nr]="$Nr \"${FSTAB_VALUES[Nr]}\" off"
+				else
+	            	Read_Fusetab_Mnt_List[Nr]="$Nr \"${FSTAB_VALUES[Nr]}\" off"
+				fi
+	        done
+		}
+		#}}}
+		read_fstab fuse
+		if [ -n "$FS_DRIVE" ] ; then
+			case "$Opt" in
+				-u)
+					# FUSE Laufwerke ausbinden.
+					read_fusetab_mnt_list
+					if [ ! -z "$Read_Fusetab_Mnt_List" ] ; then
+						FUSE_UMOUNT_MENU=($Read_Fusetab_Mnt_List)
+						FUSE_UMOUNT_TITLE=$(gettext 'Laufwerke_ausbinden')
+						FUSE_UMOUNT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke zum ausbinden, aus dem Dateisystem, aus.')
+						checklist "$FUSE_UMOUNT_TITLE" "$FUSE_UMOUNT_MSG" "$FUSE_UMOUNT_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*) script_help fuse_mount_help
+									checklist "$FUSE_UMOUNT_TITLE" "$FUSE_UMOUNT_MSG" "$FUSE_UMOUNT_MENU"
+									;;
+								*)	# Dateisystem umounten
+									for n in $gv_Auswahl ; {
+										mount_check -a ${(s| |)${FSTAB_VALUES[n]}[2]}
+									}
+									break
+									;;
+							esac
+						done
+					else
+						MSG=$(gettext 'Es ist kein FUSE Laufwerk zum ausbinden, aus dem Dateisystem, vorhanden.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					;;
+				-m)
+					read_fusetab_mnt_list
+					if [ ! -z "$Read_Fusetab_No_Mnt_List" ] ; then
+						FUSE_MOUNT_MENU=($Read_Fusetab_No_Mnt_List)
+						FUSE_MOUNT_TITLE=$(gettext 'Laufwerke_einbinden')
+						FUSE_MOUNT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke zum einbinden, ins Dateisystem, aus.')
+						checklist "$FUSE_MOUNT_TITLE" "$FUSE_MOUNT_MSG" "$FUSE_MOUNT_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*) script_help fuse_mount_help
+									checklist "$FUSE_MOUNT_TITLE" "$FUSE_MOUNT_MSG" "$FUSE_MOUNT_MENU"
+									;;
+								*)	# Dateisystem mounten
+									for n in $gv_Auswahl ; {
+										mount_check -m ${(s| |)${FSTAB_VALUES[n]}[2]}
+									}
+									break
+									;;
+							esac
+						done
+					else
+						MSG=$(gettext 'Es ist kein FUSE Laufwerk zum einbinden ins Dateisystem vorhanden, oder sind alle schon eingebunden.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					;;
+			esac
+		else
+			no_tabentry_msg
+		fi
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

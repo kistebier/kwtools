@@ -1,0 +1,638 @@
+# Funktion (conf_ca), erstellt neue CAs und Zertifikate# {{{
+#
+# usage: conf_ca [ -ca | -subca | -r ] [ -c [ server_cert | client_cert ]]
+# -c - Benutzer/Server Zertifikate + openssl.cnf Sektion
+# -ca - CA
+# -subca - SubCA
+# -r - neue Anforderung und Schluessel erstellen
+#
+conf_ca() {
+	if [ "${#argv}" -ge 1 ] ; then
+		CONF_CA_UNSET=(COMMONNAME CA_NAME CA_CAPASSWORD CAPASSWD CA_CAPASSWD CAPASSWORD)
+		unset -- Cert_Opt Opt
+		local Opt Cert_Opt
+		Opt="$1"
+		Cert_Opt="$2"
+		# checkt die Variablen $Opt und $Cert_Opt# {{{
+		case "$Opt" in
+			-c)
+				case "$Cert_Opt" in
+					server_cert|client_cert)
+						;;
+					*)	# abbrechen
+						unset -- Cert_Opt
+						no_para_msg $0
+						return 1
+						;;
+				esac
+				;;
+		esac
+		## }}}
+		if [ -n "$CA_OPEN_NAME" ] ; then
+			# Daten der (Sub)CA einlesen.
+			read_ca_data "${KWSSL_DIR}/${CA_OPEN_NAME}/cacert.pem"
+		fi
+		# einige Variablen loeschen
+		unset -- $CONF_CA_UNSET
+		# Variablen
+		KEYLENGTH="4096"
+		VALIDITY=${VALIDITY:-3650}
+		PRESERVEDN=${PRESERVEDN:-yes}
+		REQ_CREATE_TITLE="${lv_Request_Create}"
+		#
+		# Funktion (create_private_key), erstellt einen privaten Schluessel# {{{
+		#
+		# usage: create_private_key CANAME FILENAME KEYLENGTH
+		#
+		create_private_key() {
+			if [[ ${#argv} == 3 ]] ; then
+				local CAName Filename Keylength TmpDir KeyDir CaDir
+				# Variablen
+				CAName="$1"
+				Keylength="$3"
+				CaDir="${KWSSL_DIR}/${CAName}"
+				TmpDir="${KWSSL_DIR}/Tmp"
+				#
+				if [ "$2" != cacert.key ] ; then
+					Filename="${2}.pem"
+					KeyDir="${CaDir}/keys"
+				else
+					Filename="$2"
+					KeyDir="$CaDir"
+				fi
+				# DSA oder RSA# {{{
+				# Algorithmus pruefen
+				check_alg
+				if [ -n "$DsaParam" ] ; then
+					create_file -d $TmpDir
+					# -----BEGIN DSA PARAMETERS-----
+					openssl dsaparam \
+						-out ${TmpDir}/${Filename}.dsaparam \
+						-rand ${CaDir}/.rand $Keylength || prog_failure
+					# -----BEGIN DSA PRIVATE KEY-----
+					openssl $Gen_Alg -aes256 -out ${KeyDir}/${Filename} \
+						-rand ${CaDir}/.rand -passout env:CAPASSWD \
+						${TmpDir}/${Filename}.dsaparam || prog_failure
+				else
+					# -----BEGIN RSA PRIVATE KEY-----
+					openssl $Gen_Alg -aes256 -out ${KeyDir}/${Filename} \
+						-rand ${CaDir}/.rand \
+						-passout env:CAPASSWD $Keylength || prog_failure
+				fi
+				## }}}
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+		# Funktion (conf_ca_menu)# {{{
+		#
+		conf_ca_menu() {
+			case $Opt in
+				-ca)
+					# CA erstellen# {{{
+					REQ_CREATE_MENU=($lv_Ssl_Name \"$CA_NAME\"
+					\"$lv_Ssl_CommonName\" \"$COMMONNAME\"
+	                $lv_Ssl_Land_Code \"$COUNTRYCODE\" \"$lv_Ssl_Password\" \"$CAPASSWORD\"
+	                \"$lv_Ssl_Password_Generate\" \"\" $lv_Ssl_Bundesstaat \"$COUNTRY\"
+	                $lv_Ssl_Location \"$LOCATION\" $lv_Ssl_Organisation \"$ORGANISATION\"
+	                $lv_Ssl_Organisation_Unit \"$ORGANISATIONUNIT\" $lv_Ssl_Email \"$MAIL\"
+	                $lv_Ssl_Validity \"$VALIDITY\" $lv_Ssl_Key_length \"$KEYLENGTH\"
+	                $lv_Ssl_Digest \"$DIGEST\" $gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-subca)
+					# SubCA erstellen# {{{
+					REQ_CREATE_MENU=($lv_Ssl_Name \"$CA_NAME\"
+					\"$lv_Ssl_CA_Password\" \"$CA_CAPASSWORD\"
+				   	\"$lv_Ssl_CommonName\" \"$COMMONNAME\"
+	                $lv_Ssl_Land_Code \"$COUNTRYCODE\" \"$lv_Ssl_Password\" \"$CAPASSWORD\"
+	                \"$lv_Ssl_Password_Generate\" \"\" $lv_Ssl_Bundesstaat \"$COUNTRY\"
+	                $lv_Ssl_Location \"$LOCATION\" $lv_Ssl_Organisation \"$ORGANISATION\"
+	                $lv_Ssl_Organisation_Unit \"$ORGANISATIONUNIT\" $lv_Ssl_Email \"$MAIL\"
+	                $lv_Ssl_Validity \"$VALIDITY\" $lv_Ssl_Key_length \"$KEYLENGTH\"
+	                $lv_Ssl_Digest \"$DIGEST\" \"$lv_Ssl_PreserveDN\" \"$PRESERVEDN\"
+					$gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-c)
+					# Benutzer/Server Zertifikate erstellen# {{{
+					REQ_CREATE_MENU=(\"$Ssl_ServerUserName\" \"$COMMONNAME\"
+	                \"$lv_Ssl_CA_Password\" \"$CA_CAPASSWORD\"
+					$lv_Ssl_Land_Code \"$COUNTRYCODE\"
+					\"$lv_Ssl_Password\" \"$CAPASSWORD\"
+	                \"$lv_Ssl_Password_Generate\" \"\" $lv_Ssl_Bundesstaat \"$COUNTRY\"
+	                $lv_Ssl_Location \"$LOCATION\" $lv_Ssl_Organisation \"$ORGANISATION\"
+	                $lv_Ssl_Organisation_Unit \"$ORGANISATIONUNIT\" $lv_Ssl_Email \"$MAIL\"
+					$lv_Ssl_Validity \"$VALIDITY\" 
+	                $lv_Ssl_Key_length \"$KEYLENGTH\" $lv_Ssl_Digest \"$DIGEST\"
+					$lv_Ssl_Alg \"$ALG\" \"$lv_Ssl_PreserveDN\" \"$PRESERVEDN\"
+					$gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-r)
+					# nur Anforderungen erstellen# {{{
+					REQ_CREATE_MENU=(\"$lv_Ssl_CommonName\" \"$COMMONNAME\"
+					$lv_Ssl_Land_Code \"$COUNTRYCODE\"
+					\"$lv_Ssl_Password\" \"$CAPASSWORD\"
+	                \"$lv_Ssl_Password_Generate\" \"\" $lv_Ssl_Bundesstaat \"$COUNTRY\"
+	                $lv_Ssl_Location \"$LOCATION\" $lv_Ssl_Organisation \"$ORGANISATION\"
+	                $lv_Ssl_Organisation_Unit \"$ORGANISATIONUNIT\" $lv_Ssl_Email \"$MAIL\"
+					$lv_Ssl_Validity \"$VALIDITY\" 
+	                $lv_Ssl_Key_length \"$KEYLENGTH\" $lv_Ssl_Digest \"$DIGEST\"
+					$lv_Ssl_Alg \"$ALG\" \"$lv_Ssl_PreserveDN\" \"$PRESERVEDN\"
+					$gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				*)
+					no_para_msg $0
+					break
+					;;
+			esac
+			menubox "$2" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$REQ_CREATE_MENU"
+		}
+		## }}}
+		# Funktion (check_alg), prueft den Algotrithmus# {{{
+		#
+		check_alg() {
+			if [[ $ALG == DSA ]] ; then
+				DsaParam=dsaparam
+				Gen_Alg=gendsa
+			else
+				Gen_Alg=genrsa
+				unset -- DsaParam
+			fi
+		}
+		## }}}
+		# Funktion (check_helpfile), prueft welche Hilfe Datei angezeigt# {{{
+		# werden soll, etc..
+		#
+		# usage: check_helpfile [ -r | -ca | -subca ] [ -c [ server_cert | client_cert ]]
+		#
+		# -c - Benutzer/Server Zertifikate + openssl.cnf Sektion
+		# -ca - CA
+		# -subca - SubCA
+		# -r - Anforderung
+		#
+		check_helpfile() {
+			local H_Opt Conf_Section
+			H_Opt="$1"
+			Conf_Section="$2"
+			case "$H_Opt" in
+				-ca)
+					# CA
+					CA_TITLE=$(gettext 'erstelle CA')
+					HELPFILE="conf_rootca_help conf_defaultca_help"
+					;;
+				-subca)
+					# SubCA
+					CA_TITLE=$(gettext 'erstelle SubCA')
+					HELPFILE="conf_subca_help conf_defaultca_help"
+					;;
+				-c)
+					# Einstellungen fuer die Erstellung von Benutzer/Server Zertifikaten# {{{
+					# und Anzeigen bzw. der Hilfedateien.
+					CA_TITLE=$(gettext 'erstelle $lv_Cert')
+					if [[ $Conf_Section == server_cert ]] ; then
+						Ssl_ServerUserName="$lv_Ssl_ServerName"
+						HELPFILE="conf_serverca_help conf_defaultca_help"
+					else
+						Ssl_ServerUserName="$lv_Ssl_UserName"
+						HELPFILE="conf_userca_help conf_defaultca_help"
+					fi
+					# # }}}
+					;;
+				-r)
+					# Anforderung
+					CA_TITLE=$(gettext 'erstelle Anforderung')
+					HELPFILE="conf_request_help conf_defaultca_help"
+					;;
+			esac
+		}
+		## }}}
+		# Funktion (create_ca)# {{{
+		create_ca() {
+			# CA erstellen# {{{
+			if [[ $Opt == -ca ]] ; then
+				# check auf CommonName, Land, Passwoerter, etc.
+				if [[ -n $COMMONNAME ]] && \
+					[[ -n $COUNTRYCODE ]] && [[ -n $CA_NAME ]] && \
+					[[ -n $CAPASSWORD ]] && [[ -n $MAIL ]] ; then
+					# Verzeichnisstruktur erstellen
+					create_pki $CA_NAME
+					# Grundkonfiguration/Sektion einlesen
+					read_openssl_conf v3_ca
+					# Digest umwandeln
+					convert_digest $DIGEST
+					# Grundkonfiguration erstellen
+					ca_certs_conf -r
+					# ins Verzeichnis wechseln
+					cd $KWSSL_DIR
+					# privaten Schluessel erstellen
+					create_private_key "$CA_NAME" cacert.key "$KEYLENGTH"
+					# Cacert (Zertifikat) erzeugen und signieren
+					if [ "$RET" != 1 ] ; then
+						openssl req -new -keyform PEM -outform PEM \
+							-config $KWSSL2RC -x509 $lv_Digest -days $VALIDITY \
+							-key ${CA_NAME}/cacert.key \
+							-out ${CA_NAME}/cacert.pem \
+							-subj "/C=${COUNTRYCODE}/ST=${COUNTRY}/L=${LOCATION}/O=${ORGANISATION}/OU=${ORGANISATIONUNIT}/CN=${COMMONNAME}/emailAddress=${MAIL}" \
+							-batch -passin env:CAPASSWD || prog_failure
+						# CRL erstellen
+						if [ "$RET" != 1 ] ; then
+							create_crl "$CA_NAME" ca_ca
+							# Options Variable fuers Hauptmenue festlegen.
+							# Wird benoetigt falls es noch keine CA gibt, um
+							# nach deren Erstellung das richtige Menue aufzurufen..
+							MAIN_MENU_OPT="-ca"
+							# Variable der ab jetzt geoeffneten CA belegen.
+							CA_OPEN_NAME="$CA_NAME"
+						fi
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Ssl_CommonName, $lv_Ssl_Land_Code, $lv_Ssl_Password, $lv_Ssl_Name und $lv_Ssl_Email mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					conf_ca_menu $Opt
+				fi
+			## }}}
+			# SubCAs erstellen, mit Passwort der RootCA# {{{
+			elif [[ $Opt == -subca ]] ; then
+				if [[ -n $COMMONNAME ]] && [[ -n $CA_CAPASSWORD ]] && \
+					[[ -n $COUNTRYCODE ]] && [[ -n $CA_NAME ]] && \
+					[[ -n $CAPASSWORD ]] && [[ -n $MAIL ]] ; then
+					# Verzeichnisstruktur erstellen
+					create_pki $CA_NAME
+					# Grundkonfiguration/Sektion einlesen
+					read_openssl_conf v3_ca
+					# Digest umwandeln
+					convert_digest $DIGEST
+					# aktuelle Serial Nr. herausbekommen
+					NR=$(< ${KWSSL_DIR}/${CA_OPEN_NAME}/serial)
+					# Dateinamen aus den Werten vom Subject erstellen
+					# Basis: CN EMAIL OU O L ST C
+					gen_name
+					# Grundkonfiguration erstellen
+					ca_certs_conf -r
+					# preserveDN pruefen
+					check_preservedn
+					# ins Verzeichnis wechseln
+					cd $KWSSL_DIR
+					# privater Schluessel
+					create_private_key "$CA_NAME" cacert.key "$KEYLENGTH"
+					# Certificate Request
+					if [ "$RET" != 1 ] ; then
+						create_request "$CA_NAME" cacert.key "$lv_Digest"
+						# Zertifikat erzeugen und mit RootCA signieren
+						if [ "$RET" != 1 ] ; then
+							sign_ca_request "$CA_NAME" "$VALIDITY"
+							if [ "$RET" != 1 ] ; then
+								# Dateien in die CA-Struktur kopieren und CA-Kette erstellen.
+								integrate_files_to_ca "$CA_NAME" "$GEN_NAME" "$NR"
+								# CRL erstellen
+								create_crl "$CA_NAME" ca_ca
+								#
+								# Options Variable fuers Hauptmenue festlegen.
+								# Wird benoetigt falls es noch keine CA gibt, um
+								# nach deren Erstellung das richtige Menue aufzurufen..
+								MAIN_MENU_OPT="-subca"
+								# Variable der ab jetzt geoeffneten CA belegen.
+								CA_OPEN_NAME="$CA_NAME"
+							fi
+						fi
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Ssl_Name, $lv_Ssl_CA_Password, $lv_Ssl_CommonName, $lv_Ssl_Password, $lv_Ssl_Land_Code und $lv_Ssl_Email mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					conf_ca_menu $Opt
+				fi
+			## }}}
+			# Benutzer/Server Zertifikate erstellen# {{{
+			elif [[ $Opt == -c ]] ; then
+				if [[ -n $COMMONNAME ]] && [[ -n $CA_CAPASSWORD ]] && \
+					[[ -n $MAIL ]] && [[ -n $CAPASSWORD ]] && \
+					[[ -n $COUNTRYCODE ]] ; then
+					# Grundkonfiguration/Sektion einlesen
+					read_openssl_conf "$Cert_Opt"
+					# Digest umwandeln
+					convert_digest $DIGEST
+					# Leerzeichen durch Unterstriche ersetzen
+					COMMONNAME1="${COMMONNAME// /_}"
+					# Dateinamen aus den Werten vom Subject erstellen
+					# Basis: CN EMAIL OU O L ST C
+					gen_name
+					########################################
+					# INFO: wirklich benutzen?
+					########################################
+#					# Grundkonfiguration erstellen
+#					if [[ $Cert_Opt == server_cert ]] ; then
+#						ca_certs_conf -s
+#					else
+#						ca_certs_conf -u
+#					fi
+					# preserveDN pruefen
+					check_preservedn
+					# privaten Schluessel erstellen
+					create_private_key "$CA_OPEN_NAME" "$GEN_NAME" "$KEYLENGTH"
+					# Anforderung erstellen
+					if [ "$RET" != 1 ] ; then
+						create_request "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
+						# Zertifikate erzeugen und mit (Sub)CA signieren
+						if [ "$RET" != 1 ] ; then
+							sign_cert_request "$CA_OPEN_NAME" "${Cert_Opt%_*}_ca" "${GEN_NAME}.pem" "$VALIDITY" "$Digest"
+						fi
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $Ssl_ServerUserName, $lv_Ssl_CA_Password, $lv_Ssl_Password, $lv_Ssl_Land_Code und $lv_Ssl_Email mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					conf_ca_menu $Opt
+				fi
+			## }}}
+			# nur Anforderung erstellen# {{{
+			elif [[ $Opt == -r ]] ; then
+				if [[ -n $COMMONNAME ]] && \
+					[[ -n $MAIL ]] && [[ -n $CAPASSWORD ]] && \
+					[[ -n $COUNTRYCODE ]] ; then
+					# Digest umwandeln
+					convert_digest $DIGEST
+					# Leerzeichen durch Unterstriche ersetzen
+					COMMONNAME1="${COMMONNAME// /_}"
+					# Dateinamen aus den Werten vom Subject erstellen
+					# Basis: CN EMAIL OU O L ST C
+					gen_name
+					# privaten Schluessel erstellen
+					create_private_key "$CA_OPEN_NAME" "$GEN_NAME" "$KEYLENGTH"
+					# Anforderung erstellen
+					if [ "$RET" != 1 ] ; then
+						create_request "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
+					fi
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Ssl_CommonName, $lv_Ssl_Password, $lv_Ssl_Land_Code und $lv_Ssl_Email mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					conf_ca_menu $Opt
+				fi
+			fi
+			## }}}
+		}
+		## }}}
+		check_helpfile "$Opt" $Cert_Opt
+		conf_ca_menu $Opt
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+					# Hilfe Messagebox
+					script_help "$HELPFILE"
+					conf_ca_menu $Opt
+					;;
+				"$lv_Ssl_CA_Password")
+					# RootCA Password Eingabe
+					ca_passwd_input
+					conf_ca_menu $Opt $lv_Ssl_CA_Password
+					;;
+				$lv_Ssl_Name)
+					# Name der CA eingeben# {{{
+					inputbox "$lv_Ssl_Name" "$SAVE_MSG" "$CA_NAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						if [ ! -d "${KWSSL_DIR}/${gv_Auswahl}" ] ; then
+							# dementsprechende Variablen fuer die CA belegen
+							CA_NAME="$gv_Auswahl"
+						else
+							unset -- CA_NAME
+							ca_existed_msg "$gv_Auswahl"
+						fi
+					else
+						unset -- CA_NAME
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Name
+					;;
+				"$lv_Ssl_CommonName")
+					# allgemeine Daten fuer das CA Zertifikat eingeben# {{{
+					COMMONNAME_MSG=$(gettext 'Geben Sie den allgemeinen Namen fuer die CA ein.')
+					inputbox "$lv_Ssl_CommonName" "$COMMONNAME_MSG" "$COMMONNAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						COMMONNAME="$gv_Auswahl"
+					else
+						unset -- COMMONNAME
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_CommonName
+					;;
+				$lv_Ssl_ServerName)
+					# Dateiname des Zertifikats eingeben# {{{
+					SERVERNAME_MSG=$(gettext 'Geben Sie den Namen fuer den Server ein.')
+					inputbox "$lv_Ssl_ServerName" "$SERVERNAME_MSG" "$COMMONNAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						COMMONNAME="$gv_Auswahl"
+					else
+						unset -- COMMONNAME
+					fi
+					## }}}
+					conf_ca_menu $Opt $Ssl_ServerUserName
+					;;
+				$lv_Ssl_UserName)
+					# Username des Zertifikats eingeben# {{{
+					USERNAME_MSG=$(gettext 'Geben Sie einen Benutzernamen ein.')
+					inputbox "$lv_Ssl_UserName" "$USERNAME_MSG" "$COMMONNAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						COMMONNAME="$gv_Auswahl"
+					else
+						unset -- COMMONNAME
+					fi
+					## }}}
+					conf_ca_menu $Opt $Ssl_ServerUserName
+					;;
+				$lv_Ssl_Land_Code)
+					# Land (2 Buchstaben Code) eingeben# {{{
+					COUNTRYCODE_MSG=$(gettext 'Geben Sie den Laendercode (2 Buchstaben, z. B. DE) ein.')
+					inputbox "$lv_Ssl_Land_Code" "$COUNTRYCODE_MSG" "$COUNTRYCODE"
+					case "$gv_Auswahl" in
+						[A-Z][A-Z])
+							COUNTRYCODE="$gv_Auswahl"
+							;;
+						*)
+							no_input_msg
+							;;
+					esac
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Land_Code
+					;;
+				"$lv_Ssl_Password")
+					# Passwort eingeben# {{{
+					PASSWD_MSG=$(gettext 'Geben Sie bitte ein Passwort fuer das Zertifikat oder CA ein (mindestens $PASSWD_LENGTH Zeichen lang) und wiederholen dieses im Feld darunter.')
+					mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" "$PASSWD_LENGTH"
+					if [[ -n $gv_Pass ]] ; then
+						password_display "$gv_Pass"
+						if [ -n "$gv_Star_Passphrase" ] ; then
+							CAPASSWORD="$gv_Star_Passphrase"
+							export CAPASSWD="$gv_Pass"
+							unset -- gv_Pass
+						else
+							unset -- CAPASSWD CAPASSWORD gv_Pass
+						fi
+					else
+						unset -- CAPASSWORD CAPASSWD gv_Pass
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Password
+					;;
+				"$lv_Ssl_Password_Generate")
+					# Passord generieren# {{{
+					# Standard Passwort Laenge ist 10 Zeichen lang
+					# wenn kein Passwort manuell eingegeben wurde.
+					gv_Pass=${${${(ws: :)$(head -c 256 /dev/urandom | uuencode -m -)}[4]}[1,$PASSWD_LENGTH]}
+					if [[ -n $gv_Pass ]] ; then
+						PASSWORD="$gv_Pass"
+						export CAPASSWD="$gv_Pass"
+						unset -- gv_Pass
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Password_Generate
+					;;
+				$lv_Ssl_Bundesstaat)
+					# Bundesstaat oder Provinz eingeben# {{{
+					COUNTRY_MSG=$(gettext 'Geben Sie den Bundesstaat oder die Provinz ein.')
+					inputbox "$lv_Ssl_Bundesstaat" "$COUNTRY_MSG" "$COUNTRY"
+					if [ -n "$gv_Auswahl" ] ; then
+						COUNTRY="$gv_Auswahl"
+					else
+						unset -- COUNTRY
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Bundesstaat
+					;;
+				$lv_Ssl_Location)
+					# Standort - z.B. Stadt eingeben# {{{
+					LOCATION_MSG=$(gettext 'Geben Sie den Standort (z. B. Stadt) ein.')
+					inputbox "$lv_Ssl_Location" "$LOCATION_MSG" "$LOCATION"
+					if [ -n "$gv_Auswahl" ] ; then
+						LOCATION="$gv_Auswahl"
+					else
+						unset -- LOCATION
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Location
+					;;
+				$lv_Ssl_Organisation)
+					# Organisation - z.B. Firma eingeben# {{{
+					ORGANISATION_MSG=$(gettext 'Geben Sie ihre Organisation (z. B. Firma) ein.')
+					inputbox "$lv_Ssl_Organisation" "$ORGANISATION_MSG" "$ORGANISATION"
+					if [ -n "$gv_Auswahl" ] ; then
+						ORGANISATION="$gv_Auswahl"
+					else
+						unset -- ORGANISATION
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Organisation
+					;;
+				$lv_Ssl_Organisation_Unit)
+					# Organisationseinheit - z.B. Arbeit eingeben# {{{
+					ORGANISATIONUNIT_MSG=$(gettext 'Geben Sie ihre Organisationeinheit (z. B. Arbeit) ein.')
+					inputbox "$lv_Ssl_Organisation_Unit" "$ORGANISATIONUNIT_MSG" "$ORGANISATIONUNIT"
+					if [ -n "$gv_Auswahl" ] ; then
+						ORGANISATIONUNIT="$gv_Auswahl"
+					else
+						unset -- ORGANISATIONUNIT
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Organisation_Unit
+					;;
+				$lv_Ssl_Email)
+					# Email-Adresse# {{{
+					EMAIL_MSG=$(gettext 'Geben Sie eine Mail Adresse ein.')
+					mail_address "$EMAIL_MSG" "$MAIL"
+					if [ -n "$gv_Mail_Adr" ] ; then
+						MAIL="$gv_Mail_Adr"
+					else
+						unset -- MAIL
+					fi
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Email
+					;;
+				$lv_Ssl_Validity)
+					# Gueltigkeitseingabe
+					validity_input
+					conf_ca_menu $Opt $lv_Ssl_Validity
+					;;
+				$lv_Ssl_Key_length)
+					# Schluessellaenge eingeben (numbits)
+					keylength_input
+					conf_ca_menu $Opt $lv_Ssl_Key_length
+					;;
+				$lv_Ssl_Digest)
+					# Digest auswaehlen# {{{
+					DIGEST_MENU=(SHA-1 \"\" MD2 \"\" MDC2 \"\"
+					MD4 \"\" MD5 \"\" RIPEMD-160 \"\")
+					# Funktion (digest_menu)# {{{
+					digest_menu() {
+						menubox "$DIGEST" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$DIGEST_MENU"
+					}
+					## }}}
+					digest_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*) # Hilfe
+								script_help "$HELPFILE"
+								digest_menu
+								;;
+							*) # Auswahl uebernehmen
+								DIGEST="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Digest
+					;;
+				$lv_Ssl_Alg)
+					# Algorithmus auswaehlen# {{{
+					ALG_MENU=(RSA \"\" DSA \"\")
+					# Funktion (alg_menu)# {{{
+					alg_menu() {
+						menubox "$ALG" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$ALG_MENU"
+					}
+					## }}}
+					alg_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*) # Hilfe
+								script_help "$HELPFILE"
+								alg_menu
+								;;
+							*) # Auswahl uebernehmen
+								ALG="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					conf_ca_menu $Opt $lv_Ssl_Alg
+					;;
+				$lv_Ssl_PreserveDN)
+					# eMail Subject DN hinzufuegen?
+					choice_preservedn
+					conf_ca_menu $Opt $lv_Ssl_PreserveDN
+					;;
+				$gv_Create)
+					# CAs, Zertifikate erstellen und konfigurieren
+					create_ca
+					# einige Variablen/Passwoerter loeschen
+					unset -- $CONF_CA_UNSET
+					break
+					;;
+				$gv_Back)
+					# zurueck
+					# einige Variablen loeschen
+					unset -- $CONF_CA_UNSET
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

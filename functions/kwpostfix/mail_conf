@@ -1,0 +1,147 @@
+# Mail Parameter einstellen{{{
+#
+# usage: mail_conf
+#
+mail_conf() {
+
+# Variable
+MAIL_TITLE="${gv_Configuration}::${lv_Mail}"
+
+# Bestehende Konfiguration einlesen# {{{
+print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)(mail_|mailbox_)*} | \
+	sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+	s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+read_file -f ${gv_WorkDir}/postfix$$
+rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+## }}}
+# Funktion (conf_mail_menue), Parameter fuer alles was mit mail anfaengt{{{
+conf_mail_menue() {
+	MAIL_MENU=(mail_name \"\$mail_name\"
+	mail_owner \"\$mail_owner\"
+	mail_spool_directory \"\$mail_spool_directory\"
+	mailbox_command \"\$mailbox_command\"
+	mailbox_command_maps \"\$mailbox_command_maps\"
+	mailbox_delivery_lock \"\$mailbox_delivery_lock\"
+	mailbox_size_limit \"\$mailbox_size_limit\"
+	mailbox_transport \"\$mailbox_transport\"
+	mailbox_transport_maps \"\$mailbox_transport_maps\"
+	postfix \"reload\"
+	$gv_Back \"\")
+	menubox "$1" "$MAIL_TITLE" "$gv_Menupoint" "$MAIL_MENU"
+}
+#}}}
+conf_mail_menue
+while [ "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help mail_help
+			conf_mail_menue
+			;;
+		mail_name)
+			# Mail Name fuer Begruessungs Banner{{{
+			MAIL_NAME_MSG=$(gettext 'Geben Sie den Namen des Mailservers, fuer das Begruessungs Banner ein (Bsp. Postfix).')
+			inputbox "$MAIL_TITLE" "$MAIL_NAME_MSG"
+			if [ "$gv_Auswahl" ] ; then
+				mail_name="$gv_Auswahl"
+				postconf -e mail_name="$gv_Auswahl"
+			else
+				mail_name=""
+				postconf -e mail_name=""
+			fi
+			#}}}
+			conf_mail_menue mail_name
+			;;
+		mail_owner)
+			# Mail user auswaehlen{{{
+			user_auswahl
+			mail_owner="$WERT"
+			postconf -e mail_owner="$WERT"
+			#}}}
+			conf_mail_menue mail_owner
+			;;
+		mail_spool_directory)
+			# mail spool Verzeichnis einstellen{{{
+			dselect "$mail_spool_directory"
+			if [ "$VERZ" ] ; then
+				dselect_check "$VERZ"
+				if [ "$VERZ" ] ; then
+					mail_spool_directory="$VERZ"
+					postconf -e mail_spool_directory="$VERZ"
+				fi
+			fi
+			#}}}
+			conf_mail_menue mail_spool_directory
+			;;
+		mailbox_command)
+			# Mailbox Kommando{{{
+			# U_OPT wird benoetigt von der Funktion return_check.
+			U_OPT=hk
+			#
+			MAILBOX_CMD_MSG=$(gettext 'Geben Sie ein Kommando ein, dass fuer die Einlieferung in die lokalen Mailboxen zustaendig ist (Bsp. /usr/bin/procmail -t -a \"\$EXTENSION\").')
+			inputbox "$MAIL_TITLE" "$MAILBOX_CMD_MSG" "${${mailbox_command//\"/\\\"}//\$/\\\$}"
+			if [[ -n $gv_Auswahl ]] ; then
+				mailbox_command="$gv_Auswahl"
+				postconf -e mailbox_command="$gv_Auswahl"
+			else
+				mailbox_command=""
+				postconf -e mailbox_command=""
+			fi
+			#}}}
+			conf_mail_menue mailbox_command
+			;;
+		mailbox_command_maps)
+			# Tabelle fuer Mailbox Befehle# {{{
+			tab_support_choice "$gv_Auswahl"
+			mailbox_command_maps="$MAPS"
+			postconf -e mailbox_command_maps="$MAPS"
+			## }}}
+			conf_mail_menue mailbox_command_maps
+			;;
+		mailbox_delivery_lock)
+			# Lockart einstellen# {{{
+			lock_art "$mailbox_delivery_lock"
+			mailbox_delivery_lock="$WERT"
+			postconf -e mailbox_delivery_lock="$WERT"
+			## }}}
+			conf_mail_menue mailbox_delivery_lock
+			;;
+		mailbox_size_limit)
+			# Mailbox Groesse einstellen{{{
+			number_input -b "$mailbox_size_limit"
+			if [ "$NUMBER" ] ; then
+				mailbox_size_limit="$NUMBER"
+				postconf -e mailbox_size_limit="$NUMBER"
+			fi
+			#}}}
+			conf_mail_menue mailbox_size_limit
+			;;
+		mailbox_transport)
+			# Mailbox Transport Methode, wird aus master.cf gelesen{{{
+			transport_methode
+			mailbox_transport="$WERT"
+			postconf -e mailbox_transport="$WERT"
+			#}}}
+			conf_mail_menue mailbox_transport
+			;;
+		mailbox_transport_maps)
+			# Mailbox Transport Methode - Mapdatei{{{
+			tab_support_choice "$gv_Auswahl"
+			mailbox_transport_maps="$WERT"
+			postconf -e mailbox_transport_maps="$WERT"
+			#}}}
+			conf_mail_menue mailbox_transport_maps
+			;;
+		postfix)
+			# postfix, Konfiguration neu einlesen
+			postfix_start_reload
+			break
+			;;
+		$gv_Back)	break
+			;;
+	esac
+done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

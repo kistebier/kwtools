@@ -1,0 +1,97 @@
+# Funktion (default_conf)# {{{
+#
+# usage: default_conf
+#
+default_conf() {
+	# Funktion (default_conf_menu)# {{{
+	DEFAULT_CONF_MENU=(\"$lv_Ca_Certs\" \"\"
+	\"$lv_Server_Ca\" \"\" \"$lv_User_Ca\" \"\"
+	$lv_Revokes \"\" $gv_Back \"\")
+	default_conf_menu() {
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$DEFAULT_CONF_MENU"
+	}
+	# }}}
+	#
+	default_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe Messagebox
+				script_help default_conf_help
+				default_conf_menu
+				;;
+			"$lv_Ca_Certs")
+				# normale CA Zertifikate konfigurieren
+				read_openssl_conf v3_ca
+				ca_certs_conf -n
+				default_conf_menu $lv_Ca_Certs
+				;;
+			"$lv_Server_Ca")
+				# Server Zertifikate konfigurieren
+				read_openssl_conf server_cert
+				ca_certs_conf -s
+				default_conf_menu $lv_Server_Ca
+				;;
+			"$lv_User_Ca")
+				# Benutzer Zertifikate konfigurieren
+				read_openssl_conf client_cert
+				ca_certs_conf -u
+				default_conf_menu $lv_User_Ca
+				;;
+			$lv_Revokes)
+				# Tage der Gueltigkeit der Widerrufslisten eingeben# {{{
+				# bisher nur fuer alle CAs (ca_ca, server_ca,...)
+				check_default_revoke_days ca_ca
+				DEFAULT_REVOKE_DAYS=${DEFAULT_REVOKE_DAYS:-30}
+				# Funktion (default_revokes_menu)# {{{
+				#
+				default_revokes_menu() {
+					DEFAULT_REVOKE_MENU=(\"$lv_Ssl_Validity\" \"$DEFAULT_REVOKE_DAYS\"
+					$gv_Create \"\" $gv_Back \"\")
+					menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_REVOKE_MENU"
+				}
+				# }}}
+				default_revokes_menu
+				while [ "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+				    	    # Hilfe Messagebox
+							script_help default_conf_help
+							default_revokes_menu
+							;;
+						$lv_Ssl_Validity)
+							# Gueltigkeit in Tage eingeben
+							revoke_days_input
+							default_revokes_menu $lv_Ssl_Validity
+							;;
+						$gv_Create)
+							# erstellen# {{{
+							if [ -n "$DEFAULT_REVOKE_DAYS" ] ; then
+								sed -e "s#default_crl_days =.*#default_crl_days = $DEFAULT_REVOKE_DAYS#" $KWSSL2RC > ${gv_WorkDir}/conf_crl
+								mv ${gv_WorkDir}/conf_crl $KWSSL2RC
+								break
+							else
+								MSG=$(gettext 'Sie muessen erst den Menuepunkt $lv_Ssl_Validity mit einem Wert belegen.')
+								msgbox "$gv_Info" "$MSG"
+								default_revokes_menu $lv_Ssl_Validity
+							fi
+							## }}}
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				default_conf_menu $lv_Revokes
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

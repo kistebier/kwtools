@@ -1,0 +1,224 @@
+# Funktion tls_per_site_table{{{
+#
+tls_per_site_table() {
+	FILE="$1"
+	# Variable fuers Menue
+	lv_Keyword=$(gettext 'Schluesselwort')
+
+	# Funktion tls_per_site_menue{{{
+	tls_per_site_menue() {
+		TLS_PER_SITE_MENU=($lv_Address \"$ADR\" $lv_Port \"$PORT\" 
+		$lv_Keyword \"$KEYWORD\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$TLS_PER_SITE_MENU"
+	}
+	#}}}
+	# Funktion tls_per_site_aendern{{{
+	tls_per_site_aendern() {
+	tls_per_site_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help "$TAB_HELP"
+				tls_per_site_menue
+				;;
+			$lv_Address)
+				# Server Adresse eingeben{{{
+				ADRESS_MSG=$(gettext 'Geben Sie bitte den Rechnernamen des Servers ein (Bsp. server.domain.de).')
+				inputbox "$TABLE_TITLE" "$ADRESS_MSG" "$ADR"
+				if [ -n "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						\[*\])
+							ADR="$gv_Auswahl"
+							;;
+						*)
+							# Server in eckige Klammern stellen?
+							Adr="$gv_Auswahl"
+							SQUARE_BRACKET=$(gettext 'Soll der Rechnername ($Adr) in eckige Klammern (direkte Einlieferung) gestellt werden?')
+							yesno "$TABLE_TITLE" "$SQUARE_BRACKET" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								ADR="[${Adr}]"
+							else
+								ADR="$Adr"
+							fi
+							;;
+					esac
+				else
+					unset -- ADR
+					no_input_msg
+				fi
+				#}}}
+				tls_per_site_menue $lv_Address
+				;;
+			$lv_Port)
+				# Port vergeben{{{
+				PORT_MSG=$(gettext 'Geben Sie hier einen Port ein (Bsp. 25).')
+				inputbox "$TABLE_TITLE" "$PORT_MSG" "$PORT"
+				if [ -n "$gv_Auswahl" ] ; then
+					PORT="$gv_Auswahl"
+					if [ "$PORT" = 0 ] ; then
+						no_input_msg
+						unset -- PORT
+					fi
+				else
+					unset -- PORT
+					no_input_msg
+				fi
+				#}}}
+				tls_per_site_menue $lv_Port
+				;;
+			$lv_Keyword)
+				# Schluesselwort waehlen{{{
+				KEYWORD_MSG=$(gettext 'Waehlen Sie ein Schluesselwort aus.')
+				KEYWORD_MENU=(NONE \"\" MAY \"\" MUST_NOPEERMATCH \"\" 
+					MUST \"\")
+				# Funktion (keyword_menu)# {{{
+				#
+				keyword_menu() {
+					menubox "$1" "$TABLE_TITLE" "$KEYWORD_MSG" "$KEYWORD_MENU" "$KEYWORD"
+				}
+				## }}}
+				keyword_menu $KEYWORD
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						*HELP)
+							script_help tls_per_site_keyword_help
+							keyword_menu $KEYWORD
+							;;
+						*)	# uebernehmen
+							KEYWORD="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#}}}
+				tls_per_site_menue $lv_Keyword
+				;;
+			$gv_Save)
+				# Eintraege speichern{{{
+				if [ "$ADR" -a "$KEYWORD" ] ; then
+					if [ -n "$AENDERN_ADR" ] ; then
+						if [ -n "$PORT" ] ; then
+							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}:${PORT}\t${KEYWORD}#" $FILE >$FILE$$
+						else
+							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${KEYWORD}#" $FILE >$FILE$$
+						fi
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						if [ -n "$PORT" ] ; then
+							>> $FILE$$ <<< "${ADR}:${PORT}	$KEYWORD"
+						else
+							>> $FILE$$ <<< "$ADR	$KEYWORD"
+						fi
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					MSG=$(gettext 'Sie muessen mindestens eine Adresse und ein Schluesselwort mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					tls_per_site_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Eintraege
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- PORT ADR KEYWORD AENDERN_ADR AENDERN_ADR1
+				tls_per_site_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Eintraege aendern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl aendern
+								C_CHOICE="$gv_Auswahl"
+								ADR="${${${=gv_Auswahl}[1]}%:*}"
+								PORT="${${${=gv_Auswahl}[1]}#*:}"
+								KEYWORD="${${=gv_Auswahl}[2]}"
+								AENDERN_ADR="${${=gv_Auswahl}[1]}"
+								AENDERN_ADR1="${${=gv_Auswahl}[2]}"
+								tls_per_site_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)	
+				# Eintraege loeschen{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Loeschen
+								while read ADRESS ; do
+									grep -v "^${${${ADRESS// /.*}//\]/\\]}//\[/\\[}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen
+				# die Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:devel:fs_conf</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Linux, linux, Netzworkk, kwtools, fs_conf, zsh, Zsh">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2014-03-19">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../images/favicon.ico" type="image/ico">
+        <LINK href="../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center>
+			<a href="../../doku/devel/script_init.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+			 <a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+                         <a href="../../doku/devel/hw.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h1>Allgemeine Funktionen die das Dateisystem betreffen.</h1></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p>Man muss diese Funktion (fs_conf) nur ausf&uuml;hren, dann kann man alle
+			enthaltenenen Funktionen ausf&uuml;hren, wie z. B. "copy_fs". Wenn nichts zu der
+			Syntax steht, wird die Funktion einfach nur aufgerufen.
+			Manche Funktionen haben auch noch eigene Funktionen die aber nur von diesen benutzt werden und 
+			dadurch bisher noch nicht weiter erkl&auml;rt werden.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+		<tr>
+			<td></td>
+			<td><h4>Dateisystemfunktionen</h4><p>
+			<a href="fs.html#check_part_fs" target="_self">check_part_fs</a><br>
+			<a href="fs.html#copy_fs" target="_self">copy_fs</a><br>
+			<a href="fs.html#floppy_format" target="_self">floppy_format</a><br>
+			<a href="fs.html#format" target="_self">format</a><br>
+			<a href="fs.html#formatprogs_check" target="_self">formatprogs_check</a><br>
+			<a href="fs.html#mdadm_conf_scan" target="_self">mdadm_conf_scan</a><br>
+			<a href="fs.html#resize_fs" target="_self">resize_fs</a></p>
+			<h4>Nachrichten und Fehlermeldungen</h4>
+			<p><a href="fs.html#no_copy_fs_msg" target="_self">no_copy_fs_msg</a><br>
+			<a href="fs.html#no_fs_support_msg" target="_self">no_fs_support_msg</a><br>
+			<a href="fs.html#no_fs_type_msg" target="_self">no_fs_type_msg</a><br>
+			<a href="fs.html#no_space_fp_msg" target="_self">no_space_fp_msg</a><br>
+			<a href="fs.html#use_kwcryptsetup_msg" target="_self">use_kwcryptsetup_msg</a>
+			</p></td>
+			<td></td>
+		</tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="check_part_fs">check_part_fs</a></b>
+			<p>Die Funktion check_part_fs &uuml;berpr&uuml;ft das &uuml;bergebene Laufwerk
+			darauf welches Dateisystem es besitzt. Dabei werden die util-linux >=2.16.2
+			benutzt.<br>
+			check_part_fs LAUFWERK<br>
+			LAUFWERK - Variable die das zu &uuml;berpr&uuml;fende Laufwerk enth&auml;lt.<br>
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Fs - Variable die das Dateisystem enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="copy_fs">copy_fs</a></b>
+			<p>copy_fs kopiert Dateisysteme und passt sie der Gr&ouml;sse an.
+			Zur Zeit werden nur die Dateisysteme ext2/3/4, fat16, fat32,
+			ntfs, reiserfs, reiser4 und xfs unterst&uuml;tzt. Die Dateisysteme/Partitionstypen
+			auf dem Quell- und Ziel-Laufwerk m&uuml;ssen identisch sein. fat16 und fat32
+			Dateisysteme kann man
+			nicht vergr&ouml;ssern und xfs Dateisysteme nicht verkleinern.<br>
+			copy_fs SRC DST<br>
+			SRC - Variable die die Quell-Partition enth&auml;lt.<br>
+			DST - Variable die die Ziel-Partition enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="floppy_format">floppy_format</a></b>
+			<p>Diese Funktion dient zum formatieren von Disketten mittels
+			"fdformat". Zum Beispiel um Images auf Diskette zu kopieren
+			(Bootdiskette).<br>
+			floppy_format "$FLOPPY"</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="format">format</a></b>
+			<p>format dient zum Formatieren von Blockorientierten Ger&auml;ten, wie Festplatten.
+			Zuerst wird nach den Programmen f&uuml;r die Dateisysteme gesucht. Wenn diese vorhanden sind,
+			werden sie zur Auswahl angeboten, um die Partitionen,
+			Logische Volumes oder RAID-Arrays dementsprechend zu formatieren.<br>
+			format DEVICES [ FS ]<br>
+			DEVICES - Variable die die zu formatierenden Blockger&auml;te enth&auml;lt.<br>
+			FS - Dateisystem, ist optional. Kann man mit &uuml;bergeben, wenn die Funktion
+			<a href="fs.html#formatprogs_check" target="_self">formatprogs_check</a> schon verher ausgef&uuml;hrt wurde.
+			Ansonsten ruft format diese Funktion auf.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="formatprogs_check">formatprogs_check</a></b>
+			<p>&Uuml;berpr&uuml;ft, welche Formatierungswerkzeuge installiert sind. Nur die aufgez&auml;hlten
+			gehen zur Zeit. Dabei wird die Variable FM_Menue belegt.<br>
+			formatprogs_check [ -p | -s ]<br>
+			-p = &Uuml;berpr&uuml;fung auf ext2, ext3, ext4, fat32, hfs, hfsplus, jfs, linux-swap, ntfs, reiserfs, reiser4, ufs, xfs.
+			linux-swap wird nur von kwparted ben&ouml;tigt.<br>
+			-s = &Uuml;berpr&uuml;fung auf swap.<br>
+			nichts = &Uuml;berpr&uuml;fung auf ext2, ext3, ext4, fat32, hfs, hfsplus, jfs, ntfs, reiserfs, reiser4, ufs, xfs.<br>
+			<b><font color="darkYellow">Variable</font></b><br>
+			FM_Menue - Variable die die Namen der Dateisysteme enth&auml;lt deren Werkzeuge installiert 
+			sind. Diese sind aufbereitet f&uuml;r die Funktion <a href="sys.html#menubox" target="_blank">menubox</a>.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="mdadm_conf_scan">mdadm_conf_scan</a></b>
+			<p>Diese Funktion dient zum updaten der Konfigurationsdatei
+			des Programms mdadm (Software-RAID).<br>
+			mdadm_conf_scan</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="resize_fs">resize_fs</a></b>
+			<p>Mit der Funktion resize_fs kann man die Dateisysteme von 
+			Partitionen, RAID Arrays, Logischen Volumes oder 
+			verschl&uuml;sselten Laufwerken &auml;ndern,
+			vorrausgesetzt das Dateisystem unterst&uuml;tzt das.<br>
+			resize_fs [ -l | -p | -r ] [+|-]SIZE OLD_SIZE DEVICE<br>
+			-l - LVM in der Gr&ouml;sse ver&auml;ndern.<br>
+			-p - Partitionen in der Gr&ouml;sse ver&auml;ndern.<br>
+			-r - RAID Arrays in der Gr&ouml;sse ver&auml;ndern.<br>
+			-+ - vergr&ouml;ssern.<br>
+			-- - verkleinern.<br>
+			SIZE - Gr&ouml;sse in KiloByte die dazu addiert oder entfernt werden soll.<br>
+			OLD_SIZE - alte Gr&ouml;sse des Laufwerks, zur Berechnung.<br>
+			DEVICE - Laufwerk, kann ein RAID, LV oder eine normale Partition sein.<br>
+			<b>Notiz:</b> normale Partitionen (-p) gehen nocht nicht.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h1>Dateisystemnachrichten und Fehlermeldungen</h1></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_copy_fs_msg">no_copy_fs_msg</a></b>
+			<p>Nachricht das man dieses Dateisystem nicht kopieren kann, da die Gr&ouml;sse
+			des Ziellaufwerks zu klein ist.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_fs_support_msg">no_fs_support_msg</a></b>
+			<p>Info dar&uuml;ber, wenn ein Dateisystem (noch) nicht unterst&uuml;tzt wird.<br>
+			no_fs_support_msg FILESYSTEM<br>
+			FILESYSTEM - Dateisystem welches noch nicht unterst&uuml;tzt wird.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_fs_type_msg">no_fs_type_msg</a></b>
+			<p>Info dar&uuml;ber, wenn kein Dateisystemtyp festgestellt werden kann.<br>
+			no_fs_type_msg DEVICE<br>
+			DEVICE - Laufwerk dessen Dateisystemtyp nicht erkannt wurde.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_space_fp_msg">no_space_fp_msg</a></b>
+			<p>Info dar&uuml;ber, dass kein Platz mehr auf dem Laufwerk ist. Lesen Sie dazu
+			die Hilfe zum Scrip kwrsync_backup.<br>
+			no_space_fp_msg [ -e DST_SIZE SRC_SIZE ]<br>
+			-e - erweiterte Fehlermeldung mit Anzeige der Laufwerksgr&ouml;ssen.<br>
+			DST_SIZE - Zielgr&ouml;sse des Laufwerks.<br>
+			SRC_SIZE - vorhandene Gr&ouml;sse des Laufwerks.<br>
+			nichts - Fehlermeldung das der Platz nicht mehr ausreicht.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="use_kwcryptsetup_msg">use_kwcryptsetup_msg</a></b>
+			<p>Info dar&uuml;ber das dieses Laufwerk verschl&uuml;sselt 
+			ist und mit dem Script <a target="_blank" href="../kwtools/sys/kwcryptsetup.html" name="kwcryptsetup">kwcryptsetup</a> bearbeitet werden muss.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center>
+			<a href="../../doku/devel/script_init.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+			 <a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+                         <a href="../../doku/devel/hw.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

@@ -1,0 +1,41 @@
+# Funktion (parse_mail_host)# {{{
+#
+# usage: parse_mail_host MAILHOST
+# MAILHOST - Rechnereingabe die zerlegt werden soll.
+#
+parse_mail_host() {
+	if [ "$#" = 1 ] ; then
+		unset -- PROT PORT Name Name1 Name2 MAIL_HOST Serv
+		Serv="$1"
+		case "$Serv" in
+			(pop|pops|imap|imaps|smtp|smtps)://*:<->*)
+				PROT="${Serv%://*}"
+				PORT="${Serv##*:}"
+				Name="${Serv%:*}"
+				Name1="${Name#*://}"
+				Name2="${Name1#*@}"
+				MAIL_HOST="$Name2"
+				;;
+			(pop|pops|imap|imaps|smtp|smtps)://*)
+				PROT="${Serv%://*}"
+				Name="${Serv##*[@/]}"
+				MAIL_HOST="$Name"
+				case "$PROT" in
+					imap)	PORT="143" ;;
+					imaps)	PORT="993" ;;
+					pop)	PORT="110" ;;
+					pops)	PORT="995" ;;
+					smtp)	PORT="25" ;;
+					smtps)	PORT="465" ;;
+				esac
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

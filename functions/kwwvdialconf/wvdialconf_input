@@ -1,0 +1,165 @@
+# Funktion wvdialconf_input# {{{
+#
+# benoetigt die Funktion wvdial_config
+#
+# usage: wvdialconf_input
+wvdialconf_input() {
+	# Funktion wvdialconf_input_menu# {{{
+	lv_Username=$(gettext 'Benutzername')
+	lv_Speed=$(gettext 'Geschwindigkeit')
+	lv_Init=$(gettext 'Init')
+	lv_Modem=$(gettext 'Modem')
+	lv_Telephone=$(gettext 'Telefon')
+	#
+	wvdialconf_input_menu() {
+		CONF_MENU=($lv_Username \"$USER_NAME\" $lv_Speed \"$SPEED\"
+		$lv_Init \"$INIT\" ${lv_Init}1 \"$INIT1\" ${lv_Init}2 \"$INIT2\"
+		${lv_Init}3 \"$INIT3\" $lv_Modem \"$MODEM\" $gv_Passwd \"$PASS\"
+		$lv_Telephone \"$PHONE\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	INIT_MSG=$(gettext 'Geben Sie einen Initialisierungs Zeichenkette fuer Ihr Modem ein.')
+	wvdialconf_input_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help input_help
+				wvdialconf_input_menu
+				;;
+			$lv_Username)
+				# Usernamen eingeben# {{{
+				USER_NAME_MSG=$(gettext 'Geben Sie den Benutzernamen der Verbindung ein.')
+				inputbox "$gv_Configuration" "$USER_NAME_MSG" "$USER_NAME"
+				if [ -n "$gv_Auswahl" ] ; then
+					USER_NAME="$gv_Auswahl"
+				else
+					USER_NAME=""
+				fi
+				## }}}
+				wvdialconf_input_menu $lv_Username
+				;;
+			$lv_Speed)
+				# Geschwindigkeit auswahlen# {{{
+				SPEED_MENU=(57600 \"\" 115200 \"\")
+				SPEED_MSG=$(gettext 'Waehlen Sie die Geschwindigkeit von Ihrem Modem aus.')
+				menubox "$SPEED" "$gv_Configuration" "$SPEED_MSG" "$SPEED_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help modem_speed_help
+							menubox "$SPEED" "$gv_Configuration" "$SPEED_MSG" "$SPEED_MENU"
+							;;
+						*)
+							SPEED="$gv_Auswahl"
+							break
+					esac
+				done
+				## }}}
+				wvdialconf_input_menu $lv_Speed
+				;;
+			$lv_Init)
+				# Int1 eingeben# {{{
+				inputbox "$gv_Configuration" "$INIT_MSG" "$INIT"
+				if [ -n "$gv_Auswahl" ] ; then
+					INIT="$gv_Auswahl"
+				else
+					INIT=""
+				fi
+				## }}}
+				wvdialconf_input_menu $lv_Init
+				;;
+			${lv_Init}1)
+				# Init1 eingeben# {{{
+				inputbox "$gv_Configuration" "$INIT_MSG" "$INIT1"
+				if [ -n "$gv_Auswahl" ] ; then
+					INIT1="$gv_Auswahl"
+				else
+					INIT1=""
+				fi
+				## }}}
+				wvdialconf_input_menu ${lv_Init}1
+				;;
+			${lv_Init}2)
+				# Init2 eingeben# {{{
+				inputbox "$gv_Configuration" "$INIT_MSG" "$INIT2"
+				if [ -n "$gv_Auswahl" ] ; then
+					INIT2="$gv_Auswahl"
+				else
+					INIT2=""
+				fi
+				## }}}
+				wvdialconf_input_menu ${lv_Init}2
+				;;
+			${lv_Init}3)
+				# Init3 eingeben# {{{
+				inputbox "$gv_Configuration" "$INIT_MSG" "$INIT3"
+				if [ -n "$gv_Auswahl" ] ; then
+					INIT3="$gv_Auswahl"
+				else
+					INIT3=""
+				fi
+				## }}}
+				wvdialconf_input_menu ${lv_Init}3
+				;;
+			$lv_Modem)
+				# Modem Device auswaehlen# {{{
+				MODEM_MSG=$(gettext 'Waehlen Sie die Schnittstelle zu Ihrem Modem aus.')
+				MODEM_MENU=(ttyS0 \"(COM1:)\" off ttyS1 \"(COM2:)\" off ttyS2 \"(COM4:)\" off ttyS3 \"(COM4:)\" off ttyACM0 \"USB Modem 1\" off ttyACM1 \"USB Modem 2\" off ttyACM2 \"USB Modem 3\" off ttyACM3 \"USB Modem 4\" off ttyUSB0 \"USB Serial 0\" off ttyUSB1 \"USB Serial 1\" off ttyUSB2 \"USB Serial 2\" off ttyUSB3 \"USB Serial 3\" off)
+				radiolist "$gv_Configuration" "$MODEM_MSG" "$MODEM_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help modem_device_help
+							radiolist "$gv_Configuration" "$MODEM_MSG" "$MODEM_MENU"
+							;;
+						*)
+							MODEM="/dev/${gv_Auswahl}"
+							break
+					esac
+				done
+				## }}}
+				wvdialconf_input_menu $lv_Modem
+				;;
+			$gv_Passwd)
+				# Passwort eingeben# {{{
+				PASSWD_MSG=$(gettext 'Geben Sie das Passwort fuer diese Verbindung ein.')
+				inputbox "$gv_Configuration" "$PASSWD_MSG" "$PASS"
+				if [ -n "$gv_Auswahl" ] ; then
+					PASS="$gv_Auswahl"
+				else
+					PASS=""
+				fi
+				## }}}
+				wvdialconf_input_menu $lv_Passwd
+				;;
+			$lv_Telephone)
+				# Telefonnummer eingeben# {{{
+				PHONE_MSG=$(gettext 'Geben Sie die Tefefonnummer der Verbindung ein.')
+				inputbox "$gv_Configuration" "$PHONE_MSG" "$PHONE"
+				if [ -n "$gv_Auswahl" ] ; then
+					PHONE="$gv_Auswahl"
+				else
+					no_input_msg
+				fi
+				## }}}
+				wvdialconf_input_menu $lv_Telephone
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				autoload -U wvdial_config
+				if [ "$CREATE" = yes ] ; then
+					wvdial_config -i "$DIAL_CONF_CHAPTER"
+				else
+					wvdial_config -c "$DIAL_CONF_CHAPTER"
+				fi
+				unset -- PASS
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

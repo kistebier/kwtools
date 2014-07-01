@@ -1,0 +1,833 @@
+.\"     Title: KWNARC.CONF
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
+.\"      Date: 12/17/2013
+.\"    Manual: 
+.\"    Source: Version 0.0.8
+.\"
+.TH "KWNARC\&.CONF" "5" "12/17/2013" "Version 0.0.8" "Benutzer Anleitung"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+kwnarc.conf \- Haupt\-Konfigurationsdatei f\(:ur kwnarc.
+.SH "BESCHREIBUNG"
+.PP
+Die Datei
+\fI/etc/kwtools/kwnarc\&.conf\fR
+beinhaltet alle Haupt Werte f\(:ur das Script
+\fBkwnarc\fR\&. Jede Zeile besitzt eine Variable in der Form
+\fBVariable\fR=\fIWert\fR\&. Bei Leerzeichen zwischen den Werten m\(:ussen diese in Apostrophe gesetzt werden\&. Beginnt eine Zeile mit
+\(lq#\(rq
+oder ist leer wird dies als Kommentar interpretiert\&.
+.SH "VARIABELN"
+.PP
+\fBSTART_IPTABLES\fR
+.RS 4
+Soll
+\fBiptables\fR
+beim booten gestartet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBIPTABLES\fR
+.RS 4
+Standort vom Programm
+\fBiptables\fR\&. Meist ist dies
+\fI/sbin/iptables\fR\&. Standard ist
+\fI/sbin/iptables\fR\&.
+.RE
+.PP
+\fBLOAD_MODULES\fR
+.RS 4
+Sollen Netfilter Module geladen werden (\fByes/no\fR) \- nur notwendig falls
+\fBNetfilter\fR
+als Modul kompiliert wurde\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBEXTERNAL_INTERFACE\fR
+.RS 4
+Externe Schnittstelle \- Beispiele:
+\fBeth0\fR
+(\fIEthernet\fR),
+\fBippp0\fR
+(\fIISDN\fR),
+\fBppp0\fR
+(\fIDSL/modem\fR)\&.
+.RE
+.PP
+\fBDYNAMIC_EXTERNAL_IP\fR
+.RS 4
+Besitzt das
+\fBEXTERNAL_INTERFACE\fR
+eine dynamische IP (\fByes/no\fR)\&. Zum Beispiel vom Internet Service Provider (\fIISP\fR)\&. Falls diese Option
+\(lq\fBno\fR\(rq
+ist m\(:ussen Sie bei
+\fBEXTERNAL_INTERFACE_IP\fR
+eine IP Adresse eintragen\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBEXTERNAL_INTERFACE_IP\fR
+.RS 4
+Falls die Option
+\fBDYNAMIC_EXTERNAL_IP\fR
+\(lq\fByes\fR\(rq
+ist, wird KWNARC versuchen diese automatisch herauszufinden\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Die folgenden Optionen betreffen die Kontrolle der externen Schnittstelle\&. Geben Sie hier Service Namen oder Port\-Nummern ein (\fI/etc/services\fR)\&. Ist der Port > 1024 m\(:ussen Sie eine Port\-Nummer vergeben\&.
+.sp
+Die Anzahl der Services sind auf 15 beschr\(:ankt\&. Sie sollten nicht mehr als 15 offene Ports auf einer Firewall haben, aus Sicherheitsgr\(:unden\&.
+.RE
+.PP
+\fBALLOW_TCP_EXT\fR
+.RS 4
+Beispiel
+\(lq\fBssh,smtp,http\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBALLOW_UDP_EXT\fR
+.RS 4
+Beispiel
+\(lq\fBdomain,ntp\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Geben Sie hier Port\-Bereiche oder und Port\-Nummern ein (\fI/etc/services\fR)\&. Die Anzahl der Services sind nicht auf 15 beschr\(:ankt\&. Wenn Sie dies nicht unbedingt ben\(:otigen, benutzen Sie lieber eine explizite Einstellung der offenen Services\&.
+.RE
+.PP
+\fBALLOW_TCP_EXT_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.PP
+\fBALLOW_UDP_EXT_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.PP
+\fBCHECK_SYN_PACKET_LENGTH\fR
+.RS 4
+Soll die L\(:ange der
+\fBSYN\fR
+Pakete gepr\(:uft werden (\fByes/no\fR)? Lassen Sie dies auf
+\(lq\fByes\fR\(rq
+ausser Sie haben dies fest in Ihren Kernel kompiliert\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Falls Sie einen Einzelrechner besitzen k\(:onnen Sie hier aufh\(:oren zu lesen\&.
+.RE
+.SS "MASQUERADING SEKTION"
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Dies ist das Linux Equivalent vom
+\(lq\fBInternet Connection Sharing\fR\(rq\&. Stellen Sie die Option
+\fBALWAYS_FORWARD\fR
+nicht auf
+\(lq\fByes\fR\(rq, ausser Sie wissen was Sie tun\&.
+.RE
+.PP
+\fBMASQUERADE\fR
+.RS 4
+Soll das maskieren (\fINAT\fR) der externen IP Adresse eingeschaltet werden (\fByes/no\fR)? Dies wird nur ben\(:otigt wenn die Rechner aus dem
+\fILAN\fR
+oder der
+\fIDMZ\fR
+mit dem Internet kommunizieren d\(:urfen und Sie keine feste externe IP Adresse besitzen\&. Siehe
+.sp
+.RS 4
+.nf
+\%http://www\&.netfilter\&.org/documentation/HOWTO/de/NAT\-HOWTO\&.html
+.fi
+.RE
+.sp
+Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBLAN_INTERFACE\fR
+.RS 4
+Geben Sie hier die Schnittstelle zum Local Area Network (\fILAN\fR) ein\&. Beispiel:
+\fBeth1\fR\&.
+.RE
+.PP
+\fBALWAYS_FORWARD\fR
+.RS 4
+Sollen Pakete immer weitergeleitet werden (\fByes/no\fR)? Wird von Masquerading ben\(:otigt\&. Lassen Sie dies auf
+\(lq\fBno\fR\(rq, wenn Sie nicht wissen was Sie tun\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBPROTECT_FROM_LAN\fR
+.RS 4
+Soll die Firewall vor dem internen Netz (\fILAN\fR) gesch\(:utzt werden (\fByes/no\fR)?
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Die folgenden Optionen betreffen die Kontrolle der Schnittstelle zum
+\fILAN\fR\&. Geben Sie hier Service Namen oder Port\-Nummern ein (\fI/etc/services\fR)\&. Ist der Port > 1024 m\(:ussen Sie eine Port\-Nummer vergeben\&.
+.sp
+Die Anzahl der Services sind auf 15 beschr\(:ankt\&. Sie sollten nicht mehr als 15 offene Ports auf einer Firewall haben, aus Sicherheitsgr\(:unden\&.
+.RE
+.PP
+\fBALLOW_TCP_LAN\fR
+.RS 4
+Beispiel
+\(lq\fBssh,smtp,http\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBALLOW_UDP_LAN\fR
+.RS 4
+Beispiel
+\(lq\fBdomain,ntp\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Geben Sie hier Port\-Bereiche oder und Port\-Nummern ein (\fI/etc/services\fR)\&. Die Anzahl der Services sind nicht auf 15 beschr\(:ankt\&. Wenn Sie dies nicht unbedingt ben\(:otigen, benutzen Sie lieber eine explizite Einstellung der offenen Services\&.
+.RE
+.PP
+\fBALLOW_TCP_LAN_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.PP
+\fBALLOW_UDP_LAN_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.SS "PORTFORWARDING SECTION \- REQUIRE MASQUERADING AND FORWARDING"
+.PP
+\fBPORT_FORWARD\fR
+.RS 4
+Dies wird keinen Effekt haben ausser
+\fBMASQUERADE\fR
+ist eingeschaltet\&.
+\(lq\fByes\fR\(rq
+oder
+\(lq\fBno\fR\(rq
+\- Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBDMZ_INTERFACE\fR
+.RS 4
+\fIDMZ\fR
+(DeMilitary Zone) Schnittstelle (technisch gesehen, k\(:onnen Sie Ihre
+\fILAN\fR
+Schnittstelle benutzen ist aber keine sichere Praktik)\&.
+.RE
+.PP
+\fBPROTECT_FROM_DMZ\fR
+.RS 4
+Soll die Firewall vor der
+\fIDMZ\fR
+gesch\(:utzt werden (\fByes/no\fR)?
+.RE
+.PP
+\fBFORWARD_LAN_TO_DMZ\fR
+.RS 4
+Sollen Pakete vom
+\fILAN\fR
+in die
+\fIDMZ\fR
+weitergeleitet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBFORWARD_CONF\fR
+.RS 4
+Standard ist
+\fI/etc/kwtools/kwnarc\-forward\&.conf\fR\&. Stellen Sie dort ihre Regeln f\(:ur Port\-Forwarding ein\&. Es gibt eine bestimmte Syntax f\(:ur die Datei\&. Beispiel ist im Verzeichnis
+\fI/usr/share/doc/kwtools\-net\-narc/examples\fR\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Die folgenden Optionen betreffen die Kontrolle der Schnittstelle zur
+\fIDMZ\fR\&. Geben Sie hier Service Namen oder Port\-Nummern ein (\fI/etc/services\fR)\&. Ist der Port > 1024 m\(:ussen Sie eine Port\-Nummer vergeben\&. Die Anzahl der Services sind auf 15 beschr\(:ankt\&. Sie sollten nicht mehr als 15 offene Ports auf einer Firewall haben, aus Sicherheitsgr\(:unden\&.
+.RE
+.PP
+\fBALLOW_TCP_DMZ\fR
+.RS 4
+Beispiel
+\(lq\fBssh,smtp,http\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBALLOW_UDP_DMZ\fR
+.RS 4
+Beispiel
+\(lq\fBdomain,ntp\fR\(rq
+\- ohne Leerzeichen\&.
+.RE
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Geben Sie hier Port\-Bereiche oder und Port\-Nummern ein (\fI/etc/services\fR)\&. Die Anzahl der Services sind nicht auf 15 beschr\(:ankt\&. Wenn Sie dies nicht unbedingt ben\(:otigen, benutzen Sie lieber eine explizite Einstellung der offenen Services\&.
+.RE
+.PP
+\fBALLOW_TCP_DMZ_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.PP
+\fBALLOW_UDP_DMZ_RANGE\fR
+.RS 4
+Beispiel
+\(lq\fB6000:6010 6660:6669 3128\fR\(rq\&.
+.RE
+.SS "TRACEROUTE SECTION"
+.PP
+\fBANSWER_PING\fR
+.RS 4
+Soll die Firewall auf
+\fBping\fR
+Anfragen, von Windows Rechnern, antworten (\fByes/no\fR)? Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBPING_RATE\fR
+.RS 4
+Standard ist
+\(lq\fB1/s\fR\(rq\&. Wenn Sie von
+\fBping\fR
+Anfragen \(:uberflutet werden, ver\(:andern Sie diesen Wert\&.
+.RE
+.PP
+\fBANSWER_TRACEROUTE\fR
+.RS 4
+Soll die Firewall auf
+\fBping\fR
+Anfragen, von Unix Rechnern, antworten (\fByes/no\fR)? Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBAUTH_REJECT\fR
+.RS 4
+Sollen Antworten vom
+\fIAuth\fR
+Port abgelehnt werden, anstelle sie weg zu schmeissen (\fByes/no\fR)? Falls Sie einen
+\fBidentd\fR
+Daemon benutzen oder
+\fIIRC\fR
+sollten Sie dies ausschalten\&.
+.RE
+.PP
+\fBDROP_BROADCASTS\fR
+.RS 4
+Sollen Broadcast Anfragen verworfen werden (\fByes/no\fR)? Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBBROADCAST_NETWORKS\fR
+.RS 4
+Beispiel:
+\(lq\fB0\&.0\&.0\&.0/8 255\&.255\&.255\&.255 224\&.0\&.0\&.0/4\fR\(rq\&.
+.RE
+.SS "LOGGING SECTION"
+.PP
+\fBLOG_DROPS\fR
+.RS 4
+Falls diese Option ausgeschaltet ist, haben die restlichen Log Optionen keinen Effekt\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBNORM_LOG_LEVEL\fR
+.RS 4
+Logt alles in
+\fI/var/log/firewall\&.log\fR, nur falls Sie diesen Eintrag in der Datei
+\fI/etc/syslog\&.conf\fR
+haben:
+\(lq\fIkern\&.\fR=\fBNORM_LOG_LEVEL\fR \- \fI/var/log/firewall\&.log\fR\(rq\&. Standard ist
+\(lq\fBdebug\fR\(rq\&.
+.RE
+.PP
+\fBWARN_LOG_LEVEL\fR
+.RS 4
+Ver\(:andern Sie dies auf
+\(lqwarning\(rq, falls Sie mehr loggen m\(:ochten\&. Diese k\(:onnen in der Datei
+\fI/var/log/warn\fR
+nachgelesen werden\&. Standard ist
+\(lq\fBdebug\fR\(rq\&. Tragen Sie diesen Eintrag zus\(:atzlich in die
+\fI/etc/syslog\&.conf\fR
+ein:
+\(lq\fIkern\&.\fR=\fBWARN_LOG_LEVEL\fR \- \fI/var/log/warn\fR\(rq\&.
+.RE
+.PP
+\fBLOG_PROBES\fR
+.RS 4
+Logt Pakete von Ports die mit den Optionen
+\fBTCP/UDP_PROBE\fR
+definiert sind (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_ILLEGAL\fR
+.RS 4
+Logt Pakete die mit der Option
+\fBILLEGAL_TCP_FLAGS\fR, in der
+\fBADVANCED SECTION\fR, definiert sind (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_INVALID\fR
+.RS 4
+Logt Pakete die keine g\(:ultige Verbindung besitzen (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_SPOOF\fR
+.RS 4
+Logt Pakete der Einstellungen in der
+\fBANTI\-SPOOFING SECTION\fR, die in der
+\fBADVANCED SECTION\fR, definiert sind (\fByes/no\fR)\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBLOG_ICMP\fR
+.RS 4
+Logt Pakete die nicht von
+\fBALLOW_ICMP_MESSAGE\fR
+akzeptiert werden (\fByes/no\fR)\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBLOG_SMB\fR
+.RS 4
+Logt SMB/Windows CIFS verwandte Pakete (\fByes/no\fR)\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBLOG_PACKET_LENGTH\fR
+.RS 4
+Logt TCP
+\fISYN\fR
+Pakete die eine falsche Header L\(:ange besitzen (\fBPACKET_LENGTH\fR) (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_LIMIT_EXCEED\fR
+.RS 4
+Logt TCP Verbindungen die den Wert in
+\fBLIMIT_RATE\fR
+\(:uberschreiten (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_IPLIMIT_EXCEED\fR
+.RS 4
+Logt TCP Verbindungen die den Wert in
+\fBIPLIMIT_MAX_ACCEPT\fR
+\(:uberschreiten (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOG_ALL_ELSE\fR
+.RS 4
+Dies loggt alles was nicht eindeutig auf Ihre Einstellungen passt (empfohlen) (\fByes/no\fR)\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBBURST_MAX\fR
+.RS 4
+Maximum der Initial Nummer von Paketen die zusammenpassen, die geloggt werden sollen\&. Standard ist
+\(lq\fB5\fR\(rq\&.
+.RE
+.PP
+\fBLOG_RATE\fR
+.RS 4
+Nicht implementiert \- Intervall der Log Eintr\(:age\&. Dies dient dazu damit nicht zu viele abgelehnte Anfragen den Rechner, durch permanentes schreiben in die Log Dateien, lahmlegen\&. Standard ist
+\(lq\fB1\fR\(rq
+Eintrag pro Sekunde (\fB1/s\fR)\&.
+.RE
+.SS "PROBABLE PROBES SECTION"
+.PP
+\fBNOTIZ:\fR
+.RS 4
+Die Anzahl der Eintr\(:age darf nicht 15 \(:uberschreiten! Benutzen Sie eine kommagetrennte Liste ohne Leerzeichen (allgemein Trojaner) \- siehe:
+.sp
+.RS 4
+.nf
+\%http://www\&.simovits\&.com/sve/nyhetsarkiv/1999/nyheter9902\&.html
+.fi
+.RE
+.RE
+.PP
+\fBTCP_PROBE\fR
+.RS 4
+Geben Sie hier eine Liste von TCP Ports ein auf die
+\fBkwnarc\fR
+achten und protokolieren soll, getrennt durch ein Komma\&. Standard ist
+\(lq\fB\%23,81,111,123,161,515,555,1234,1241,1243,1433,1494,2049,3306,3128\fR\(rq\&.
+.RE
+.PP
+\fBTCP_PROBE2\fR
+.RS 4
+Geben Sie hier eine Liste von TCP Ports ein auf die
+\fBkwnarc\fR
+achten und protokolieren soll, getrennt durch ein Komma\&. Standard ist
+\(lq\fB\%3389,5631,5632,6635,8080,9055,12345,24452,27374,27573,31337,42484\fR\(rq\&.
+.RE
+.PP
+\fBUDP_PROBE\fR
+.RS 4
+Geben Sie hier eine Liste von UDP Ports ein auf die
+\fBkwnarc\fR
+achten und protokolieren soll, getrennt durch ein Komma\&. Standard ist
+\(lq\fB22,161,1025,3283,5634,5882,28431,31337,31789\fR\(rq
+\&.
+.RE
+.PP
+\fBUDP_PROBE2\fR
+.RS 4
+Geben Sie hier eine Liste von UDP Ports ein auf die
+\fBkwnarc\fR
+achten und protokolieren soll, getrennt durch ein Komma\&. Standard ist nichts\&.
+.RE
+.SS "ADVANCED SECTION"
+.PP
+\fBNOTIZ:\fR
+.RS 4
+\(lq\fINICHT VER\(:ANDERN\fR\(rq
+wenn Sie sich nicht sicher sind was Sie tun\&.
+.RE
+.PP
+\fBEXECUTE_CUSTOM_SCRIPT\fR
+.RS 4
+Sollen eigene Regeln ausgef\(:uhrt werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBCUSTOM_SCRIPT\fR
+.RS 4
+Standard ist
+\fI/etc/kwtools/kwnarc\-custom\&.conf\fR\&. In dieser Datei k\(:onnen Sie eigene Regeln definieren\&. Beispiele sind im Verzeichnis
+\fI/usr/share/doc/kwtools\-net\-narc/examples\fR\&.
+.RE
+.PP
+\fBPRELOAD_IP_MODULES\fR
+.RS 4
+Eingabe der Netfilter Module die beim Start von
+\fBiptables\fR
+geladen werden sollen (Bsp\&.:
+\fIip_tables\fR)\&. Standard ist
+\(lq\fBip_tables ip_conntrack ip_conntrack_ftp\fR\(rq\&. Wird nur getan, wenn
+\fILOAD_MODULES\fR=\fByes\fR
+ist\&.
+.RE
+.PP
+\fBNAT_MODULES\fR
+.RS 4
+Eingabe der Kernel Masquerading Module\&. Wird nur getan, wenn
+\fILOAD_MODULES\fR=\fByes\fR
+ist\&. Standard ist
+\(lq\fBiptable_nat ip_nat_ftp\fR\(rq\&.
+.RE
+.PP
+\fBILLEGAL_TCP_FLAGS\fR
+.RS 4
+Geben Sie hier eine Komma getrennte Liste von TCP Flags Kombinationen ein die nicht erw\(:unscht sind, getrennt durch ein Leerzeichen\&. Standard ist
+\(lq\fBSYN,FIN PSH,FIN SYN,ACK,FIN SYN,FIN,PSH SYN,FIN,RST SYN,FIN,RST,PSH SYN,FIN,ACK,RST SYN,ACK,FIN,RST,PSH ALL"\fR\(rq
+\&.
+.RE
+.PP
+\fBFINSCAN\fR
+.RS 4
+Geben Sie hier das TCP Flag f\(:ur einen
+\fBFINSCAN\fR
+ein\&. Standard ist
+\(lq\fBFIN\fR\(rq\&.
+.RE
+.PP
+\fBXMASSCAN\fR
+.RS 4
+Geben Sie hier eine Komma getrennte Liste von illegalen TCP Flags Kombinationen f\(:ur
+\fBXMASSCAN\fR, getrennt durch ein Leerzeichen, ein\&. Standard ist
+\(lq\fBURG,PSH,FIN\fR\(rq\&.
+.RE
+.PP
+\fBNULLSCAN\fR
+.RS 4
+Sollen Pakete mit dem TCP Flag
+\(lq\fBNONE\fR\(rq
+verworfen werden (\fByes/no\fR)? Standard ist
+\(lq\fBNONE\fR\(rq\&.
+.RE
+.PP
+\fBPACKET_LENGTH\fR
+.RS 4
+Geben Sie hier einen Bereich in
+\fIKilobyte\fR
+ein, welche L\(:ange die TCP
+\fISYN\fR
+Pakete haben d\(:urfen\&. Standard ist
+\(lq\fB40:68\fR\(rq\&.
+.RE
+.PP
+\fBENABLE_LIMIT_RATE\fR
+.RS 4
+Soll eine generelle Limitierung der Log Eintr\(:age eingeschaltet werden (\fByes/no\fR)? Ben\(:otigt die Eintr\(:age in
+\fBLIMIT_BURST\fR
+und
+\fBLIMIT_RATE\fR\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBLIMIT_RATE\fR
+.RS 4
+Geben Sie die Anzahl der Log Eintr\(:age pro Zeit ein (Anzahl/Sekunde \-/Minute \-/Stunde \-/Tag)\&. Standard ist
+\(lq\fB30/s\fR\(rq\&.
+.RE
+.PP
+\fBLIMIT_BURST\fR
+.RS 4
+Geben Sie hier an ab welcher Initial Nummer der Pakete neu angefangen wird zu z\(:ahlen\&. Standard ist
+\(lq\fB50\fR\(rq\&.
+.RE
+.PP
+\fBENABLE_IPLIMIT\fR
+.RS 4
+Soll eine TCP basierte Limitierung der Log Eintr\(:age eingeschaltet werden (\fByes/no\fR)? Ben\(:otigt die Eintr\(:age in
+\fBIPLIMIT_MAX_ACCEPT\fR
+und
+\fBIPLIMIT_NETMASK\fR\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBIPLIMIT_MAX_ACCEPT\fR
+.RS 4
+Geben Sie hier die Anzahl der Log Eintr\(:age f\(:ur die Netzmaske (\fBIPLIMIT_NETMASK\fR) ein\&. Standard ist
+\(lq\fB16\fR\(rq\&.
+.RE
+.PP
+\fBIPLIMIT_NETMASK\fR
+.RS 4
+Geben Sie eine Zahl f\(:ur die Netzmaske ein\&. Zum Beispiel
+\fI192\&.168\&.0\&.0\fR/\fB24\fR
+\- heisst alle Rechner mit einer IP Adresse von
+\fI192\&.168\&.0\&.1\-254\fR\&.
+\(lq\fB24\fR\(rq
+ist die Zahl in diesem Beispiel\&. Standard ist
+\(lq\fB24\fR\(rq\&.
+.RE
+.PP
+\fBDROP_UNCLEAN_PACKETS\fR
+.RS 4
+Sollen Pakete die als
+\(lq\fBunclean\fR\(rq
+gekennzeichnet sind verworfen werden (\fByes/no\fR)? Ist noch als
+\fBEXPERIMENTAL\fR
+gekennzeichnet und sollte nicht benutzt werden\&. Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBALLOW_ICMP_MESSAGE\fR
+.RS 4
+Eintrag f\(:ur die
+\fIICMP\fR
+Nachrichten, die erlaubt werden sollen \- siehe
+.sp
+.RS 4
+.nf
+\%http://www\&.iana\&.org/assignments/icmp\-parameters
+.fi
+.RE
+.sp
+Es werden Nummern und Namen akzeptiert\&. Zum nach schauen welche ihr Kernel/iptables unterst\(:utzt k\(:onnen Sie
+\(lq\fBiptables\fR \fB\-p icmp\-h\fR\(rq
+ausf\(:uhren\&. Standard sind
+\(lq\fBecho\-reply network\-unreachable host\-unreachable port\-unreachable fragmentation\-needed time\-exceeded\fR\(rq\&.
+.RE
+.SS "ANTI\-SPOOFING SECTION"
+.PP
+.RS 4
+.\" line length increase to cope w/ tbl weirdness
+.ll +(\n(LLu * 62u / 100u)
+.TS
+l.
+\fIKleine Erkl\(:arung zu Netzwerken:\fR
+T{
+Siehe http://www\&.sans\&.org/dosstep/cisco_spoof\&.htm und http://www\&.isi\&.edu/in\-notes/rfc1918\&.txt
+T}
+T{
+0\&.0\&.0\&.0/8 \- Broadcast (alt)
+T}
+T{
+255\&.255\&.255\&.255(/32) \- Broadcast (alle)
+T}
+T{
+127\&.0\&.0\&.0/8 \- Loopback
+T}
+T{
+224\&.0\&.0\&.0/4 \- Multicast
+T}
+T{
+240\&.0\&.0\&.0/5 \- Klasse E Netz reserviert
+T}
+T{
+248\&.0\&.0\&.0/5 \- Unbesetzt
+T}
+T{
+192\&.0\&.2\&.0/24 \- NET\-TEST (reserviert)
+T}
+T{
+169\&.254\&.0\&.0/16 \- LinkLocal (reserviert)
+T}
+T{
+10\&.0\&.0\&.0/8 \- Klasse A Netz (Privatnutzung)
+T}
+T{
+172\&.16\&.0\&.0/12 \- Klasse B Netz (Privatnutzung)
+T}
+T{
+192\&.168\&.0\&.0/16 \- Klasse C Netz (Privatnutzung)
+T}
+.TE
+.\" line length decrease back to previous value
+.ll -(\n(LLu * 62u / 100u)
+.sp
+.RE
+.PP
+\fBRESERVED_NETWORKS\fR
+.RS 4
+Standard ist
+\(lq\fB127\&.0\&.0\&.0/8 240\&.0\&.0\&.0/5 248\&.0\&.0\&.0/5\fR\(rq\&.
+.RE
+.PP
+\fBPRIVATE_NETWORKS\fR
+.RS 4
+Standard ist
+\(lq\fB10\&.0\&.0\&.0/8 172\&.16\&.0\&.0/12 192\&.168\&.0\&.0/16\fR\(rq\&.
+.RE
+.PP
+\fBLOOPBACK_ACCEPT\fR
+.RS 4
+Sollen Pakete innerhalb des Loopback Interfaces erlaubt werden (\fByes/no\fR)? Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBLOOPBACK_MODE\fR
+.RS 4
+W\(:ahlen Sie den Loopback Modus aus\&. G\(:ultige Werte sind
+\(lq\fBparanoid\fR\(rq,
+\(lq\fBnormal\fR\(rq
+oder
+\(lq\fBloose\fR\(rq\&. Standard ist
+\(lq\fBnormal\fR\(rq\&.
+.RE
+.PP
+\fBBIND_IP\fR
+.RS 4
+Problem Behebung bei DNS\&. Wenn Sie DNS Probleme auf dem Firewall Rechner selbst haben, aber nicht von anderen Rechnern aus, dann k\(:onnen Sie hier eine Liste von IP Adressen, mit einem Leerzeichen getrennt, vergeben (Bsp\&.:
+\fI192\&.168\&.0\&.1 192\&.168\&.0\&.2\fR)\&.
+.RE
+.SS "KERNEL SECTION"
+.PP
+\fBNOTIZ:\fR
+.RS 4
+\(lq\fINICHT VER\(:ANDERN\fR\(rq
+wenn Sie sich nicht sicher sind was Sie tun\&.
+.RE
+.PP
+\fBSYNCOOKIES\fR
+.RS 4
+Soll die Kernel Option
+\(lq\fBSYN\-flood\fR\(rq
+Schutz (Syncookies) eingeschaltet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBANTI_SMURF\fR
+.RS 4
+Soll die Kernel Option
+\(lq\fBAnti\-Smurf\fR\(rq
+eingeschaltet werden (\fByes/no\fR)? Schaltet ein
+\(lq\fBecho\-request\fR\(rq
+zu Broadcast Adressen aus\&. Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBACCEPT_SOURCE_ROUTE\fR
+.RS 4
+Soll die Unterst\(:utzung f\(:ur
+\(lq\fBsource\-routed\fR\(rq
+Pakete (Kernel Option) eingeschaltet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
+\fBINGRESS_FILTER\fR
+.RS 4
+Ingress filtering:
+\(lq\fB1\fR\(rq
+f\(:ur einfach,
+\(lq\fB2\fR\(rq
+komplett nach RFC1812 Section 5\&.3\&.8 \- siehe:
+.sp
+.RS 4
+.nf
+http://andrew2\&.andrew\&.cmu\&.edu/rfc/rfc1812\&.html
+.fi
+.RE
+.sp
+Standard ist
+\(lq\fB2\fR\(rq\&.
+.RE
+.PP
+\fBLOG_MARTIANS\fR
+.RS 4
+Soll die Kernel Option
+\(lq\fBlog_martians\fR\(rq
+eingeschaltet werden (\fByes/no\fR)? Standard ist
+\(lq\fByes\fR\(rq\&.
+.RE
+.PP
+\fBENABLE_TCP_ECN\fR
+.RS 4
+TCP Congestion Notification \- Soll TCP Congestion Notification (ECN) eingeschaltet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq, da es nicht von jedem Rechner unterst\(:utzt wird\&.
+.RE
+.SH "DATEI"
+.PP
+\fI/etc/kwtools/kwnarc\&.conf\fR
+.RS 4
+Dies ist die Haupt Konfigurations Datei f\(:ur
+\fBkwnarc\fR\&. F\(:ur weitere Details siehe
+\fBkwnarc\fR(8)
+und
+\fBkwnarcconf\fR(8)\&.
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBiptables\fR(8),
+\fBkwnarc\fR(8),
+\fBkwnarcconf\fR(8)
+.SH "AUTOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.sp -1n
+.IP "" 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.SH "COPYRIGHT"
+Copyright \(co 2002-2013 Kai Wilke
+.br

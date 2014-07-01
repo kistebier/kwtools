@@ -1,0 +1,96 @@
+# Funktion kwvcdburn Konfiguration{{{
+#
+# benoetigt die Funktion kwvcdburn_config
+#
+# usage: kwvcdburn_conf
+#
+kwvcdburn_conf() {
+	lv_Mountdir=$(gettext 'Mountverz.')
+	lv_Video_Typ=$(gettext 'Video_Typ')
+	#
+	# Funktion vcdburn_conf_menue{{{
+	vcdburn_conf_menue() {
+		CONF_MENU=($lv_Mountdir \"$MOUNT_PATH\" $gv_Directory \"$FILM_DIR\"
+		$lv_Video_Typ \"$VCD_TYPE\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	#}}}
+	vcdburn_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe Messagebox
+				script_help conf_help
+				vcdburn_conf_menue
+				;;
+			$lv_Mountdir)
+				# Mount Verzeichnis eingeben
+				mount_path "$MOUNT_PATH"
+				vcdburn_conf_menue $lv_Mountdir
+				;;
+			$gv_Directory)	
+				# Grundverzeichnis, wo drunter die Filme liegen{{{
+				#
+				dselect "$FILM_DIR"
+				if [ "$VERZ" ] ; then
+					dselect_check "$VERZ"
+					if [ "$VERZ" ] ; then
+						user_device_check "$VERZ" AIE
+						FILM_DIR="$VERZ"
+					else
+						FILM_DIR=""
+					fi
+				else
+					FILM_DIR=""
+				fi
+				#}}}
+				vcdburn_conf_menue $gv_Directory
+				;;
+			$lv_Video_Typ)
+				# VCD Typ auswaehlen{{{
+				#
+				lv_Vcd1=$(gettext 'vcd1')
+				lv_Vcd2=$(gettext 'vcd2')
+				lv_Super_Vcd=$(gettext 'svcd')
+				lv_Hqvcd=$(gettext 'hqvcd')
+				#
+				TYP_TITLE=(${gv_Configuration}::${lv_Video_Typ})
+				TYP_MSG=$(gettext 'Waehlen Sie einen Video-CD Typ aus.')
+				VCD_Menue=($lv_Vcd1 \"\" $lv_Vcd2 \"\" $lv_Super_Vcd \"\" $lv_Hqvcd \"\")
+				# Funktion vcd_type_menu# {{{
+				#
+				vcd_type_menu() {
+					menubox "$VCD_TYPE" "$TYP_TITLE" "$TYP_MSG" "$VCD_Menue"
+				}
+				## }}}
+				vcd_type_menu
+				while [ "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+							script_help vcdtype_help
+							vcd_type_menu
+							;;
+						*)	#	
+							VCD_TYPE="$gv_Auswahl"
+							break
+							;;
+					esac		
+				done	
+				#}}}
+				vcdburn_conf_menue $lv_Video_Typ
+				;;
+			$gv_Save)
+				# Konfiguration schreiben
+				kwvcdburn_config
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

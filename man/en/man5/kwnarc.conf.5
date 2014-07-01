@@ -1,0 +1,486 @@
+.\"     Title: KWNARC.CONF
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
+.\"      Date: 12/17/2013
+.\"    Manual: 
+.\"    Source: Version 0.0.8
+.\"
+.TH "KWNARC\&.CONF" "5" "12/17/2013" "Version 0.0.8" "File Formats Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH NAME
+kwnarc.conf \- main configurations file for script kwnarc
+
+.SH DESCRIPTION
+The file \%\fI/etc/kwtools/kwnarc.conf\fP contains main value for the
+script \fBkwnarc\fR. Each line holds a single value pair in the form
+\fBOption\fR=\fIValue\fP. Double quotes are allowed around the value
+or to must when whitespaces is in value. Comment lines must have a
+hash sign (#) in the first line or after the value pair.
+
+The valid configuration options are:
+
+.SH OPTIONS
+.TP
+.B START_IPTABLES
+Start Iptables at boot up \fI(yes/no)\fP?
+Default is \fI"no"\fP.
+.TP
+.B IPTABLES
+Location of the \fBiptables\fR program. Most is this
+\%\fB/sbin/iptables\fR. Default is \%\fB/sbin/iptables\fR.
+.TP
+.B LOAD_MODULES
+Load Netfilter modules \fI(yes/no)\fP \- only
+necessary if you compiled \fBnetfilter\fR as modules. Default is
+\fI"yes"\fP.
+.TP
+.B EXTERNAL_INTERFACE
+External interface \- for examples:
+\fIeth0\fP (ethernet), \fIippp0\fP (ISDN), \fIppp0\fP (DSL/modem).
+.TP
+.B DYNAMIC_EXTERNAL_IP
+You to get a dynamic IP \fI(yes/no)\fP.
+For example from your Internet Service Provider (ISP). If this is set
+to \fI"no"\fP, you will need to enter an IP address below. Default is
+\fI"yes"\fP.
+.TP
+.B EXTERNAL_INTERFACE_IP
+If \fBDYNAMIC_EXTERNAL_IP\fR is
+\fI"yes"\fP, \fBkwnarc\fR will attempt to auto\-obtain this.
+.TP
+.B NOTE
+The options immediately below control server services
+that you are offering to the outside world \- it does not limit the
+services available to your localhost. Use comma separated name or
+numeric value from \%\fI/etc/services\fP \- if port is \&> 1024, use
+numeric value instead of name.
+.IP
+Note: limited to 15 services \- you should not need more than 15 ports
+open, especially on a firewall.
+.TP
+.B ALLOW_TCP_EXT
+Example \fI"ssh,smtp,http"\fP \- note the lack
+of spaces.
+.TP
+.B ALLOW_UDP_EXT
+Example \fI"domain,ntp"\fP \- note the lack of
+spaces.
+.TP
+.B NOTE
+The options immediately below here are similar to above,
+except that they allows you to enter port ranges (and single ports)
+using space separated numeric values. Enter as many as necessary (i.e.
+not limited to 15 entries). Unless needed, use the above instead.
+.TP
+.B ALLOW_TCP_EXT_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.TP
+.B ALLOW_UDP_EXT_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.TP
+.B CHECK_SYN_PACKET_LENGTH
+Do not disable unless you must use a
+stock kernel that does not support length checking. Default is
+\fI"yes"\fP.
+.TP
+.B NOTE
+If you simply wanted to firewall a single host, you can
+~safely skip the rest of the config options below.
+.SS MASQUERADING SECTION
+This is the Linux equivalent of \fI"Internet Connection Sharing"\fP.
+Do not turn on \fBALWAYS_FORWARD\fR unless you know what you are
+doing. \fBALWAYS_FORWARD\fR will keep forwarding (and masquing)
+traffic even when there are no firewall rules loaded.
+.TP
+.B MASQUERADE
+Turning this on will enable IP forwarding
+automatically \fI(yes/no)\fP. Default is \fI"no"\fP.
+.TP
+.B LAN_INTERFACE
+Example: \fI"eth1"\fP
+.TP
+.B ALWAYS_FORWARD
+Do not turn this on unless you want to forward
+traffic even when not firewalling. Default is \fI"no"\fP.
+.TP
+.B PROTECT_FROM_LAN
+Protect firewall from internal network
+\fI(yes/no)\fP?
+.TP
+.B NOTE
+The options immediately below control server services
+that you are offering to your internal LAN \- it does not limit the
+services available to your localhost. Use comma separated name or
+numeric value from \%\fI/etc/services\fP \- if port is \&> 1024, use
+numeric value instead of name.
+.IP
+Note: limited to 15 services \- you should not need more than 15 ports
+open, especially on a firewall.
+.TP
+.B ALLOW_TCP_LAN
+Example \fI"ssh,smtp,http"\fP \- note the lack
+of spaces.
+.TP
+.B ALLOW_UDP_LAN
+Example \fI"domain,ntp"\fP \- note the lack of
+spaces.
+.TP
+.B NOTE
+The options immediately below here are similar to above,
+except that they allows you to enter port ranges (and single ports)
+using space separated numeric values. Enter as many as necessary (i.e.
+not limited to 15 entries). Unless needed, use the above instead.
+.TP
+.B ALLOW_TCP_LAN_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.TP
+.B ALLOW_UDP_LAN_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.SS PORTFORWARDING SECTION \- REQUIRE MASQUERADING AND FORWARDING
+.TP
+.B PORT_FORWARD
+This will not have any effect unless
+\fBMASQUERADE\fR is enabled. \fI"Yes"\fP or \fI"no"\fP \- default is
+\fI"no"\fP.
+.TP
+.B DMZ_INTERFACE
+DMZ (DeMilitary Zone) interface (technically,
+you can use your LAN interface as well; bad security practice).
+.TP
+.B PROTECT_FROM_DMZ
+Protect firewall from DMZ network
+\fI(yes/no)\fP?
+.TP
+.B FORWARD_LAN_TO_DMZ
+Forward traffic from LAN to DMZ
+\fI(yes/no)\fP? Default is \fI"no"\fP.
+.TP
+.B FORWARD_CONF
+Default is
+\%\fI"/etc/kwtools/kwnarc\-forward.conf"\fP. Edit this file if you
+need to do port forwarding. Example is in directory
+\%\fI/usr/share/doc/kwtools-net-narc/examples\fP.
+.TP
+.B NOTE
+The options immediately below control server services
+that you are offering to your DMZ network \- it does not limit the
+services available to your localhost. Use comma separated name or
+numeric value from \%\fI/etc/services\fP \- if port is \&> 1024, use
+numeric value instead of name.
+.IP
+Note: limited to 15 services \- you should not need more than 15 ports
+open, especially on a firewall.
+.TP
+.B ALLOW_TCP_DMZ
+Example \fI"ssh,smtp,http"\fP \- note the lack
+of spaces.
+.TP
+.B ALLOW_UDP_DMZ
+Example \fI"domain,ntp"\fP \- note the lack of
+spaces.
+.TP
+.B NOTE
+The options immediately below here are similar to above,
+except that they allows you to enter port ranges (and single ports)
+using space separated numeric values. Enter as many as necessary (i.e.
+not limited to 15 entries). Unless needed, use the above instead.
+.TP
+.B ALLOW_TCP_DMZ_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.TP
+.B ALLOW_UDP_DMZ_RANGE
+Example \fI"6000:6010 6660:6669 3128"\fP
+.SS TRACEROUTE OPTIONS
+.TP
+.B ANSWER_PING
+To enable traceroute from MS Windows to your
+firewall, enable \fBANSWER_PING\fR \fI(yes/no)\fP. Default is
+\fI"yes"\fP.
+.TP
+.B PING_RATE
+Leave this alone unless you happen to like flood
+pings. Default is \fI"1/s"\fP.
+.TP
+.B ANSWER_TRACEROUTE
+To enable traceroute from UNIX hosts, turn
+enable \fBANSWER_TRACEROUTE\fR. Use of either option is discouraged.
+Default is \fI"yes"\fP.
+.TP
+.B AUTH_REJECT
+Auth port responds with reject instead of drop
+\fI(yes/no)\fP? Disable this if you are running \fBidentd\fR or using
+\fIIRC\fP.
+.TP
+.B DROP_BROADCASTS
+Drop broadcasts \fI(yes/no)\fP? Default is
+\fI"yes"\fP.
+.TP
+.B BROADCAST_NETWORKS
+Example: \fI"0.0.0.0/8 255.255.255.255
+224.0.0.0/4"\fP
+.SS LOGGING OPTIONS
+.TP
+.B LOG_DROPS
+If this is turned off, the rest of the log options
+have no effect. Default is \fI"yes"\fP.
+.TP
+.B NORM_LOG_LEVEL
+Log everything to \%\fI/var/log/firewall.log\fP
+ONLY if you add \%\fI"kern.=NORM_LOG_LEVEL\
+\-/var/log/firewall.log"\fP to \%\fI/etc/syslog.conf\fP. Default is
+\fB"debug"\fR.
+.TP
+.B WARN_LOG_LEVEL
+Change to \fI"warning"\fP if you want more
+urgent logging to show up in \%\fI/var/log/warn\fP. Default is
+\fB"debug"\fR. Add \%\fI"kern.=WARN_LOG_LEVEL\ \-/var/log/warn"\fP to
+\%\fI/etc/syslog.conf\fP.
+.TP
+.B LOG_PROBES
+Uses the TCP/UDP_PROBE below to monitor certain
+ports \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_ILLEGAL
+Logs packets defined by \fBILLEGAL_TCP_FLAGS\fR in
+the advanced section below \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_INVALID
+Logs packets that do not belong to a valid
+connection \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_SPOOF
+Logs packets defined by the \fBanti-spoof\fR options
+in the advanced section below \fI(yes/no)\fP. Default is \fI"no"\fP.
+.TP
+.B LOG_ICMP
+Logs packets not accepted by \fBALLOW_ICMP_MESSAGE\fR
+(below)\fI(yes/no)\fP. Default is \fI"no"\fP.
+.TP
+.B LOG_SMB
+Logs SMB/Windows CIFS related packets \fI(yes/no)\fP.
+Default is \fI"no"\fP.
+.TP
+.B LOG_PACKET_LENGTH
+Logs TCP SYN packets that have bad header
+length (PACKET_LENGTH)\fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_LIMIT_EXCEED
+Logs TCP connections that exceed
+\fBLIMIT_RATE\fR \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_IPLIMIT_EXCEED
+Logs TCP connections that exceed
+\fBIPLIMIT_MAX_ACCEPT\fR \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B LOG_ALL_ELSE
+This logs everything that we did not explicitly
+match (recommeded) \fI(yes/no)\fP. Default is \fI"yes"\fP.
+.TP
+.B BURST_MAX
+Maximal burst to Log. Default is \fI"5"\fP.
+.TP
+.B LOG_RATE
+Not implemented \- may not be a good idea. Default is
+\fI"1/s"\fP.
+.SS PROBABLE PROBES
+.TP
+.B NOTE
+Add or remove entries as necessary but do not exceed 15
+ports per line! Use comma separated values with no spaces (common
+trojans) \- see
+\%http://www.simovits.com/sve/nyhetsarkiv/1999/nyheter9902.html.
+.TP
+.B TCP_PROBE
+Default is
+\fI"23,\:81,\:111,\:123,\:161,\:515,\:555,\:1234,\:1241,\:1243,\:1433,\:1494,\:2049,\:3306,\:3128"\fP
+.TP
+.B TCP_PROBE2
+Default is
+\fI"3389,\:5631,\:5632,\:6635,\:8080,\:9055,\:12345,\:24452,\:27374,\:27573,\:31337,\:42484"\fP
+.TP
+.B UDP_PROBE
+Default is
+\fI"22,\:161,\:1025,\:3283,\:5634,\:5882,\:28431,\:31337,\:31789"\fP
+.TP
+.B UDP_PROBE2
+Default is empty.
+.SS ADVANCED OPTIONS
+.TP
+.B NOTE
+DO NOT edit unless you know what you are doing
+.TP
+.B EXECUTE_CUSTOM_SCRIPT
+Executes a custom script \fI(yes/no)\fP?
+Default is \fI"no"\fP.
+.TP
+.B CUSTOM_SCRIPT
+Default is
+\%\fI"/etc/kwtools/kwnarc\-custom.conf"\fP. Edit this file if you need
+custom rules. Example is in directory
+\%\fI/usr/share/doc/kwtools-net-narc/examples\fP.
+.TP
+.B PRELOAD_IP_MODULES
+Default is \fI"ip_tables ip_conntrack
+ip_conntrack_ftp"\fP. Gone only when \fBLOAD_MODULES\fR=\fI"yes"\fP.
+.TP
+.B NAT_MODULES
+Default is \fI"iptable_nat ip_nat_ftp"\fP. Gone
+only when \fBLOAD_MODULES\fR=\fI"yes"\fP.
+.TP
+.B ILLEGAL_TCP_FLAGS
+Default is \fI"SYN,FIN PSH,FIN SYN,ACK,FIN
+SYN,FIN,PSH SYN,FIN,RST SYN,FIN,RST,PSH SYN,FIN,ACK,RST
+SYN,ACK,FIN,RST,PSH ALL"\fP.
+.TP
+.B FINSCAN
+Default is \fI"FIN"\fP.
+.TP
+.B XMASSCAN
+Default is \fI"URG,PSH,FIN"\fP.
+.TP
+.B NULLSCAN
+Default is \fI"NONE"\fP.
+.TP
+.B PACKET_LENGTH
+SYN packet length (range in bytes). Default is
+\fI"40:68"\fP.
+.TP
+.B ENABLE_LIMIT_RATE
+Enable rate limit \fI(yes/no)\fP? Default is
+\fI"no"\fP.
+.TP
+.B LIMIT_RATE
+Default is \fI"30/s"\fP.
+.TP
+.B LIMIT_BURST
+Default is \fI"50"\fP.
+.TP
+.B ENABLE_IPLIMIT
+You better know what you are doing \- change
+the values below \fI(yes/no)\fP. Default is \fI"no"\fP.
+.TP
+.B IPLIMIT_MAX_ACCEPT
+Accept only UP TO this many connections per
+the netmask below. Default is \fI"16"\fP.
+.TP
+.B IPLIMIT_NETMASK
+Netmask value. Default is \fI"24"\fP.
+.TP
+.B DROP_UNCLEAN_PACKETS
+Drop \fI"unclean"\fP packets \- packet
+sanity checking (EXPERIMENTAL \- do not use this) \fI(yes/no)\fP.
+Default is \fI"no"\fP.
+.TP
+.B ALLOW_ICMP_MESSAGE
+Allowable ICMP messages \- see
+\%http://www.iana.org/assignments/icmp\-parameters. Will accept
+numeric or name value \- \%\fI"\fBiptables\fR\ \fI\-p\ icmp\ \-h"\fP
+to list. Default is \fI"echo\-reply network\-unreachable
+host\-unreachable port\-unreachable fragmentation\-needed
+time\-exceeded"\fP.
+.SS ANTI\-SPOOFING OPTIONS
+.TP
+.B NOTE
+See \%http://www.sans.org/dosstep/cisco_spoof.htm and
+\%http://www.isi.edu/in\-notes/rfc1918.txt
+.IP
+0.0.0.0/8 \- Broadcast (old)
+.IP
+255.255.255.255(/32) \- Broadcast (all)
+.IP
+127.0.0.0/8 \- Loopback
+.IP
+224.0.0.0/4 \- Multicast
+.IP
+240.0.0.0/5 \- Class E reserved
+.IP
+248.0.0.0/5 \- Unallocated
+.IP
+192.0.2.0/24 \- NET-TEST (reserved)
+.IP
+169.254.0.0/16 \- LinkLocal (reserved)
+.IP
+10.0.0.0/8 \- Class A (private use)
+.IP
+172.16.0.0/12 \- Class B (private use)
+.IP
+192.168.0.0/16 \- Class C (private use)
+.TP
+.B RESERVED_NETWORKS
+Default is \fI"127.0.0.0/8 240.0.0.0/5
+248.0.0.0/5"\fP.
+.TP
+.B PRIVATE_NETWORKS
+Default is \fI"10.0.0.0/8 172.16.0.0/12
+192.168.0.0/16"\fP.
+.TP
+.B LOOPBACK_ACCEPT
+Accept traffic to loopback \fI(yes/no)\fP?
+Default is \fI"yes"\fP.
+.TP
+.B LOOPBACK_MODE
+Values are \fI"paranoid"\fP, \fI"normal"\fP, or
+\fI"loose"\fP. Default is \fI"normal"\fP.
+.TP
+.B BIND_IP
+if you are having DNS problems on the firewall itself,
+but not from behind it, this should probably make sense to you.
+Otherwise, leave this blank. Use space separated dotted quad IP
+addresses if you need more than one.
+.SS KERNEL OPTIONS
+.TP
+.B NOTE
+Do not change unless you are sure what you are doing.
+.TP
+.B SYNCOOKIES
+Default is \fI"no"\fP.
+.TP
+.B ANTI_SMURF
+Default is \fI"yes"\fP.
+.TP
+.B ACCEPT_SOURCE_ROUTE
+Default is \fI"no"\fP.
+.TP
+.B INGRESS_FILTER
+Ingress filtering: \fI"1"\fP for simple,
+\fI"2"\fP to comply with RFC1812 section 5.3.8 \- see
+\%http://andrew2.andrew.cmu.edu/rfc/rfc1812.html. Default is
+\fI"2"\fP.
+.TP
+.B LOG_MARTIANS
+Default is \fI"yes"\fP.
+.TP
+.B ENABLE_TCP_ECN
+TCP congestion notification \- depreciated.
+Default is \fI"no"\fP.
+
+.SH FILES
+.TP
+.I /etc/kwtools/kwnarc.conf
+Main configuration file for
+\fBkwnarc\fR. See \fBkwnarc.conf\fR(5) for further details.
+.TP
+.I /etc/kwtools/kwnarc-custom.conf
+Configuration file for custom
+rules. See in \%\fI/usr/share/doc/kwtools-net-narc/examles\fP for a
+example.
+.TP
+.I /etc/kwtools/kwnarc-forward.conf
+Configuration file for port
+forwarding. See in \%\fI/usr/share/doc/kwtools-net-narc/examles\fP for
+a example.
+
+.SH SEE ALSO
+\fBiptables\fR(8), \fBkwnarc\fR(8)
+
+.SH AUTHOR
+Kai Wilke \&<kiste@netzworkk.de>
+
+.SH COPYRIGHT
+Copyright (C) 2002-2013 Kai Wilke
+
+
+

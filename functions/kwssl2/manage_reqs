@@ -1,0 +1,319 @@
+# Funktion (manage_reqs), Verwaltung von Anforderungen# {{{
+#
+# usage: manage_reqs
+#
+manage_reqs() {
+	# Pruefen ob eine CA geoeffnet ist.
+	if [ -n "$CA_OPEN_NAME" ] ; then
+		REQS_UNSET=(CA_CAPASSWORD CA_CAPASSWD)
+		# Funktion (cert_existed_msg), Zertifikat ist schon vorhanden.# {{{
+		cert_existed_msg() {
+			MSG=$(gettext 'Es existiert bereits ein Zertifikat mit identischen Namen. Das Erstellen (ueberschreiben) eines neuen Zertifikats wird fehlschlagen, falls das alte nicht widerrufen wurde oder abgelaufen ist.')
+			msgbox "$gv_Attention" "$MSG"
+		}
+		## }}}
+		# Funktion (req_sign), Erzeugt aus Anforderungen Zertifikate und# {{{
+		# signiert diese
+		#
+		# usage: req_sign [ client_cert | server_cert ]
+		#
+		req_sign() {
+			if [[ ${#argv} == 1 ]] ; then
+				local Conf_Section
+				Conf_Section="$1"
+				# Funktion (req_sign_menu)# {{{
+				REQ_SIGN_TITLE="${lv_Request}::${lv_Sign}"
+				#
+				req_sign_menu() {
+					REQ_SIGN_MENU=($REQS_ALL_E)
+					menubox "" "$REQ_SIGN_TITLE" "$gv_Menupoint" "$REQ_SIGN_MENU"
+				}
+				## }}}
+				# alle Anforderungen herraussuchen.
+				get_req_key_files
+				if [ -n "${REQS_ALL_E[1]}" ] ; then
+					req_sign_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help req_help
+								req_sign_menu
+								;;
+							*)
+								# Auswahl uebernehmen fuer die  Signierung und
+								# Zertifikatserstellung.
+								SIGN_FILE="${${REQS_FILE[gv_Auswahl]}##*/}"
+								Check_File="${KWSSL_DIR}/${CA_OPEN_NAME}/certs/${SIGN_FILE}"
+								# ueberpruefen ob Zertifikat schon vorhanden ist.
+								if [ -f "$Check_File" ] ; then
+									cert_existed_msg
+									CONTINUE_MSG=$(gettext 'Wirklich versuchen das Zertifikat zu ueberschrieben?')
+									yesno "$REQ_SIGN_TITLE" "$CONTINUE_MSG" "no"
+									if [ "$gv_Auswahl" = no ] ; then
+										break
+									fi
+								fi
+								# Grundkonfiguration einlesen
+								read_openssl_conf "$Conf_Section"
+								# Variablen belegen, falls leer
+								VALIDITY=${VALIDITY:-3650}
+								PRESERVEDN=${PRESERVEDN:-yes}
+								# Einstellungen taetigen# {{{
+								# Funktion (sign_menu)# {{{
+								#
+								sign_menu() {
+									SIGN_MENU=(\"$lv_Ssl_CA_Password\" \"$CA_CAPASSWORD\"
+									$lv_Ssl_Validity \"$VALIDITY\"
+									$lv_Ssl_PreserveDN \"$PRESERVEDN\"
+									$gv_Create \"\" $gv_Back \"\")
+									menubox "$1" "$REQ_SIGN_TITLE" "$gv_Menupoint" "$SIGN_MENU"
+								}
+								## }}}
+								sign_menu
+								while [ "$gv_Auswahl" ] ; do
+									case $gv_Auswahl in
+										HELP*)
+								    	    # Hilfe Messagebox
+											script_help req_sign_help
+											sign_menu
+											;;
+										"$lv_Ssl_CA_Password")
+											# CA Password Eingabe
+											ca_passwd_input
+											sign_menu $lv_Ssl_CA_Password
+											;;
+										$lv_Ssl_Validity)
+											# Gueltigkeitseingabe
+											validity_input
+											sign_menu $lv_Ssl_Validity
+											;;
+										$lv_Ssl_PreserveDN)
+											# eMail Subject DN hinzufuegen?
+											choice_preservedn
+											sign_menu $lv_Ssl_PreserveDN
+											;;
+										$gv_Create)
+											# Anforderung signieren und Zertifikat erstellen
+											if [[ -n $CA_CAPASSWORD ]] && \
+												[[ -n $VALIDITY ]] ; then
+												# Digest umwandeln
+												convert_digest $DEFAULT_MD
+												# preserveDN pruefen
+												check_preservedn
+												# Zertifikate erzeugen und mit CA signieren
+												sign_cert_request "$CA_OPEN_NAME" "${Conf_Section%_*}_ca" "$SIGN_FILE" "$VALIDITY" "$Digest"
+												# Passwoerter loeschen
+												unset -- $REQS_UNSET
+												break
+											else
+												failed_entry_msg
+												sign_menu
+											fi
+											;;
+										$gv_Back)	
+											# abbrechen
+											# Passwoerter loeschen
+											unset -- $REQS_UNSET
+											break
+											;;
+									esac
+								done
+								## }}}
+								break
+								;;
+						esac
+					done
+				else
+					no_reqs_msg
+				fi
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+		# Funktion (req_menu)# {{{
+		#
+		lv_Server_Sign=$(gettext 'signieren (Server)')
+		lv_Client_Sign=$(gettext 'signieren (Benutzer)')
+		#
+		REQ_TITLE="${CA_OPEN_NAME}::${lv_Request}"
+    		REQ_MENU=(\"$gv_Display\" \"\" \"$lv_Request_Create\" \"\"
+		\"$lv_Import\" \"\" \"$lv_Server_Sign\" \"\"
+		\"$lv_Client_Sign\" \"\"
+		$gv_Delete \"\" $gv_Back \"\")
+		req_menu() {
+			menubox "$1" "$REQ_TITLE" "$gv_Menupoint" "$REQ_MENU"
+		}
+		# }}}
+		# Funktion (no_reqs_msg)# {{{
+		no_reqs_msg() {
+			MSG=$(gettext 'Es sind keine Anforderungen vorhanden.')
+			msgbox "$gv_Info" "$MSG"
+		}
+		## }}}
+		# Funktion (no_req_msg)# {{{
+		#
+		# usage: no_req_msg FILE
+		#
+		no_req_msg() {
+			local File
+			File="$1"
+			MSG=$(gettext 'Diese Datei ($File) ist keine Anforderung.')
+			msgbox "$gv_Info" "$MSG"
+		}
+		## }}}
+		req_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					script_help req_help
+					req_menu
+					;;
+				$gv_Display)
+					# Anforderungen anschauen# {{{
+					# Funktion (req_display_menu)# {{{
+					REQ_DISPLAY_TITLE="${lv_Request}::${gv_Display}"
+					#
+					req_display_menu() {
+						REQ_DISPLAY_MENU=($REQS_ALL_M)
+						checklist "$REQ_DISPLAY_TITLE" "$gv_Menupoint" "$REQ_DISPLAY_MENU"
+					}
+					## }}}
+					# alle Anforderungen herraussuchen.
+					get_req_key_files
+					if [ -n "${REQS_ALL_M[1]}" ] ; then
+						req_display_menu
+						while [ "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)
+						    	    # Hilfe Messagebox
+									script_help req_help
+									req_display_menu
+									;;
+								*)
+									# Auswahl anzeigen
+									# alte Datei loeschen
+									rm -f $DISPLAY_FILE &>/dev/null
+									# Anzeige Datei fuellen
+									for i in ${=gv_Auswahl} ; {
+										CN_REQ_FILE="${REQS_FILE[i]}"
+										CN_NAME="${REQS_CN[i]}"
+										echo "################################" >> $DISPLAY_FILE
+										echo "$CN_NAME" >> $DISPLAY_FILE
+										echo "################################" >> $DISPLAY_FILE
+										echo "" >> $DISPLAY_FILE
+										openssl req -in "$CN_REQ_FILE" -text >> $DISPLAY_FILE
+										echo "" >> $DISPLAY_FILE
+									}
+									view_file $DISPLAY_FILE
+									break
+									;;
+							esac
+						done
+					else
+						no_reqs_msg
+					fi
+					## }}}
+					req_menu $gv_Display
+					;;
+				$lv_Request_Create)
+					# Neue Anforderung und Schluessel erstellen
+					conf_ca -r
+					req_menu $lv_Request_Create
+					;;
+				$lv_Import)
+					# Anforderung zum Import auswaehlen# {{{
+					FORMAT=""
+					SUFFIX=".pem .der .req"
+					file_choice "${REQ_FILE%/*}" only "$REQ_FILE"
+					if [ -n "$WERT" ] ; then
+						get_format_file -r "${VERZ}/${WERT}"
+						if openssl req ${=INFORM_FORMAT} -in "${VERZ}/${WERT}" &>/dev/null ; then
+							REQ_FILE="${VERZ}/${WERT}"
+							# Subject holen und Variablen mit eingelesenen Werten belegen
+							Tmp=${$(openssl req ${=INFORM_FORMAT} -in $REQ_FILE -subject -noout)[1]}
+							read_subject "$Tmp"
+							# base64 encodierten Dateienamen herausfinden
+							# und checken ob er schon existiert.
+							gen_name
+							REQ_NEW_FILE="${KWSSL_DIR}/${CA_OPEN_NAME}/req/${GEN_NAME}.pem"
+							if [ ! -f "$REQ_NEW_FILE" ] ; then
+								# Frage ob diese Request Datei importiert werden soll
+								IMPORT_REQ_TITLE="${lv_Request}::${lv_Import}"
+								IMPORT_REQ_MSG=$(gettext 'Soll diese Anforderung wirklich importiert werden (ja/nein)?\n\n${lv_Ssl_CommonName}: $COMMONNAME\n${lv_Ssl_Land_Code}: $COUNTRYCODE\n${lv_Ssl_Bundesstaat}: $COUNTRY\n${lv_Ssl_Location}: $LOCATION\n${lv_Ssl_Organisation}: $ORGANISATION\n${lv_Ssl_Organisation_Unit}: $ORGANISATIONUNIT\n${lv_Ssl_Email}: $MAIL')
+								yesno "$IMPORT_REQ_TITLE" "$IMPORT_REQ_MSG" "yes"
+								if [ "$gv_Auswahl" != no ] ; then
+									# Request importieren
+									PROG_OPT=(req ${=INFORM_FORMAT} -in $REQ_FILE
+								   		-outform PEM -out $REQ_NEW_FILE)
+									openssl $PROG_OPT || prog_failure
+								fi
+							else
+								file_existed_msg "$REQ_NEW_FILE"
+							fi
+						else
+							no_req_msg "$WERT"
+						fi
+					fi
+					## }}}
+					req_menu $lv_Import
+					;;
+				$lv_Server_Sign)
+					# Server Zertifikate Erstellung und Signierung
+					req_sign server_cert
+					req_menu $lv_Server_Sign
+					;;
+				$lv_Client_Sign)
+					# Benutzer Zertifikate Erstellung und Signierung
+					req_sign client_cert
+					req_menu $lv_Client_Sign
+					;;
+				$gv_Delete)
+					# Anforderungen loeschen# {{{
+					# Funktion (del_req_choice_menu)# {{{
+					REQ_DEL_TITLE="${lv_Request}::${gv_Delete}"
+					del_req_choice_menu() {
+						REQ_DEL_MENU=($REQS_ALL_M)
+						checklist "$REQ_DEL_TITLE" "$gv_Menupoint" "$REQ_DEL_MENU"
+					}
+					## }}}
+					get_req_key_files
+					if [ -n "${REQS_ALL_M[1]}" ] ; then
+						del_req_choice_menu
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+						    	    # Hilfe Messagebox
+									script_help req_del_help
+									del_req_choice_menu
+									;;
+								*)
+									# Auswahl uebernehmen
+									for i in ${=gv_Auswahl} ; {
+										rm -rf "${REQS_FILE[i]}" &>/dev/null
+									}
+									break
+									;;
+							esac
+						done
+					else
+						no_reqs_msg
+					fi
+					## }}}
+					req_menu $gv_Delete
+					;;
+				$gv_Back)
+					break
+					;;
+			esac
+		done
+	else
+		no_open_ca_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

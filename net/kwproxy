@@ -1,0 +1,108 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwproxy, zum einstellen der Proxy Variablen
+# Version: 0.2.9
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Rechte pruefen
+os_check
+#
+# Wenn eine Konfigurationsdatei Datei vorhanden ist einlesen.
+#
+if_conf_file $OS proxy
+
+net_conf
+
+# Variablen
+lv_Http_Proxy=$(gettext 'http_proxy')
+lv_Ftp_Proxy=$(gettext 'ftp_proxy')
+# Funktion haupt_menue{{{
+haupt_menue() {
+	MAIN_MENU=($lv_Http_Proxy \"$gv_Http_Proxy\"
+   	$lv_Ftp_Proxy \"$gv_Ftp_Proxy\" $gv_Save \"\" $gv_Exit \"\")
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+#######################################################################
+#
+# Hauptprogramm
+#
+#######################################################################
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$lv_Http_Proxy)
+			# http Proxy einstellen
+			conf_proxy -h
+			haupt_menue $lv_Http_Proxy
+			;;
+		$lv_Ftp_Proxy)
+			# ftp Proxy einstellen
+			conf_proxy -f
+			haupt_menue $lv_Ftp_Proxy
+			;;
+		$gv_Save)
+			# Konfigiration speichern.{{{
+			#
+			> $PROXY_FILE <<< "# Beginn $PROXY_FILE
+#
+# http Proxy (http_proxy=http://rechnername:port)
+#
+http_proxy="$gv_Http_Proxy"
+
+# ftp Proxy (ftp_proxy=http://rechnername:port)
+#
+ftp_proxy="$gv_Ftp_Proxy"
+				
+# End $PROXY_FILE"
+			chmod 644 $PROXY_FILE
+			break
+			#}}}
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+unset -- PROXY_FILE
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

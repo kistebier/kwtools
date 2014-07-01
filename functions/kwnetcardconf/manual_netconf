@@ -1,0 +1,120 @@
+# Funktion Netzwerkarte manuell einstellen{{{
+#
+# benoetigt die Funktion net_conf
+#
+# usage: manual_netconf
+#
+manual_netconf() {
+	lv_Ip=$(gettext 'IP')
+	lv_Boot=$(gettext 'Boot')
+	lv_Broadcast=$(gettext 'Broadcast')
+	lv_Netmask=$(gettext 'Netzmaske')
+	lv_Gateway=$(gettext 'Gateway')
+	lv_Nameserver=$(gettext 'Nameserver')
+
+	# Funktion fuers manuelle Netzwerkkonfigurationsmenue{{{
+	#
+	# usage: net_man_menue
+	net_man_menue() {
+		NET_MAN_MENU=($lv_Ip \"$gv_Ip\" $lv_Boot \"$gv_Boot\"
+		$lv_Broadcast \"$gv_Broadcast\" $lv_Netmask \"$gv_Netmask\"
+		$lv_Gateway \"$gv_Gateway\" $lv_Nameserver \"$gv_Nameserver\"
+		$gv_Save \"\" $gv_Delete \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$NET_MAN_MENU"
+	}
+	#}}}
+	STARTMODE=static
+	net_man_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help conf_help
+				net_man_menue
+				;;
+			$lv_Ip)
+				iface_ip "$gv_Ip"
+				net_man_menue $lv_Ip
+				;;
+			$lv_Boot)
+				# Auswahl das Device schon beim Systemstart gestartet werden soll (yes/no).
+				iface_onboot
+				net_man_menue $lv_Boot
+				;;
+			$lv_Broadcast)
+				iface_bcast "$gv_Broadcast"
+				net_man_menue $lv_Broadcast
+				;;
+			$lv_Netmask)
+				iface_netmask "$gv_Netmask"
+				net_man_menue $lv_Netmask
+				;;
+			$lv_Gateway)
+				iface_gate "$gv_Gateway"
+				net_man_menue $lv_Gateway
+				;;
+			$lv_Nameserver)
+				iface_nameserver "$gv_Nameserver"
+				net_man_menue $lv_Nameserver
+				;;
+			$gv_Save)
+				# Konfiguration speichern{{{
+				if [ "$gv_Ip" -a "$gv_Broadcast" -a "$gv_Netmask" ] ; then
+					BREAK=2
+					ifconfig_check "$ETH"
+					net_config
+					ifconfig $ETH netmask $gv_Netmask broadcast $gv_Broadcast $gv_Ip up
+				elif [ "$gv_Ip" -a "$gv_Netmask" ] ; then
+					BREAK=2
+					ifconfig_check "$ETH"
+					net_config
+					ifconfig $ETH netmask $gv_Netmask $gv_Ip up
+					#gv_Broadcast="`print ${${$(export LC_ALL=C ; /sbin/ifconfig $ETH )[8]}#Bcast:}`"
+				elif [ "$gv_Ip" ] ; then
+					BREAK=2
+					ifconfig_check "$ETH"
+					net_config
+					ifconfig $ETH $gv_Ip up
+					#gv_Broadcast="`print ${${$(export LC_ALL=C ; /sbin/ifconfig $ETH )[8]}#Bcast:}`"
+					#gv_Netmask="`print ${${$(export LC_ALL=C ; /sbin/ifconfig $ETH )[9]}#Maske:}`"
+				else
+					MSG=$(gettext 'Sie muessen erst eine gueltige IP-Adresse fuer diesen Rechner eingeben.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				# default Gateway# {{{
+				if [ -n "$gv_Gateway" ] ; then
+					route_check -d add "$ETH" "$gv_Gateway"
+				fi
+				## }}}
+				# Nameserver# {{{
+				if [ -n "$gv_Nameserver" ] ; then
+					local Anz
+					integer Anz
+					Anz=1
+					for i in $gv_Nameserver ; {
+						if [ "$Anz" = 1 ] ; then
+							> /etc/resolv.conf <<< "nameserver $i"
+							(( Anz++ ))
+						else
+							>> /etc/resolv.conf <<< "nameserver $i"
+						fi
+					}
+				fi
+				## }}}
+				#}}}
+				break 2
+				;;
+			$gv_Delete)
+				ifconfig_check "$ETH"
+				unset -- gv_Ip gv_Netmask gv_Broadcast gv_Gateway
+				net_config
+				break 2
+				;;
+			$gv_Back)	break 2
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

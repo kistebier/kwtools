@@ -1,0 +1,259 @@
+# Funktion (kwmutt_abook), Bearbeitung des Adressbuches# {{{
+#
+# usage: kwmutt_abook
+#
+kwmutt_abook() {
+	lv_Alias=$(gettext 'Alias')
+	lv_Mailadr=$(gettext 'Mailadresse')
+	ADDRESSBOOK_TITLE="$lv_Addressbook"
+	# Funktion (read_address_file) liest die Konfigurationsdatei ~/.mutt/address ein# {{{
+	#
+	read_address_file() {
+		if [ -f "$alias_file" ] ; then
+			unset -- Abook Abook_M
+			create_tmp_conf "$alias_file"
+			integer Anz
+			local Anz
+			Anz=0
+			while read Alias Rest ; do
+				(( Anz++ ))
+				Abook[Anz]="\"$Rest\" \"\""
+				Abook_M[Anz]="\"$Rest\" \"\" off"
+			done < "$gv_LogFile"
+		fi
+	}
+	## }}}
+	# Funktion (read_address_value) belegt die Adressbuch Variablen # {{{
+	read_address_value() {
+		unset -- MAIL_ALIAS MAIL_ADR
+		if [ -n "$argv" ] ; then
+			print $argv | while read a b ; do
+				MAIL_ALIAS="$a"
+				MAIL_ADR="$b"
+			done
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (kwmutt_abook_conf), konfiguriert das Adressbuch# {{{
+	#
+	kwmutt_abook_conf() {
+		# Funktion (kwmutt_abook_create_menu), Menue fuer das Adressbuch# {{{
+		#
+		kwmutt_abook_create_menu() {
+			ABOOK_MENU=($lv_Alias \"$MAIL_ALIAS\" $lv_Mailadr \"$MAIL_ADR\"
+			$gv_Save \"\" $gv_Back \"\")
+			menubox "$1" "$ADDRESSBOOK_TITLE" "$gv_Menupoint" "$ABOOK_MENU"
+		}
+		## }}}
+		kwmutt_abook_create_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_abook_conf_help
+					kwmutt_abook_create_menu
+					;;
+				$lv_Alias)
+					# Alias Namen vergeben# {{{
+					ALIAS_MSG=$(gettext 'Geben Sie einen Alias Namen fuer die Mailadresse ein.')
+					inputbox "$lv_Alias" "$ALIAS_MSG" "$MAIL_ALIAS"
+					if [ -n "$gv_Auswahl" ] ; then
+						MAIL_ALIAS="$gv_Auswahl"
+					else
+						MAIL_ALIAS=""
+					fi
+					## }}}
+					kwmutt_abook_create_menu $lv_Alias
+					;;
+				$lv_Mailadr)
+					# Mailadresse eingeben# {{{
+					MSG=$(gettext 'Geben Sie ein oder mehrere Mailadressen ein (Bsp. <user@domain.de>, <user1@domain.de>).')
+					mail_address "$MSG" "$MAIL_ADR"
+					if [ -n "$gv_Mail_Adr" ] ; then
+						MAIL_ADR="$gv_Mail_Adr"
+					else
+						unset -- MAIL_ADR
+					fi
+					## }}}
+					kwmutt_abook_create_menu $lv_Mailadr
+					;;
+				$gv_Save)
+					# Einstellungen speichern# {{{
+					# speichern - Erst alte Einstellungen loeschen, dann speichern
+					# oder nur neu speichern.
+					if [ -f "$alias_file" ] ; then
+						if [ -n "$ABOOK_VALUE_OLD" ] ; then
+							print -l ${(R)${(f)"$(< $alias_file)"}##alias[[:space:]]${ABOOK_VALUE_OLD}*} >${gv_WorkDir}/abook
+							>> "${gv_WorkDir}/abook" <<< "alias $MAIL_ALIAS $MAIL_ADR"
+							mv ${gv_WorkDir}/abook $alias_file
+						else
+							>> "$alias_file" <<< "alias $MAIL_ALIAS $MAIL_ADR"
+						fi
+						# Konfiguration sortieren
+						kwmutt_abook_sort
+					else
+						> "$alias_file" <<< "# Beginn $alias_file
+#
+# Aliasname | Name | eMailAdresse
+#
+# Das Adressbuch wird in Mutt mit der Taste (a) aufgerufen, dort können Adressen eingetragen
+# werden, oder man editiert diese Datei von Hand.
+# Zum schreiben einer neuen Mail Taste (m) drücken und bei der Angabe der Adresse entweder den
+# kürzeren Aliasnamen aus dem Adressbuch wählen oder die TAB-Taste drücken um durchs Adressbuch
+# zu scrollen
+#
+
+alias $MAIL_ALIAS $MAIL_ADR"
+					fi
+					## }}}
+					break
+					;;
+				$gv_Back)
+					# ohne speichern abbrechen
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	# Funktion (kwmutt_abook_menu), Menue fuer das Adressbuch# {{{
+	#
+	kwmutt_abook_menu() {
+		ABOOK_MENU=($gv_Display \"\" $gv_Create \"\"
+		$gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+		menubox "$1" "$lv_Addressbook" "$gv_Menupoint" "$ABOOK_MENU"
+	}
+	#}}}
+	# Funktion (kwmutt_abook_sort), sortiert die Adressbuch Eintraege.# {{{
+	kwmutt_abook_sort() {
+		print -l ${(M)${(f)"$(< $alias_file)"}##(\#)*} >${alias_file}.bak
+		print -l ${(M)${(f)"$(< $alias_file)"}##(s#)alias*} | sort >>${alias_file}.bak
+		mv ${alias_file}.bak $alias_file &>/dev/null
+	}
+	## }}}
+	# Funktion (no_abook_msg), Nachricht das kein Adressbuch vorhanden ist.# {{{
+	no_abook_msg() {
+		MSG=$(gettext 'Es ist noch kein Adressbuch vorhanden.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	kwmutt_abook_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_abook_help
+				kwmutt_abook_menu
+				;;
+			$gv_Display)
+				# Adressbuch Eintraege anschauen# {{{
+				if [ -f "$alias_file" ] ; then
+					if [ -s "$alias_file" ] ; then
+						view_file "$alias_file"
+					else
+						no_entry_msg
+					fi
+				else
+					no_abook_msg
+				fi
+				## }}}
+				kwmutt_abook_menu $gv_Display
+				;;
+			$gv_Create)
+				# Adressbuch Eintrag erstellen
+				unset -- MAIL_ALIAS MAIL_ADR
+				kwmutt_abook_conf
+				kwmutt_abook_menu $gv_Create
+				;;
+			$gv_Change)
+				# Adressbuch Eintraege aendern# {{{
+				if [ -f "$alias_file" ] ; then
+					# Adressbuch einlesen
+					read_address_file
+					if [ -n "$Abook" ] ; then
+						CHANGE_MENU=($Abook $gv_Back \"\")
+						menubox "$ABOOK_VALUE_OLD" "$ADDRESSBOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help kwmutt_abook_conf_help
+									menubox "$ABOOK_VALUE_OLD" "$ADDRESSBOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
+									;;
+								$gv_Back)
+									break
+									;;
+								*)
+									# Auswahl uebernehmen
+									ABOOK_VALUE_OLD="$gv_Auswahl"
+									read_address_value $gv_Auswahl
+									kwmutt_abook_conf
+									unset -- ABOOK_VALUE_OLD
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+				else
+					no_abook_msg
+				fi
+				## }}}
+				kwmutt_abook_menu $gv_Change
+				;;
+			$gv_Delete)
+				# Adressbuch Eintraege loeschen{{{
+				if [ -f "$alias_file" ] ; then
+					# Adressbuch einlesen
+					read_address_file
+					if [ -n "$Abook_M" ] ; then
+						U_OPT=no
+						DEL_MENU=($Abook_M)
+						checklist "$ADDRESSBOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help kwmutt_abook_conf_help
+									U_OPT=no
+									checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+									;;
+								*)
+									# Auswahl loeschen
+									# erst einmal in einer Datei speichern.
+									for i in $gv_Auswahl ; {
+										if [ -f "${gv_WorkDir}/del_abook" ] ; then
+											print "$i" >> "${gv_WorkDir}/del_abook"
+										else
+											print "$i" > "${gv_WorkDir}/del_abook"
+										fi
+									}
+									# Datei auslesen und Eintrga loeschen.
+									if [ -f "${gv_WorkDir}/del_abook" ] ; then
+										while read A ; do
+											print -l ${(R)${(f)"$(< $alias_file)"}##alias[[:space:]]${A}*} >${gv_WorkDir}/abook
+											mv ${gv_WorkDir}/abook $alias_file
+
+										done < "${gv_WorkDir}/del_abook"
+
+									fi
+									# Konfiguration sortieren
+									kwmutt_abook_sort
+									break
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+				else
+					no_abook_msg
+				fi
+				#}}}
+				kwmutt_abook_menu $gv_Delete
+				;;
+			$gv_Back)
+				break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

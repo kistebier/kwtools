@@ -1,0 +1,242 @@
+# Funktion (export_files), exportiert CA- und Zertifikats-Dateien# {{{
+#
+# benoetigt die Variablen CERT_EXPORT_TITLE und Export_File
+#
+# usage: export_files EXPORT_OPT FILE HELPFILE
+# EXPORT_OPT - [ -keys | -ca | -certs | -crl ]
+# FILE       - zu exportierende Datei (voller Pfad)
+# HELPFILE   - Hilfe Datei
+#
+export_files() {
+	if [[ ${#argv} == 3 ]] ; then
+		unset -- Export_File Export_Opt EXPORT_HELPFILE
+		Export_Opt="$1"
+		Export_File="$2"
+		EXPORT_HELPFILE="$3"
+		#
+		# Variablen
+		check_default_revoke_days ca_ca
+		DEFAULT_REVOKE_DAYS=${DEFAULT_REVOKE_DAYS:-30}
+		lv_KeyAdd=$(gettext 'Schluessel hinzufuegen')
+		lv_CertAdd=$(gettext 'Zertifikat hinzufuegen')
+		lv_PassAdd=$(gettext 'ohne Passwort')
+		#
+		# Funktion (export_create_filename), bestimmt den Dateinamen# {{{
+		# der ZielDatei.
+		#
+		# usage: export_create_filename OPTION EXPORT_SUFFIX
+		# OPTION        - [ -keys | -ca | -certs | -crl ]
+		# EXPORT_SUFFIX - [ der | pem | p12 | tar | txt | zip ]
+		#
+		export_create_filename() {
+			if [[ ${#argv} == 2 ]] ; then
+				unset -- EXPORT_FILENAME
+				local Export_Opt Suffix
+				Export_Opt="$1"
+				Suffix="$2"
+				# Export Suffix festlegen# {{{
+				case "$Suffix" in
+					der|pem|p12|tar|txt|zip)
+						;;
+					*)	unset -- Suffix
+						return 1
+						;;
+				esac
+				## }}}
+				# Export Dateiname vorlaeufig belegen# {{{
+				case "$Export_Opt" in
+					-ca)
+						EXPORT_FILENAME="${HOME}/${CA_OPEN_NAME}-cacert.${Suffix}"
+						;;
+					-certs)
+						EXPORT_FILENAME="${HOME}/${MAIL}-cert.${Suffix}"
+						;;
+					-chain)
+						EXPORT_FILENAME="${HOME}/${CA_OPEN_NAME}-cachain.${Suffix}"
+						;;
+					-crl)
+						EXPORT_FILENAME="${HOME}/${CA_OPEN_NAME}-crl.${Suffix}"
+						;;
+					-keys)
+						EXPORT_FILENAME="${HOME}/${MAIL}-key.${Suffix}"
+						;;
+					*)
+						return 1
+						;;
+				esac
+				## }}}
+			else
+				no_para_msg $0
+				return 1
+			fi
+			return 0
+		}
+		## }}}
+		# Funktion (export_filename), Export Dateinamen eingeben# {{{
+		#
+		# usage: export_filename [ der | pem | p12 | tar | txt | zip ]
+		#
+		export_filename() {
+			if [[ ${#argv} == 1 ]] ; then
+				local Suffix
+				Suffix="$1"
+				EXPORT_FILENAME_MSG=$(gettext 'Geben Sie den Export Dateinamen mit Suffix ($Suffix) ein.')
+				inputbox "$lv_ExportFilename" "$EXPORT_FILENAME_MSG" "$EXPORT_FILENAME"
+				if [ -n "$gv_Auswahl" ] ; then
+					EXPORT_FILENAME="$gv_Auswahl"
+				fi
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+		# Funktion (export_menu)# {{{
+		export_menu() {
+			case "$Export_Opt" in
+				-ca|-crl)
+					EXPORT_MENU=(PEM \"\" on DER \"\" off TXT \"\" off)
+					radiolist "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					;;
+				-keys)
+					EXPORT_MENU=(PEM \"\" on DER \"\" off PKCS#12 \"\" off
+					TAR \"\" off ZIP \"\" off)
+					radiolist "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					;;
+				-certs)
+					EXPORT_MENU=(PEM \"\" on DER \"\" off PKCS#12 \"\" off
+					TAR \"\" off TXT \"\" off ZIP \"\" off)
+					radiolist "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					;;
+				-chain)
+					gv_Auswahl=PEM
+					;;
+				*)
+					no_para_msg $0
+					break
+					;;
+			esac
+		}
+		## }}}
+		# Funktion (get_alg_privkey), ueberprueft welcher Algorithmus # {{{
+		# der private Schluessel besitzt.
+		#
+		# usage: get_alg_privkey PRIVKEY
+		# PRIVKEY - private Schluesseldatei
+		#
+		get_alg_privkey() {
+			if [ -f "$1" ] ; then
+				local Tmp
+				Tmp=${$(file -b $1)[2]}
+				if [[ $Tmp == RSA ]] ; then
+					ALGORITHM=rsa
+				else
+					ALGORITHM=dsa
+				fi
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+		# Funktion (pass_add), Passwort hinzufuegen (yes/no)# {{{
+		#
+		pass_add() {
+			PASSADD_MSG=$(gettext 'Ohne Passwort exportieren (ja/nein). Standard ist Nein - mit Passwort.')
+			yesno "$EXPORT_TITLE" "$PASSADD_MSG" "$PASS_VALUE"
+			if [ "$gv_Auswahl" != no ] ; then
+				PASS_VALUE="yes"
+			else
+				PASS_VALUE="no"
+			fi
+		}
+		## }}}
+		# Funktion (key_add), Schluessel hinzufuegen (yes/no)# {{{
+		#
+		key_add() {
+			KEY_MSG=$(gettext 'Schluessel hinzufuegen (ja/nein).')
+			yesno "$CERT_EXPORT_TITLE" "$KEY_MSG" "$KEY_VALUE"
+			if [ "$gv_Auswahl" != no ] ; then
+				KEY_VALUE="yes"
+			else
+				KEY_VALUE="no"
+			fi
+		}
+		## }}}
+		# Funktion (cert_add), Zertifikat hinzufuegen (yes/no)# {{{
+		#
+		cert_add() {
+			CERTADD_MSG=$(gettext 'Zertifikat hinzufuegen (ja/nein).')
+			yesno "$EXPORT_TITLE" "$CERTADD_MSG" "$CERT_VALUE"
+			if [ "$gv_Auswahl" != no ] ; then
+				CERT_VALUE="yes"
+			else
+				CERT_VALUE="no"
+			fi
+		}
+		## }}}
+		export_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help "$EXPORT_HELPFILE"
+					export_menu
+					;;
+				DER)
+					# Zertifikat nach DER exportieren
+					#
+					# Funktion manage_export_most
+					autoload -U manage_export_most
+					manage_export_most "$Export_Opt" "$Export_File" der
+					break
+					;;
+				PEM)
+					# Zertifikat nach PEM exportieren
+					#
+					# Funktion manage_export_pem
+					autoload -U manage_export_pem
+					manage_export_pem "$Export_Opt" "$Export_File" pem
+					break
+					;;
+				PKCS*)
+					# Zertifikat nach PKCS#12 exportieren
+					#
+					# Funktion manage_export_pkcs12
+					autoload -U manage_export_pkcs12
+					manage_export_pkcs12 "$Export_Opt" "$Export_File" p12
+					break
+					;;
+				TAR)
+					# Zertifikat nach TAR exportieren
+					#
+					# Funktion manage_export_most
+					autoload -U manage_export_most
+					manage_export_most "$Export_Opt" "$Export_File" tar
+					break
+					;;
+				TXT)
+					# Zertifikat nach TXT exportieren
+					#
+					# Funktion manage_export_most
+					autoload -U manage_export_most
+					manage_export_most "$Export_Opt" "$Export_File" txt
+					break
+					;;
+				ZIP)
+					# Zertifikat nach ZIP exportieren
+					#
+					# Funktion manage_export_most
+					autoload -U manage_export_most
+					manage_export_most "$Export_Opt" "$Export_File" zip
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

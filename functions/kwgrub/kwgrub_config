@@ -1,0 +1,47 @@
+# Funktion um die Standard Konfigurations Parameter zu aendern{{{
+#
+# usage: kwgrub_config
+#
+kwgrub_config() {
+	# Hauptkonfiguration aendern
+	if [ "$TAST" = "$gv_English" ] ; then
+		print -l ${(R)${(qf)"$(< $Menu_lst)"}##(#s)setkey*} >$Menu_lst$$
+		mv $Menu_lst$$ $Menu_lst
+		change_default_grub
+	else
+		print -l ${(R)${(qf)"$(< $Menu_lst)"}##(#s)setkey*} >$Menu_lst$$
+		> $Menu_lst <<< "setkey y z  
+setkey z y
+setkey Y Z 
+setkey Z Y
+setkey equal parenright
+setkey parenright parenleft
+setkey parenleft asterisk
+setkey doublequote at
+setkey plus bracketright
+setkey minus slash
+setkey slash ampersand 
+setkey ampersand percent
+setkey percent caret
+setkey underscore question
+setkey question underscore
+setkey semicolon less
+setkey less numbersign 
+setkey numbersign backslash
+setkey colon greater
+setkey greater bar
+setkey asterisk braceright
+"
+		#
+		if [ "`wc -l < $Menu_lst$$`" -gt 1 ] ; then
+			< $Menu_lst$$ >> $Menu_lst
+			rm -f $Menu_lst$$ &>/dev/null
+			change_default_grub
+		fi
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,85 @@
+# Funktion kwecryptfs Konfiguration speichern{{{
+#
+# usage: kwecryptfs_config
+#
+kwecryptfs_config() {
+#
+# Konfiguration schreiben.
+#
+> ${gv_HomePath}/.kwtools/kwecryptfsrc <<< "# Beginn ~/.kwtools/kwecryptfsrc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Geben Sie einen Chiffrierungstyp an (aes, blowfish,
+# des3_ede, twofish, cast5, cast6, arc4). Standard ist aes. 
+CIPHER=\"$CIPHER\"
+
+# Schluesselgroesse (16, 24, 32). Standard ist 16.
+KEY_SIZE=\"$KEY_SIZE\"
+
+# Geben Sie den Schluesseltyp an (gpg, openssl, passphrase,
+# pkcs11-helper, tspi). Diese liegen normalerweise
+# unter /usr/lib*/ecryptfs/. Standard ist passphrase.
+# Dazu muss man noch die Schluessel Option, wie eine
+# Schluesseldatei mit angeben.
+#
+# Einige der folgenden Werte kann man kombinieren. Z. B.
+# KEY_TYPE=openssl:openssl_passwd_keyfile=/path/to/openssl_private_RSA_file:openssl_passwd_file=/path/to/openssl_password_file
+#
+# KEY_TYPE=keytype:key_option=option
+#
+# KEY_TYPE=gpg - Hier ist noch nichts
+#
+# KEY_TYPE=openssl:openssl_passwd=password
+# KEY_TYPE=openssl:openssl_passwd_file=/path/to/openssl_password_file
+# KEY_TYPE=openssl:openssl_passwd_keyfile=/path/to/openssl_private_RSA_file
+#
+# KEY_TYPE=passphrase:passphrase_passwd=password
+# KEY_TYPE=passphrase:passphrase_passwd_file=/path/to/password_file
+# KEY_TYPE=passphrase:passphrase_salt=16 digit hex Wert.
+#
+# KEY_TYPE=pkcs11-helper - Hier ist noch nichts
+#
+# KEY_TYPE=tspi - Hier ist noch nichts
+#
+# siehe man 7 ecryptfs.
+KEY_TYPE=\"$KEY_TYPE\"
+
+# Mountverzeichnis fuer externe Laufwerke (USBstick).
+MOUNT_PATH=\"$MOUNT_PATH\"
+
+# Soll das Laufwerk nicht beim starten des Rechners erstellt
+# werden, sondern manuell (yes/no)?
+NOAUTO=\"$NOAUTO\"
+
+# Soll die Signatur des Schluessels mit
+# ~/.ecryptfs/sig-cache.txt verglichen werden
+# (yes/no)? No ist gut fuer nicht interactive
+# Setups, falls die Schluessel Signatur nicht
+# im Cache ist.
+NO_SIG_CACHE=\"$NO_SIG_CACHE\"
+
+# Sollen nicht verschluesselte Dateien
+# ins ecryptfs durch gereicht werden (yes/no)? Ist gut
+# um auch unverschluesselte Dateien zu bearbeiten.
+PASSTHROUGH=\"$PASSTHROUGH\"
+
+# Soll die Version der verschluesselten Dateien angezeigt
+# werden (yes/no)? Ist gut fuer Backups Tools die erweiterte
+# Attribute des Dateisystems unterstuetzen.
+VERSION=\"$VERSION\"
+
+# Sollen die Metadaten der verschluesselten Dateien
+# in dem erweiterten Attributen des Dateisystems
+# gespeichert werden (yes/no)?.
+XATTR=\"$XATTR\"
+
+# End ~/.kwtools/kwecryptfsrc"
+
+read_file kwecryptfsrc
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

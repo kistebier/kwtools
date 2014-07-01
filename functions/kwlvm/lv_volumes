@@ -1,0 +1,383 @@
+# Funktion um LV's anzuzeigen, erstellen, umbennen, {{{
+# verkleinern, vergroessern und loeschen.
+#
+# usage: lv_volumes
+lv_volumes() {
+	search_pv
+	vg_display
+	if [ -n "${VG[1]}" ] ; then
+		# Variablen
+		lv_Enlarge=$(gettext 'vergroessern')
+		lv_Reduce=$(gettext 'verkleinern')
+		lv_Vol_Group=$(gettext 'Volume_Group')
+		lv_LV_Name=$(gettext 'LV_Name')
+		lv_Size=$(gettext 'Groesse')
+		#
+		# Funktion (drive_size_to_kb), Laufwerksangaben in KiloByte umrechnen# {{{
+		drive_size_to_kb() {
+			convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+			if [ -n "$SIZE_KB" ] ; then
+				New_Size_Tmp="$SIZE_KB"
+			fi
+			# Vorhandene Groesse in KByte umrechnen.
+			convert_drive_size "$SIZE_KB1_ME" "$SIZE_KB1"
+			if [ -n "$SIZE_KB" ] ; then
+				Old_Size_Tmp="$SIZE_KB"
+			fi
+		}
+		## }}}
+		# Funktion lv_menue{{{
+		LV_TITLE=($lv_Logical_Vol)
+		LV_MENU=($gv_Display \"\" $gv_Create \"\" $lv_Enlarge \"\"
+		$lv_Reduce \"\" $lv_Rename \"\" $gv_Delete \"\" $gv_Back \"\")
+		#
+		lv_menue() {
+			menubox "$1" "$LV_TITLE" "$gv_Menupoint" "$LV_MENU"
+		}
+		#}}}
+		lv_menue
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help lv_help
+					lv_menue
+					;;
+				$gv_Display)
+					# Anzeige der LVs{{{
+					lv
+					# Sind LVs vorhanden, werden sie zur Auswahl gestellt.
+					if [ "${LV_M[1]}" ] ; then
+						# Funktion lv_anzeige_menue{{{
+						LV_DISPLAY_MENU=($LV_M)
+						LV_DISPLAY_TITLE=(${lv_Logical_Vol}::${gv_Display})
+						LV_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere LVs zur Anzeige aus.')
+						lv_anzeige_menue() {
+							checklist "$LV_DISPLAY_TITLE" "$LV_DISPLAY_MSG" "$LV_DISPLAY_MENU"
+						}
+						#}}}
+						lv_anzeige_menue
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help lv_help
+									lv_anzeige_menue
+									;;
+								*)
+									# Anzeige der LVs
+									lvdisplay ${=gv_Auswahl} >${gv_WorkDir}/lvdisplay
+									view_file ${gv_WorkDir}/lvdisplay
+									lv_anzeige_menue
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					#}}}
+					lv_menue $gv_Display
+					;;
+				$gv_Create)
+					# Erstellung von LVs{{{
+					unset -- VG_AUSWAHL LV_NAME SIZE
+					# Funktion lv_create_menue{{{
+					LV_CREATE_TITLE=(${lv_Logical_Vol}::${gv_Create})
+					#
+					lv_create_menue() {
+						LV_CREATE_MENU=($lv_Vol_Group \"$VG_AUSWAHL\" $lv_LV_Name
+						\"$LV_NAME\" $lv_Size \"$SIZE\" $gv_Create \"\" $gv_Back \"\")
+						menubox "$1" "$LV_CREATE_TITLE" "$gv_Menupoint" "$LV_CREATE_MENU"
+					}
+					#}}}
+					lv_create_menue
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help lv_create_help
+								lv_create_menue
+								;;
+							$lv_Vol_Group)
+								# VG auswaehlen{{{
+								LV_VG_MENU=($VG_M)
+								LV_VG_TITLE=(${lv_Logical_Vol}::${lv_Vol_Group})
+								LV_VG_MSG=$(gettext 'Waehlen Sie eine VG aus, auf der ein LV erzeugt werden soll.')
+								radiolist "$LV_VG_TITLE" "$LV_VG_MSG" "$LV_VG_MENU"
+								while [ "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help vg_auswahl_help
+											radiolist "$LV_VG_TITLE" "$LV_VG_MSG" "$LV_VG_MENU"
+											;;
+										*)	VG_AUSWAHL="$gv_Auswahl"
+											break
+											;;
+									esac
+								done
+								#}}}
+								lv_create_menue $lv_Vol_Group
+								;;
+							$lv_LV_Name)
+								# LV Namen eingeben, ohne Leerzeichen{{{
+								LV_NAME_TITLE=(${lv_Logical_Vol}::${lv_LV_Name})
+								LV_NAME_MSG=$(gettext 'Geben Sie bitte hier den Namen ihrer neuen LV, ohne Leerzeichen, ein.')
+								U_OPT="-"
+								inputbox "$LV_NAME_TITLE" "$LV_NAME_MSG" "$LV_NAME"
+								if [ "$gv_Auswahl" ] ; then
+									if ! lvdisplay /dev/${VG_AUSWAHL:-**}/${gv_Auswahl} &>/dev/null ; then
+										LV_NAME="$gv_Auswahl"
+									else
+										MSG=$(gettext 'Der Name fuer dieses LV existiert schon.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+								else
+									LV_NAME=""
+								fi
+								#}}}
+								lv_create_menue $lv_LV_Name
+								;;
+							$lv_Size)
+								# Groesse des LV angeben{{{
+								if [ "$VG_AUSWAHL" ] ; then
+									vg_free_size "$VG_AUSWAHL"
+									# umrechnen nach KByte.
+									convert_drive_size -i "$VG_SIZE"
+									SIZE_KB1="$SIZE_KB"
+									SIZE_KB1_ME="$SIZE_KB_ME"
+									#
+									LV_SIZE_TITLE=(${lv_Logical_Vol}::${lv_Size})
+									LV_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ihrer neuen LV ein (3G = 3GigaByte). Es sind noch "${SIZE_KB1}${SIZE_KB1_ME}" frei.')
+									#
+									number_input -D "$LV_SIZE_TITLE" "$LV_SIZE_MSG" "$SIZE"
+									if [ -n "$NUMBER" ] ; then
+										# Laufwerksangaben in KiloByte umrechnen
+										drive_size_to_kb
+										if [[ "$New_Size_Tmp" -le "$Old_Size_Tmp" ]] ; then
+											SIZE="$NUMBER"
+											CREATE_SIZE="${New_Size_Tmp%.*}k"
+										else
+											over_size_msg
+											unset -- SIZE CREATE_SIZE
+										fi
+									fi
+								else
+									no_select_vg_msg
+								fi
+								#}}}
+								lv_create_menue $lv_Size
+								;;
+							$gv_Create)
+								# LV erzeugen{{{
+								if [ "$VG_AUSWAHL" -a "$LV_NAME" -a "$CREATE_SIZE" ] ; then
+									lvcreate -v -n $LV_NAME -L${CREATE_SIZE} $VG_AUSWAHL 2>&1 | progressbox $gv_Create "$LV_NAME" || prog_failure
+									#
+									# Formatieren yes/no
+									#
+									format "/dev/${VG_AUSWAHL}/${LV_NAME}"
+									break
+								else
+									MSG=$(gettext 'Sie muessen erst VG Name, LV Name und die Groesse einstellen.')
+									msgbox "$gv_Attention" "$MSG"
+									lv_create_menue
+								fi
+								#}}}
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+					#}}}
+					lv_menue $gv_Create
+					;;
+				$lv_Enlarge)
+					# LV vergroessern{{{
+					lv
+					if [ "${LV[1]}" ] ; then
+						LV_ENLARGE_MENU=($LV_M)
+						LV_ENLARGE_TITLE=(${lv_Logical_Vol}::${lv_Enlarge})
+						LV_ENLARGE_MSG=$(gettext 'Waehlen Sie eine LV zum vergroessern aus.')
+						radiolist "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help lv_auswahl_help
+									radiolist "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
+									;;
+								*)
+									LV_DEV="$gv_Auswahl"
+									LV_DEV1=${LV_DEV%/*}
+									#
+									# Die Variable VG_SIZE wird von der Funktion vg_free_size
+									# belegt.
+									vg_free_size "${LV_DEV1##*/}"
+									convert_drive_size -i "$VG_SIZE"
+									SIZE_KB1="$SIZE_KB"
+									SIZE_KB1_ME="$SIZE_KB_ME"
+									#
+									LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ein, um die ihr LV vergroessert werden soll (3G = 3 GigaByte). Es sind noch "${SIZE_KB1}${SIZE_KB1_ME}" frei.')
+									number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
+									#
+									while [ -n "$NUMBER" ] ; do
+										# Laufwerksangaben in KiloByte umrechnen
+										drive_size_to_kb
+										if [[ "$New_Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
+											# Dateisystem checken und verkleinern.
+											resize_fs -l +${New_Size_Tmp} $Old_Size_Tmp "$LV_DEV"
+											break
+										else
+											over_size_msg
+											number_input -D "$RESIZE_TITLE" "$LV_ENLARGE_SIZE_MSG"
+										fi
+									done
+									break
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					#
+					unset -- LV_DEV SIZE
+					#}}}
+					lv_menue $lv_Enlarge
+					;;
+				$lv_Reduce)
+					# LV verkleinern{{{
+					lv
+					#
+					if [ "${LV[1]}" ] ; then
+						LV_REDUCE_MENU=($LV_M)
+						LV_REDUCE_TITLE=(${lv_Logical_Vol}::${lv_Reduce})
+						LV_REDUCE_MSG=$(gettext 'Waehlen Sie eine LV zum verkleinern aus.')
+						radiolist "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help lv_auswahl_help
+									radiolist "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
+									;;
+								*)	LV_DEV="$gv_Auswahl"
+									# Variable LV_SIZE belegen.
+									lv_free_size $LV_DEV
+									convert_drive_size -i "$LV_SIZE"
+									SIZE_KB1="${SIZE_KB}.${SIZE_KOMMA}"
+									SIZE_KB1_ME="$SIZE_KB_ME"
+									#
+									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr LV verkleinert werden soll (300m = 300MByte). Diese LV besitzt insgesamt "${SIZE_KB1}${SIZE_KB_ME}".')
+									number_input -D "$LV_REDUCE_TITLE" "$LV_REDUCE_SIZE_MSG"
+									#
+									while [ -n "$NUMBER" ] ; do
+										# Laufwerksangaben in KiloByte umrechnen
+										drive_size_to_kb
+										if [[ "$New_Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
+											# Dateisystem checken und verkleinern.
+											resize_fs -l -${New_Size_Tmp} $Old_Size_Tmp "$LV_DEV"
+											break
+										else
+											over_size_msg
+											number_input -D "$LV_REDUCE_TITLE" "$LV_REDUCE_SIZE_MSG"
+										fi
+									done
+									break
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					#
+					unset -- LV_DEV SIZE
+					#}}}
+					lv_menue $lv_Reduce
+					;;
+				$lv_Rename)
+					# umbennen einer lV{{{
+					lv
+					#
+					if [ "${LV[1]}" ] ; then
+						local O_Lv
+						LV_RENAME_MENU=($LV_E)
+						LV_RENAME_TITLE=(${lv_Logical_Vol}::${lv_Rename})
+						LV_RENAME_MSG=$(gettext 'Waehlen Sie eine LV zum umbenennen aus.')
+						menubox "$O_Lv" "$LV_RENAME_TITLE" "$LV_RENAME_MSG" "$LV_RENAME_MENU"  
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)	script_help lv_replace_help
+									menubox "$O_Lv" "$LV_RENAME_TITLE" "$LV_RENAME_MSG" "$LV_RENAME_MENU"  
+									;;
+								*)
+									# neuen Namen fuer die LV eingeben
+									O_Lv=$gv_Auswahl
+									# LV umounten
+									mount_check -u "$O_Lv"
+									U_OPT="-"
+									LV_NEW_NAME=$(gettext 'Geben Sie einen neuen Namen fuer das LV $O_Lv, ohne Leerzeichen, ein.')
+									inputbox "$LV_RENAME_TITLE" "$LV_NEW_NAME"
+									#
+									if [ "$gv_Auswahl" ] ; then
+										Lv_Path="${O_Lv%/*}"
+										lvrename -v $O_Lv ${Lv_Path}/${gv_Auswahl} 2>&1 | progressbox $lv_Rename "$gv_Auswahl" || prog_failure
+									else
+										no_input_msg
+									fi
+									break
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					#}}}
+					lv_menue $lv_Rename
+					;;
+				$gv_Delete)
+					# Loeschen von LVs{{{
+					lv
+					# Sind LVs vorhanden, werden sie zur Auswahl gestellt.
+					if [ "${LV[1]}" ] ; then
+						LV_DEL_MENU=($LV_M)
+						LV_DEL_TITLE=(${lv_Logical_Vol}::${gv_Delete})
+						LV_DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere LVs zum loeschen aus.')
+						checklist "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
+						#
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help lv_del_help
+									checklist "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
+									;;
+								*)
+									# loeschen der LVs
+									Anz=${(w)#gv_Auswahl}
+									DEVS="$gv_Auswahl"
+									Devs=${gv_Auswahl//\ /\\n}
+									MSG=$(gettext 'Jetzt werden alle ausgewaehlten logischen Volumes geloescht.\n$Devs\n\nFortfahren (ja/nein)?')
+									yesno "$gv_Attention" "$MSG" "" "$Anz"
+									if [ "$gv_Auswahl" = yes ] ; then
+										for i in ${=DEVS} ; {
+											# LVs umounten
+											mount_check -u "$i"
+										}
+										# LVs beenden
+										lvchange -a n ${=DEVS} &>/dev/null || prog_failure
+										# LVs loeschen
+										lvremove -v -f ${=DEVS} 2>&1 | progressbox $gv_Delete "${=DEVS}" || prog_failure
+									fi
+									break
+									;;
+							esac
+						done
+					else
+						no_lv_msg
+					fi
+					#}}}
+					lv_menue $gv_Delete
+					;;
+				$gv_Back)	break
+					;;
+			esac
+		done
+	else
+		no_vg_msg
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

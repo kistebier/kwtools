@@ -1,0 +1,36 @@
+# Funktion (pix_workarounds)# {{{
+#
+# usage: pix_workarounds TITLE VAR
+#
+pix_workarounds() {
+	if [[ ${#argv} == 2 ]] ; then
+		unset -- VALUE
+		PIX_TITLE="$1"
+		PIX_VAR="$2"
+		PIX_WORKAROUNDS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Workarounds fuer die (CISCO) PIX Firewall aus.')
+		#
+		generate_is_file ${PIX_VAR//,/}
+		is_value "disable_esmtp delay_dotcrlf"
+		#
+		U_OPT=k
+		checklist "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
+		if [[ -n $gv_Auswahl ]] ; then
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help pix_workarounds_value_help
+						U_OPT=k
+						checklist "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
+						;;
+					*)	# uebernehmen
+						VALUE="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+		fi
+	else
+		unset -- VALUE
+		no_para_msg $0
+	fi
+}
+## }}}

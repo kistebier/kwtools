@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:devel:net_conf</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Linux, linux, Netzworkk, kwtools, zsh, Zsh">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2011-05-13">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+        <LINK href="../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center>
+			<a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+			 <a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+                         <a href="../../doku/devel/sys.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h1>Funktionen f&uuml;r die Konfiguration der Netzwerke.</h1>
+			<p>Viele Funktionen generieren Variablen oder Array's zur weiteren
+			Verarbeitung durch das jeweilige Script. Schauen sie dazu in die jeweiligen
+			Header der Funktionen. Alle Werte werden immer als erstes in der Variable "$gv_Auswahl" 
+			oder das Duplikat, unter anderem in einer Logdatei ($gv_LogFile), gespeichert.
+			Manche Funktionen haben auch noch eigene Funktionen die aber nur von diesen benutzt werden und 
+			dadurch bisher noch nicht weiter erkl&auml;rt werden.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><b>Funktionen:</b>
+			Man muss diese Funktion (net_conf) nur ausf&uuml;hren, dann kann man alle
+			enthaltenenen Funktionen ausf&uuml;hren, wie z. B. "conf_hostname". Wenn nichts zu der
+			Syntax steht, wird die Funktion einfach nur aufgerufen.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+		<tr>
+			<td></td>
+			<td><h4>Netzfunktionen</h4><p>
+			<a href="net.html#conf_hostname" target="_self">conf_hostname</a><br>
+			<a href="net.html#conf_proxy" target="_self">conf_proxy</a><br>
+			<a href="net.html#iface_bcast" target="_self">iface_bcast</a><br>
+			<a href="net.html#iface_dhcp" target="_self">iface_dhcp</a><br>
+			<a href="net.html#iface_gate" target="_self">iface_gate</a><br>
+			<a href="net.html#iface_ip" target="_self">iface_ip</a><br>
+			<a href="net.html#iface_nameserver" target="_self">iface_nameserver</a><br>
+			<a href="net.html#iface_netmask" target="_self">iface_netmask</a><br>
+			<a href="net.html#iface_onboot" target="_self">iface_onboot</a><br>
+			<a href="net.html#ifconfig_check" target="_self">ifconfig_check</a><br>
+			<a href="net.html#ip_analyse" target="_self">ip_analyse</a><br>
+			<a href="net.html#mail_address" target="_self">mail_address</a><br>
+			<a href="net.html#remote_sh" target="_self">remote_sh</a><br>
+			<a href="net.html#route_check" target="_self">route_check</a><br>
+			<a href="net.html#update_nis" target="_self">update_nis</a></p>
+			<h4>Nachrichten und Fehlermeldungen</h4>
+			<p><a href="net.html#ip_gt_three_msg" target="_self">ip_gt_three_msg</a><br>
+			<a href="net.html#no_ip_address_msg" target="_self">no_ip_address_msg</a><br>
+			<a href="net.html#no_remote_shell_msg" target="_self">no_remote_shell_msg</a><br>
+			<a href="net.html#no_valid_ip_msg" target="_self">no_valid_ip_msg</a></p></td>
+			<td></td>
+		</tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><hr></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="conf_hostname">conf_hostname</a></b>
+			<p>Mit dieser Funktion kann man den Rechnernamen eingeben und deren Syntax pr&uuml;fen.
+			Es werden nur die Zeichen a-z,A-Z,0-9-_. erlaubt und als Abschluss nur a-z.<br>
+			conf_hostname [ -a MSG | -f ]<br>
+			-a - ein oder mehrere Rechnernamen/IP-Adressen durch ein Leerzeichen getrennt eingeben.<br>
+			MSG - Nachricht f&uuml;r die Eingabe des/der Rechnernamen/IP-Adressen.<br>
+			-f - FQHN, voll qualifizierten Rechnername eingeben (host.example.de).<br>
+			nichts - einzelnen Rechnernnamen eingeben.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Hostname - Variable die die Rechnernamen/IP-Adressen enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="conf_proxy">conf_proxy</a></b>
+			<p>Mit dieser Funktion kann man verschiedene Proxy Einstellungen t&auml;tigen. Seperat 
+			f&uuml;r jedes OS das von den kwtools unterst&uuml;tzt wird.<br>
+			conf_proxy [ -f | -h | -o ]<br>
+			-f - FTP Proxy eingeben.<br>
+			-h - HTTP Proxy eingeben (http://host.example.de:3128).<br>
+			-o - Proxy ohne Protokoll Angabe eingeben (host.example.de:3128).<br>			
+			<b><font color="darkYellow">Variablen</font></b><br>
+			gv_Proxy - Variable die den Rechnernamen:Port enth&auml;lt.<br>
+			gv_Ftp_Proxy - FTP Proxy Variable die den Protokoll://Rechnernamen:Port enth&auml;lt.<br>
+			gv_Http_Proxy - HTTP Proxy Variable die den Protokoll://Rechnernamen:Port enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_bcast">iface_bcast</a></b>
+			<p>Eingabe der Broadcast Adresse (192.168.0.255).<br>
+			iface_bcast [ VAR ]<br>
+			VAR - Variable mit dem vorherigen Wert.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Broadcast - Variable die die eingegebene Broadcast Adresse enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_dhcp">iface_dhcp</a></b>
+			<p>Soll das Netzwerk per dhcp konfiguriert werden (ja/nein)? Bei "ja" wird die Variable
+			gv_Ip gel&ouml;scht (manuelle IP Adress Vergabe).<br>
+			iface_dhcp<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Dhcp - Variable die durch die Antwort mit "yes" oder "no" belegt wurde.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_gate">iface_gate</a></b>
+			<p>Eingabe des Gateway (192.168.0.1).<br>
+			iface_gate [ VAR ]<br>
+			VAR - Variable mit dem vorherigen Wert.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Gateway - Variable die die eingegebene Gateway Adresse enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_ip">iface_ip</a></b>
+			<p>Eingabe der IP Adresse(n) (192.168.0.1), Netzwerkadresse oder eines IP-Prefix.
+			Bei Verwendung von XEN wird die Variable
+			gv_Dhcp gel&ouml;scht (dynamische IP Adress Vergabe).<br>
+			iface_ip [ --xen | -x ] [ OLD-IP ]<br>
+			iface_ip [ --prefix | -p ] [ OLD-IP-PREFIX ]<br>
+			--xen, -x - bei DomU's unter XEN kann man 3 IP-Adressen vergeben.<br>
+			--prefix, -p - Einen IP-Prefix vergeben.<br>
+			nichts - eine IP Adress Eingabe.<br>
+			OLD-IP - alte IP-Adresse[n] mit uebergeben.<br>
+			OLD-IP-PREFIX - alten IP-Prefix mit uebergeben.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Ip - Variable die die eingegebene(n) IP Adresse(n) oder IP-Prefixe enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_nameserver">iface_nameserver</a></b>
+			<p>Eingabe von bis zu 3 Nameserver IPs (192.168.0.1 192.168.0.2), getrennt durch ein 
+			Leerzeichen.<br>
+			iface_nameserver [ VAR ]<br>
+			VAR - Variable mit dem vorherigen Wert.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Nameserver - Variable die die eingegebene(n) IP Adresse(n) enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_netmask">iface_netmask</a></b>
+			<p>Eingabe der Netmask (255.255.255.0).<br>
+			iface_netmask [ VAR ]<br>
+			VAR - Variable mit dem vorherigen Wert.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Netmask - Variable die die eingegebene Netmask Adresse enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="iface_onboot">iface_onboot</a></b>
+			<p>Soll das Interface beim Systemstart gestartet werden (ja/nein)?<br>
+			iface_onboot<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Boot - Variable die durch die Antwort mit "yes" oder "no" belegt wurde.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="ifconfig_check">ifconfig_check</a></b>
+			<p>Diese Funktion pr&uuml;ft ob das &uuml;bergebene Interface aktiv ist, wenn ja wird es 
+			deaktiviert.<br>
+			ifconfig_check ETH<br>
+			ETH - Variable die das &uuml;bergebene Interface enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="ip_analyse">ip_analyse</a></b>
+			<p>Diese Funktion zerlegt die &uuml;bergebene IP Adresse,
+			zur besseren &Uuml;berpr&uuml;fung.
+			Aus 192.168.0.1 wird 192 168 0 1.<br>
+			ip_analyse IP&apos;s<br>
+			IP - IP Adressen die zerlegt werden soll.<br>
+			IPv6 funktioniert noch nicht (leider keine Testm&ouml;glichkeit).<br>	
+			<b><font color="darkYellow">Variablen</font></b><br>
+			IP1 - Variable die den 1. Teil der IP Adresse enth&auml;lt.<br>
+			IP2 - Variable die den 2. Teil der IP Adresse enth&auml;lt.<br>
+			IP3 - Variable die den 3. Teil der IP Adresse enth&auml;lt.<br>
+			IP4 - Variable die den 4. Teil der IP Adresse enth&auml;lt.<br>
+			gv_Ip_Adr - Variable die die &uuml;berpr&uuml;fte IP-Adresse
+			enth&auml;lt.<br>
+			PTR - Variable die den PTR Record enth&auml;lt (.${IP3}.${IP2}.${IP1}.in-addr.arpa).</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="mail_address">mail_address</a></b>
+			<p>Mit dieser Funktion kann man eine Mailadresse eingeben und deren 
+			Syntax pr&uuml;fen. Es werden nur die Zeichen a-z,A-Z,0-9-_. erlaubt 
+			und als Abschluss nach dem letzten "." Zeichen nur a-z (Muster = 
+			[a-z,A-Z,0-9-_.]*@[a-z,A-Z,0-9-_.]*.[a-z]*).<br>
+			mail_address [ MAILADRESS ] oder<br>
+			mail_address [ MESSAGE ] [ MAILADRESS ]<br>
+			MESSAGE - eigene Nachricht fuer den Benutzer uebergeben.<br>
+			MAILADRESS - Variable die den vorherigen Wert besitzt, so kann z.B. der 
+			verherige Wert erhalten werden.<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Mail_Adr - Variable die die eingegebene Mailadresse 
+			enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="remote_sh">remote_sh</a></b>
+			<p>Diese Funktion pr&uuml;ft ob die rsh und/oder ssh installiert 
+			sind.<br>
+			remote_sh<br>			
+			<b><font color="darkYellow">Variable</font></b><br>
+			R_SHELL - Variable die die Shell(s) enth&auml;lt f&uuml;r die Funktion 
+			<a href="sys.html" name="menubox" target="_blank">menubox</a>.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="route_check">route_check</a></b>
+			<p>Diese Funktion erstellt und l&ouml;scht Routen auf einem Netzwerk Interface.<br>
+			route_check -d delete ETH<br>
+			route_check -d add ETH GATEWAY<br>
+			route_check -o delete ETH IP<br>
+			route_check -o add ETH IP GATEWAY<br>
+			-d - default Gateway<br>
+			-o - andere Gateway Routen<br>
+			add/delete - erstellen oder l&ouml;schen einer Route.<br>
+			ETH - Variable die das Interface enth&auml;lt.<br>
+			GATEWAY - Variable die die IP Adresse des Gateways enth&auml;lt.<br>
+			IP - Variable die die IP Adresse enth&auml;lt auf die diese Route gelegt oder 
+			vom Interface ETH die Route von der IP Adresse gel&ouml;scht werden soll.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="update_nis">update_nis</a></b>
+			<p>Diese Funktion pr&uuml;ft, ob ein NIS Server (ypserv) auf dem 
+			lokalen System l&auml;uft. Wenn dieses so ist wird die NIS-Datenbank
+			im Verzeichnis /var/yp upgedatet.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h1>Nachrichten und Fehlermeldungen</h1></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="ip_gt_three_msg">ip_gt_three_msg</a></b>
+			<p>Info dar&uuml;ber das die Anzahl der IP-Adressen gr&ouml;sser als 3 ist.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_ip_address_msg">no_ip_address_msg</a></b>
+			<p>Info dar&uuml;ber das Sie erst eine g&uuml;ltige IP-Adresse eingeben m&uuml;ssen.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_remote_shell_msg">no_remote_shell_msg</a></b>
+			<p>Info dar&uuml;ber das keine Remote Shell installiert (PATH?) ist.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="no_valid_ip_msg">no_valid_ip_msg</a></b>
+			<p>Info dar&uuml;ber das man diese IP oder den IP-Prefix ($Ip_Msg) nicht vergeben
+			darf/kann. Die letzte Zahl muss zum Beispiel bei eine IP-Adresse (ipv4) zwischen
+			1 und 254 liegen.<br>
+			no_valid_ip_msg [ -i | -n | -p ] IP<br>
+			-i - IP Fehlermeldung, weil die letzte Nr nicht zw. 1 und 254 liegt (nur ipv4).<br>
+			-n - IP Fehlermeldung, weil die IP nicht zu einem Netzwerk gehoert (nur ipv4).<br>
+			-p - IP Prefix Fehlermeldung, weil der IP-Prefix nicht stimmt (nur ipv4).<br>
+			IP - Variable die die IP-Adresse oder den IP-Prefix enth&auml;lt den man
+			nicht vergeben kann (nur ipv4).</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center>
+			<a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+			 <a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                         <img src="../../images/trans.gif" width="15" height="8" border="0">
+                         <a href="../../doku/devel/sys.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

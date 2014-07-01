@@ -1,0 +1,173 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.05.2014
+#
+# Script: kwvmstat, zeigt verschiedene Statistiken
+#         des virtuellen Speichers (man 1 vmstat).
+#
+# Version: 0.3.1
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen
+prog_check vmstat
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# Wenn es eine Konf.-Datei gibt einlesen.
+#
+read_file kwvmstatrc
+
+# Variablen
+MEMORY=$(gettext 'Arbeitspeicher')
+IN_ACTIVE=$(gettext 'in und aktiver Arbeitsspeicher')
+lv_Display=$(gettext 'Anzeige v. in/aktiver Speicher')
+lv_Diskstat=$(gettext 'Festplatten Statistik')
+lv_Display_Parttable=$(gettext 'Festplatten Aktivitaet')
+lv_Partstat=$(gettext 'Partitions Statistik')
+lv_Forks=$(gettext 'Forksanzahl seit boot')
+lv_Display_Slab=$(gettext 'Anzeige von slabinfo')
+lv_Other_Stat=$(gettext 'verschiedene Statistiken')
+
+# Partitions Statistik geht nur mit root Rechten.
+if [ "$UID" = 0 ] ; then
+	TITLE_MENU=($gv_Configuration \"\" a \"$lv_Display\" d \"$lv_Diskstat\"
+	D \"$lv_Display_Parttable\" f \"$lv_Forks\" m \"$lv_Display_Slab\"
+	p \"$lv_Partstat\" s \"$lv_Other_Stat\" $gv_Exit \"\")
+else
+	TITLE_MENU=($gv_Configuration \"\" a \"$lv_Display\" d \"$lv_Diskstat\"
+	D \"$lv_Display_Parttable\" f \"$lv_Forks\"
+	s \"$lv_Other_Stat\" $gv_Exit \"\")
+fi
+# Funktion Hauptmenue{{{
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$TITLE_MENU"
+}
+#}}}
+# Funktion no_null_msg# {{{
+#
+no_null_msg() {
+	MSG=$(gettext 'Sie koennen fuer die Aktualisierungen nicht die 0 vergeben. Es wird jetzt eine Endlos Anzeige gestartet. Mit STRG+C koennen Sie die Anzeige beenden. Ansonsten konfigurieren Sie kwvmstat.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+kernel_release
+if [[ "${gv_K_Release%%-*}" < 2.6.0 ]] ; then
+	MSG=$(gettext 'Sie benoetigen einen Kernel >= Version 2.6.0.')
+	msgbox "$INFO" "$MSG"
+	exit 0
+fi
+#
+hw_conf
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration
+			autoload -U kwvmstat_conf kwvmstat_config
+			kwvmstat_conf
+			haupt_menue $gv_Configuration
+			;;
+		a)
+			# Anzeige vom in/aktivem Arbeitsspeicher.# {{{
+			# mit Speichereinheit oder ohne
+			if [ "$COUNTER" -gt 0 -a "$DELAY" -gt 0 ] ; then
+				vmstat -${gv_Auswahl}n -S ${MEM_UNIT:-K} $DELAY $COUNTER | progressbox "$MEMORY" "$IN_ACTIVE"
+			else
+				no_null_msg
+				# delay=1
+				vmstat -${gv_Auswahl}n -S ${MEM_UNIT:-K} 1 | progressbox "$MEMORY" "$IN_ACTIVE"
+			fi
+			## }}}
+			haupt_menue $gv_Auswahl
+			;;
+		d|D|f|s)
+			# d - Disk Statistik# {{{
+			# D - Disk Tabelle
+			# f - Nr von forks seit boot
+			# s - verschiedene Events und Speicher Statistiken
+			vmstat -${gv_Auswahl} >$gv_LogFile
+			if [ "`wc -l < $gv_LogFile`" -gt 0 ] ; then
+				view_file "$gv_LogFile"
+			fi
+			## }}}
+			haupt_menue $gv_Auswahl
+			;;
+		m)
+			# m - slabinfo (Kernel Festplatten Zuteilstatistik)# {{{
+			vmstat -${gv_Auswahl} >$gv_LogFile
+			if [ "`wc -l < $gv_LogFile`" -gt 0 ] ; then
+				view_file "$gv_LogFile"
+			fi
+			## }}}
+			haupt_menue $gv_Auswahl
+			;;
+		p)	# Partition Statistik
+			# benoetigt root Rechte# {{{
+			Opt="$gv_Auswahl"
+			disk
+			partdb
+			if [ "$PART" ] ; then
+				part_choice "$PART_E"
+				if [ -n "$WERT" ] ; then
+					vmstat -${Opt} $WERT >$gv_LogFile
+					if [ "`wc -l < $gv_LogFile`" -gt 0 ] ; then
+						view_file "$gv_LogFile"
+					fi
+				fi
+			else
+				# keine Partition zum anschauen vorhanden
+				MSG=$(gettext 'Es sind keine Partitionen zum anzeigen vorhanden.')
+				msgbox "$gv_Info" "$MSG"
+			fi
+			## }}}
+			haupt_menue $Opt
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

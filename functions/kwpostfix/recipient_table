@@ -1,0 +1,160 @@
+# Funktion recipient_table{{{
+#
+recipient_table() {
+	FILE="$1"
+	autoload -U no_adr_msg
+	# Funktion recipient_menue{{{
+	recipient_menue() {
+		RECIPIENT_MENU=($lv_Address \"$ADR\" $gv_Save \"\" $gv_Back \"\")
+		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$RECIPIENT_MENU"
+	}
+	#}}}
+	# Funktion recipient_aendern{{{
+	recipient_aendern() {
+	recipient_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help "$TAB_HELP"
+				recipient_menue
+				;;
+			$lv_Address)
+				# Adresse waehlen{{{
+				ADR_MSG=$(gettext 'Geben Sie hier bitte eine Mailadresse oder Domain ein (Bsp. @domain.de | user@domain.de).')
+				inputbox "$TABLE_TITLE" "$ADR_MSG" "$ADR"
+				if [ "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[a-zA-Z0-9]*@*.*|@*.*)	ADR="$gv_Auswahl"
+							;;
+						*)
+							unset -- ADR
+							no_input_msg
+							;;
+					esac
+				else
+					unset -- ADR
+					no_input_msg
+				fi
+				#}}}
+				recipient_menue
+				;;
+			$gv_Save)
+				# Eintraege speichern{{{
+				# ":" in der 2. Spalte wird nicht ausgewertet
+				# und dient nur zur Einhaltung der Syntax von
+				# lookup Tabellen.
+				if [ "$ADR" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}.*#${ADR}\t:#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$ADR	:"
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					no_adr_msg
+					recipient_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Eintraege
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- ADR AENDERN_ADR
+				recipient_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Eintraege aendern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl aendern
+								C_CHOICE="$gv_Auswahl"
+								ADR=${${=gv_Auswahl}[1]}
+								AENDERN_ADR="$ADR"
+								recipient_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Eintraege loeschen{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Loeschen
+								while read ADRESS REST ; do
+									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen
+				# die Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

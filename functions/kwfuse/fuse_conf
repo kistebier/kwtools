@@ -1,0 +1,75 @@
+# Funktion fuse_conf, Konfiguration von fuse.conf, benoetigt root Rechte{{{
+#
+# usage: fuse_conf
+#
+fuse_conf() {
+	# Falls $FUSE_CONF existiert wird sie eingelesen# {{{
+	if [ -f "$FUSE_CONF" ] ; then
+		MOUNT_MAX=${(L)${${(s:=:)${(M)${(f)"$(< ${FUSE_CONF})"}##mount_max*}}[2]}}
+		if [ -n "`print ${(M)${(f)"$(< ${FUSE_CONF})"}##user_allow_other}`" ] ; then
+			USER_ALLOW_OTHER=user_allow_other
+		else
+			unset -- USER_ALLOW_OTHER
+		fi
+	else
+		# 1000 is default
+		MOUNT_MAX=1000
+	fi
+	## }}}
+	# Funktion fuse_conf_menue{{{
+	lv_Mount_Max=$(gettext 'mount_max')
+	lv_U_A_Other=$(gettext 'user_allow_other')
+	#
+	fuse_conf_menue() {
+		FUSE_CONF_MENU=($lv_Mount_Max \"$MOUNT_MAX\"
+		$lv_U_A_Other \"$USER_ALLOW_OTHER\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$FUSE_CONF_MENU"
+	}
+	#}}}
+	fuse_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help fuse_conf_help
+				fuse_conf_menue
+				;;
+			$lv_Mount_Max)
+				# Maximale Nummer von FUSE mounts die von non-root# {{{
+				# Users erlaubt werden. Standard ist 1000.
+				MOUNT_MAX_MSG=$(gettext 'Geben Sie hier die maximale Anzahl der Laufwerke an die von normalen Benutzern ins Dateisystem eingebunden werden duerfen.')
+				number_input "$gv_Configuration" "$MOUNT_MAX_MSG" "$MOUNT_MAX"
+				if [ "$NUMBER" ] ; then
+					MOUNT_MAX="$NUMBER"
+				else
+					MOUNT_MAX="1000"
+				fi
+				## }}}
+				fuse_conf_menue $lv_Mount_Max
+				;;
+			$lv_U_A_Other)
+				# erlaube non-root Users die Optionen allow_other oder# {{{
+				# allow_root?
+				USER_ALLOW_MSG=$(gettext 'Duerfen normale Benutzer die Einbinde-Optionen der Laufwerke, allow_other oder allow_root, benutzen (ja/nein)?')
+				yesno "$gv_Configuration" "$USER_ALLOW_MSG" "$USER_ALLOW_OTHER"
+				if [ "$gv_Auswahl" != no ] ; then
+					USER_ALLOW_OTHER=user_allow_other
+				else
+					unset -- USER_ALLOW_OTHER
+				fi
+				## }}}
+				fuse_conf_menue $lv_U_A_Other
+				;;
+			$gv_Save)
+				fuse_config
+				break
+				;;
+			$gv_Back)	break
+				;;
+			esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

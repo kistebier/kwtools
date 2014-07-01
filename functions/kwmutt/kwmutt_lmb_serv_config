@@ -1,0 +1,39 @@
+# Funktion (kwmutt_lmb_serv_config), schreibt die lokalen Mailbox Konfigurationsdateien# {{{
+# fuer "mutt".
+#
+# usage: kwmutt_lmb_serv_config
+#
+kwmutt_lmb_serv_config() {
+#
+# Konfiguration schreiben.
+#
+> $M_LMB_SERV <<< "# Beginn $M_LMB_SERV
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+set folder=\"$folder\"
+set spoolfile=\"$spoolfile\"
+set postponed=\"$postponed\"
+set record=\"$record\"
+
+# Der Typ der Mailbox. Moeglich sind:
+#   - mbox
+#   - MMDF
+#   - MH
+#   - Maildir
+set mbox_type=\"$mbox_type\"
+
+set mail_check=\"$mail_check\""
+if [ "$mbox_type" != Maildir ] ; then
+>> $M_LMB_SERV <<< "set dotlock_program=\"$dotlock_program\""
+fi
+
+>> $M_LMB_SERV <<< "mailboxes "$mailboxes"
+
+# End $M_LMB_SERV"
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

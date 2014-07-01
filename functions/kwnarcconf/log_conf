@@ -1,0 +1,274 @@
+# Funktion log_conf{{{
+log_conf() {
+	#
+	# Hauptkonfiguration einlesen.
+	lv_alert=$(gettext 'alert')
+	lv_crit=$(gettext 'crit')
+	lv_debug=$(gettext 'debug')
+	lv_emerg=$(gettext 'emerg')
+	lv_info=$(gettext 'info')
+	lv_notice=$(gettext 'notice')
+	lv_warning=$(gettext 'warning')
+	LOG_LEVEL_MENU=($lv_alert \"\" $lv_crit \"\" $lv_debug \"\"
+	$lv_emerg \"\" $lv_info \"\" $lv_notice \"\"
+	$lv_warning \"\" $gv_Back \"\")
+	#
+	read_file -f $MAIN_NARC_CONF
+	# Funktion log_conf_menue{{{
+	#
+	lv_Burst_Max=$(gettext 'BURST_MAX')
+	lv_Log_All_Else=$(gettext 'LOG_ALL_ELSE')
+	lv_Log_Drops=$(gettext 'LOG_DROPS')
+	lv_Log_Icmp=$(gettext 'LOG_ICMP')
+	lv_Log_Illegal=$(gettext 'LOG_ILLEGAL')
+	lv_Log_Invalid=$(gettext 'LOG_INVALID')
+	lv_Log_Iplimit_Exceed=$(gettext 'LOG_IPLIMIT_EXCEED')
+	lv_Log_Limit_Exceed=$(gettext 'LOG_LIMIT_EXCEED')
+	lv_Log_Paket_Length=$(gettext 'LOG_PACKET_LENGTH')
+	lv_Log_Probes=$(gettext 'LOG_PROBES')
+	lv_Log_Rate=$(gettext 'LOG_RATE')
+	lv_Log_Smb=$(gettext 'LOG_SMB')
+	lv_Log_Spoof=$(gettext 'LOG_SPOOF')
+	lv_Norm_Log_Level=$(gettext 'NORM_LOG_LEVEL')
+	lv_Warn_Log_Level=$(gettext 'WARN_LOG_LEVEL')
+	#
+	LOG_CONF_TITLE=(${gv_Configuration}::${lv_Log_Conf})
+	log_conf_menue() {
+		LOG_CONF_MENU=($lv_Burst_Max \"$BURST_MAX\" $lv_Log_All_Else \"$LOG_ALL_ELSE\"
+		$lv_Log_Drops \"$LOG_DROPS\" $lv_Log_Icmp \"$LOG_ICMP\"
+		$lv_Log_Illegal \"$LOG_ILLEGAL\" $lv_Log_Invalid \"$LOG_INVALID\"
+		$lv_Log_Iplimit_Exceed \"$LOG_IPLIMIT_EXCEED\"
+		$lv_Log_Limit_Exceed \"$LOG_LIMIT_EXCEED\"
+		$lv_Log_Paket_Length \"$LOG_PACKET_LENGTH\"
+		$lv_Log_Probes \"$LOG_PROBES\" $lv_Log_Rate \"$LOG_RATE\"
+		$lv_Log_Smb \"$LOG_SMB\" $lv_Log_Spoof \"$LOG_SPOOF\"
+		$lv_Norm_Log_Level \"$NORM_LOG_LEVEL\" $lv_Warn_Log_Level \"$WARN_LOG_LEVEL\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$LOG_CONF_TITLE" "$gv_Menupoint" "$LOG_CONF_MENU"
+	}
+	#}}}
+	log_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help log_conf_help
+				log_conf_menue
+				;;
+			$lv_Log_Drops)
+				# Drops loggen, bei nein haben alle anderen Optionen{{{
+				# kein Effekt.
+				MSG=$(gettext 'Sollen Drops geloggt werden, bei nein haben alle anderen LOG-Optionen kein Effekt (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "${LOG_DROPS:-yes}"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_DROPS=yes
+				else
+					LOG_DROPS=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Drops
+				;;
+			$lv_Burst_Max)
+				# Wieviele Pakte sollen hoechstens geloggt werdenhoehsten.  {{{
+				MSG=$(gettext 'Wieviele Paket sollen hoehsten geloggt werden (Bsp. 5).')
+				number_input "$LOG_CONF_TITLE" "$MSG" "$BURST_MAX"
+				if [ "$NUMBER" ] ; then
+					BURST_MAX="$NUMBER"
+				else
+					BURST_MAX=5
+				fi
+				#}}}
+				log_conf_menue $lv_Burst_Max
+				;;
+			$lv_Log_All_Else)
+				# Alles loggen was nicht irgendwie auf ein Muster passt? {{{
+				MSG=$(gettext 'Alles loggen was nicht irgendwie auf ein Muster passt (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_ALL_ELSE"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_ALL_ELSE=yes
+				else
+					LOG_ALL_ELSE=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_All_Else
+				;;
+			$lv_Log_Illegal)
+				# Illegale TCP Flags loggen?{{{
+				MSG=$(gettext 'Illegale TCP Flags loggen (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_ILLEGAL"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_ILLEGAL=yes
+				else
+					LOG_ILLEGAL=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Illegal
+				;;
+			$lv_Log_Icmp)
+				# ICMP Pakete, die weiter unten angegeben sind, loggen?{{{
+				MSG=$(gettext 'ICMP Pakete loggen (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_ICMP"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_ICMP=yes
+				else
+					LOG_ICMP=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Icmp
+				;;
+			$lv_Log_Invalid)
+				# Pakete loggen die nicht zu einer gueltigen Verbindung{{{
+				# gehoeren?
+				MSG=$(gettext 'Pakete loggen die nicht zu einer gueltigen Verbindung gehoeren (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_INVALID"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_INVALID=yes
+				else
+					LOG_INVALID=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Invalid
+				;;
+			$lv_Log_Iplimit_Exceed)
+				# Verbindungen loggen die den Wert{{{
+				# IPLIMIT_MAX_ACCEPT ueberschreiten?.
+				MSG=$(gettext 'Verbindungen loggen die den Wert von "IPLIMIT_MAX_ACCEPT" ueberschreiten (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_IPLIMIT_EXCEED"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_IPLIMIT_EXCEED=yes
+				else
+					LOG_IPLIMIT_EXCEED=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Iplimit_Exceed
+				;;
+			$lv_Log_Limit_Exceed)
+				# Verbindungen loggen die den Wert{{{
+				# LIMIT_RATE ueberschreiten?.
+				MSG=$(gettext 'Verbindungen loggen die den Wert in "LIMIT_RATE" ueberschreiten (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_LIMIT_EXCEED"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_LIMIT_EXCEED=yes
+				else
+					LOG_LIMIT_EXCEED=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Limit_Exceed
+				;;
+			$lv_Log_Paket_Length)
+				# TCP SYN Pakete loggen die eine irre Header Laenge{{{
+				# besitzen (PACKET_LENGTH)?.
+				MSG=$(gettext 'TCP SYN Pakete loggen die eine irre Header Laenge besitzen "PACKET_LENGTH" (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_PACKET_LENGTH"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_PACKET_LENGTH=yes
+				else
+					LOG_PACKET_LENGTH=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Paket_Length
+				;;
+			$lv_Log_Probes)
+				# Monitoring von TCP/UDP Probe Ports?{{{
+				MSG=$(gettext 'Monitoring von TCP/UDP Probe Ports (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_PROBES"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_PROBES=yes
+				else
+					LOG_PROBES=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Probes
+				;;
+			$lv_Log_Rate)
+				# Log Rate{{{
+				# minute/stunde... (menue)
+				LOG_RATE_OLD="$LOG_RATE"
+				MSG=$(gettext 'Log Rate Limitierung.')
+				inputbox "$LOG_CONF_TITLE" "$MSG" "$LOG_RATE"
+				if [ "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						[0-9]*/[dhms])
+							LOG_RATE="$gv_Auswahl"
+							;;
+						*)	LOG_RATE="$LOG_RATE_OLD"
+							;;
+					esac
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Rate
+				;;
+			$lv_Log_Smb)
+				# SMB/Windows CIFS verwandte Pakete{{{
+				# loggen?
+				MSG=$(gettext 'SMB/Windows CIFS verwandte Pakete loggen (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_SMB"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_SMB=yes
+				else
+					LOG_SMB=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Smb
+				;;
+			$lv_Log_Spoof)
+				# Pakete loggen die in der Anti-Spoof Section definiert{{{
+				# sind?
+				MSG=$(gettext 'Pakete loggen die in der Anti-Spoof Section definiert sind (ja/nein)?')
+				yesno "$LOG_CONF_TITLE" "$MSG" "$LOG_SPOOF"
+				if [ "$gv_Auswahl" = yes ] ; then
+					LOG_SPOOF=yes
+				else
+					LOG_SPOOF=no
+				fi
+				#}}}
+				log_conf_menue $lv_Log_Spoof
+				;;
+			$lv_Norm_Log_Level)
+				# Loglevel in /etc/syslog.conf einstellen{{{
+				menubox "$NORM_LOG_LEVEL" "$LOG_CONF_TITLE" "$gv_Menupoint" "$LOG_LEVEL_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help log_level_help
+							menubox "$NORM_LOG_LEVEL" "$LOG_CONF_TITLE" "$gv_Menupoint" "$LOG_LEVEL_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)	#
+							NORM_LOG_LEVEL="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#}}}
+				log_conf_menue $lv_Norm_Log_Level
+				;;
+			$lv_Warn_Log_Level)
+				# Warn-Loglevel einstellen{{{
+				menubox "$WARN_LOG_LEVEL" "$LOG_CONF_TITLE" "$gv_Menupoint" "$LOG_LEVEL_MENU"
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help log_level_help
+							menubox "$WARN_LOG_LEVEL" "$LOG_CONF_TITLE" "$gv_Menupoint" "$LOG_LEVEL_MENU"
+							;;
+						$gv_Back)	break
+							;;
+						*)	WARN_LOG_LEVEL="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				#}}}
+				log_conf_menue $lv_Warn_Log_Level
+				;;
+			$gv_Save)	main_conf_save
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

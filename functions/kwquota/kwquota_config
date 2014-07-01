@@ -1,0 +1,718 @@
+# Funktion (kwquota_config), konfiguriert Standard Werte fuer quota.# {{{
+#
+# usage: kwquota_config FS MOUNTPOINT
+# FS - Dateisystem
+# MOUNTPOINT - Mountpunkt der Laufwerke
+#
+kwquota_config() {
+	if [ $# -eq 2 ] ; then
+		unset -- QUOTA_PROG QUOTA_DRIVE QUOTA_ID
+		# Variablen# {{{
+		case "$1" in
+			xfs)
+				# um quota zu verwalten.
+				QUOTA_PROG=xfs_quota
+				QUOTA_DRIVE="$2"
+				;;
+			*)	#QUOTA_PROG=quotatool
+				QUOTA_PROG=setquota
+				QUOTA_DRIVE="$2"
+				;;
+		esac
+		#
+		lv_Seconds=$(gettext 'Sekunden')
+		lv_Hours=$(gettext 'Stunden')
+		lv_Days=$(gettext 'Tage')
+		lv_Weeks=$(gettext 'Wochen')
+		lv_Months=$(gettext 'Monate')
+		lv_Grace_Time=$(gettext 'Ueberschreitungszeit')
+		lv_User_Id=$(gettext 'Benutzer_ID')
+		lv_Group_Id=$(gettext 'Gruppen_ID')
+		lv_Project_Id=$(gettext 'Projekt_ID')
+		lv_Project_Nr=$(gettext 'Projekt_Nr')
+		lv_Project_Dir=$(gettext 'Projekt_Verz.')
+		lv_BH_Limit=$(gettext 'Block_Hardlimit')
+		lv_BS_Limit=$(gettext 'Block_Softlimit')
+		lv_IH_Limit=$(gettext 'Inode_Hardlimit')
+		lv_IS_Limit=$(gettext 'Inode_Softlimit')
+		lv_RT_BH_Limit=$(gettext 'Realtime_Block_Hardlimit')
+		lv_RT_BS_Limit=$(gettext 'Realtime_Block_Softlimit')
+		lv_BG_Time=$(gettext 'Block_Grace_Zeit')
+		lv_IG_Time=$(gettext 'Inode_Grace_Zeit')
+		lv_RT_BG_Time=$(gettext 'Realtime_Block_Grace_Zeit')
+		# Welches Quota.
+		if [ -n "$USER_ID" ] ; then
+			QUOTA_ID="$lv_User_Id $USER_ID"
+		elif [ -n "$GROUP_ID" ] ; then
+			QUOTA_ID="$lv_Group_Id $GROUP_ID"
+		elif [ -n "$PROJECT_ID" ] ; then
+			QUOTA_ID="$lv_Project_Id $PROJECT_ID"
+		fi
+		## }}}
+		# Funktion (kwquota_conf_menu), menupoints for kwquota_conf# {{{
+		kwquota_conf_menu() {
+			case "$QUOTA_PROG" in
+				xfs_quota)
+					# Anzeige der normalen xfs Konfiguration
+					if [ "$PROJ_CREATE" = yes ] ; then
+						unset -- PROJECT_ID PROJECT_NR PROJECT_DIR
+						BL_GR_TIME="${BL_GR_TIME:-7d}"
+						I_GR_TIME="${I_GR_TIME:-7d}"
+						RT_BL_GR_TIME="${RT_BL_GR_TIME:-7d}"
+						KONF_MENU=($lv_Project_Id \"$PROJECT_ID\" $lv_Project_Nr \"$PROJECT_NR\"
+						$lv_Project_Dir \"$PROJECT_DIR\" $lv_BH_Limit \"$BH_LIMIT\"
+						$lv_BS_Limit \"$BS_LIMIT\" $lv_IH_Limit \"$IH_LIMIT\"
+						$lv_IS_Limit \"$IS_LIMIT\" $lv_RT_BH_Limit \"$RTBH_LIMIT\"
+						$lv_RT_BS_Limit \"$RTBS_LIMIT\" $lv_BG_Time \"$BL_GR_TIME\"
+						$lv_IG_Time \"$I_GR_TIME\" $lv_RT_BG_Time \"$RT_BL_GR_TIME\"
+						$gv_Save \"\" $gv_Back \"\")
+					else
+						KONF_MENU=($QUOTA_ID --------------- \"\" $lv_BH_Limit \"$BH_LIMIT\"
+						$lv_BS_Limit \"$BS_LIMIT\" $lv_IH_Limit \"$IH_LIMIT\"
+						$lv_IS_Limit \"$IS_LIMIT\" $lv_RT_BH_Limit \"$RTBH_LIMIT\"
+						$lv_RT_BS_Limit \"$RTBS_LIMIT\" $lv_BG_Time \"$BL_GR_TIME\"
+						$lv_IG_Time \"$I_GR_TIME\" $lv_RT_BG_Time \"$RT_BL_GR_TIME\"
+						$gv_Save \"\" $gv_Back \"\")
+					fi
+					;;
+				*)
+					# Anzeige der normalen Konfiguration
+					KONF_MENU=($QUOTA_ID --------------- \"\" $lv_BH_Limit \"$BH_LIMIT\"
+					$lv_BS_Limit \"$BS_LIMIT\" $lv_IH_Limit \"$IH_LIMIT\"
+					$lv_IS_Limit \"$IS_LIMIT\" $lv_BG_Time \"$BL_GR_TIME\"
+					$lv_IG_Time \"$I_GR_TIME\" $gv_Save \"\" $gv_Back \"\")
+					;;
+			esac
+			menubox "$1" "$C_TITLE" "$gv_Menupoint" "$KONF_MENU"
+		}
+		## }}}
+		# Funktion (grace_period_menu)# {{{
+		grace_period_menu() {
+			GR_TITLE=(${gv_Configuration}::${lv_Grace_Time})
+			GR_MENU=($lv_Seconds \"\" $lv_Hours \"\" $lv_Days \"\"
+				$lv_Weeks \"\" $lv_Months \"\" $gv_Back \"\")
+			menubox "" "$GP_TITLE" "$gv_Menupoint" "$GR_MENU"
+		}
+		## }}}
+		# Funktion (grace_period), Grace period einstellen# {{{
+		#
+		# usage: grace_period VAR_NAME TITLE
+		#
+		grace_period() {
+			if [ $# = 2 ] ; then
+				unset -- Time
+				GP_VAR="$1"
+				GP_TITLE="$2"
+				grace_period_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help config_help
+							grace_period_menu
+							;;
+						$lv_Seconds)
+							# Sekunden eingeben
+							if [ "${GP_VAR##*[0-9]}" = s ] ; then
+								Time="${GP_VAR%%[a-zA-Z]*}"
+							fi
+							number_input -s "${Time:-86400}"
+							break
+							;;
+						$lv_Hours)
+							# Stunden eingeben
+							if [ "${GP_VAR##*[0-9]}" = h ] ; then
+								Time="${GP_VAR%%[a-zA-Z]*}"
+							fi
+							number_input -h "${Time:-2}"
+							break
+							;;
+						$lv_Days)
+							if [ "${GP_VAR##*[0-9]}" = d ] ; then
+								Time="${GP_VAR%%[a-zA-Z]*}"
+							fi
+							number_input -d "${Time:-7}"
+							break
+							;;
+						$lv_Weeks)
+							# Wochen eingeben
+							if [ "${GP_VAR##*[0-9]}" = w ] ; then
+								Time="${GP_VAR%%[a-zA-Z]*}"
+							fi
+							number_input -w "${Time:-1}"
+							break
+							;;
+						$lv_Months)
+							# Monate eingeben
+							if [ "${GP_VAR##*[0-9]}" = m ] ; then
+								Time="${GP_VAR%%[a-zA-Z]*}"
+							fi
+							number_input -m "${Time:-1}"
+							break
+							;;
+					esac
+				done
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+		kwquota_conf_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					# Hilfe
+					script_help config_help
+					kwquota_conf_menu
+					;;
+				$lv_User_Id)
+					kwquota_conf_menu $lv_User_Id
+					;;
+				$lv_Group_Id)
+					kwquota_conf_menu $lv_Group_Id
+					;;
+				$lv_Project_Id)
+					# Projekt ID (Namen) vergeben, ausser es wird nur das Projekt veraendert.# {{{
+					if [ ! -z "$PROJ_CREATE" ] ; then
+						PROJ_MSG=$(gettext 'Geben Sie einen Namen fuer das Projekt ein.')
+						inputbox "$C_TITLE" "$PROJ_MSG"
+						if [ -n "$gv_Auswahl" ] ; then
+							if [ -s "$XFS_PROJID" ] ; then
+								local Ist_Project_Id
+								unset -- Ist_Project_Id
+								Ist_Project_Id="`print ${${(M)${(f)"$(< ${XFS_PROJID})"}##(#s)${gv_Auswahl}:}%:}`"
+							fi
+							#
+							if [ -z "$Ist_Project_Id" ] ; then
+								PROJECT_ID="$gv_Auswahl"
+							else
+								MSG=$(gettext 'Diese Projekt_ID (${gv_Auswahl}) ist schon vergeben.')
+								msgbox "$gv_Info" "$MSG"
+								unset -- PROJECT_ID
+							fi
+						else
+							unset -- PROJECT_ID
+						fi
+					fi
+					## }}}
+					kwquota_conf_menu $lv_Project_Id
+					;;
+				$lv_Project_Nr)
+					# Project Nummer auswaehlen.# {{{
+					PROJ_Nr_MSG=$(gettext 'Waehlen Sie eine Nummer fuer das Projekt aus.')
+					# Verschiedene Zahlen die schon vergeben sind herrausfinden.
+					if [ -s "$XFS_PROJECTS" ] ; then
+						unset -- PROJ_Nr_MENU Anz
+						local Anz
+						Anz=0
+						for i in {1..100} ; {
+							if [ "`print ${(ws.:.)${(M)${(f)"$(< ${XFS_PROJECTS})"}##${i}:}}`" != "$i" ] ; then
+								(( Anz++ ))
+								PROJ_Nr_MENU[Anz]="$i \"\""
+							fi
+						}
+					else
+						for i in {1..100} ; {
+							(( Anz++ ))
+							PROJ_Nr_MENU[Anz]="$i \"\""
+						}
+					fi
+					# restliche Nummern zur Auswahl stellen.
+					if [ -n "$PROJ_Nr_MENU" ] ; then
+						PROJECT_NR_MENU=($PROJ_Nr_MENU)
+						menubox "$PROJECT_NR" "$C_TITLE" "$PROJ_Nr_MSG" "$PROJ_NR_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help config_help
+									menubox "$PROJECT_NR" "$C_TITLE" "$PROJ_Nr_MSG" "$PROJ_NR_MENU"
+									;;
+								*)
+									# Auswahl uebernehmen
+									PROJECT_NR="$gv_Auswahl"
+									break
+								;;
+							esac
+						done
+					else
+						MSG=$(gettext 'Es ist keine Nummer fuer eine neues Projekt mehr uebrig.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					kwquota_conf_menu $lv_Project_Nr
+					;;
+				$lv_Project_Dir)
+					# Projekt Verzeichnis auswaehlen# {{{
+					unset -- Ist_Exist
+					local Ist_Exist
+					dselect $QUOTA_DRIVE
+					if [ -n "$VERZ" -a -s "$XFS_PROJECTS" ] ; then
+						# ueberpruefen ob schon vergeben
+						for i in `awk -F : '{print $2}' $XFS_PROJECTS` ; {
+							Ist_Exist="`print ${(M)${i}##(#s)${VERZ}}`"
+							if [ "$Ist_Exist" ] ; then
+								break
+							fi
+						}
+						#
+						if [ -n "$Ist_Exist" ] ; then
+							MSG=$(gettext 'Dieses Verzeichnis ($VERZ) wird schon von einem anderen Projekt ueberwacht.')
+							msgbox "$gv_Info" "$MSG"
+							unset -- PROJECT_DIR
+						else
+							PROJECT_DIR="$VERZ"
+						fi
+					elif [ -n "$VERZ" ] ; then
+						PROJECT_DIR="$VERZ"
+					else
+						unset -- PROJECT_DIR
+					fi
+					## }}}
+					kwquota_conf_menu $lv_Project_Dir
+					;;
+				$lv_BH_Limit)
+					# Block Hardlimit Groesse einstellen# {{{
+					LIMIT_TITLE=(${gv_Configuration}::${lv_BH_Limit})
+					SIZE="$BH_LIMIT"
+					limit_size_conf -h "$BS_LIMIT"
+					if [ -n "$SIZE" ] ; then
+						BH_LIMIT="$SIZE"
+					else
+						BH_LIMIT=0
+					fi
+					## }}}
+					kwquota_conf_menu $lv_BH_Limit
+					;;
+				$lv_BS_Limit)
+					# Block Softlimit Groesse einstellen# {{{
+					LIMIT_TITLE=(${gv_Configuration}::${lv_BS_Limit})
+					SIZE="$BS_LIMIT"
+					limit_size_conf -s "$BH_LIMIT"
+					if [ -n "$SIZE" ] ; then
+						BS_LIMIT="$SIZE"
+					else
+						BS_LIMIT=0
+					fi
+					## }}}
+					kwquota_conf_menu $lv_BS_Limit
+					;;
+				$lv_IH_Limit)
+					# Inode Hardlimit Groesse einstellen# {{{
+					number_input -i "${IH_LIMIT:-100}"
+					if [ -n "$NUMBER" ] ; then
+						if [ -n "$IS_LIMIT" ] ; then
+							if [ "$IS_LIMIT" -le "$NUMBER" ] ; then
+								IH_LIMIT="$NUMBER"
+							else
+								over_limit_size_msg
+								unset -- IH_LIMIT
+							fi
+						else
+							IH_LIMIT="$NUMBER"
+						fi
+					else
+						unset -- IH_LIMIT
+					fi
+					## }}}
+					kwquota_conf_menu $lv_IH_Limit
+					;;
+				$lv_IS_Limit)
+					# Inode Softlimit Groesse einstellen# {{{
+					number_input -i "${IS_LIMIT:-95}"
+					if [ -n "$NUMBER" ] ; then
+						if [ -n "$IH_LIMIT" ] ; then
+							if [ "$IH_LIMIT" -ge "$NUMBER" ] ; then
+								IS_LIMIT="$NUMBER"
+							else
+								over_limit_size_msg
+								unset -- IS_LIMIT
+							fi
+						else
+							IS_LIMIT="$NUMBER"
+						fi
+					else
+						unset -- IS_LIMIT
+					fi
+					## }}}
+					kwquota_conf_menu $lv_IS_Limit
+					;;
+				$lv_RT_BH_Limit)
+					# Realtime Block Hardlimit Groesse einstellen# {{{
+					LIMIT_TITLE=(${gv_Configuration}::${lv_RT_BH_Limit})
+					SIZE="$RTBH_LIMIT"
+					limit_size_conf -h "$RTBS_LIMIT"
+					if [ -n "$SIZE" ] ; then
+						RTBH_LIMIT="$SIZE"
+					else
+						RTBH_LIMIT=0
+					fi
+					## }}}
+					kwquota_conf_menu $lv_RT_BH_Limit
+					;;
+				$lv_RT_BS_Limit)
+					# Realtime Block Softlimit Groesse einstellen# {{{
+					LIMIT_TITLE=(${gv_Configuration}::${lv_RT_BS_Limit})
+					SIZE="$RTBS_LIMIT"
+					limit_size_conf -s "$RTBH_LIMIT"
+					if [ -n "$SIZE" ] ; then
+						RTBS_LIMIT="$SIZE"
+					else
+						RTBS_LIMIT=0
+					fi
+					## }}}
+					kwquota_conf_menu $lv_RT_BS_Limit
+					;;
+				$lv_RT_BG_Time)
+					# Realtime Block Grace period einstellen# {{{
+					grace_period $RT_BL_GR_TIME "$GR_TITLE"
+					if [ -n "$NUMBER" ] ; then
+						RT_BL_GR_TIME="$NUMBER"
+					else
+						unset -- RT_BL_GR_TIME
+					fi
+					## }}}
+					kwquota_conf_menu $lv_RT_BG_Time
+					;;
+				$lv_BG_Time)
+					# Block Grace period einstellen# {{{
+					grace_period "$BL_GR_TIME" "$GR_TITLE"
+					if [ -n "$NUMBER" ] ; then
+						BL_GR_TIME="$NUMBER"
+					else
+						unset -- BL_GR_TIME
+					fi
+					## }}}
+					kwquota_conf_menu $lv_BG_Time
+					;;
+				$lv_IG_Time)
+					# Inode Grace period einstellen# {{{
+					grace_period "$I_GR_TIME" "$GR_TITLE"
+					if [ -n "$NUMBER" ] ; then
+						I_GR_TIME="$NUMBER"
+					else
+						unset -- I_GR_TIME
+					fi
+					## }}}
+					kwquota_conf_menu $lv_IG_Time
+					;;
+				$gv_Save)
+					# speichern# {{{
+					unset -- PROG_OPT PROG_UG_OPT PROG_TIME_OPT B_TIMER_OPT RTB_TIMER_OPT I_TIMER_OPT
+					# quota erstellen
+					# Funktion (no_choice_msg), nicht genuegend Menuepunkte belegt.# {{{
+					no_choice_msg() {
+						MSG=$(gettext 'Sie muessen mindestens einen Benutzer, und/oder eine Gruppe,
+oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
+						msgbox "$gv_Attention" "$MSG"
+					}
+					## }}}
+					# Funktion (quota_opt), Optionen sammeln und Masseinheiten # {{{
+					# umbenennen in die richtigen Werte
+					# Programmausfuehrung sammeln - bis PetaByte
+					#
+					# usage: quota_opt FS [ bhard | bsoft | ... ] VALUE [ UNIT ]
+					# FS - Dateisystem
+					# bhard, etc - quota Optionen fuers Limit
+					# VALUE - Limit Wert
+					# UNIT - Masseinheit
+					#
+					quota_opt() {
+						if [ $# -ge 3 ] ; then
+							Q_Fs="$1"
+							Q_Opt="$2"
+							Q_Value="$3"
+							Q_Unit="$4"
+							case "$Q_Fs" in
+								xfs)
+									# xfs Dateisystem# {{{
+									case "$Q_Opt" in
+										bhard|bsoft)
+											B_TIMER_OPT=-b
+											;;
+										rtbhard|rtbsoft)
+											RTB_TIMER_OPT=-r
+											;;
+										ihard|isoft)
+											# Wert uebernehmen
+											I_TIMER_OPT=-i
+											;;
+									esac
+									#
+									if [ -n "$Q_Value" -a -n "$Q_Unit" ] ; then
+										case "$Q_Unit" in
+											p|P|PB|Pb)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}p"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}p"
+												fi
+												;;
+											t|T|TB|Tb)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}t"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}t"
+												fi
+												;;
+											g|G|GB|Gb)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}g"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}g"
+												fi
+												;;
+											m|M|MB|Mb)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}m"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}m"
+												fi
+												;;
+											k|K|KB|Kb)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}k"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}k"
+												fi
+												;;
+											b|B)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}b"
+												else
+													PROG_OPT="${Q_Opt}=${Q_Value}b"
+												fi
+												;;
+										esac
+									elif [ -n "$Q_Value" ] ; then
+										# isoft und ihard
+										if [ -n "$PROG_OPT" ] ; then
+											PROG_OPT="$PROG_OPT ${Q_Opt}=${Q_Value}"
+										else
+											PROG_OPT="${Q_Opt}=${Q_Value}"
+										fi
+									fi
+									## }}}
+									;;
+								*)
+									# andere Dateisysteme# {{{
+									# ###################################
+									# sind noch keine
+									# ###################################
+									## }}}
+									;;
+							esac
+						fi
+					}
+					## }}}
+					case "$QUOTA_PROG" in
+						xfs_quota)
+							# Funktion (xfs_set_grace_period), Ueberschreitungszeit fuer Benutzer setzen# {{{
+							#
+							# usage: xfs_set_grace_period
+							xfs_set_grace_period() {
+								if [ $# = 1 ] ; then
+									local T_Opt
+									unset -- T_Opt
+									T_Opt="$1"
+									#
+									if [ "$BL_GR_TIME" = "$RT_BL_GR_TIME" -a "$BL_GR_TIME" = "$I_GR_TIME" ] ; then
+										xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $I_TIMER_OPT $RTB_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+									elif [ "$BL_GR_TIME" ] ; then
+										xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+									elif [ "$I_GR_TIME" ] ; then
+										xfs_quota -x -c "timer $T_Opt $I_TIMER_OPT $I_GR_TIME" $QUOTA_DRIVE || prog_failure
+									elif [ "$RT_BL_GR_TIME" ] ; then
+										xfs_quota -x -c "timer $T_Opt $RTB_TIMER_OPT $RT_BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+									fi
+								else
+									no_para_msg $0
+								fi
+							}
+							## }}}
+							# Optionen sammeln# {{{
+							quota_opt xfs bhard ${BH_LIMIT%%[a-zA-Z]*} ${BH_LIMIT##*[0-9]}
+							quota_opt xfs bsoft ${BS_LIMIT%%[a-zA-Z]*} ${BS_LIMIT##*[0-9]}
+							quota_opt xfs ihard $IH_LIMIT
+							quota_opt xfs isoft $IS_LIMIT
+							quota_opt xfs rtbhard ${RTBH_LIMIT%%[a-zA-Z]*} ${RTBH_LIMIT##*[0-9]}
+							quota_opt xfs rtbsoft ${RTBS_LIMIT%%[a-zA-Z]*} ${RTBS_LIMIT##*[0-9]}
+							## }}}
+							# quota setzen# {{{
+							# check ob vorhanden user/Gruppe/project
+							# -u/-g/-p
+							if [ -n "$USER_ID" ] ; then
+								xfs_quota -x -c "limit -u $PROG_OPT $USER_ID" $QUOTA_DRIVE || prog_failure
+								# Ueberschreitungszeit fuer Benutzer setzen
+								xfs_set_grace_period -u
+							elif [ -n "$GROUP_ID" ] ; then
+								xfs_quota -x -c "limit -g $PROG_OPT $GROUP_ID" $QUOTA_DRIVE || prog_failure
+								# Ueberschreitungszeit fuer Gruppe setzen
+								xfs_set_grace_period -g
+								# Projekt kreieren oder aendern?
+							elif [ -n "$PROJECT_ID" ] ; then
+								if [ "$PROJ_CREATE" = yes -a -n "$PROJECT_NR" -a -n "$PROJECT_DIR" ] ; then
+									# $XFS_PROJECTS und XFS_PROJID erstellen
+									if [ -f "$XFS_PROJECTS" ] ; then
+										>> "$XFS_PROJECTS" <<< "${PROJECT_NR}:${PROJECT_DIR}"
+									else
+										> "$XFS_PROJECTS" <<< "${PROJECT_NR}:${PROJECT_DIR}"
+									fi
+									#
+									if [ -f "$XFS_PROJID" ] ; then
+										>> "$XFS_PROJID" <<< "${PROJECT_ID}:${PROJECT_NR}"
+									else
+										> "$XFS_PROJID" <<< "${PROJECT_ID}:${PROJECT_NR}"
+									fi
+									xfs_quota -x -c "project -s $PROJECT_ID" $QUOTA_DRIVE || prog_failure
+									xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure
+								else
+									xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure
+								fi
+								# Ueberschreitungszeit fuer Project setzen
+								xfs_set_grace_period -p
+							else
+								# nicht genuegend Prog Optionen
+								no_choice_msg
+								kwquota_conf_menu
+							fi
+							## }}}
+							;;
+						*)
+							# Funktion (grace_convert), rechnet die Grace Zeit in# {{{
+							# Sekunden um
+							#
+							# usage: grace_convert TIME
+							# TIME - Zeit die umgerechnet werden soll.
+							#
+							grace_convert() {
+								unset -- GR_TIME Tmp
+								local Tmp
+								integer Tmp
+								if [ $# = 1 ] ; then
+									case "$1" in
+										[0-9][0-9]:[0-9][0-9])
+											# Stunden in Sekunden umrechnen
+											H_tmp="${${1%%:*}#0}"
+											S_tmp="${${1##*:}#0}"
+											(( Tmp = H_tmp * 3600 ))
+											(( Tmp1 = S_tmp * 60 ))
+											(( GR_TIME = Tmp + Tmp1 ))
+											;;
+										*)
+											case ${1##*[0-9]} in
+												h)
+													# Stunden in Sekunden umrechnen
+													Tmp="${1%%[a-zA-Z]}"
+													(( GR_TIME = Tmp * 3600 ))
+													;;
+												d)
+													# Tage in Sekunden umrechnen
+													# angenommen werden 24 Stunden
+													Tmp="${1%%[a-zA-Z]}"
+													(( GR_TIME = Tmp * 86400 ))
+													;;
+												w)
+													# Wochen in Sekunden umrechnen
+													# angenommen werden 7 Tage
+													Tmp="${1%%[a-zA-Z]}"
+													(( GR_TIME = Tmp * 604800 ))
+													;;
+												m)
+													# Monate in Sekunden umrechnen
+													# angenommen werden 30 Tage
+													Tmp="${1%%[a-zA-Z]}"
+													(( GR_TIME = Tmp * 2592000 ))
+													;;
+												s|*)
+													# sind schon Sekunden
+													GR_TIME="${1%%[a-zA-Z]}"
+													;;
+											esac
+											;;
+									esac
+									#
+								else
+									no_para_msg $0
+								fi
+							}
+							## }}}
+							# ansonsten wird "setquota" benutzt# {{{
+							# Funktion (quota_opt_exec) Optionen fuer setquota sammeln# {{{
+							# und ausfuehren
+							#
+							# usage: quota_opt_exec
+							quota_opt_exec() {
+								# Limits
+								if [ "$BH_LIMIT" -a "$BS_LIMIT" -a "$IH_LIMIT" -a "$IS_LIMIT" ] ; then
+									#PROG_OPT="$PROG_UG_OPT -b -l ${BH_LIMIT// /} -q ${BS_LIMIT// /}"
+									###################################
+									# Block Limits in KByte umrechnen
+									###################################
+									convert_drive_size "${${BH_LIMIT// /}##*[0-9]}" "${${BH_LIMIT// /}%%[a-zA-Z]}"
+									if [ -n "$SIZE_KB" ] ; then
+										BH_Size="$SIZE_KB:r"
+									fi
+									convert_drive_size "${${BS_LIMIT// /}##*[0-9]}" "${${BS_LIMIT// /}%%[a-zA-Z]}"
+									if [ -n "$SIZE_KB" ] ; then
+										BS_Size="$SIZE_KB:r"
+									fi
+									#
+									# Format: block-softlimit block-hardlimit inode-hardlimit
+									# inode-softlimit, in Bytes/Integer Zahlen
+									PROG_OPT="$PROG_UG_OPT $BS_Size $BH_Size $IS_LIMIT $IH_LIMIT"
+									setquota ${=PROG_OPT} $QUOTA_DRIVE || prog_failure
+								else
+									no_choice_msg
+								fi
+								# Ueberschreitungszeiten
+								if [ -n "$BL_GR_TIME" -a -n "$I_GR_TIME" ] ; then
+									# Block und Inode
+									# Zeit Limits in Sekunden umrechnen
+									#
+									unset -- BLS_GR_TIME IS_GR_TIME
+									grace_convert "$BL_GR_TIME"
+									if [ -n "$GR_TIME" ] ; then
+										BLS_GR_TIME="$GR_TIME"
+									fi
+									grace_convert "$I_GR_TIME"
+									if [ -n "$GR_TIME" ] ; then
+										IS_GR_TIME="$GR_TIME"
+									fi
+									# ausfuehren
+									if [ -n "$BLS_GR_TIME" -a -n "$IS_GR_TIME" ] ; then
+										PROG_TIME_OPT="$QU_OPT -t $BLS_GR_TIME $IS_GR_TIME"
+										setquota ${=PROG_TIME_OPT} $QUOTA_DRIVE || prog_failure
+									fi
+								fi
+							}
+							## }}}
+							if [ -n "$USER_ID" ] ; then
+								PROG_UG_OPT="-u $USER_ID"
+								quota_opt_exec
+							elif [ -n "$GROUP_ID" ] ; then
+								PROG_UG_OPT="-g $GROUP_ID"
+								quota_opt_exec
+							else
+								# nicht genuegend Prog Optionen
+								no_choice_msg
+								kwquota_conf_menu
+							fi
+							## }}}
+							;;
+					esac
+					## }}}
+					unset -- QUOTA_PROG QUOTA_DRIVE
+					break
+					;;
+				$gv_Back)
+					unset -- QUOTA_PROG QUOTA_DRIVE
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

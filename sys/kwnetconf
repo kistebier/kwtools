@@ -1,0 +1,110 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwnetconf, ist ein Frontend fuer verschiedene
+#	      Netzwerk Konfigurationsprogramme.
+#
+# Version: 0.1.2
+#
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+# Menu belegen#{{{
+NETCARD=$(gettext 'Netzwerkkarten (LAN/WLAN) Konfiguration')
+DSL=$(gettext 'Einwahl per DSL-Modem')
+ISDN=$(gettext 'Einwahl per ISDN')
+MODEM=$(gettext 'Einwahl per Analogmodem')
+
+# Shortcut description selected
+DESC=("$NETCARD" "$DSL" "$ISDN" "$MODEM")
+
+unset -- TYPES
+typeset -a TYPES
+Anz=1
+for i in kwnetcardconf pppoeconf isdnconfig wvdial ; {
+	if [[ -x ${commands[$i]} ]] ; then
+		TYPES[Anz]="$i \"${DESC[Anz]}\""
+	fi
+	(( Anz++ ))
+}
+## }}}
+# Funktion Hauptmenue{{{
+haupt_menue() {
+	MAIN_MENU=(${TYPES[*]} $gv_Exit \"\")
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+
+haupt_menue
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help help
+			haupt_menue
+			;;
+		wvdial)
+			# wvdial ausfuehren
+			if [ ! -e /etc/wvdial.conf ] ; then
+				prog_check wvdialconf
+				if [ -z "$NO_PROGS" ] ; then
+					wvdialconf /etc/wvdial.conf || prog_failure
+				fi
+			else
+				if [[ -x ${commands[kwwvdialconf]} ]] ; then
+					kwwvdialconf
+				else
+					EDIT_TITLE=$(gettext '${gv_Configuration}::wvdial')
+					edit_file "$EDIT_TITLE" /etc/wvdial.conf
+				fi
+			fi
+			check_status
+			haupt_menue wvdial
+			;;
+		$gv_Exit)	break ;;
+		*)	
+			# alle anderen Programme
+			N_PROG="$gv_Auswahl"
+			$gv_Auswahl
+			check_status
+			haupt_menue $N_PROG
+			;;
+	esac
+done
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

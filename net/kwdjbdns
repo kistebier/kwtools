@@ -1,0 +1,408 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwdjbdns, konfiguriert, loescht Dan Bernsteins DNS server
+# Version: 0.3.7
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Root pruefen
+root_check
+
+# Installation der daemontools pruefen.
+prog_check svc axfrdns-conf dnscache-conf pickdns-conf rbldns-conf tinydns-conf walldns-conf
+if [[ -n $NO_PROGS ]] ; then
+	exit 0
+fi
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+autoload -U dns_check axfrdns_management pickdns_management rbldns_management \
+	tinydns_management dns_status no_dns_msg
+
+# Variablen
+lv_Administration=$(gettext 'Administration')
+lv_Database=$(gettext 'Datenbank')
+lv_Domain=$(gettext 'Domain')
+lv_New_Create=$(gettext 'neu erstellen')
+lv_Server=$(gettext 'Server')
+lv_Ip=$(gettext 'IP')
+lv_Add=$(gettext 'addieren')
+lv_Dnscache=$(gettext 'dnscache')
+lv_Pickdns=$(gettext 'pickdns')
+lv_Tinydns=$(gettext 'tinydns')
+lv_Axfrdns=$(gettext 'axfrdns')
+lv_Rbldns=$(gettext 'rbldns')
+lv_Walldns=$(gettext 'walldns')
+
+# Funktion (check_dns_user), prueft ob die dns Programm Benutzer# {{{
+# in der /etc/passwd stehen
+#
+check_dns_user() {
+	RETURN=0
+	for i in G${DNS} Gdnslog ; {
+		if ! getent passwd $i >/dev/null ; then
+			useradd --system --shell /bin/false \
+			--home-dir /nonexistent --no-create-home $i || \
+			MSG=$(gettext 'Konnte den Benutzer $i nicht anlegen.')
+			msgbox "$gv_Attention" "$MSG"
+			RETURN=1
+		fi
+	}
+}
+## }}}
+# Funktion haupt_menue{{{
+MAIN_MENU=($gv_Configuration \"\" $lv_Dnscache \"\" $lv_Tinydns \"\"
+	$lv_Axfrdns \"\" $lv_Pickdns \"\" $lv_Rbldns \"\" $gv_Exit \"\")
+#
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+
+###########################################################
+#
+# Hauptprogramm
+#
+###########################################################
+#
+if [ -d /etc/service ] ; then
+	SERVICE_DIR=/etc/service
+elif [ -d /service ] ; then
+	SERVICE_DIR=/service
+else
+	MSG=$(gettext 'Kann das Service Verzeichnis (/service oder /etc/service) der daemontools nicht finden. Pruefen Sie ob die daemontools installiert sind.')
+	msgbox "$gv_Attention" "$MSG"
+	exit 0
+fi
+
+# Variablen deklarieren/pruefen/erstellen
+SV_DIR=/etc/sv
+if [ ! -d "$SV_DIR" ] ; then
+	mkdir -p "$SV_DIR" &>/dev/null
+fi
+
+DOMAIN_TITLE="${gv_Configuration}::${lv_Domain}"
+DOMAIN_MSG=$(gettext 'Geben Sie bitte die domain an, die jetzt verwaltet werden soll (Bsp. domain.de).')
+TEXT=$(gettext 'Text')
+#
+net_conf
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+	        #
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration fuer dnscache, tinydns, axfrdns, rbldns, pickdns oder{{{
+			# dnswall.
+			autoload -U dnscache_conf
+			IP_LOCAL_MSG=$(gettext 'Geben Sie bitte die IP-Adresse von ihrem Recher ein (z.B. 192.168.0.1).')
+			# Funktion konf_menue{{{
+			CONF_MENU=($lv_Dnscache \"\" $lv_Tinydns \"\" $lv_Axfrdns \"\"
+		   		$lv_Pickdns \"\" $lv_Rbldns \"\" $lv_Walldns \"\"
+			   	$lv_Server $gv_Delete $gv_Back \"\")
+			konf_menue() {
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+			}
+			#}}}
+			#
+			konf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						script_help conf_help
+						konf_menue
+						;;
+					$lv_Dnscache)
+						# Verschiedene DNS Caches einrichten koennen.{{{
+						DNS=$gv_Auswahl
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							dnscache_conf
+						fi
+						#}}}
+						konf_menue $lv_Dnscache
+						;;
+					$lv_Tinydns)
+						# Tinydns einrichten{{{
+						DNS=$gv_Auswahl
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							T_TITLE=(${gv_Configuration}::${lv_Tinydns})
+							inputbox "$T_TITLE" "$IP_LOCAL_MSG"
+							if [[ -n $gv_Auswahl ]] ; then
+								ip_analyse "$gv_Auswahl"
+								if [[ -n $gv_Ip_Adr ]] ; then
+									${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr &>/dev/null
+									ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+									ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+									ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+									dns_status
+								fi
+							else
+								no_input_msg
+							fi
+						fi
+						#}}}
+						konf_menue $lv_Tinydns
+						;;
+					$lv_Axfrdns)
+						# axfrdns einrichten{{{
+						DNS=$gv_Auswahl
+						DNS1=$lv_Tinydns
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							if [[ -d ${SV_DIR}/${DNS1} ]] ; then
+								H_IP="`< ${SV_DIR}/${DNS1}/env/IP`"
+								${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} ${SV_DIR}/${DNS1} $H_IP &>/dev/null
+								ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+								ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+								ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+								dns_status
+							else
+								MSG=$(gettext 'Auf diesem Rechner ist kein tinydns Server vorhanden/konfiguriert.')
+								msgbox "$gv_Attention" "$MSG"	
+							fi
+						fi
+						#}}}
+						konf_menue $lv_Axfrdns
+						;;
+					$lv_Pickdns)
+						# Pickdns einrichten{{{
+						DNS=$gv_Auswahl
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							P_TITLE=(${gv_Configuration}::${lv_Pickdns})
+							inputbox "$P_TITLE" "$IP_LOCAL_MSG"
+							#
+							if [[ -n $gv_Auswahl ]] ; then
+								ip_analyse "$gv_Auswahl"
+								if [[ -n $gv_Ip_Adr ]] ; then
+									${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr &>/dev/null
+									ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+									ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+									ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+									dns_status
+								fi
+							else
+								no_input_msg
+							fi
+						fi
+						#}}}
+						konf_menue $lv_Pickdns
+						;;
+					$lv_Rbldns)
+						# rbldns einrichten{{{
+						DNS=$gv_Auswahl
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							# Erst den domainnamen eingeben, sonst geht gar nichts.
+							inputbox "$DOMAIN_TITLE" "$DOMAIN_MSG"
+							if [[ -n $gv_Auswahl ]] ; then
+								RBL_DOMAIN="$gv_Auswahl"
+								RBL_TITLE=(${gv_Configuration}::${lv_Rbldns})
+								inputbox "$RBL_TITLE" "$IP_LOCAL_MSG"
+				                #
+								if [[ -n $gv_Auswahl ]] ; then
+									ip_analyse "$gv_Auswahl"
+					                if [[ -n $gv_Ip_Adr ]] ; then
+										${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr $RBL_DOMAIN &>/dev/null
+										ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+										ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+										ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+										dns_status
+									fi
+								else
+									no_input_msg
+								fi
+							fi
+						fi
+						#}}}
+						konf_menue $lv_Rbldns
+						;;
+					$lv_Walldns)
+						# walldns einrichten{{{
+						DNS=$gv_Auswahl
+						check_dns_user
+						if [[ $RETURN == 0 ]] ; then
+							dns_check
+							W_TITLE=(${gv_Configuration}::${lv_Walldns})
+							inputbox "$W_TITLE" "$IP_LOCAL_MSG"
+							if [[ -n $gv_Auswahl ]] ; then
+								ip_analyse "$gv_Auswahl"
+								if [[ -n $gv_Ip_Adr ]] ; then
+									${DNS}-conf G${DNS} Gdnslog ${SV_DIR}/${DNS} $gv_Ip_Adr &>/dev/null
+									ln -s ${SV_DIR}/${DNS} $SERVICE_DIR
+									ln -s /var/lib/supervise/${DNS} ${SV_DIR}/${DNS}/supervise
+									ln -s /var/lib/supervise/${DNS}.log ${SV_DIR}/${DNS}/log/supervise
+									dns_status
+								fi
+							else
+								no_input_msg
+							fi
+						fi
+						#}}}
+						konf_menue $lv_Walldns
+						;;
+					$lv_Server)
+						# Ein oder mehrere Server loeschen{{{
+						unset -- S_Menue
+						for i in `print ${SERVICE_DIR}/(N@)` ; {
+							if [ -h $i ] ; then
+								S_Menue="$S_Menue ${i##*/} \"\" off"
+							fi
+						}
+						#
+						if [ -n "${S_Menue[1]}" ] ; then
+							# gefundene Server zum loeschen bereit stellen.
+							DEL_MENU=($S_Menue)
+							DEL_TITLE=(${gv_Configuration}::${gv_Delete})
+							DEL_MSG=$(gettext 'Waehlen Sie einen oder mehrere Server zum loeschen aus.')
+							checklist "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+							#
+							while [ "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP)	script_help serv_del_help
+										checklist "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+										;;
+									*)
+										# loeschen
+										for i in ${=gv_Auswahl} ; {
+											Dir=$(readlink -f ${SERVICE_DIR}/${i})
+											svc -dx $Dir &>/dev/null
+											rm -rf $Dir &>/dev/null
+											rm $SERVICE_DIR/${i} &>/dev/null
+										}
+										break
+										;;
+								esac
+							done		
+						else
+							MSG=$(gettext 'Es sind keine DNS Server konfiguriert.')
+							msgbox "$gv_Attention" "$MSG"
+							break
+						fi
+						#}}}
+						konf_menue $lv_Server
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Dnscache)
+			# Von Welchen Rechneradressen darf auf den dnscache zugegriffen werden.{{{
+			DNS=$gv_Auswahl
+			if [ -d ${SV_DIR}/${DNS} ] ; then
+				cd ${SV_DIR}/${DNS}/root/ip
+				LOCAL="`< ${SV_DIR}/${DNS}/env/IP`"
+				if [ "$LOCAL" != 127.0.0.1 ] ; then
+					unset -- H_IP
+					ANZ=0
+					for ip in * ; {
+						(( ANZ++ ))
+						H_IP[ANZ]="$ip"
+					}
+					#
+					TITLE=(${lv_Administration}::${lv_Dnscache})
+					MSG=$(gettext 'Geben Sie bitte die IP-Adressen von den Netzwerken an, die ihren Cache benutzen duerfen, getrennt durch ein Leerzeichen (z.B. 192.168.0.0 192.168.1.0).')
+					inputbox "$TITLE" "$MSG" "$H_IP"
+				    #
+					if [ -n "$gv_Auswahl" ] ; then
+						rm -f ${SV_DIR}/${DNS}/root/ip/*~*127.0.0.1
+						for i in ${=gv_Auswahl} ; {
+							if [ "$i" != 127.0.0.1 ] ; then
+								# Fehlermeldung das dies keine IP Adresse ist.
+								ip_analyse "$i"
+						    	if [[ -n $gv_Ip_Adr ]] ; then
+									create_file ${SV_DIR}/${DNS}/root/ip/${gv_Ip_Adr}
+								else
+									# Fehlermeldung
+									no_valid_ip_msg -n "$i"
+								fi
+							fi
+						}
+					else
+						no_input_msg
+					fi
+				else
+					MSG=$(gettext 'Dieser Rechner ist kein external-Cache und kann deswegen auch fuer kein Netz freigegeben werden.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			else
+				no_dns_msg $DNS
+			fi
+			#}}}
+			haupt_menue $lv_Dnscache
+			;;
+		$lv_Tinydns)
+			# tinydns verwalten
+			DNS="$gv_Auswahl"
+			tinydns_management
+			haupt_menue $lv_Tinydns
+			;;
+		$lv_Axfrdns)
+			# axfrdns Server Verwaltung
+			DNS="$gv_Auswahl"
+			axfrdns_management
+			haupt_menue $lv_Axfrdns
+			;;
+		$lv_Pickdns)
+			# pickdns verwalten
+			DNS="$gv_Auswahl"
+			pickdns_management
+			haupt_menue $lv_Pickdns
+			;;
+		$lv_Rbldns)
+			# rbldns server Verwaltung
+			DNS="$gv_Auswahl"
+			rbldns_management
+			haupt_menue $lv_Rbldns
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

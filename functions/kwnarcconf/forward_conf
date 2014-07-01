@@ -1,0 +1,307 @@
+# Funktion forward_conf{{{
+#
+# usage: forward_conf [ -i | -c | -d ]
+# -i Forwarding Regeln anlegen.
+# -c Forwarding Regeln aendern.
+# -d - Forwarding Regeln loeschen.
+#
+forward_conf() {
+	if [ "$#" -eq 1 ] ; then
+		local Opt
+		Opt="$1"
+		# Funktion no_forward_rules_msg# {{{
+		#
+		no_forward_rules_msg() {
+			MSG=$(gettext 'Es sind keine Forward Regeln definiert.')
+			msgbox "$gv_Attention" "$MSG"
+		}
+		## }}}
+		# Funktion forward_input, Forward Regeln eingeben{{{
+		#
+		# usage: forward_input
+		forward_input() {
+			# Funktion forward_eingabe_menue{{{
+			lv_Interface=$(gettext 'Interface')
+			lv_Protokoll=$(gettext 'Protokoll')
+			lv_Orig_IP=$(gettext 'Orig_IP')
+			lv_Orig_Port=$(gettext 'Orig_Port')
+			lv_New_IP=$(gettext 'New_IP')
+			lv_New_Port=$(gettext 'New_Port')
+			#
+			forward_eingabe_menue() {
+				FORWARD_INPUT_MENU=($lv_Interface \"$INTERFACE\"
+				$lv_Protokoll \"$PROTOCOL\" $lv_Orig_IP \"$ORIG_IP\"
+				$lv_Orig_Port \"$ORIG_PORT\" $lv_New_IP \"$NEW_IP\"
+				$lv_New_Port \"$NEW_PORT\" $gv_Save \"\" $gv_Back \"\")
+				menubox "$1" "$FORWARD_TITLE" "$gv_Menupoint" "$FORWARD_INPUT_MENU"
+			}
+			#}}}
+			forward_eingabe_menue
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help forward_conf_input_help
+						forward_eingabe_menue
+						;;
+					$lv_Interface)
+						# Interface vergeben{{{
+						MSG=$(gettext 'Vergeben Sie hier das Interface an das die Pakete weitergeleitet werden sollen (Bsp.: eth0).')
+						inputbox "$FORWARD_TITLE" "$MSG" "$INTERFACE"
+						if [ "$gv_Auswahl" ] ; then
+							INTERFACE="$gv_Auswahl"
+						else
+							INTERFACE=""
+						fi
+						#}}}
+						forward_eingabe_menue $lv_Interface
+						;;
+					$lv_Protokoll)
+						# TCP/IP Protokoll auswaehlen{{{
+						$lv_Tcp=$(gettext 'tcp')
+						$lv_Udp=$(gettext 'udp')
+						PROTO_MENU=($lv_Tcp \"\" $lv_Udp \"\")
+						#
+						MSG=$(gettext 'Waehlen Sie das richtige TCP/IP Protokoll aus.')
+						menubox "$PROTOCOL" "$FORWARD_TITLE" "$MSG" "$PROTO_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help protocol_help
+									menubox "$PROTOCOL" "$FORWARD_TITLE" "$MSG" "$PROTO_MENU"
+									;;
+								*)	PROTOCOL="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						#}}}
+						forward_eingabe_menue $lv_Protokoll
+						;;
+					$lv_Orig_IP)
+						# von welcher IP soll weitergeleitet werden{{{
+						MSG=$(gettext 'Geben Sie hier die IP Adresse an, an welche die Pakete urspruenglich gehen sollten (Bsp.: 192.168.0.1).')
+						inputbox "$FORWARD_TITLE" "$MSG" "$ORIG_IP"
+						if [ "$gv_Auswahl" ] ; then
+							ip_analyse "$gv_Auswahl"
+							if [ -n "$gv_Ip_Adr" ] ; then
+								ORIG_IP="$gv_Ip_Adr"
+							else
+								ORIG_IP=""
+							fi
+						else
+							ORIG_IP=""
+						fi
+						#}}}
+						forward_eingabe_menue $lv_Orig_IP
+						;;
+					$lv_Orig_Port)
+						# an welchen Port ging die urspruengliche Anfrage{{{
+						MSG=$(gettext 'Geben Sie hier den Port an, an welchen die Pakete urspruenglich gehen sollten (Bsp.: 81).')
+						inputbox "$FORWARD_TITLE" "$MSG" "$ORIG_PORT"
+						if [ "$gv_Auswahl" ] ; then
+							ORIG_PORT="$gv_Auswahl"
+						else
+							ORIG_PORT=""
+						fi
+						#}}}
+						forward_eingabe_menue $lv_Orig_Port
+						;;
+					$lv_New_IP)
+						# an welche IP soll weitergeleitet werden{{{
+						MSG=$(gettext 'Geben Sie hier die IP Adresse an, an welche die Pakete weitergeleitet werden sollen (Bsp.: 192.168.1.1).')
+						inputbox "$FORWARD_TITLE" "$MSG" "$NEW_IP"
+						if [ "$gv_Auswahl" ] ; then
+							ip_analyse "$gv_Auswahl"
+							if [ -n "$gv_Ip_Adr" ] ; then
+								NEW_IP="$gv_Ip_Adr"
+							else
+								NEW_IP=""
+							fi
+						else
+							NEW_IP=""
+						fi
+						#}}}
+						forward_eingabe_menue $lv_New_IP
+						;;
+					$lv_New_Port)
+						# an welchen Port soll die Anfrage weitergeleitet werden{{{
+						MSG=$(gettext 'Geben Sie hier den Port an, an welchen die Pakete weitergeleitet werden sollen (Bsp.: 80).')
+						inputbox "$FORWARD_TITLE" "$MSG" "$NEW_PORT"
+						if [ "$gv_Auswahl" ] ; then
+							NEW_PORT="$gv_Auswahl"
+						else
+							NEW_PORT=""
+						fi
+						#}}}
+						forward_eingabe_menue $lv_New_Port
+						;;
+					$gv_Save)
+						# Einstellungen aendern/speichern{{{
+						if [ -n "$PROTOCOL" -a -n "$ORIG_IP" -a -n "$ORIG_PORT" -a -n "$NEW_IP" -a -n "$NEW_PORT" ] ; then
+							if [ -n "$FORWARD_LIST_OLD" ] ; then
+								# alten Eintrag loeschen
+								print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##(s#)${FORWARD_LIST_OLD}*} > ${FORWARD_NARC_CONF}$$
+								mv "${FORWARD_NARC_CONF}$$" "$FORWARD_NARC_CONF"
+							else
+								# erstmal etwas vergleichbares loeschen
+								print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##(s#)(INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\")} > ${FORWARD_NARC_CONF}$$ 
+								mv "${FORWARD_NARC_CONF}$$" "$FORWARD_NARC_CONF"
+							fi
+							# Regel einfuegen
+							>> "$FORWARD_NARC_CONF" <<< "INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\""
+							#
+							if [ "$FORWARD_NARC_CONF_AENDERN" = yes ] ; then
+								break
+							else
+								unset -- INTERFACE PROTOCOL ORIG_IP ORIG_PORT NEW_IP NEW_PORT
+							fi
+						else
+							MSG=$(gettext 'Sie muessen, bis auf Interface, alle Menuepunkte mit Werten belegen.')
+							msgbox "$gv_Attention" "$MSG"
+						fi
+						#}}}
+						forward_eingabe_menue
+						;;
+					$gv_Back)
+						break
+						;;
+				esac
+			done
+		}
+		#}}}
+		case "$Opt" in
+			-i)
+				# Forward Regeln anlegen
+				forward_input
+				;;
+			-c)
+				# Forward Regeln aendern# {{{
+				local Anz Forward_List
+				integer Anz
+				# Funktion forward_change_list{{{
+				#
+				forward_change_list() {
+					unset -- Forward_List
+					grep -v '^ *#' "$FORWARD_NARC_CONF" | grep -v '^$' | \
+					while read a ; do
+						if [ -n "$a" ] ; then
+							Forward_List+=(\"$a\" \"\")
+						fi
+					done
+				}
+				#}}}
+				# Funktion forward_change_list_menue{{{
+				#
+				forward_change_list_menue() {
+					FW_CHANGE_MENU=(${Forward_List//\"/\'} $gv_Back \"\")
+					menubox "$F_CHOICE" "$FORWARD_TITLE" "$gv_Menupoint" "$FW_CHANGE_MENU"
+				}
+				#}}}
+				forward_change_list
+				if [ -n "$Forward_List" ] ; then
+					forward_change_list_menue
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help forward_conf_change_help
+								forward_change_list_menue
+								;;
+							$gv_Back)	break
+								;;
+							*)
+								# Auswahl bearbeiten
+								F_CHOICE="$gv_Auswahl"
+								unset -- INTERFACE PROTOCOL ORIG_IP ORIG_PORT NEW_IP NEW_PORT
+								# Auswahl zerpfluecken{{{
+								print ${(s:;:)${gv_Auswahl}} | \
+									while read i p oi op ni np ; do
+										INTERFACE="${${(s:=:)${i}}[2]}"
+										PROTOCOL="${${(s:=:)${p}}[2]}"
+										ORIG_IP="${${(s:=:)${oi}}[2]}"
+										ORIG_PORT="${${(s:=:)${op}}[2]}"
+										NEW_IP="${${(s:=:)${ni}}[2]}"
+										NEW_PORT="${${(s:=:)${np}}[2]}"
+									done
+								FORWARD_LIST_OLD="INTERFACE=\"$INTERFACE\";PROTOCOL=\"$PROTOCOL\";ORIG_IP=\"$ORIG_IP\";ORIG_PORT=\"$ORIG_PORT\";NEW_IP=\"$NEW_IP\";NEW_PORT=\"$NEW_PORT\""
+								#}}}
+								forward_input
+								forward_change_list
+								forward_change_list_menue
+								;;
+						esac
+					done
+				else
+					no_forward_rules_msg
+				fi
+				## }}}
+				;;
+			-d)
+				# Forward Regeln loeschen# {{{
+				local Anz Forward_List ForwardListe Line Z_Nr
+				typeset -a Z_Nr
+				integer Anz
+				#
+				# Funktion forward_delete_list{{{
+				#
+				forward_delete_list() {
+					unset -- Forward_List ForwardListe
+					IFS=$'\r'
+					read -A ForwardListe <<< "`grep -v '^ *#' "$FORWARD_NARC_CONF" | grep -v '^$' | tr "\n" "$IFS"`"
+					IFS=$'\ '
+					Anz=1
+					Anz1=0
+					while [ "${ForwardListe[Anz]}" != '' ] ; do
+						set -- ${ForwardListe[Anz]}
+						(( Anz1++ ))
+						Z_Nr[Anz1]=(${${(s,:,)$(grep -n "${ForwardListe[Anz]}" "$FORWARD_NARC_CONF")}[1]})
+						Forward_List[Anz1]="$Anz \"${ForwardListe[Anz]}\" off"
+						(( Anz++ ))
+					done
+				}
+				#}}}
+				# Funktion forward_delete_list_menue{{{
+				#
+				DEL_TITLE=$(gettext 'Konfiguration::Weiterleitung::loeschen')
+				DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Forward Regeln zum loeschen aus.')
+				forward_delete_list_menue() {
+					checklist "$DEL_TITLE" "$DEL_MSG" "$Forward_List"
+				}
+				#}}}
+				forward_delete_list
+				if [ -n "$Forward_List" ] ; then
+					forward_delete_list_menue
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help forward_conf_delete_help
+								forward_delete_list_menue
+								;;
+							*)
+								# Zeilen herausfinden{{{
+								Anz=0
+								for i in ${=gv_Auswahl} ; {
+									(( Anz++ ))
+									L_Nr[Anz]=${Z_Nr[i]}
+								}
+								# Zeilen loeschen
+								if [ -n "$L_Nr" ] ; then
+									Line="${L_Nr//\ /d ; }d"
+									sed -e "$Line" "$FORWARD_NARC_CONF" > "${FORWARD_NARC_CONF}$$"
+									mv "${FORWARD_NARC_CONF}$$" "$FORWARD_NARC_CONF"
+								fi
+								#}}}
+								break
+								;;
+						esac
+					done
+				else
+					no_forward_rules_msg
+				fi
+				## }}}
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

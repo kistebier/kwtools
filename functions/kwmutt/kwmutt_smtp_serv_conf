@@ -1,0 +1,460 @@
+# Funktion (kwmutt_smtp_serv_conf), konfiguriert SMTP fuer mutt# {{{
+#
+# usage: kwmutt_smtp_serv_conf
+kwmutt_smtp_serv_conf() {
+	Unset=(sendmail sendmail_wait smtp_url DEFAULT_SERVER
+		smtp_pass smtp_authenticators)
+	unset -- $Unset
+	SMTP_TITLE="$lv_Smtp"
+	# Funktion (smtp_empty_var_fill), leere Variable mit Standardwerten fuellen.# {{{
+	#
+	smtp_empty_var_fill() {
+		# leere Variable mit Standardwerten fuellen.
+		DEFAULT_SERVER="${DEFAULT_SERVER:-no}"
+		sendmail="${sendmail:-/usr/sbin/sendmail -oem -oi}"
+		sendmail_wait="${sendmail_wait:-0}"
+		#smtp_url="${smtp_url:-smtp://localhost:25}"
+		#smtp_pass="$smtp_pass"
+		#smtp_authenticators="$smtp_authenticators"
+	}
+	#}}}
+	# Funktion (smtp_choice_menu), Auswahl Menue# {{{
+	#
+	smtp_choice_menu() {
+		SMTP_CHOICE_MENU=(smtp \"\" sendmail \"\" $gv_Back \"\")
+		menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SMTP_CHOICE_MENU"
+	}
+	## }}}
+	# Funktion (smtp_serv_conf_menu), Auswahl Menue# {{{
+	#
+	smtp_serv_conf_menu() {
+		menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
+	}
+	## }}}
+	# Funktion (smtp_sendmail_conf_menu), menu fuer die Sendmail SMTP Konfiguration# {{{
+	smtp_sendmail_conf_menu() {
+		SMTP_SENDMAIL_CONF_MENU=(\"$lv_Default_Smtp\" \"$DEFAULT_SERVER\"
+		$lv_Conf_Name \"$DEFAULT_NAME\"
+		sendmail \"$sendmail\"
+		sendmail_wait \"$sendmail_wait\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SMTP_SENDMAIL_CONF_MENU"
+	}
+	## }}}
+	# Funktion (smtp_server_conf_menu), menu fuer die Server SMTP Konfiguration# {{{
+	smtp_server_conf_menu() {
+		SMTP_SERVER_CONF_MENU=(\"$lv_Default_Smtp\" \"$DEFAULT_SERVER\"
+		smtp_url \"$smtp_url\"
+		smtp_pass \"$smtp_pass\"
+		smtp_authenticators \"$smtp_authenticators\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SMTP_SERVER_CONF_MENU"
+	}
+	## }}}
+	# Funktion (smtp_sendmail_conf), konfiguriert Sendmail SMTP.#{{{
+	#
+	smtp_sendmail_conf() {
+		smtp_sendmail_conf_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_smtp_sendmail_help
+					smtp_sendmail_conf_menu
+					;;
+				$lv_Default_Smtp)
+					# Soll diese SMTP Einstellung als Standard deklariert werden (ja/nein)?# {{{
+					yesno "$SMTP_TITLE" "$DEFAULT_SMTP_MSG" "$DEFAULT_SERVER"
+					if [ "$gv_Auswahl" = yes ] ; then
+						DEFAULT_SERVER="yes"
+					else
+						DEFAULT_SERVER="no"
+					fi
+					## }}}
+					smtp_sendmail_conf_menu $lv_Default_Smtp
+					;;
+				$lv_Conf_Name)
+					# Eingabe eines Namens fuer die Konfigurationsdatei# {{{
+					MSG=$(gettext 'Geben Sie einen Namen, ohne Leerzeichen, fuer die Konfigurationsdatei ein (Bsp.: sendmail).')
+					inputbox "$LMB_TITLE" "$MSG" "$DEFAULT_NAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						DEFAULT_NAME="$gv_Auswahl"
+					else
+						unset -- DEFAULT_NAME
+					fi
+					## }}}
+					smtp_sendmail_conf_menu $lv_Conf_Name
+					;;
+				sendmail)
+					# Befehl von mutt zur Auslieferung von mails.# {{{
+					MSG=$(gettext 'Geben Sie den Befehl zum versenden von mails ein (z.B. /usr/sbin/sendmail -oem -oi).')
+					inputbox "$SMTP_TITLE" "$MSG" "$sendmail"
+					if [ -n "$gv_Auswahl" ] ; then
+						sendmail="$gv_Auswahl"
+					else
+						sendmail="/usr/sbin/sendmail -oem -oi"
+					fi
+					#}}}
+					smtp_sendmail_conf_menu sendmail
+					;;
+				sendmail_wait)
+					# Wartezeit von mutt bei Auslieferung von mails.# {{{
+					MSG=$(gettext 'Geben Sie die Zeit ein die Mutt warten soll bis es die Auslieferung in den Hintergrund verschiebt (Sekunden).')
+					inputbox "$SMTP_TITLE" "$MSG" "$sendmail_wait"
+					if [ -n "$gv_Auswahl" ] ; then
+						sendmail_wait="$gv_Auswahl"
+					else
+						sendmail_wait="0"
+					fi
+					#}}}
+					smtp_sendmail_conf_menu sendmail_wait
+					;;
+				$gv_Save)
+					# Konfiguration speichern# {{{
+					unset -- M_SMTP_SERV
+					if [[ -n $sendmail && -n $DEFAULT_NAME ]] ; then
+						# Pruefen, ob vorhanden Konfiguration geaendert
+						# werden soll oder eine neue angelegt werden
+						# soll.
+						if [[ -n $Old_Value ]] ; then
+							M_SMTP_SERV="$Old_Value"
+							kwmutt_smtp_serv_config sendmail
+							# Default SMTP Versand einstellen oder nicht.
+							default_serv_link smtp "$M_SMTP_SERV"
+							break
+						else
+							if [[ -f ${MUTT}/${DEFAULT_NAME}.smtp ]] ; then
+								# Nachricht das die Konfiguration schon existiert.
+								mutt_conf_file_exist
+								# zurück zum gleichen Menue.
+								smtp_sendmail_conf_menu
+							else
+								M_SMTP_SERV="${MUTT}/${DEFAULT_NAME}.smtp"
+								kwmutt_smtp_serv_config sendmail
+								# Default SMTP Versand einstellen oder nicht.
+								default_serv_link smtp "$M_SMTP_SERV"
+								break
+							fi
+						fi
+						#
+					else
+						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte sendmail und $lv_Conf_Name mit einem Wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+						smtp_sendmail_conf_menu
+					fi
+					unset -- $Unset
+					## }}}
+					break 2
+					;;
+				$gv_Back)
+					# ohne speichern abbrechen
+					unset -- $Unset
+					break 2
+					;;
+			esac
+		done
+	}
+	## }}}
+	# Funktion (smtp_server_conf), konfiguriert SMTP-Server.#{{{
+	#
+	smtp_server_conf() {
+		DEFAULT_SERVER="${DEFAULT_SERVER:-no}"
+		smtp_server_conf_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_smtp_server_help
+					smtp_server_conf_menu
+					;;
+				$lv_Default_Smtp)
+					# Soll diese SMTP Einstellung als Standard deklariert werden (ja/nein)?# {{{
+					yesno "$SMTP_TITLE" "$DEFAULT_SMTP_MSG" "$DEFAULT_SERVER"
+					if [ "$gv_Auswahl" = yes ] ; then
+						DEFAULT_SERVER="yes"
+					else
+						DEFAULT_SERVER="no"
+					fi
+					## }}}
+					smtp_server_conf_menu $lv_Default_Smtp
+					;;
+				smtp_url)
+					# Eingabe des SMTP-Server# {{{
+					Old_Tmp="$smtp_url"
+					# SMTP Server
+					SERVER_MSG=$(gettext 'Tragen Sie bitte ihren SMTP Server ein (smtp[s]://[Benutzer[:Passwort]@]host[:port]).')
+					# Server Eingabe
+					inputbox "$gv_Configuration" "$SERVER_MSG" "$smtp_url"
+					if [ "$gv_Auswahl" ] ; then
+						Smtp_Url="$gv_Auswahl"
+						check_mail_server "$gv_Auswahl"
+					fi
+					# Falls ein Wert vorhanden ist uebernehmen.
+					if [ -n "$Mailserver" ] ; then
+						smtp_url="$Smtp_Url"
+						unset -- sendmail
+					else
+						if [ -z "$Old_Tmp" ] ; then
+							smtp_url=""
+						else
+							smtp_url="$Old_Tmp"
+							unset -- sendmail
+						fi
+					fi
+					## }}}
+					smtp_server_conf_menu smtp_url
+					;;
+				smtp_pass)
+					# Passwort des SMTP-Users# {{{
+					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer Ihr SMTP-Konto ein.')
+					inputbox "$SMTP_TITLE" "$PASSWD_MSG" "$smtp_pass"
+					if [ -n "$gv_Auswahl" ] ; then
+						smtp_pass="$gv_Auswahl"
+					else
+						smtp_pass=""
+					fi
+					#
+					## }}}
+					smtp_server_conf_menu smtp_pass
+					;;
+				smtp_authenticators)
+					# Auswahl der zu benutzenden Authentifizierungs Methoden.# {{{
+					# Variablen
+					# Funktion (smtp_auth_conf)# {{{
+					#
+					smtp_auth_conf() {
+						SMTP_AUTH_MENU=($lv_Choice \"$smtp_authenticators\"
+						\"$lv_Serv_Test\" \"\" $gv_Back \"\")
+						menubox "$1" "$SMTP_TITLE" "$gv_Menupoint" "$SMTP_AUTH_MENU"
+					}
+					## }}}
+					autoload -U check_auth_server
+					smtp_auth_conf
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwmutt_smtp_server_help
+								smtp_auth_conf
+								;;
+							$lv_Choice)
+								# Auswahl der Auth-Methoden# {{{
+								# vorhandene Auth-Methoden mit on zum Auflisten markieren# {{{
+								is_auth_methode "$smtp_authenticators" "cram-md5 digest-md5 gssapi login"
+								if [ -n "$M_TMP" ] ; then
+									CHOICE_MENU=($M_TMP)
+								else
+									CHOICE_MENU=(cram-md5 \"\" off digest-md5 \"\" off
+									gssapi \"\" off login \"\" off)
+								fi
+								#}}}
+								checklist "$SMTP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help kwmutt_smtp_server_help
+											checklist "$SMTP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+											;;
+										*)
+											# Werte uebernehmen
+											smtp_authenticators="${gv_Auswahl// /:}"
+											break
+											;;
+									esac
+								done
+								## }}}
+								smtp_auth_conf $lv_Choice
+								;;
+							$lv_Serv_Test)
+								# Auth Faehigkeiten des Servers testen# {{{
+								if [ -n "$smtp_url" ] ; then
+									check_mail_server -a "$smtp_url"
+									if [ -n "$AUTHENTICATORS" ] ; then
+										smtp_authenticators="$AUTHENTICATORS"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst einen SMTP-Server im Menuepunkt smtp_url einstellen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+								# # }}}
+								smtp_auth_conf $lv_Serv_Test
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+					## }}}
+					smtp_server_conf_menu smtp_authenticators
+					;;
+				$gv_Save)
+					# Konfiguration speichern# {{{
+					unset -- M_SMTP_SERV
+					if [ -n "$smtp_url" ] ; then
+						# smtp_url aufsplitten fuer den Rechnernamen.
+						# rechnername.smtp wird die Konfigurationsdatei
+						# genannt.
+						parse_mail_host "$smtp_url"
+						if [ -n "$MAIL_HOST" ] ; then
+							M_SMTP_SERV="${MUTT}/${MAIL_HOST}.smtp"
+							kwmutt_smtp_serv_config smtp
+							# Default SMTP Versand einstellen oder nicht.
+							default_serv_link smtp "$M_SMTP_SERV"
+						else
+							no_input_msg
+						fi
+					else
+						MSG=$(gettext 'Sie muessen mindestens den Menuepunkt smtp_url mit einem Wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					unset -- $Unset
+					## }}}
+					break 2
+					;;
+				$gv_Back)
+					# ohne speichern abbrechen
+					unset -- $Unset
+					break 2
+					;;
+			esac
+		done
+	}
+	## }}}
+	#
+	smtp_serv_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_smtps_serv_help
+				smtp_serv_conf_menu
+				;;
+			$gv_Display)
+				# Anzeige der SMTP Konfigurationsdatei{{{
+				read_accounts smtp
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					DISPLAY_TITLE="$gv_Display"
+					DISPLAY_MSG=$(gettext 'Waehlen Sie einen Versand aus um seine Einstellungen anzusehen.')
+					mail_account_choice "$DISPLAY_TITLE" "$DISPLAY_MSG"
+					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					if [ -f "$VALUE" ] ; then
+						view_file "$VALUE"
+					fi
+				else
+					no_entry_msg
+				fi
+				#}}}
+				smtp_serv_conf_menu $gv_Display
+				;;
+			$gv_Create)
+				# SMTP Konfigurations Eintraege erstellen{{{
+				unset -- $Unset
+				smtp_choice_menu
+				while [ "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_smtp_choice_help
+							smtp_choice_menu
+							;;
+						smtp)
+							# Server SMTP Konfiguration
+							smtp_server_conf
+							;;
+						sendmail)
+							# Mit Standard Variablen belegen, falls noetig.
+							smtp_empty_var_fill
+							# Sendmail SMTP Konfiguration
+							smtp_sendmail_conf
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				#}}}
+				smtp_serv_conf_menu $gv_Create
+				;;
+			$gv_Change)
+				# SMTP Konfigurations Eintraege veraendern.# {{{
+				read_accounts smtp
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					CHANGE_MENU=($ACCOUNT_TMP)
+					menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_change_help
+								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+								;;
+							*)	# Uebernahme/aendern 
+								unset -- Old_Value
+								Old_Value="$gv_Auswahl"
+								Opt="${${gv_Auswahl##*/}%.smtp}"
+								# alte Konfiguration einlesen.
+								read_conf smtp "$Old_Value"
+								# jedem seine Konfiguration
+								if [[ $Opt == sendmail<-> ]] ; then
+									# Mit Standard Variablen belegen, falls noetig.
+									smtp_empty_var_fill
+									# Sendmail Konfiguration bearbeiten.
+									smtp_sendmail_conf
+								else
+									# SMTP-Server Konfiguration bearbeiten.
+									smtp_server_conf
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#
+				unset -- Old_Value
+				## }}}
+				smtp_serv_conf_menu $gv_Change
+				;;
+			$gv_Delete)
+				# SMTP Kontos loeschen.# {{{
+				read_accounts smtp
+				if [ -n "$ACCOUNT_TMP_M" ] ; then
+					DEL_MENU=($ACCOUNT_TMP_M)
+					checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_del_help
+								checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+								;;
+							*)	# Uebernahme (Konfigurationsdateien) loeschen
+								unset -- Link_File
+								Link=default_smtp
+								for i in ${=gv_Auswahl} ; {
+									Link_File="$(readlink -f ${MUTT}/${Link}(@N))"
+									if [[ $Link_File == $i ]] ; then
+										rm "$i" "${MUTT}/${Link}" &>/dev/null
+									else
+										rm "$i" &>/dev/null
+									fi
+								}
+								# falls der default Link geloescht wurde, wird
+								# auf die erstbeste *.smtp Datei ein neuer angelegt.
+								# Ansonsten nicht.
+								if [ ! -L "${MUTT}/${Link}" ] ; then
+									cd "$MUTT"
+									for i in *.smtp(.N) ; {
+										if [ -f "$i" ] ; then
+											ln -sf "$i" "$Link"
+											break
+										fi
+									}
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				smtp_serv_conf_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

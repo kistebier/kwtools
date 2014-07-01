@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, kwnetconf, kwnetconf, netcard, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2010-03-11">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwnetconf.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwwvdialconf.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwnetcardconf>kwnetcardconf</a></h2>
+                                <p>Mit kwnetcardconf kann man alle vorhandenen Netzwerkkarten konfigurieren
+				einschliesslich des Standard Gateway. Bei der Konfiguration des WLAN kann man 
+				zus&auml;tzlich die Parameter der Verbindung einstellen.</p>
+				<p>Beim Start des Scripts wird zuerst nach vorhandenen Netzwerkkarten
+				und deren Treiber gesucht. Werden Karten gefunden werden sie folgendermaßen
+				dargestellt:<br>
+				1 Device_Beschreibung(Netzwerk-Karte)_MAC-Adresse_Treiber<br>
+				2 Device_Beschreibung(WLAN-Karte)_MAC-Adresse_Treiber<br>
+				...</p>
+				<p>Nach einer Auswahl der Karte wird eine Konfigurations Auswahl angeboten, ob man 
+				diese &uuml;ber dhcp (automatische Vergabe einer IP-Adresse, etc.) oder manuell 
+				vornehmen m&ouml;chte. Bei WLAN wird gefragt ob man erst die Treiber Parameter
+				einstellen m&ouml;chte. Bei nein wird mit der Netzwerk Konfiguration begonnen.</p>
+
+				<p><b>Notiz:</b> Bedenken Sie das die Verschl&uuml;ssellung in der WLAN Konfiguration
+				eingestellt wird.</p>
+
+				<p><b>Notiz:</b> pppoe (*DSL) (&uuml;ber die jeweilige Interface
+				Konfigurationsdatei) wird noch nicht unterst&uuml;tzt. Desweiteren
+				konfiguriert kwnetcardconf nur client seitig. Heißt, es werden keine
+				Server (dhcpd, waproamd, aeswepd,...) konfiguriert.</p>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwnetcardconf.html#allgemein">1 allgemeine Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwnetcardconf.html#wlan">2 WLAN Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=allgemein>1 allgemeine Konfiguration</a></h3>
+                                <p>Diese Konfiguration gilt f&uuml;r alle Karten.</p>
+				<p><b>IP:</b> Geben Sie hier die IP Adresse Ihrer Netzwerkkarte ein (Bsp. 
+				192.168.0.1)</p>
+				<p><b>Boot:</b> Soll das Interface beim Systemstart aktiviert werden (ja/nein)?</p>
+				<p><b>Broadcast:</b> Eingabe der Broadcast Adresse (Bsp. 255.255.255.0). Ist 
+				optional.</p>
+				<p><b>Netmask:</b> Eingabe der Netzmaske (Bsp. 192.168.0.255). Ist optional.</p>
+				<p><b>Gateway:</b> Hier gibt man die IP Adresse des Gateway ein. Es wird
+				gepr&uuml;ft, ob dieser Rechner erreichbar ist. Wenn ihr Netz einen Gateway
+				besitzt, dieser aber auf ping Pakete nicht antworten darf, dann m&uuml;ssen
+				Sie diesen von Hand eintragen. Bei Debian + kwtools-net ist das die Datei
+				/etc/network/interfaces.</p>
+				<p><b>Nameserver:</b> Eingabe von bis zu 3 Nameservern.</p>
+				<p><b>Notiz:</b> Die Nameserver werden aus der Datei /etc/resolv.conf gelesen.
+				Man muss sie also meist nur einmal vergeben.</p>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=wlan>2 WLAN Konfiguration</a></h3>
+                                <p>Einstellungen f&uuml;r die WLAN Karte:<br></p>
+				<p><b>ESSID:</b> Geben Sie hier einen Namen oder den Namen des Netzwerks ein.</p>
+				<p><b>Netzwerk_ID:</b> Geben Sie die Netzwerk ID ein, so das alle
+				angrenzenden Funknetze sich das gleiche Medium teilen k&ouml;nnen.</p>
+				<p><b>Modus:</b> Auswahl des Operations Modus dieser Node (siehe man 8 iwconfig).</p>
+				<p><b>Kanal:</b> Geben Sie die Kanal Nummer ein, auf dem gesendet/empfangen
+				(1...16) wird.</p>
+				<p><b>Frequenz:</b> Geben Sie die Frequenz Nummer ein + Masseinheit ein.
+				(Bsp. 2.4G = 2,4 GHz bei IEEE 802.11b/g) ein.</p>
+				<p><b>Empfindlichkeit:</b> Geben Sie die Empfindlichkeit der Verbindung ein
+				(Bsp. -80, 2; siehe man 8 iwconfig).</p>
+				<p><b>Bitrate:</b> Geben Sie die Geschwindigkeit der Daten&uuml;bermittlung
+				(Bsp. 5.5M = 5.5 MByte) ein.</p>
+				<p><b>Schl&uuml;ssel:</b> Hier kann man die Verschl&uuml;ssellung ausw&auml;hlen
+				beziehungsweise einen Schl&uuml;ssel eingeben.</p>
+				<p><b>RTS_Handshake:</b> Geben Sie die Gr&ouml;sse f&uuml;r das kleinste Paket
+				(Bsp. 512) ein f&uuml;r welches ein RTS gesendet werden soll. Dies ist ein Overhead
+				der bei einer grossen Anzahl oder versteckten Noden sich ausgleichen kann.</p>
+				<p><b>Fragment_Gr&ouml;sse:</b> Geben Sie hier die Gr&ouml;sse ein ab dem ein
+				Paket geslittet werden soll (Bsp. 512).</p>
+				<p><b>iwspy_Optionen:</b> Geben Sie hier die Parameter f&uuml;r
+				&quot;iwspy&quot; (siehe man 8 iwspy) ein. &quot;iwspy&quot; zeigt Statistiken
+				&uuml;ber die WLAN Karte.</p>
+				<p><b>iwpriv_Optionen:</b> Geben Sie hier die extra (private) Parameter
+				f&uuml;r &quot;iwpriv&quot; (siehe man 8 iwpriv) ein. &quot;iwpriv&quot;
+				stellt treiberspezifische Parameter ein.</p>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwnetconf.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwwvdialconf.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

@@ -1,0 +1,264 @@
+# Relay (Weiterleitungen) Konfiguration einstellen{{{
+
+relay_conf() {
+
+	# Variable
+	RELAY_TITLE="${gv_Configuration}::${lv_Relay}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(R)${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)(relay_|relayhost)*}##*_code*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_relay_menu), die Weiterleitungs-Parameter einstellen# {{{
+	conf_relay_menu() {
+		RELAY_MENU=(relay_clientcerts \"\$relay_clientcerts\"
+		relay_delivery_slot_cost \"\$relay_delivery_slot_cost\"
+		relay_delivery_slot_discount \"\$relay_delivery_slot_discount\"
+		relay_delivery_slot_loan \"\$relay_delivery_slot_loan\"
+		relay_destination_concurrency_failed_cohort_limit \"\$relay_destination_concurrency_failed_cohort_limit\"
+		relay_destination_concurrency_limit \"\$relay_destination_concurrency_limit\"
+		relay_destination_concurrency_negative_feedback \"\$relay_destination_concurrency_negative_feedback\"
+		relay_destination_concurrency_positive_feedback \"\$relay_destination_concurrency_positive_feedback\"
+		relay_destination_rate_delay \"\$relay_destination_rate_delay\"
+		relay_destination_recipient_limit \"\$relay_destination_recipient_limit\"
+		relay_domains \"\$relay_domains\"
+		relay_extra_recipient_limit \"\$relay_extra_recipient_limit\"
+		relay_initial_destination_concurrency \"\$initial_destination_concurrency\"
+		relay_minimum_delivery_slots \"\$relay_minimum_delivery_slots\"
+		relay_recipient_limit \"\$relay_recipient_limit\"
+		relay_recipient_maps \"\$relay_recipient_maps\"
+		relay_recipient_refill_delay \"\$relay_recipient_refill_delay\"
+		relay_recipient_refill_limit \"\$relay_recipient_refill_limit\"
+		relay_transport \"\$relay_transport\"
+		relayhost \"\$relayhost\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$RELAY_TITLE" "$gv_Menupoint" "$RELAY_MENU"
+	}
+	## }}}
+	conf_relay_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help relay_help
+				conf_relay_menu
+				;;
+			relay_clientcerts)
+				# Tabelle mit Client Zertifikaten Fingerprints{{{
+				tab_support_choice "$gv_Auswahl"
+				relay_clientcerts="$MAPS"
+				postconf -e relay_clientcerts="$MAPS"
+				#}}}
+				conf_relay_menu relay_clientcerts
+				;;
+			relay_delivery_slot_cost)
+				# Standard = $default_delivery_slot_cost# {{{
+				default_or_input relay_delivery_slot_cost number_input -i $relay_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					relay_delivery_slot_cost="$Value"
+					postconf -e relay_delivery_slot_cost="$Value"
+				fi
+				#	# }}}
+				conf_relay_menu relay_delivery_slot_cost
+				;;
+			relay_delivery_slot_discount)
+				# Standard = $default_delivery_slot_discount# {{{
+				default_or_input relay_delivery_slot_discount number_input -i $relay_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					relay_delivery_slot_discount="$Value"
+					postconf -e relay_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_delivery_slot_discount
+				;;
+			relay_delivery_slot_loan)
+				# Standard = $default_delivery_slot_loan# {{{
+				default_or_input relay_delivery_slot_loan number_input -i $relay_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					relay_delivery_slot_loan="$Value"
+					postconf -e relay_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_delivery_slot_loan
+				;;
+			relay_destination_concurrency_failed_cohort_limit)
+				# Standard = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input relay_destination_concurrency_failed_cohort_limit number_input -i $relay_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					relay_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e relay_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_concurrency_failed_cohort_limit
+				;;
+			relay_destination_concurrency_limit)
+				# Standard = $default_destination_concurrency_limit# {{{
+				default_or_input relay_destination_concurrency_limit number_input -i $relay_destination_concurrency_limit
+				if [[ -n $Value ]] ; then
+					relay_destination_concurrency_limit="$Value"
+					postconf -e relay_destination_concurrency_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_concurrency_limit
+				;;
+			relay_destination_concurrency_negative_feedback)
+				# Standard = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input relay_destination_concurrency_negative_feedback number_input -i $relay_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					relay_destination_concurrency_negative_feedback="$Value"
+					postconf -e relay_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_concurrency_negative_feedback
+				;;
+			relay_destination_concurrency_positive_feedback)
+				# Standard = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input relay_destination_concurrency_positive_feedback number_input -i $relay_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					relay_destination_concurrency_positive_feedback="$Value"
+					postconf -e relay_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_concurrency_positive_feedback
+				;;
+			relay_destination_rate_delay)
+				# Standard = $default_destination_rate_delay# {{{
+				# Suffixe - s=Sekunde, m=Minute, h=Stunde, d=Tag, w=Woche
+				default_or_input relay_destination_rate_delay number_input '-a "$RELAY_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' ${relay_destination_rate_delay%?}
+				if [[ -n $Value ]] ; then
+					relay_destination_rate_delay="$Value"
+					postconf -e relay_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_rate_delay
+				;;
+			relay_destination_recipient_limit)
+				# Standard = $default_destination_recipient_limit# {{{
+				default_or_input relay_destination_recipient_limit number_input -i $relay_destination_recipient_limit
+				if [[ -n $Value ]] ; then
+					relay_destination_recipient_limit="$Value"
+					postconf -e relay_destination_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_destination_recipient_limit
+				;;
+			relay_domains)
+				# Domains fuer die bzw. von denen postfix relayed{{{
+				tab_support_choice "$gv_Auswahl"
+				relay_domains="$MAPS"
+				postconf -e relay_domains="$MAPS"
+				#}}}
+				conf_relay_menu relay_domains
+				;;
+			relay_extra_recipient_limit)
+				# Standard = $default_extra_recipient_limit# {{{
+				default_or_input relay_extra_recipient_limit number_input -i $relay_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					relay_extra_recipient_limit="$Value"
+					postconf -e relay_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_extra_recipient_limit
+				;;
+			relay_initial_destination_concurrency)
+				# Standard = $initial_destination_concurrency# {{{
+				default_or_input relay_initial_destination_concurrency number_input -i $relay_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					relay_initial_destination_concurrency="$Value"
+					postconf -e relay_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_relay_menu relay_initial_destination_concurrency
+				;;
+			relay_minimum_delivery_slots)
+				# Standard = $default_minimum_delivery_slots# {{{
+				default_or_input relay_minimum_delivery_slots number_input -i $relay_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					relay_minimum_delivery_slots="$Value"
+					postconf -e relay_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_minimum_delivery_slots
+				;;
+			relay_recipient_limit)
+				# Standard = $default_recipient_limit# {{{
+				default_or_input relay_recipient_limit number_input -i $relay_recipient_limit
+				if [[ -n $Value ]] ; then
+					relay_recipient_limit="$Value"
+					postconf -e relay_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_recipient_limit
+				;;
+			relay_recipient_maps)
+				# Tabelle mit Mailadressen, fuer die postfix Mails annehmen soll.{{{
+				# s. zless STANDARD_CONFIGURATION_README.gz im Dokumentations-Pfad
+				tab_support_choice "$gv_Auswahl"
+				relay_recipient_maps="$MAPS"
+				postconf -e relay_recipient_maps="$MAPS"
+				#}}}
+				conf_relay_menu relay_recipient_maps
+				;;
+			relay_recipient_refill_delay)
+				# Standard = $default_recipient_refill_delay# {{{
+				default_or_input relay_recipient_refill_delay number_input -s ${relay_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					relay_recipient_refill_delay="$Value"
+					postconf -e relay_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_recipient_refill_delay
+				;;
+			relay_recipient_refill_limit)
+				# Standard = $default_recipient_refill_limit# {{{
+				default_or_input relay_recipient_refill_limit number_input -i $relay_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					relay_recipient_refill_limit="$Value"
+					postconf -e relay_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_relay_menu relay_recipient_refill_limit
+				;;
+			relay_transport)
+				# Standard = relay# {{{
+				transport_methode ${relay_transport%%:*} ${relay_transport##*:}
+				relay_transport="$WERT"
+				postconf -e relay_transport="$WERT"
+				## }}}
+				conf_relay_menu relay_transport
+				;;
+			relayhost)
+				# An welchen Host sollen alle ausgehenden Mails zugestellt werden{{{
+				RELAYHOST_MSG=$(gettext 'Geben Sie den Host an, an den alle ausgehenden Mails gesendet werden sollen (Bsp. [smtp.domain.de] , smtp.domain.de:25, [smtp.domain.de]:25).')
+				inputbox "$RELAY_TITLE" "$RELAYHOST_MSG" "$relayhost"
+				if [ "$gv_Auswahl" ] ; then
+					if [ "${(w)#gv_Auswahl}" = 1 ] ; then
+						relayhost="$gv_Auswahl"
+						postconf -e relayhost="$gv_Auswahl"
+					else
+						no_input_msg
+					fi
+				else
+					relayhost=""
+					postconf -e relayhost=""
+				fi
+				#}}}
+				conf_relay_menu relayhost
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

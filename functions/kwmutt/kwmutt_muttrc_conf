@@ -1,0 +1,654 @@
+# Funktion (kwmutt_muttrc_conf), konfiguriert die default Einstellungen ~/.muttrc# {{{
+# fuer mutt.
+#
+# usage: kwmutt_muttrc_conf
+#
+kwmutt_muttrc_conf() {
+	Unset=(autoedit abort_nosubject abort_unmodified
+	allow_8bit beep beep_new charset delete edit_headers followup_to
+	fast_reply editor hdr_order hostname ignore_list_reply_to include
+	ispell locale mark_old markers metoo mixmaster move
+	postpone query_command quit quote_regexp realname reply_regexp
+	reply_to reverse_alias reverse_name shell signature smileys
+	tilde use_envelope_from user_agent write_bcc)
+	unset -- $Unset
+
+	# Translation Variablen
+	lv_muttrc=$(gettext 'muttrc')
+
+	# Funktion (muttrc_conf_menu), menu fuer die SSL/TLS Konfiguration# {{{
+	MUTTRC_TITLE="$lv_Default"
+	muttrc_conf_menu() {
+		MUTTRC_CONF_MENU=(realname \"$realname\"
+		hostname \"$hostname\"
+		editor \"$editor\"
+		shell \"$shell\"
+		beep \"$beep\"
+		beep_new \"$beep_new\"
+		move \"$move\"
+		postpone \"$postpone\"
+		delete \"$delete\"
+		include \"$include\"
+		quit \"$quit\"
+		charset \"$charset\"
+		locale \"$locale\"
+		ispell \"$ispell\"
+		signature \"$signature\"
+		abort_nosubject \"$abort_nosubject\"
+		abort_unmodified \"$abort_unmodified\"
+		alias_file \"$alias_file\"
+		allow_8bit \"$allow_8bit\"
+		autoedit \"$autoedit\"
+		edit_headers \"$edit_headers\"
+		fast_reply \"$fast_reply\"
+		followup_to \"$followup_to\"
+		hdr_order \"$hdr_order\"
+		ignore_list_reply_to \"$ignore_list_reply_to\"
+		mark_old \"$mark_old\"
+		markers \"$markers\"
+		metoo \"$metoo\"
+		mixmaster \"$mixmaster\"
+		query_command \"$query_command\"
+		quote_regexp \"$quote_regexp\"
+		reply_regexp \"$reply_regexp\"
+		reply_to \"$reply_to\"
+		reverse_alias \"$reverse_alias\"
+		reverse_name \"$reverse_name\"
+		smileys \"$smileys\"
+		tilde \"$tilde\"
+		use_envelope_from \"$use_envelope_from\"
+		user_agent \"$user_agent\"
+		write_bcc \"$write_bcc\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$MUTTRC_TITLE" "$gv_Menupoint" "$MUTTRC_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$MUTTCONF" ] ; then
+		create_tmp_conf "$MUTTCONF"
+		read_file -f $gv_LogFile
+		hdr_order="${(R)${(M)${(f)"$(< $gv_LogFile)"}##hdr_order*}##hdr_order[[:space:]]}"
+	fi
+	## }}}
+	# leere Variablen von kwmuttrc mit Standardwerten fuellen.
+	first_var_muttrc
+	# Variable fuer signature bereinigen (Pfad abschneiden).
+	signature="${signature##*/}"
+	#
+	muttrc_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_muttrc_help
+				muttrc_conf_menu
+				;;
+			abort_nosubject)
+				# Soll abgebrochen werden wenn kein Betreff eingegeben wurde. {{{
+				MSG=$(gettext 'Soll abgebrochen werden wenn kein Betreff eingegeben wurde.')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$abort_nosubject"
+				if [ -n "$VALUE" ] ; then
+					abort_nosubject="$VALUE"
+				else
+					abort_nosubject="ask-yes"
+				fi
+				## }}}
+				muttrc_conf_menu abort_nosubject
+				;;
+			abort_unmodified)
+				# Soll Mutt mich fragen, ob er abbrechen soll wenn eine Nachricht# {{{
+				# nicht bearbeitet wurde.
+				MSG=$(gettext 'Soll Mutt Sie fragen, ob er abbrechen soll wenn eine Nachricht nicht bearbeitet wurde.')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$abort_unmodified"
+				if [ -n "$VALUE" ] ; then
+					abort_unmodified="$VALUE"
+				else
+					abort_unmodified="yes"
+				fi
+				## }}}
+				muttrc_conf_menu abort_unmodified
+				;;
+			alias_file)
+				# Soll das Mutt eigene Adressbuch benutzen werden. {{{
+				yesno_option "$alias_file" "$M_ABOOK"
+				MSG=$(gettext 'Soll das Mutt eigene Adressbuch benutzen werden. Es liegt unter ${M_ABOOK}.')
+				yesno "$MUTTRC_TITLE" "$MSG" "$YN_OPT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					alias_file="$M_ABOOK"
+				else
+					unset -- alias_file
+				fi
+				## }}}
+				muttrc_conf_menu alias_file
+				;;
+			allow_8bit)
+				# Soll Mutt 8-Bit Zeichen zu 7-Bit Zeichen kodieren?# {{{
+				MSG=$(gettext 'Soll Mutt beim versenden 8-Bit Zeichen zu 7-Bit Zeichen kodieren (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$allow_8bit"
+				if [ "$gv_Auswahl" = yes ] ; then
+					allow_8bit="yes"
+				else
+					allow_8bit="no"
+				fi
+				#}}}
+				muttrc_conf_menu allow_8bit
+				;;
+			autoedit)
+				# Soll Mutt ohne Eingangsfragen des Sende-Menues die Nachricht# {{{
+				# zur Bearbeitung oeffnen (ja/nein)?
+				MSG=$(gettext 'Soll Mutt ohne Eingangsfragen des Sende-Menues die Nachricht zur Bearbeitung oeffnen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$autoedit"
+				if [ "$gv_Auswahl" = yes ] ; then
+					autoedit="yes"
+				else
+					autoedit="no"
+				fi
+				#}}}
+				muttrc_conf_menu autoedit
+				;;
+			beep)
+				# Soll Mutt bei Fehlern piepsen?# {{{
+				MSG=$(gettext 'Soll Mutt bei einem Fehler einen Piepston ausloesen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$beep"
+				if [ "$gv_Auswahl" = yes ] ; then
+					beep="yes"
+				else
+					beep="no"
+				fi
+				#}}}
+				muttrc_conf_menu beep
+				;;
+			beep_new)
+				# Soll Mutt bei neuen Nachrichten piepsen?# {{{
+				MSG=$(gettext 'Soll Mutt bei neuen Nachrichten einen Piepston ausloesen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$beep_new"
+				if [ "$gv_Auswahl" = yes ] ; then
+					beep_new="yes"
+				else
+					beep_new="no"
+				fi
+				#}}}
+				muttrc_conf_menu beep_new
+				;;
+			charset)
+				# Eingabe des Zeichensatzes# {{{
+				MSG=$(gettext 'Geben Sie den Zeichensatz ein (z.B. fuer Westeuropa iso-8859-1).')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$charset"
+				if [ -n "$gv_Auswahl" ] ; then
+					charset="$gv_Auswahl"
+				else
+					charset="iso-8859-1"
+				fi
+				## }}}
+				muttrc_conf_menu charset
+				;;
+			delete)
+				# Sollen Nachrichten automatisch ohne Nachfrage geloescht werden? # {{{
+				MSG=$(gettext 'Wie sollen Nachrichten geloescht werden.')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$delete"
+				if [ -n "$VALUE" ] ; then
+					delete="$VALUE"
+				else
+					delete="ask-yes"
+				fi
+				## }}}
+				muttrc_conf_menu delete
+				;;
+			edit_headers)
+				# Im Editor die Header noch anzeigen, damit diese nachtraeglich# {{{
+				# eingefuegt/abgeaendert werden koennen.
+				MSG=$(gettext 'Soll Mutt immer den Header im Editor zum editieren mit anzeigen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$edit_headers"
+				if [ "$gv_Auswahl" = yes ] ; then
+					edit_headers="yes"
+				else
+					edit_headers="no"
+				fi
+				#}}}
+				muttrc_conf_menu edit_headers
+				;;
+			editor)
+				# Eingabe des Editors# {{{
+				MSG=$(gettext 'Geben Sie einen Editor mit Optionen ein, ansonsten werden die Variablen EDITOR oder VISUAL ausgewertet (z.B. vim).')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$editor"
+				if [ -n "$gv_Auswahl" ] ; then
+					editor="$gv_Auswahl"
+				else
+					editor=""
+				fi
+				## }}}
+				muttrc_conf_menu editor
+				;;
+			fast_reply)
+				# Soll Mutt beim Antworten verzichten nach einzelnen Dingen zu fragen?# {{{
+				MSG=$(gettext 'Soll Mutt beim Antworten verzichten nach einzelnen Dingen zu fragen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$fast_reply"
+				if [ "$gv_Auswahl" = yes ] ; then
+					fast_reply="yes"
+				else
+					fast_reply="no"
+				fi
+				#}}}
+				muttrc_conf_menu fast_reply
+				;;
+			followup_to)
+				# Soll Mutt den Mail-Followup-To Header bei bekannten (abonnierten)# {{{
+				# Mailinglisten setzen (ja/nein)?
+				MSG=$(gettext 'Soll Mutt den Mail-Followup-To Header bei bekannten (abonnierten) Mailinglisten setzen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$followup_to"
+				if [ "$gv_Auswahl" = yes ] ; then
+					followup_to="yes"
+				else
+					followup_to="no"
+				fi
+				#}}}
+				muttrc_conf_menu followup_to
+				;;
+			hdr_order)
+				# Geben Sie die Reihenfolge an in der Mutt die Header anzeigen soll.# {{{
+				MSG=$(gettext 'Geben Sie die Reihenfolge an in der Mutt die Header anzeigen soll.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$hdr_order"
+				if [ -n "$gv_Auswahl" ] ; then
+					hdr_order="$gv_Auswahl"
+				else
+					hdr_order="$hdr_order"
+				fi
+				#}}}
+				muttrc_conf_menu hdr_order
+				;;
+			hostname)
+				# Eingabe des Rechnernamens# {{{
+				MSG=$(gettext 'Geben Sie bitte den Rechnernamen ein, ansonsten wird der lokale Rechnername benutzt.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$hostname"
+				if [ -n "$gv_Auswahl" ] ; then
+					hostname="$gv_Auswahl"
+				else
+					hostname="$HOSTNAME"
+				fi
+				## }}}
+				muttrc_conf_menu hostname
+				;;
+			ignore_list_reply_to)
+				# Soll Mutt den Reply-To Header bei der Antwort auf Mailinglisten# {{{
+				# ignorieren (ja/nein)?
+				MSG=$(gettext 'Soll Mutt den Reply-To Header bei der Antwort auf Mailinglisten ignorieren (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$ignore_list_reply_to"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ignore_list_reply_to="yes"
+				else
+					ignore_list_reply_to="no"
+				fi
+				#}}}
+				muttrc_conf_menu ignore_list_reply_to
+				;;
+			include)
+				# Sollen Nachrichten beim antworten hinzugefuegt werden? # {{{
+				MSG=$(gettext 'Sollen Nachrichten beim Antworten hinzugefuegt werden?')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$include"
+				if [ -n "$VALUE" ] ; then
+					include="$VALUE"
+				else
+					include="ask-yes"
+				fi
+				## }}}
+				muttrc_conf_menu include
+				;;
+			ispell)
+				# Eingabe des Rechtschreibprogramms + Optionen# {{{
+				prog_check ispell
+				if [ -n "$NO_PROGS" ] ; then
+					ispell=""
+				else
+					# ispell Einstellung
+					MSG=$(gettext 'Geben Sie an wie Mutt das Rechtschreibprogramm (ispell) aufrufen soll (z.B. /usr/bin/ispell -d ngerman).')
+					inputbox "$MUTTRC_TITLE" "$MSG" "$ispell"
+					if [ -n "$gv_Auswahl" ] ; then
+						ispell="$gv_Auswahl"
+					else
+						ispell=""
+					fi
+				fi
+				## }}}
+				muttrc_conf_menu ispell
+				;;
+			locale)
+				# locale auswaehlen# {{{
+				if [ -d /usr/share/locale ] ; then
+					# locale sammeln und zur Auswahl stellen
+					integer Anz
+					Anz=0
+					for i in /usr/share/locale/*(/N:t) ; {
+						(( Anz++ ))
+						Dir[Anz]="$i \"\""
+					}
+					#
+					if [ -n "${Dir[1]}" ] ; then
+						LOCALE_MENU=($Dir)
+						menubox "$locale" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help kwmutt_muttrc_help
+									menubox "$locale" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
+									;;
+								*)	# Auswahl uebernehmen
+									locale="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+					else
+						MSG=$(gettext 'Es sind keine locale Dateien vorhanden.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+				else
+					no_dir_msg /usr/share/locale
+				fi
+				## }}}
+				muttrc_conf_menu locale
+				;;
+			mark_old)
+				# neue ungelesene Nachrichten beim verlassen von mutt als old kennzeichnen# {{{
+				MSG=$(gettext 'Sollen neue ungelesene Nachrichten beim verlassen von mutt immer als old gekennzeichnet werden (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$mark_old"
+				if [ "$gv_Auswahl" = yes ] ; then
+					mark_old="yes"
+				else
+					mark_old="no"
+				fi
+				#}}}
+				muttrc_conf_menu mark_old
+				;;
+			markers)
+				# Soll bei Benutzung des internen Pagers ein "+" bei einem Zeilenumbruch eingefuegt werden (ja/nein)?# {{{
+				MSG=$(gettext 'Soll bei Benutzung des internen Pagers ein \"+\" bei einem Zeilenumbruch eingefuegt werden (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$markers"
+				if [ "$gv_Auswahl" = yes ] ; then
+					markers="yes"
+				else
+					markers="no"
+				fi
+				#}}}
+				muttrc_conf_menu markers
+				;;
+			metoo)
+				# Soll Mutt Mail Adresse in Empfaenger-Liste behalten (ja/nein)?# {{{
+				MSG=$(gettext 'Soll Mutt Ihre Adresse, bei einer Antwort, in der Liste der Empfaenger belassen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$metoo"
+				if [ "$gv_Auswahl" = yes ] ; then
+					metoo="yes"
+				else
+					metoo="no"
+				fi
+				#}}}
+				muttrc_conf_menu metoo
+				;;
+			mixmaster)
+				# mixmaster Remailer Programm einstellen.# {{{
+				MSG=$(gettext 'Geben Sie das mixmaster Progamm ein (z.B. mixmaster, Debian mixmaster-filter).')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$mixmaster"
+				if [ -x "$gv_Auswahl" ] ; then
+					mixmaster="$gv_Auswahl"
+				else
+					no_prog_exec_msg "$gv_Auswahl"
+					mixmaster=""
+				fi
+				## }}}
+				muttrc_conf_menu mixmaster
+				;;
+			move)
+				# Soll verhindert werden das gelesene mails in die lokale# {{{
+				# mailbox verschoben werden?
+				MSG=$(gettext 'Soll die gelesene Mail in die lokale Mailbox verschoben werden?')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$move"
+				if [ -n "$VALUE" ] ; then
+					move="$VALUE"
+				else
+					move="ask-no"
+				fi
+				## }}}
+				muttrc_conf_menu move
+				;;
+			postpone)
+				# Sollen Nachrichten beim nicht versenden in der # {{{
+				# postponed-Mailbox gespeichert werden?
+				MSG=$(gettext 'Sollen Nachrichten beim nicht versenden in der postponed-Mailbox gespeichert werden?')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$postpone"
+				if [ -n "$VALUE" ] ; then
+					postpone="$VALUE"
+				else
+					postpone="ask-yes"
+				fi
+				## }}}
+				muttrc_conf_menu postpone
+				;;
+			query_command)
+				# Kommando fuer die Abfrage externer Adressbuecher.# {{{
+				MSG=$(gettext 'Geben Sie den Befehl zur Abfrage externer Adressbuecher ein Bsp.: abook --mutt-query '%s').')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$query_command"
+				if [ -n "$gv_Auswahl" ] ; then
+					query_command="$gv_Auswahl"
+				else
+					query_command=""
+				fi
+				#}}}
+				muttrc_conf_menu query_command
+				;;
+			quit)
+				# Sollen beim beenden von Mutt nachgefragt werden?# {{{
+				MSG=$(gettext 'Soll das Beenden von Mutt nachgefragt werden?')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$quit"
+				if [ -n "$VALUE" ] ; then
+					quit="$VALUE"
+				else
+					quit="no"
+				fi
+				## }}}
+				muttrc_conf_menu quit
+				;;
+			quote_regexp)
+				# Eingabe eines regulaeren Ausdrucks damit der interne Pager von Mutt # {{{
+				# zitierte Abschnitte zu erkennen.
+				MSG=$(gettext 'Geben Sie einen regulaeren Ausdruck ein, wie der interne Pager von Mutt zitierte Abschnitte erkennen kann.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$quote_regexp"
+				if [ -n "$gv_Auswahl" ] ; then
+					quote_regexp="$gv_Auswahl"
+				else
+					quote_regexp="^([ \t]*[|>:}#])+"
+				fi
+				## }}}
+				muttrc_conf_menu quote_regexp
+				;;
+			realname)
+				# Eingabe des realen Benutzernamens# {{{
+				MSG=$(gettext 'Geben Sie Ihren realen Namen ein.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$realname"
+				if [ -n "$gv_Auswahl" ] ; then
+					realname="$gv_Auswahl"
+				else
+					realname="$USER"
+				fi
+				## }}}
+				muttrc_conf_menu realname
+				;;
+			reply_regexp)
+				# Eingabe eines regulaeren Ausdrucks um in Disskusionsfaeden und beim Antworten# {{{
+				# Nachrichten zu erkennen die schon Antworten sind.
+				MSG=$(gettext 'Geben Sie einen regulaeren Ausdruck ein, um in Disskusionsfaeden und beim Antworten Nachrichten zu erkennen die schon Antworten sind (meist RE: oder AW:).')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$reply_regexp"
+				if [ -n "$gv_Auswahl" ] ; then
+					reply_regexp="$gv_Auswahl"
+				else
+					reply_regexp="^(re([\[0-9\]+])*|aw):[ \t]*"
+				fi
+				## }}}
+				muttrc_conf_menu reply_regexp
+				;;
+			reply_to)
+				# Soll Mutt die Adresse im Reply-To Header fuer Antworten benutzen?# {{{
+				MSG=$(gettext 'Soll Mutt die Adresse im Reply-To Header fuer Antworten benutzen?')
+				yesno_select "$MUTTRC_TITLE" "$MSG" "$reply_to"
+				if [ -n "$VALUE" ] ; then
+					reply_to="$VALUE"
+				else
+					reply_to="ask-yes"
+				fi
+				## }}}
+				muttrc_conf_menu reply_to
+				;;
+			reverse_alias)
+				# Soll Mutt den persoenlichen Namen aus dem adressbuch verwenden?# {{{
+				MSG=$(gettext 'Soll Mutt versuchen den persoenlichen Namen aus Ihrem Adressbuch im Index-Menue an zu zeigen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$reverse_alias"
+				if [ "$gv_Auswahl" = yes ] ; then
+					reverse_alias="yes"
+				else
+					reverse_alias="no"
+				fi
+				#}}}
+				muttrc_conf_menu reverse_alias
+				;;
+			reverse_name)
+				# Soll Mutt die Mail-Adresse aus dem From-Header ermitteln# {{{
+				# oder den augenblicklichen Rechnernamen benutzen (ja/nein)?
+				MSG=$(gettext 'Soll Mutt die Mail-Adresse aus dem From-Header ermitteln oder den augenblicklichen Rechnernamen benutzen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$reverse_name"
+				if [ "$gv_Auswahl" = yes ] ; then
+					reverse_name="yes"
+				else
+					reverse_name="no"
+				fi
+				#}}}
+				muttrc_conf_menu reverse_name
+				;;
+			shell)
+				# Shell auswaehlen# {{{
+				unset -- shell
+				CHOICE_SHELL=$(gettext 'Shell')
+				MUTT_SHELL_MENU=(passwd \"\" $CHOICE_SHELL \"\")
+				menubox "" "$MUTTRC_TITLE" "$gv_Menupoint" "$MUTT_SHELL_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwmutt_muttrc_help
+							menubox "" "$MUTTRC_TITLE" "$gv_Menupoint" "$MUTT_SHELL_MENU"
+							;;
+						passwd)	# shell aus /etc/passwd nehmen
+							shell="no"
+							break
+							;;
+						*)	# Auswahl uebernehmen
+							list_shell $shell
+							if [ -n "$gv_Shell" ] ; then
+								shell="$gv_Shell"
+							else
+								shell="no"
+							fi
+							break
+							;;
+					esac
+				done
+				# Nochmal pruefen ob shell leer ist.
+				if [ -z "$shell" ] ; then
+					shell="no"
+				fi
+				#}}}
+				muttrc_conf_menu shell
+				;;
+			signature)
+				# Signaturdateiname vergeben.# {{{
+				MSG=$(gettext 'Geben Sie den Dateinamen fuer die Signatur ein. Diese Datei befindet sich anschliessend im Vrzeichnis ~/.kwtools/kwmutt.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$signature"
+				if [ -n "$gv_Auswahl" ] ; then
+					signature="$gv_Auswahl"
+				else
+					signature="signature"
+				fi
+				## }}}
+				muttrc_conf_menu signature
+				;;
+			smileys)
+				# Eingabe des Format, wie irrtuemliche Treffer des # {{{
+				# quote_regexp Suchausdruck abgefangen werden sollen.
+				MSG=$(gettext 'Geben Sie das Format ein wie irrtuemliche Treffer des quote_regexp Suchausdruck abgefangen werden sollen.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$smileys"
+				if [ -n "$gv_Auswahl" ] ; then
+					smileys="$gv_Auswahl"
+				else
+					smileys="(>From)|(:[-^]?[][)(><\}{|/DP])"
+				fi
+				## }}}
+				muttrc_conf_menu smileys
+				;;
+			tilde)
+				# Soll der interne Pager von Mutt Leerzeilen bis zur # {{{
+				# Unterkante des Bildschirms mit einer Tilde (~) auffuellen
+				# (ja/nein)?
+				MSG=$(gettext 'Soll der interne Pager von Mutt Leerzeilen bis zur Unterkante des Bildschirms mit einer Tilde (~) auffuellen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$tilde"
+				if [ "$gv_Auswahl" = yes ] ; then
+					tilde="yes"
+				else
+					tilde="no"
+				fi
+				#}}}
+				muttrc_conf_menu tilde
+				;;
+			use_envelope_from)
+				# Soll Mutt versuchen den Envelope-Absender von Nachrichten aus# {{{
+				# dem "From:"-Header herzuleiten (ja/nein)?
+				MSG=$(gettext 'Soll Mutt versuchen den Envelope-Absender von Nachrichten aus dem \"From:\"-Header herzuleiten (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$use_envelope_from"
+				if [ "$gv_Auswahl" = yes ] ; then
+					use_envelope_from="yes"
+				else
+					use_envelope_from="no"
+				fi
+				#}}}
+				muttrc_conf_menu use_envelope_from
+				;;
+			user_agent)
+				# User-Agent Header aktivieren# {{{
+				MSG=$(gettext 'Soll Mutt immer einen User-Agent: Mutt/Versions-Header generieren (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$user_agent"
+				if [ "$gv_Auswahl" = yes ] ; then
+					user_agent="yes"
+				else
+					user_agent="no"
+				fi
+				#}}}
+				muttrc_conf_menu user_agent
+				;;
+			write_bcc)
+				# Soll Mutt auch das Bcc Feld beim vorbereiten zum# {{{
+				# versenden einer Nachricht mit anzeigen?
+				MSG=$(gettext 'Soll Mutt auch das Bcc Feld beim vorbereiten zum versenden einer Nachricht mit anzeigen (ja/nein)?')
+				yesno "$MUTTRC_TITLE" "$MSG" "$write_bcc"
+				if [ "$gv_Auswahl" = yes ] ; then
+					write_bcc="yes"
+				else
+					write_bcc="no"
+				fi
+				#}}}
+				muttrc_conf_menu write_bcc
+				;;
+			$gv_Save)
+				# Falls die Signatur-Datei nicht existiert,
+				# wird eine erstellt.
+				create_file "${MUTT}/${signature}"
+				# Einstellungen speichern
+				kwmutt_muttrc_config
+				read_mutt_files
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

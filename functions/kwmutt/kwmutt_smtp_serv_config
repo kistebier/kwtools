@@ -1,0 +1,57 @@
+# Funktion (kwmutt_smtp_serv_config), schreibt die smtp Konfigurationsdatei# {{{
+# (sendmail, smtp) fuer "mutt".
+#
+# usage: kwmutt_smtp_serv_config [ smtp | sendmail ]
+#
+kwmutt_smtp_serv_config() {
+#
+# Konfiguration schreiben.
+#
+if [ "$#" = 1 ] ; then
+	case "$1" in
+		smtp)
+			> $M_SMTP_SERV <<< "# Beginn $M_SMTP_SERV
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# Der Name/IP-Adresse Ihres SMTP Servers.
+# z.B.: [smtp[s]://][username[:password]@]smtpserver[:port]
+set smtp_url=\"$smtp_url\"
+
+# Passwort fuer Ihren Login beim SMTP Server.
+set smtp_pass=\"$smtp_pass\"
+
+# Authentifizierungsmethoden die Mutt fuer SMTP benutzen soll.
+set smtp_authenticators=\"$smtp_authenticators\"
+
+# End $M_SMTP_SERV"
+			;;
+		sendmail)
+			> $M_SMTP_SERV <<< "# Beginn $M_SMTP_SERV
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# Erst mal die Standard-Optionen von sendmail verwenden
+reset sendmail
+
+# Wie wird sendmail aufgerufen?
+set sendmail=\"$sendmail\"
+
+# Sendmail ab bestimmter Abbruch Zeit in den Hintergrund? 
+set sendmail_wait=\"$sendmail_wait\"
+
+# End $M_SMTP_SERV"
+			;;
+		*)
+			no_para_msg $0
+			;;
+	esac
+else
+	no_para_msg $0
+fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

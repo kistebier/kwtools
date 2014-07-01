@@ -1,0 +1,136 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwauth, stellt PAM und andere Authentifizierungs-
+# Methoden fuer ihr System ein.
+#
+# Version: 0.0.3
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Root pruefen
+root_check
+
+# extra Funktionen laden
+autoload -U net_conf kwauth_nis_conf kwauth_nis_config
+
+# Variablen
+lv_Auth=$(gettext 'Authentifizierung')
+
+# Funktionen (check_auth), pruefen welches Authentifizierung gerade aktuell ist.# {{{
+#
+check_auth() {
+	unset -- AUTH_IS
+	AUTH_IS+=(PAM \"\")
+	if [[ -e /lib/security/pam_ldap.so ]] ; then
+		AUTH_IS+=(LDAP \"\")
+	fi
+	if [[ -x `which ypbind` ]] ; then
+		AUTH_IS+=(NIS \"\")
+	fi
+}
+## }}}
+# Funktion haupt_menue{{{
+haupt_menue() {
+	MAIN_MENU=($AUTH_IS)
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+#
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+os_check
+# Distributions eigene Tools benutzen.# {{{
+case "$OS" in
+	centos|fedora|SUSE)
+		if_conf_prog "$OS" auth
+		exit 0
+		;;
+esac
+## }}}
+
+# Pruefen ob libpam-runtime (>=1.0.1-6) schon das Programm
+# pam-auth-update besitzt.
+prog_check pam-auth-update
+if [[ -n $NO_PROGS ]] ; then
+	exit 0
+fi
+
+net_conf
+check_auth
+haupt_menue
+print "$gv_Auswahl"
+while [ "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)
+			# Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		PAM)
+			# PAM Modul Konfiguration# {{{
+			pam-auth-update --force
+			if [ $? = 0 ] ; then
+				# NIS loeschen
+				kwauth_nis_config -r
+			fi
+			## }}}
+			haupt_menue PAM
+			;;
+		LDAP)
+			# Konfiguration fuer LDAP# {{{
+			# mit anschliessender PAM Konfiguration.
+			if_conf_prog "$OS" ldap-client
+			if [ $? = 0 ] ; then
+				# NIS loeschen
+				kwauth_nis_config -r
+			fi
+			#}}}
+			haupt_menue LDAP
+			;;
+		NIS)
+			# NIS Konfigurieren# {{{
+			kwauth_nis_conf
+			## }}}
+			haupt_menue NIS
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

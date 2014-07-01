@@ -1,0 +1,448 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatibility version to use.
+# >=3 create conffiles automatically
+#export DH_COMPAT=5
+
+# Name our packages
+package-common=kwtools-common
+package-bin=kwtools-bin
+#package-doc=kwtools-doc
+package-graphic=kwtools-graphic
+package-multi=kwtools-multi
+package-multi-xmms2=kwtools-multi-xmms2
+package-multi-xmms2d=kwtools-multi-xmms2d
+package-net=kwtools-net
+package-net-djbdns=kwtools-net-djbdns
+package-net-mutt=kwtools-net-mutt
+package-net-narc=kwtools-net-narc
+package-net-postfix=kwtools-net-postfix
+package-sys=kwtools-sys
+package-sys-crypt=kwtools-sys-crypt
+package-sys-fuse=kwtools-sys-fuse
+package-sys-grub=kwtools-sys-grub
+package-sys-grub2=kwtools-sys-grub2
+package-sys-kwpasswd=kwtools-sys-kwpasswd
+package-sys-lvm=kwtools-sys-lvm
+package-sys-parted=kwtools-sys-parted
+package-sys-quota=kwtools-sys-quota
+package-sys-raid=kwtools-sys-raid
+package-utils=kwtools-utils
+package-utils-pim=kwtools-utils-pim
+package-utils-ssl=kwtools-utils-ssl
+#
+share_path=/usr/share/kwtools
+func_path=/usr/share/kwtools/functions
+help_path=/usr/share/kwtools/help
+kwhelp_path=/usr/share/kwtools/help/kwadmin
+data_path=/usr/share/kwtools/data
+man_path=/usr/share/man
+etc_path=/etc
+skel_path=/etc/skel
+doc_path=/usr/share/doc
+exec_path=/usr/lib/kwtools
+#menu_path=/usr/share/menu
+sbin_path=/usr/sbin
+bin_path=/usr/bin
+lintian_path=/usr/share/lintian/overrides
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	touch configure-stamp
+
+
+build: build-stamp
+
+build-stamp: configure-stamp 
+	dh_testdir
+
+	# Add here commands to compile the package.
+	#/usr/bin/docbook-to-man debian/kwtools.sgml > kwtools.1
+	cd debian/po ; zsh update-and-compile
+
+	touch build-stamp
+
+clean:
+	debconf-updatepo
+	#debconf-updatepo --podir=debian/po/kwtools-net-narc
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# Add here commands to clean up after the build process.
+	cd debian/po ; zsh update-and-compile clean
+
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+
+	# Add here commands to install the package into debian/kwtools-*.
+	
+
+	# kwtools-bin
+	cp -a kwadmin $(CURDIR)/debian/$(package-bin)$(exec_path)
+#	cp -a help/kwadmin/kw_conf_help help/kwadmin/utils_help \
+#		help/kwadmin/help help/kwadmin/kw_lang_help help/kwadmin/graphic_help \
+#		help/kwadmin/multi_help help/kwadmin/net_help help/kwadmin/sys_help \
+#		$(CURDIR)/debian/$(package-bin)$(kwhelp_path)
+	cp -a help/kwadmin/* $(CURDIR)/debian/$(package-bin)$(kwhelp_path)
+	cp -a functions/kwadmin $(CURDIR)/debian/$(package-bin)$(func_path)
+	cp -a man/de/man1/kwadmin.1 $(CURDIR)/debian/$(package-bin)$(man_path)/de/man1
+	cp -a debian/po/kwadmin/usr $(CURDIR)/debian/$(package-bin)
+	
+	# kwtools-common
+	cp -a etc/kwtools/main.cf $(CURDIR)/debian/$(package-common)$(etc_path)/kwtools
+	cp -a skeleton-dialog.zsh $(CURDIR)/debian/$(package-common)$(exec_path)
+	cp -a help/share $(CURDIR)/debian/$(package-common)$(help_path)
+	cp -a man/de/man5/main.cf.5 $(CURDIR)/debian/$(package-common)$(man_path)/de/man5
+	cp -a functions/sys $(CURDIR)/debian/$(package-common)$(func_path)
+	cp -a debian/po/kwtools-common/usr $(CURDIR)/debian/$(package-common)
+
+	# kwtools-doc
+	#cp -a doc/html/* $(CURDIR)/debian/$(package-doc)$(doc_path)/$(package-doc)/html
+
+	# kwtools-graphic
+	cp -a graphic $(CURDIR)/debian/$(package-graphic)$(exec_path)
+	cp -a help/kwcamera $(CURDIR)/debian/$(package-graphic)$(help_path)
+#	cp -a help/kwadmin/graphic_kwcamera_help $(CURDIR)/debian/$(package-graphic)$(kwhelp_path)
+	cp -a functions/kwcamera $(CURDIR)/debian/$(package-graphic)$(func_path)
+	cp -a man/de/man5/kwcamerarc.5 $(CURDIR)/debian/$(package-graphic)$(man_path)/de/man5
+	cp -a man/de/man1/kwcamera.1 $(CURDIR)/debian/$(package-graphic)$(man_path)/de/man1
+	cp -a debian/po/kwcamera/usr $(CURDIR)/debian/$(package-graphic)
+
+	# kwtools-multi
+	cp -a multi/kwrecord multi/kwrip multi/kwsnd2sndfm multi/kwvcdburn \
+	   	$(CURDIR)/debian/$(package-multi)$(exec_path)/multi
+	cp -a help/kwrip help/kwrecord help/kwsnd2sndfm help/kwvcdburn \
+		$(CURDIR)/debian/$(package-multi)$(help_path)
+#	cp -a help/kwadmin/multi_kwrecord_help help/kwadmin/multi_kwrip_help \
+#		help/kwadmin/multi_kwsnd2sndfm_help	help/kwadmin/multi_kwvcdburn_help \
+#		$(CURDIR)/debian/$(package-multi)$(kwhelp_path)
+	cp -a functions/kwrip functions/kwrecord \
+		functions/kwsnd2sndfm functions/kwvcdburn \
+		$(CURDIR)/debian/$(package-multi)$(func_path)
+	cp -a man/de/man1/kwrip.1 man/de/man1/kwrecord.1 \
+		man/de/man1/kwsnd2sndfm.1 man/de/man1/kwvcdburn.1 \
+		$(CURDIR)/debian/$(package-multi)$(man_path)/de/man1
+	cp -a man/de/man5/kwriprc.5 man/de/man5/cd_dvdrc.5 \
+		man/de/man5/kwsnd2sndfmrc.5 man/de/man5/kwvcdburnrc.5 \
+		$(CURDIR)/debian/$(package-multi)$(man_path)/de/man5
+	cp -a debian/po/kwrip/usr debian/po/kwrecord/usr \
+		debian/po/kwsnd2sndfm/usr debian/po/kwvcdburn/usr \
+		$(CURDIR)/debian/$(package-multi)
+
+	# kwtools-multi-xmms2
+	cp -a multi/kwxmms2 $(CURDIR)/debian/$(package-multi-xmms2)$(exec_path)/multi
+	cp -a help/kwxmms2 $(CURDIR)/debian/$(package-multi-xmms2)$(help_path)
+#	cp -a help/kwadmin/multi_kwxmms2_help $(CURDIR)/debian/$(package-multi-xmms2)$(kwhelp_path)
+	cp -a functions/kwxmms2 $(CURDIR)/debian/$(package-multi-xmms2)$(func_path)
+	cp -a man/de/man1/kwxmms2.1 $(CURDIR)/debian/$(package-multi-xmms2)$(man_path)/de/man1
+	cp -a man/de/man5/kwxmms2rc.5 \
+		$(CURDIR)/debian/$(package-multi-xmms2)$(man_path)/de/man5
+	cp -a debian/po/kwxmms2/usr $(CURDIR)/debian/$(package-multi-xmms2)
+
+	# kwtools-multi-xmms2d
+	cp -a multi/kwxmms2d $(CURDIR)/debian/$(package-multi-xmms2d)$(exec_path)/multi
+	cp -a help/kwxmms2d $(CURDIR)/debian/$(package-multi-xmms2d)$(help_path)
+#	cp -a help/kwadmin/multi_kwxmms2d_help $(CURDIR)/debian/$(package-multi-xmms2d)$(kwhelp_path)
+	cp -a functions/kwxmms2d $(CURDIR)/debian/$(package-multi-xmms2d)$(func_path)
+	cp -a man/de/man1/kwxmms2d.1 $(CURDIR)/debian/$(package-multi-xmms2d)$(man_path)/de/man1
+	cp -a debian/po/kwxmms2d/usr $(CURDIR)/debian/$(package-multi-xmms2d)
+
+	# kwtools-net
+	cp -a etc/kwtools/kwrsync_backup.cf \
+		$(CURDIR)/debian/$(package-net)$(etc_path)/kwtools
+	cp -a ./kwrsync_cron $(CURDIR)/debian/$(package-net)$(exec_path)
+	cp -a ./kwrsync_backup_cron $(CURDIR)/debian/$(package-net)$(exec_path)
+	cp -a net/kwnetstat net/kwrsync_backup net/kwproxy net/kwrsync \
+		$(CURDIR)/debian/$(package-net)$(exec_path)/net
+	cp -a help/kwnetstat help/kwrsync help/kwrsync_backup help/kwproxy \
+		$(CURDIR)/debian/$(package-net)$(help_path)
+#	cp -a help/kwadmin/net_kwnetstat_help \
+#		help/kwadmin/net_kwproxy_help help/kwadmin/net_kwrsync_backup_help \
+#		help/kwadmin/net_kwrsync_help \
+#		$(CURDIR)/debian/$(package-net)$(kwhelp_path)
+	cp -a usr/share/kwrsync_backup/* \
+		$(CURDIR)/debian/$(package-net)$(share_path)/kwrsync_backup/utils
+	cp -a functions/kwrsync_backup functions/kwrsync \
+		$(CURDIR)/debian/$(package-net)$(func_path)
+	cp -a man/de/man1/kwnetstat.1 \
+		man/de/man1/kwrsync.1 man/de/man1/kwrsync_cron.1 \
+		$(CURDIR)/debian/$(package-net)$(man_path)/de/man1
+	cp -a man/de/man5/kwrsyncrc.5 man/de/man5/kwrsynctab.5 man/de/man5/kwrsync_backup.cf.5 \
+		$(CURDIR)/debian/$(package-net)$(man_path)/de/man5
+	cp -a man/de/man8/kwrsync_backup.8 man/de/man8/kwrsync_backup_cron.8 man/de/man8/kwproxy.8 \
+		$(CURDIR)/debian/$(package-net)$(man_path)/de/man8
+	cp -a debian/po/kwnetstat/usr \
+		debian/po/kwrsync_backup/usr debian/po/kwrsync_backup_cron/usr \
+		debian/po/kwrsync/usr debian/po/kwrsync_cron/usr \
+		$(CURDIR)/debian/$(package-net)
+
+	# kwtools-net-djbdns
+	cp -a net/kwdjbdns $(CURDIR)/debian/$(package-net-djbdns)$(exec_path)/net
+	cp -a help/kwdjbdns $(CURDIR)/debian/$(package-net-djbdns)$(help_path)
+#	cp -a help/kwadmin/net_kwdjbdns_help $(CURDIR)/debian/$(package-net-djbdns)$(kwhelp_path)
+	cp -a functions/kwdjbdns $(CURDIR)/debian/$(package-net-djbdns)$(func_path)
+	cp -a man/de/man1/kwdjbdns.1 $(CURDIR)/debian/$(package-net-djbdns)$(man_path)/de/man1
+	cp -a debian/po/kwdjbdns/usr $(CURDIR)/debian/$(package-net-djbdns)
+
+	# kwtools-net-mutt
+	cp -a usr/bin/check-smtp-auth usr/bin/mutt.* usr/bin/mailhops \
+		$(CURDIR)/debian/$(package-net-mutt)$(bin_path)
+	cp -a data/kwmutt $(CURDIR)/debian/$(package-net-mutt)$(data_path)
+	cp -a net/kwmutt $(CURDIR)/debian/$(package-net-mutt)$(exec_path)/net
+	cp -a help/kwmutt $(CURDIR)/debian/$(package-net-mutt)$(help_path)
+#	cp -a help/kwadmin/net_kwmutt_help $(CURDIR)/debian/$(package-net-mutt)$(kwhelp_path)
+	cp -a functions/kwmutt $(CURDIR)/debian/$(package-net-mutt)$(func_path)
+	cp -a man/de/man1/kwmutt.1 $(CURDIR)/debian/$(package-net-mutt)$(man_path)/de/man1
+	cp -a debian/po/kwmutt/usr $(CURDIR)/debian/$(package-net-mutt)
+
+	# kwtools-net-narc
+	cp -a etc/kwtools/kwnarc.conf $(CURDIR)/debian/$(package-net-narc)$(etc_path)/kwtools
+	cp -a net/kwnarcconf $(CURDIR)/debian/$(package-net-narc)$(exec_path)/net
+	cp -a usr/sbin/kwnarc $(CURDIR)/debian/$(package-net-narc)$(sbin_path)
+	cp -a help/kwnarcconf $(CURDIR)/debian/$(package-net-narc)$(help_path)
+#	cp -a help/kwadmin/net_kwnarcconf_help $(CURDIR)/debian/$(package-net-narc)$(kwhelp_path)
+	cp -a functions/kwnarcconf $(CURDIR)/debian/$(package-net-narc)$(func_path)
+	cp -a man/de/man8/kwnarc.8 man/de/man8/kwnarcconf.8 \
+		$(CURDIR)/debian/$(package-net-narc)$(man_path)/de/man8
+	cp -a man/de/man5/kwnarc.conf.5 $(CURDIR)/debian/$(package-net-narc)$(man_path)/de/man5
+	cp -a man/en/man8/kwnarc.8 $(CURDIR)/debian/$(package-net-narc)$(man_path)/man8
+	cp -a man/en/man5/kwnarc.conf.5 $(CURDIR)/debian/$(package-net-narc)$(man_path)/man5
+	cp -a debian/po/kwnarcconf/usr $(CURDIR)/debian/$(package-net-narc)
+
+	# kwtools-net-postfix
+	cp -a net/kwpostfix $(CURDIR)/debian/$(package-net-postfix)$(exec_path)/net
+	cp -a help/kwpostfix $(CURDIR)/debian/$(package-net-postfix)$(help_path)
+#	cp -a help/kwadmin/net_kwpostfix_help $(CURDIR)/debian/$(package-net-postfix)$(kwhelp_path)
+	cp -a functions/kwpostfix $(CURDIR)/debian/$(package-net-postfix)$(func_path)
+	cp -a man/de/man1/kwpostfix.1 $(CURDIR)/debian/$(package-net-postfix)$(man_path)/de/man1
+	cp -a debian/po/kwpostfix/usr $(CURDIR)/debian/$(package-net-postfix)
+
+	# kwtools-sys
+	cp -a sys/kwauth sys/kwclock sys/kwgroup sys/kwlogrotate sys/kwnetconf \
+		sys/kwuser sys/kwwvdialconf sys/kwrunlevconf \
+		$(CURDIR)/debian/$(package-sys)$(exec_path)/sys
+	cp -a kwnetcardconf $(CURDIR)/debian/$(package-sys)$(exec_path)
+	cp -a help/kwauth help/kwclock help/kwgroup help/kwlogrotate \
+		help/kwnetconf \
+		help/kwnetcardconf help/kwuser help/kwwvdialconf \
+		help/kwrunlevconf $(CURDIR)/debian/$(package-sys)$(help_path)
+#	cp -a help/kwadmin/sys_kwgroup_help help/kwadmin/sys_kwlog*_help \
+#		help/kwadmin/sys_kwn*_help \
+#		 help/kwadmin/sys_kwu*_help help/kwadmin/sys_kwwv*_help \
+#		help/kwadmin/sys_kwrunlevconf_help help/kwadmin/sys_kwclock_help \
+#		$(CURDIR)/debian/$(package-sys)$(kwhelp_path)
+	cp -a functions/kwauth functions/kwclock functions/kwnetcardconf \
+		functions/kwlogrotate \
+		functions/kwwvdialconf functions/kwrunlevconf functions/kwuser \
+		$(CURDIR)/debian/$(package-sys)$(func_path)
+	cp -a man/de/man5/kwuserrc.5 \
+		$(CURDIR)/debian/$(package-sys)$(man_path)/de/man5
+	cp -a man/de/man8/kwauth.8 man/de/man8/kwgroup.8 \
+		man/de/man8/kwlogrotate.8 \
+		man/de/man8/kwnetcardconf.8 man/de/man8/kwnetconf.8 \
+		man/de/man8/kwuser.8 man/de/man8/kwwvdialconf.8 \
+		man/de/man8/kwrunlevconf.8 man/de/man8/kwclock.8 \
+		$(CURDIR)/debian/$(package-sys)$(man_path)/de/man8
+	cp -a debian/po/kwauth/usr debian/po/kwgroup/usr \
+		debian/po/kwlogrotate/usr \
+		debian/po/kwnetcardconf/usr debian/po/kwnetconf/usr \
+		debian/po/kwuser/usr debian/po/kwwvdialconf/usr \
+		debian/po/kwrunlevconf/usr debian/po/kwclock/usr \
+		$(CURDIR)/debian/$(package-sys)
+
+	# kwtools-sys-fuse
+	cp -a sys/kwfuse $(CURDIR)/debian/$(package-sys-fuse)$(exec_path)/sys
+	cp -a help/kwfuse $(CURDIR)/debian/$(package-sys-fuse)$(help_path)
+#	cp -a help/kwadmin/sys_kwfuse_help $(CURDIR)/debian/$(package-sys-fuse)$(kwhelp_path)
+	cp -a functions/kwfuse $(CURDIR)/debian/$(package-sys-fuse)$(func_path)
+	cp -a man/de/man8/kwfuse.8 $(CURDIR)/debian/$(package-sys-fuse)$(man_path)/de/man8
+	cp -a debian/po/kwfuse/usr $(CURDIR)/debian/$(package-sys-fuse)
+
+	# kwtools-sys-crypt
+	cp -a sys/kwcrypt $(CURDIR)/debian/$(package-sys-crypt)$(exec_path)/sys
+	cp -a kwecryptfs kwlosetup kwcryptsetup $(CURDIR)/debian/$(package-sys-crypt)$(exec_path)/
+	cp -a help/kwecryptfs help/kwcrypt help/kwcryptsetup help/kwlosetup \
+		$(CURDIR)/debian/$(package-sys-crypt)$(help_path)
+#	cp -a help/kwadmin/sys_kwcrypt_help $(CURDIR)/debian/$(package-sys-crypt)$(kwhelp_path)
+	cp -a functions/kwecryptfs functions/kwcrypt functions/kwcryptsetup \
+          functions/kwlosetup $(CURDIR)/debian/$(package-sys-crypt)$(func_path)
+	cp -a man/de/man5/kwcryptsetuprc.5 man/de/man5/kwlosetuprc.5 \
+		man/de/man5/kwecryptfsrc.5 $(CURDIR)/debian/$(package-sys-crypt)$(man_path)/de/man5
+	cp -a man/de/man8/kwcrypt.8 man/de/man8/kwecryptfs.8 man/de/man8/kwcryptsetup.8 \
+		man/de/man8/kwlosetup.8 $(CURDIR)/debian/$(package-sys-crypt)$(man_path)/de/man8
+	cp -a debian/po/kwecryptfs/usr debian/po/kwcrypt/usr debian/po/kwcryptsetup/usr \
+		debian/po/kwlosetup/usr $(CURDIR)/debian/$(package-sys-crypt)
+
+	# kwtools-sys-grub
+	cp -a sys/kwgrub $(CURDIR)/debian/$(package-sys-grub)$(exec_path)/sys
+	cp -a help/kwgrub $(CURDIR)/debian/$(package-sys-grub)$(help_path)
+#	cp -a help/kwadmin/sys_kwgrub_help $(CURDIR)/debian/$(package-sys-grub)$(kwhelp_path)
+	cp -a functions/kwgrub $(CURDIR)/debian/$(package-sys-grub)$(func_path)
+	cp -a man/de/man8/kwgrub.8 $(CURDIR)/debian/$(package-sys-grub)$(man_path)/de/man8
+	cp -a debian/po/kwgrub/usr $(CURDIR)/debian/$(package-sys-grub)
+
+	# kwtools-sys-grub2
+	cp -a sys/kwgrub2 $(CURDIR)/debian/$(package-sys-grub2)$(exec_path)/sys
+	cp -a etc/grub.d $(CURDIR)/debian/$(package-sys-grub2)$(etc_path)/
+	cp -a help/kwgrub2 $(CURDIR)/debian/$(package-sys-grub2)$(help_path)
+#	cp -a help/kwadmin/sys_kwgrub2_help $(CURDIR)/debian/$(package-sys-grub2)$(kwhelp_path)
+	cp -a functions/kwgrub2 $(CURDIR)/debian/$(package-sys-grub2)$(func_path)
+	cp -a man/de/man8/kwgrub2.8 $(CURDIR)/debian/$(package-sys-grub2)$(man_path)/de/man8
+	cp -a debian/po/kwgrub2/usr $(CURDIR)/debian/$(package-sys-grub2)
+
+	# kwtools-sys-kwpasswd
+	cp -a usr/bin/firstlogin $(CURDIR)/debian/$(package-sys-kwpasswd)$(bin_path)
+	cp -a sys/kwpasswd $(CURDIR)/debian/$(package-sys-kwpasswd)$(exec_path)/sys
+
+	cp -a etc/skel/.firstlogin etc/skel/.bash_login \
+		etc/skel/.kde etc/skel/.config \
+		$(CURDIR)/debian/$(package-sys-kwpasswd)$(skel_path)
+	cp -a help/kwpasswd $(CURDIR)/debian/$(package-sys-kwpasswd)$(help_path)
+#	cp -a help/kwadmin/sys_kwpasswd_help \
+		$(CURDIR)/debian/$(package-sys-kwpasswd)$(kwhelp_path)
+	cp -a man/de/man1/kwpasswd.1 \
+		$(CURDIR)/debian/$(package-sys-kwpasswd)$(man_path)/de/man1
+	cp -a debian/po/kwpasswd/usr $(CURDIR)/debian/$(package-sys-kwpasswd)
+
+	# kwtools-sys-lvm
+	cp -a sys/kwlvm $(CURDIR)/debian/$(package-sys-lvm)$(exec_path)/sys
+	cp -a help/kwlvm $(CURDIR)/debian/$(package-sys-lvm)$(help_path)
+#	cp -a help/kwadmin/sys_kwlvm_help $(CURDIR)/debian/$(package-sys-lvm)$(kwhelp_path)
+	cp -a functions/kwlvm $(CURDIR)/debian/$(package-sys-lvm)$(func_path)
+	cp -a man/de/man8/kwlvm.8 $(CURDIR)/debian/$(package-sys-lvm)$(man_path)/de/man8
+	cp -a debian/po/kwlvm/usr $(CURDIR)/debian/$(package-sys-lvm)
+
+	# kwtools-sys-parted
+	cp -a sys/kwparted $(CURDIR)/debian/$(package-sys-parted)$(exec_path)/sys
+	cp -a help/kwparted $(CURDIR)/debian/$(package-sys-parted)$(help_path)
+#	cp -a help/kwadmin/sys_kwparted_help $(CURDIR)/debian/$(package-sys-parted)$(kwhelp_path)
+	cp -a functions/kwparted $(CURDIR)/debian/$(package-sys-parted)$(func_path)
+	cp -a man/de/man8/kwparted.8 $(CURDIR)/debian/$(package-sys-parted)$(man_path)/de/man8
+	cp -a debian/po/kwparted/usr $(CURDIR)/debian/$(package-sys-parted)
+
+	# kwtools-sys-quota
+	cp -a sys/kwquota $(CURDIR)/debian/$(package-sys-quota)$(exec_path)/sys
+	cp -a help/kwquota $(CURDIR)/debian/$(package-sys-quota)$(help_path)
+#	cp -a help/kwadmin/sys_kwquota_help $(CURDIR)/debian/$(package-sys-quota)$(kwhelp_path)
+	cp -a functions/kwquota $(CURDIR)/debian/$(package-sys-quota)$(func_path)
+	cp -a man/de/man8/kwquota.8 $(CURDIR)/debian/$(package-sys-quota)$(man_path)/de/man8
+	cp -a debian/po/kwquota/usr $(CURDIR)/debian/$(package-sys-quota)
+
+	# kwtools-sys-raid
+	cp -a sys/kwraid $(CURDIR)/debian/$(package-sys-raid)$(exec_path)/sys
+	cp -a help/kwraid $(CURDIR)/debian/$(package-sys-raid)$(help_path)
+#	cp -a help/kwadmin/sys_kwraid_help $(CURDIR)/debian/$(package-sys-raid)$(kwhelp_path)
+	cp -a functions/kwraid $(CURDIR)/debian/$(package-sys-raid)$(func_path)
+	cp -a man/de/man8/kwraid.8 \
+		$(CURDIR)/debian/$(package-sys-raid)$(man_path)/de/man8
+	cp -a debian/po/kwraid/usr $(CURDIR)/debian/$(package-sys-raid)
+
+	# kwtools-utils
+	cp -a utils/kwgpgcrypt utils/kwmuttprintcf utils/kwpwsafe \
+		utils/kwvmstat $(CURDIR)/debian/$(package-utils)$(exec_path)/utils
+	cp -a help/kwgpgcrypt help/kwmuttprintcf help/kwpwsafe \
+		help/kwvmstat $(CURDIR)/debian/$(package-utils)$(help_path)
+#	cp -a help/kwadmin/utils_kwgpgcrypt_help \
+#		help/kwadmin/utils_kwmuttprintcf_help help/kwadmin/utils_kwpwsafe_help \
+#		help/kwadmin/utils_kwvmstat_help \
+#		$(CURDIR)/debian/$(package-utils)$(kwhelp_path)
+	cp -a functions/kwgpgcrypt functions/kwmuttprintcf \
+		functions/kwpwsafe functions/kwvmstat \
+		$(CURDIR)/debian/$(package-utils)$(func_path)
+	cp -a man/de/man1/kwgpgcrypt.1 \
+		man/de/man1/kwmuttprintcf.1 man/de/man1/kwpwsafe.1 man/de/man1/kwvmstat.1 \
+		$(CURDIR)/debian/$(package-utils)$(man_path)/de/man1
+	cp -a man/de/man5/kwvmstatrc.5 \
+		$(CURDIR)/debian/$(package-utils)$(man_path)/de/man5
+	cp -av debian/po/kwgpgcrypt/usr \
+		debian/po/kwmuttprintcf/usr debian/po/kwpwsafe/usr \
+		debian/po/kwvmstat/usr $(CURDIR)/debian/$(package-utils)
+
+	# kwtools-utils-pim
+	cp -a create.cal.pl kwholiday kwtex-cal kwtermin kwtermin_cron \
+		$(CURDIR)/debian/$(package-utils-pim)$(exec_path)
+	cp -a utils/kwplaner $(CURDIR)/debian/$(package-utils-pim)$(exec_path)/utils
+	cp -a data/calendar $(CURDIR)/debian/$(package-utils-pim)$(data_path)
+	cp -a help/kwplaner help/kwtermin help/kwtex-cal \
+		$(CURDIR)/debian/$(package-utils-pim)$(help_path)
+#	cp -a help/kwadmin/utils_kwplaner_help \
+#		$(CURDIR)/debian/$(package-utils-pim)$(kwhelp_path)
+	cp -a functions/kwplaner functions/kwtermin \
+		$(CURDIR)/debian/$(package-utils-pim)$(func_path)
+	cp -a man/de/man1/create.cal.pl.1 man/de/man1/kwholiday.1 \
+		man/de/man1/kwtex-cal.1 man/de/man1/kwplaner.1 man/de/man1/kwtermin.1 \
+		man/de/man1/kwtermin_cron.1 \
+		$(CURDIR)/debian/$(package-utils-pim)$(man_path)/de/man1
+	cp -a man/de/man5/kwplanerrc.5 \
+		$(CURDIR)/debian/$(package-utils-pim)$(man_path)/de/man5
+	cp -a debian/po/kwholiday/usr debian/po/kwtex-cal/usr \
+		debian/po/kwplaner/usr debian/po/kwtermin/usr \
+		debian/po/kwtermin_cron/usr $(CURDIR)/debian/$(package-utils-pim)
+	
+	# kwtools-utils-ssl
+	cp -a utils/kwssl2 $(CURDIR)/debian/$(package-utils-ssl)$(exec_path)/utils
+	cp -a help/kwssl2 $(CURDIR)/debian/$(package-utils-ssl)$(help_path)
+#	cp -a help/kwadmin/utils_kwssl2_help \
+#		$(CURDIR)/debian/$(package-utils-ssl)$(kwhelp_path)
+	cp -a functions/kwssl2 $(CURDIR)/debian/$(package-utils-ssl)$(func_path)
+	cp -a man/de/man1/kwssl2.1 $(CURDIR)/debian/$(package-utils-ssl)$(man_path)/de/man1
+	cp -a debian/po/kwssl2/usr $(CURDIR)/debian/$(package-utils-ssl)
+
+
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installdebconf
+	# alle nicht definierten Doc-dirs in *.dirs als Link
+	# nach kwtools-common erstellen
+	dh_installdocs --link-doc=kwtools-common
+	dh_installdocs
+	dh_installexamples
+	dh_installmenu -n
+#	dh_installlogrotate
+	dh_installlogrotate --name=kwrsync_backup
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+	dh_installinit -n --name=kwnarc
+#	dh_installcron
+	dh_installcron --name=kwrsync_backup
+	dh_installman
+	dh_installppp --name=1kwnarc
+	dh_installppp --name=kwnarc
+#	dh_installinfo
+	dh_installchangelogs --exclude=changelog
+	dh_link
+	dh_lintian
+	dh_strip
+	dh_compress
+	dh_fixperms
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_perl
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

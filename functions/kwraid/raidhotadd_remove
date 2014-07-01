@@ -1,0 +1,181 @@
+# Funktion um Partitionen im laufenden Betrieb zu entfernen oder hinzufuegen{{{
+#
+# benoetigt die Funktion search_fdisks
+#
+# usage: raidhotadd_remove
+#
+raidhotadd_remove() {
+	# Warning Nachricht{{{
+	MSG=$(gettext 'Hoffentlich wissen Sie was Sie hier tun. Wenn Ihre Hardware nicht Hotplugfaehig ist, kann dies Ihre Geraete zerstoeren.')
+	msgbox "$gv_Attention" "$MSG"
+	# }}}
+	# Funktion (hotadd_remove_menu)# {{{
+	hotadd_remove_menu() {
+		RAID_CHANGE_DISK_MENU=($MD_ARRAY_STATE_E)
+		RAID_CHANGE_DISK_TITLE=$(gettext '${lv_Raid_Hot_Ar}::raiddev')
+		RAID_CHANGE_DISK_MSG=$(gettext 'Waehlen Sie ein RAID Array aus, in welchem Laufwerke gewechselt werden sollen.')
+		menubox "$RAIDDEV" "$RAID_CHANGE_DISK_TITLE" "$RAID_CHANGE_DISK_MSG" "$RAID_CHANGE_DISK_MENU"
+	}
+	## }}}
+	# ARRAY auswaehlen
+	search_md_state
+	hotadd_remove_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help hotadd_remove_help
+				hotadd_remove_menu
+				;;
+			*)	#
+				RAIDDEV="$gv_Auswahl"
+				# Erst das RAID Level herausfinden. Hotadd, Hotremove funktioniert nur bei
+				# RAID Level >0
+				RAIDLEVEL=$(raid_is_level $RAIDDEV)
+				#
+				if [ "$RAIDLEVEL" = linear -o "${RAIDLEVEL#raid}" = 0 ] ; then
+					MSG=$(gettext 'In diesem RAIDLEVEL ($RAIDLEVEL) kann diese Software keine Partition tauschen, da es entweder garnicht geht oder sehr schwierig ist.')
+					msgbox "$gv_Attention" "$MSG"
+				else
+					######################################
+					# TODO:
+					# klonen fehlt
+					######################################
+					# Menue entfernen, partitionieren, hinzufuegen
+					lv_Part_Remove=$(gettext 'Laufwerk_entfernen')
+					lv_Partition=$(gettext 'Partitionierung')
+					lv_Part_Add=$(gettext 'Laufwerk_hinzufuegen')
+					#
+					RAID_CHANGE_PART_TITLE=$(gettext '${lv_Raid_Hot_Ar}::Laufwerksauswahl')
+					RAIDHOTADD_REMOVE_MENU=($lv_Part_Remove \"\"
+					$lv_Partition \"\" $lv_Part_Add \"\" $gv_Back \"\")
+					# Funktion (raidhotadd_remove_menu)# {{{
+					#
+					raidhotadd_remove_menu() {
+						menubox "$1" "$RAID_CHANGE_DISK_TITLE" "$gv_Menupoint" "$RAIDHOTADD_REMOVE_MENU"
+					}
+					## }}}
+					raidhotadd_remove_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help hotadd_remove_menue_help
+								raidhotadd_remove_menu
+								;;
+							$lv_Part_Remove)
+								# Partitionen/Festplatten aus dem Array entfernen.{{{
+								RAID_PART_REM_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum entfernen aus.')
+								# Funktion (remove_part_menu)# {{{
+								remove_part_menu() {
+									RAID_PART_REM_MENU=($PARTS_STATE)
+									menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_REM_MSG" "$RAID_PART_REM_MENU"
+								}
+								## }}}
+								raid_search_part_state $RAIDDEV
+								remove_part_menu
+								while [ "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help hotadd_remove_help
+											remove_part_menu
+											;;
+										/dev*)
+											# Partition auswaehlen
+											#
+											HDDEV="$gv_Auswahl"
+											PART_RAID_DEL_MSG=$(gettext 'Soll die Partition "$HDDEV" aus dem RAID Array "$RAIDDEV" entfernt werden (ja/nein)?')
+											yesno "$RAID_CHANGE_PART_TITLE" "$PART_RAID_DEL_MSG" ""
+											if [ "$gv_Auswahl" = yes ] ; then
+												# Gibt es keine faulty Disks, wird eine beim
+												# entfernen, als faulty, markiert.
+												Part_State_Nr=${PARTS_STATE[(i)$HDDEV]}
+												(( Part_State_Nr-- ))
+												if [[ ${PARTS_STATE[$Part_State_Nr]} != faulty ]] ; then
+													mdadm $RAIDDEV -f $HDDEV >/dev/null || prog_failure
+													# sleep wird benoetigt, da das faulty setzen
+													# an Zeit braucht.
+													sleep 1
+												fi
+												mdadm $RAIDDEV -r $HDDEV >/dev/null || prog_failure
+												raid_search_part_state $RAIDDEV
+												# Info das die Festplatte/Partition nun getauscht
+												# oder repariert werden kann.
+												MSG=$(gettext 'Sie koennen jetzt die Festplatte wechseln. Achten Sie darauf das beim Festplattenwechsel, alle dazugehoerigen Partitionen aus den Arrays entfernt wurden.')
+												infobox "$gv_Info" "$MSG" 3
+												# Fortschrittsbalken
+												raid_gauge
+											fi
+											break
+											;;
+									esac
+								done
+								#}}}
+								raidhotadd_remove_menu $lv_Part_Remove
+								;;
+							$lv_Part_Add)
+								# Partition wieder hinzufuegen{{{
+								# Festplatten herrausfinden
+								disk
+								if [ ! -z "${DISK_DEV[1]}" ] ; then
+									# RAID Partitionen herrausfinden# {{{
+									partdb -i fd
+									if [ "${PART[1]}" ] ; then
+										part_md_lose
+										# freie RAID Partitionen zur Auswahl stellen.# {{{
+										if [ -z "${Part_Md_Lose_E[1]}" ] ; then
+											# Meldung ueber keine freien RAID Partitionen
+											MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfuegung.')
+											msgbox "$gv_Attention" "$MSG"
+										else
+											# Wenn, Freie RAID Partitionen zur Auswahl stellen.
+											RAID_PART_ADD_MENU=($Part_Md_Lose_E)
+											RAID_PART_ADD_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum hinzufuegen aus.')
+											menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+											while [ "$gv_Auswahl" ] ; do
+												case "$gv_Auswahl" in
+													HELP*)
+														script_help share/part_help
+														menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+														;;
+													/dev*)
+														HDDEV="$gv_Auswahl"
+														mdadm $RAIDDEV -a $HDDEV >/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge
+														break
+														;;
+												esac
+											done
+										fi
+										## }}}
+									else
+										no_part_msg
+									fi
+									## }}}
+								else
+									no_disk_msg
+								fi
+								#}}}
+								raidhotadd_remove_menu $lv_Part_Add
+								;;
+							$lv_Partition)
+								# Partitionierung
+								search_fdisks
+								raidhotadd_remove_menu $lv_Partition
+								;;
+							$gv_Back)
+								break
+								;;
+						esac
+
+					done
+				fi
+				#
+				search_md_state
+				hotadd_remove_menu
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

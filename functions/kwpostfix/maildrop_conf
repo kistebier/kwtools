@@ -1,0 +1,218 @@
+# maildrop (?) Konfiguration einstellen{{{
+
+maildrop_conf() {
+
+	# Variable
+	MAILDROP_TITLE="${gv_Configuration}::${lv_Maildrop}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)maildrop_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_maildrop_menu), die Mailman-Parameter einstellen# {{{
+	conf_maildrop_menu() {
+		MAILDROP_MENU=(maildrop_delivery_slot_cost \"\$maildrop_delivery_slot_cost\"
+		maildrop_delivery_slot_discount \"\$maildrop_delivery_slot_discount\"
+		maildrop_delivery_slot_loan \"\$maildrop_delivery_slot_loan\"
+		maildrop_destination_concurrency_failed_cohort_limit \"\$maildrop_destination_concurrency_failed_cohort_limit\"
+		maildrop_destination_concurrency_limit \"\$maildrop_destination_concurrency_limit\"
+		maildrop_destination_concurrency_negative_feedback \"\$maildrop_destination_concurrency_negative_feedback\"
+		maildrop_destination_concurrency_positive_feedback \"\$maildrop_destination_concurrency_positive_feedback\"
+		maildrop_destination_rate_delay \"\$maildrop_destination_rate_delay\"
+		maildrop_destination_recipient_limit \"\$maildrop_destination_recipient_limit\"
+		maildrop_extra_recipient_limit \"\$maildrop_extra_recipient_limit\"
+		maildrop_initial_destination_concurrency \"\$maildrop_initial_destination_concurrency\"
+		maildrop_minimum_delivery_slots \"\$maildrop_minimum_delivery_slots\"
+		maildrop_recipient_limit \"\$maildrop_recipient_limit\"
+		maildrop_recipient_refill_delay \"\$maildrop_recipient_refill_delay\"
+		maildrop_recipient_refill_limit \"\$maildrop_recipient_refill_limit\"
+		maildrop_time_limit \"\$maildrop_time_limit\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$MAILDROP_TITLE" "$gv_Menupoint" "$MAILDROP_MENU"
+	}
+	## }}}
+	conf_maildrop_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help maildrop_help
+				conf_maildrop_menu
+				;;
+			maildrop_delivery_slot_cost)
+				# = $default_delivery_slot_cost# {{{
+				default_or_input maildrop_delivery_slot_cost number_input -i $maildrop_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					maildrop_delivery_slot_cost="$Value"
+					postconf -e maildrop_delivery_slot_cost="$Value"
+				fi
+				#	# }}}
+				conf_maildrop_menu maildrop_delivery_slot_cost
+				;;
+			maildrop_delivery_slot_discount)
+				# = $default_delivery_slot_discount# {{{
+				default_or_input maildrop_delivery_slot_discount number_input -i $maildrop_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					maildrop_delivery_slot_discount="$Value"
+					postconf -e maildrop_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_delivery_slot_discount
+				;;
+			maildrop_delivery_slot_loan)
+				# = $default_delivery_slot_loan# {{{
+				default_or_input maildrop_delivery_slot_loan number_input -i $maildrop_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					maildrop_delivery_slot_loan="$Value"
+					postconf -e maildrop_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_delivery_slot_loan
+				;;
+			maildrop_destination_concurrency_failed_cohort_limit)
+				# = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input maildrop_destination_concurrency_failed_cohort_limit number_input -i $maildrop_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					maildrop_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e maildrop_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_concurrency_failed_cohort_limit
+				;;
+			maildrop_destination_concurrency_limit)
+				# = $default_destination_concurrency_limit# {{{
+				default_or_input maildrop_destination_concurrency_limit number_input -i $maildrop_destination_concurrency_limit
+				if [[ -n $Value ]] ; then
+					maildrop_destination_concurrency_limit="$Value"
+					postconf -e maildrop_destination_concurrency_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_concurrency_limit
+				;;
+			maildrop_destination_concurrency_negative_feedback)
+				# = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input maildrop_destination_concurrency_negative_feedback number_input -i $maildrop_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					maildrop_destination_concurrency_negative_feedback="$Value"
+					postconf -e maildrop_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_concurrency_negative_feedback
+				;;
+			maildrop_destination_concurrency_positive_feedback)
+				# = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input maildrop_destination_concurrency_positive_feedback number_input -i $maildrop_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					maildrop_destination_concurrency_positive_feedback="$Value"
+					postconf -e maildrop_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_concurrency_positive_feedback
+				;;
+			maildrop_destination_rate_delay)
+				# = $default_destination_rate_delay# {{{
+				default_or_input maildrop_destination_rate_delay number_input '-a "$MAILDROP_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' $maildrop_destination_rate_delay
+				if [[ -n $Value ]] ; then
+					maildrop_destination_rate_delay="$Value"
+					postconf -e maildrop_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_rate_delay
+				;;
+			maildrop_destination_recipient_limit)
+				# = $default_destination_recipient_limit# {{{
+				default_or_input maildrop_destination_recipient_limit number_input -i $maildrop_destination_recipient_limit
+				if [[ -n $Value ]] ; then
+					maildrop_destination_recipient_limit="$Value"
+					postconf -e maildrop_destination_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_destination_recipient_limit
+				;;
+			maildrop_extra_recipient_limit)
+				# = $default_extra_recipient_limit# {{{
+				default_or_input maildrop_extra_recipient_limit number_input -i $maildrop_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					maildrop_extra_recipient_limit="$Value"
+					postconf -e maildrop_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_extra_recipient_limit
+				;;
+			maildrop_initial_destination_concurrency)
+				# = $initial_destination_concurrency# {{{
+				default_or_input maildrop_initial_destination_concurrency number_input -i $maildrop_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					maildrop_initial_destination_concurrency="$Value"
+					postconf -e maildrop_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_maildrop_menu maildrop_initial_destination_concurrency
+				;;
+			maildrop_minimum_delivery_slots)
+				# = $default_minimum_delivery_slots# {{{
+				default_or_input maildrop_minimum_delivery_slots number_input -i $maildrop_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					maildrop_minimum_delivery_slots="$Value"
+					postconf -e maildrop_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_minimum_delivery_slots
+				;;
+			maildrop_recipient_limit)
+				# = $default_recipient_limit# {{{
+				default_or_input maildrop_recipient_limit number_input -i $maildrop_recipient_limit
+				if [[ -n $Value ]] ; then
+					maildrop_recipient_limit="$Value"
+					postconf -e maildrop_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_recipient_limit
+				;;
+			maildrop_recipient_refill_delay)
+				# = $default_recipient_refill_delay# {{{
+				default_or_input maildrop_recipient_refill_delay number_input -s ${maildrop_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					maildrop_recipient_refill_delay="$Value"
+					postconf -e maildrop_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_recipient_refill_delay
+				;;
+			maildrop_recipient_refill_limit)
+				# = $default_recipient_refill_limit# {{{
+				default_or_input maildrop_recipient_refill_limit number_input -i $maildrop_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					maildrop_recipient_refill_limit="$Value"
+					postconf -e maildrop_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_maildrop_menu maildrop_recipient_refill_limit
+				;;
+			maildrop_time_limit)
+				# = $command_time_limit# {{{
+				default_or_input maildrop_time_limit number_input -s ${maildrop_time_limit%?}
+				if [[ -n $Value ]] ; then
+					maildrop_time_limit="$Value"
+					postconf -e maildrop_time_limit="$Value"
+				fi
+				## }}}
+				conf_maildrop_menu maildrop_time_limit
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

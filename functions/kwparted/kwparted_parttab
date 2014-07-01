@@ -1,0 +1,304 @@
+# Funktion (kwparted_parttab), Partitionstabellen aller Festplatten{{{
+# sichern und die des MBR
+#
+kwparted_parttab() {
+	lv_Backup=$(gettext 'Sicherung')
+	lv_Mbr=$(gettext 'MBR')
+	lv_Fp=$(gettext 'Festplatte')
+	# Funktion parttab_menue{{{
+	PARTTAB_MENU=(\"$PART_TAB $gv_Create\" \"\" \"$PART_TAB $gv_Delete\" \"\"
+		\"$lv_Backup $gv_Create\" \"\" \"$lv_Backup $gv_Back\" \"\" $gv_Back \"\")
+	parttab_menue() {
+		menubox "$1" "$PART_TAB" "$gv_Menupoint" "$PARTTAB_MENU"
+	}
+	#}}}
+	# Funktion (no_parttab_msg)# {{{
+	#
+	# usage: no_parttab_msg
+	no_parttab_msg() {
+		if [ $# = 1 ] ; then
+			unset -- D
+			local D
+			D="$1"
+			MSG=$(gettext 'Das Laufwerk $D hat keine Partitionstabelle oder es ist kein Medium vorhanden.')
+		else
+			no_para_msg $0
+		fi
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	parttab_menue
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help parttab_help
+				parttab_menue
+				;;
+			"$PART_TAB $gv_Create")
+				# Partitionstabelle erstellen# {{{
+				# Funktion label_create_menu# {{{
+				#
+				# Herausfinden von Festplatten die keine Partitionstabelle
+				# besitzen und zur Auswahl anbieten.
+				#
+				label_create_menu() {
+					unset -- Disk_Part_Cr
+					for i in $DISK_DEV ; {
+						if [ -z "`parted -s $i print 2>/dev/null`" ] ; then
+							Disk_Part_Cr+=($i \"\")
+						fi	
+					}
+					#
+					# Gibt es keine Partitionstabelle wird eine Information darueber angezeigt
+					# und abgebrochen.
+					if [ -z "$Disk_Part_Cr" ] ; then
+						MSG=$(gettext 'Alle Festplatten haben schon eine Partitionstabelle.')
+						msgbox "$gv_Info" "$MSG"
+						break
+					else
+						LABEL_MENU=($Disk_Part_Cr $gv_Back \"\")
+						menubox "$L_DISK" "$PART_TAB" "$gv_Menupoint" "$LABEL_MENU"
+					fi
+				}
+				## }}}
+				label_create_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help parttab_help
+							label_create_menu
+							;;
+						/dev*)
+							# eine Partitionstabelle kreieren.
+							L_DISK="$gv_Auswahl"
+							disk_create_parttab $gv_Auswahl
+							break
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				## }}}
+				parttab_menue "$PART_TAB $gv_Create"
+				;;
+			"$PART_TAB $gv_Delete")
+				# Partitionstabelle loeschen# {{{
+				# Funktion backup_delete_menu# {{{
+				#
+				# Herausfinden von Festplatten mit Partitionstabelle
+				# und zur Auswahl anbieten.
+				#
+				backup_delete_menu() {
+					unset -- Disk_Part_Del
+					for i in $DISK_DEV ; {
+						if [ "`parted -s $i print 2>/dev/null`" ] ; then
+							Disk_Part_Del+=($i \"\")
+						fi	
+					}
+					# Gibt es keine Partitionstabelle wird eine Information darueber angezeigt
+					# und abgebrochen.
+					if [ -z "$Disk_Part_Del" ] ; then
+						MSG=$(gettext 'Es ist keine Partitionstabelle vorhanden.')
+						msgbox "$gv_Info" "$MSG"
+						break
+					else
+						PART_DEL_MENU=($Disk_Choice_ALL \"\" $Disk_Part_Del $gv_Back \"\")
+						menubox "" "$PART_TAB" "$gv_Menupoint" "$PART_DEL_MENU"
+					fi
+				}
+				## }}}
+				# Funktion (disk_delete_parttab), loescht die Partitionstabellen# {{{
+				#
+				disk_delete_parttab() {
+					if [ $# = 1 ] ; then
+						unset -- Fp_Part_Del
+						local Fp_Part_Del
+						Fp_Part_Del="$1"
+						# verschieden grosse Partitionstabellen.
+						if [ "$FP_DiskLabel" = loop ] ; then
+							COUNT=3
+						elif [ "$FP_DiskLabel" = dvh ] ; then
+							COUNT=2
+						else
+							COUNT=1
+						fi
+						dd if=/dev/zero of=${Fp_Part_Del} bs=512 count=$COUNT &>/dev/null
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				backup_delete_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help parttab_help
+							backup_delete_menu
+							;;
+						$Disk_Choice_ALL)
+							# alle Festplatten Partitionstabellen loeschen.# {{{
+							for i in $DISK_DEV ; {
+								disk_delete_parttab $i
+							}
+							## }}}
+							backup_delete_menu
+							;;
+						/dev*)
+							# eine Partitionstabelle loeschen
+							disk_delete_parttab $gv_Auswahl
+							backup_delete_menu
+							;;
+						$gv_Back)	break
+							;;
+					esac
+				done
+				## }}}
+				parttab_menue "$PART_TAB $gv_Delete"
+				;;
+			"$lv_Backup $gv_Create")
+				# Sicherung erstellen - alle oder einzeln# {{{
+				Date="`date +%d.%m.%Y`"
+				# Funktion backup_create_menu# {{{
+				backup_create_menu() {
+					BACKUP_CREATE_MENU=($Disk_Choice_ALL \"\" $DISK_DEV_E $gv_Back \"\")
+					menubox "" "$PART_TAB" "$gv_Menupoint" "$BACKUP_CREATE_MENU"
+				}
+				## }}}
+				# Funktion (backup_part_mbr), MBR und Partitionstabelle sichern# {{{
+				#
+				# usage: backup_part_mbr FP
+				# FP - Festplatte
+				#
+				backup_part_mbr() {
+					if [[ ${#argv} == 1 ]] ; then
+						#unset -- Backup_Fp Backup_Pt_File Backup_Mbr_File Date
+						local Backup_Fp Backup_Pt_File Backup_Mbr_File
+						Backup_Fp="$1"
+						# wird gespeichert als hda.parttab-${Date}.txt
+						Backup_Pt_File="/boot/${Backup_Fp##*/}.parttab-${Date}.txt"
+						Backup_Mbr_File="/boot/${Backup_Fp##*/}-${Date}.mbr"
+						# Gibt es eine Partitionstabelle wird sie gespeichert.
+						# Und zwar in Form von Byte und Compact.
+						if [ "`parted -s $Backup_Fp print`" ] ; then
+							PROG_OPT="-s $Backup_Fp unit co print free unit b print free >/dev/null > $Backup_Pt_File"
+							eval parted ${=PROG_OPT}
+							dd if=$Backup_Fp bs=512 count=1 of="$Backup_Mbr_File" &>/dev/null
+						else
+							no_parttab_msg $Backup_Fp
+						fi
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				backup_create_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help parttab_help
+							backup_create_menu
+							;;
+						$Disk_Choice_ALL)
+							# alle Festplatten Partitionstabellen sichern.# {{{
+							for i in $DISK_DEV ; {
+								backup_part_mbr $i
+							}
+							## }}}
+							backup_create_menu
+							;;
+						/dev*)
+							# Die Partitionstabelle einer Festplatte sichern.
+							backup_part_mbr "$gv_Auswahl"
+							backup_create_menu
+							;;
+						$gv_Back) break
+							;;
+					esac
+				done
+				## }}}
+				parttab_menue "$lv_Backup $gv_Create"
+				;;
+			"$lv_Backup $gv_Back")
+				# Sicherung zurueck spielen - einzeln# {{{
+				#######################################
+				# 1. MBR Auswahl
+				# 2. FP Auswahl
+				# 3. speichern ausfuehren
+				# 4. Status
+				unset -- MBR FP
+				# Funktion backup_back_menu# {{{
+				backup_back_menu() {
+					BACK_MENU=($lv_Mbr \"$MBR\" $lv_Fp \"$FP\"
+						$gv_Save \"\" $gv_Back \"\")
+					menubox "$1" "$PART_TAB" "$gv_Menupoint" "$BACK_MENU"
+				}
+				## }}}
+				backup_back_menu
+				while [[ -n $gv_Auswahl ]] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help parttab_help
+							backup_back_menu
+							;;
+						$lv_Mbr)
+							# Sicherungsdatei auswaehlen# {{{
+							SUFFIX=".mbr"
+							FORMAT=""
+							file_choice /boot only "$MBR"
+							if [[ -n $WERT ]] ; then
+								MBR="$WERT"
+							fi
+							## }}}
+							backup_back_menu $lv_Mbr
+							;; 
+						$lv_Fp)
+							# Festplatte auswaehlen# {{{
+							if [[ -n ${DISK_DEV_E[1]} ]] ; then
+								# Funktion backup_back_fp_menu# {{{
+								backup_back_fp_menu() {
+									BACK_FP_MENU=($DISK_DEV_E)
+									menubox "$1" "$PART_TAB" "$gv_Menupoint" "$BACK_FP_MENU"
+								}
+								## }}}
+								#
+								backup_back_fp_menu $FP
+								while [ "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)
+											script_help parttab_help
+											backup_back_fp_menu $FP
+											;;
+										*)
+											FP="$gv_Auswahl"
+											break
+											;;
+									esac
+								done
+							fi
+							## }}}
+							backup_back_menu $lv_Fp
+							;; 
+						$gv_Save)
+							# Sicherung zurueckspielen.# {{{
+							if [ -n "$MBR" -a -n "$FP" ] ; then
+								dd if="$MBR" of="$FP" &>/dev/null
+							else
+								MSG=$(gettext 'Sie muessen beide Menuepunkte mit Werten belegen.')
+								msgbox "$gv_Info" "$MSG"
+								backup_back_menu
+							fi
+							## }}}
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				parttab_menue "$lv_Backup $gv_Back"
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

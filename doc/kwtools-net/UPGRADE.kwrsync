@@ -1,0 +1,15 @@
+Syntax has changed.
+
+Before (kwrsync 0.0.9 and before):
+
+<Sourcedir>TAB<Remotedir>TAB<Remote shell>TAB<Destination host>TAB<Exclude>
+
+After (from kwrsync 1.0.0 on):
+
+<Sourcedir>TAB<Remotedir>TAB<Destination host>TAB<rsync arguments>TAB<Exclude>
+
+# F.E. upgrade from old configuration file -> new.
+while read a b c d e ; do
+	print "${a}\t${b}\t${d}\t-\t${e}" >> /var/tmp/kwrsynctab-new
+done < ~/.kwtools/kwrsynctab
+mv  -v /var/tmp/kwrsynctab-new ~/.kwtools/kwrsynctab

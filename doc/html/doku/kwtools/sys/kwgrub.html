@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, grub-legacy, grub, kwgrub, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2011-01-31">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwgroup.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwgrub2.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwgrub>kwgrub</a></h2>
+                                <p>Installiert und konfiguriert den Bootloader Grub. Mit Grub brauchen Sie nicht mehr
+				den Bootloader neu zu installieren, falls Sie einen neuen Kernel kreiert haben.
+				Genaueres gibt es mit dem Befehl "info grub". Man kann ihn auf Diskette, in den
+				Master Boot Record oder in den Bootsector einer Partition installieren.</p>
+                                <p><b>Notiz:</b> Ben&ouml;tigt root Rechte. Dieses Script funktioniert
+				zur Zeit nur mit <b>grub</b>. <b>grub2</b> wurde noch nicht getestet.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwgrub.html#boot-conf">1 Boot-Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwgrub.html#conf">2 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwgrub.html#install">3 Installation</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=boot-conf>1 Boot-Konfiguration</a></h3>
+                                <p>Hier kann man entweder eine neue Konfiguration anlegen oder eine
+				vorhandene Konfiguration ausw&auml;hlen und ver&auml;ndern oder l&ouml;schen.</p>
+
+				<p><b>Name:</b> Name der Konfiguration (neu eingeben,vorhandene ausw&auml;hlen).</p>
+
+				<p><b>Kernel_Part:</b> Hier kann man eine Partition im Grub spezifischen
+        			Format ausw&auml;hlen, auf welcher der Kernel und die *stage*
+        			Dateien liegen.</p>
+
+				<p><b>Kernel:</b> Auswahl des Kernels der gebootet werden soll. Wird
+       				memtest86.bin ausgew&auml;hlt, ben&ouml;tigt man die unteren Einstellungen
+        			nicht. Es kommt dann eine Info-Meldung.</p>
+
+				<p><b>Root_Part:</b> Hier kann man eine Partition ausw&auml;hlen, welche die Root-Partition 
+				ist, f&uuml;r diese Konfiguration.</p>
+
+				<p><b>Append:</b> Eingabe zus&auml;tzlicher Kernel Parameter, wie vga=791
+        			video=vesa:mtrr (alles eine Zeile)</p>
+				
+				<p><b>Initrd:</b> Auswahl der Initrd (Ramdisk) falls ihr ausgew&auml;hlter Kernel
+				eine ben&ouml;tigt. Nicht zu verwechseln mit Module1 (Multibootkernel).</p>
+				
+				<p><b>Lock:</b> Sollen Benutzer nur mit einem Passwort den Men&uuml;eintrag
+				booten d&uuml;rfen (ja/nein)?</p>
+				
+				<p><b>Module:</b> Auswahl eines Multiboot-Kernel. Wird zum Beispiel bei der
+				Virtualisierungs-Software Xen ben&ouml;tigt.</p>
+				
+				<p><b>Module1:</b> Auswahl der initrd f&uuml;r den Multiboot-Kernel.</p>
+				
+				<p><b>Memtest:</b> Auswahl des Testprogramms f&uuml;r den Arbeitsspeicher.</p>
+
+				<p><b>Makeactive:</b> Wird nur ben&ouml;tigt wenn grub einen anderen Bootloader,
+        			&uuml;ber das chainloading Verfahren, starten soll/muss. Zum
+        			Beispiel bei Windows. Wenn Sie ja/yes dr&uuml;cken wird chainloader auf +1
+				gesetzt. Das ist der 1. Sector auf der Boot-Partition.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=conf>2 Konfiguration</a></h3>
+                                <p><b>Menue anzeigen:</b> Soll das Bootmen&uuml; beim booten angezeigt werden 
+				(ja/nein)?</p>
+                                <p><b>Password:</b> Password welches beim booten ben&ouml;tigt wird um
+				die Bootparameter zu &auml;ndern.</p>
+                                <p><b>Splash:</b> "splashimage" ist eigentlich kein eigener grub Befehl. Man
+				kann hier aber ein Splashimage ausw&auml;hlen, welches dann als
+				Hintergrundbild f&uuml;r das Bootmen&uuml; dient. Es muss ein Bild im
+				XPM Format sein. N&auml;heres dazu auf der Seite:<br>
+				<a href="http://ruslug.rutgers.edu/~mcgrof/grub-images/" target="_blank">http://ruslug.rutgers.edu/~mcgrof/grub-images/</a></p>
+                                <p><b>Standard-Boot:</b> Welcher Kernel/Eintrag soll standardm&auml;ssig
+				gebootet werden? 0 ist der erste Eintrag. Es werden alle Eintr&auml;ge der Reihe
+				nach abgearbeitet.</p>
+                                <p><b>Tastatur:</b> Tastaturbelegung. Zur Zeit ist nur deutsch und englisch
+				vorhanden.</p>
+                                <p><b>Timeout:</b> Nach welcher Zeit soll der voreingestellte Kernel gebootet werden.
+				Siehe Standard-Boot. Geben Sie die Zeit in Sekunden an (10 = 10 sec.).</p>
+                                <p><b>Beispiel:</b> <a href="../../../files/menu.lst" target="_blank">menu.lst</a></p>
+				</td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=install>3 Installation</a></h3>
+                                <p><b>Kernel-Part:</b> Auswahl der Partition auf der sich der Kernel, stage1/2
+				und/oder menu.lst befinden.</p>
+				<p><b>MBR_Floppy_Part:</b> Wohin soll grub installiert werden? In den Master
+				Boot Records (MBR), auf Diskette (Floppy) oder in den Bootsector
+				einer Festplattenpartition.</p>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwgroup.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwgrub2.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

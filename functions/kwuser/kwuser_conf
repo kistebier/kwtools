@@ -1,0 +1,223 @@
+# Funktion (kwuser_conf), konfiguriert Standard# {{{
+# Einstellungen zum erzeugen von Benutzern mittels kwuser
+#
+# usage: kwuser_conf
+kwuser_conf() {
+	# Funktionen einlesen
+	hw_conf
+	#
+	FIRSTLOGIN=${FIRSTLOGIN:-yes}
+	ENCRYPT_METHOD=${ENCRYPT_METHOD:-DES}
+	PASSWD_LENGTH=${PASSWD_LENGTH:-8}
+	KWUSER_UMASK=${KWUSER_UMASK:-022}
+	KW_NGROUP=${KW_NGROUP:-users}
+	KW_NGROUPS=${KW_NGROUPS:-users}
+	lv_Umask=$(gettext 'umask')
+	lv_Pass_Length=$(gettext 'Passwortlaenge')
+	lv_Firstlogin=$(gettext 'Erstlogin')
+	lv_Encrypt=$(gettext 'Verschluesselung')
+	#
+	lv_Quota=$(gettext 'Quota')
+	lv_BH_Limit=$(gettext 'Block_Hardlimit')
+	lv_BS_Limit=$(gettext 'Block_Softlimit')
+	#
+	# Funktion (kwuser_conf_menu)# {{{
+	#
+	kwuser_conf_menu() {
+		KW_CONF_MENU=($gv_Group \"$KW_NGROUP\"
+	   	$lv_Groups \"$KW_NGROUPS\" $lv_Shell \"${U_SHELL:-/bin/bash}\"
+		$lv_Pass_Length \"$PASSWD_LENGTH\"
+		$lv_Encrypt \"$ENCRYPT_METHOD\"
+		$lv_Firstlogin \"$FIRSTLOGIN\"
+		$lv_Umask \"$KWUSER_UMASK\"
+		$lv_BH_Limit \"$BH_LIMIT\"
+		$lv_BS_Limit \"$BS_LIMIT\"
+	   	$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$KW_CONF_MENU"
+	}
+	## }}}
+	kwuser_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfe Messagebox
+				script_help kwuser_conf_help
+				kwuser_conf_menu
+				;;
+			$gv_Group)
+				# Gruppe bestimmen{{{
+				#
+				user_group_check -g
+				if [ "$?" = 0 ] ; then
+					KW_GROUP_TITLE=(${gv_Configuration}::${gv_Group})
+					KW_GROUP_MSG=$(gettext 'Waehlen Sie die Hauptgruppe fuer die zu erstellenden Benutzer aus.')
+					menubox "$KW_NGROUP" "$KW_GROUP_TITLE" "$KW_GROUP_MSG" "$U_G_ARRAY"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/group_help
+								menubox "$KW_NGROUP" "$KW_GROUP_TITLE" "$KW_GROUP_MSG" "$U_G_ARRAY"
+								;;
+							*)
+								# Gruppe uebernehmen
+								KW_NGROUP="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				fi
+				#}}}
+				kwuser_conf_menu $gv_Group
+				;;
+			$lv_Groups)
+				# Gruppen fuer Benutzer denen er angehoeren soll.# {{{
+				user_group_check -g
+				if [ "$?" = 0 ] ; then
+					# Filtern, ob die Gruppe schon ausgewaehlt wurde, wenn ja
+					# als on markieren.
+					generate_is_file "$KW_NGROUPS"
+					is_value "${(o)U_G_ARRAY_S}"
+					# Gibt es Werte werden sie zur Auswahl angeboten
+					if [ -n "$VALUE_ARRAY" ] ; then
+						KW_GROUPS_TITLE=(${gv_Configuration}::${lv_Groups})
+						KW_GROUPS_MSG=$(gettext 'Waehlen Sie hier die Gruppen aus zu denen die zu erstellenden Benutzer standardmaessig gehoeren sollen.')
+						checklist "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help share/group_help
+									checklist "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
+									;;
+								*)
+									# Gruppen uebernehmen
+									KW_NGROUPS="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						check_gv_Auswahl KW_NGROUPS
+					fi
+				fi
+				## }}}
+				kwuser_conf_menu $lv_Groups
+				;;
+			$lv_Shell)
+				# Shell auswaehlen# {{{
+				list_shell $U_SHELL
+				if [ -n "$gv_Shell" ] ; then
+					U_SHELL="$gv_Shell"
+				else
+					U_SHELL="/bin/false"
+				fi
+				#}}}
+				kwuser_conf_menu $lv_Shell
+				;;
+			$lv_Encrypt)
+				# Verschluesselung auswaehlen# {{{
+				unset -- Methode
+				local Methode
+				for i in DES SHA256 SHA512 MD5 ; {
+					if [[ $i = $ENCRYPT_METHOD ]] ; then
+						Methode+=($i \"\" on)
+					else
+						Methode+=($i \"\" off)
+					fi
+				}
+				# Menu
+				ENCRYPT_MSG=$(gettext 'Waehlen Sie eine Methode zur Verschluesselung Ihres Passwortes aus. Standard ist DES.')
+				ENCRYPT_TITLE="${gv_Configuration}::${lv_Encrypt}"
+				ENCRYPT_MENU=($Methode)
+				radiolist "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+				#
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help kwuser_conf_help
+							radiolist "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+							;;
+						*)
+							# Auswahl uebernehmen
+							ENCRYPT_METHOD="$gv_Auswahl" 
+							break
+							;;
+					esac
+				done
+				## }}}
+				kwuser_conf_menu $lv_Encrypt
+				;;
+			$lv_Firstlogin)
+				# Zu Einstellungen beim 1. Login auffordern.# {{{
+				FIRSTLOGIN_TITLE="${gv_Configuration}::${lv_Firstlogin}"
+				FIRSTLOGIN_MSG=(gettext 'Soll beim 1. Login zu weiteren Einstellungen, wie Passwortaenderung aufgefordert werden (ja/nein)?')
+				yesno "$FIRSTLOGIN_TITLE" "$FIRSTLOGIN_MSG" "${FIRSTLOGIN:-yes}"
+				if [ "$gv_Auswahl" != no ] ; then
+					FIRSTLOGIN="yes"
+				else
+					FIRSTLOGIN="no"
+				fi
+				#}}}
+				kwuser_conf_menu $lv_Firstlogin
+				;;
+			$lv_Pass_Length)
+				# Passwortlaenge eingeben# {{{
+				MSG=$(gettext 'Geben Sie die Laenge des Passworts ein, welches generiert werden soll (z.B. 8).')
+				number_input "$gv_Configuration" "$MSG" "$PASSWD_LENGTH"
+				if [ -n "$NUMBER" -a "$NUMBER" -ge 5 ] ; then
+					PASSWD_LENGTH="$NUMBER" 
+				else
+					MSG=$(gettext 'Die Passwortlaenge ist zu kurz. Sie muss mindestens 5 Zeichen lang sein. Sie wird auf 8 Zeichen gesetzt.')
+					PASSWD_LENGTH="8"
+				fi
+				## }}}
+				kwuser_conf_menu $lv_Pass_Length
+				;;
+			$lv_Umask)
+				# Umask zum erstellen der Homeverzeichnisse vergeben# {{{
+				mask -u "$KWUSER_UMASK"
+				if [ -n "$MASK" ] ; then
+					KWUSER_UMASK="$MASK"
+				fi
+				## }}}
+				kwuser_conf_menu $lv_Umask
+				;;
+			$lv_BH_Limit)
+				# Block Hardlimit Groesse einstellen# {{{
+				LIMIT_TITLE=(${gv_Configuration}::${lv_BH_Limit})
+				SIZE="$BH_LIMIT"
+				limit_size_conf -h "$BS_LIMIT"
+				if [ -n "$SIZE" ] ; then
+					BH_LIMIT="$SIZE"
+				else
+					BH_LIMIT=0
+				fi
+				## }}}
+				kwuser_conf_menu $lv_BH_Limit
+				;;
+			$lv_BS_Limit)
+				# Block Softlimit Groesse einstellen# {{{
+				LIMIT_TITLE=(${gv_Configuration}::${lv_BS_Limit})
+				SIZE="$BS_LIMIT"
+				limit_size_conf -s "$BH_LIMIT"
+				if [ -n "$SIZE" ] ; then
+					BS_LIMIT="$SIZE"
+				else
+					BS_LIMIT=0
+				fi
+				## }}}
+				kwuser_conf_menu $lv_BS_Limit
+				;;
+			$gv_Save)
+				# speichern# {{{
+				kwuser_config
+				## }}}
+				return 0
+				;;
+			$gv_Back)	return 0
+				;;
+		esac
+	done
+	return 0
+}
+# }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

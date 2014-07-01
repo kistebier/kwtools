@@ -1,0 +1,229 @@
+# Funktion, SQL Datenbanken{{{
+ldap_db() {
+	###########################################
+	# TODO: SSL/TLS und SASL fehlen
+	###########################################
+	unset -- FILE
+	FILE="$2"
+	lv_Attr=$(gettext 'Attribute')
+	lv_Search_Base=$(gettext 'Suchbasis')
+	lv_Timeout=$(gettext 'Zeitlimit')
+	lv_Ldap_Filter=$(gettext 'LDAP-Filter')
+	lv_Ldap_Tab=$(gettext 'LDAP_Tabelle')
+	#
+	LDAP_CONF_TITLE="${gv_Configuration}::${lv_Ldap_Tab}"
+
+	# Funktion Schlüsseldatei einlesen{{{
+	#
+	read_werte() {
+		unset -- Attribute DB_User DB_Host Ldap_Filter Port Search_Base Timeout
+		typeset -Lx DB_Host
+		while read Key b Value ; do
+			case $Key in 
+				bind_dn)	DB_User="$Value"
+					;;
+				bind_pw)	PASSPHRASE="$Value"
+							Pass=$PASSPHRASE
+							password_display "$Pass"
+							PASSPHRASE1="$gv_Star_Passphrase"
+							unset -- gv_Star_Passphrase
+					;;
+				search_base)	Search_Base="$Value"
+					;;
+				server_host)	DB_Host="$Value"
+					;;
+				server_port)	Port="$Value"
+					;;
+				timeout)	Timeout="$Value"
+					;;
+				query_filter)	Ldap_Filter="$Value"
+					;;
+				special_result_attribute)	Attribute="$Value"
+					;;
+			esac
+		done < $1
+	}
+	#}}}
+	# Funktion Datenbank Suchbasis{{{
+	search_base() {
+		SEARCH_BASE_MSG=$(gettext 'Geben Sie hier die zu verwendende LDAP-Suchbasis ein (Bsp. dc=domain.de,dc=de)')
+		inputbox "$LDAP_CONF_TITLE" "$SEARCH_BASE_MSG" "${Search_Base:-dc=domain.de,dc=de}"
+		if [ "$gv_Auswahl" ] ; then
+			Search_Base="$gv_Auswahl"
+		else
+			unset -- Search_Base
+		fi
+	}
+	#}}}
+	# Funktion Benutzer auswählen{{{
+	db_user() {
+		DB_USER_MSG=$(gettext 'Geben Sie den Benutzer ein, der sich in die Datenbank einloggen darf.')
+		inputbox "$LDAP_CONF_TITLE" "$DB_USER_MSG" "$DB_User"
+		if [ "$gv_Auswahl" ] ; then
+			DB_User="$gv_Auswahl"
+		else
+			unset -- DB_User
+		fi
+	}
+	#}}}
+	# Funktion Datenbank Passwort{{{
+	db_passwd() {
+		# PASSPHRASE1 wird von passwd erzeugt.
+		DB_PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer die Datenbank ein.')
+		DB_PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort fuer die Datenbank ein.')
+		password "$LDAP_CONF_TITLE" "$DB_PASSWD_MSG" 5
+		if [ "$PASSPHRASE" ] ; then
+			PASS1="$PASSPHRASE"
+			password "$LDAP_CONF_TITLE" "$DB_PASSWD_MSG1" 5
+			if [ "$PASSPHRASE" ] ; then
+				PASS2="$PASSPHRASE"
+				if [ "$PASS1" = "$PASS2" ] ; then
+					Pass="$PASSPHRASE"
+					password_display "$Pass"
+					PASSPHRASE1="$gv_Star_Passphrase"
+					unset -- gv_Star_Passphrase
+				else
+					different_passwd
+					unset -- Pass PASSPHRASE PASSPHRASE1 PASS1 PASS2
+				fi
+			fi
+		fi
+		#
+	}
+	#}}}
+	# Datenbankrechner{{{
+	db_host() {
+		DB_HOST_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch Leerzeichen, ein auf dem die Datenbank laeuft.')
+		inputbox "$LDAP_CONF_TITLE" "$DB_HOST_MSG" "$DB_Host"
+		if [ "$gv_Auswahl" ] ; then
+			unset -- DB_Host
+			local Anz
+			integer Anz
+			Anz=0
+			for i in ${=gv_Auswahl} ; {
+				if [ "$i" = , ] ; then
+					continue
+				else
+					(( Anz++ ))
+					DB_Host[Anz]="$i"
+				fi
+			}
+		else
+			unset -- DB_Host
+		fi
+	}
+	#}}}
+	# Funktion ldap_conf_menu{{{
+	ldap_conf_menue() {
+		LDAP_CONF_MENU=($gv_Filename \"$FILE\" -------------------- \"\"
+		$gv_User \"$DB_User\"
+		$gv_Passwd \"$PASSPHRASE1\" $lv_Port \"$Port\" $gv_Host \"$DB_Host\"
+		$lv_Search_Base \"$Search_Base\" $lv_Timeout \"$Timeout\"
+		$lv_Ldap_Filter \"$Ldap_Filter\" $lv_Attr \"$Attribute\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$LDAP_CONF_TITLE" "$gv_Menupoint" "$LDAP_CONF_MENU"
+	}
+	#}}}
+	read_werte $FILE
+	# ldap Datenbank Einstellungen{{{
+	ldap_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help "$TAB_HELP"
+				ldap_conf_menu
+				;;
+			$gv_Filename|---*)
+				# Dateinamen Anzeige
+				ldap_conf_menu $gv_Filename
+				;;
+			$lv_Attr)
+				# Attribute der Verzeichnisse, die Dns oder URLs enthalten.{{{
+				ATTRIBUTE_MSG=$(gettext 'Geben Sie die Attribute der Verzeichnisse ein, die DNs oder URLs enthalten (Bsp. mail).')
+				inputbox "$LDAP_CONF_TITLE" "$ATTRIBUTE_MSG" "$Attribute"
+				if [ "$gv_Auswahl" ] ; then
+					Attribute="$gv_Auswahl"
+				else
+					unset -- Attribute
+				fi
+				#}}}
+				ldap_conf_menu $lv_Attr
+				;;
+			$gv_User) # DB_user
+				db_user
+				ldap_conf_menu $gv_User
+				;;
+			$lv_Ldap_Filter)
+				# LDAP-Filter mit dem das LDAP-Verzeichnis durchsucht wird.{{{
+				# (Bsp. query_filter = (&(mail=%s)(paid_up=true))
+				U_OPT=regexp
+				QUERY_FILTER_MSG=$(gettext 'Geben Sie den LDAP-Filter ein, mit dem das LDAP-Verzeichnis durchsucht wird (Bsp. (&(mail=%s)(paid_up=true)) ).')
+				inputbox "$LDAP_CONF_TITLE" "$QUERY_FILTER_MSG" "${Ldap_Filter//\"/\\\"}"
+				if [ "$gv_Auswahl" ] ; then
+					Ldap_Filter="$gv_Auswahl"
+				else
+					unset -- Ldap_Filter
+				fi
+				#}}}
+				ldap_conf_menu $lv_Ldap_Filter
+				;;
+			$gv_Passwd) # DB Passwort
+				db_passwd
+				ldap_conf_menu $gv_Passwd
+				;;
+			$lv_Port)
+				# Porteingabe{{{
+				PORT_MSG=$(gettext 'Geben Sie den Port des LDAP-Servers ein. Standard ist Port 389.')
+				number_input "$LDAP_CONF_TITLE" "$PORT_MSG" "$Port"
+				if [ "$NUMBER" ] ; then
+					Port="$NUMBER"
+				else
+					Port=389
+				fi
+				#}}}
+				ldap_conf_menu $lv_Port
+				;;
+			$gv_Host)	# Datenbankhost
+				db_host
+				ldap_conf_menu $gv_Host
+				;;
+			$lv_Search_Base) # zu verwendete LDAP-Suchbasis
+				search_base
+				ldap_conf_menu $lv_Search_Base
+				;;
+			$lv_Timeout)
+				# Timeout{{{
+				TIMEOUT_MSG=$(gettext 'Geben Sie den Timout bei einer Verbindungsanfrage ein. Standard ist 10 = 10 Sekunden.')
+				number_input "$LDAP_CONF_TITLE" "$TIMEOUT_MSG" "$Timeout"
+				if [ "$NUMBER" ] ; then
+					Timeout="$NUMBER"
+				else
+					Timeout=10
+				fi
+				#}}}
+				ldap_conf_menu $lv_Timeout
+				;;
+			$gv_Save)	
+				# speichern{{{
+				if [ "$DB_Host" -a "$Search_Base" -a "$Ldap_Filter" ] ; then
+					ldap_config
+					unset -- PASSPHRASE Pass PASSPHRASE1 PASS1 PASS2
+					break
+				else
+					failed_entry_msg
+					ldap_conf_menu
+				fi
+				#}}}
+				;;
+			$gv_Back)
+				unset -- PASSPHRASE Pass PASSPHRASE1 PASS1 PASS2
+				break
+				;;
+		esac
+	done
+	#}}}
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

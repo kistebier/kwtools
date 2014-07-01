@@ -1,0 +1,46 @@
+# Funktion flags_choice{{{
+#
+# usage: flags_choice [ -p | -r ] [ VALUE ]
+#
+flags_choice() {
+	local Flags Help
+	case "$1" in
+		-p)	Help="pcre_help"
+			Flags="${2:-ix}"
+			generate_is_file "`print ${(s::)${Flags}}`"
+			is_value "i m s x A E U X"
+			;;
+		-r)	Help="regexp_help"
+			Flags="${2:-ix}"
+			generate_is_file "`print ${(s::)${Flags}}`"
+			is_value "i m x"
+			;;
+		*)	no_para_msg "$0"
+			return 1
+			;;
+	esac
+	#
+	F_MSG=$(gettext 'Waehlen Sie die Flags fuer den regulaeren Ausdruck aus.')
+	F_MENU=($VALUE_ARRAY)
+	U_OPT=-
+	checklist "$TABLE_TITLE" "$F_MSG" "$F_MENU" "$Flags"
+	#
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help "$Help"
+				U_OPT=-
+				checklist "$TABLE_TITLE" "$F_MSG" "$F_MENU" "$Flags"
+				;;
+			*)	# Auswahl übernehmen
+				FLAGS="$gv_Auswahl"
+				break
+				;;
+		esac
+	done
+	return 0
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

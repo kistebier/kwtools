@@ -1,0 +1,317 @@
+# Funktion (manage_export_most), managed das exportieren ins# {{{
+# DER,TAR,TXT,ZIP Format.
+#
+# usage: manage_export_pem OPTION EXPORT_FILE SUFFIX
+# OPTION      - [ -keys | -ca | -certs | -crl ]
+# EXPORT_FILE - zu exportierende Datei
+# SUFFIX      - [ der | tar | txt | zip ]
+#
+manage_export_most() {
+	#
+	if [[ ${#argv} == 3 ]] && [[ -f $2 ]] ; then
+		local Opt Suffix In_File
+		Opt="$1"
+		In_File="$2"
+		Suffix="$3"
+		#
+		# Variablen belegen
+		CERT_VALUE="no"
+		#
+		# Export Dateiname und Suffix erst einmal festlegen
+		export_create_filename "$Opt" "$Suffix"
+		#
+		# Funktion (export_most_menu)# {{{
+		#
+		export_most_menu() {
+			case "$Opt" in
+				-crl)
+					# Widerrufsliste exportieren# {{{
+					EXP_HELPFILE=export_crl_all_help
+					EXPORT_MOST_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+					\"$lv_Ssl_CA_Password\" \"$CA_CAPASSWORD\"
+					$lv_Ssl_Validity \"$DEFAULT_REVOKE_DAYS\"
+					$gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-ca|-certs)
+					# CAs und Zertifikate exportieren# {{{
+					# 
+					###########################################
+					# Notiz:
+					# Das Format DER und TXT benoetigen keine
+					# weiteren Menuepunkte
+					###########################################
+					EXP_HELPFILE=export_ca_cert_most_help
+					EXPORT_MOST_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+					$gv_Create \"\" $gv_Back \"\")
+					## }}}
+					;;
+				-keys)
+					# Schluessel exportieren# {{{
+					EXP_HELPFILE=export_key_most_help
+					case "$Suffix" in
+						der)
+							EXPORT_MOST_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+							\"$lv_Ssl_Key_Password\" \"$CA_CAPASSWORD\"
+							\"$lv_CertAdd\" \"$CERT_VALUE\"
+							$gv_Create \"\" $gv_Back \"\")
+							;;
+						*)
+							EXPORT_MOST_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+							$gv_Create \"\" $gv_Back \"\")
+							;;
+					esac
+					## }}}
+					;;
+			esac
+			menubox "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MOST_MENU"
+		}
+		## }}}
+		export_most_menu
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help "$EXP_HELPFILE"
+					export_most_menu
+					;;
+				"$lv_ExportFilename")
+					# Dateiname fuer den Export eingeben# {{{
+					export_filename $Suffix
+					## }}}
+					export_most_menu $lv_ExportFilename
+					;;
+				$lv_Ssl_CA_Password)
+					# CA Passwort eingeben
+					ca_passwd_input
+					export_most_menu $lv_Ssl_CA_Password
+					;;
+				$lv_Ssl_Key_Password)
+					# Schluessel Passwort eingeben
+					ca_passwd_input -keys
+					export_most_menu $lv_Ssl_Key_Password
+					;;
+				$lv_Ssl_Validity)
+					# Gueltigkeitseingabe
+					revoke_days_input
+					export_most_menu $lv_Ssl_Validity
+					;;
+				$gv_Create)
+					# exportieren# {{{
+					#
+					# An cd $KWSSL_DIR denken
+					cd $KWSSL_DIR
+					case "$Opt" in
+						-ca)
+							# CAs exportieren# {{{
+							case "$Suffix" in
+								der)
+									openssl x509 -in ${CA_OPEN_NAME}/cacert.pem -outform DER -out "$EXPORT_FILENAME" || prog_failure
+									;;
+								txt)
+									openssl x509 -in ${CA_OPEN_NAME}/cacert.pem -text -noout > "$EXPORT_FILENAME" || prog_failure
+									;;
+							esac
+							break
+							## }}}
+							;;
+						-certs)
+							# Zertifikate exportieren# {{{
+							case "$Suffix" in
+								der)
+									# DER Export
+									openssl x509 -in "$In_File" -outform DER -out "$EXPORT_FILENAME" || prog_failure
+									;;
+								tar)
+									# TAR Export, mit Zertifikate, Schluessel, CA# {{{
+									# ertsmal ./tmp loeschen
+									rm -rf tmp &>/dev/null
+									# ./tmp erstellen
+									create_file -d tmp
+									CAKEY="${In_File/\/certs\///keys/}"
+									CACERT="${CA_OPEN_NAME}/cacert.pem"
+									cp -au "$In_File" ./tmp/cert.pem
+									cp -au "$CAKEY" ./tmp/key.pem
+									cp -au "$CACERT" ./tmp/cacert.pem
+									# Tar-Archiv erstellen
+									cd /
+									tar -cvf "$EXPORT_FILENAME" ${KWSSL_DIR#/}/tmp 2>/dev/null || prog_failure
+									## }}}
+									;;
+								txt)
+									# Text Export
+									openssl x509 -in "$In_File" -text -noout > "$EXPORT_FILENAME" || prog_failure
+									;;
+								zip)
+									# ZIP Export, mit Zertifikat, Schluessel, CA# {{{
+									# ertsmal ./tmp loeschen
+									rm -rf tmp &>/dev/null
+									# ./tmp erstellen
+									create_file -d tmp
+									CAKEY="${In_File/\/certs\///keys/}"
+									CACERT="${CA_OPEN_NAME}/cacert.pem"
+									cp -au "$In_File" ./tmp/cert.pem
+									cp -au "$CAKEY" ./tmp/key.pem
+									cp -au "$CACERT" ./tmp/cacert.pem
+									# Tar-Archiv erstellen
+									cd ./tmp
+									zip -9v "$EXPORT_FILENAME" * 2>/dev/null || prog_failure
+									## }}}
+									;;
+							esac
+							break
+							## }}}
+							;;
+						-crl)
+							# Widerrufsliste exportieren.# {{{
+							case "$Suffix" in
+								der)
+									# ins DER Format exportieren# {{{
+									if [[ -n $EXPORT_FILENAME ]] && \
+										[[ -n $CA_CAPASSWORD ]] && \
+										[[ -n $DEFAULT_REVOKE_DAYS ]] ; then
+										# ertsmal ./tmp loeschen
+										rm -rf tmp &>/dev/null
+										# ./tmp erstellen
+										create_file -d tmp
+										#
+										openssl ca -gencrl -config $KWSSL2RC \
+											-out ./tmp/crl.pem \
+											-passin env:CA_CAPASSWD \
+											-crldays $DEFAULT_REVOKE_DAYS || prog_failure
+										if [ "$RET" != 1 ] ; then
+											openssl crl -in ./tmp/crl.pem \
+												-outform DER -out "$EXPORT_FILENAME" || \
+												prog_failure
+										fi
+										# Passwoerter loeschen
+										unset -- CA_CAPASSWD CA_CAPASSWORD
+										break
+									else
+										failed_entry_msg
+										export_most_menu
+									fi
+									## }}}
+									;;
+								txt)
+									# ins TXT Format exportieren# {{{
+									if [[ -n $EXPORT_FILENAME ]] && \
+										[[ -n $CA_CAPASSWORD ]] && \
+										[[ -n $DEFAULT_REVOKE_DAYS ]] ; then
+										# ertsmal ./tmp loeschen
+										rm -rf tmp &>/dev/null
+										# ./tmp erstellen
+										create_file -d tmp
+										#
+										openssl ca -gencrl -config $KWSSL2RC \
+											-out ./tmp/crl.pem \
+											-passin env:CA_CAPASSWD \
+											-crldays $DEFAULT_REVOKE_DAYS || prog_failure
+										if [ "$RET" != 1 ] ; then
+											openssl crl -in ./tmp/crl.pem \
+												-text -noout > "$EXPORT_FILENAME" || \
+												prog_failure
+										fi
+										# Passwoerter loeschen
+										unset -- CA_CAPASSWD CA_CAPASSWORD
+										break
+									else
+										failed_entry_msg
+										export_most_menu
+									fi
+									## }}}
+									;;
+							esac
+							## }}}
+							;;
+						-keys)
+							# Schluessel exportieren# {{{
+							case "$Suffix" in
+								der)
+									# DER Export# {{{
+									# Algorithmus feststellen
+									get_alg_privkey "$In_File"
+									CACERT="${In_File/\/keys\///certs/}"
+									# ohne Passwort, mit Zertifikat
+									if [[ -n $CA_CAPASSWORD ]] && \
+										[[ $CERT_VALUE == yes ]] ; then
+										openssl "$ALGORITHM" -in "$In_File" \
+										-outform DER -out "$EXPORT_FILENAME" \
+										-passin env:CA_CAPASSWD || prog_failure
+										# Zertifikat hinzufuegen
+										echo "" >> "$EXPORT_FILENAME" &>/dev/null
+										< "$CACERT" >> "$EXPORT_FILENAME" &>/dev/null
+										# Passwoerter loeschen
+										unset -- CA_CAPASSWORD CA_CAPASSWD
+										break
+									# ohne Passwort, ohne Zertifikat
+									elif [[ -n $CA_CAPASSWORD ]] && \
+										[[ $CERT_VALUE == no ]] ; then
+										openssl "$ALGORITHM" -in "$In_File" \
+										-outform DER -out "$EXPORT_FILENAME" \
+										-passin env:CA_CAPASSWD || prog_failure
+										# Passwoerter loeschen
+										unset -- CA_CAPASSWORD CA_CAPASSWD
+										break
+									else
+										failed_entry_msg
+										export_most_menu
+									fi
+									## }}}
+									;;
+								tar)
+									# TAR Export, mit Zertifikate, Schluessel, CA# {{{
+									# ertsmal ./tmp loeschen
+									rm -rf tmp &>/dev/null
+									# ./tmp erstellen
+									create_file -d tmp
+									CAKEY="${In_File/\/certs\///keys/}"
+									CACERT="${CA_OPEN_NAME}/cacert.pem"
+									cp -au "$In_File" ./tmp/cert.pem
+									cp -au "$CAKEY" ./tmp/key.pem
+									cp -au "$CACERT" ./tmp/cacert.pem
+									# Tar-Archiv erstellen
+									cd /
+									tar -cvf "$EXPORT_FILENAME" ${KWSSL_DIR#/}/tmp 2>/dev/null || prog_failure
+									break
+									## }}}
+									;;
+								zip)
+									# ZIP Export, mit Zertifikat, Schluessel, CA# {{{
+									# ertsmal ./tmp loeschen
+									rm -rf tmp &>/dev/null
+									# ./tmp erstellen
+									create_file -d tmp
+									CAKEY="${In_File/\/certs\///keys/}"
+									CACERT="${CA_OPEN_NAME}/cacert.pem"
+									cp -au "$In_File" ./tmp/cert.pem
+									cp -au "$CAKEY" ./tmp/key.pem
+									cp -au "$CACERT" ./tmp/cacert.pem
+									# Tar-Archiv erstellen
+									cd ./tmp
+									zip -9v "$EXPORT_FILENAME" * 2>/dev/null || prog_failure
+									break
+									## }}}
+									;;
+							esac
+							## }}}
+							;;
+					esac
+					## }}}
+					;;
+				$gv_Back)
+					# Abbrechen
+					unset -- CA_CAPASSWD CA_CAPASSWORD
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+# }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

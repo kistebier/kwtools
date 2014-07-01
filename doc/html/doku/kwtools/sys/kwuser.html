@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, User, Benutzer, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2012-03-08">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwrunlevconf.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwuser>kwuser</a></h2>
+                                <p>kwuser erstellt, l&ouml;scht und ver&auml;ndert Benutzer. Beim
+				anlegen eines Benutzers muss man ein Passwort vergeben. Wenn man einige
+				Einstellungen eines Benutzers &auml;ndert braucht man dies nicht tun.</p>
+
+				<p>Die Option &#091; -m &#124; --multi &#093; ist ein Sonderfall mit
+				der Sie viele Benutzer gleichzeitig anlegen 
+				k&ouml;nnen. Es erscheint dann eine etwas andere Men&uuml;auswahl mit den
+				zus&auml;tzlichen Punkten Prefix, Prefix_Homeverz. und Anzahl. Die Benutzer
+				werden dann mit der Kombination aus Prefix+Anzahl erstellt.</p>
+
+				<p><font color="Red"><b>Notiz:</b> Die Passw&ouml;rter stehen 
+				danach in der Datei /root/passwd-prefix.txt. Die 
+				Passw&ouml;rter werden mittels der Ger&auml;tedatei 
+				/dev/urandom und dem Programm uuencode gebildet.
+				Diese Datei sollten Sie ordentlich sichern!<br>
+				Die Datei hat das Format &quot;User Passwort&quot;.<br>
+				Auch sollten Sie bei der Erstellung von mehr als 10000 
+				Benutzern lieber eine 
+				Datenbank benutzen. Die Geschwindigkeit ist dann 
+				besser.</font></p>
+
+                                <p><b>Notiz:</b> Ben&ouml;tigt root Rechte.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwuser.html#conf">1
+			Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwuser.html#normal">2
+			Men&uuml;punkte zum anlegen von Benutzern</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwuser.html#muser">3
+			Men&uuml;punkte beim Start von kwuser mit der Option -m</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=conf>1 Konfiguration</a></h3>
+				<p>Hier k&ouml;nnen Sie die Werte konfigurieren die beim
+				anlegen von Benutzern angewendet werden sollen.</p>
+				<p><b>Gruppe:</b> Gruppe des Benutzers bestimmen.</p>
+				<p><b>Gruppen:</b> Gruppen einstellen zu welchen der
+				Benutzer geh&ouml;ren soll. Wird keine eingestellt wird,
+				kommt die Gruppe users zum Zuge (Standard).</p>
+				<p><b>Shell:</b> Eine der installierten Shells, als Standard,
+				zum erstellen von Benutzer Accounts ausw&auml;hlen.</p>
+				<p><b>Passwortl&auml;nge:</b> Eingabe einer Passwortl&auml;nge
+				die beim generieren eines Passwortes benutzt werden soll. Wird
+				nichts angegeben wird eine L&auml;nge von 8 Zeichen benutzt.</p>
+				<p><b>Verschl&uuml;sselung:</b> Auswahl der 
+				Verschl&uuml;sselungs-Methode, die beim erstellen eines 
+				Benutzern Accounts, zum erstellen eines Passworts benutzt 
+				werden soll.</p>
+				<p>Zur Auswahl stehen Blowfish, DES, SHA256, SHA512 und MD5.
+				Je nachdem welche unterst&uuml;tzte Distribution benutzt wird.
+				DES ist Standard unter Debian.</p>
+				<p><b>Erstlogin:</b> Zu Einstellungen (Passwort&auml;nderung) 
+				beim 1. Login auffordern (yes/no)? Standard ist "yes". Bei "no" 
+				werden die einschl&auml;gigen Dateien f&uuml;r "GNOME", KDE", 
+				"Bash" und "Zsh" gel&ouml;scht. Mehr wird zur Zeit noch nicht 	
+				unterst&uuml;tzt.</p>
+				<p>Notiz: Ben&ouml;tigt das Paket "kwtools-sys-kwpasswd", 
+				ausser Sie benutzen die Sourcen.</p>
+				<p><b>umask:</b> Die "umask" legt fest, welche Rechte eine neu 
+				angelegte Datei/Verzeichnis bekommt oder, besser gesagt,
+				nicht bekommt. Falls Sie die "umask"-Regel auch an anderer
+				Stelle, wie ~/.profile angegeben haben gilt diese nur f&uuml;r
+				die Dateien/Verzeichnisse die beim erstellen des 
+				Home-Verzeichnisses angelegt werden.</p>
+				<p>Quota Einstellungen zum anlegen von Benutzern.
+				Quota bedeutet Plattenplatzbeschr&auml;nkung.
+				Quota wird nur angelegt wenn das Home Verzeichnis
+				des Benutzers auch auf einer eigenen Partition mit
+				Quota Unterst&uuml;tzung liegt (Bsp.: /home/user =
+				/home Quota Laufwerk).</p>
+				<p><b>Block_Hardlimit:</b> Gr&ouml;sse des Block
+				Hardlimits. Als Masseinheit stehen
+				k,K,Kb,KB,m,M,Mb,MB,g,G,Gb,GB,.... zur Verf&uuml;gung.</p>
+				<p><b>Block_Softlimit:</b> Gr&ouml;sse des Block Softlimits.
+				Siehe Block_Hardlimit.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=normal>2 Men&uuml;punkte
+				zum anlegen von Benutzern</a></h3>
+                                <p><b>Benutzer:</b> W&auml;hlen Sie einen vorhandene Gruppe aus oder geben
+				einen neuen Gruppen Namen ein.</p>
+				<p><b>Benutzer_ID:</b> Hier kann man eine Benutzer ID eingeben oder eine vorhandene
+				ver&auml;ndern. Es wird gepr&uuml;ft, ob Sie schon existiert.</p>
+				<p><b>Gruppe:</b> Gruppe des Benutzers bestimmen.</p>
+				<p><b>Gruppen:</b> Gruppen einstellen zu welchen der Benutzer geh&ouml;ren soll. 
+				Wird keiner eingestellt wird, kommt die Gruppe "users" zum Zuge (Standard).</p>
+				<p><b>Kommentar:</b> Kommentar eingeben, wie zum Beispiel den vollen Namen 
+				(optional).</p>
+				<p><b>Shell:</b> Eine der installierten Shell f&uuml;r den Benutzer ausw&auml;hlen.</p>
+				<p><b>Home:</b> Home Verzeichnis des Benutzers einstellen. Standard ist 
+				/home/Benutzername.</p>
+				<p><b>Passwort:</b> Passwort f&uuml;r den Benutzer eingeben 
+				oder &auml;ndern (ein Muss, wenn es eine Login Shell gibt).
+				Es m&uuml;ssen mindestens 6 Zeichen sein.</p>
+				<p><b>Passwort generieren:</b> Hier k&ouml;nnen Sie ein 
+				Passwort f&uuml;r den zu erstellenden Benutzer generieren.</p>
+				<p><b>Verfallsdatum:</b> Geben Sie das Datum ein bis zu dem dieses Benutzerfach,
+				ohne Passwort &Auml;nderung, bestehen soll (z.B. 60 - 60 Tage).</p>
+				<p><b>inaktiv nach Verfallsdatum:</b> Geben Sie hier eine Zahl, in Tagen ein,
+				nachdem das Benutzerfach eng&uuml;ltig gesperrt werden soll. Die Zahl richtet
+				sich nach dem Verfallsdatum. 0 ist gleich unbegrenzt.</p>
+				<p><b></b></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=muser>3 Men&uuml;punkte beim Start
+			 von kwuser mit der Option -m</a></h3>
+                                <p><b>Prefix:</b> W&auml;hlen Sie einen vorhandene Gruppe aus 
+				oder geben einen neuen Gruppen Namen ein.</p>
+				<p><b>Prefix_Homeverz.:</b> Verzeichnis unter dem die Benutzer erstellt werden 
+				sollen.</p>
+				<p><b>Anzahl:</b> Anzahl der Benutzer die angelegt werden soll.</p>
+				<p><b>Gruppe:</b> Gruppe der Benutzer bestimmen.</p>
+				<p><b>Gruppen:</b> Gruppen einstellen zu welchen die Benutzer geh&ouml;ren sollen. 
+				Wird keine eingestellt wird, kommt die Gruppe "users" zum Zuge (Standard).</p>
+				<p><b>Kommentar:</b> Kommentar eingeben, wie zum Beispiel Sch&uuml;ler Klasse3b 
+				(optional).</p>
+				<p><b>Shell:</b> Eine der installierten Shell f&uuml;r die Benutzer ausw&auml;hlen.</p>
+				<p><b>Verfallsdatum:</b> Geben Sie das Datum ein bis zu dem diese Benutzerf&auml;cher,
+				ohne Passwort &Auml;nderung, bestehen sollen (z.B. 60 - 60 Tage).</p>
+				<p><b>inaktiv nach Verfallsdatum:</b> Geben Sie hier eine Zahl, in Tagen ein,
+				nachdem die Benutzerf&auml;cher eng&uuml;ltig gesperrt werden sollen. Die Zahl richtet
+				sich nach dem Verfallsdatum. 0 ist gleich unbegrenzt.</p>
+				<p><b></b></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwrunlevconf.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

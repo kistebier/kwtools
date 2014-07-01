@@ -1,0 +1,203 @@
+# Funktion termin_change{{{
+#
+# usage: termin_change
+#
+termin_change() {
+	case "$1" in
+		-b|-h|-m|-t|-w|-y)
+			Search_Termin="$1"
+			;;
+		*)
+			Search_Termin=""
+	esac
+	# Funktion termin_change_list{{{
+	#
+	# usage: termin_change_list
+	#
+	termin_change_list() {
+		unset -- DATE VW_TIME START_TIME SUBJECT TEXT CC TerminListe Termin_Change_List
+		setopt localoptions shwordsplit
+		# IFS=Return
+		IFS=$'\r'
+		#
+		read -A TerminListe <<< "`grep -v "^#" $TerminFile | tr "\n" "$IFS"`"
+		# IFS=Tab
+		IFS=$'\t'
+		Anz=1
+		Anz1=0
+		while [ "${TerminListe[Anz]}" != "" ] ; do
+			set -- ${TerminListe[Anz]}
+			case "$Search_Termin" in
+				-b)
+					# Geburtstage herrausfiltern
+					if [ "$6" = b ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				-h)
+					# Ferien/Urlaub herrausfiltern
+					if [ "$6" = h ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				-t)
+					# taegliche Termine herrausfiltern
+					if [ "$6" = t ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				-w)
+					# woechentliche Termine herrausfiltern
+					if [ "$6" = w ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				-m)
+					# monatlich Termine herrausfiltern
+					if [ "$6" = m ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				-y)
+					# jaehrliche Termine herrausfiltern
+					if [ "$6" = y ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+				*)
+					if [ "$1" -le "$TerminCalc" -a "$1" -ge "$Termin_Date" ] ; then
+						(( Anz1++ ))
+						DATE[Anz1]="$1"
+						VW_TIME[Anz1]="$2"
+						START_TIME[Anz1]="$3"
+						SUBJECT[Anz1]="$4"
+						TEXT[Anz1]="$5"
+						REPEAT[Anz1]="$6"
+						CC[Anz1]="$7"
+						TERMIN_OLD=""
+					fi
+					(( Anz++ ))
+					;;
+			esac
+		done
+		# IFS=space
+		IFS=$'\ '
+	}
+	#}}}
+	# Funktionen termin_change_list_menue{{{
+	#
+	termin_change_list_menue() {
+		Nr=0
+		while [ "$Nr" -lt "$Anz1" ] ; do
+			(( Nr++ ))
+			Termin_Change_List[Nr]="$Nr \"`date -d ${DATE[Nr]} +%d.%m.%Y` ${VW_TIME[Nr]} `date -d ${START_TIME[Nr]} +%H:%M` ${SUBJECT[Nr]} ${TEXT[Nr]} ${REPEAT[Nr]} ${CC[Nr]}\""
+		done
+	}
+	#}}}
+	termin_change_list
+	if [ -n "$START_TIME" ] ; then
+		termin_change_list_menue
+		# Funktion termin_change_menu{{{
+		termin_change_menu() {
+			CHANGE_MENU=($Termin_Change_List $gv_Back \"\")
+			menubox "$NR" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+		}
+		#}}}
+		termin_change_menu
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help change_help
+					termin_change_menu $NR
+					;;
+				$gv_Back)	break
+					;;
+				*)
+					# Termine aendern
+					NR="$gv_Auswahl"
+					DATE="${DATE[gv_Auswahl]}"
+					VW_TIME="${VW_TIME[gv_Auswahl]}"
+					START_TIME="${START_TIME[gv_Auswahl]}"
+					SUBJECT="${SUBJECT[gv_Auswahl]}"
+					TEXT="${TEXT[gv_Auswahl]}"
+					REPEAT="${REPEAT[gv_Auswahl]}"
+					CC="${CC[gv_Auswahl]}"
+					setopt shwordsplit
+					IFS=$'\t'
+					TERMIN_OLD="${DATE}${IFS}${VW_TIME}${IFS}${START_TIME}${IFS}${SUBJECT}${IFS}${TEXT}${IFS}${REPEAT}${IFS}${CC}"
+					IFS=$'\ '
+					unsetopt shwordsplit
+					termin_input
+					# Termine neu einlesen
+					termin_change_list
+					if [ -n "$TerminListe" ] ; then
+						termin_change_list_menue
+						termin_change_menu $NR
+					else
+						no_termin_msg
+					fi
+					;;
+			esac
+		done
+	else
+		no_termin_msg
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

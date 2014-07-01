@@ -1,0 +1,1276 @@
+# Funktion Lukserweiterung behandeln, luks_extension# {{{
+luks_extension() {
+	# Variablen# {{{
+	PASS_MSG=$(gettext 'Geben Sie eine ihrer Passphrasen ein die geloescht werden soll.')
+	PASSWD_SINGLE_MSG=$(gettext 'Geben Sie eine vorhandene Passphrase fuer das Laufwerk "$DEVICE" ein.')
+	PASSWD_SINGLE1_MSG=$(gettext 'Geben Sie eine neue Passphrase fuer das Laufwerk "$DEVICE" ein.')
+	PASSWD_MULTI_MSG=$(gettext 'Geben Sie eine vorhandene Passphrase fuer das Laufwerk "$DEVICE" ein, dann eine neue und wiederholen diese neue Passphrase im Feld darunter. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+	lv_Luksinfo=$(gettext 'LUKSinfo')
+	lv_AddKey=$(gettext 'Schluessel addieren')
+	lv_ChangeKey=$(gettext 'Schluessel aendern')
+	lv_RemoveKey=$(gettext 'Schluessel loeschen')
+	lv_HeaderBackup=$(gettext 'Sicherung erstellen')
+	lv_HeaderRestore=$(gettext 'Sicherung zurueck')
+	lv_Suspend=$(gettext 'schlafen')
+	lv_Resume=$(gettext 'aufwachen')
+	lv_KillSlot=$(gettext 'SLot loeschen')
+	lv_Erase=$(gettext 'SLots ausloeschen')
+	# Untermenues
+	lv_Dir=$(gettext 'Verzeichnis')
+	lv_Device=$(gettext 'Laufwerk')
+	lv_Slots=$(gettext 'Slots')
+	lv_NewKeyFile=$(gettext 'neue Schluesseldatei')
+	lv_OldKeyFile=$(gettext 'alte Schluesseldatei')
+	lv_RemoveKeyFile=$(gettext 'Schluesseldatei')
+	# Standard Variablen
+	BAK_DIR="${BAK_DIR:-/lib/cryptsetup/backup}"
+	## }}}
+	# Funktion (no_all_menupoints_msg)# {{{
+	no_all_menupoints_msg() {
+		MSG=$(gettext 'Sie muessen erst alle Menuepunkte mit Werten belegen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_backup_msg), kein Backup erstellt.# {{{
+	no_backup_msg() {
+		local Dev
+		Dev="$1"
+		MSG=$(gettext '${Dev}: Sicherung ist fehlgeschlagen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_choice_device_msg), kein Device# {{{
+	# ausgewaehlt.
+	#
+	no_choice_device_msg() {
+		MSG=$(gettext 'Sie muessen erst ein $lv_Device auswaehlen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_erase_msg), kein ausradieren der Slots.# {{{
+	no_erase_msg() {
+		local Dev
+		Dev="$1"
+		MSG=$(gettext '${Dev}: Das ausloeschen aller Schluessel Slots ist fehlgeschlagen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_free_slot_msg), keine freien Slots mehr.# {{{
+	#
+	no_free_slot_msg() {
+		MSG=$(gettext 'Es gibt keine freien Schluessel Slots mehr.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_killslot_msg), Schlussel Slots konnten nicht geloescht werden.# {{{
+	no_killslot_msg() {
+		MSG=$(gettext 'Der Schluessel Slot konnte nicht geloescht werden. Falsche Passphrase? Es wird abgebrochen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_restore_backup_msg), Backup konnte nicht wieder hergestellt werden.# {{{
+	no_restore_backup_msg() {
+		MSG=$(gettext 'Das Restaurieren des LUKS Headers ist fehlgeschlagen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_suspend_msg), einschlafen hat nicht funktioniert.# {{{
+	no_suspend_msg() {
+		local Dev
+		Dev="$1"
+		MSG=$(gettext '${Dev}: Das Schlafen legen des Laufwerks ist fehlgeschlagen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (suspend_resume_devs), sucht nach schlafenden# {{{
+	# und nicht schlafenden Laufwerken.
+	suspend_resume_devs() {
+		unset -- SRC_DEVS SUSPEND_DEV SUSPEND_DEV_M RESUME_DEV RESUME_DEV_M
+		local Status
+		for i in "${=MAP_DST_DEV_E}" ; {
+			Status="`print ${${(ws: :)${(M)"${(f)$(dmsetup info $i 2>/dev/null)}"##State:*}}[2]}`"
+			if [[ $Status == SUSPENDED ]] ; then
+				SUSPEND_DEV+=($i)
+				SUSPEND_DEV_M+=($i \"\" off)
+			elif [[ $Status == ACTIVE ]] ; then
+				RESUME_DEV+=($i)
+				RESUME_DEV_M+=($i \"\" off)
+			fi
+		}
+	}
+	## }}}
+	# Funktion (search_slots), suche nach aktiven Schluessel Slots# {{{
+	search_slots() {
+		unset -- SLOT_NR_M SLOT_NR_E SLOT_NR SLOT_NRD_M SLOT_NRD_E SLOT_NRD
+		local Luks_Dev a b nr state
+		Luks_Dev="$1"
+		print -l ${(M)${(f)"$(cryptsetup luksDump ${LUKSHEADER:-$Luks_Dev} 2>/dev/null)"}##(Key Slot*)} |\
+		while read a b nr state ; do
+			if [ "$state" = ENABLED ] ; then
+				SLOT_NR_E+=(${nr%:})
+				SLOT_NR+=(${nr%:} \"\")
+				SLOT_NR_M+=(${nr%:} \"\" off)
+			else
+				SLOT_NRD_E+=(${nr%:})
+				SLOT_NRD+=(${nr%:} \"\")
+				SLOT_NRD_M+=(${nr%:} \"\" off)
+			fi
+		done
+	}
+	## }}}
+	# Funktion (check_cryptsetup_params), prueft Optionen,# {{{
+	# Schluessel, etc..
+	#
+	# usage: check_cryptsetup_params "$DEVICE"
+	#
+	check_cryptsetup_params() {
+		local key dst src
+		dst="$1"
+		src="$2"
+		key="`print ${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${dst}[[:space:]]*}}[3]}`"
+		OLDKEY="$key"
+
+		# parse UUID= symlinks
+		parse_uuid_label $src
+		if [ -n "$REALDEV" ] ; then
+			src="$REALDEV"
+		fi
+
+		if ! parse_opts "$dst" ; then
+			return 1
+		fi
+
+		# Export crypttab fields as environment variables
+		export CRYPTTAB_NAME="$dst"
+		export CRYPTTAB_SOURCE="$src"
+		export CRYPTTAB_KEY="$key"
+
+		if ! check_key_opt "$key" ; then
+			return 1
+		fi
+
+		return 0
+	}
+	## }}}
+	# Funktion luks_ext_menu# {{{
+	LUKS_TITLE="$lv_Luks"
+	LUKS_MENU=($lv_Luksinfo \"\" \"$lv_AddKey\" \"\"
+	\"$lv_ChangeKey\" \"\" \"$lv_RemoveKey\" \"\"
+	\"$lv_HeaderBackup\" \"\" \"$lv_HeaderRestore\" \"\"
+	\"$lv_Suspend\" \"\" \"$lv_Resume\" \"\" \"$lv_KillSlot\" \"\"
+	\"$lv_Erase\" \"\" $gv_Back \"\")
+	luks_ext_menu() {
+		menubox "$1" "$LUKS_TITLE" "$gv_Menupoint" "$LUKS_MENU"
+	}
+	## }}}
+	luks_ext_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help luks_help
+				luks_ext_menu
+				;;
+			$lv_Luksinfo)
+				# Luksinformationen von verschluesselten Laufwerken anzeigen (/etc/crypttab)# {{{
+				INFO_TITLE="${lv_Luks}::${lv_Luksinfo}"
+				checklist "$INFO_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help luks_help
+							checklist "$INFO_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+							;;
+						*)	# Auswahl anzeigen
+							rm -f ${gv_WorkDir}/dmstate &>/dev/null
+		 					for i in ${=gv_Auswahl} ; {
+								# Über den Index des Arrays die Index Nr. heraus
+								# bekommen (i).
+								Nr="$MAP_DEV_E[(i)$i]"
+								DST_DEV="${MAP_DST_DEV_E[Nr]}"
+								# LUKSHEADER herausfinden.
+								if ! parse_opts "$DST_DEV" ; then
+									break
+								fi
+								if [ -f "${gv_WorkDir}/dmstate" ] ; then
+									cryptsetup luksDump ${LUKSHEADER:-$i} 2>/dev/null >>${gv_WorkDir}/dmstate
+									print "" >>${gv_WorkDir}/dmstate
+								else
+									cryptsetup luksDump ${LUKSHEADER:-$i} 2>/dev/null >${gv_WorkDir}/dmstate
+									print "" >>${gv_WorkDir}/dmstate
+								fi
+							}
+							#
+							if [ -f ${gv_WorkDir}/dmstate -a "`wc -l < ${gv_WorkDir}/dmstate`" -gt 1 ] ; then
+								view_file ${gv_WorkDir}/dmstate
+							else
+								MSG=$(gettext 'Es sind keine Luksinformationen vorhanden. Ueberpruefen Sie ihre Konfiguration (/etc/crypttab)!')
+								msgbox "$gv_Attention" "$MSG"
+							fi
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_LUKSinfo
+				;;
+			$lv_AddKey)
+				# Passhrase addieren# {{{
+				DEVICE=""
+				DST_DEV=""
+				SLOT=""
+				NEWKEY=""
+				ADDKEY_TITLE="${lv_Luks}::${lv_AddKey}"
+				# Funktion addkey_menu# {{{
+				addkey_menu() {
+					ADDKEY_MENU=($lv_Device \"$DEVICE\" $lv_Slots \"$SLOT\"
+					\"$lv_NewKeyFile\" \"$NEWKEY\" \"$lv_AddKey\" \"\" $gv_Back \"\")
+					menubox "$1" "$ADDKEY_TITLE" "$gv_Menupoint" "$ADDKEY_MENU"
+				}
+				## }}}
+				addkey_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_addkey_help
+							addkey_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks das einen neuen Schluessel# {{{
+							# bekommen soll.
+							menubox "$DEVICE" "$ADDKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_addkey_help
+										menubox "$DEVICE" "$ADDKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										# Über den Index des Arrays die Index Nr. heraus
+										# bekommen (i).
+										Nr="$MAP_DEV_E[(i)$DEVICE]"
+										DST_DEV="${MAP_DST_DEV_E[Nr]}"
+										# Parameter pruefen
+										check_cryptsetup_params "$DST_DEV" "$DEVICE"
+										break
+										;;
+								esac
+							done
+							## }}}
+							addkey_menu $lv_Device
+							;;
+						$lv_Slots)
+							# Auswahl des Slot der einen neuen Schluessel# {{{
+							# bekommt.
+							SLOT_MSG=$(gettext 'Waehlen Sie einen Schluessel Slot aus.')
+							if [ -n "$DEVICE" ] ; then
+								search_slots "$DEVICE"
+								if [ "${#SLOT_NRD}" -ge 1 ] ; then
+									menubox "$SLOT" "$ADDKEY_TITLE" "$SLOT_MSG" "$SLOT_NRD"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help luks_addkey_help
+												menubox "$SLOT" "$ADDKEY_TITLE" "$SLOT_MSG" "$SLOT_NRD"
+												;;
+											*)	# Auswahl übernehmen
+												SLOT="$gv_Auswahl"
+												break
+												;;
+										esac
+									done
+								else
+									no_free_slot_msg
+								fi
+							else
+								no_choice_device_msg
+							fi
+							## }}}
+							addkey_menu $lv_Slots
+							;;
+						$lv_NewKeyFile)
+							# Schluesseldatei auswaehlen# {{{
+							FORMAT=""
+							SUFFIX=""
+							file_choice "${NEWKEY%/*}" only "$NEWKEY"
+							if [ -n "$WERT" ] ; then
+								NEWKEY="${VERZ}/${WERT##*/}"
+							else
+								NEWKEY=""
+							fi
+							## }}}
+							addkey_menu $lv_NewKeyFile
+							;;
+						$lv_AddKey)
+							# Schluessel hinzufuegen# {{{
+							if [ -n "$DEVICE" ] ; then
+								result=ok
+								# auf freie Slots puefen
+								if [ -z "$SLOT" ] ; then
+									search_slots "$DEVICE"
+									if [ "${#SLOT_NRD}" -lt 1 ] ; then
+										no_free_slot_msg
+										unset -- SLOT_PARAM
+										break
+									fi
+								else
+									SLOT_PARAM="-S $SLOT"
+								fi
+
+								set -x
+								# Keyscript exitiert, Datei mit neuem Schlüssel existiert,
+								# Slot ist angegeben.
+								if [ -n "$KEYSCRIPT" ] && [ -f "$NEWKEY" ] ; then
+									PARAMS="--key-file=- $SLOT_PARAM"
+									# eventuell NEWKEY entschluesseln
+									$KEYSCRIPT "$NEWKEY" >${gv_WorkDir}/passphrase
+									# Los gehts
+									$KEYSCRIPT "$keyscriptarg" | \
+									cryptsetup ${=PARAMS} luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									${gv_WorkDir}/passphrase &>/dev/null || result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								# Keyscript existiert, Datei mit neuem Schlüssel
+								# existiert nicht, Slot ist angegeben.
+								elif [ -n "$KEYSCRIPT" ] && [ -z "$NEWKEY" ] ; then
+									PARAMS="--key-file=- $SLOT_PARAM"
+									# neue Passphrase eingeben
+									password "$gv_Passwd_TITLE" "$PASSWD_SINGLE1_MSG"
+									print "$PASSPHRASE" >${gv_WorkDir}/passphrase
+									# Los gehts
+									$KEYSCRIPT "$keyscriptarg" | \
+									cryptsetup ${=PARAMS} luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									${gv_WorkDir}/passphrase &>/dev/null || result=fail 
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								# Key existiert nicht, Datei mit neuem Schlüssel existiert,
+								# Slot ist angegeben.
+								elif [ -f "$key" ] && [ -f "$NEWKEY" ] ; then
+									PARAMS="--key-file=$key $SLOT_PARAM"
+									# Los gehts
+									cryptsetup ${=PARAMS} luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									$NEWKEY &>/dev/null || result=fail
+									# Passphrase schreddern.
+									clean_keys
+								# Key existiert, Datei mit neuem Schlüssel existiert nicht,
+								# Slot ist angegeben.
+								elif [ -f "$key" ] && [ -z "$NEWKEY" ] ; then
+									PARAMS="--key-file=$key $SLOT_PARAM"
+									# passwordbox
+									password "$gv_Passwd_TITLE" "$PASSWD_SINGLE1_MSG"
+									print "$PASSPHRASE" >${gv_WorkDir}/passphrase
+									# Los gehts
+									cryptsetup ${=PARAMS} luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									${gv_WorkDir}/passphrase &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								# Key existiert nicht, Datei mit neuem Schlüssel existiert nicht,
+								# Slot ist angegeben.
+								elif [ -z "$key" ] && [ -f "$NEWKEY" ] ; then
+									PARAMS="--key-file=- $SLOT_PARAM"
+									# passwordbox
+									password "$gv_Passwd_TITLE" "$PASSWD_SINGLE_MSG"
+									# Los gehts
+									print "$PASSPHRASE" | cryptsetup ${=PARAMS} \
+									luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									$NEWKEY &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								else
+									# passwordbox
+									PARAMS="--key-file=- $SLOT_PARAM"
+			         				mixed_password -o "$gv_Passwd_TITLE" "$PASSWD_MULTI_MSG" 8 21
+									[[ -z "$gv_Pass" ]] && break
+									# Man muss den neuen Schlüssel
+									# erst in eine Datei schreiben.
+									print "$gv_Pass" > ${gv_WorkDir}/passphrase
+									# Los gehts
+									print "$gv_Old_Pass" | \
+									cryptsetup ${=PARAMS} luksAddKey "${LUKSHEADER:-$DEVICE}" \
+									${gv_WorkDir}/passphrase &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								fi
+								set +x
+
+								if [ "$result" = fail ] ; then
+									MSG=$(gettext 'Das hinzufuegen einer neuen Passphrase ist fehlgeschlagen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							addkey_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_AddKey
+				;;
+			$lv_ChangeKey)
+				# Schluessel eines Slots aendern.# {{{
+				DEVICE=""
+				DST_DEV=""
+				SLOT=""
+				NEWKEY=""
+				OLDKEY=""
+				CHANGEKEY_TITLE="${lv_Luks}::${lv_ChangeKey}"
+				# Funktion changekey_menu# {{{
+				changekey_menu() {
+					CHANGEKEY_MENU=($lv_Device \"$DEVICE\" $lv_Slots \"$SLOT\"
+					\"$lv_Keyscript\" \"$KEYSCRIPT\" \"$lv_OldKeyFile\" \"$OLDKEY\"
+					\"$lv_NewKeyFile\" \"$NEWKEY\" $gv_Change \"\" $gv_Back \"\")
+					menubox "$1" "$CHANGEKEY_TITLE" "$gv_Menupoint" "$CHANGEKEY_MENU"
+				}
+				## }}}
+				changekey_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_changekey_help
+							changekey_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks von dem der Schluessel# {{{
+							# geändert werden sollen.
+							menubox "$DEVICE" "$CHANGEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_changekey_help
+										menubox "$DEVICE" "$CHANGEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										# Über den Index des Arrays die Index Nr. heraus
+										# bekommen (i).
+										Nr="$MAP_DEV_E[(i)$DEVICE]"
+										DST_DEV="${MAP_DST_DEV_E[Nr]}"
+										# Optionen des Laufwerks pruefen, Variablen
+										# exportieren, etc..
+										check_cryptsetup_params "$DST_DEV" "$DEVICE"
+										break
+										;;
+								esac
+							done
+							## }}}
+							changekey_menu $lv_Device
+							;;
+						$lv_Slots)
+							# Auswahl des Slots von dem der Schluessel# {{{
+							# geändert werden soll.
+							SLOT_MSG=$(gettext 'Waehlen Sie einen Slot aus.')
+							if [ -n "$DEVICE" ] ; then
+								search_slots "$DEVICE"
+								if [ -n "${SLOT_NR[1]}" ] ; then
+									menubox "$SLOT" "$CHANGEKEY_TITLE" "$SLOT_MSG" "$SLOT_NR" "$SLOTS"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help luks_changekey_help
+												menubox "$SLOT" "$CHANGEKEY_TITLE" "$SLOT_MSG" "$SLOT_NR" "$SLOTS"
+												;;
+											*)	# Auswahl übernehmen
+												SLOT="$gv_Auswahl"
+												break
+												;;
+										esac
+									done
+								else
+									MSG=$(gettext 'Es gibt keinen Schluessel Slot zum aendern.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+							else
+								no_choice_device_msg
+							fi
+							## }}}
+							changekey_menu $lv_Slots
+							;;
+						$lv_Keyscript)
+							# Script auswaehlen welches die Schluesseldateien bearbeitet,# {{{
+							# z.B. um eine gnupg verschluesselte Schluesseldatei
+							# zu entschluesseln.
+							FORMAT="SCRIPT"
+							SUFFIX=""
+							file_choice "${KEYSCRIPT%/*}" only "$KEYSCRIPT"
+							if [ -x "$WERT" ] ; then
+								KEYSCRIPT="${VERZ}/${WERT##*/}"
+							else
+								KEYSCRIPT=""
+							fi
+							## }}}
+							changekey_menu $lv_Keyscript
+							;;
+						$lv_OldKeyFile)
+							# alte Schluesseldatei auswaehlen# {{{
+							FORMAT=""
+							SUFFIX=""
+							file_choice "${OLDKEY%/*}" only "$OLDKEY"
+							if [ -n "$WERT" ] ; then
+								OLDKEY="${VERZ}/${WERT##*/}"
+							else
+								OLDKEY=""
+							fi
+							## }}}
+							changekey_menu $lv_OldKeyFile
+							;;
+						$lv_NewKeyFile)
+							# Schluesseldatei auswaehlen# {{{
+							FORMAT=""
+							SUFFIX=""
+							file_choice "${NEWKEY%/*}" only "$NEWKEY"
+							if [ -n "$WERT" ] ; then
+								NEWKEY="${VERZ}/${WERT##*/}"
+							else
+								NEWKEY=""
+							fi
+							## }}}
+							changekey_menu $lv_NewKeyFile
+							;;
+						$gv_Change)
+							# Schluessel aendern.# {{{
+							result=ok
+							######################################
+							# TODO: crypttab keyfile -> newkeyfile aendern
+							# oder doch lieber ueber manage_cryptdisk?
+							if [ -n "$DEVICE" ] && [ -n "$SLOT" ] ; then
+								if [ -n "$KEYSCRIPT" ] ; then
+									# mit Keyscript# {{{
+									if [ -f "$OLDKEY"  ] && [ -f "$NEWKEY" ] ; then
+										PARAMS="--key-file=- -S $SLOT"
+										# evtl. Schluesseldatei entschluesseln
+										$KEYSCRIPT "$NEWKEY" >${gv_WorkDir}/passphrase
+										# los gehts
+										$KEYSCRIPT "$OLDKEY" | cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										${gv_WorkDir}/passphrase &>/dev/null || result=fail
+										# Schlüssel-Dateien und Dateien mit
+										# Passphrase schreddern.
+										clean_keys
+									elif [ -f "$OLDKEY"  ] && [ -z "$NEWKEY" ] ; then
+										PARAMS="--key-file=- -S $SLOT"
+										# neue Passphrase eingeben und in Datei speichern.
+										password "$gv_Passwd_TITLE" "$PASSWD_SINGLE1_MSG"
+										print "$PASSPHRASE" >${gv_WorkDir}/passphrase
+										# los gehts
+										$KEYSCRIPT "$OLDKEY" | cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										${gv_WorkDir}/passphrase &>/dev/null || result=fail
+										# Schlüssel-Dateien und Dateien mit
+										# Passphrase schreddern.
+										clean_keys
+									else
+										clean_keys
+										MSG=$(gettext 'Sie muessen mindestens neben dem Menuepunkt "$lv_Keyscript" auch den Punkt "$lv_OldKeyFile" mit einem Wert belegen.')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+								else
+									# ohne Keyscript# {{{
+									if [ -f "$OLDKEY"  ] && [ -f "$NEWKEY" ] ; then
+										PARAMS="--key-file=$OLDKEY -S $SLOT"
+										# los gehts
+										cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										$NEWKEY &>/dev/null || result=fail
+									elif [ -f "$OLDKEY"  ] && [ -z "$NEWKEY" ] ; then
+										PARAMS="--key-file=$OLDKEY -S $SLOT"
+										# neue Passphrase eingeben und in Datei speichern.
+										password "$gv_Passwd_TITLE" "$PASSWD_SINGLE1_MSG"
+										print "$PASSPHRASE" >${gv_WorkDir}/passphrase
+										# los gehts
+										cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										${gv_WorkDir}/passphrase &>/dev/null || result=fail
+										# Schlüssel-Dateien und Dateien mit
+										# Passphrase schreddern.
+										clean_keys
+									elif [ -z "$OLDKEY"  ] && [ -f "$NEWKEY" ] ; then
+										PARAMS="--key-file=- -S $SLOT"
+										# alte Passphrase eingeben.
+										password "$gv_Passwd_TITLE" "$PASSWD_SINGLE_MSG"
+										# los gehts
+										print "$PASSPHRASE" | cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										$NEWKEY &>/dev/null || result=fail
+										# Schlüssel-Dateien und Dateien mit
+										# Passphrase schreddern.
+										clean_keys
+									else
+				         				mixed_password -o "$gv_Passwd_TITLE" "$PASSWD_MULTI_MSG" 8 21
+										[[ -z "$gv_Pass" ]] && break
+										PARAMS="--key-file=- -S $SLOT"
+										# Man muss den neuen Schlüssel
+										# erst in eine Datei schreiben.
+										print "$gv_Pass" >${gv_WorkDir}/passphrase
+										# los gehts
+										print "$gv_Old_Pass" | cryptsetup ${=PARAMS} \
+										luksChangeKey "${LUKSHEADER:-$DEVICE}" \
+										${gv_WorkDir}/passphrase &>/dev/null || \
+										result=fail
+										# Schlüssel-Dateien und Dateien mit
+										# Passphrase schreddern.
+										clean_keys
+									fi
+									## }}}
+								fi
+
+								if [ "$result" = fail ] ; then
+									MSG=$(gettext 'Das aendern der Passphrase ist fehlgeschlagen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							changekey_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_ChangeKey
+				;;
+			$lv_RemoveKey)
+				# Passphrasen loeschen# {{{
+				DEVICE=""
+				REMKEY=""
+				REMOVEKEY_TITLE="${lv_Luks}::${lv_RemoveKey}"
+				# Funktion removekey_menu# {{{
+				removekey_menu() {
+					REMOVEKEY_MENU=($lv_Device \"$DEVICE\" \"$lv_Keyscript\" \"$KEYSCRIPT\"
+					$lv_RemoveKeyFile \"$REMKEY\" $gv_Delete \"\" $gv_Back \"\")
+					menubox "$1" "$REMOVEKEY_TITLE" "$gv_Menupoint" "$REMOVEKEY_MENU"
+				}
+				## }}}
+				removekey_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_removekey_help
+							removekey_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks von dem der Schluessel# {{{
+							# geloescht werden sollen.
+							menubox "$DEVICE" "$REMOVEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_removekey_help
+										menubox "$DEVICE" "$REMOVEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+							## }}}
+							removekey_menu $lv_Device
+							;;
+						$lv_Keyscript)
+							# Script auswaehlen welches die Schluesseldateien bearbeitet,# {{{
+							# z.B. um eine gnupg verschluesselte Schluesseldatei
+							# zu entschluesseln.
+							FORMAT="SCRIPT"
+							SUFFIX=""
+							file_choice "${KEYSCRIPT%/*}" only "$KEYSCRIPT"
+							if [ -x "$WERT" ] ; then
+								KEYSCRIPT="${VERZ}/${WERT##*/}"
+							else
+								KEYSCRIPT=""
+							fi
+							## }}}
+							changekey_menu $lv_Keyscript
+							;;
+						$lv_RemoveKey)
+							# Schluesseldatei auswaehlen# {{{
+							FORMAT=""
+							SUFFIX=""
+							file_choice "${REMKEY%/*}" only "$REMKEY"
+							if [ -n "$WERT" ] ; then
+								REMKEY="${VERZ}/${WERT##*/}"
+							else
+								REMKEY=""
+							fi
+							## }}}
+							removekey_menu $lv_RemoveKey
+							;;
+						$gv_Delete)
+							# Auswahl löschen# {{{
+							if [ -n "$DEVICE" ] ; then
+								result=ok
+								# mit Keyscript und Schluesseldatei
+								if [ -n "$KEYSCYRIPT" ] && [ -f "$REMKEY" ] ; then
+									# eventuell REMKEY entschluesseln
+									"$KEYSCRIPT" "$REMKEY" >${gv_WorkDir}/passphrase
+									# Los gehts
+									cryptsetup --keyfile="${gv_WorkDir}/passphrase" \
+									luksRemoveKey "${LUKSHEADER:-$DEVICE}" &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								# ohne Keyscript und Schluesseldatei
+								elif [ -z "$KEYSCYRIPT" ] && [ -f "$REMKEY" ] ; then
+									# Los gehts
+									cryptsetup --keyfile="$REMKEY" \
+									luksRemoveKey "${LUKSHEADER:-$DEVICE}" &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								else
+									# Eine Passphrase eingeben, speichern und loeschen.
+									password "$DEL_TITLE" "$PASS_MSG"
+									print "$PASSPHRASE" >${gv_WorkDir}/passphrase
+									# Los gehts
+									cryptsetup --key-file=${gv_WorkDir}/passphrase \
+									luksRemoveKey "${LUKSHEADER:-$DEVICE}" &>/dev/null || \
+									result=fail
+									# Schlüssel-Dateien und Dateien mit
+									# Passphrase schreddern.
+									clean_keys
+								fi
+								if [ "$result" != ok ] ; then
+									MSG=$(gettext 'Das Loeschen der Passphrase ist fehlgeschlagen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							removekey_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_RemoveKey
+				;;
+			$lv_HeaderBackup)
+				# Backup vom LUKS Header eines Laufwerks erstellen.# {{{
+				# luksHeaderBackup src-device --header-backup-file file
+				DEVICE=""
+				BAK_TITLE="${lv_Luks}::${lv_HeaderBackup}"
+				# Funktion bak_menu# {{{
+				bak_menu() {
+					BAK_MENU=($lv_Device \"$DEVICE\" $lv_Dir \"$BAK_DIR\"
+					$gv_Create \"\" $gv_Back \"\")
+					menubox "$1" "$BAK_TITLE" "$gv_Menupoint" "$BAK_MENU"
+				}
+				## }}}
+				bak_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_bak_help
+							bak_menu
+							;;
+						$lv_Device)
+							# Auswahl eines oder mehrerer Laufwerke# {{{
+							checklist "$BAK_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_bak_help
+										checklist "$BAK_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+							## }}}
+							bak_menu $lv_Device
+							;;
+						$lv_Dir)
+							# Bakupverzeichnis auswaehlen# {{{
+							dselect "$BAK_DIR"
+							if [ -d "$VERZ" ] ; then
+								BAK_DIR="$VERZ"
+							fi
+							## }}}
+							bak_menu $lv_Dir
+							;;
+						$gv_Create)
+							# Backup erstellen.# {{{
+							if [ -n "$BAK_DIR" -a -n "${DEVICE[1]}" ] ; then
+								for i in "${=DEVICE}" ; {
+									# Über den Index des Arrays die Index Nr. heraus
+									# bekommen (i).
+									Nr="$MAP_DEV_E[(i)$i]"
+									DST_DEV="${MAP_DST_DEV_E[Nr]}"
+									# LUKSHEADER herausfinden.
+									if ! parse_opts "$DST_DEV" ; then
+										break
+									fi
+									cryptsetup luksHeaderBackup "${LUKSHEADER:-$i}" \
+									--header-backup-file \
+									"${BAK_DIR}/${i##*/}_`date +%d.%m.%Y`" &>/dev/null || \
+									no_backup_msg "$i"
+								}
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							bak_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_HeaderBackup
+				;;
+			$lv_HeaderRestore)
+				# Backup vom LUKS Header eines Laufwerks restaurieren.# {{{
+				# luksHeaderRestore src-device --header-backup-file file
+				DEVICE=""
+				RESTORE_TITLE="${lv_Luks}::${lv_HeaderRestore}"
+				# Funktion restore_menu# {{{
+				restore_menu() {
+					RESTORE_MENU=($lv_Device \"$DEVICE\" $lv_File \"$BAK_FILE\"
+					$gv_Create \"\" $gv_Back \"\")
+					menubox "$1" "$RESTORE_TITLE" "$gv_Menupoint" "$RESTORE_MENU"
+				}
+				## }}}
+				restore_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_restore_help
+							restore_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks# {{{
+							menubox "$DEVICE" "$RESTORE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_restore_help
+										menubox "$DEVICE" "$RESTORE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										# Über den Index des Arrays die Index Nr. heraus
+										# bekommen (i).
+										Nr="$MAP_DEV_E[(i)$DEVICE]"
+										DST_DEV="${MAP_DST_DEV_E[Nr]}"
+										break
+										;;
+								esac
+							done
+							## }}}
+							restore_menu $lv_Device
+							;;
+						$lv_File)
+							# Backupdatei auswaehlen# {{{
+							FORMAT="LUKS"
+							SUFFIX=""
+							file_choice "${${BAK_FILE%/*}:-$BAK_DIR}" only "$BAK_FILE"
+							if [ -n "$WERT" ] ; then
+								BAK_FILE="${VERZ}/${WERT##*/}"
+							else
+								BAK_FILE=""
+							fi
+							## }}}
+							restore_menu $lv_File
+							;;
+						$gv_Create)
+							# Backup zurueck sichern.# {{{
+							if [ -n "$BAK_FILE" -a -n "$DEVICE" ] ; then
+								# LUKSHEADER herausfinden.
+								if ! parse_opts "$DST_DEV" ; then
+									break
+								fi
+								print yes | cryptsetup luksHeaderRestore \
+								"${LUKSHEADER:-$DEVICE}" \
+								--header-backup-file "$BAK_FILE" &>/dev/null || \
+								no_restore_backup_msg
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							restore_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_HeaderRestore
+				;;
+			$lv_Suspend)
+				# Laufwerk schlafen legen# {{{
+				DEVICE=""
+				SUSPEND_TITLE="${lv_Luks}::${lv_Suspend}"
+				# Funktion suspend_menu# {{{
+				suspend_menu() {
+					SUSPEND_MENU=($lv_Device \"$DEVICE\"
+					$lv_Suspend \"\" $gv_Back \"\")
+					menubox "" "$SUSPEND_TITLE" "$gv_Menupoint" "$SUSPEND_MENU"
+				}
+				## }}}
+				suspend_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_suspend_help
+							suspend_menu
+							;;
+						$lv_Device)
+							# Auswahl eines oder mehrerer Laufwerke die# {{{
+							# noch nicht eingeschlafen sind.
+							suspend_resume_devs
+							if [ -n "${RESUME_DEV_M[1]}" ] ; then
+								checklist "$SUSPEND_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$RESUME_DEV_M"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help luks_suspend_help
+											checklist "$SUSPEND_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$RESUME_DEV_M"
+											;;
+										*)	# Auswahl übernehmen
+											DEVICE="$gv_Auswahl"
+											break
+											;;
+									esac
+								done
+							else
+								MSG=$(gettext 'Es ist kein Laufwerk zum schlafen legen vorhanden.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+							## }}}
+							suspend_menu
+							;;
+						$lv_Suspend)
+							# Laufwerke einschlafen lassen.# {{{
+							if [ -n "$DEVICE" ] ; then
+								for i in "${=DEVICE}" ; {
+									# LUKSHEADER herausfinden.
+									if ! parse_opts "$i" ; then
+										break
+									fi
+									# Luksheader belegen falls vorhanden
+									if [ -n "$LUKSHEADER" ] ; then
+										HEADER="--header=$LUKSHEADER"
+									fi
+									cryptsetup $HEADER luksSuspend "$i" &>/dev/null || \
+										no_suspend_msg "$i"
+								}
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							suspend_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_Suspend
+				;;
+			$lv_Resume)
+				# Laufwerk aufwachen# {{{
+				DEVICE=""
+				RESUME_TITLE="${lv_Luks}::${lv_Resume}"
+				# Funktion resume_menu# {{{
+				resume_menu() {
+					RESUME_MENU=($lv_Device \"$DEVICE\"
+					$lv_Resume \"\" $gv_Back \"\")
+					menubox "" "$RESUME_TITLE" "$gv_Menupoint" "$RESUME_MENU"
+				}
+				## }}}
+				resume_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_resume_help
+							resume_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks das# {{{
+							# eingeschlafen ist.
+							suspend_resume_devs
+							if [ -n "${SUSPEND_DEV_M[1]}" ] ; then
+								checklist "$RESUME_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$SUSPEND_DEV_M"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help luks_resume_help
+											checklist "$RESUME_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$SUSPEND_DEV_M"
+											;;
+										*)	# Auswahl übernehmen
+											DEVICE="$gv_Auswahl"
+											# Über den Index des Arrays die Index Nr. heraus
+											# bekommen (i).
+											Nr="$MAP_DST_DEV_E[(i)$DEVICE]"
+											SRC_DEV="${MAP_DEV_E[Nr]}"
+											break
+											;;
+									esac
+								done
+							else
+								MSG=$(gettext 'Es ist kein Laufwerk zum aufwecken vorhanden.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+							## }}}
+							resume_menu
+							;;
+						$lv_Resume)
+							# Laufwerke aufwachen lassen.# {{{
+							if [ -n "$DEVICE" ] ; then
+								result=ok
+								if ! check_cryptsetup_params "$DEVICE" "$SRC_DEV" ; then
+									break
+								fi
+								PARAMS=""
+								if [ -n "$LUKSHEADER" ] ; then
+									PARAMS="--header=$LUKSHEADER"
+								fi
+								if [ -n "$KEYSCRIPT" ] ; then
+									PARAMS="$PARAMS --key-file=-"
+									# Los gehts
+									$KEYSCRIPT "$keyscriptarg" | \
+									cryptsetup ${=PARAMS} luksResume "$DEVICE" &>/dev/null || \
+									result=fail
+								elif [ -f "$key" ] ; then
+									PARAMS="$PARAMS --key-file=$key"
+									# Los gehts
+									cryptsetup ${=PARAMS} luksResume "$DEVICE" &>/dev/null || \
+									result=fail
+								else
+									# passwordbox
+									PARAMS="$PARAMS --key-file=-"
+									password "$gv_Passwd_TITLE" "$PASSWD_SINGLE_MSG"
+									# Los gehts
+									print $PASSPHRASE | \
+									cryptsetup ${=PARAMS} luksResume "$DEVICE" &>/dev/null || \
+									result=fail
+									clean_keys
+								fi
+
+								if [ "$result" = fail ] ; then
+									MSG=$(gettext 'Das Aufwachen des Laufwerks ist fehlgeschlagen.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							resume_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_Resume
+				;;
+			$lv_KillSlot)
+				# Schluessel Slot loeschen# {{{
+				DEVICE=""
+				SLOTS=""
+				KILLSLOT_TITLE="${lv_Luks}::${lv_KillSlot}"
+				# Funktion killslot_menu# {{{
+				killslot_menu() {
+					KILLSLOT_MENU=($lv_Device \"$DEVICE\" $lv_Slots \"$SLOTS\"
+					$gv_Delete \"\" $gv_Back \"\")
+					menubox "$1" "$KILLSLOT_TITLE" "$gv_Menupoint" "$KILLSLOT_MENU"
+				}
+				## }}}
+				killslot_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_killslot_help
+							killslot_menu
+							;;
+						$lv_Device)
+							# Auswahl eines Laufwerks von dem Slots geloescht# {{{
+							# werden sollen.
+							menubox "$DEVICE" "$KILLSLOT_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_killslot_help
+										menubox "$DEVICE" "$KILLSLOT_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										# Über den Index des Arrays die Index Nr. heraus
+										# bekommen (i).
+										Nr="$MAP_DEV_E[(i)$DEVICE]"
+										DST_DEV="${MAP_DST_DEV_E[Nr]}"
+										check_cryptsetup_params "$DST_DEV" "$DEVICE"
+										break
+										;;
+								esac
+							done
+							## }}}
+							killslot_menu $lv_Device
+							;;
+						$lv_Slots)
+							# Auswahl der Slots zum loeschen# {{{
+							SLOT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Slots aus.')
+							if [ -n "$DEVICE" ] ; then
+								search_slots "$DEVICE"
+								if [ -n "${SLOT_NR_M[1]}" ] ; then
+									if [ "${#SLOT_NR}" = 1 ] ; then
+										MSG=$(gettext 'VORSICHT! Es gibt nur noch 1 Schluessel Slot.')
+										msgbox "$gv_Attention" "$MSG"
+									fi
+									checklist "$KILLSLOT_TITLE" "$SLOT_MSG" "$SLOT_NR_M" "$SLOTS"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help luks_killslot_help
+												checklist "$KILLSLOT_TITLE" "$SLOT_MSG" "$SLOT_NR_M" "$SLOTS"
+												;;
+											*)	# Auswahl übernehmen
+												SLOTS="$gv_Auswahl"
+												break
+												;;
+										esac
+									done
+								else
+									MSG=$(gettext 'Es gibt keinen Schluessel Slot zum loeschen mehr.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+							else
+								no_choice_device_msg
+							fi
+							## }}}
+							killslot_menu $lv_Slots
+							;;
+						$gv_Delete)
+							# Slots des Laufwerks loeschen.# {{{
+							if [ -n "$DEVICE" ] && [ -n "${SLOTS[1]}" ] ; then
+								if [ -n "$KEYSCRIPT" ] ; then
+									PARAMS="--key-file=-"
+									for i in "${=SLOTS}" ; {
+										$KEYSCRIPT "$keyscriptarg" | \
+										cryptsetup ${=PARAMS} luksKillSlot \
+										"${LUKSHEADER:-$DEVICE}" "$i" || \
+										no_killslot_msg && break
+									}
+								elif [ -f "$key" ] ; then
+									PARAMS="$PARAMS --key-file=$key"
+									for i in "${=SLOTS}" ; {
+										cryptsetup ${=PARAMS} luksKillSlot \
+										"${LUKSHEADER:-$DEVICE}" "$i" &>/dev/null || \
+										no_killslot_msg && break
+									}
+									clean_keys
+								else
+									PARAMS="--key-file=-"
+									# passwordbox
+									password "$gv_Passwd_TITLE" "$PASSWD_SINGLE_MSG"
+									for i in "${=SLOTS}" ; {
+										print $PASSPHRASE | \
+										cryptsetup ${=PARAMS} luksKillSlot \
+										"${LUKSHEADER:-$DEVICE}" \
+										"$i" &>/dev/null || \
+										no_killslot_msg && clean_keys && break
+									}
+								fi
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							killslot_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_KillSlot
+				;;
+			$lv_Erase)
+				# Alle Slots unwiederrufbar löschen# {{{
+				DEVICE=""
+				ERASE_TITLE="${lv_Luks}::${lv_Erase}"
+				# Funktion erase_menu# {{{
+				erase_menu() {
+					ERASE_MENU=($lv_Device \"$DEVICE\"
+					$gv_Delete \"\" $gv_Back \"\")
+					menubox "$1" "$ERASE_TITLE" "$gv_Menupoint" "$ERASE_MENU"
+				}
+				## }}}
+				erase_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help luks_erase_help
+							erase_menu
+							;;
+						$lv_Device)
+							# Auswahl eines oder mehrerer Laufwerke# {{{
+							checklist "$ERASE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help luks_erase_help
+										checklist "$ERASE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+										;;
+									*)	# Auswahl übernehmen
+										DEVICE="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+							## }}}
+							erase_menu $lv_Device
+							;;
+						$gv_Delete)
+							# Backup erstellen.# {{{
+							if [ "${DEVICE[1]}" ] ; then
+								for i in "${=DEVICE}" ; {
+									# Über den Index des Arrays die Index Nr. heraus
+									# bekommen (i).
+									Nr="$MAP_DEV_E[(i)$i]"
+									DST_DEV="${MAP_DST_DEV_E[Nr]}"
+									# LUKSHEADER herausfinden.
+									if ! parse_opts "$DST_DEV" ; then
+										break
+									fi
+									# Los gehts
+									print yes | cryptsetup luksErase "${LUKSHEADER:-$i}" \
+									&>/dev/null || no_erase_msg "$i"
+								}
+							else
+								no_all_menupoints_msg
+							fi
+							## }}}
+							earse_menu
+							;;
+						$gv_Back)
+							break
+							;;
+					esac
+				done
+				## }}}
+				luks_ext_menu $lv_Erase
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

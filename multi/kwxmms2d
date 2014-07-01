@@ -1,0 +1,123 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 23.06.2014
+#
+# Script: kwxmms2d, ein Script um den xmms2d Daemon
+# zu managen.
+#
+# Version: 0.0.4
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Pruefen ob xmms2d und xmms2-launcher installiert sind.
+prog_check xmms2d xmms2-launcher
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Variablen
+lv_Server_Start=$(gettext 'Server starten')
+lv_Server_Stop=$(gettext 'Server stoppen')
+CONFFILE="${HOME}/.config/xmms2/xmms2.conf"
+
+# Muster der Konfiguration erstellen
+if [ ! -f "$CONFFILE" ] ; then
+	xmms2d -q -c $CONFFILE &>/dev/null &
+	kill `pidof xmms2d`
+fi
+
+
+# Funktion haupt_menue{{{
+#
+haupt_menue() {
+	MAIN_MENU=($gv_Configuration \"\" \"$lv_Server_Start\" \"\"
+	\"$lv_Server_Stop\" \"\" $gv_Exit \"\")
+	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration# {{{
+			autoload -U kwxmms2d_conf kwxmms2d_config
+			kwxmms2d_conf
+			## }}}
+			haupt_menue
+			;;
+		$lv_Server_Start)
+			# lokalen Server starten# {{{
+			ps uxU $USER | grep xmms2d | egrep -v 'grep|kwxmms2d' >${gv_WorkDir}/ps
+			if [ "`wc -l < ${gv_WorkDir}/ps`" = 0 ] ; then
+				PROG_OPT=" -q -c ~/.config/xmms2/xmms2.conf"
+				eval xmms2-launcher "${=PROG_OPT}" 1>/dev/null || prog_failure
+			else
+				MSG=$(gettext 'Es laeuft schon ein XMMS Server.')
+				msgbox "$gv_Info" "$MSG"
+			fi
+			## }}}
+			haupt_menue
+			;;
+		$lv_Server_Stop)
+			# lokale(n) Server stoppen# {{{
+			ps uxU $USER | grep xmms2d | egrep -v 'grep|kwxmms2d' >${gv_WorkDir}/ps
+			if [ "`wc -l < ${gv_WorkDir}/ps`" != 0 ] ; then
+				while read User Ps_Id Rest ; do
+					kill "$Ps_Id"
+				done < ${gv_WorkDir}/ps
+			else
+				MSG=$(gettext 'Es laeuft kein XMMS Server.')
+				msgbox "$gv_Info" "$MSG"
+			fi
+			## }}}
+			haupt_menue
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

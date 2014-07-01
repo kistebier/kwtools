@@ -1,0 +1,145 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 15.10.2012
+#
+# Script: kwrsync_backup_cron, make a snapshot from local and remote hosts
+# per crontab.
+#
+# Version: 0.1.3
+#
+
+trap 'rm -rf $gv_WorkDir &>/dev/null ; lock -r $gv_ScriptName' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+Kwrsync_Backup_Fpath=${PREFIX}/share/kwtools/functions/kwrsync_backup
+if [ -z ${(M)${FPATH}##*${Kwrsync_Backup_Fpath}*} ] ; then
+	FPATH=${Kwrsync_Backup_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+# Scriptinitialisierung
+script_init -o
+
+# Dieses Cron Script locken.
+lock -s $gv_ScriptName
+
+# Option for kwrsync_backup_exec
+case "$1" in
+	hourly|daily|weekly|mounthly)	OPT="$1"	;;
+	*)	OPT="hourly"	;;
+esac
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benötigten Funktionen laden.
+autoload -U kwrsync_backup_exec
+
+HostName="`hostname`"
+#
+# Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
+#
+KWRSYNC_CF=${ETC_PATH}/kwrsync_backup.cf
+KWRSYNC_CF_DIR=${ETC_PATH}/kwrsync_backup.d
+IFSBAK="$IFS"
+
+if [ -f $KWRSYNC_CF ] ; then
+	source $KWRSYNC_CF
+else
+	MSG=$(gettext 'Es gibt keine Konfigurationsdatei auf dem Rechner $HostName.')
+	> ${gv_WorkDir}/kwrsync_backup_cron <<< "Host: $HostName
+$MSG"
+	mail -s "$gv_ScriptName Error" root < "${gv_WorkDir}/kwrsync_backup_cron"
+	exit 1
+fi
+
+if [ -z "$BW_LIMIT" ] ; then
+	BW_LIMIT=0
+fi
+if [ -z "$SERVER" ] ; then
+	SERVER=localhost
+fi
+LOGFILE="${LOGFILE:-/var/log/kwrsync_backup.log}"
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+# Ist kein Backupverzeichnis angegeben, kommt eine Fehlermeldung
+if [ -z "$BACKUP_PATH" ] ; then
+	MSG=$(gettext 'Sie muessen erst ein Verzeichnis angeben, wo die Backups gesichert
+werden sollen (/etc/kwtools/kwrsync_backup.cf).')
+	> ${gv_WorkDir}/kwrsync_backup_cron <<< "Host: $HostName
+$MSG"
+	mail -s "$gv_ScriptName Error" root < "${gv_WorkDir}/kwrsync_backup_cron"
+	exit 1
+fi
+
+# mounten des Backup-Verzeichnis
+if [ "$MOUNT_PATH" ] ; then
+	if [ -z ${(M)$(< /proc/mounts)##$MOUNT_PATH} ] ; then
+		mount $MOUNT_PATH
+		if [ "$?" != 0 ] ; then
+		MSG=$(gettext 'Kann Backup-Verzeichnis nicht einbinden.')
+			> ${gv_WorkDir}/kwrsync_backup_cron <<< "Host: $HostName
+$MSG"
+			mail -s "$gv_ScriptName Error" root < "${gv_WorkDir}/kwrsync_backup_cron"
+			exit 1
+		fi
+	fi
+fi
+
+# Pruefe auf freien Plattenplatz
+if [ "$CHECK_HDMINFREE" = yes ] ; then
+	Kb_Is_Free=${${(s: :)${(M)${(f)"$(df $MOUNT_PATH)"}##*%}%\%}[10]}
+	Inode_Is_Free=${${(s: :)${(M)${(f)"$(df -i $MOUNT_PATH)"}##*%}%\%}[10]}
+	if [ "$Kb_Is_Free" -ge "$HDMINFREE" -o "$Inode_Is_Free" -ge "$HDMINFREE" ] ; then
+		MSG=$(gettext 'Es ist nicht mehr genug Platz vorhanden.')
+		> ${gv_WorkDir}/kwrsync_backup_cron <<< "Host: $HostName
+$MSG"
+		mail -s "$gv_ScriptName Error" root < "${gv_WorkDir}/kwrsync_backup_cron"
+	else
+		kwrsync_backup_exec $OPT
+	fi
+else
+	kwrsync_backup_exec $OPT
+fi
+# umounten des Backup-Verzeichnis
+if [ "$MOUNT_PATH" ] ; then
+	umount $MOUNT_PATH
+	if [ "$?" != 0 ] ; then
+		MSG=$(gettext 'Kann Backup-Verzeichnis nicht ausbinden.')
+		> ${gv_WorkDir}/kwrsync_backup_cron <<< "Host: $HostName
+$MSG"
+		mail -s "$gv_ScriptName Error" root < "${gv_WorkDir}/kwrsync_backup_cron"
+		exit 1
+	fi
+fi
+
+# Lockfile loeschen
+lock -r $gv_ScriptName
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

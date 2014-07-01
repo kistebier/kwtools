@@ -1,0 +1,192 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.10.2012
+#
+# Script: kwtermin_cron, um Termine zu ueberwachen.
+# Version: 0.1.4
+
+trap 'rm -rf $gv_WorkDir &>/dev/null ; lock -r $gv_ScriptName' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init -o
+
+# Dieses Cron Script locken.
+lock -s $gv_ScriptName
+
+# Wenn eine ~/.kwtools/kwplanerrc Datei vorhanden ist einlesen.
+#
+read_file kwplanerrc
+
+# Funktion Terminwarnung{{{
+Terminwarnung() {
+	if [ -n "$8" ] ; then
+		MailParm="-c $8"
+	else
+		unset -- MailParm
+	fi
+	case "$7" in
+		[by])
+			mail $MailParm -s "$TerminMsg `date -d \"${YEAR}${2[5,8]}\" \"+%a, %d.%m.%Y\"`: ${5}" $1 <<< "$6"
+			;;
+		[mtw])
+			mail $MailParm -s "$TerminMsg `date -d \"${YEAR}${MONTH}${Update_Termin[7,8]}\" \"+%a, %d.%m.%Y\"`: ${5}" $1 <<< "$6"
+			;;
+		*)
+			mail $MailParm -s "$TerminMsg `date -d \"$2\" \"+%a, %d.%m.%Y\"`: ${5}" $1 <<< "$6"
+			;;
+	esac
+}
+#}}}
+# Funktion check_date_time, Uhrzeit und Datum ueberpruefen und evtl. umrechnen{{{
+check_date_time() {
+	# Startzeit in Minute umrechnen
+	START_DATE="$1"
+	Vw_Time="$2"
+	START_TIME="$3"
+	Start_Std="${START_TIME[1,2]}"
+	Start_Min="${START_TIME[3,4]}"
+	(( WARN_TIME = Start_Std*60+Start_Min-Vw_Time ))
+	# Ist die Zahl negativ, muss der vom Startdatum 1 Tag abgerechnet werden.
+	Minus_Warn_Time=${WARN_TIME[1]}
+	if [ "$Minus_Warn_Time" = - ] ; then
+		START_DATE="`date -d \"$START_DATE 1 days ago\" +%Y%m%d`"
+	else
+		unset -- Minus_Warn_Time
+	fi
+	# aktuelle Zeit in Minute umrechnen
+	WARN_TIME="`date -d \"$START_TIME $Vw_Time minutes ago\" +%H%M`"
+	ACT_TIME="`date +%H%M`"
+}
+#}}}
+
+# Variablen
+integer Anz
+TerminFile="${gv_HomePath}/.kwtools/kwplaner/termin"
+Date="`date +%Y%m%d`"
+Termin_Date="$Date"
+DAY="${Date[7,8]}"
+MONTH="${Date[5,6]}"
+YEAR="${Date[1,4]}"
+Error=$(gettext 'Fehler:')
+TerminMsg=$(gettext 'Termin am')
+NoTerminList=$(gettext 'Kann Termin-Liste nicht oeffnen ($TerminFile).')
+
+if [ -z "$MAIL_ADR" ] ; then
+	MAIL_ADR="$USER@localhost"
+fi
+if [ ! -r "$TerminFile" ]; then
+	mail -s "$Error $gv_ScriptName" $MAIL_ADR <<< "$NoTerminList"
+	exit 0
+fi
+
+IFS=$'\r'
+
+read -A TerminListe <<< "`grep -v "^#" $TerminFile | tr "\n" "$IFS"`"
+
+IFS=$'\t'
+Anz=1
+
+while [ "${TerminListe[Anz]}" != "" ] ; do
+	set -- ${=${TerminListe[Anz]}}
+	# extra Einstellungen, Wiederholung/Geburtstag/Ferien
+	case $6 in
+		t)
+			# taegliche Wiederholungen anzeigen# {{{
+			check_date_time "$1" "$2" "$3"
+			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
+				Update_Termin="${YEAR}${MONTH}${DAY}"
+				if [ "$Update_Termin" -le "$Termin_Date" -a "$Update_Termin" -ge "$Termin_Date" ]; then
+					Terminwarnung $MAIL_ADR $*
+				fi
+			fi
+			## }}}
+			;;
+		w)
+			# woechentliche Wiederholungen anzeigen# {{{
+			check_date_time "$1" "$2" "$3"
+			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
+				Act_Termin_Day="${START_DATE[7,8]}"
+				Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
+				while [ "$Act_Termin_Day" -le 31 ] ; do
+					if [ "$Update_Termin" -eq "$Termin_Date" ]; then
+						Terminwarnung $MAIL_ADR $*
+						break
+					else
+						(( Act_Termin_Day = Act_Termin_Day + 7 ))
+						Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
+					fi
+				done
+			fi
+			## }}}
+			;;
+		m)
+			# monatliche Wiederholungen anzeigen# {{{
+			check_date_time "$1" "$2" "$3"
+			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
+				Act_Termin_Day="${START_DATE[7,8]}"
+				Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
+				if [ "$Update_Termin" -le "$Termin_Date" -a "$Update_Termin" -ge "$Termin_Date" ]; then
+					Terminwarnung $MAIL_ADR $*
+				fi
+			fi
+			## }}}
+			;;
+		[by])
+			# Geburtstage/jaehrliche Wiederholungen anzeigen# {{{
+			check_date_time "$1" "$2" "$3"
+			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
+				Act_Termin_Year="${START_DATE[1,4]}"
+				Act_Termin_Month="${START_DATE[5,6]}"
+				Act_Termin_Day="${START_DATE[7,8]}"
+				Update_Termin="${YEAR}${Act_Termin_Month}${Act_Termin_Day}"
+				if [ "$Update_Termin" -le "$Termin_Date" -a "$Update_Termin" -ge "$Termin_Date" ]; then
+					Terminwarnung $MAIL_ADR $*
+				fi
+			fi
+			## }}}
+			;;
+		*)
+			# Ferien/Urlaub/Termine anzeigen# {{{
+			check_date_time "$1" "$2" "$3"
+			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
+				if [ "$START_DATE" -le "$Termin_Date" -a "$START_DATE" -ge "$Termin_Date" ]; then
+					Terminwarnung $MAIL_ADR $*
+				fi
+			fi
+			## }}}
+			;;
+	esac
+	(( Anz++ ))
+done
+
+# Lockfile loeschen
+lock -r $gv_ScriptName
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

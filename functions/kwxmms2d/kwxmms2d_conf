@@ -1,0 +1,65 @@
+# Funktion (kwxmms2d_conf)# {{{
+#
+# usage: kwxmms2d_conf
+kwxmms2d_conf() {
+	# Funktion (kwxmms2_conf_menu)# {{{
+	lv_Xmms_Server=$(gettext 'Server')
+	kwxmms2d_conf_menu() {
+		CONF_MENU=($lv_Xmms_Server \"$XMMS_SERVER_PATH\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	# Funktionen (restart_server_msg), Nachricht das man den Server neu starten soll# {{{
+	restart_server_msg() {
+		MSG=$(gettext 'Falls Sie die Adresse des Servers geaendert haben sollten Sie ihn neu starten.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+
+	# herrausfinden der alten Adresse
+	XMMS_SERVER_PATH=${${${(M)$(grep ipcsocket "$CONFFILE")##*(unix*|tcp*)}#*>}%<*}
+
+	kwxmms2d_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe Messagebox
+				script_help conf_help
+				kwxmms2d_conf_menu
+				;;
+			$lv_Xmms_Server)
+				# Protokoll+Rechner+Portnumer Eingabe# {{{
+				# oder Protokoll+Verzeichnis.
+				XMMS_SERVER_MSG=$(gettext 'Tragen Sie bitte die Adresse Ihres xmms2d Servers ein (Bsp.: tcp://host:9667 oder unix:///tmp/xmms-ipc-username). Siehe Hilfe.')
+				inputbox "$gv_Configuration" "$XMMS_SERVER_MSG" "$XMMS_SERVER_PATH"
+				if [ -n "$gv_Auswahl" ] ; then
+					case "$gv_Auswahl" in
+						tcp://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|unix:///*)
+							# Uebernahme der Werte
+							XMMS_SERVER_PATH="$gv_Auswahl"
+							;;
+						*)
+							no_input_msg
+							;;
+					esac
+				fi
+				## }}}
+				kwxmms2d_conf_menu
+				;;
+			$gv_Save)
+				# speichern
+				kwxmms2d_config
+				restart_server_msg
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

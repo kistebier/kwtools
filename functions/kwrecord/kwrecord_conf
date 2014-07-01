@@ -1,0 +1,227 @@
+# Funkion, kwrecord Konfiguration{{{
+#
+# usage: kwrecord_conf
+kwrecord_conf() {
+	lv_Cd_Burn_Prog=$(gettext 'CD-Brennprogramm')
+	lv_Dvd_Burn_Prog=$(gettext 'DVD-Brennprogramm')
+	lv_Cd_Size=$(gettext 'CD-Groesse')
+	lv_Dvd_Size=$(gettext 'DVD-Groesse')
+	lv_Cd_Speed=$(gettext 'CD-Geschwindigkeit')
+	lv_Dvd_Speed=$(gettext 'DVD-Geschwindigkeit')
+	lv_Write_Drive=$(gettext 'Brennlaufwerk')
+	lv_Read_Drive=$(gettext 'Leselaufwerk')
+	lv_Source_Driver=$(gettext 'Quell-Treiber')
+	lv_Write_Driver=$(gettext 'Treiber')
+	lv_Write_Drive=$(gettext 'Brennlaufwerk')
+	lv_Cddb=$(gettext 'CDDB')
+	lv_Tmp_Dir=$(gettext 'Tmp_Verzeichnis')
+	lv_Eject=$(gettext 'CD/DVD_auswerfen')
+	lv_Simulate=$(gettext 'simulieren')
+	# Funktion, Konfigurationsmenue{{{
+	#
+	# usage: cd_dvd_conf_menue
+	#
+	cd_dvd_conf_menue() {
+		CONF_MENU=($lv_Cd_Burn_Prog \"$CD_PROG\"
+		$lv_Dvd_Burn_Prog \"$DVD_PROG\" $lv_Cd_Size \"$CD_SIZE\"
+		$lv_Cd_Speed \"$WRITE_SPEED\" $lv_Dvd_Size \"$DVD_SIZE\"
+		$lv_Dvd_Speed \"$DVD_SPEED\" $lv_Write_Drive \"$WRITE_DEVICE\"
+		$lv_Read_Drive \"$READ_DEVICE\"
+		$lv_Source_Driver \"$CD_SOURCE_DRIVER\"
+		$lv_Write_Driver \"$CD_WRITE_DRIVER\"
+		$lv_Cddb \"$CDDB\"
+		$lv_Tmp_Dir \"$TMP_DIR\"
+		$lv_Eject \"$EJECT\"
+		$lv_Simulate \"$SIMULATE\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	#}}}
+	cd_dvd_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfe zur Konfiguration
+				script_help conf_help
+				cd_dvd_conf_menue
+				;;
+			$lv_Cd_Burn_Prog)
+				# Brennprogramm pruefen.{{{
+				prog_check cdrdao
+				if [ -n "$PROGS" ] ; then
+					CD_PROG="$PROGS"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Cd_Burn_Prog
+				;;
+			$lv_Dvd_Burn_Prog)
+				# DVD Brennprogramm.{{{
+				prog_check growisofs
+				if [ -n "$PROGS" ] ; then
+					DVD_PROG="$PROGS"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Dvd_Burn_Prog
+				;;
+			$lv_Cd_Size)
+				# CD Groesse angeben{{{
+				#
+				cd_size
+				if [ -z "$CD_SIZE" ] ; then
+					CD_SIZE=650
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Cd_Size
+				;;
+			$lv_Cd_Speed)
+				# Brenngeschwindigkeit eingeben{{{
+				# integer, da nur Integer Zahlen benutzt werden koennen.
+				#
+				cd_dvd_speed "$WRITE_SPEED"
+				if [ "$NUMBER" -a "$NUMBER" != 0 ] ; then
+					WRITE_SPEED="$NUMBER"
+				else
+					WRITE_SPEED="4"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Cd_Speed
+				;;
+			$lv_Dvd_Size)	
+				# DVD-Groesse der DVD eingeben{{{
+				#
+				dvd_size
+				if [ -z "$DVD_SIZE" ] ; then
+					DVD_SIZE="4,7"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Dvd_Size
+				;;
+			$lv_Dvd_Speed)	
+				# Brenngeschwindigkeit fuer DVD eingeben{{{
+				cd_dvd_speed $DVD_SPEED
+				if [ "$NUMBER" -a "$NUMBER" != 0 ] ; then
+					DVD_SPEED="$NUMBER"
+				else
+					DVD_SPEED="1"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Dvd_Speed
+				;;
+			$lv_Write_Drive)
+				# Brenner auswaehlen{{{
+				cd_device
+				if [ "$DEVICE" ] ; then
+					WRITE_DEVICE="$DEVICE"
+					device_convert -i "$WRITE_DEVICE"
+					user_device_check $CDROM AI
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Write_Drive
+				;;
+			$lv_Read_Drive)
+				# Laufwerk auswaehlen von dem gelesen wird{{{
+				cd_device
+				if [ "$DEVICE" ] ; then
+					READ_DEVICE="$DEVICE"
+					device_convert -i "$READ_DEVICE"
+					user_device_check $CDROM A
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Read_Drive
+				;;
+			$lv_Source_Driver)
+				# Leselaufwerkstreiber auswaehlen{{{
+				local Old_Source_Driver
+				Old_Source_Driver="$CD_SOURCE_DRIVER"
+				cd_driver "$CD_SOURCE_DRIVER"
+				if [ -n "$CD_DRIVER" ] ; then
+					CD_SOURCE_DRIVER="$CD_DRIVER"
+				else
+					CD_SOURCE_DRIVER="$Old_Source_Driver"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Source_Driver
+				;;
+			$lv_Write_Driver)
+				# Brenner Laufwerkstreiber auswaehlen{{{
+				local Old_Write_Driver
+				Old_Write_Driver="$CD_WRITE_DRIVER"
+				cd_driver "$CD_WRITE_DRIVER"
+				if [ -n "$CD_DRIVER" ] ; then
+					CD_WRITE_DRIVER="$CD_DRIVER"
+				else
+					CD_WRITE_DRIVER="$Old_Write_Driver"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Write_Driver
+				;;
+			$lv_Cddb)
+				# CDDB Server definieren{{{
+				CDDB_TITLE=$(gettext '${gv_Configuration}::CDDB-Datenbankserver')
+				MSG=$(gettext 'Geben Sie hier bitte eine Komma mit Leerzeichen separate Liste von CDDB Server ein (siehe Hilfe).')
+				inputbox "$CDDB_TITLE" "$MSG" "$CDDB"
+				if [ "$gv_Auswahl" ] ; then
+					CDDB="$gv_Auswahl"
+				else
+					unset -- CDDB
+					no_input_msg
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Cddb
+				;;
+			$lv_Tmp_Dir)
+				# Temporaeres Verzeichnis fuer die Images eingeben{{{
+				dselect "${TMP_DIR:-/var/tmp}"
+				if [ "$VERZ" ] ; then
+					dselect_check -c "$VERZ"
+					if [ "$VERZ" ] ; then
+						TMP_DIR="$VERZ"
+					else
+						TMP_DIR=/var/tmp
+					fi
+				else
+					TMP_DIR=/var/tmp
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Tmp_Dir
+				;;
+			$lv_Eject)
+				# nach dem brennen CD/DVD auswerfen?{{{
+				#
+				MSG=$(gettext 'Soll die CD/DVD nach dem brennen ausgeworfen werden (ja/nein)?')
+				yesno "$gv_Configuration" "$MSG" "${EJECT:-yes}"
+				if [ "$gv_Auswahl" != no ] ; then
+					EJECT="yes"
+				else
+					EJECT="no"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Eject
+				;;
+			$lv_Simulate)
+				# Brennen simulieren{{{
+				#
+				MSG=$(gettext 'Soll das brennen nur simuliert werden (ja/nein)?')
+				yesno "$gv_Configuration" "$MSG" "${SIMULATE:-no}"
+				if [ "$gv_Auswahl" != no ] ; then
+					SIMULATE="yes"
+				else
+					SIMULATE="no"
+				fi
+				#}}}
+				cd_dvd_conf_menue $lv_Simulate
+				;;
+			$gv_Save)
+				cd_dvd_config
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,118 @@
+# Funktion (revoke_files), widerruft CA- und Zertifikats-Dateien
+#
+# benoetigt die Variablen CERT_REVOKE_TITLE und Revoke_File
+#
+# usage: revoke_files FILE
+# FILE - CA/Zertifikat Datei (voller Pfad)
+#
+revoke_files() {
+	if [[ ${#argv} == 1 ]] && [[ -f $1 ]] ; then
+		unset -- Revoke_File
+		Revoke_File="$1"
+		GROUND=${GROUND:-unspecified}
+		#
+		# Funktion (ground_revoke_menu)# {{{
+		#
+		ground_revoke_menu() {
+			GROUND_REVOKE_MENU=(unspecified \"\" on
+			KeyCompromise \"\" off
+			CaCompromise \"\" off
+			AffiliationChanged \"\" off 
+			Superseded \"\" off CessationOfOperation \"\" off
+			CertificatHold \"\" off)
+			radiolist "$CERT_REVOKE_TITLE" "$gv_Menupoint" "$GROUND_REVOKE_MENU"
+		}
+		## }}}
+		# Funktion (conf_revoke_menu)# {{{
+		conf_revoke_menu() {
+			CONF_REVOKE_MENU=(\"$lv_Ssl_Password\" \"$CAPASSWORD\"
+			$lv_Ground \"$GROUND\" $gv_Save \"\" $gv_Back \"\")
+			menubox "$1" "$CERT_REVOKE_TITLE" "$gv_Menupoint" "$CONF_REVOKE_MENU"
+		}
+		## }}}
+		conf_revoke_menu
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help ca_revoke_help
+					conf_revoke_menu
+					;;
+				"$lv_Ssl_Password")
+					# Passwort fuer das Zertifikat eingeben# {{{
+					CERT_REVOKE_MSG=$(gettext 'Geben Sie bitte das Password fuer dieses Zertifikat ein.')
+					password "$CERT_REVOKE_TITLE" "$CERT_REVOKE_MSG"
+					if [ -n "$PASSPHRASE" ] ; then
+						password_display "$PASSPHRASE"
+						if [ -n "$gv_Star_Passphrase" ] ; then
+							CAPASSWORD="$gv_Star_Passphrase"
+							export CAPASSWD="$PASSPHRASE"
+							unset -- PASSPHRASE
+						else
+							unset -- CAPASSWORD CAPASSWD PASSPHRASE
+						fi
+					else
+						unset -- CAPASSWD CAPASSWORD PASSPHRASE
+					fi
+					## }}}
+					conf_revoke_menu $lv_Ssl_Password
+					;;
+				$lv_Ground)
+					# Grund angeben/auswaehlen# {{{
+					ground_revoke_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help ca_revoke_help
+								ground_revoke_menu
+								;;
+							*)
+								# Auswahl uebernehmen
+								GROUND="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					conf_revoke_menu $lv_Ground
+					;;
+				$gv_Save)
+					# CAs und Zertifikate widerrufen# {{{
+					cd ${KWSSL_DIR}/${CA_OPEN_NAME}
+					if [ -n "$CAPASSWORD" ] ; then
+						# Widerrufsliste erstellen/bearbeiten
+						openssl ca -config $KWSSL2RC \
+							-batch -crl_reason $GROUND \
+							-revoke $Revoke_File \
+							-passin env:CAPASSWD || prog_failure
+						if [ "$RET" != 1 ] ; then
+							create_crl "$CA_OPEN_NAME"
+						fi
+						# Passwoerter loeschen
+						unset -- CAPASSWORD CAPASSWD
+						break
+					else
+						MSG=$(gettext 'Sie muessen ein Passwort eingeben.')
+						msgbox "$gv_Info" "$MSG"
+						conf_revoke_menu $lv_Ssl_Password
+					fi
+					## }}}
+					;;
+				$gv_Back)
+					# Passwoerter loeschen
+					unset -- CAPASSWORD CAPASSWD
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+#
+
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

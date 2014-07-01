@@ -1,0 +1,287 @@
+# Funktion, SQL Datenbanken{{{
+sql_db() {
+	# Variablen
+	lv_Where_Field=$(gettext 'Quellfeld')
+	lv_Select_Field=$(gettext 'Zielfeld')
+	lv_Conditions=$(gettext 'Konditionen')
+	lv_Function=$(gettext 'Funktion')
+	#
+	FIELD_MSG=$(gettext 'Geben Sie den Spaltennamen der Tabelle, der den zu behandelten Eintrag mapt, ein.')
+
+	# Funktion sql_conf_menu{{{
+	sql_conf_menue() {
+		SQL_CONF_MENU=($gv_Filename \"$FILE\" ------------------- \"\"
+		$gv_User \"$DB_User\" $gv_Passwd \"$PASSPHRASE1\" $lv_Db \"$DB_Name\"
+		$lv_Tab \"$Table\" $lv_Where_Field \"$Where_Field\"
+		$lv_Select_Field \"$Select_Field\" $lv_Conditions \"$Kond\"
+		$lv_Function \"$Func\" $gv_Host \"$DB_Host\" $gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SQL_CONF_TITLE" "$gv_Menupoint" "$SQL_CONF_MENU"
+	}
+	#}}}
+	# Funktion Schlüsseldatei einlesen{{{
+	#
+	read_werte() {
+		unset -- DB_Name DB_User Table DB_Host Select_Field Where_Field Func Kond
+		typeset -Lx DB_Host
+		while read Key b Value ; do
+			case $Key in 
+				dbname)	DB_Name="$Value"
+					;;
+				user)	DB_User="$Value"
+					;;
+				table)	Table="$Value"
+					;;
+				hosts)	DB_Host="$Value"
+					;;
+				password)	PASSPHRASE="$Value"
+					Pass=$PASSPHRASE
+					password_display "$Pass"
+					PASSPHRASE1="$gv_Star_Passphrase"
+					unset -- gv_Star_Passphrase
+					;;
+				select_field)	Select_Field="$Value"
+					;;
+				where_field)	Where_Field="$Value"
+					;;
+				select_functions)	Func="$Value"
+					;;
+				additional_conditions)	Kond="$Value"
+					;;
+			esac
+		done < $1
+	}
+	#}}}
+	# Funktion Datenbankname{{{
+	db_name() {
+		DB_NAME_MSG=$(gettext 'Geben Sie den Namen der Datenbank ein.')
+		inputbox "$SQL_CONF_TITLE" "$DB_NAME_MSG" "$DB_Name"
+		if [ "$gv_Auswahl" ] ; then
+			DB_Name="$gv_Auswahl"
+		else
+			unset -- DB_Name
+		fi
+	}
+	#}}}
+	# Funktion Benutzer auswählen{{{
+	db_user() {
+		DB_USER_MSG=$(gettext 'Geben Sie den Benutzer ein, der sich in die Datenbank einloggen darf.')
+		inputbox "$SQL_CONF_TITLE" "$DB_USER_MSG" "$DB_User"
+		if [ "$gv_Auswahl" ] ; then
+			DB_User="$gv_Auswahl"
+		else
+			unset -- DB_User
+		fi
+	}
+	#}}}
+	# Funktion Datenbank Passwort{{{
+	db_passwd() {
+		# PASSPHRASE1 wird von passwd erzeugt.
+		PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer die Datenbank ein.')
+		PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort fuer die Datenbank ein.')
+		password "$SQL_CONF_TITLE" "$PASSWD_MSG" 5
+		if [ -n "$PASSPHRASE" ] ; then
+			PASS1="$PASSPHRASE"
+			password "$SQL_CONF_TITLE" "$PASSWD_MSG1" 5
+			if [ "$PASSPHRASE" ] ; then
+				PASS2="$PASSPHRASE"
+				if [[ $PASS1 == $PASS2 ]] ; then
+					Pass="$PASSPHRASE"
+					password_display "$Pass"
+					PASSPHRASE1="$gv_Star_Passphrase"
+					unset -- gv_Star_Passphrase
+				else
+					different_passwd
+					unset -- Pass PASSPHRASE PASSPHRASE1 PASS1 PASS2
+				fi
+			fi
+		fi
+	}
+	#}}}
+	# Tabellenname{{{
+	db_table()
+	{
+		DB_TABLE_MSG=$(gettext 'Geben Sie den Tabellennamen der Datenbank ein.')
+		inputbox "$SQL_CONF_TITLE" "$DB_TABLE_MSG" "$Table"
+		if [ "$gv_Auswahl" ] ; then
+			Table="$gv_Auswahl"
+		else
+			unset -- Table
+		fi
+	}
+	#}}}
+	# Konditionen{{{
+	db_condition()
+	{
+		KONDITION_MSG=$(gettext 'Geben Sie die zusaetzlichen Konditionen fuer die Abfrage der Datenbank ein. Siehe man 5 pgsql_table/mysql_table.')
+		inputbox "$SQL_CONF_TITLE" "$KONDITION_MSG" "$Kond"
+		if [ "$gv_Auswahl" ] ; then
+			Kond="$gv_Auswahl"
+		else
+			unset -- Kond
+		fi
+	}
+	#}}}
+	# Datenbankrechner{{{
+	db_host() {
+		DB_HOST_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch Leerzeichen, ein auf dem die Datenbank laeuft.')
+		inputbox "$SQL_CONF_TITLE" "$DB_HOST_MSG" "$DB_Host"
+		if [ "$gv_Auswahl" ] ; then
+			unset -- DB_Host
+			local Anz
+			integer Anz
+			Anz=0
+			for i in ${=gv_Auswahl} ; {
+				if [ "$i" = , ] ; then
+					continue
+				else
+					(( Anz++ ))
+					DB_Host[Anz]="$i"
+				fi
+			}
+		else
+			unset -- DB_Host
+		fi
+	}
+	#}}}
+	# Funktion Tabellenname, der den Mapeintrag enthaelt.{{{
+	# (Bsp.: select_field=destination, where_field=alias)
+	select_field() {
+		inputbox "$SQL_CONF_TITLE" "$FIELD_MSG" "$Select_Field"
+		if [ "$gv_Auswahl" ] ; then
+			Select_Field="$gv_Auswahl"
+		else
+			unset -- Select_Field
+		fi
+	}
+	#}}}
+	# Funktion Tabellenname, der den zu behandelten Eintrag enthaelt, eingeben{{{
+	# (Bsp.: select_field=destination, where_field=alias, )
+	where_field() {
+		inputbox "$SQL_CONF_TITLE" "$FIELD_MSG" "$Where_Field"
+		if [ "$gv_Auswahl" ] ; then
+			Where_Field="$gv_Auswahl"
+		else
+			unset -- Where_Field
+		fi
+	}
+	#}}}
+	# Funktion die die Auswahl in der Tabelle übernimmt{{{
+	# auswählen. Benötigt nicht Tabellenname, Auswahl_Feld,
+	# Welches_Feld und Konditionen.
+	#
+	db_function() {
+		FUNCTION_MSG=$(gettext 'Geben Sie den Namen der Funktion fuer die Tabelle der Datenbank ein.')
+		inputbox "$SQL_CONF_TITLE" "$FUNCTION_MSG" "$Func"
+		if [ "$gv_Auswahl" ] ; then
+			Func="$gv_Auswahl"
+		else
+			unset -- Func
+		fi
+	}
+	#}}}
+	# Mysql/Postgresql/Sqlite Datenbank Einstellungen{{{
+	sql_conf() {
+		sql_conf_menue
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)	script_help "$TAB_HELP"
+					sql_conf_menue
+					;;
+				$gv_Filename|---*)
+					# Dateinamen Anzeige
+					sql_conf_menue $gv_Filename
+					;;
+				$lv_Db) # Datenbankname
+					db_name
+					sql_conf_menue $lv_Db
+					;;
+				$gv_User) # DB_user
+					db_user
+					sql_conf_menue $gv_User
+					;;
+				$gv_Passwd) # DB Passwort
+					db_passwd
+					sql_conf_menue $gv_Passwd
+					;;
+				$lv_Tab)	# DB_Tabelle
+					db_table
+					sql_conf_menue $lv_Tab
+					;;
+				$gv_Host)	# Datenbankhost
+					db_host
+					sql_conf_menue $gv_Host
+					;;
+				$lv_Where_Field)	# Where_Field
+					where_field
+					sql_conf_menue $lv_Where_Field
+					;;
+				$lv_Select_Fied)	# Select_Field
+					select_field
+					sql_conf_menue $lv_Select_Fied
+					;;
+				$lv_Conditions)
+					# Konditionen
+					db_condition
+					sql_conf_menue $lv_Conditions
+					;;
+				$lv_Function)
+					db_function
+					sql_conf_menue $lv_Function
+					;;
+				$gv_Save)	
+					# speichern{{{
+					if [ "$DB_Name" -a "$DB_User" -a "$DB_Host" -a "$Pass" -a "$Func" ] ; then
+						sql_config
+						unset -- PASSPHRASE Pass PASSPHRASE1 PASS1 PASS2
+						break
+					elif [ "$DB_Name" -a "$Table" -a "$DB_User" -a "$DB_Host" -a "$Pass" -a "$Select_Field" -a "$Where_Field" ] ; then
+						sql_config
+						unset -- PASSPHRASE Pass PASSPHRASE1 PASS1 PASS2
+						break
+					else
+						failed_entry_msg
+						sql_conf_menue
+					fi
+					#}}}
+					;;
+				$gv_Back)
+					unset -- PASSPHRASE Pass PASSPHRASE1 PASS1 PASS2
+					break
+					;;
+			esac
+		done
+	}
+	#}}}
+	case $1 in
+		mysql)
+			unset -- FILE
+			FILE="$2"
+			lv_Mysql_Tab=$(gettext 'Mysql_Tabelle')
+			SQL_CONF_TITLE="${gv_Configuration}::${lv_Mysql_Tab}"
+			read_werte $FILE
+			sql_conf
+			;;
+		pgsql)
+			unset -- FILE
+			FILE="$2"
+			lv_Pgsql_Tab=$(gettext 'Postgresql_Tabelle')
+			SQL_CONF_TITLE="${gv_Configuration}::${lv_Pgsql_Tab}"
+			read_werte $FILE
+			sql_conf
+			;;
+		sqlite)
+			unset -- FILE
+			FILE="$2"
+			lv_Pgsql_Tab=$(gettext 'Sqlite_Tabelle')
+			SQL_CONF_TITLE="${gv_Configuration}::${lv_Sqlite_Tab}"
+			read_werte $FILE
+			sql_conf
+			;;
+	esac
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

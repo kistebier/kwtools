@@ -1,0 +1,235 @@
+# Funktion (manage_export_pkcs12), managed das exportieren ins# {{{
+# PKCS#12 Format.
+#
+# usage: manage_export_pkcs12 OPTION EXPORT_FILE SUFFIX
+# OPTION      - [ -keys | -certs ]
+# EXPORT_FILE - zu exportierende Datei
+# SUFFIX      - p12
+#
+manage_export_pkcs12() {
+	if [[ ${#argv} == 3 ]] && [[ -f $2 ]] && [[ $3 == p12 ]] ; then
+		UNSET_EXPORT=(EXPORT_PASSWORD EXPORT_PASSWD CA_CAPASSWD CA_CAPASSWORD
+			DISPLAYNAME PASS_VALUE PKCS_VALUE)
+		unset -- $UNSET_EXPORT
+		local Opt Suffix In_File
+		Opt="$1"
+		In_File="$2"
+		Suffix="$3"
+		#
+		# Variablen
+		lv_ExportPass=$(gettext 'Export Passwort')
+		lv_Display_Name=$(gettext 'Anzeigename')
+		lv_PKCS_Structure=$(gettext 'PKCS#12 Struktur')
+		# fuer das jeweilige Exportmenue einige Variablen
+		# vorbelegen.
+		case "$Opt" in
+			-keys)
+				PASS_VALUE=${PASS_VALUE:-yes}
+				PKCS_VALUE=${PKCS_VALUE:-yes}
+				;;
+			*)
+				PASS_VALUE=${PASS_VALUE:-no}
+				PKCS_VALUE=${PKCS_VALUE:-yes}
+				;;
+		esac
+		#
+		# Export Dateiname und Suffix erst einmal festlegen
+		export_create_filename "$Opt" "$Suffix"
+		#
+		# Funktion (export_pkcs12_menu)# {{{
+		#
+		export_pkcs12_menu() {
+			if [[ $PASS_VALUE == no ]] ; then
+				EXPORT_PKCS12_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+				\"$lv_PassAdd\" \"$PASS_VALUE\"
+				\"$lv_Ssl_Key_Password\" \"$CA_CAPASSWORD\"
+				\"$lv_ExportPass\" \"$EXPORT_PASSWORD\"
+				$lv_Display_Name \"$DISPLAYNAME\"
+				\"$lv_PKCS_Structure\" \"$PKCS_VALUE\"
+				$gv_Create \"\" $gv_Back \"\")
+			else
+				EXPORT_PKCS12_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
+				\"$lv_PassAdd\" \"$PASS_VALUE\"
+				\"$lv_Ssl_Key_Password\" \"$CA_CAPASSWORD\"
+				$lv_Display_Name \"$DISPLAYNAME\"
+				\"$lv_PKCS_Structure\" \"$PKCS_VALUE\"
+				$gv_Create \"\" $gv_Back \"\")
+			fi
+			menubox "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_PKCS12_MENU"
+		}
+		## }}}
+		export_pkcs12_menu
+		while [ "$gv_Auswahl" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+		    	    # Hilfe Messagebox
+					script_help export_pkcs12_help
+					export_pkcs12_menu
+					;;
+				"$lv_ExportFilename")
+					# Dateiname fuer den Export eingaben# {{{
+					export_filename $Suffix
+					## }}}
+					export_pkcs12_menu $lv_ExportFilename
+					;;
+				"$lv_PassAdd")
+					# mit oder ohne Passwort exportieren.# {{{
+					pass_add
+					## }}}
+					export_pkcs12_menu $lv_PassAdd
+					;;
+				"$lv_Ssl_Key_Password")
+					# privater Schluessel Password Eingabe
+					ca_passwd_input -keys
+					export_pkcs12_menu $lv_Ssl_Key_Password
+					;;
+				"$lv_ExportPass")
+					# Export Password Eingabe# {{{
+					EXPORTKEYPASS_MSG=$(gettext 'Geben Sie das Export Passwort ein.')
+					password "$lv_ExportPass" "$EXPORTKEYPASS_MSG" "$PASSWD_LENGTH"
+					# Passworteingabe pruefen
+					if [ -n "$PASSPHRASE" ] ; then
+						password_display "$PASSPHRASE"
+						if [ -n "$gv_Star_Passphrase" ] ; then
+							EXPORT_PASSWORD="$gv_Star_Passphrase"
+							export EXPORT_PASSWD="$PASSPHRASE"
+							unset -- PASSPHRASE
+						else
+							unset -- EXPORT_PASSWORD EXPORT_PASSWD PASSPHRASE
+						fi
+					else
+						unset -- EXPORT_PASSWORD EXPORT_PASSWD PASSPHRASE
+					fi
+					## }}}
+					export_pkcs12_menu $lv_ExportPass
+					;;
+				$lv_Display_Name)
+					# Anzeigename eingeben# {{{
+					DISPLAYNAME_MSG=$(gettext 'Geben Sie den Anzeigenamen ein.')
+					inputbox "$lv_Display_Name" "$DISPLAYNAME_MSG" "$DISPLAYNAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						DISPLAYNAME="$gv_Auswahl"
+					else
+						unset -- DISPLAYNAME
+					fi
+					## }}}
+					export_pkcs12_menu $lv_Display_Name
+					;;
+				"$lv_PKCS_Structure")
+					# CA in die PKCS#12 Struktur hinzufuegen .# {{{
+					MSG=$(gettext 'Soll die CA in die PKCS#12 Struktur hinzugefuegt werden (ja/nein)?')
+					yesno "$gv_Info" "$MSG" "$PKCS_VALUE"
+					if [ "$gv_Auswahl" != no ] ; then
+						PKCS_VALUE=yes
+					else
+						PKCS_VALUE=no
+					fi
+					## }}}
+					export_pkcs12_menu $lv_PKCS_Structure
+					;;
+				$gv_Create)
+					# exportieren# {{{
+					unset -- PROG_OPT CACERT CAKEY
+					# Funktion (check_displayname)# {{{
+					#
+					check_displayname() {
+						if [ -n "$DISPLAYNAME" ] ; then
+							PROG_OPT+=(-name "$DISPLAYNAME")
+						else
+							KEYLENGTH=$(get_keylength $CACERT)
+							PROG_OPT+=(-name "${EXPORT_FILENAME##*/} $KEYLENGTH Bit Zertifikat")
+						fi
+					}
+					## }}}
+					# Funktion (check_pkcs12_structure)# {{{
+					check_pkcs12_structure() {
+						if [[ $PKCS_VALUE == yes ]] ; then
+							PROG_OPT+=(-certfile ${KWSSL_DIR}/${CA_OPEN_NAME}/cacert.pem)
+						fi
+					}
+					## }}}
+					# Variablen CAKEY und CACERT belegen
+					case "$Opt" in
+						-certs)
+							# Zertifikate exportieren# {{{
+							# Datei Variablen belegen
+							CACERT="$In_File"
+							CAKEY="${In_File/\/certs\///keys/}"
+							## }}}
+							;;
+						-keys)
+							# Schluessel exportieren# {{{
+							# Datei Variablen belegen
+							CAKEY="$In_File"
+							CACERT="${In_File/\/keys\///certs/}"
+							## }}}
+							;;
+					esac
+					#
+					# exportieren mit Passwort# {{{
+					if [[ $PASS_VALUE == no ]] ; then
+						if [ -n "$CA_CAPASSWORD" -a -n "$EXPORT_PASSWORD" ] ; then
+							# grundlegende Befehlsoptionen in der Variable
+							# PROG_OPT speichern.
+							PROG_OPT=(pkcs12 -export -inkey "$CAKEY"
+							-in "$CACERT" -out "$EXPORT_FILENAME"
+							-passin env:CA_CAPASSWD -passout env:EXPORT_PASSWD)
+							# Anzeigename belegen falls nicht erfolgt.
+							check_displayname
+							# pkcs12 Struktur mit hinzufuegen
+							check_pkcs12_structure
+							# Pefehl ausfuehren
+							openssl $PROG_OPT || prog_failure
+							# fertig, Variablen loeschen
+							unset -- $UNSET_EXPORT
+							break
+						else
+							MSG=$(gettext 'Sie muessen auch die Menuepunkte $lv_Ssl_Key_Password und $lv_ExportPass mit Werten belegen.')
+							msgbox "$gv_Info" "$MSG"
+							# Menue noch mal ausfuehren
+							export_pkcs12_menu
+						fi
+						## }}}
+					else
+						# exportieren ohne Passwort# {{{
+						if [ -n "$CA_CAPASSWORD" ] ; then
+							# grundlegende Befehlsoptionen in der Variable
+							# PROG_OPT speichern.
+							PROG_OPT=(pkcs12 -export -inkey "$CAKEY"
+							-in "$CACERT" -out "$EXPORT_FILENAME"
+							-passin env:CA_CAPASSWD -passout pass: -nodes)
+							# Anzeigename belegen falls nicht erfolgt.
+							check_displayname
+							# pkcs12 Struktur mit hinzufuegen
+							check_pkcs12_structure
+							# Pefehl ausfuehren
+							openssl $PROG_OPT || prog_failure
+							# fertig, Variablen loeschen
+							unset -- $UNSET_EXPORT
+							break
+						else
+							MSG=$(gettext 'Sie muessen auch den Menuepunkt $lv_Ssl_Key_Password mit einem Wert belegen.')
+							msgbox "$gv_Info" "$MSG"
+							# Menue noch mal ausfuehren
+							export_pkcs12_menu
+						fi
+						## }}}
+					fi
+					## }}}
+					;;
+				$gv_Back)
+					# Abbrechen
+					unset -- $UNSET_EXPORT
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+# }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

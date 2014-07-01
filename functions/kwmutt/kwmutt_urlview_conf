@@ -1,0 +1,26 @@
+# Funktion (kwmutt_urlview_conf), (de)aktiviert urlview macros{{{
+#
+kwmutt_urlview_conf() {
+	CREATE_MSG=$(gettext 'Sie koennen jetzt mit der Tastenkombination STRG+b eine URL aus Ihrer mail in einem Browser aufrufen.')
+	if [ -f "$M_URI" ] ; then
+		# Tmpdatei mit evtl. Daten fuellen und auswerten
+		create_tmp_conf "$M_URI"
+		if [ -s "$gv_LogFile" ] ; then
+			MSG=$(gettext '$lv_Urlview ist schon mit der Tastenkombination STRG+b eingerichtet.')
+			msgbox "$gv_Info" "$MSG"
+		else
+			# Konfigurationsdatei schreiben und den User benachrichtigen
+			kwmutt_urlview_config
+			msgbox "$gv_Info" "$CREATE_MSG"
+		fi
+	else
+		# Konfigurationsdatei schreiben und den User benachrichtigen
+		kwmutt_urlview_config
+		msgbox "$gv_Info" "$CREATE_MSG"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

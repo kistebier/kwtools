@@ -1,0 +1,485 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.05.2014
+#
+# Script: kwcamera, zum einstellen, downloaden, löschen von Bildern in Digital Kameras.
+# Version: 0.0.7
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen
+prog_check gphoto2
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# Pruefen welches Home Verzeichnis vorliegt (Bsp. sudo, su)
+# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+if [ -f "${gv_HomePath}/.kwtools/camerarc" -a ! -f "${gv_HomePath}/.kwtools/kwcamerarc" ] ; then
+	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/camerarc nach ${gv_HomePath}/.kwtools/kwcamerarc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
+	if [ "$gv_Auswahl" != no ] ; then
+		mv "${gv_HomePath}/.kwtools/camerarc" "${gv_HomePath}/.kwtools/kwcamerarc" &>/dev/null
+	else
+		rm "${gv_HomePath}/.kwtools/camerarc" &>/dev/null
+	fi
+fi
+
+# Konfiguration einlesen
+read_file kwcamerarc 
+
+if [ -z "$IMAGE_DIR" ] ; then
+	IMAGE_DIR="$HOME"
+fi	
+#
+No_Config=$(gettext 'Sie muessen erst ihre Kamera konfigurieren.')
+lv_Camera_Conf=$(gettext 'Kamera_Einstellung')
+lv_Download=$(gettext 'Download')
+#
+# funktion haupt_menue{{{
+MAIN_MENU=($gv_Configuration \"\" $lv_Download \"\" $gv_Delete \"\"
+	$lv_Camera_Conf \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion kwcamera_gauge# {{{
+#
+# usage: kwcamera_gauge [ -t ] ANZ
+#
+kwcamera_gauge() {
+	
+	if [ "$#" -ge 1 ] ; then
+		KWCAMERA_DOWN_TITLE=$(gettext 'Download::Bilder')
+		unset -- PERCENT1 PERCENT Prog_Extra
+		local Anz Anz1 Prog_Extra
+		integer Anz Anz1
+		case "$1" in
+			-t)
+				# thumbnails laden# {{{
+				KWCAMERA_GAUGE_MSG=$(gettext 'Thumbnail von Bild ${Img_Anz[Anz1]} wird von der Kamera $CAMERA_MODELL nach `pwd`/${IMAGE_PRAEFIX}-${Img_Anz[Anz1]}.${Img_Suffix[Anz1]} gespeichert.')
+				Prog_Extra="-t"
+				Anz=$2
+				Anz1=1
+				(( PERCENT1 = 100 / Anz ))
+				(( PERCENT = PERCENT + PERCENT1 ))
+				# Zeichen der Message zaehlen und dementsprechend die Groesse
+				# des dialog Fensters anpassen.
+				count_char_to_line "$KWCAMERA_GAUGE_MSG"
+				# Prozess - download der Bilder
+				while [ "$PERCENT" -le 100 ] ; do
+					print "$PERCENT" ; gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" $Prog_Extra ${Img_Anz[Anz1]} --filename "${IMAGE_PRAEFIX}-${Img_Anz[Anz1]}.${Img_Suffix[Anz1]}" >/dev/null | gauge "$KWCAMERA_DOWN_TITLE" "$KWCAMERA_GAUGE_MSG" "$gv_LineAnz" ; (( PERCENT = PERCENT + PERCENT1 )) ; (( Anz1++ )) ; 
+				done
+				## }}}
+				;;
+			*)
+				# Bilder laden# {{{
+				KWCAMERA_GAUGE_MSG=$(gettext 'Bild ${Img_Anz[Anz1]} wird von der Kamera $CAMERA_MODELL nach `pwd`/${IMAGE_PRAEFIX}-${Img_Anz[Anz1]}.${Img_Suffix[Anz1]} gespeichert.')
+				Prog_Extra="-p"
+				Anz=$1
+				Anz1=1
+				(( PERCENT1 = 100 / Anz ))
+				(( PERCENT = PERCENT + PERCENT1 ))
+				# Zeichen der Message zaehlen und dementsprechend die Groesse
+				# des dialog Fensters anpassen.
+				count_char_to_line "$KWCAMERA_GAUGE_MSG"
+				# Prozess - download der Bilder
+				while [ "$PERCENT" -le 100 ] ; do
+					print "$PERCENT" ; gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" $Prog_Extra ${Img_Anz[Anz1]} --filename "${IMAGE_PRAEFIX}-%n.%C" >/dev/null | gauge "$KWCAMERA_DOWN_TITLE" "$KWCAMERA_GAUGE_MSG" "$gv_LineAnz" ; (( PERCENT = PERCENT + PERCENT1 )) ; (( Anz1++ )) ; 
+				done
+				## }}}
+				;;
+		esac
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+
+######################################################################
+#
+# Hauptprogramm
+#
+#####################################################################
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)	#
+			# Hilfe zu Camera
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration der Kamera{{{
+			lv_Model=$(gettext 'Modell')
+			lv_Port=$(gettext 'Port')
+			# Funktion conf_menue{{{
+			conf_menue() {
+				MENUE=($gv_Directory \"$IMAGE_DIR\" $lv_Port \"$CAMERA_PORT\"
+			   	$lv_Model \"$CAMERA_MODELL\" $gv_Save \"\" $gv_Back \"\")
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MENUE"
+			}
+			#}}}
+			# Hardware Funktionen laden
+			hw_conf
+			conf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfe zu Camera Konfiguration
+						script_help conf_help
+						conf_menue
+						;;
+					$gv_Directory)
+						# Verzeichnis auswaehlen, wo die Bilder gespeichert werden sollen.# {{{
+						dselect "$IMAGE_DIR"
+						if [ "$VERZ" ] ; then
+							# Verzeichnis checken, oder nachfragen, ob es angelegt werden soll
+							dselect_check -c "$VERZ"
+							if [ "$VERZ" ] ; then
+								user_device_check "$VERZ" AIE
+								IMAGE_DIR="$VERZ"
+							fi
+						fi	
+						## }}}
+						conf_menue $gv_Directory
+						;;
+					$lv_Port)
+						# Port auswaehlen{{{
+						char_device_anzeige
+						if [ "$CHAR_ARRAY" ] ; then
+							# Funktion char_conf_port_menue{{{
+							#
+							char_conf_port_menue() {
+								TITLE=(${gv_Configuration}::${lv_Port})
+								MSG=$(gettext 'Waehlen Sie ihren Kamera Anschluss aus.')
+								menubox "$CAMERA_PORT" "$TITLE" "$MSG" "$CHAR_ARRAY"
+							}
+							#}}}
+							char_conf_port_menue
+							while [ "$gv_Auswahl" ] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe zu Camera Konfiguration
+										#
+										script_help conf_help
+										char_conf_port_menue
+										;;
+									*)	#
+										CAMERA_PORT="$gv_Auswahl"
+										break
+										;;
+								esac		
+							done
+						fi	
+						#}}}
+						conf_menue $lv_Port
+						;;
+					$lv_Model)
+						# 1. verfügbare Kameramodelle in einem array speichern{{{
+						#
+						unset -- MOD_ARRAY
+						ANZ=1
+						gphoto2 --list-cameras | grep -v '^[A-Z]' \
+							| sed 's/"//g ; s/>>//g ; s/<<//g ; s/»//g ; s/«//g' | while read i ; do
+							MOD_ARRAY[ANZ]="\"$i\" \"\""
+							(( ANZ++ ))
+						done
+						#
+						if [ "$MOD_ARRAY" ] ; then
+							# Funktion camera_conf_model_menue{{{
+							#
+							camera_conf_model_menue() {
+								TITLE=(${gv_Configuration}::${lv_Model})
+								MSG=$(gettext 'Waehlen Sie ihr Kamera Modell aus.')
+								menubox "$CAMERA_MODELL" "$TITLE" "$MSG" "$MOD_ARRAY"
+							}
+							#}}}
+							#
+							camera_conf_model_menue
+							while [ "$gv_Auswahl" ] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe zu Camera Konfiguration
+										script_help modell_conf_help
+										camera_conf_model_menue
+										#
+							 			;;
+									*)	#
+										CAMERA_MODELL="$gv_Auswahl"
+										break
+										;;
+								esac		
+							done
+						fi	
+						#}}}
+						conf_menue $lv_Model
+						;;
+					$gv_Save) 
+						# Konfiguration schreiben.
+						autoload -U kwcamera_config
+						kwcamera_config
+						break
+						;;
+					$gv_Back) break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Download)
+			# Download von Bildern{{{
+			# SubVerzeichnis aussuchen
+			#
+			if [ "$CAMERA_PORT" -a "$CAMERA_MODELL" ] ; then
+				# 
+				# Anzahl der Bilder ermitteln.
+				#
+				gphoto2 --port $CAMERA_PORT --camera "$CAMERA_MODELL" -L 2>/dev/null | grep '^#' >${gv_WorkDir}/list_img
+				#
+				# Sind keine Bilder vorhanden kommt eine Nachricht
+				#
+				ANZ="`wc -l < ${gv_WorkDir}/list_img`"
+				if [ "$ANZ" -gt 1 ] ; then
+					DOWN_TITLE=$(gettext 'Download')
+					lv_Complete=$(gettext 'komplett')
+					lv_Choice=$(gettext 'Auswahl')
+					# Funktion download_images# {{{
+					#
+					download_images() {
+						unset -- Images_Anz
+						Images_Anz="${#Img_Anz[@]}"
+						#
+						dselect "$IMAGE_DIR"
+						if [ "$VERZ" ] ; then
+							# Verzeichnis checken, oder nachfragen, ob es angelegt werden soll
+							dselect_check -c "$VERZ"
+							if [ "$VERZ" ] ; then
+								user_device_check "$VERZ" AIE
+								IMAGE_SUB_DIR="$VERZ"
+							else	
+								IMAGE_SUB_DIR="$IMAGE_DIR"
+							fi	
+							cd "$IMAGE_SUB_DIR"
+							#
+							# Präfix für Bilder eingeben.
+							#
+							IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
+							#
+							TITLE=$(gettext 'Download::Praefix')
+							MSG=$(gettext 'Geben Sie bitte einen Praefix ein.')
+							inputbox "$TITLE" "$MSG" $IMAGE_PRAEFIX
+							#
+							if [ "$gv_Auswahl" ] ; then
+								IMAGE_PRAEFIX="$gv_Auswahl"
+							else	
+								#
+								# Falls es kein Präfix gibt, wird image genommen. So werden die Sandartdateien 
+								# nicht überschrieben, da die Kamera alles im P1010001.JPG Format speichert.
+								#
+								IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
+							fi
+							# überprüfen, ob der Präfix, in dem angegebenen Verzeichnis schon vorhanden ist.
+							# Wenn ja gehts zur Neueingabe eines Präfixes.
+							#
+							ls (*/)#${IMAGE_PRAEFIX}-<0-1000000>.(jpg|JPG) &>/dev/null
+							while [ "$?" = 0 ] ; do
+								MSG1=$(gettext 'Dieser Praefix existiert schon.')
+								msgbox "$gv_Attention" "$MSG1"
+								#
+								inputbox "$TITLE" "$MSG" $IMAGE_PRAEFIX
+								if [ "$gv_Auswahl" ] ; then
+									IMAGE_PRAEFIX="$gv_Auswahl"
+								else	
+									IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
+								fi
+								ls (*/)#${IMAGE_PRAEFIX}-<0-1000000>.(jpg|JPG) 2&>/dev/null
+							done
+							#
+							# Bilder und Thumbnails runterladen
+							#
+							kwcamera_gauge "$Images_Anz"
+							#
+							dselect_check -c "${IMAGE_SUB_DIR}/thumbnails"
+							if  [ "$VERZ" ] ; then
+								user_device_check "$VERZ" AIE
+								cd "$VERZ"
+								#
+								# Präfix für thumbnails setzen
+								# gphoto2 Bug, bei --filename mit %n
+								#
+								IMAGE_PRAEFIX="thumb-${IMAGE_PRAEFIX}"
+								kwcamera_gauge -t "$Images_Anz"
+							fi
+						else
+							no_input_msg
+						fi	
+					}
+					## }}}
+					# Funktion down_choice_menu# {{{
+					#
+					DOWN_MENU=($gv_Display \"\" $lv_Choice \"\" $lv_Complete \"\" $gv_Back \"\")
+					down_choice_menu() {
+						menubox "$1" "$DOWN_TITLE" "$gv_Menupoint" "$DOWN_MENU"
+					}
+					## }}}
+					down_choice_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help choice_help
+								down_choice_menu
+								;;
+							$gv_Display)
+								# Thumbnails temporaer herrunterladen# {{{
+								create_file -d ${gv_WorkDir}/thumb
+								pushd ${gv_WorkDir}/thumb
+								if [ -z ./*(N.) ] ; then
+									gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" -T &>/dev/null
+								fi
+								# Vorschau der Bilder
+								zgv -S './*'
+								popd
+								## }}}
+								down_choice_menu $gv_Display
+								;;
+							$lv_Choice)
+								# Eine Auswahl an Bildern zur Verfuegung# {{{
+								# stellen
+								unset -- Anz Suffix Choice_Menue
+								typeset -a Suffix
+								local Anz Suffix
+								integer Anz
+								Anz=1
+								while read Count Pic Rest ; do
+									Choice_Menue[Anz]="${Count#[#]} $Pic off"
+									Suffix[Anz]="${Pic##*.}"
+									(( Anz++ ))
+								done <${gv_WorkDir}/list_img
+								#
+								DOWN_MSG=$(gettext 'Waehlen Sie ein oder mehrere Bilder zum download aus.')
+								checklist "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help choice_help
+											checklist "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
+											;;
+										*)
+											# Auswahl uebernehmen
+											# Array "Img_Anz" belegen fuer die Nachrichtenausgabe
+											unset -- Anz1
+											local Anz1
+											integer Anz1
+											Anz1=1
+											for n in ${=gv_Auswahl} ; {
+												Img_Anz[Anz1]="$n"
+												Img_Suffix[Anz1]="${Suffix[n]}"
+												(( Anz1++ ))
+											}
+											#
+											download_images "$Img_Anz"
+											break
+											;;
+									esac
+								done
+								## }}}
+								down_choice_menu $lv_Choice
+								;;
+							$lv_Complete)
+								# alle Bilder/Filme runterladen# {{{
+								# Array "Img_Anz" belegen fuer die Nachrichtenausgabe
+								unset -- Anz
+								local Anz
+								integer Anz
+								Anz=1
+								while read Count Pic Rest ; do
+									Img_Anz[Anz]="${Count#[#]}"
+									Img_Suffix[Anz]="${Pic##*.}"
+									(( Anz++ ))
+								done <${gv_WorkDir}/list_img
+								download_images "$Img_Anz"
+								## }}}
+								down_choice_menu $lv_Complete
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+				else
+					MSG=$(gettext 'Es sind keine Bilder vorhanden.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			else
+				msgbox "$gv_Attention" "$No_Config"
+			fi
+			#}}}
+			rm -rf ${gv_WorkDir}/thumb &>/dev/null
+			haupt_menue $lv_Download
+			;;
+		$gv_Delete)
+			# Bilder in der Kamera löschen{{{
+			#
+			if [ "$CAMERA_PORT" -a "$CAMERA_MODELL" ] ; then
+				gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" -D
+			else
+				msgbox "$gv_Attention" "$No_Config"
+			fi
+			#}}}
+			haupt_menue $gv_Delete
+			;;
+		$lv_Camera_Conf)
+			# Kamara Einstellung{{{
+			if [ "$CAMERA_PORT" -a "$CAMERA_MODELL" ] ; then
+				gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" --config 
+				#
+				# Fehlermeldung falls keine Kamera angeschlossen ist
+				#
+				if [ ! "$?" = 0 ] ; then
+					No_Camera=$(gettext 'Keine Kamera angeschlossen?')
+					msgbox "$gv_Attention" "$No_Camera"
+				fi	
+			else
+				msgbox "$gv_Attention" "$No_Config"
+			fi
+			#}}}
+			haupt_menue $lv_Camera_Conf
+			;;
+		$gv_Exit) break
+			;;
+	esac
+done	
+#
+unset -- gv_Auswahl IMAGE_DIR CAMERA_MODELL CAMERA_PORT IST IMAGE_PRAEFIX
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

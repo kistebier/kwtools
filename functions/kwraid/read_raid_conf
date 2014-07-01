@@ -1,0 +1,74 @@
+# Funktion (read_raid_conf), liest bestehende Konfiguration ein# {{{
+read_raid_conf() {
+	unset -- CR_AUTO CR_GROUP CR_META CR_MODE CR_OWNER CR_SYM \
+		HOMEHOST MAILFROM MAILADDR PROGRAM
+	if [[ -r $RAIDTAB ]] ; then
+		while read Opt Value ; do
+			case "$Opt" in
+				ARRAY)
+					############################
+					# TODO:
+					# Nur zur Ansicht oder auch vorh. 
+					# ARRAYs hinzufuegen, wegnehmen
+					# (mdadm_startall)
+					############################
+					;;
+				CREATE)
+					# Einstellung zum erstellen von ARRAYs# {{{
+					for i in ${=Value} ; {
+						case "$i" in
+							owner=*)
+								CR_OWNER="${${(ws:=:)i}[2]}"
+								;;
+							group=*)
+								CR_GROUP="${${(ws:=:)i}[2]}"
+								;;
+							mode=*)
+								CR_MODE="${${(ws:=:)i}[2]}"
+								;;
+							auto=*)
+								CR_AUTO="${${(ws:=:)i}[2]}"
+								;;
+							metadata=*)
+								CR_META="${${(ws:=:)i}[2]}"
+								;;
+							symlinks=*)
+								CR_SYM="${${(ws:=:)i}[2]}"
+								;;
+						esac
+					}
+					## }}}
+					;;
+				HOMEHOST)
+					HOMEHOST="$Value"
+					;;
+				MAILADDR)
+					MAILADDR="$Value"
+					;;
+				MAILFROM)
+					MAILFROM="$Value"
+					;;
+				PROGRAM)
+					# Programm, wenn beim Monitoring ein potenzielles event
+					# detectet wird
+					PROGRAM="$Value"
+					;;
+				*)
+					;;
+			esac
+		done < $RAIDTAB
+	fi
+	
+	# Variablen mit Standard Werten belegen, falls sie leer sind.
+	CR_OWNER=${CR_OWNER:-root}
+	CR_GROUP=${CR_GROUP:-disk}
+	CR_MODE=${CR_MODE:-0660}
+	CR_AUTO=${CR_AUTO:-yes}
+	CR_META=${CR_META:-1.2}
+	CR_SYM=${CR_SYM:-yes}
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

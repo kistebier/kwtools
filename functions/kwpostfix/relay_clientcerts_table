@@ -1,0 +1,174 @@
+# Funktion relay_clientcerts_table{{{
+#
+relay_clientcerts_table() {
+	FILE="$1"
+	lv_Fingerprint=$(gettext 'Fingerprint')
+	lv_User_Host=$(gettext 'Benutzer/Rechner')
+	# Funktion relay_clientcerts_menu{{{
+	relay_clientcerts_menu() {
+		RELAY_CLIENTCERTS_MENU=($lv_Fingerprint \"$FINGERPRINT\"
+			$lv_User_Host \"$USER_HOST\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$RELAY_CLIENTCERTS_MENU"
+	}
+	#}}}
+	# Funktion relay_clientcerts_aendern{{{
+	#
+	relay_clientcerts_aendern() {
+	relay_clientcerts_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl"  in
+			HELP*)	script_help "$TAB_HELP"
+				relay_clientcerts_menu
+				;;
+			$lv_Fingerprint)
+				# Domains eingeben{{{
+				FINGERPRINT_MSG=$(gettext 'Geben Sie den Fingerprint des Zertifikats oder des oeffentlichen Schluessel des Client ein (Bsp. D7:04:2F:A7:0B:8C:A5:21:FA:31:77:E1:41:8A:EE:80).')
+				inputbox "$TABLE_TITLE" "$FINGERPRINT_MSG" "$FINGERPRINT"
+				case "$gv_Auswahl" in
+					*:*:*:*)
+						FINGERPRINT="$gv_Auswahl"
+						;;
+					*)
+						unset -- FINGERPRINT
+						no_input_msg
+						;;
+				esac
+				#}}}
+				relay_clientcerts_menu $lv_Fingerprint
+				;;
+			$lv_User_Host)
+				# Benutzer oder Rechner eingeben{{{
+				USER_HOST_MSG=$(gettext 'Geben Sie den Namen eines Benutzer oder Rechners, der zum Fingerprint passt, ein (Bsp.: user oder host.domain.de).')
+				inputbox "$TABLE_TITLE" "$USER_HOST_MSG" "$USER_HOST"
+				if [[ -n $gv_Auswahl ]] ; then
+					USER_HOST="$gv_Auswahl"
+				else
+					unset -- USER_HOST
+					no_input_msg
+				fi
+				#}}}
+				relay_clientcerts_menu $lv_User_Host
+				;;
+			$gv_Save)
+				# Einstellungen speichern{{{
+				if [ -n "$FINGERPRINT" -a -n "$USER_HOST" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${FINGERPRINT}\t${USER_HOST}#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${FINGERPRINT}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$FINGERPRINT	$USER_HOST"
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Fingerprint und $lv_User_Host mit Werten belegen.')
+					msgbox "$gv_Attention" "$MSG"
+					relay_clientcerts_menu
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	#
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Einträge
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- AENDERN_ADR AENDERN_ADR1 FINGERPRINT USER_HOST
+				relay_clientcerts_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Einträge verändern{{{
+				#
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl verändern
+								C_CHOICE="$gv_Auswahl"
+								FINGERPRINT=${${(w)=gv_Auswahl}[1]}
+								USER_HOST=${${(w)=gv_Auswahl}[2]}
+								AENDERN_ADR="$FINGERPRINT"
+								AENDERN_ADR1="$USER_HOST"
+								relay_clientcerts_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Einträge löschen{{{
+				#
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Löschen
+								while read e ; do
+									grep -v "^${e}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen die Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

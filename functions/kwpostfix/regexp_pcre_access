@@ -1,0 +1,111 @@
+# Funktion (regexp_pcre_access), Eingabe fuer verschiedene Parameter
+# die in den Lookup Tabellen mit der Transport Methode regexp oder
+# pcre bzw. eine*_access Tabelle ist.
+#
+# usage: regexp_pcre_access
+#
+regexp_pcre_access() {
+	# Funktion regexp_pcre_access_host{{{
+	#
+	# usage: regexp_pcre_access_host
+	#
+	regexp_pcre_access_host() {
+		HOST_MSG=$(gettext 'Geben Sie hier bitte den Namen oder die IP eines Ziel-Rechners ein (Bsp. host.domain.de | 192.168.0.1).')
+		inputbox "$TABLE_TITLE" "$HOST_MSG" "$HOST"
+		if [[ ${(w)#gv_Auswahl} == 1 ]] ; then
+			case "$gv_Auswahl" in
+				\[*\])
+					HOST="$gv_Auswahl"
+					;;
+				*)
+					# Server in eckige Klammern stellen?
+					Host="$gv_Auswahl"
+					SQUARE_BRACKET=$(gettext 'Soll der Rechner ($Host) in eckige Klammern (direkte Einlieferung) gestellt werden?')
+					yesno "$TABLE_TITLE" "$SQUARE_BRACKET" ""
+					if [ "$gv_Auswahl" = yes ] ; then
+						HOST="[${Host}]"
+					else
+						HOST="$Host"
+					fi
+					;;
+			esac
+			OldHost="$HOST"
+		else
+			unset -- HOST
+			no_input_msg
+		fi
+	}
+	#}}}
+	# Funktion regexp_pcre_access_mail{{{
+	#
+	# usage: regexp_pcre_access_mail
+	#
+	regexp_pcre_access_mail() {
+		mail_address "$MAIL"
+		if [ -n "$gv_Mail_Adr" ] ; then
+			MAIL="$gv_Mail_Adr"
+			OldMail="$MAIL"
+		else
+			unset -- MAIL
+		fi
+	}
+	#}}}
+	# Funktion regexp_pcre_access_port{{{
+	#
+	# usage: regexp_pcre_access_port
+	#
+	regexp_pcre_access_port() {
+		PORT_MSG=$(gettext 'Geben Sie hier einen Port fuer den Rechner ein (Bsp. 25).')
+		inputbox "$TABLE_TITLE" "$PORT_MSG" "$PORT"
+		if [ "$gv_Auswahl" != 0 ] ; then
+			PORT="$gv_Auswahl"
+			OldPort="$PORT"
+		elif [ -n "$gv_Auswahl" ] ; then
+			PORT="$gv_Auswahl"
+			OldPort="$PORT"
+		else
+			unset -- PORT
+			no_input_msg
+		fi
+	}
+	#}}}
+	# Funktion regexp_pcre_access_text{{{
+	#
+	# usage: regexp_pcre_access_text
+	#
+	regexp_pcre_access_text() {
+		unset -- WERT
+		case "$ACTION" in
+			OK|DUNNO)
+				unset -- TEXT
+				no_ok_and_dunno_txt_msg
+				;;
+			*)
+				U_OPT=regexp
+				if [[ $TRANS == error ]] ; then
+					TEXT_MSG=$(gettext 'Geben Sie einen Text fuer die Transport Methode \"error\" ein.')
+				else
+					TEXT_MSG=$(gettext 'Geben Sie einen Text ein, der auf einen bestimmten Fehlercode oder Aktion gesendet werden soll.')
+				fi
+				inputbox "$TABLE_TITLE" "$TEXT_MSG" "$TEXT"
+				if [[ -n $gv_Auswahl ]] ; then
+					WERT="$gv_Auswahl"
+				fi
+				;;
+		esac
+	}
+	#}}}
+	# Funktion no_ok_and_dunno_txt_msg# {{{
+	#
+	# usage: no_ok_and_dunno_txt_msg
+	no_ok_and_dunno_txt_msg() {
+		MSG=$(gettext 'Bei der Aktion (OK oder DUNNO) kann man keinen Antworttext vergeben.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+}
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

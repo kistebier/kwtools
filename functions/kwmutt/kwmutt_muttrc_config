@@ -1,0 +1,334 @@
+# Funktion (kwmutt_muttrc_config), schreibt die default Konfigurationsdatei# {{{
+# fuer "mutt".
+#
+# usage: kwmutt_muttrc_config
+#
+kwmutt_muttrc_config() {
+#
+# Konfiguration schreiben.
+#
+> $MUTTCONF <<< "# Beginn $MUTTCONF
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# Zuerst alle Variablen auf Standardwerte zuruecksetzen
+reset all
+
+# Die Shell aus /etc/passwd verwenden
+set shell=\"$shell\"
+
+# Nicht gelesene Nachrichten nicht als \"Old\" markieren. Dies ist *sehr*
+# stoerend.
+# set mark_old=no
+set mark_old=\"$mark_old\"
+
+# Gelesene Nachrichten nicht nach mbox verschieben?
+set move=\"$move\"
+
+# Ihr richtiger Name. Dient dazu, den Eintrag in der /etc/passwd zu umgehen
+set realname=\"$realname\"
+
+# Mein FQDN (u.a. der Teil nach dem @ in der Message-ID)
+set hostname=\"$hostname\"
+
+# Editoreinstellung
+set editor=\"$editor\"
+
+# Signatur Datei
+set signature=\"${MUTT}/${signature}\"
+
+# Smilies im Titel der Mail nicht als Quoteebene interpretieren
+# Auch was nettes fuers Syntaxhighlighting: Wie sehen Smileys aus
+# set smileys=\"((:|\\(|;|=)(-|=|-'|%)(\\)|:|\\=))\"
+set smileys=\"$smileys\"
+
+# Dies bestimmt den Zeichensatz, der verwendet werden soll, wenn Zeichen
+# verwendet sollen, die nicht zu US-ASCII passen. Fuer Europa ist ISO-8859-1
+# goldrichtig.
+set charset=\"$charset\"
+
+# Locale-Einstellungen. Diese Variable hat die gleiche Wirkung wie »export
+# LC_ALL='C'« auf der Shell. Sprich: Es bestimmt das Zeit- und Datumsformat.
+set locale=\"$locale\"
+
+# Nicht abbrechen wenn die Nachricht keinen Betreff hat
+set abort_nosubject=\"$abort_nosubject\"
+
+# Mutt soll mich fragen, ob er abbrechen soll, wenn eine Nachricht nicht
+# bearbeitet wurde
+set abort_unmodified=\"$abort_unmodified\"
+
+# Mails loeschen, ohne vorher zu fragen (delete=yes).
+set delete=\"$delete\"
+
+# Nachricht(en) beim Antworten hinzufuegen?
+set include=\"$include\"
+
+# Nach Postponing fragen, wenn editieren von Nachricht abgebrochen wird?
+set postpone=\"$postpone\"
+
+# Frage, wie Mutt wirklich beendet werden soll.
+set quit=\"$quit\"
+
+# Soll Mutt auch das Bcc Feld beim vorbereiten zum
+# versenden einer Nachricht mit anzeigen?.
+set write_bcc=\"$write_bcc\"
+
+# Wenn dies nicht gesetzt ist, werden Mails als Quoted-Printable verschickt. Im
+# Allgemeinen ist dies sicherer.
+set allow_8bit=\"$allow_8bit\"
+
+# Den Reply-To:-Header auf Mailinglisten ignorieren
+set ignore_list_reply_to=\"$ignore_list_reply_to\"
+
+# Beim Antworten nicht nach 'To;', 'Subject:' etc. fragen?
+set fast_reply=\"$fast_reply\"
+
+# Immer fragen, ob die Adresse im Reply-To-Header benutzt werden soll.
+# Normalerweise wird man mit »yes« antworten, meistens ist es aber nicht
+# erwuenscht.
+set reply_to=\"$reply_to\"
+
+# Wollen Sie bei einem Reply auf der Empfaengerliste stehen?
+set metoo=\"$metoo\"
+
+# Rechtschreibpruefung
+set ispell=\"$ispell\"
+
+# Wenn es eine neue Nachricht gibt, soll ein beepton ertoenen?
+set beep=\"$beep\"
+set beep_new=\"$beep_new\"
+
+# Ohne Frage Nachricht editieren (yes/no)?
+set autoedit=\"$autoedit\"
+
+# Soll Mutt den Mail-Followup-To Header bei bekannten (abonnierten)
+# Mailinglisten setzen (yes/no)?
+set followup_to=\"$followup_to\"
+
+# In dieser Reihenfolge sollen die Header im Pager angezeigt werden.
+hdr_order \"$hdr_order\"
+
+# Header immer im Editor mit anzeigen (yes/no)?
+set edit_headers=\"$edit_headers\"
+
+# Soll Mutt immer einen User-Agent: Mutt/Versions-Header generieren (yes/no)?
+set user_agent=\"$user_agent\"
+
+# Ganz nuetzlich: Wenn einem z.B. eine Mail an thomasb+www@trash.net geschickt
+# wurde, dann wird auch mit dieser Adresse geantwortet - gleich, was Sie in den
+# \"From:\"-Header setzen.
+set reverse_name=\"$reverse_name\"
+
+# Mutt soll versuchen den Envelope-Absender von Nachrichten aus
+# dem \"From:\"-Header herzuleiten (yes/no)?
+set use_envelope_from=\"$use_envelope_from\"
+
+# Eine Markierung (+) einfuegen, wenn der Pager einen Zeilenumbruch machen muss.
+set markers=\"$markers\"
+
+# Soll der interne Pager von Mutt Leerzeilen bis zur Unterkante des
+# Bildschirms mit einer Tilde (~) auffuellen (yes/no)?
+set tilde=\"$tilde\"
+
+# Diese RegExp sollte auf gequoteten Text matchen, damit Mutt ihn entsprechend
+# einfaerben kann
+# Beispiel: set quote_regexp=\"^( {0,4}[>|:%]| {0,4}[a-z0-9]+[>|]+)+\"
+set quote_regexp=\"$quote_regexp\"
+
+# Diese RegExp muss auf Betreffzeilen von Replys matchen, damit Mutt threaden
+# kann
+# Beispiel: set reply_regexp=\"^((re(\\^[0-9])? ?:|a(nt)?w(ort)?:|\\(fwd\\))[ \t]+)*\"
+set reply_regexp=\"$reply_regexp\"
+
+# Mixmaster Support (only when --with-mixmaster)
+# Mixmaster binary
+set mixmaster=\"$mixmaster\"
+
+## ============================================================================
+## externe Einstellungsdateien
+## ============================================================================
+
+## ---------------------------------------------------------------------------
+## Standard Server oeffnen. Wenn man Mutt startet, werden genau diese Server
+## Einstellungen eingelesen.
+## default_server - Link auf die Konfigurationsdatei des IMAP oder POP Server.
+## default_smtp - Link auf die Konfigurationsdatei des SMTP Server oder Sendmail.
+## ---------------------------------------------------------------------------
+source ${MUTT}/default_server
+source ${MUTT}/default_smtp
+
+## ---------------------------------------------------------------------------
+## imap spezifische Einstellungen
+## ---------------------------------------------------------------------------
+source $M_IMAP
+
+## ---------------------------------------------------------------------------
+## pop spezifische Einstellungen
+## ---------------------------------------------------------------------------
+source $M_POP
+
+## ---------------------------------------------------------------------------
+# Addressbuch
+## ---------------------------------------------------------------------------
+# Ermoeglicht die verwendung eines kleinen Adressbuches bei diesem die Adressen in einer 
+# seperaten Datei abgespeichert werden. Ansonsten speichert Mutt die Adressen default in 
+# seine >.muttrc< Konfigurationsdatei.
+#
+# Mutt eigene Addressbuch Datei verwenden.
+# Die Datei heisst bei kwmutt ~/.mutt/address.
+set alias_file=\"$alias_file\"
+
+# # Namen zu Adressen ueber die Aliasliste suchen und im Index anzeigen?
+set reverse_alias=\"$reverse_alias\"
+
+# Aliasdatei einlesen, damit die Adressen gleich bekannt sind
+source $alias_file
+
+## ------------------------------ABOOK----------------------------------------
+# ABOOK Adressbuch
+# Wer das Textbesierte Adressbuch 'abook' verwendet, kann von diesem aus auch
+# beim waehlen eines Kontaktes Mutt mit der entsprechenden eMail Adresse oeffnen
+# lassen. Hierzu den Kontakt waehlen und die Taste (m) druecken.
+# Zudem ist es moeglich von Mutt aus mit der Suche auf die eMail Adressdaten
+# von 'abook' zuzugreifen.
+# Hierzu sind bei paar Zeilen zu aktivieren.
+#
+# Wenn man in Mutt die Taste (Q) verwendet, kann man so nach Adressen in 'abook'
+# suchen lassen. Zudem lassen sich ganz einfach durch druecken von (A) die eMail
+# Adresse einer Mail so im 'abook' eintragen.
+# query_command=\"abook --mutt-query '%s'\"
+#
+set query_command=\"$query_command\"
+#
+# Beispiel:
+# macro generic,index,pager \ca \"<shell-escape>abook<return>\" \"launch abook\"
+# macro index,pager A \"<pipe-message>abook --add-email<return>\" \"add the
+# sender address to abook\"
+
+## ----------------------------------------------------------------------------
+## charset-hook Einstellungen
+## ----------------------------------------------------------------------------
+source $M_CHARSETHOOKS
+
+## ----------------------------------------------------------------------------
+## Farben
+## ----------------------------------------------------------------------------
+source $M_COLORS
+
+## -------------------------------------------------------------------------
+## folder-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_FOLDERHOOKS
+
+## ---------------------------------------------------------------------------
+# Format Einstellungen fuer Antworten, forward, Nachrichtenanzeige, Status,...
+## ---------------------------------------------------------------------------
+source $M_FORMAT
+
+## -------------------------------------------------------------------------
+## crypt Einstellungen
+## -------------------------------------------------------------------------
+source $M_CRYPT
+
+## -------------------------------------------------------------------------
+## pgp Einstellungen
+## -------------------------------------------------------------------------
+source $M_GPG
+
+## -------------------------------------------------------------------------
+## pgp-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_PGPHOOKS
+
+## ---------------------------------------------------------------------------
+# Mailinglisten
+## ---------------------------------------------------------------------------
+source $M_ML
+
+## ---------------------------------------------------------------------------
+## Tasten Belegungen
+## ---------------------------------------------------------------------------
+source $M_KBD
+
+## ---------------------------------------------------------------------------
+## mbox-hook Einstellungen
+## ---------------------------------------------------------------------------
+source $M_MBOXHOOKS
+
+## ---------------------------------------------------------------------------
+## message-hook Einstellungen
+## ---------------------------------------------------------------------------
+source $M_MESSAGEHOOKS
+
+## ---------------------------------------------------------------------------
+## Pager Einstellungen
+## ---------------------------------------------------------------------------
+source $M_PAGER
+
+## ---------------------------------------------------------------------------
+## Druck Einstellungen
+## ---------------------------------------------------------------------------
+# Um Mails aus Mutt drucken zu koennen, eignet sich das Tool \"MuttPrint\" hervorragend.
+# Sofern es installiert ist !
+source $M_PRINT
+
+## -------------------------------------------------------------------------
+## save-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_SAVEHOOKS
+
+## -------------------------------------------------------------------------
+## Score Einstellungen
+## -------------------------------------------------------------------------
+source $M_SCORE
+
+## -------------------------------------------------------------------------
+## send-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_SENDHOOKS
+
+## ---------------------------------------------------------------------------
+## S/MIME Konfiguration
+## ---------------------------------------------------------------------------
+source $M_SMIME
+
+## ---------------------------------------------------------------------------
+# Baum Struktur Anzeige Einstellungen
+## ---------------------------------------------------------------------------
+source $M_SORT
+
+## ---------------------------------------------------------------------------
+## SSL/TLS Einstellungen
+## ---------------------------------------------------------------------------
+source $M_SSL
+
+## -------------------------------------------------------------------------
+## unignore Einstellungen
+## -------------------------------------------------------------------------
+source $M_UNIGNORE
+
+## -------------------------------------------------------------------------
+## fcc-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_FCCHOOKS
+
+## -------------------------------------------------------------------------
+## fcc-save-hook Einstellungen
+## -------------------------------------------------------------------------
+source $M_FCCSAVEHOOKS
+
+## ---------------------------------------------------------------------------
+## UrlView Einstellungen
+## ---------------------------------------------------------------------------
+# Durch die Tastenkombination STRG+B koennen so alle Urls in einer Mail angebrowst werden.
+# Hierzu wird das Programm "urlview" verwendet welches installiert sein muss.
+source $M_URI
+
+# End $MUTTCONF"
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

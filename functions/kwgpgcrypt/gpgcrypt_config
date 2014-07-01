@@ -1,0 +1,114 @@
+# Funktion gpgcrypt_config, Einstellungen speichern{{{
+#
+# usage: gpgcrypt_config
+gpgcrypt_config() {
+	if [ -f $PGP_OPTIONS ] ; then
+		cp -a $PGP_OPTIONS ${PGP_OPTIONS}.kwtools-bak
+		if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)keyserver[[:space:]]*} ] ; then
+			sed -e "s#^keyserver[[:space:]].*#keyserver ${KEY_SERV_ALL:-hkp://subkeys.pgp.net}#g" $PGP_OPTIONS >$PGP_OPTIONS$$
+			mv $PGP_OPTIONS$$ $PGP_OPTIONS
+		else
+			>> $PGP_OPTIONS <<< "keyserver ${KEY_SERV_ALL:-hkp://subkeys.pgp.net}" 
+		fi
+		#
+		if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)default-key[[:space:]]*} ] ; then
+			sed -e "s#^default-key[[:space:]].*#default-key $DEFAULT_KEY#g" $PGP_OPTIONS >$PGP_OPTIONS$$
+			mv $PGP_OPTIONS$$ $PGP_OPTIONS
+		else
+			>> $PGP_OPTIONS <<< "default-key $DEFAULT_KEY" 
+		fi
+		#
+		if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)trusted-key[[:space:]]*} ] ; then
+			sed -e "s#^trusted-key[[:space:]].*#trusted-key $TRUSTED_KEY#g" $PGP_OPTIONS >$PGP_OPTIONS$$
+			mv $PGP_OPTIONS$$ $PGP_OPTIONS
+		else
+			>> $PGP_OPTIONS <<< "trusted-key $TRUSTED_KEY" 
+		fi
+	else
+> $PGP_OPTIONS <<< "# Options for GnuPG
+# If you have more than 1 secret key in your keyring, you may want
+# to uncomment the following option and set your preffered keyid
+
+default-key $DEFAULT_KEY
+
+# GnuPG ultimately trusts all keys in the secret keyring.  If you do
+# not have all your secret keys online available you should use this
+# option to tell GnuPG about ultimately trusted keys.
+# You have to give the long keyID here which can be obtained by using
+# the --list-key command along with the option --with-colons; you will
+# get a line similiar to this one:
+#    pub:u:1024:17:5DE249965B0358A2:1999-03-15:2006-02-04:59:f:
+# the 5th field is what you want.
+
+trusted-key $TRUSTED_KEY
+
+# The next option is enabled because this one is needed for interoperation
+# with PGP 5 users.  To enable full OpenPGP compliance you have to remove
+# this option.
+
+force-v3-sigs
+
+# Because some mailers change lines starting with \"From \" to \">From \"
+# it is good to handle such lines in a special way when creating
+# cleartext signatures; all other PGP versions do it this way too.
+# To enable full OpenPGP compliance you have to remove this option.
+
+escape-from-lines
+
+# If you do not use the Latin-1 (ISO-8859-1) charset, you should
+# tell GnuPG which is the native character set.  Please check
+# the man page for supported character sets. 
+
+charset iso-8859-1
+
+# lock the file only once for the lifetime of a process.
+# if you do not define this, the lock will be obtained and released
+# every time it is needed - normally this is not needed.
+
+lock-once
+
+# GnuPG can send and receive keys to and from a keyserver.  These
+# servers can be HKP, email, or LDAP (if GnuPG is built with LDAP
+# support).
+#
+# Example HKP keyserver:
+#      hkp://subkeys.pgp.net
+#
+# Example email keyserver:
+#      mailto:pgp-public-keys@keys.pgp.net
+#
+# Example LDAP keyservers:
+#      ldap://pgp.surfnet.nl:11370
+#      ldap://keyserver.pgp.com
+#
+# Regular URL syntax applies, and you can set an alternate port
+# through the usual method:
+#      hkp://keyserver.example.net:22742
+#
+# If you have problems connecting to a HKP server through a buggy http
+# proxy, you can use keyserver option broken-http-proxy (see below),
+# but first you should make sure that you have read the man page
+# regarding proxies (keyserver option honor-http-proxy)
+#
+# Most users just set the name and type of their preferred keyserver.
+# Note that most servers (with the notable exception of
+# ldap://keyserver.pgp.com) synchronize changes with each other.  Note
+# also that a single server name may actually point to multiple
+# servers via DNS round-robin.  hkp://subkeys.pgp.net is an example of
+# such a "server", which spreads the load over a number of physical
+# servers.
+
+keyserver ${KEY_SERV_ALL:-hkp://subkeys.pgp.net}
+#keyserver mailto:pgp-public-keys@keys.nl.pgp.net
+#keyserver ldap://pgp.surfnet.nl:11370
+#keyserver ldap://keyserver.pgp.com
+
+no-secmem-warning"
+	fi
+	parse_opt
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

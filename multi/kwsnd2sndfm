@@ -1,0 +1,465 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwsnd2sndfm, konvertiert soundformate
+# Version: 0.0.10
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+if [ -f "${gv_HomePath}/.kwtools/snd2sndfmrc" -a ! -f "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" ] ; then
+	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/snd2sndfmrc nach ${gv_HomePath}/.kwtools/kwsnd2sndfmrc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
+	if [ "$gv_Auswahl" != no ] ; then
+		mv "${gv_HomePath}/.kwtools/snd2sndfmrc" "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" &>/dev/null
+	else
+		rm "${gv_HomePath}/.kwtools/snd2sndfmrc" &>/dev/null
+	fi
+fi
+
+# Konfigurationen einlesen.
+read_file kwsnd2sndfmrc
+
+Lame_Prog="${commands[lame]}"
+Ogg_Prog="${commands[oggenc]}"
+
+# Optionen und Moeglichkeiten ausloten{{{
+if [ -x "$Lame_Prog" -a -x "$Ogg_Prog" ] ; then
+	# Auswahl fuer die De-/Encodierung.
+	ENC_AUSWAHL=(raw-mp3 \"\" raw-ogg \"\" wav-mp3 \"\" wav-ogg \"\" $gv_Back \"\")
+	DEC_AUSWAHL=(mp3-raw \"\" mp3-wav \"\" ogg-raw \"\" ogg-wav \"\" $gv_Back \"\")
+elif [ -x "$Lame_Prog" ] ; then
+	ENC_AUSWAHL=(raw-mp3 \"\" wav-mp3 \"\" $gv_Back \"\")
+	DEC_AUSWAHL=(mp3-raw \"\" mp3-wav \"\" ogg-raw \"\" ogg-wav \"\" $gv_Back \"\")
+else
+	MSG=$(gettext 'Es ist kein Encodierungs- oder Decodierungsprogramm installiert.')
+	msgbox "$gv_Attention" "$MSG"
+	exit 0
+fi
+#
+# lame Optionen von wav -> mp3, umgekehrt und ogg -> wav
+if [ -z "$LAME_ENC_OPT" ] ; then
+	# Beispiel fuer raw -> mp3: Optionen="-r -m s -b 24 -s 44.1"
+	# -r = inputfile ist eine raw PCM Datei
+	# -m s = Modus Stereo
+	# -b = Bitrate in kbps
+	# -s = Stereo 44.1 khz
+	LAME_ENC_OPT="--r3mix -b112"
+fi
+if [ -z "$LAME_DEC_OPT" ] ; then
+	LAME_DEC_OPT="--decode"
+fi
+# OGG Optionen von wav -> ogg und umgekehrt
+if [ -z "$OGG_ENC_OPT" ] ; then
+	OGG_ENC_OPT="-b 128 -o"
+fi
+if [ -z "$OGG_DEC_OPT" ] ; then
+	OGG_DEC_OPT="-R -e 1 -b 16"
+fi
+#}}}
+
+# Variablen
+lv_Cd=$(gettext 'CD')
+lv_Dvd=$(gettext 'DVD')
+lv_Decode=$(gettext 'Dekodierung')
+lv_Encode=$(gettext 'Enkodierung')
+lv_Burn=$(gettext 'brennen')
+
+# Funktion haupt_menue{{{
+#
+MAIN_MENU=($gv_Configuration \"\" $lv_Decode \"\"
+$lv_Encode \"\" $lv_Burn \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+cdrom
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration{{{
+			#
+			lv_Mountdir=$(gettext 'Mountverz.')
+			lv_Lame_Dec_Opt=$(gettext 'Lame_Decoder_Option')
+			lv_Lame_Enc_Opt=$(gettext 'Lame_Encoder_Option')
+			lv_Ogg_Dec_Opt=$(gettext 'Ogg_Decoder_Option')
+			lv_Ogg_Enc_Opt=$(gettext 'Ogg_Encoder_Option')
+			LAME_DEC_TITLE=(${gv_Configuration}::${lv_Lame_Dec_Opt})
+			OGG_DEC_TITLE=(${gv_Configuration}::${lv_Ogg_Dec_Opt})
+			DEC_MSG=$(gettext 'Geben Sie hier die Optionen zum decodieren der Sound Dateien ein, siehe man 1 lame oder oggdec.')
+			LAME_ENC_TITLE=(${gv_Configuration}::${lv_Lame_Enc_Opt})
+			OGG_ENC_TITLE=(${gv_Configuration}::${lv_Ogg_Enc_Opt})
+			ENC_MSG=$(gettext 'Geben Sie hier die Optionen zum encodieren der Sound Dateien ein, siehe man 1 lame oder oggenc.')
+			#
+			# Funktion, snd_conf_menue{{{
+			snd_conf_menue() {
+				CONF_MENU=($lv_Mountdir \"$MOUNT_PATH\" $gv_Directory \"$SND_DIR\"
+			   	$lv_Lame_Dec_Opt \"$LAME_DEC_OPT\" $lv_Lame_Enc_Opt \"$LAME_ENC_OPT\"
+			   	$lv_Ogg_Dec_Opt \"$OGG_DEC_OPT\" $lv_Ogg_Enc_Opt \"$OGG_ENC_OPT\"
+			   	$gv_Save \"\" $gv_Back \"\")
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+			}
+			#}}}
+			snd_conf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)	# Hilfe zur Konfiguration
+						script_help conf_help
+						snd_conf_menue
+						;;
+					$lv_Mountdir)
+						# Mount Verzeichnis auswaehlen
+						mount_path "$MOUNT_PATH"
+						snd_conf_menue $lv_Mountdir
+						;;
+					$gv_Directory)
+						# Standard Audio Verzeichnis auswaehlen# {{{
+						dselect "$SND_DIR"
+						if [ "$VERZ" ] ; then
+							dselect_check "$VERZ"
+							if [ "$VERZ" ] ; then
+								user_device_check "$VERZ" AIE
+								SND_DIR="$VERZ"
+							else
+								unset -- SND_DIR
+							fi
+						fi
+						## }}}
+						snd_conf_menue $gv_Directory
+						;;
+					$lv_Lame_Dec_Opt)
+						# Lame Decoder Optionen eingeben# {{{
+						inputbox "$LAME_DEC_TITLE" "$DEC_MSG" "$LAME_DEC_OPT"
+						if [ -n "$gv_Auswahl" ] ; then
+							LAME_DEC_OPT="$gv_Auswahl"
+						else
+							unset -- LAME_DEC_OPT
+						fi
+						## }}}
+						snd_conf_menue $lv_Lame_Dec_Opt
+						;;
+					$lv_Lame_Enc_Opt)
+						# Lame Encoder Optionen eingeben# {{{
+						inputbox "$LAME_ENC_TITLE" "$ENC_MSG" "$LAME_ENC_OPT"
+						if [ -n "$gv_Auswahl" ] ; then
+							LAME_ENC_OPT="$gv_Auswahl"
+						else
+							unset -- LAME_ENC_OPT
+						fi
+						## }}}
+						snd_conf_menue $lv_Lame_Enc_Opt
+						;;
+					$lv_Ogg_Dec_Opt)
+						# Ogg Decoder Optionen eingeben# {{{
+						inputbox "$OGG_DEC_TITLE" "$DEC_MSG" "$OGG_DEC_OPT"
+						if [ -n "$gv_Auswahl" ] ; then
+							OGG_DEC_OPT="$gv_Auswahl"
+						else
+							unset -- OGG_DEC_OPT
+						fi
+						## }}}
+						snd_conf_menue $lv_Ogg_Dec_Opt
+						;;
+					$lv_Ogg_Enc_Opt)
+						# Ogg Encoder Optionen eingeben# {{{
+						inputbox "$OGG_ENC_TITLE" "$ENC_MSG" "$OGG_ENC_OPT"
+						if [ -n "$gv_Auswahl" ] ; then
+							OGG_ENC_OPT="$gv_Auswahl"
+						else
+							unset -- OGG_ENC_OPT
+						fi
+						## }}}
+						snd_conf_menue $lv_Ogg_Enc_Opt
+						;;
+					$gv_Save)
+						autoload -U kwsnd2sndfm_config	
+						kwsnd2sndfm_config
+						break
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done	
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Decode)
+			# Decodierung von audio Dateien{{{
+			#
+			DEC_TITLE=$(gettext 'dekodieren')
+			menubox "" "$DEC_TITLE" "$gv_Menupoint" "$DEC_AUSWAHL"
+			#
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help code_choice_help
+						menubox "" "$DEC_TITLE" "$gv_Menupoint" "$DEC_AUSWAHL"
+						;;
+					mp3-w*)
+						# mp3 --> wav{{{
+						U_OPT=no
+						FORMAT="MP3"
+						SUFFIX=".mp3 .Mp3 .MP3"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								lame ${=LAME_DEC_OPT} ${FILE} ${${FILE%.*}//\ /_}.wav || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					ogg-w*)
+						# ogg --> wav{{{
+						U_OPT=no
+						FORMAT="OGG"
+						SUFFIX=".ogg .Ogg .OGG"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							if [ "$OGG_DEC_OPT" ] ; then
+								while read FILE ; do
+									oggdec ${=OGG_DEC_OPT} -o ${${FILE%.*}//\ /_}.wav ${FILE} || prog_failure
+								done <$gv_LogFile$$
+								del_file -f $gv_LogFile$$
+							else
+								while read FILE ; do
+									lame ${=LAME_DEC_OPT} ${FILE} ${${FILE%.*}//\ /_}.wav || prog_failure
+								done <$gv_LogFile$$
+								del_file -f $gv_LogFile$$
+							fi	
+						fi	
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					mp3-r*)
+						# mp3 --> raw{{{
+						U_OPT=no
+						FORMAT="MP3"
+						SUFFIX=".mp3 .Mp3 .MP3"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								lame ${=LAME_DEC_OPT} ${FILE} ${${FILE%.*}//\ /_}.raw || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					ogg-r*)
+						# ogg --> raw{{{
+						U_OPT=no
+						FORMAT="OGG"
+						SUFFIX=".ogg .Ogg .OGG"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							if [ "$OGG_DEC_OPT" ] ; then
+								while read FILE ; do
+									oggdec ${=OGG_DEC_OPT} -o ${${FILE%.*}//\ /_}.raw ${FILE} || prog_failure
+								done <$gv_LogFile$$
+								del_file -f $gv_LogFile$$
+							else
+								while read FILE ; do
+									lame ${=LAME_DEC_OPT} ${FILE} ${${FILE%.*}//\ /_}.raw || prog_failure
+								done <$gv_LogFile$$
+								del_file -f $gv_LogFile$$
+							fi	
+						fi	
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					$gv_Back) break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $lv_Decode
+			;;
+		$lv_Encode)
+			# Encodierung von audio Dateien{{{
+			#
+			ENC_TITLE=$(gettext 'enkodieren')
+			menubox "" "$ENC_TITLE" "$gv_Menupoint" "$ENC_AUSWAHL"
+			#
+			# Durch den erweiterten Variablenausdruck ${(qq)i} wird die
+			# Variable $i gequotet $i -> 'Zeichenkette'
+			#
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help code_choice_help
+						menubox "" "$ENC_TITLE" "$gv_Menupoint" "$ENC_AUSWAHL"
+						;;
+					raw-m*)	
+						# raw --> mp3{{{
+						U_OPT=no
+						FORMAT="WAVE"
+						SUFFIX=".raw .Raw .RAW"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								lame ${=LAME_ENC_OPT} ${FILE} ${${FILE%.*}//\ /_}.mp3 || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					raw-o*)	
+						# raw --> ogg{{{
+						U_OPT=no
+						FORMAT="WAVE"
+						SUFFIX=".raw .Raw .RAW"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								oggenc ${FILE} ${=OGG_ENC_OPT} ${${FILE%.*}//\ /_}.ogg || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					wav-m*)	
+						# wav --> mp3{{{
+						U_OPT=no
+						FORMAT="WAVE"
+						SUFFIX=".wav .Wav .WAV"
+						#
+						file_choice "$SND_DIR" multi
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								lame ${=LAME_ENC_OPT} ${FILE} ${${FILE%.*}//\ /_}.mp3 || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					wav-o*)	
+						# wav --> ogg{{{
+						U_OPT=no
+						FORMAT="WAVE"
+						SUFFIX=".wav .Wav .WAV"
+						#
+						file_choice "$SND_DIR" multi
+						#
+						if [ "$WERT" ] ; then
+							while read FILE ; do
+								oggenc ${FILE} ${=OGG_ENC_OPT} ${${FILE%.*}//\ /_}.ogg || prog_failure
+							done <$gv_LogFile$$
+							del_file -f $gv_LogFile$$
+						fi
+						rm -rf $gv_LogFile$$ &>/dev/null
+						break
+						#}}}
+						;;
+					$gv_Back) break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $lv_Encode
+			;;
+		$lv_Burn)
+			# Sound Dateien brennen# {{{
+			multi_conf
+			SND2SNDFM_BURN_TITLE=($lv_Burn)
+			SND2SNDFM_BURN_MSG=$(gettext 'Soll eine CD oder DVD gebrannt werden?')
+			SND2SNDFM_BURN_MENU=($lv_Cd \"\" $lv_Dvd \"\" $gv_Back \"\")
+			# Funktion (snd_burn_menu)
+			snd_burn_menu() {
+				menubox "$1" "$SND2SNDFM_BURN_TITLE" "$SND2SNDFM_BURN_MSG" "$SND2SNDFM_BURN_MENU"
+			}
+			#
+			snd_burn_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help burn_help
+						snd_burn_menu
+						;;
+					$lv_Cd)	# Audio-CD brennen
+						audio_burn CD
+						snd_burn_menu $lv_Cd
+						;;
+					$lv_Dvd)	# Audio-DVD brennen
+						audio_burn DVD
+						snd_burn_menu $lv_Dvd
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			## }}}
+			haupt_menue $lv_Burn
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

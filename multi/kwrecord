@@ -1,0 +1,334 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwrecord, ein Script um verschiedene Sachen
+# auf CD-R(W) und DVD-+R(W)/RAM zu brennen.
+#
+# Version: 0.1.28
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Wenn es eine Konf.-Datei gibt einlesen.
+read_file cd_dvdrc
+
+# Exportiert die Variable DIR, beinhaltet das letzte Verzeichnis
+typeset -x DIR=""
+
+# erste Variablen fuer das Hauptmenue einlesen.
+multi_conf
+
+# Funktion haupt_menue{{{
+#
+MAIN_MENU=($gv_Configuration \"\" $gv_Audio_Cd \"\"
+$gv_Audio_Dvd \"\" $gv_Cdcopy \"\" $gv_Dvdcopy \"\"
+$gv_Data_Cd \"\" $gv_Data_Dvd \"\" $gv_Iso_Cd \"\"
+$gv_Iso_Dvd \"\" $gv_Photo_Cd \"\" $gv_Photo_Dvd \"\"
+$gv_Video_Cd \"\" $gv_Video_Dvd \"\" $gv_Del_Cd \"\"
+$gv_Format_Dvd \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+cdrom
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# CD/CD-R(W)/DVD/DVD-+R(W) konfigurieren# {{{
+			read_file cd_dvdrc
+			autoload -U kwrecord_conf
+			kwrecord_conf
+			## }}}
+			haupt_menue $gv_Configuration
+			#
+			;;
+		$gv_Audio_Cd)
+			# Audio CDs brennen# {{{
+			if [ -n "$CD_PROG" ] ; then
+				audio_burn CD
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Audio_Cd
+			;;
+		$gv_Audio_Dvd)
+			# Audio DVDs brennen# {{{
+			if [ -n "$DVD_PROG" ] ; then
+				audio_burn DVD
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Audio_Dvd
+			;;
+		$gv_Cdcopy)
+			# CD kopieren# {{{
+			if [ -n "$CD_PROG" ] ; then
+				cd_dvd_burn --copycd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Cdcopy
+			;;
+		$gv_Dvdcopy)
+			# DVD kopieren# {{{
+			if [ -n "$DVD_PROG" ] ; then
+				cd_dvd_burn --copydvd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Dvdcopy
+			;;
+		$gv_Data_Cd)
+			# Daten CD brennen# {{{
+			if [ -n "$CD_PROG" ] ; then
+				cd_dvd_burn --datacd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Data_Cd
+			;;
+		$gv_Data_Dvd)
+			# Daten DVD brennen# {{{
+			if [ -n "$DVD_PROG" ] ; then
+				cd_dvd_burn --datadvd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Data_Dvd$gv_Data_Dvd
+			;;
+		$gv_Iso_Cd)
+			# CD, Iso Images brennen# {{{
+			if [ -n "$CD_PROG" ] ; then
+				cd_dvd_burn --isocd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Iso_Cd
+			;;
+		$gv_Iso_Dvd)
+			# DVD, Iso Images brennen# {{{
+			if [ -n "$DVD_PROG" ] ; then
+				cd_dvd_burn --isodvd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Iso_Dvd
+			;;
+		$gv_Photo_Cd)
+			# Photo CD brennen# {{{
+			if [ -n "$CD_PROG" ] ; then
+				cd_dvd_burn --photocd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Photo_Cd
+			;;
+		$gv_Photo_Dvd)
+			# Photo DVD brennen# {{{
+			if [ -n "$DVD_PROG" ] ; then
+				cd_dvd_burn --photodvd
+			else
+				no_cddvd_prog_msg
+			fi
+			## }}}
+			haupt_menue $gv_Photo_Dvd
+			;;
+		$gv_Video_Cd)
+			# Video-CD brennen{{{
+			#
+			if [ -n "$CD_PROG" ] ; then
+				cd_dvd_burn --vcd
+			else
+				no_cddvd_prog_msg
+			fi
+			#}}}
+			haupt_menue $gv_Video_Cd
+			;;
+		$gv_Video_Dvd)
+			# Video-DVD brennen{{{
+			#
+			if [ -n "$DVD_PROG" ] ; then
+				cd_dvd_burn --vdvd
+			else
+				no_cddvd_prog_msg
+			fi
+			#}}}
+			haupt_menue $gv_Video_Dvd
+			;;
+		$gv_Del_Cd)
+			# CD-RW loeschen{{{
+			if [ -n "$CD_PROG" ] ; then
+				# Funktion (del_cd), loescht die CDRWs# {{{
+				#
+				del_cd() {
+					# Funktion device_convert erzeugt die Variable CDROM
+					lv_Minimal=$(gettext 'minimal')
+					lv_All=$(gettext 'ganz')
+					DEL_TITLE=$(gettext 'CD+-RW::loeschen')
+					DEL_MSG=$(gettext 'Loesche CD+-RW.')
+					DEL_MENU=($lv_Minimal \"\" $lv_All \"\")
+					CDRW_DEL_MSG=$(gettext 'Soll die CD-+R(W) wirklich geloescht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+					#
+					menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
+					while [ $gv_Auswahl ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help blank_help
+								menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
+								;;
+							$lv_Minimal)
+								# CDRW minimal loeschen
+								yesno "$gv_Attention" "$CDRW_DEL_MSG" "yes"
+								if [ "$gv_Auswahl" = yes ] ; then
+									eject -t $CDROM &>/dev/null && sleep 1
+									PROG_OPT="blank --blank-mode minimal --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER"
+									$CD_PROG ${=PROG_OPT} 2>&1 | progressbox "$DEL_TITLE" "$DEL_MSG" || prog_failure
+								fi
+								break
+								;;
+							$lv_All)
+								# CDRW ganz loeschen
+								yesno "$gv_Attention" "$CDRW_DEL_MSG" "yes"
+								if [ "$gv_Auswahl" = yes ] ; then
+									eject -t $CDROM &>/dev/null && sleep 1
+									PROG_OPT="blank --blank-mode full --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER"
+									$CD_PROG ${=PROG_OPT} 2>&1 | progressbox "$DEL_TITLE" "$DEL_MSG" || prog_failure
+								fi
+								break
+								#
+								;;
+						esac
+					done
+				}
+				## }}}
+				device_convert -i "$WRITE_DEVICE"
+				cd_dvd_conf -W
+				check_cd_state "$WRITE_DEVICE"
+				if [ "$CD_RW" = yes -a "$CD_CAP" != 00:00:00 ] ; then
+					if [ "$CD_R_EMPTY" = yes ] ; then
+						MSG=$(gettext 'Diese CDRW ist schon leer. Fortfahren (ja/nein)?')
+						yesno "$gv_Info" "$MSG" "no"
+						if [ "$gv_Auswahl" = yes ] ; then
+							del_cd
+						fi
+					else
+						del_cd
+					fi
+				else
+					MSG=$(gettext 'Sie muessen erst eine CD+-RW ins Brenner Laufwerk einlegen.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			else
+				no_cddvd_prog_msg
+			fi
+			#}}}
+			haupt_menue $gv_Del_Cd
+			;;
+		$gv_Format_Dvd)
+			# DVD formatieren{{{
+			autoload -U check_dvd_state
+			if [ -n "$DVD_PROG" ] ; then
+				# Funktion (del_dvd), DVD formatieren# {{{
+				#
+				del_dvd() {
+					# Funktion device_convert erzeugt die Variable CDROM
+					PROG_OPT="-force $CDROM"
+					dvd+rw-format ${=PROG_OPT}
+					# Wenn DVD?RAM, dann mit mkudffs ein UDF Dateisystem erstellen.
+					if [ "$DVD_RW" = DVDRAM -a -x "${commands[mkudffs]}" ] ; then
+						#PROG_OPT="--udfrev=0x0150 --media-type=dvdram $CDROM"
+						PROG_OPT="--media-type=dvdram $CDROM"
+						mkudffs ${=PROG_OPT}
+					fi
+				}
+				## }}}
+				cd_dvd_conf -W
+				device_convert -i "$WRITE_DEVICE"
+				eject -t $CDROM &>/dev/null && sleep 1
+				# Staus der DVD pruefen
+				check_dvd_state "$CDROM"
+				case "$DVD_RW" in
+					DVD?RW | DVDRAM)
+						if [ "${DVD_LEGACY#*=}" = "${DVD_CAP#*=}" -o "$DVD_R" = blank  ] ; then
+							MSG=$(gettext 'Diese DVD-+RW/RAM ist schon leer. Fortfahren (ja/nein)?')
+							yesno "$gv_Info" "$MSG" "no"
+							if [ "$gv_Auswahl" = yes ] ; then
+								del_dvd
+							fi
+						else
+							MSG=$(gettext 'Soll die DVD-+RW/RAM wirklich geloescht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+							yesno "$gv_Attention" "$MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								del_dvd
+							fi
+						fi
+						;;
+					*)	
+						MSG=$(gettext 'Sie muessen erst eine DVD+-RW/RAM ins DVD Brenner Laufwerk einlegen.')
+						msgbox "$gv_Attention" "$MSG"
+						;;
+				esac
+			else
+				no_cddvd_prog_msg
+			fi
+			#}}}
+			haupt_menue $gv_Format_Dvd
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

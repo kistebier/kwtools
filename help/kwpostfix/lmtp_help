@@ -1,0 +1,492 @@
+# lmtp_help fuer kwpostfix{{{
+TITLE="${gv_Configuration}::${lv_Lmtp}::${gv_Help}"
+MSG=$(gettext 'lmtp_address_preference: Waehlen Sie das Internet Protokoll aus.
+\tZur Auswahl stehen ipv4, ipv6 und beide zusammen (any).
+\tStandard ist any.
+
+lmtp_assume_final: Soll, falls ein entfernter LMTP Server anzeigt
+\tdas er kein DNS unterstuetzt, soll der Server annehmen das die
+\tfinale Zustellung vollzogen wurde und sendet eine "delivered"
+\tNachricht anstelle von "relayed".
+\tServer 
+
+lmtp_bind_address: IPv4-Adresse, die fuer ausgehende Verbindungen
+\tvia LMTP benutzt wird. Ist keine Angabe waehlt Postfix die
+\tsinnvollste aus allen IP-Adressen des Servers aus.
+
+lmtp_bind_address6: IPv6-Adresse, die fuer ausgehende Verbindungen
+\tvia LMTP benutzt wird. Ist keine Angabe waehlt Postfix die
+\tsinnvollste aus allen IP-Adressen des Servers aus.
+\t(Bsp. 2001:240:5c7:0:250:56ff:fe89:1)
+
+lmtp_body_checks: Tabelle, eine Filterung des Bodies beim versenden
+\teiner Mail.
+
+lmtp_cname_overrides_servername: Soll das ueberschreiben der Server-
+\tnamen, die der LMTP client zum loggen benutzt, bei DNS CNAME
+\trecords erlaubt werden (ja/nein)? Dies geschieht beim SASL
+\tPasswort nachschlagen, bei der TLS Regel Entscheidung oder
+\tbei der TLS Zertifikat Bestaetigung.
+\tStandard ist nein.
+
+lmtp_connect_timeout: Timeout fuer den Aufbau der Verbindung. Wenn
+\tdie Zahl 0 ist wird der Standardwert fuer TCP/IP Verbindungen
+\taus dem Kernel genommen. Zur Auswahl stehen die Suffixe
+\ts=Sekunde, m=Minute, h=Stunde, d=Tag und w=Woche.
+\tStandard ist 0s.
+
+lmtp_connection_cache_destinations: Soll die LMTP Verbindung
+\tpermanent gecacht werden (ja/nein)?
+
+lmtp_connection_cache_on_demand: Soll die LMTP Verbindung zeitweilig
+\tgecacht werden, wenn ein Ziel ein hohes Mail Aufkommen in
+\tder "active" Warteschlange hat (ja/nein)?
+\tStandard ist ja.
+
+lmtp_connection_cache_time_limit: Zeit ab wann der Cache einer LMTP
+\tSitzung neu benutzt wird bevor sie geschlossen wird.
+\tStandard ist 2s.
+
+lmtp_connection_reuse_time_limit: Zeit die ein unbenutzter LMTP
+\tClient Socket offen gelassen werden soll.
+\tStandard ist 300s.
+
+lmtp_data_done_timeout: Timeout nach erfolgter Uebertragung der Mail
+\tper LMTP. Zur Auswahl stehen die Suffixe s=Sekunde, m=Minute,
+\th=Stunde, d=Tag und w=Woche.
+\tStandard ist 600s.
+
+lmtp_data_init_timeout: Timeout nach dem LMTP Kommando DATA. Zur
+\tAuswahl stehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag
+\tund w=Woche.
+\tStandard ist 120s.
+
+lmtp_data_xfer_timeout: Timeout waehrend der Uebertragung einer Mail
+\tan einen LMTP Server. Zur Auswahl stehen die Suffixe s=Sekunde,
+\tm=Minute, h=Stunde, d=Tag und w=Woche.
+\tStandard ist 180s.
+
+lmtp_defer_if_no_mx_address_found: Soll die Mail Zustellung zurueck-
+\tgestellt werden, wenn ein MX record nicht zu einer IP
+\tAdresse aufgeloest werden kann (ja/nein)?
+\tStandard ist nein.
+
+lmtp_delivery_slot_cost: Dient dem Postfix Queue Manager zur
+\tBerechnung der optimalen Verteilung von ausgehenden Mails.
+\tStandard ist $default_delivery_slot_cost.
+
+lmtp_delivery_slot_discount: Dient dem Postfix Queue Manager zur
+\tBerechnung der optimalen Verteilung von ausgehenden Mails.
+\tStandard ist $default_delivery_slot_discount.
+
+lmtp_delivery_slot_loan: Dient dem Postfix Queue Manager zur
+\tBerechnung der optimalen Verteilung von ausgehenden Mails.
+\tStandard ist $default_delivery_slot_loan.
+
+lmtp_destination_concurrency_failed_cohort_limit: Sinkt die Zahl
+\tparalleler Zustellungen an ein Ziel unter diesen Wert, wird das
+\tZiel (voruebergehend) fuer "tot" erklaert und aus der Zustellung
+\tgenommen.
+\tStandard ist $default_destination_concurrency_failed_cohort_limit.
+
+lmtp_destination_concurrency_limit: Maximale Anzahl gleichzeitiger
+\tVerbindungen per LMTP zu einem Rechner.
+\tStandard ist $default_destination_concurrency_limit.
+
+lmtp_destination_concurrency_negative_feedback: Bestimmt, wie
+\tschnell die Anzahl gleichzeitiger Verbindungen an ein Ziel gesenkt
+\twird, wenn es einen Fehler gibt. Senkt die simultanen Verbindungen
+\tzu einem Ziel bei einem Fehler.
+\tStandard ist $default_destination_concurrency_negative_feedback.
+
+lmtp_destination_concurrency_positive_feedback: Bestimmt, wieviele
+\tMails anfangs parallel an ein Ziel zugestellt werden sollen.
+\tErhoeht die simultanen Verbindungen zu einem Ziel bei einer
+\terfolgreichen Zustellung.
+\tStandard ist $default_destination_concurrency_positive_feedback.
+
+lmtp_destination_rate_delay: Zeitdauer nach jeder Mailzustellung,
+\tbevor an das gleiche Ziel wieder eine Mail versandt werden darf.
+\tZur Auswahl stehen die Suffixe s=Sekunde, m=Minute, h=Stunde,
+\td=Tag und w=Woche.
+\tStandard ist $default_destination_rate_delay.
+
+lmtp_destination_recipient_limit:  Maximale Anzahl der Empfaenger in
+\teiner Mail, die ueber LMTP versendet wird. Groessere
+\tEmpfaengerlisten werden auf mehrere Mails aufgeteilt.
+\tStandard ist $default_destination_recipient_limit.Maximalzahl der Empfaenger in
+
+lmtp_discard_lhlo_keyword_address_maps: Tabelle von LMTP Server mit
+\tLHLO Schluesselwoertern (starttls, auth, ...) die der LMTP
+\tClient ignorieren soll, bei einer LHLO Antwort vom
+\tentfernten LMTP Server.
+
+lmtp_discard_lhlo_keywords: Eine Liste von LHLO Schluesselwoertern
+\t(starttls, auth, ...) die der LMTP Client ignorieren soll,
+\tbei einer LHLO Antwort von einem entfernten LMTP Server.
+
+lmtp_dns_resolver_options: DNS Resolver Optionen fuer den Postfix
+\tLMTP Client. Einige Optionen weisen auf die Domainnamen in der
+\tDatei /etc/resolv.conf hin.
+
+lmtp_enforce_tls: Soll SSL/TLS beim Versand einer Mail erzwungen
+\twerden (ja/nein)?
+\tStandard ist nein.
+
+lmtp_extra_recipient_limit: Anzahl der zusaetzlichen Mailadressen
+\tpro Transport-Methode, die der Postfix Queue-Manager einlesen soll.
+\tStandard ist $default_extra_recipient_limit.
+
+lmtp_generic_maps: Tabelle die die Umschreibung von lokal gueltigen
+\tAdressen zu global gueltigen Adressen beim versenden uebers
+\tInternet beinhaltet.
+
+lmtp_header_checks: Tabelle, eine Filterung des Header beim
+\tversenden einer Mail.
+
+lmtp_host_lookup: Welchen Mechanismus soll der Client zum nach-
+\tschauen von Rechner IP Adressen benutzen (Bsp. dns).)
+\tStandard ist dns.
+
+lmtp_initial_destination_concurrency: Anzahl gleichzeitiger
+\tVerbindungen zu einem anderen Host. Postfix schaltet spaeter
+\tgegebenfalls weitere Parallelverbindungen dazu. Sollte nicht
+\tauf 1 stehen sonst blockiert eine defekte Empfaengeradresse die
+\tgesamten Mails an dieses Ziel. Integer Zahlen von 1 bis .... sind
+\terlaubt.
+\tStandard ist $initial_destination_concurrency.
+
+lmtp_lhlo_name: Rechnername der in einem LMTP LHLO Kommando gesendet
+\twerden soll.
+\tStandard ist $myhostname.
+
+lmtp_lhlo_timeout: Timeout nach dem LMTP Kommando LHLO. Zur Auswahl
+\tstehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag und
+\tw=Woche.
+\tStandard ist 300s.
+
+lmtp_line_length_limit: Die maximale Laenge vom Nachrichten Kopf
+\tund der Zeilen im Hauptteil der Mail.
+\tStandard ist 998.
+
+lmtp_mail_timeout: Timeout nach dem LMTP Kommando MAIL FROM: Zur
+\tAuswahl stehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag
+\tund w=Woche.
+\tStandard ist 300s.
+
+lmtp_mime_header_checks: Tabelle mit Filtermustern fuer den Mime
+\tHeader beim versenden einer Mail.
+
+lmtp_minimum_delivery_slots: Minimale Anzahl von Empfaengern, ab
+\tder der Postfix Queue-Manager besondere Scheduling-Algorithmen auf
+\tdie Mail anwendet.
+\tStandard ist $default_minimum_delivery_slots.
+
+lmtp_mx_address_limit: Maximale Anzahl von MX (Mailverteiler) IP
+\tAdressen.
+\tStandard ist 5.
+
+lmtp_mx_session_limit: Maximale Anzahl von LMTP Sitzungen pro Zu-
+\tstellung, bevor aufgegeben wird oder die Zustelllung geht
+\tzurueck.
+\tStandard ist 2.
+
+lmtp_nested_header_checks: Tabelle mit Filtermustern der Mailanhaenge
+\tHeader, beim versenden einer mail.
+
+lmtp_per_record_deadline: Sie koennen das Verhalten der
+\tsmtp_*_timeout Limits veraendern vom Zeitlimit eines Lese- oder
+\tSchreibaufruf zu einem Zeitlimit zum erhalten oder senden einer
+\tkompletten Aufzeichnung (ja/nein).
+\tStandard ist nein.
+
+lmtp_pix_workaround_delay_time: Workaround fuer einen Fehler in Cisco
+\tPIX Firewalls. Fuegt eine Wartezeit vor dem ".<CR><LF>" ein, der die
+\tDATA-Uebertragung in einer LMTP-Sitzung beendet.
+\tStandard ist 10s.
+
+lmtp_pix_workaround_maps: Tabelle mit den entfernten Serveradressen
+\tfuer die die PIX Workarounds gelten sollen.
+
+lmtp_pix_workaround_threshold_time: Wenn eine Mail laenger als diese
+\tZeit in der Mailqueue liegt, geht Postfix davon aus, dass die
+\tCisco PIX Firewall fehlerhaft ist, und wendet die Verzoegerung
+\tan, um den Fehler auszugleichen.
+\tStandard ist 500s.
+
+lmtp_pix_workarounds: Auswahl von Workarounds fuer die (CISCO) PIX
+\tFirewall Bugs die der Postfix LMTP Client ausgleichen soll.
+\tStandard ist disable_esmtp,delay_dotcrlf.
+
+lmtp_quit_timeout: Timeout nach dem LMTP Kommando QUIT. Zur Auswahl
+\tstehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag und
+\tw=Woche.
+\tStandard ist 300s.
+
+lmtp_quote_rfc821_envelope: Sollen die Adressen im LMTP MAIL FROM
+\tund RCPT TO Kommando gequotet werden (ja/nein)?
+\tStandard ist ja.
+
+lmtp_randomize_addresses: Soll die Reihenfolge der Enveloper-Adressen
+\tbei einer LMTP-Sitzung gemixt werden (ja/nein)? Das verhindert
+\t, das stets die gleiche defekte Adresse die gesamte
+\tAuslieferung einer Mail blockiert.
+\tStandard ist ja.
+
+lmtp_rcpt_timeout: Timeout nach dem LMTP Kommando RCPT TO: Zur
+\tAuswahl stehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag
+\tund w=Woche.
+\tStandard ist 300s.
+
+lmtp_recipient_limit: Maximalzahl an Empfaenger in einer Mail.
+\tStandard ist $default_recipient_limit.
+
+lmtp_recipient_refill_delay: Zeitverzoegerung, nach der der
+\tPostfix Queue-Manager weitere Mailadressen in seine
+\tScheduling-Liste einliest.
+\tStandard ist $default_recipient_refill_delay.
+
+lmtp_recipient_refill_limit: Anzahl der Empfaenger-Slots, die
+\tder Postfix Queue-Manager in einem Durchlauf einliest.
+\tStandard ist $default_recipient_refill_limit.
+
+lmtp_reply_filter: Tabelle mit Filtern um den Reply Header von
+\tentfernten LMTP Servern zu korrigieren.
+
+lmtp_rset_timeout: Timeout nach dem LMTP Kommando RSET.
+\tStandard ist 20s.
+
+lmtp_sasl_auth_cache_name: Eine optioale Tabelle die wiederholte
+\tSASL Authentifizierungsfehler mit dem gleichen entfernten LMTP
+\tServer Rechnername, Benutzer und Passwort.
+
+lmtp_sasl_auth_cache_time: Eingabe des maximalen Alters der
+\t"smtp_sasl_auth_cache_name" Eintraegen bis sie geloescht
+\twerden.
+\tStandard ist 90d (d = Tage)
+
+lmtp_sasl_auth_enable: Soll LMTP-Auth beim Versand ueber LMTP
+\taktiviert werden (ja/nein)?
+\tStandard ist nein.
+
+lmtp_sasl_auth_soft_bounce: Falls eine LMTP-AUTH Identifierzierung
+\tmit dem Fehlercode 535 abgelehnt wird kann die Mailzustellung
+\taufgeschoben werden oder die Mail als unzustellbar gekennzeichnet
+\twerden (ja/nein).
+\tStandard ist ja.
+
+NOTIZ: Ein ja ueberschreibt die globale Einstellung des
+\tParameters "soft_bounce", ein nein nicht.
+
+lmtp_sasl_mechanism_filter: Einige LMTP Server unterstuetzen
+\tAuthentifizierungsmassnahmen, die obwohl auf den clients
+\tverfuegbar, in der Praxis nicht arbeiten oder nur mit
+\tBerechtigungsnachweisen zur Authentifizierung arbeiten. Mit
+\tdiesem Parameter kann man die Liste der Server Mechanismen,
+\tdie der LMTP client beruecksichtigen soll, weiter
+\teinschraenken.
+
+lmtp_sasl_password_maps: Tabelle mit den Kennungen/Passwoertern fuer
+\tauthentifizierte Verbindungen.
+
+lmtp_sasl_path: Pfad zum SASL-Socket fuer bestimmete
+\tSASL-Implementationen wie Dovecot. Siehe auch dem Punkt
+\tsmtpd_sasl_type.
+
+lmtp_sasl_security_options: Zulaessige Identifizierungsmethoden bei
+\tausgehenden LMTP-Auth Verbindungen.
+\tStandard ist noplaintext, noanonymous.
+
+lmtp_sasl_tls_security_options: Zulaessige Identifizierungsmethoden
+\tbei ausgehenden LMTP-Auth Verbindungen die der CLient per TLS
+\tbenutzen soll.
+\tStandard ist $lmtp_sasl_security_options.
+
+lmtp_sasl_tls_verified_security_options: Zulaessige Identifizierungs-
+\tmethoden bei ausgehenden LMTP-Auth Verbindungen die der CLient per
+\tTLS mit einem geprueften Server Zertifikat benutzen soll.
+\tStandard ist $lmtp_sasl_tls_security_options.
+
+lmtp_sasl_type: Waehlen Sie ein SASL Plugin mit der sich der Postfix
+\tLMTP Client authentifizieren soll aus. Zur Verfuegung stehen
+\tcyrus und dovecot falls verfuegbar.
+\tStandard ist cyrus.
+
+lmtp_send_dummy_mail_auth: Man kann an das MAIL FROM Kommando, bei
+\tder SASL Authentifizierung die AUTH=<> Optionen anhaengen
+\t(ja/nein).
+\tStandard ist nein.
+
+lmtp_send_xforward_command: Soll ein XFORWARD Befehl an den LMTP
+\tServer gesendet werden, falls der LMTP LHLO dies
+\tunterstuetzt (ja/nein)?
+\tStandard ist nein.
+
+lmtp_sender_dependent_authentication: Hier koennen Sie die
+\tSASL Authentifizierung des Postfix Clients aktivieren.
+\tDabei wird der SMTP Cache ausgeschaltet, damit bei Mails von
+\tverschiedenen Sendern die richtige Beglaubigung angewendet wird
+\t(ja/nein).
+\tStandard ist nein.
+
+lmtp_skip_5xx_greeting: Soll der Begruessungsstring bei einem
+\tLMTP-Code 5xx (dauerhafter Fehler) ignoriert werden (ja/nein)?
+\tBei ja wird dann trotzdem versucht die Mail abzusetzen.
+\tStandard ist ja.
+
+lmtp_skip_quit_response: Soll die LMTP Sitzung nach dem Quit, ohne
+\tauf eine Antwort des LMTP Servers abzuwarten, beendet werden
+\t(ja/nein)?
+\tStandard ist ja.
+
+lmtp_starttls_timeout: Timeout, zum lesen und schreiben waehrend TLS
+\tgestartet wird.
+\tStandard ist 300s.
+
+lmtp_tcp_port: TCP Port, auf dem der LMTP Server angesprochen wird.
+\tStandard ist 24.
+
+lmtp_tls_CAfile: Auswahl der Datei mit den CAs denen dieser 
+\tServer vertraut, fuer die Signatur von Client Zertifikaten.
+
+lmtp_tls_CApath: Verzeichnis in dem die Zertifikate liegen, fuer
+\teingehende Mails. Diese werden dann mit den Rechten des Mail 
+\tServers gelesen.
+
+lmtp_tls_block_early_mail_reply: Soll versucht werden eine Mail
+\tHjacking Attacke zu erkennen (ja/nein)? Dies basiert auf der
+\tSchwachstelle im TLS Protokoll (CVE-2009-3555), wo ein Angreifer
+\tboeswillige HELO, MAIL, RCPT, DATA Kommandos vorab an eine
+\tPostfix LMTP client TLS Session schickt.
+\tStandard ist nein.
+
+lmtp_tls_cert_file: Datei (RSA) welche das unterschriebene
+\tprivate Zertifikat besitzt.
+
+lmtp_tls_ciphers: Auswahl des Minimum an Qualitaet die der Postfix
+\tLMTP Client bei der TLS Verschluesselung benutzen soll.
+\tStandard ist export.
+
+lmtp_tls_dcert_file: Datei (DSA) welche das unterschriebene private
+\tZertifikat besitzt.
+
+lmtp_tls_dkey_file: Datei (DSA) welche das unterschriebene,
+\tunverschluesselte private Zertifikat besitzt.
+\tStandard ist $lmtp_tls_dcert_file.
+
+lmtp_tls_eccert_file: Datei mit dem Postfix LMTP client ECDSA
+\tZertifikat im PEM Format. Diese Datei kann auch den privaten
+\tSchluessel des Postfix LMTP Clienten enthalten (siehe auch dem
+\tMenuepunkt "lmtp_tls_eckey_file").
+\tZum Beispiel: /etc/postfix/ecdsa-ccert.pem.
+
+lmtp_tls_eckey_file: Datei mit dem Postfix LMTP client ECDSA
+\tprivaten Schluessel im PEM Format. Der private Schluessel darf
+\tkeine Passphrase haben und nicht verschluesselt sein.
+\tStandard ist $lmtp_tls_eccert_file.
+
+NOTIZ: Stellen Sie die richtigen Rechte dieser Datei ein!
+
+lmtp_tls_enforce_peername: Soll der entfernte LMTP Server die
+\tInformationen, fuer Rechnernamen im Zertifikat suchen
+\t(ja/nein)?
+\tStandard ist ja.
+
+lmtp_tls_exclude_ciphers: Auswahl einer Liste der Verschluesselung
+\toder Verschluesselungstypen die von der Postfix LMTP Client
+\tVerschluesselungliste aller TLS Sicherheitslevel ausgeschlossen
+\twerden.
+
+lmtp_tls_fingerprint_cert_match: Eingabe einer Liste von
+\tFingerprints der entfernten SMTP Server die akzeptiert werden
+\tsollen. Dafuer muss das TLS Sicherheitslevel auf "fingerprint"
+\tgesetzt werden (lmtp_tls_security_level=fingerprint).
+
+lmtp_tls_fingerprint_digest: Auswahl der Methode zur Berechnung
+\tder Fingerprints von Zertifikaten.
+\tStandard ist md5.
+
+lmtp_tls_key_file: Datei (RSA) welche das unterschriebene,
+\tunverschluesselte private Zertifikat besitzt.
+\tStandard ist $lmtp_tls_cert_file.
+
+lmtp_tls_loglevel: Loglevel auswaehlen.
+\tStandard ist 0.
+
+lmtp_tls_mandatory_ciphers: Auswahl des Minimum an Qualitaet die
+\tPostfix LMTP Client bei der TLS Verschluesselung benutzen soll.
+\tStandard ist medium.
+
+lmtp_tls_mandatory_exclude_ciphers: Auswahl einer Liste der
+\tVerschluesselung oder Verschluesselungstypen die von der Postfix
+\tLMTP Client Verschluesselungliste aller TLS Sicherheitslevel
+\tausgeschlossen werden.
+
+lmtp_tls_mandatory_protocols: Auswahl der TLS Protokolle die der
+\tPostfix LMTP Client bei der TLS Verschluesselung benutzen oder
+\tausschliessen soll. Das Zeichen "!" schliesst das Protokoll aus.
+\tStandard ist !SSLv2.
+
+lmtp_tls_note_starttls_offer: Soll der Rechnername vom entfernten
+\tLMTP Server geloggt werden, falls TLS nicht fuer diesen
+\tServer aktiviert ist (ja/nein)?
+\tStandard ist nein.
+
+lmtp_tls_per_site: Tabelle fuer die Regeln der TLS Benutzung von
+\tLMTP Clients.
+
+NOTIZ: Es ist eindringlich vom Einsatz dieser Lookup Tabellen
+\tabzuraten. Benutzen Sie besser "lmtp_tls_policy_maps".
+
+lmtp_tls_policy_maps:
+
+lmtp_tls_protocols: Auswahl der TLS Protokolle die der Postfix LMTP
+\tClient bei der TLS Verschluesselung benutzen oder ausschliessen
+\tsoll. Das Zeichen "!" schliesst das Protokoll aus.
+\tStandard ist !SSLv2.
+
+lmtp_tls_scert_verifydepth: Ueberpruefungstiefe des Server
+\tZertifikates.
+\tStandard ist 9.
+
+lmtp_tls_secure_cert_match: Auswahl der Strategie wie der Postfix
+\tLMTP Client die Zertifikate des gegenueberliegenden Servers, bei
+\teinem bestimmten TLS Sicherheitslevel, ueberpruefen soll. Siehe
+\tsmtp_tls_policy_maps.
+\tStandard ist nexthop.
+
+lmtp_tls_security_level: Legt fest ob, ob SSL/TLS benutzt werden
+\tdarf, kann oder muss. Hier legen Sie das LMTP TLS Sicherheits-
+\tlevel fuer den Postfix LMTP Client fest. Zur Auswahl stehen
+\t"none" "may" "encrypt" "fingerprint" "secure" "verify".
+
+lmtp_tls_session_cache_database: Datei die den TLS Sitzungs Cache
+\tfuer LMTP Clients enthaelt. Dadurch koennen mehrere LMTP
+\tProzesse die Sitzungs Informationen benutzen.
+
+lmtp_tls_session_cache_timeout: Verfallzeit der TLS Sitzungs Cache
+\tInformation fuer LMTP Clients.
+\tStandard ist 3600s.
+
+lmtp_tls_verify_cert_match: Auswahl der Strategie wie der Postfix
+\tLMTP Client die Zertifikate des gegenueberliegenden Servers, bei
+\teinem bestimmten TLS Sicherheitslevel, ueberpruefen soll. Siehe
+\tsmtp_tls_policy_maps.
+\tStandard ist hostname.
+
+lmtp_use_tls: Soll LMTP-Auth bei ausgehenden Verbindungen benutzt
+\twerden, falls ein entfernter LMTP Server STARTTLS
+\tanbietet (ja/nein)?
+\tStandard ist nein.
+
+lmtp_xforward_timeout: Timeout fuer den LMTP Clienten fuer das
+\tsenden eines XFORWARD Kommandos und der Antwort vom Server. Zur
+\tAuswahl stehen die Suffixe s=Sekunde, m=Minute, h=Stunde, d=Tag
+\tund w=Woche.
+\tStandard ist 300s.
+')
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

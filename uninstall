@@ -1,0 +1,160 @@
+#!/bin/zsh
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.03.2012
+#
+# Script: uninstall, deinstalliert alle Dateien der
+#         kwtools.
+#
+# Version: 0.2.4
+#
+setopt shwordsplit extendedglob
+setopt nonomatch
+
+if [ "`id -u`" != 0 ] ; then
+	echo ""
+	echo "Please become root before running uninstall"
+	echo ""
+	exit 1
+fi
+
+# Variablen initiieren
+KW_EXEC="/usr/lib /usr/local/lib"
+KW_FILES="/usr/share /usr/local/share"
+KW_SKEL_DIR="/etc/skel"
+KW_SKEL_KDE_DIR="/etc/skel/.kde"
+KW_SKEL_GNOME_DIR="/etc/skel/.config"
+KW_SKEL_FILES="${KW_SKEL_DIR}/.firstlogin ${KW_SKEL_DIR}/.bash_login
+	${KW_SKEL_KDE_DIR}/Autostart/firstlogin.desktop
+	${KW_SKEL_GNOME_DIR}/autostart/firstlogin.desktop"
+KW_CONF_FILES="/etc /usr/local/etc"
+KW_PPP="/etc/ppp/ip-up.d /etc/ppp/ip-down.d"
+KW_INIT="/etc/init.d"
+KW_CROND="/etc/cron.d"
+KW_LOGROTATED="/etc/logrotate.d"
+KW_GRUB_FILES="/etc/grub.d/42_passwd"
+MAN_DIRS="/usr/share/man /usr/local/share/man"
+MAN_SUBDIRS="man1 man5 man8 de/man1 de/man5 de/man8"
+KW_MANPAGES="create.cal.pl.1.gz kwdjbdns.1.gz kwholiday.1.gz
+	kwgpgcrypt.1.gz kwcamera.1.gz kwtex-cal.1.gz kwadmin.1.gz
+	kwmutt.1.gz kwmuttprintcf.1.gz
+	kwnetstat.1.gz kwpasswd.1.gz kwpostfix.1.gz kwpwsafe.1.gz kwrecord.1.gz
+   	kwrip.1.gz kwvmstat.1.gz kwxmms2.1.gz kwxmms2d.1.gz
+	kwplaner.1.gz kwrsync.1.gz kwrsync_cron.1.gz kwsnd2sndfm.1.gz
+	kwssl2.1.gz kwtermin.1.gz kwtermin_cron.1.gz kwvcdburn.1.gz
+	cd_dvdrc.5.gz kwcryptsetuprc.5.gz kwecryptfsrc.5.gz kwpwsaferc.5.gz
+	kwcamerarc.5.gz kwnarc.conf.5.gz kwlosetuprc.5.gz
+	kwrsync_backup.cf.5.gz main.cf.5.gz
+	kwplanerrc.5.gz kwriprc.5.gz kwrsyncrc.5.gz kwrsynctab.5.gz
+	kwsnd2sndfmrc.5.gz kwuserrc.5.gz kwvcdburnrc.5.gz kwvmstatrc.5.gz
+	kwxmms2rc.5.gz
+	kwauth.8.gz kwcrypt.8.gz kwcryptsetup.8.gz kwecryptfs.8.gz kwfuse.8.gz kwgrub.8.gz
+	kwgrub2.8.gz kwgroup.8.gz kwlosetup.8.gz kwlogrotate.8.gz
+	kwlvm.8.gz kwnarc.8.gz kwnarcconf.8.gz kwnetconf.8.gz kwnetcardconf.8.gz
+	kwparted.8.gz kwquota.8.gz kwrsync_backup.8.gz kwrsync_backup_cron.8.gz
+	kwuser.8.gz kwproxy.8.gz kwraid.8.gz
+	kwrunlevconf.8.gz kwclock.8.gz kwwvdialconf.8.gz"
+
+# kwtools Scripte in /usr/bin loeschen
+for i in check-smtp-auth call-jpeg2ps.zsh \
+	mutt.vcard.filter mutt.octet.filter mailhops \
+	firstlogin ; {
+	rm -f /usr/bin/${i} /usr/local/bin/${i} &>/dev/null
+}
+
+# Links loesechen
+for i in $KW_EXEC ; {
+	for P in ${i}/kwtools/**/*(Nx) ; {
+		LINK="`basename $P`"
+		rm -f /usr/bin/${LINK} /usr/sbin/${LINK} /usr/local/bin/${LINK} \
+			/usr/local/sbin/${LINK} &>/dev/null
+	}
+}
+
+# loeschen der Pfade, in denen die kwtools Programm/Functions/Doc Dateien liegen.
+for i in $KW_EXEC $KW_FILES ; {
+	if [ "${i}/kwtools(/)" ] ; then
+		rm -rf ${i}/kwtools &>/dev/null
+	fi
+	if [ "${i}/doc/kwtools*(/)" ] ; then
+		rm -rf ${i}/doc/kwtools* &>/dev/null
+	fi
+}
+
+# Sollen die alten Konfigurationsdateien geloescht werden (?)
+print ""
+print -n "Sollen die Konfigurationsdateien geloescht werden (y/N): "
+read Answ
+case "$Answ" in
+	y|Y)
+		# Konfigurationsdateien loeschen
+		for i in $KW_CONF_FILES ; {
+			if [ -d ${i}/kwtools ] ; then
+				rm -rf ${i}/kwtools &>/dev/null
+			fi
+		}
+		;;
+	n|N|*)
+		;;
+esac
+
+# /etc/skel Dateien/Verz. loeschen (KDE und GNOME).
+rm -fv $KW_SKEL_FILES &>/dev/null
+for i in $KW_SKEL_KDE_DIR $KW_SKEL_GNOME_DIR ; {
+	rmdir ${i}/Autostart &>/dev/null
+	rmdir ${i}/autostart &>/dev/null
+	rmdir $i &>/dev/null
+}
+
+# Manpages loeschen.
+for i in $MAN_DIRS ; {
+	for M in $MAN_SUBDIRS ; {
+		if [ -d ${i}/${M} ] ; then
+			pushd ${i}/${M}
+			print $KW_MANPAGES | xargs rm -f "{}" &>/dev/null
+			popd
+		fi
+	}
+}
+
+# PPP Startdateien loeschen
+for i in $KW_PPP ; {
+	rm -f ${i}/*kwnarc &>/dev/null
+}
+
+# Init Scripts loeschen
+rm -f /etc/init.d/kwnarc &>/dev/null
+rm -f /etc/init.d/rc?.d/???kwnarc &>/dev/null
+rm -f /etc/rc?.d/init.d/???kwnarc &>/dev/null
+
+# Cron Dateien loeschen
+rm -f ${KW_CROND}/kwrsync_backup &>/dev/null
+
+# Logrotate Dateien loeschen
+rm -f ${KW_LOGROTATED}/kwrsync_backup &>/dev/null
+
+# kwgrub2 Script loeschen
+rm -f $KW_GRUB_FILES &>/dev/null
+
+# Rest von kwnarc loeschen
+rm -f /usr/sbin/kwnarc /usr/local/sbin/kwnarc &>/dev/null
+
+# lintian Dateien loeschen
+rm -f /usr/share/lintian/overrides/kwtools-* \
+	/usr/local/share/lintian/overrides/kwtools-* &>/dev/null
+
+# Menues bei Debian loeschen
+rm -f /usr/lib/kwtools-* /usr/share/menu/kwtools-* \
+	/usr/local/lib/kwtools-* /usr/local/share/menu/kwtools-* &>/dev/null
+
+# Locale loeschen
+if [ -d debian/po ] ; then
+	for i in debian/po/*~*old(N/) ; {
+		dir="${i##*/}"
+		rm /usr/share/locale/*/LC_MESSAGES/${dir}.mo \
+			/usr/local/share/locale/*/LC_MESSAGES/${dir}.mo &>/dev/null
+	}
+fi
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

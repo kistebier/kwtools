@@ -1,0 +1,87 @@
+# kwmutt_pop_serv_help fuer kwmutt{{{
+TITLE="${lv_Pop}::${gv_Help}"
+MSG=$(gettext 'Hier koennen Sie Ihre POP-Server Konfigurationen verwalten. Sie
+koennen welche erstellen, ansehen, aendern und loeschen.
+
+Standard-Mailbox: Soll dieses Postfach als Standard deklariert
+\twerden (ja/nein)?
+\tDefault ist "no".
+
+\tDies dient dazu, falls Sie Mutt auf der Konsole aufrufen, das ein
+\tPostfach automatisch geoeffnet wird.
+
+pop_host: Der Name Ihres POP-Servers fuer die Funktion fetch-mail
+\t(mail holen). Sie koennen auch einen anderen Port, einen Usernamen
+\tund ein Passwort eingeben,
+\tz.B.: [pop[s]://][username[:password]@]popserver[:port]
+\tDefault ist pop_host=pop://localhost:110
+
+pop_user: Geben Sie Ihren Benutzernamen auf dem POP-Server ein. 
+\tDefault ist Ihr Benutzername auf dem lokalen System.
+
+pop_pass: Enthaelt das Passwort Ihres POP-Kontos. Falls die Variable
+\tungesetzt ist, wird Mutt Sie nach Ihrem Passwort fragen, wenn Sie
+\tdie POP-Mailbox oeffnen wollen.
+
+NOTIZ: Sie sollten diese Option nur verwenden, wenn Sie sich auf
+\teinem ausreichend sicheren Rechner befinden, weil der Superuser
+\tihre muttrc auch dann lesen kann, wenn Sie eigentlich der einzige
+\tsind, der sie lesen kann. 
+
+pop_authenticators: Dies ist eine durch Doppelpunkte getrennte Liste
+\tvon Authentifizierungsmethoden, die Mutt zum Einloggen auf einem
+\tPOP-Server anzuwenden versucht, in der Reihenfolge, wie Mutt sie
+\tausprobieren soll. Authentifizierungsmethoden sind entweder
+\t"user", "apop" oder ein SASL-Mechanismus, z.B. "digest-md5",
+\t"gssapi" oder "cram-md5". Dieser Parameter unterscheidet nicht
+\tzwischen Gross- und Kleinschreibung. Falls diese Variable ungesetzt
+\tist (Voreinstellung), wird Mutt alle moeglichen verfuegbaren
+\tMethoden durchprobieren, angefangen von der sichersten bis zur
+\tunsichersten. 
+\tBeispiel: set pop_authenticators="digest-md5:apop:user"
+
+folder: Diese Variable bestimmt das Verzeichnis, in dem Ihre
+\tMailboxen liegen. Ein + oder = am Anfang des Pfadnamens wird durch
+\tden Wert dieser Variable ersetzt. Beachte, dass Sie, falls Sie
+\tfuer diese Variable einen anderen Wert als die Voreinstellungen
+\tverwenden, sicherstellen muessen, dass folder gesetzt wird, bevor
+\tSie + oder = fuer andere Variablen benutzen, weil die Ersetzung
+\tbereits im "set"-Kommando erfolgt.
+\tDefault ist set folder=~/Mail
+
+mailboxes: Hier werden die Mailboxen definiert, in denen das System
+\tempfangene Nachrichten ablegt und die deshalb auf neue Nachrichten
+\tueberprueft werden sollen (getrennt durch ein Leerzeichen).
+\tBeispiel mailboxes +inbox +spam
+
+spoolfile: Wenn Ihre Posteingangs-Datei (spool-Mailbox) an einem
+\tunueblichen Ort ist, sodass Mutt sie nicht automatisch findet,
+\tkoennen Sie mit dieser Variable ihren Pfad angeben. Mutt setzt
+\tdiese Variable automatisch auf den Wert der Umgebungsvariablen
+\t$MAIL, wenn Sie sie nicht ausdruecklich setzen.
+
+postponed: Mutt erlaubt es, das Versenden der Nachricht, die man
+\tgerade editiert, fuer unbestimmte Zeit zurueckzustellen. Wenn man
+\tsich dafuer entscheidet, eine Nachricht zurueckzustellen,
+\tspeichert Mutt sie in dem Ordner ab, den diese Variable angibt.
+\tDefault ist set postponed=~/postponed
+
+record: Diese Variable gibt die Datei an, in der Ihre ausgehenden
+\tNachrichten abgelegt werden sollen. (Dies ist die bevorzugte
+\tMethode, um eine Kopie Ihrer Nachrichten abzuspeichern; eine
+\tandere Moeglichkeit waere es, den my_hdr-Befehl zu verwenden, um
+\tein Bcc:-Feld zu erzeugen, das Ihre E-Mail-Adresse enthaelt.) 
+\tDer Wert von $record wird von den Variablen $force_name und
+\t$save_name, sowie von dem Befehl fcc-hook ueberschrieben.
+\tBeispiel set record=~/sent
+
+pop_checkinterval: Diese Variable bestimmt, wie oft (in Sekunden)
+\tMutt ueber POP nach neuer Mail schauen soll. Dies betrifft die
+\tPostfaecher die in mailboxes definiert sind.
+\tDefault ist set pop_checkinterval=900
+')
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

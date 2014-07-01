@@ -1,0 +1,149 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwclock, zeigt die aktuelle Zeit und das Datum des Rechners an und kann
+#         diese einstellen.
+#
+# Version: 0.1.22
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check date hwclock
+if [ ! -z "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# auf Root pruefen
+root_check
+
+# Pruefen ob ntpdate installiert ist.
+NTPDATE="$(which ntpdate)"
+
+# Variablen
+lv_Time_Serv=$(gettext 'Zeitserver')
+lv_Clock=$(gettext 'Uhrzeit')
+lv_Date=$(gettext 'Datum')
+
+# Funktion haupt_menue{{{
+haupt_menue() {
+	if [[ -x $NTPDATE ]] ; then
+		MAIN_MENU=($lv_Time_Serv \"\" $lv_Clock \"$UHR\"
+			$lv_Date \"$DATE\" $gv_Exit \"\")
+	else
+		MAIN_MENU=($lv_Clock \"$UHR\"
+			$lv_Date \"$DATE\" $gv_Exit \"\")
+	fi
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion aktuelles Datum/Zeit{{{
+act_date() {
+	UHR=$(date +%H:%M:%S)
+	DATE=$(date +%d.%m.%Y)
+}
+#}}}
+#
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+act_date
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)	
+			script_help help
+			haupt_menue
+			;;
+		$lv_Time_Serv)
+			# Uhrzeit nach einer Atomuhr, mittels dem Protokoll ntp stellen{{{
+			autoload -U timeserver_conf
+			os_check
+			net_conf
+			if_conf_file "$OS" ntp
+			timeserver_conf
+			act_date
+			#}}}
+			haupt_menue $lv_Time_Serv
+			;;
+		$lv_Clock)
+			# Uhrzeit einstellen{{{
+			timebox
+			if [ -n "$gv_Auswahl" ] ; then
+				STD=${${(s,:,)${gv_Auswahl}}[1]}
+				MIN=${${(s,:,)${gv_Auswahl}}[2]}
+				Year=$(date +%Y)
+				Mon_Day=$(date +%m%d)
+				date ${Mon_Day}${STD}${MIN}${Year}
+				hwclock --systohc
+				UHR=$(date +%H:%M:%S)
+			else
+				act_date
+			fi
+			#}}}
+			haupt_menue $lv_Clock
+			;;
+		$lv_Date)
+			# Datum einstellen{{{
+			calendarbox 
+			if [ -n "$gv_Auswahl" ] ; then
+				Day=${${(s,/,)${gv_Auswahl}}[1]}
+				Mon=${${(s,/,)${gv_Auswahl}}[2]}
+				Year=${${(s,/,)${gv_Auswahl}}[3]}
+				# Uhrzeit nochmal einlesen.
+				Uhr=$(date +%H%M)
+				date ${Mon}${Day}${Uhr}${Year}
+				hwclock --systohc
+				UHR=$(date +%H:%M:%S)
+				DATE="${Day}.${Mon}.${Year}"
+			else
+				act_date
+			fi
+			#}}}
+			haupt_menue $lv_Date
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

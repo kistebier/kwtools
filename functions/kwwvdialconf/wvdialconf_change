@@ -1,0 +1,35 @@
+# Funktion wvdialconf_change# {{{
+#
+# usage: wvdialconf_change
+wvdialconf_change() {
+	# Konfigurationsabschnitte einlesen
+	read_tab_entry
+	if [ -n "${CONF_TAB_MENU_E[1]}" ] ; then
+		# Auswahlanzeige
+		CHANGE_MENU=($CONF_TAB_MENU_E $gv_Back \"\")
+		menubox "$DIAL_CONF_CHAPTER" "$gv_Configuration" "$CHANGE_MSG" "$CHANGE_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help change_help
+					menubox "$DIAL_CONF_CHAPTER" "$gv_Configuration" "$CHANGE_MSG" "$CHANGE_MENU"
+					;;
+				$gv_Back)	break ;;
+				*)
+					# Konfigurationsabschnittsname speichern
+					DIAL_CONF_CHAPTER="$gv_Auswahl"
+					# Konfiguragtion einlesen
+					read_conf_entry
+					wvdialconf_input
+					break
+					;;
+			esac
+		done
+	else
+		no_conf_entry_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

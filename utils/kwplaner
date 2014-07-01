@@ -1,0 +1,276 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>, 10.05.2014
+#
+# Script: kwplaner, für Termine, Kalender etc.
+# Version: 0.0.7
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+#
+# Wenn es eine Konf.-Datei gibt einlesen.
+#
+read_file kwplanerrc
+if [ -z "$BLAND" ] ; then
+	BLAND="DE_HA"
+fi
+if [ -z "$FEIERTAG_DIR" ] ; then
+	FEIERTAG_DIR="/usr/share/calendar"
+fi
+if [ -z "$Z_HOST" ] ; then
+	PLAN_HOST="`hostname`"
+fi
+FEIERTAG_DIR_HOME="${HOME}/.calendar"
+if [ ! -d "$FEIERTAG_DIR_HOME" ] ; then
+	create_file -d "$FEIERTAG_DIR_HOME"
+fi
+
+# Funktion haupt_menue{{{
+#
+lv_Kwholiday=$(gettext 'kwholiday')
+lv_Kwtex_Cal=$(gettext 'kwtex-cal')
+lv_Kwtermin=$(gettext 'kwtermin')
+MAIN_MENUE=($gv_Configuration \"\" $lv_Kwholiday \"\" $lv_Kwtex_Cal \"\"
+	$lv_Kwtermin \"\" "$gv_Exit" \"\")
+#
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENUE"
+}
+#}}}
+################################################################
+#
+# Hauptprogramm
+#
+################################################################
+#
+net_conf
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+			# Hilfe zu Planer
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Programm planer konfigurieren{{{
+			autoload -U planer_conf_state planer_config
+			net_conf
+			lv_Calendar=$(gettext 'Kalender')
+			lv_Mailadr=$(gettext 'Mailadresse')
+			lv_State_Bl=$(gettext 'Staat/Bundesland')
+			#
+			# Funktion konf_menue{{{
+			konf_menue() {
+				CONF_MENUE=($gv_Display \"$CAL_VIEW\" $lv_Calendar \"$CAL\"
+				$lv_Mailadr \"$MAIL_ADR\" $gv_Host \"$PLAN_HOST\"
+				$lv_State_Bl \"$BLAND\" $gv_Directory \"$FEIERTAG_DIR\"
+				$gv_Save \"\" $gv_Back \"\")
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENUE"
+			}
+			#}}}
+			konf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfe zur Konfiguration
+						script_help conf_help
+						konf_menue
+						;;
+					$gv_Display)
+						# Auswahl der Kalenderansicht{{{
+						# Funktion cal_view_menue{{{
+						lv_Daily=$(gettext 'taeglich')
+						lv_Weekly=$(gettext 'woechentlich')
+						lv_Monthly=$(gettext 'monatlich')
+						lv_Yearly=$(gettext 'jaehrlich')
+						#
+						V_TITLE=(${gv_Configuration}::${gv_Display})
+						V_MSG=$(gettext 'Waehlen Sie eine Ansicht aus.')
+						V_MENUE=(t $lv_Daily w $lv_Weekly m $lv_Monthly y $lv_Yearly $gv_Back \"\")
+						cal_view_menue() {
+							if [[ -n $CAL_VIEW ]] ; then
+								# Variable CAL_VIEW umrechnen in das dementsprechende
+								# Anzeigezeichnen
+								case "$CAL_VIEW" in
+									"0 days")	CAL_VIEW_CHAR=t
+										;;
+									"1 weeks")	CAL_VIEW_CHAR=w
+										;;
+									"1 months")	CAL_VIEW_CHAR=m
+										;;
+									"1 years")	CAL_VIEW_CHAR=y
+										;;
+								esac
+							fi
+							menubox "$CAL_VIEW_CHAR" "$V_TITLE" "$V_MSG" "$V_MENUE"
+						}
+						#}}}
+						cal_view_menue
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help cal_view_help
+									cal_view_menue
+									;;
+								$gv_Back)	break
+									;;
+								t)	CAL_VIEW="0 days"
+									break
+									;;
+								w)	CAL_VIEW="1 weeks"
+									break
+									;;
+								m)	CAL_VIEW="1 months"
+									break
+									;;
+								y)	CAL_VIEW="1 years"
+									break
+									;;
+							esac
+						done
+						#}}}
+						konf_menue $gv_Display
+						;;
+					$lv_Mailadr)
+						# Mailadresse eingeben{{{
+						mail_address "$MAIL_ADR"
+						if [ -n "$MAILADR" ] ; then
+							MAIL_ADR="$MAILADR"
+						else
+							unset -- MAIL_ADR
+						fi
+						#}}}
+						konf_menue $lv_Mailadr
+						;;
+					$lv_State_Bl)	
+						# Auswahl des Staates/Bundeslandes
+						planer_conf_state
+						konf_menue $lv_State_Bl
+						;;
+					$lv_Calendar)
+						# vorhandene Kalender zur Anzeige heraussuchen{{{
+						#
+						unset -- Files
+						# vergleichen, ob sie schon ausgewaehlt wurde.
+						generate_is_file "$CAL"
+						Files=(${FEIERTAG_DIR%/}/(*/)#calendar.*(.N) ${FEIERTAG_DIR_HOME}/(*/)#*(.N))
+						########################################
+						#Files="`ls ${FEIERTAG_DIR%/}/(*/)#calendar.*(.N) ${FEIERTAG_DIR_HOME}/(*/)#*(.N) 2>/dev/null`"
+						########################################
+						is_value "$Files"
+						#
+						if [ "$VALUE_ARRAY" ] ; then
+							# Funktion conf_cal_menue{{{
+							#
+							CONF_CAL_MENU=($VALUE_ARRAY)
+							CONF_CAL_TITLE=$(gettext 'Konfiguration::Kalender')
+							CONF_CAL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Kalenderdateien aus.')
+							conf_cal_menue() {
+								checklist "$CONF_CAL_TITLE" "$CONF_CAL_MSG" "$CONF_CAL_MENU"
+							}
+							#}}}
+							conf_cal_menue
+							while [ "$gv_Auswahl" ] ; do
+								case $gv_Auswahl in
+									HELP*)
+										script_help conf_cal_help
+										conf_cal_menue
+										;;
+									*)	#
+										CAL="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+						else
+							MSG=$(gettext 'Es sind keine Kalenderdateien vorhanden.')
+							msgbox "$gv_Attention" "$MSG"
+						fi
+						#}}}
+						konf_menue $lv_Calendar
+						;;
+					$gv_Host)
+						# Welchen Namen bzw. IP hat der Server auf dem Termin laeuft.{{{
+						# Geht zur Zeit nur localhost.
+						conf_hostname "$PLAN_HOST"
+						if [ -n "$gv_Hostname" ] ; then
+							PLAN_HOST="$gv_Hostname"
+						else
+							unset -- PLAN_HOST
+						fi
+						#}}}
+						konf_menue $gv_Host
+						;;
+					$gv_Directory)
+						# Standardverzeichnis von calendar auswählen.{{{
+						#
+						dselect "$FEIERTAG_DIR"
+						if [ "$VERZ" ] ; then
+							dselect_check "$VERZ"
+							if [ "$VERZ" ] ; then
+								user_device_check "$VERZ" RX
+								FEIERTAG_DIR="$VERZ"
+							fi
+						fi
+						#}}}
+						konf_menue $gv_Directory
+						;;
+					$gv_Save)
+						# Konfiguration schreiben.{{{
+						if [ "$CAL" ] ; then
+							planer_config
+							break 
+						else
+							MSG=$(gettext 'Sie muessen erst mindestens 1 Kalender vorher auswaehlen. Tun Sie dies Bitte in der Konfiguration von planer.')
+							msgbox "$gv_Attention" "$MSG"
+							konf_menue
+						fi
+						#}}}
+						;;
+					$gv_Back)
+						# keine Konfiguration schreiben.
+						break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$gv_Exit) break
+			;;
+		*)	# Programme ausführen lassen.
+			$gv_Auswahl
+			haupt_menue $gv_Auswahl
+			;;
+	esac
+done	
+#
+unset -- BLAND CAL FEIERTAG_DIR PLAN_HOST gv_Auswahl
+exit 0
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,247 @@
+# Funktion (kwquota_conf), konfiguriert quota.# {{{
+#
+# usage: kwquota_conf
+#
+kwquota_conf() {
+	# Funktion conf_menu# {{{
+	#
+	CONF_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+	conf_menu() {
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	# Funktion (read_choice_data), Quota Daten einlesen und# {{{
+	# bei mehr als einem quota diese dementsprechend zur
+	# Verfuegung stellen.
+	#
+	# usage: read_choice_data
+	#
+	read_choice_data() {
+		unset -- PROJ_CREATE
+		if [ "`wc -l < $USER_LOGFILE`" -gt 1 -a "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
+			CHOICE_MENU=($gv_User \"\" $gv_Group \"\" $gv_Back \"\")
+			menubox "$WHAT_QUOTA" "$UG_WHAT_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help ugp_help
+							menubox "$WHAT_QUOTA" "$UG_WHAT_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+						;;
+					$gv_User)
+						# uebernehmen
+						C_TITLE=(${UG_WHAT_TITLE}::${gv_User})
+						WHAT_QUOTA=User
+						QU_OPT=-u
+						case "$QFS" in
+							xfs) read_xfs_data "$USER_LOGFILE"	;;
+							ext[23]|reiserfs|jfs)	read_data "$USER_LOGFILE"	;;
+						esac
+						return 0
+						;;
+					$gv_Group)
+						# uebernehmen
+						C_TITLE=(${UG_WHAT_TITLE}::${gv_Group})
+						WHAT_QUOTA=Group
+						QU_OPT=-g
+						case "$QFS" in
+							xfs) read_xfs_data "$GROUP_LOGFILE"	;;
+							ext[23]|reiserfs|jfs)	read_data "$GROUP_LOGFILE"	;;
+						esac
+						return 0
+						;;
+					$gv_Back)	return 1	;;
+				esac
+			done
+		elif [ "`wc -l < $USER_LOGFILE`" -gt 1 ] ; then
+			C_TITLE=(${UG_WHAT_TITLE}::${gv_User})
+			WHAT_QUOTA=User
+			QU_OPT=-u
+			case "$QFS" in
+				xfs) read_xfs_data "$USER_LOGFILE"	;;
+				ext[23]|reiserfs|jfs)	read_data "$USER_LOGFILE"	;;
+			esac
+		elif [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
+			C_TITLE=(${UG_WHAT_TITLE}::${gv_Group})
+			WHAT_QUOTA=Group
+			QU_OPT=-g
+			case "$QFS" in
+				xfs) read_xfs_data "$GROUP_LOGFILE"	;;
+				ext[23]|reiserfs|jfs)	read_data "$GROUP_LOGFILE"	;;
+			esac
+		elif [ "`wc -l < $PROJECT_LOGFILE`" -gt 1 ] ; then
+			if [ "$CREATE" = yes ] ; then
+				C_TITLE=(${UG_WHAT_TITLE}::${lv_Project})
+				WHAT_QUOTA=Project
+				QU_OPT=-p
+				PROJ_CREATE=yes
+			else
+				C_TITLE=(${UG_WHAT_TITLE}::${lv_Project})
+				WHAT_QUOTA=Project
+				QU_OPT=-p
+				read_xfs_data "$PROJECT_LOGFILE"
+			fi
+		else
+			C_TITLE=(${UG_WHAT_TITLE}::${lv_Project})
+			WHAT_QUOTA=Project
+			QU_OPT=-p
+			PROJ_CREATE=yes
+		fi
+	}
+	## }}}
+	conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				script_help conf_help
+				conf_menu
+				;;
+			$gv_Create)
+				# anlegen# {{{
+				unset -- QUOTA_PART QFS BH_LIMIT BS_LIMIT RTBH_LIMIT RTBS_LIMIT \
+					IH_LIMIT IS_LIMIT RT_BL_GR_TIME BL_GR_TIME I_GR_TIME RESET USER_ID \
+					GROUP_ID PROJECT_ID
+				kwquota_change -c
+				## }}}
+				conf_menu $gv_Create
+				;;
+			$gv_Change)
+				# aendern# {{{
+				unset -- QUOTA_PART QFS BH_LIMIT BS_LIMIT RTBH_LIMIT RTBS_LIMIT \
+					IH_LIMIT IS_LIMIT RT_BL_GR_TIME BL_GR_TIME I_GR_TIME RESET USER_ID \
+					GROUP_ID PROJECT_ID
+				kwquota_change
+				## }}}
+				conf_menu $gv_Change
+				;;
+			$gv_Delete)
+				# quota auf device loeschen, heist auf null setzen# {{{
+				read_fstab_quota
+				if [ -n "$Mountpoint" ] ; then
+					DEL_MP_MENU=($Mountpoint)
+					menubox "" "$gv_Delete" "$gv_Menupoint" "$DEL_MP_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help quota_drive_help
+								menubox "" "$gv_Delete" "$gv_Menupoint" "$DEL_MP_MENU"
+								;;
+							*)
+								# Auswahl uebernehmen
+								quota_check_fs $gv_Auswahl
+								case "$QFS" in
+									xfs)
+										# XFS Dateisystem# {{{
+										# pruefen, ob xfs_quota ausfuehrbar ist.
+										prog_check_xfs_quota
+										#
+										ext_ug_quota_check -d
+										# Daten einlesen
+										read_choice_data
+										# Gibt es einen User oder eine Gruppe dann wird sie
+										# zur Auswahl angeboten.
+										# Quota loeschen
+										if [ -n "$User_Qu_M" ] ; then
+											DEL_MENU=($User_Qu_M)
+											checklist "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
+											while [ -n "$gv_Auswahl" ] ; do
+												case "$gv_Auswahl" in
+													HELP*)	script_help share/conf_del_msg
+														checklist "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
+														;;
+													*)
+														# Auswahl loeschen
+														# User/gruppen/Projekte auf Null setzen
+														for i in $gv_Auswahl ; {
+															xfs_quota -x -c "limit bhard=0 bsoft=0 ihard=0 isoft=0 rtbhard=0 rtbsoft=0 $i" "$QUOTA_PART" || prog_failure
+															# Projekte loeschen
+															case "$WHAT_QUOTA" in
+																Proj*)
+																	# Eintraege in /etc{projects,projid
+																	# loeschen}
+																	if [ -s "$XFS_PROJID" ] ; then
+																		local Ist_Project_Id
+																		unset -- Ist_Project_Id
+																		Ist_Project_Id="`print ${${(M)${(f)"$(< ${XFS_PROJID})"}##(#s)${gv_Auswahl}:}%:}`"
+																		Ist_Project_Nr="`print ${${(ws,:,)${(M)${(f)"$(< ${XFS_PROJID})"}##(#s)${gv_Auswahl}:*}}[2]}`"
+																	fi
+																	if [ -s "$XFS_PROJECTS" -a -n "$Ist_Project_Nr" ] ; then
+																		Ist_Projects_Nr="`print ${${(M)${(f)"$(< ${XFS_PROJECTS})"}##(#s)${Ist_Project_Nr}:}%:}`"
+																	fi
+																	#
+																	if [ -n "$Ist_Project_Id" -a -n "$Ist_Project_Nr" -a -n "$Ist_Projects_Nr" ] ; then
+																		# loeschen
+																		print -l ${(R)${(f)"$(< $XFS_PROJID)"}##(#s)${Ist_Project_Id}:${Ist_Project_Nr}} >${gv_WorkDir}/projid || prog_failure
+																		mv ${gv_WorkDir}/projid $XFS_PROJID || prog_failure
+																		print -l ${(R)${(f)"$(< ${XFS_PROJECTS})"}##(#s)${Ist_Projects_Nr}:*} >${gv_WorkDir}/projects || prog_failure
+																		mv ${gv_WorkDir}/projects $XFS_PROJECTS || prog_failure
+																	else
+																		MSG=$(gettext 'Kann keine vernuenfigen Eintraege in $XFS_PROJECTS und $XFS_PROJID zum loeschen finden.')
+																		msgbox "$gv_Attention" "$MSG"
+																	fi
+																	;;
+															esac
+														}
+														break 2
+														;;
+												esac
+											done
+										else
+											no_quota_user_group_msg
+											break
+										fi
+										## }}}
+										;;
+									ext[23]|reiserfs|jfs)
+										# ext2/3, jfs und reiserfs Dateisysteme# {{{
+										ext_ug_quota_check -d
+										# Daten einlesen
+										read_choice_data
+										# Gibt es einen User oder eine Gruppe dann wird sie
+										# zur Auswahl angeboten.
+										if [ -n "$User_Qu_M" ] ; then
+											# loeschen
+											DEL_MENU=($User_Qu_M)
+											checklist "$C_TITLE" "$gv_Menupoint" "$DEL_MENU"
+											while [ -n "$gv_Auswahl" ] ; do
+												case "$gv_Auswahl" in
+													HELP*)	script_help share/conf_del_msg
+														checklist "$C_TITLE" "$gv_Menupoint" "$DEL_MENU"
+														;;
+													*)
+														# Auswahl loeschen
+														for i in $gv_Auswahl ; {
+															edquota -p root $QU_OPT $i -f $QUOTA_PART || prog_failure
+														}
+														break 2
+														;;
+												esac
+											done
+										else
+											no_quota_user_group_msg
+											break
+										fi
+										## }}}
+										;;
+									*)
+										# FS wird nicht unterstuetzt
+										no_quota_fs_msg
+										break
+										;;
+								esac
+								;;
+						esac
+					done
+				else
+					no_quota_msg
+				fi
+				## }}}
+				conf_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

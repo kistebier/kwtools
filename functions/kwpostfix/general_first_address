@@ -1,0 +1,31 @@
+# Funktion (general_first_address), Adresse waehlen{{{
+#
+# Eingabe der Adresse die in der 1. Spalte der
+# Lookup Tabellen eingetragen wird.
+#
+# usage: general_first_address
+#
+general_first_address() {
+	GENERAL_FIRST_ADR_MSG=$(gettext 'Geben Sie hier bitte eine Mailadresse, User oder eine Domain ein (Bsp. user | @domain.de | user@domain.de).')
+	inputbox "$TABLE_TITLE" "$GENERAL_FIRST_ADR_MSG" "$ADR"
+	if [ "$gv_Auswahl" ] ; then
+		case "$gv_Auswahl" in
+			[a-zA-Z0-9]*[-._]*@*.*|[a-zA-Z0-9]*[-._]*!@*)	ADR="$gv_Auswahl"
+				;;
+			@*.*)	ADR="$gv_Auswahl"
+				;;
+			*)
+				unset -- ADR
+				no_input_msg
+				;;
+		esac
+	else
+		unset -- ADR
+		no_input_msg
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

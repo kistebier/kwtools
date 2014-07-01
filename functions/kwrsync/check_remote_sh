@@ -1,0 +1,18 @@
+# Funktion (check_remote_sh), remote-shell Optionen belegen# {{{
+#
+check_remote_sh() {
+	case "$RSYNC_RSH" in
+		[rs]sh)
+			if ! [ "`hostname`" = "$h" -o "$h" = localhost ] ; then
+				RSYNC_CONF_RSH="-ze $RSYNC_RSH"
+			else
+				unset -- RSYNC_CONF_RSH
+			fi
+			;;
+	esac
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

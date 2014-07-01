@@ -1,0 +1,152 @@
+# Funktion relay_domains_table{{{
+#
+relay_domains_table() {
+	FILE="$1"
+	autoload -U no_host_or_domain_msg
+
+	# Funktion relay_domain_menue{{{
+	relay_domain_menue() {
+		RELAY_DOMAIN_MENU=($lv_Host_Domain \"$ADR\" $gv_Save \"\" $gv_Back \"\")
+		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$RELAY_DOMAIN_MENU"
+	}
+	#}}}
+	# Funktion relay_domain_aendern{{{
+	#
+	relay_domain_aendern() {
+	relay_domain_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help "$TAB_HELP"
+				relay_domain_menue
+				;;
+			$lv_Host_Domain)
+				# Hosts/Domains eingeben{{{
+				HOST_DOMAIN_MSG=$(gettext 'Geben Sie den Namen eines Rechners oder einer Domain ein (Bsp. host.domain.de | domain.de).')
+				inputbox "$TABLE_TITLE" "$HOST_DOMAIN_MSG" "$ADR"
+				if [[ ${(w)#gv_Auswahl} == 1 ]] ; then
+					ADR="$gv_Auswahl"
+				else
+					unset -- ADR
+					no_input_msg
+				fi
+				#}}}
+				relay_domain_menue
+				;;
+			$gv_Save)
+				# Einstellungen speichern{{{
+				#
+				if [ "$ADR" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}.*#${ADR}\t:#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						>> $FILE$$ <<< "$ADR	:"
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					no_host_or_domain_msg
+					relay_domain_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	#
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Einträge
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- ADR AENDERN_ADR
+				relay_domain_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Einträge verändern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)	#
+								# Auswahl aendern
+								ADR=${${=gv_Auswahl}[1]}
+								AENDERN_ADR="$ADR"
+								relay_domain_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Eintraege loeschen{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Löschen
+								while read ADRESS REST ; do
+									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu erzeugen und Postfix anweisen die Einstellungen neu einzulesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

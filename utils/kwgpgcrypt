@@ -1,0 +1,284 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwgpgcrypt, ent/verschluesselt Dateien oder ganze Verzeichnisse.
+# Version: 0.0.9
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen
+prog_check gpg
+if [ -z "$PROGS" ] ; then
+	exit 0
+else
+	PROG=gpg
+fi
+
+PGP_HOME="${gv_HomePath}/.gnupg"
+Lv_Verfall=$(gettext 'verfallen am')
+Lv_Verfall_End=$(gettext 'verfaellt am')
+Lv_Verfall_No_End=$(gettext 'verfaellt nicht')
+MANTRA_MSG=$(gettext 'Geben Sie ihren Mantra ein.')
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+autoload -U gpgcrypt_opt gpgcrypt_auswahl gpgcrypt no_key_serv_msg no_gpg_key_msg
+
+lv_Key_Manage=$(gettext 'Schluessel_Management')
+lv_Sign=$(gettext 'signieren')
+lv_Encrypt=$(gettext 'verschluesseln')
+lv_Sign_Encrypt=$(gettext 'signieren/verschluesseln')
+lv_Decrypt=$(gettext 'entschluesseln')
+
+MAIN_MENU=($gv_Configuration \"\" $lv_Key_Manage \"\" $lv_Sign \"\"
+	$lv_Encrypt \"\" $lv_Sign_Encrypt \"\" $lv_Decrypt \"\" $gv_Exit \"\")
+# Funktion haupt_menue{{{
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# privaten Schluessel erzeugen (pub_create){{{
+#
+pub_create() {
+	if [ -f ${gv_HomePath}/.gnupg/pubring.gpg ] ; then
+		# Pruefen, ob der user schon einen Schluessel besitzt.
+		if $PROG --homedir $PGP_HOME --quiet --list-keys $USER 1>/dev/null ; then
+			# Wenn ja wird dies mitgeteilt und gefragt, ob ein 
+			# neuer key erstellt werden soll.
+			MSG=$(gettext 'Es ist schon ein privater Schluessel vorhanden. Soll ein neuer erzeugt werden (ja/nein)? Bedenken Sie das Sie erst alle alten verschluesselten Dateien/Verzeichnisse mit dem alten Scluessel entschluesseln sollten bevor Sie einen neuen erstellen.')
+			yesno "$gv_Attention" "$MSG" "no"
+			if [ "$gv_Auswahl" != no ] ; then
+				$PROG --homedir $PGP_HOME --gen-key
+			fi
+		else
+			$PROG --homedir $PGP_HOME --gen-key
+		fi
+	else
+		$PROG --homedir $PGP_HOME --gen-key
+	fi
+	RET=0
+}
+#}}}
+# privaten Schluessel erzeugen falls noch nicht vorhanden{{{
+# sonst wird die Verzeichnisstruktur von gnupg nicht erstellt.
+#
+pub_new_create() {
+	# Funktion no_key_msg# {{{
+	no_key_msg() {
+		MSG=$(gettext 'Sie haben noch keinen Schluessel erzeugt. Dies wird jetzt getan. Machen Sie in der Zeit etwas auf dem PC damit der Schluessel ordentlich verschluesselt wird.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion generate_key# {{{
+	generate_key() {
+		$PROG --homedir $PGP_HOME --gen-key
+	}
+	## }}}
+	if [ -d "$PGP_HOME" ] ; then
+		if [ -z "`gpg --homedir $PGP_HOME --list-keys $USER 2>/dev/null`" ] ; then
+			no_key_msg
+			generate_key
+		fi
+	else
+		no_key_msg
+		generate_key
+	fi
+}
+#}}}
+# Funktion Anzeige aller privaten/oefentlichen Schluessel.{{{
+#
+# usage: private_list -u (eigene) oder nur private_list
+private_list() {
+	Day_Time=$(date +%Y%m%d)
+	# Funktion read_key, um Variablen zur Anzeige zu belegen{{{
+	#
+	read_key() {
+		while read a Key Date REST ; do
+			if [ -z ${(M)${U_ID}##*${Key#*/}*} ] ; then
+				(( ANZ++ ))
+				case "$a" in
+					pub)
+						U_ID="${Key#*/}"
+						if [ "$REST" ] ; then
+							V_Date=${${${${(s: :)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys "${U_ID}")"}##*(verfaellt|expires)*}}[5]}%]}%)}
+							if [ "$V_Date" ] ; then
+								V_Time="`date -d ${V_Date} +%Y%m%d`"
+								# Ist die Zeit kleiner/gleich der heutigen, wird die Variable "Verfall" mit "verfallen" belegt.
+								if [ "$V_Time" -le "$Day_Time" ] ; then
+									VERFALL="$Lv_Verfall ${V_Date}"
+								else
+									VERFALL="$Lv_Verfall_End ${V_Date}"
+								fi
+							fi
+						else
+							unset -- NAME 
+							VERFALL="$Lv_Verfall_No_End"
+						fi
+						;;
+					uid)
+						NAME="${Key} ${Date} ${REST}"
+						;;
+				esac
+			fi
+			if [ -n "$NAME" ] ; then
+				I_Menue_Multi[ANZ]="$U_ID \"${NAME//\"/} $VERFALL\" off"
+				I_Menue[ANZ]="$U_ID \"${NAME//\"/} $VERFALL\""
+				unset -- NAME
+			fi
+		done
+	}
+	#}}}
+	unset -- I_Menue I_Menue_Multi U_ID NAME VERFALL
+	case $1 in
+		-u)	#
+			# eigene Schluessel
+			#
+			ANZ=0
+			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys "$USER" 2>/dev/null)"}##(s#)(pub|uid)*}} | \
+			read_key
+			;;
+		*)	#
+			# alle Schluessel
+			#
+			ANZ=0
+			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys 2>/dev/null)"}##(s#)(pub|uid)*}} | \
+			read_key
+			;;
+	esac
+}
+#}}}
+# Funktion parse_opt# {{{
+#
+parse_opt() {
+	unset -- KEY_SERV_ALL DEFAULT_KEY TRUSTED_KEY
+	if [ -f "$PGP_OPTIONS" ] ; then
+		print -l ${(R)${(f)"$(< $PGP_OPTIONS)"}##[(s#)|$]*} | \
+		while read a b ; do
+			case "$a" in
+				keyserver)
+					if [ ! -z "$b" ] ; then
+						KEY_SERV_ALL="$b"
+					else
+						KEY_SERV_ALL="hkp://subkeys.pgp.net"
+					fi
+					;;
+				default-key)
+					if [ ! -z "$b" ] ; then
+						DEFAULT_KEY="$b"
+					fi
+					;;
+				trusted-key)
+					if [ ! -z "$b" ] ; then
+						TRUSTED_KEY="$b"
+					fi
+					;;
+			esac
+		done
+	fi
+}
+## }}}
+######################################################
+# revoke Certifikat auswaehlen mit gpg einlesen
+# und/oder auf Server laden
+######################################################
+#
+###############################################################
+#
+# Hauptprogramm
+#
+###############################################################
+#
+pub_new_create
+# Seit Version 1.2.5-3 benutzt gnupg die Options Datei gpg.conf
+Version=${${(s: :)${(M)${(f)"$(gpg --help)"}[(r)gpg*]}}[3]}
+if [[ $Version < 1.2.5-3 ]] ; then
+	PGP_OPTIONS="${PGP_HOME}/options"
+else
+	PGP_OPTIONS="${PGP_HOME}/gpg.conf"
+fi
+#
+parse_opt
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+			# Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration, wie  keyserver ....
+			autoload -U gpgcrypt_conf gpgcrypt_config
+			gpgcrypt_conf
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Key_Manage)
+			# Schluessel Management
+			autoload -U key_manage
+			key_manage
+			haupt_menue $lv_Key_Manage
+			;;
+		$lv_Sign)
+			# Auswahl an Dateien oder ganze Verzeichnisse signieren.
+			ACTION=sign
+			dir_file_choice gpgcrypt
+			haupt_menue $lv_Sign
+			;;
+		$lv_Encrypt)
+			# Auswahl an Dateien oder ganze Verzeichnisse verschluesseln
+			ACTION=crypt
+			dir_file_choice gpgcrypt
+			haupt_menue $lv_Encrypt
+			;;
+		$lv_Sign_Encrypt)
+			# Auswahl an Dateien oder ganze Verzeichnisse signieren und verschluesseln
+			ACTION=both
+			dir_file_choice gpgcrypt
+			haupt_menue $lv_Sign_Encrypt
+			;;
+		$lv_Decrypt)
+			# Auswahl an Dateien oder ganze Verzeichnisse entschluesseln
+			ACTION=decrypt
+			dir_file_choice gpgcrypt
+			haupt_menue $lv_Decrypt
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done
+#
+unset -- gv_Auswahl
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

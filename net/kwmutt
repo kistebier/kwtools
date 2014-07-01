@@ -1,0 +1,684 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke  <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwmutt, konfiguriert den Mail-Client Mutt.
+#
+# Version: 0.1.0
+
+###################################################################
+# TODO:
+# Profile anlegen, al'a ~/.kwtools/kwmutt/profile.name/.
+# Jedes Profil kann verschiedene Server und Einstellungen haben,
+# das die globalen Einstellungen ueberschreibt.
+###################################################################
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Pruefen ob mutt installiert ist.
+prog_check mutt
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Mutt Variablen# {{{
+GLOBAL_MUTTCONF=/etc/Muttrc
+ORIG_MUTTCONF="${gv_HomePath}/.muttrc"
+MUTTCONF="${gv_HomePath}/.kwtools/kwmuttrc"
+ORIG_MUTT="${gv_HomePath}/.mutt"
+MUTT="${gv_HomePath}/.kwtools/kwmutt"
+#}}}
+# Variablen# {{{
+L_DEFAULT_SERVER="default_server"
+L_DEFAULT_SMTP="default_smtp"
+
+# Pruefen ob, abook installiert und ausfuehrbar ist.
+if [[ -x ${commands[abook]} ]] ; then
+	ABOOK_CMD="${commands[abook]}"
+else
+	unset -- ABOOK_CMD
+fi
+M_ABOOK="${MUTT}/address"
+M_CHARSETHOOKS="${MUTT}/charsethooks"
+M_COLORS="${MUTT}/colors"
+M_COLOR_HDR="${MUTT}/color.header"
+M_COLOR_HDR_AGENTS="${MUTT}/color.header.agents"
+M_COLOR_INDEX="${MUTT}/color.index"
+M_COLOR_INDEX_SPAM="${MUTT}/color.index.spam"
+M_COLOR_FRIENDS="${MUTT}/color.index.friendly"
+M_CRYPT="${MUTT}/crypt"
+M_FCCHOOKS="${MUTT}/fcchooks"
+M_FCCSAVEHOOKS="${MUTT}/fccsavehooks"
+M_FOLDERHOOKS="${MUTT}/folderhooks"
+M_FORMAT="${MUTT}/format"
+M_GPG="${MUTT}/gpg"
+M_PGPHOOKS="${MUTT}/pgphooks"
+M_IMAP="${MUTT}/imap"
+M_KBD="${MUTT}/mkbd"
+M_MBOXHOOKS="${MUTT}/mboxhooks"
+M_MESSAGEHOOKS="${MUTT}/messagehooks"
+M_ML="${MUTT}/mailinglists"
+M_PAGER="${MUTT}/pager"
+M_POP="${MUTT}/pop"
+M_PRINT="${MUTT}/print"
+M_SAVEHOOKS="${MUTT}/savehooks"
+M_SCORE="${MUTT}/score"
+M_SENDHOOKS="${MUTT}/sendhooks"
+M_SIGN="${MUTT}/signature"
+M_SORT="${MUTT}/sort"
+M_SMIME="${MUTT}/smime"
+M_SSL="${MUTT}/ssl"
+M_UNIGNORE="${MUTT}/unignore_headers"
+M_URI="${MUTT}/urlview"
+#
+Muttrc_LogFile="${gv_WorkDir}/Muttrc"
+#
+lv_Addressbook=$(gettext 'Adressbuch')
+lv_Charset=$(gettext 'Zeichensatz')
+lv_Ext_Configuration=$(gettext 'erweiterte Konfiguration')
+lv_Friendly_List=$(gettext 'Bekanntenliste')
+lv_Mailbox=$(gettext 'Mailbox')
+lv_Mailing_List=$(gettext 'Mailinglisten')
+lv_Mutt_Start=$(gettext 'Mutt starten')
+lv_Print=$(gettext 'Drucker')
+lv_Send=$(gettext 'Versand')
+## }}}
+		# Funktion (default_color), kopiert die Standardfarben# {{{
+		#
+		# usage: default_color [ -d ]
+		#
+		# -d - dunkel - schawrzer Hintergrund
+		#
+		default_color() {
+			if [[ $# == 1 && $1 == -d ]] ; then
+				# Standard Farben einstellen/kopieren (dunkel - schwarzer Hintergrund).
+				cp "${DATA_PATH}/${gv_ScriptName}/color.dark" "$M_COLORS" &>/dev/null
+				cp "${DATA_PATH}/${gv_ScriptName}/color.index.dark" "$M_COLOR_INDEX" &>/dev/null
+				cp "${DATA_PATH}/${gv_ScriptName}/color.index.spam.dark" "${MUTT}/color.index.spam" &>/dev/null
+				cp ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
+			else
+				# Standard Farben einstellen/kopieren (hell - weisser Hintergrund).
+				cp "${DATA_PATH}/${gv_ScriptName}/color.light" "$M_COLORS" &>/dev/null
+				cp "${DATA_PATH}/${gv_ScriptName}/color.index.light" "$M_COLOR_INDEX" &>/dev/null
+				cp "${DATA_PATH}/${gv_ScriptName}/color.index.spam.light" "${MUTT}/color.index.spam" &>/dev/null
+				cp ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
+			fi
+		}
+		## }}}
+# Funktion (first_var_muttrc),leere Variablen von kwmuttrc mit Standardwerten fuellen.# {{{
+first_var_muttrc() {
+	abort_nosubject="${abort_nosubject:-ask-yes}"
+	abort_unmodified="${abort_unmodified:-yes}"
+	#alias_file="${alias_file:-$M_ABOOK}"
+	allow_8bit="${allow_8bit:-yes}"
+	autoedit="${autoedit:-no}"
+	beep="${beep:-yes}"
+	beep_new="${beep_new:-no}"
+	charset="${charset:-iso-8859-1}"
+	delete="${delete:-ask-yes}"
+	# Falls die Variable EDITOR durch die kwtools (main.cf) mit
+	# dialog belegt ist, leeren.
+	if [[ $EDITOR != dialog ]] ; then
+		editor="${editor:-$EDITOR}"
+	fi
+	edit_headers="${edit_headers:-no}"
+	fast_reply="${fast_reply:-no}"
+	followup_to="${followup_to:-yes}"
+	hdr_order="${hdr_order:-From: Reply-To: Subject: To: Cc: Bcc: X-Spamblock-maybe: Date:}"
+	hostname="${hostname:-$HOST}"
+	ignore_list_reply_to="${ignore_list_reply_to:-no}"
+	include="${include:-ask-yes}"
+	ispell="${ispell:-ispell}"
+	locale="${locale:-$LC_ALL}"
+	mark_old="${mark_old:-yes}"
+	markers="${markers:-yes}"
+	metoo="${metoo:-no}"
+	mixmaster="${mixmaster:-mixmaster}"
+	move="${move:-ask-no}"
+	#query_command="$query_command"
+	quote_regexp="${quote_regexp:-^([ \t]*[|>:\}#])+}"
+	postpone="${postpone:-ask-yes}"
+	quit="${quit:-ask-no}"
+	realname="${realname:-$USER}"
+	reply_regexp="${reply_regexp:-^(re([\[0-9\]+])*|aw):[ \t]*}"
+	reply_to="${reply_to:-ask-yes}"
+	reverse_alias="${reverse_alias:-no}"
+	reverse_name="${reverse_name:-no}"
+	shell="${shell:-$SHELL}"
+	signature="${signature:-$M_SIGN}"
+	smileys="${smileys:-(>From )|(:[-^]?[][)(><\}{|/DP])}"
+	tilde="${tilde:-no}"
+	use_envelope_from="${use_envelope_from:-no}"
+	user_agent="${user_agent:-yes}"
+	write_bcc="${write_bcc:-yes}"
+}
+## }}}
+# Funktion (read_mutt_files), prueft welche Dateien unter ~/.kwtools/kwmutt# {{{
+# vorhanden und in muttrc konfiguriert sind. Dementsprechend 
+# wird die muttrc upgedatet.
+#
+read_mutt_files() {
+	# mutt Konfigurations-Dateien.# {{{
+	for i in $M_ABOOK $M_COLORS $M_CRYPT $M_FORMAT $M_GPG \
+		$M_CHARSETHOOKS $M_FCCHOOKS $M_FCCSAVEHOOKS \
+		$M_FOLDERHOOKS $M_IMAP $M_MBOXHOOKS $M_MESSAGEHOOKS \
+		$M_ML $M_KBD $M_PAGER $M_PGPHOOKS $M_POP $M_PRINT $M_SAVEHOOKS \
+		$M_SCORE $M_SENDHOOKS $M_SMIME \
+		$M_SORT $M_SSL $M_UNIGNORE $M_URI ; {
+		if [[ -f $MUTTCONF ]] ; then
+			# Wenn man muttrc konfiguriert hat sind alle
+			# Dateien die kwmutt benutzt standardmaessig aktiviert.
+			if [[ -f $i ]] ; then
+				# Ist $M_ABOOK vorhanden aber die Variable alias_file
+				# nicht belegt, wird auch source $ABOOK deaktiviert.
+				if [[ $i == $M_ABOOK ]] ; then
+					if [ -z "$alias_file" ] ; then
+						sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+						mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+					else
+						sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+						mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+					fi
+				else
+					sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+					mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+				fi
+			else
+				sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+				mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+			fi
+		fi
+	}
+	## }}}
+	# Farben# {{{
+	for i in $M_COLOR_HDR $M_COLOR_HDR_AGENTS \
+		$M_COLOR_INDEX $M_COLOR_INDEX_SPAM \
+		$M_COLOR_FRIENDS ; {
+		if [[ -f $i ]] ; then
+			sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
+			mv "$gv_LogFile" "$M_COLORS" &>/dev/null
+		else
+			sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
+			mv "$gv_LogFile" "$M_COLORS" &>/dev/null
+
+		fi
+	}
+	## }}}
+	# Default Server# {{{
+	for i in $L_DEFAULT_SERVER $L_DEFAULT_SMTP ; {
+		if [[ -L ${MUTT}/${i} ]] ; then
+			sed -e "s,^#*source[[:space:]].*${i##*/.},source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+			mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+		else
+			sed -e "s,^source[[:space:]].*${i##*/.},#source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+			mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
+
+		fi
+	}
+	## }}}
+}
+## }}}
+
+# kwmutt Struktur aufbauen und evtl. ~/.muttrc nach ~/.muttrc-yyyy-mm-dd kopiert.#{{{
+MUTTRC_MSG=$(gettext 'Sie haben eine normale muttrc-Konfiguration. Soll diese nach ${gv_HomePath}/.muttrc.kwtools-`date +%Y-%m-%d` gespeichert werden? Die neue Konfiguration wird unter ${gv_HomePath}/.kwtools/kwmuttrc gespeichert.\n\nSoll die neue Konfiguration aktiviert werden (ja/nein)?')
+
+MUTTRC_MSG1=$(gettext 'Der Link $ORIG_MUTTCONF ist falsch und kann neu korrekt gesetzt werden.\n\nSoll dies jetzt geschehen?')
+
+# kwmutt Struktur aufbauen und evtl. ~/.mutt nach ~/.mutt-yyyy-mm-dd kopiert.
+MUTT_MSG=$(gettext 'Sie haben eine normale mutt-Konfiguration. Soll diese nach ${gv_HomePath}/.mutt.kwtools-`date +%Y-%m-%d` gespeichert werden? Die neue Konfiguration wird unter ${gv_HomePath}/.kwtools/kwmutt gespeichert.\n\nSoll die neue Konfiguration aktiviert werden (ja/nein)?')
+
+MUTT_MSG1=$(gettext 'Der Link $ORIG_MUTT ist falsch und kann neu korrekt gesetzt werden.\n\nSoll dies jetzt geschehen?')
+
+EXIT_MSG=$(gettext 'Da kwmutt seine eigene Struktur benoetigt bricht es jetzt ab.')
+
+# auf ~/.muttrc pruefen.
+if [[ -L $ORIG_MUTTCONF ]] ; then
+	Link="`readlink -f $ORIG_MUTTCONF`"
+	# pruefen ob der Link korrekt ist.
+	if [[ "$Link" != "$MUTTCONF" ]] ; then
+		msgbox "$gv_Info" "$MUTTRC_MSG1"
+		# Link loeschen
+		rm -f "$ORIG_MUTTCONF" &>/dev/null
+		# Link von ~/.kwtools/kwmuttrc --> ~/.muttrc anlegen.
+		ln -sf "$MUTTCONF" "$ORIG_MUTTCONF" &>/dev/null
+	fi
+elif [[ -f $ORIG_MUTTCONF ]] ; then
+	yesno "$gv_Info" "$MUTTRC_MSG" ""
+	if [ "$gv_Auswahl" = yes ] ; then
+		cp -a "$ORIG_MUTTCONF" "${gv_HomePath}/.muttrc.kwtools-`date +%Y-%m-%d`" &>/dev/null
+		mv "$ORIG_MUTTCONF" "$MUTTCONF" &>/dev/null
+		# Link von ~/.kwtools/kwmuttrc --> ~/.muttrc anlegen.
+		ln -sf "$MUTTCONF" "$ORIG_MUTTCONF" &>/dev/null
+	fi
+elif [[ ! -L $ORIG_MUTTCONF && ! -f $MUTTCONF ]] ; then
+	autoload kwmutt_muttrc_config
+	# Nachricht das jetzt eine Struktur und kwmuttrc angelegt wird.
+	MSG=$(gettext 'Sie haben keine kwmuttrc Konfiguration, weshalb jetzt eine Standard Konfiguration angelegt wird.')
+	msgbox "$gv_Info" "$MSG"
+	# kwmuttrc erstellen.
+	first_var_muttrc
+	kwmutt_muttrc_config
+	# Link von ~/.kwtools/kwmuttrc --> ~/.muttrc anlegen.
+	ln -sf "$MUTTCONF" "$ORIG_MUTTCONF" &>/dev/null
+else
+	msgbox "$gv_Attention" "$EXIT_MSG"
+	exit 0
+fi
+# auf ~/.mutt pruefen.
+if [[ -L $ORIG_MUTT ]] ; then
+	Link="`readlink -f $ORIG_MUTT`"
+	# pruefen ob der Link korrekt ist.
+	if [[ "$Link" != "$MUTT" ]] ; then
+		msgbox "$gv_Info" "$MUTT_MSG1"
+		# Link loeschen
+		rm -f "$ORIG_MUTT" &>/dev/null
+		create_file -d "$MUTT"
+		# Link von ~/.kwtools/kwmutt --> ~/.mutt anlegen.
+		ln -sf "$MUTT" "$ORIG_MUTT" &>/dev/null
+	fi
+elif [[ -d $ORIG_MUTT ]] ; then
+	yesno "$gv_Info" "$MUTT_MSG" ""
+	if [ "$gv_Auswahl" = yes ] ; then
+		cp -a "$ORIG_MUTT" "${gv_HomePath}/.mutt.kwtools-`date +%Y-%m-%d`" &>/dev/null
+		mv "$ORIG_MUTT" "$MUTT" &>/dev/null
+		# Link von ~/.kwtools/kwmutt --> ~/.mutt anlegen.
+		ln -sf "$MUTT" "$ORIG_MUTT" &>/dev/null
+	fi
+elif [[ ! -L $ORIG_MUTT ]] ; then
+	create_file -d "$MUTT"
+	# Link von ~/.kwtools/kwmutt --> ~/.mutt anlegen.
+	ln -sf "$MUTT" "$ORIG_MUTT" &>/dev/null
+else
+	msgbox "$gv_Attention" "$EXIT_MSG"
+	exit 0
+fi
+
+# Farben (dunkel kopieren)
+default_color -d
+# Standard (un_)autoview Dateien kopieren.
+cp -au ${DATA_PATH}/${gv_ScriptName}/*autoview "$MUTT" &>/dev/null
+read_mutt_files
+
+#}}}
+
+# Funktion (create_tmp_conf), erzeugt ein temporaere Datei (Muttrc) zum einlesen# {{{
+# simple Ueberpruefung was wie ausgefuehrt wird.
+#
+# usage: create_tmp_conf [ CHAR ] FILE
+# CHAR - irgendein Zeichen
+# FILE - Mutt Datei zum einlesen
+create_tmp_conf() {
+	if [ "$#" = 2 ] ; then
+		if [ -f "${argv[2]}" ] ; then
+			egrep -v "^[[:space:]]*(#|$)" ${argv[2]} | sed -e 's#^set ##g' >$Muttrc_LogFile
+		fi
+	else
+		if [ -f "$argv" ] ; then
+			egrep -v "^[[:space:]]*(#|$)" $argv | sed -e 's#^set ##g' >$gv_LogFile
+		fi
+	fi
+	#
+}
+## }}}
+# Funktion (yesno_select), Auswahl fuer mutts quad-options# {{{
+#
+# usage: yesno_select TITLE MSG [ OLD_VALUE ]
+#
+yesno_select() {
+	if [ "$#" -ge 2 ] ; then
+		unset -- VALUE
+		local YN_TITLE YN_MSG Old_Value M_Tmp
+		YN_TITLE="$1"
+		YN_MSG="$2"
+		Old_Value="$3"
+		#
+		for i in yes ask-yes no ask-no ; {
+			if [ "$i" = "$Old_Value" ] ; then
+				M_Tmp+=($i \"\" on)
+			else
+				M_Tmp+=($i \"\" off)
+			fi
+		}
+		#
+		YN_MENU=($M_Tmp)
+		radiolist "$YN_TITLE" "$YN_MSG" "$YN_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_quad_help
+					radiolist "$YN_TITLE" "$YN_MSG" "$YN_MENU"
+					;;
+				*)
+					# Auswahl uebernehmen
+					VALUE="$gv_Auswahl"
+					break
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+# Funktion (main_menu), Hauptmenue# {{{
+MAIN_MENU=($gv_Configuration \"\" \"$lv_Ext_Configuration\" \"\"
+	\"$lv_Mutt_Start\" \"\" $lv_Addressbook \"\"
+	$lv_Print \"\" $lv_Mailing_List \"\"
+	$gv_Exit \"\")
+#
+main_menu() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+## }}}
+# Funktion (read_accounts), listet alle Konfigurationen auf und stellt sie zur Auswahl.# {{{
+#
+# usage: read_accounts [ imap | lmb | pop | smtp ]
+#
+read_accounts() {
+	unset -- ACCOUNT_TMP ACCOUNT_TMP_M
+	integer Anz
+	Anz=0
+	Opt="$1"
+	case "$Opt" in
+		pop|imap|lmb)
+			# ausgewaehlte mailboxen
+			for i in ${MUTT}/*.${Opt}(.N) ; {
+				(( Anz++ ))
+				ACCOUNT_TMP[Anz]="$i \"\""
+				ACCOUNT_TMP_M[Anz]="$i \"\" off"
+			}
+			;;
+		smtp)
+			# Versand
+			for i in ${MUTT}/*.smtp(.N) ; {
+				(( Anz++ ))
+				ACCOUNT_TMP[Anz]="$i \"\""
+				ACCOUNT_TMP_M[Anz]="$i \"\" off"
+			}
+			;;
+		*)
+			# alle mailboxen
+			for i in ${MUTT}/*.(imap|lmb|pop)(.N) ; {
+				(( Anz++ ))
+				ACCOUNT_TMP[Anz]="$i \"\""
+				ACCOUNT_TMP_M[Anz]="$i \"\" off"
+			}
+			;;
+	esac
+}
+## }}}
+# Funktion (mail_account_choice), Menue Anzeige# {{{
+#
+# benoetigt vorher die Funktion read_accounts.
+#
+# usage: mail_account_choice TITLE MSG
+#
+# TITLE - Titel der an diese Funktion uebergeben werden muss.
+# MSG - Nachricht die an diese Funktion uebergeben werden muss.
+#
+mail_account_choice() {
+	if [ "$#" = 2 ] ; then
+		unset -- VALUE
+		MAIL_TITLE="$1"
+		MAIL_MSG="$2"
+		MAIL_MENU=($ACCOUNT_TMP)
+		menubox "" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_serv_ips_help
+					menubox "" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
+					;;
+				*)	# Auswahl uebernehmen
+					VALUE="$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+	# Funktion (no_abook_conf_msg), Nachricht das kein Adressbuch konfiguriert ist,# {{{
+	# beziehungsweise es ist kein Adressbuch Programm vorhanden
+	no_abook_conf_msg() {
+MSG=$(gettext 'Entweder ist kein Adressbuch-Programm vorhanden, keine Adressdatenbank
+oder Sie muessen erst den Menuepunkt alias_file in der Standard Konfiguration mit
+einem Wert belegen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+# Funktion (read_conf), Bestehende Mailserver Konfiguration einlesen.# {{{
+#
+# usage: read_conf [ imap | lmb | pop | smtp ] SERVER_FILE
+#
+read_conf() {
+	if [ "$#" = 2 ] ; then
+		# Variable M_SERV mit evtl. Datei belegen
+		unset -- M_SERV Protocol Link_File Link
+		local Protocol Link Link_File
+		Protocol="$1"
+		if [ -f "$2" ] ; then
+			M_SERV="$2"
+			M_Serv_Name="${${M_SERV##*/}%.*}"
+		fi
+		# Bestehende Konfiguration einlesen.
+		if [ -n "$M_SERV" ] ; then
+			create_tmp_conf "$M_SERV"
+			read_file -f $gv_LogFile
+			# Pruefen ob der default Link nicht leer ist und
+			# mailboxen herausfinden..
+			case "$Protocol" in
+				pop|imap|lmb)
+					Link=default_server
+					Link_File="$(readlink -f ${MUTT}/${Link}(@N) 2>/dev/null)"
+					mailboxes=${(R)${(M)${(f)"$(< $gv_LogFile)"}##mailboxes*}##mailboxes[[:space:]]}
+					Name="${${Link_File##*/}%.[pop|imap|lmb]}"
+					;;
+				smtp)
+					Link=default_smtp
+					Link_File="$(readlink -f ${MUTT}/${Link}(@N) 2>/dev/null)"
+					Name="${${Link_File##*/}%.smtp}"
+
+					;;
+				*)
+					no_para_msg $0
+					;;
+			esac
+			#
+			if [[ -f "$Link_File" && $Name == $M_Serv_Name ]] ; then
+				DEFAULT_SERVER="yes"
+			else
+				DEFAULT_SERVER="no"
+			fi
+			# Variable DEFAULT_NAME mit dem Wert aus $M_Serv_Name belegen.
+			DEFAULT_NAME="$M_Serv_Name"
+		fi
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+
+# globale Konfiguration einlesen
+create_tmp_conf -g "$GLOBAL_MUTTCONF"
+read_file -f "$Muttrc_LogFile"
+create_tmp_conf "$MUTTCONF"
+read_file -f "$gv_LogFile"
+
+# Netz Funktionen einlesen
+net_conf
+
+main_menu
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			main_menu
+			;;
+		$gv_Configuration)
+			# Konfiguration# {{{
+			autoload -U kwmutt_conf
+			kwmutt_conf
+			## }}}
+			main_menu $gv_Configuration
+			;;
+		$lv_Ext_Configuration)
+			# erweiterte Konfiguration# {{{
+			autoload -U kwmutt_hdr_conf
+			kwmutt_hdr_conf
+			## }}}
+			main_menu $lv_Ext_Configuration
+			;;
+		$lv_Addressbook)
+			# Adressbuch bearbeiten# {{{
+			if [ -x "$ABOOK_CMD" -a -n "$query_command" ] ; then
+				abook
+			elif [ -n "$alias_file" ] ; then
+				autoload -U kwmutt_abook
+				kwmutt_abook
+			else
+				no_abook_conf_msg
+			fi
+			## }}}
+			main_menu $lv_Addressbook
+			;;
+		$lv_Mailing_List)
+			# Mailinglisten verwalten# {{{
+			# Falles es noch keine Datei gibt, eine mit Kopf erstellen.# {{{
+			if [ ! -e "$M_ML" ] ; then
+				> "$M_ML" <<< "# Beginn $M_ML
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+### ----------------------------------------------------------------------------
+## Mailinglisten
+## ----------------------------------------------------------------------------
+
+# Format ist subscribe Mailinglist
+
+# Zuerst auf null stellen (kein Kommentar auf der selben Zeile wie das Kommando!)
+unsubscribe *
+
+# Mailinglisten"
+			fi
+			## }}}
+			# editieren
+			if [ "$EDITOR" = dialog ] ; then
+				editbox "$lv_Mailing_List" "$M_ML"
+			else
+				"$EDITOR" "$M_ML"
+			fi
+			## }}}
+			main_menu $lv_Mailing_List
+			;;
+		$lv_Mutt_Start)
+			# Mutt mit bestimmter mailbox/server starten# {{{
+			read_accounts
+			if [ -n "$ACCOUNT_TMP" ] ; then
+				MUTT_POST_ACCOUNT_MENU=($ACCOUNT_TMP)
+				MUTT_POST_ACCOUNT_MSG=$(gettext 'Waehlen Sie ein Post-Konto aus das Sie einsehen moechten.')
+				menubox "$Conf_File_Tmp" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help help
+							menubox "$Conf_File_Tmp" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
+							;;
+						*)	# Auswahl uebernehmen
+							Conf_File_Tmp="$gv_Auswahl"
+							# allgemeine muttrc Variablen in eine temporaere Datei
+							# zum einlesen uebernehmen.
+							if [ -f "$MUTTCONF" ] ; then
+								 < "$MUTTCONF" > "${gv_WorkDir}/all_muttrc"
+							fi
+							# ausgewaehlte Postfach Variablen in die temporaere muttrc Datei
+							# zum sourcen addieren.
+							>> "${gv_WorkDir}/all_muttrc" <<< "source $Conf_File_Tmp"
+							# Ist ein xterm am laufen wird es auch benutzt.
+							if [[ $TERM == xterm ]] && [[ -n $DISPLAY ]] ; then
+								prog_check xterm
+								if [ -z "$NO_PROGS" ] ; then
+									# xterm im augenblicklichen $DISPLAY
+									# ausfuehren.
+									xterm -T "$gv_ScriptName" -geometry ${COLUMNS}x${LINES} -e "mutt -F ${gv_WorkDir}/all_muttrc" &
+								else
+									mutt -F ${gv_WorkDir}/all_muttrc
+								fi
+							else
+								# Ist kein xterm am laufen wird die Konsolen benutzt.
+								mutt -F ${gv_WorkDir}/all_muttrc
+							fi
+							break
+							;;
+					esac
+				done
+			else
+				MSG=$(gettext 'Es ist kein Postfach konfiguriert.')
+				msgbox "$gv_Info" "$MSG"
+			fi
+			## }}}
+			main_menu $lv_Mutt_Start
+			;;
+		$lv_Print)
+			# Muttprint konfigurieren# {{{
+			# #########################################################
+			# Ist der Drucker muttprint kann man ihn hier konfigurieren
+			# Andere drucker gehen (noch) nicht
+			# #########################################################
+			if [ -f "$M_PRINT" ] ; then
+				create_tmp_conf "$M_PRINT"
+				read_file -f $gv_LogFile
+				if [[ $print_command == muttprint ]] ; then
+					kwmuttprintcf
+				else
+					MSG=$(gettext 'Diese Druckkommando kann noch nicht konfiguriert werden.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+			fi
+			## }}}
+			main_menu $lv_Print
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

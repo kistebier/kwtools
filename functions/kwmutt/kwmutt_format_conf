@@ -1,0 +1,246 @@
+# Funktion (kwmutt_format_conf), konfiguriert den Pager fuer mutt# {{{
+#
+# usage: kwmutt_format_conf
+kwmutt_format_conf() {
+	Unset=(attribution attach_format alias_format compose_format date_format
+	folder_format forward_format index_format message_format mix_entry_format
+	pager_format pgp_entry_format query_format status_format)
+	unset -- $Unset
+	# Funktion (format_conf_menu), menu fuer die Drucker Konfiguration# {{{
+	FORMAT_TITLE="$lv_Format"
+	format_conf_menu() {
+		FORMAT_CONF_MENU=(attribution \"$attribution\"
+		alias_format \"$alias_format\"
+		attach_format \"$attach_format\"
+		compose_format \"$compose_format\"
+		date_format \"$date_format\"
+		folder_format \"$folder_format\"
+		forward_format \"$forward_format\"
+		index_format \"$index_format\"
+		message_format \"$message_format\"
+		mix_entry_format \"$mix_entry_format\"
+		pager_format \"$pager_format\"
+		pgp_entry_format \"$pgp_entry_format\"
+		query_format \"$query_format\"
+		status_format \"$status_format\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$FORMAT_TITLE" "$gv_Menupoint" "$FORMAT_CONF_MENU"
+	}
+	## }}}
+	# Bestehende Konfiguration einlesen.# {{{
+	if [ -f "$M_FORMAT" ] ; then
+		create_tmp_conf "$M_FORMAT"
+		read_file -f $gv_LogFile
+	fi
+	## }}}
+	# leere Variable mit Standardwerten fuellen.# {{{
+	attribution="${attribution:-On %d, %n wrote:}"
+	alias_format="${alias_format:-%4n %2f %t %-10a   %r}"
+	attach_format="${attach_format:-%u%D%I %t%4n %T%.40d%> [%.7m/%.10M, %.6e%?C?, %C?, %s] }"
+	compose_format="${compose_format:--- Mutt: Compose  [Approx. msg size: %l   Atts: %a]%>-}"
+	date_format="${date_format:-!%a, %b %d, %Y at %I:%M:%S%p %Z}"
+	folder_format="${folder_format:-%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f}"
+	forward_format="${forward_format:-[%a: %s]}"
+	index_format="${index_format:-%4C %Z %\{%b %d\} %-15.15L (%?l?%4l&%4c?) %s}"
+	message_format="${message_format:-%s}"
+	mix_entry_format="${mix_entry_format:-%4n %c %-16s %a}"
+	pager_format="${pager_format:--%Z- %C/%m: %-20.20n   %s%*  -- (%P)}"
+	pgp_entry_format="${pgp_entry_format:-%4n %t%f %4l/0x%k %-4a %2c %u}"
+	query_format="${query_format:-%4c %t %-25.25a %-25.25n %?e?(%e)?}"
+	status_format="${status_format:--%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---}"
+	## }}}
+	format_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_format_help
+				format_conf_menu
+				;;
+			attribution)
+				# Bestimmt die Anzeige des Adressbuches.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die 1. Zeile bei einer Antwort angefuegt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$attribution"
+				if [ -n "$gv_Auswahl" ] ; then
+					attribution="$gv_Auswahl"
+				else
+					attribution=""
+				fi
+				## }}}
+				format_conf_menu attribution
+				;;
+			alias_format)
+				# Bestimmt die Anzeige des Adressbuches.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Daten aus dem Adressbuch angezeigt werden sollen.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$alias_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					alias_format="$gv_Auswahl"
+				else
+					alias_format=""
+				fi
+				## }}}
+				format_conf_menu alias_format
+				;;
+			attach_format)
+				# Bestimmt das Aussehen des Anhaenge-Menues.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie das Anhaenge-Menue angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$attach_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					attach_format="$gv_Auswahl"
+				else
+					attach_format=""
+				fi
+				## }}}
+				format_conf_menu attach_format
+				;;
+			compose_format)
+				# Bestimmt das Aussehen der Statuszeile im Compose-Menue.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Statuszeile im Compose-Menue angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$compose_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					compose_format="$gv_Auswahl"
+				else
+					compose_format=""
+				fi
+				## }}}
+				format_conf_menu compose_format
+				;;
+			date_format)
+				# Bestimmt die Anzeige des Datums.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie das Datum angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$date_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					date_format="$gv_Auswahl"
+				else
+					date_format=""
+				fi
+				## }}}
+				format_conf_menu date_format
+				;;
+			folder_format)
+				# Bestimmt die Anzeige des Datei-Browsers.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Anzeige des Datei-Browsers angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$folder_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					folder_format="$gv_Auswahl"
+				else
+					folder_format=""
+				fi
+				## }}}
+				format_conf_menu folder_format
+				;;
+			forward_format)
+				# Bestimmt das Aussehen der Betreff-Zeile beim forwarding einer mail.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Betreff-Zeile beim weiterleiten einer mail generiert werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$forward_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					forward_format="$gv_Auswahl"
+				else
+					forward_format=""
+				fi
+				## }}}
+				format_conf_menu forward_format
+				;;
+			index_format)
+				# Bestimmt das Aussehen des Nachrichten-Index.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie der Nachrichten-Index angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$index_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					index_format="$gv_Auswahl"
+				else
+					index_format=""
+				fi
+				## }}}
+				format_conf_menu index_format
+				;;
+			message_format)
+				# Bestimmt das Aussehen von Attachments.# {{{
+			MSG=$(gettext 'Geben Sie das Format ein wie die Anzeige von Attachments des Typs message/rfc822 angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$message_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					message_format="$gv_Auswahl"
+				else
+					message_format=""
+				fi
+				## }}}
+				format_conf_menu message_format
+				;;
+			mix_entry_format)
+				# Diese Variable beschreibt den Aufbau einer Remailer-Zeile# {{{
+				# in dem Menue zur Auswahl einer Mixmaster-Kette.
+				MSG=$(gettext 'Geben Sie das Format ein wie der Aufbau einer Remailer-Zeile im Menue zur Auswahl einer Mixmaster-Kette aufgebaut werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$mix_entry_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					mix_entry_format="$gv_Auswahl"
+				else
+					mix_entry_format=""
+				fi
+				## }}}
+				format_conf_menu mix_entry_format
+				;;
+			pager_format)
+				# Bestimmt das Aussehen der Status-Zeile des pagers.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie der Pager die Status-Zeile anzeigen soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$pager_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					pager_format="$gv_Auswahl"
+				else
+					pager_format=""
+				fi
+				## }}}
+				format_conf_menu pager_format
+				;;
+			pgp_entry_format)
+				# Bestimmt das Aussehen des PGP_Schluesselauswahl Menue.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie das Menue bei der PGP-Schluesselauswahl angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$pgp_entry_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					pgp_entry_format="$gv_Auswahl"
+				else
+					pgp_entry_format=""
+				fi
+				## }}}
+				format_conf_menu pgp_entry_format
+				;;
+			query_format)
+				# Bestimmt das Format der Status-Zeile, die im Index-Menue angezeigt wird.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Status-Zeile im Index-Menue angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$query_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					query_format="$gv_Auswahl"
+				else
+					query_format=""
+				fi
+				## }}}
+				format_conf_menu query_format
+				;;
+			status_format)
+				# Bestimmt das Format der Status-Zeile, die im Index-Menue angezeigt wird.# {{{
+				MSG=$(gettext 'Geben Sie das Format ein wie die Status-Zeile im Index-Menue angezeigt werden soll.')
+				inputbox "$FORMAT_TITLE" "$MSG" "$status_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					status_format="$gv_Auswahl"
+				else
+					status_format=""
+				fi
+				## }}}
+				format_conf_menu status_format
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwmutt_format_config
+				unset -- $Unset
+				break
+				;;
+			$gv_Back)
+				# ohne speichern abbrechen
+				unset -- $Unset
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

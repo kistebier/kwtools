@@ -1,0 +1,239 @@
+#!/bin/zsh
+#
+# Author: Kai Wilke <kiste@netzworkk.de>, 13.05.2014
+#
+# Script: kwadmin ist eine Oberfläche für verschiedene Scripte, die
+# die Arbeit mit Linux erleichtern sollen.
+# Version: 0.3.2
+
+trap 'setterm -inversescreen off ; setterm -reset ; 
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Variablen
+ALL_MSG=$(gettext 'Waehlen Sie ein Programm aus.')
+GRAPHIC_TITLE=$(gettext 'Grafik')
+MULTI_TITLE=$(gettext 'Multimedia')
+NET_TITLE=$(gettext 'Netzwerk')
+SYS_TITLE=$(gettext 'System')
+UTILS_TITLE=$(gettext 'Dienstprogramme')
+lv_Packagesystem=$(gettext 'Paketsystem')
+
+# Prüfen, welche Pakete installiert sind.{{{
+#
+unset -- HAUPT_MENU
+HAUPT_MENU="$gv_Configuration \"\""
+#
+for i in ${KWTOOLS_PATH}/{graphic,multi,net,sys,utils} ; {
+	if [ "${i}/*(.x)" -a "${i##*/}" = graphic ] ; then
+		HAUPT_MENU+=( $GRAPHIC_TITLE \"\" )
+	elif [ "${i}/*(.x)" -a "${i##*/}" = multi ] ; then
+		HAUPT_MENU+=( $MULTI_TITLE \"\" )
+	elif [ "${i}/*(.x)" -a "${i##*/}" = net ] ; then
+		HAUPT_MENU+=( $NET_TITLE \"\")
+	elif [ "${i}/*(.x)" -a "${i##*/}" = sys ] ; then
+		HAUPT_MENU+=( $SYS_TITLE \"\")
+	elif [ "${i}/*(.x)" -a "${i##*/}" = utils ] ; then
+		HAUPT_MENU+=( $UTILS_TITLE \"\" )
+	fi
+}
+HAUPT_MENU=($HAUPT_MENU $gv_Exit \"\")
+#}}}
+# Funktion prog_choice{{{
+#
+# usage: prog_choice Verzeichnis
+#
+prog_choice() {
+	unset -- Prog_Menue
+	for i in ${1%/}/*(.x) ; {
+		Prog_Menue+=(${i##*/} \"\")
+	}
+}
+#}}}
+# Funktion Hauptmenue{{{
+#
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$HAUPT_MENU"
+}
+#}}}
+#####################################################################
+#
+# Hauptprogramm
+#
+#####################################################################
+
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)	#
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			autoload -U kwadmin_conf
+			root_check
+			kwadmin_conf
+			rm -rf $gv_Script_Lock &>/dev/null
+			haupt_menue $gv_Configuration
+			;;
+		$UTILS_TITLE) 
+			# Dienstprogramme herausfinden{{{
+			prog_choice ${KWTOOLS_PATH}/utils
+			#
+			PROG_MENU=($Prog_Menue $gv_Back \"\")
+			menubox "$U_PROG" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfetext
+						script_help utils
+						menubox "$U_PROG" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+					$gv_Back) break
+						;;
+					*)	#
+						U_PROG="$gv_Auswahl"
+						$gv_Auswahl
+						menubox "$U_PROG" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+				esac		
+			done
+			#}}}
+			haupt_menue $UTILS_TITLE
+			;;
+		$GRAPHIC_TITLE)
+			# Graphic-Programme herausfinden{{{
+			#
+			prog_choice ${KWTOOLS_PATH}/graphic
+			# Die Variable Prog_menue wird von der Funktion prog_choice erzeugt.
+			PROG_MENU=($Prog_Menue $gv_Back \"\")
+			menubox "$G_PROG" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfetext
+						script_help graphic
+						menubox "$G_PROG" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+					$gv_Back) break
+						;;
+					*)	#
+						G_PROG="$gv_Auswahl"
+						$gv_Auswahl
+						menubox "$G_PROG" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+				esac		
+			done
+			#
+			#}}}
+			haupt_menue $GRAPHIC_TITLE
+			;;
+		$MULTI_TITLE)
+			# Multimedia-Programme herausfinden{{{
+			prog_choice ${KWTOOLS_PATH}/multi
+			#
+			PROG_MENU=($Prog_Menue $gv_Back \"\")
+			menubox "$M_PROG" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfetext
+						script_help multi
+						menubox "$M_PROG" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+					$gv_Back)	break
+						;;
+					*)	#
+						M_PROG="$gv_Auswahl"
+						$gv_Auswahl
+						menubox "$M_PROG" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+				esac		
+			done
+			#}}}
+			haupt_menue $MULTI_TITLE
+			;;
+		$NET_TITLE)
+			# Netzwerk-Programme herausfinden{{{
+			prog_choice ${KWTOOLS_PATH}/net
+			#
+			PROG_MENU=($Prog_Menue $gv_Back \"\")
+			menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)	#
+						script_help net
+						menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+					$gv_Back)	break
+						;;
+					*)	#
+						N_PROG="$gv_Auswahl"
+						$gv_Auswahl
+						menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+				esac
+			done	
+			#}}}
+			haupt_menue $NET_TITLE
+			;;
+		$SYS_TITLE)
+			# System-Programme herausfinden{{{
+			prog_choice ${KWTOOLS_PATH}/sys
+			#
+			PROG_MENU=($Prog_Menue $gv_Back \"\")
+			menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
+			while [ "$gv_Auswahl"  ] ; do
+				case $gv_Auswahl in
+					HELP*)	#
+						# Hilfetext
+						script_help sys
+						menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+					$gv_Back)	break
+						;;
+					*)	#
+						S_PROG="$gv_Auswahl"
+						$gv_Auswahl
+						menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						;;
+				esac
+			done	
+			#}}}
+			haupt_menue $SYS_TITLE
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

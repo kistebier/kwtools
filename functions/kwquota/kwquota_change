@@ -1,0 +1,166 @@
+# Funktion (kwquota_change), Quotas aendern# {{{
+#
+# usage: kwquota_change [ -c ]
+# -c - quota erstellen
+#
+kwquota_change() {
+	if [ $# = 1  -a "$1" = -c ] ; then
+		unset -- Opt
+		local Opt
+		Opt=$1
+	fi
+	#
+	read_fstab_quota
+	if [ -n "${Mountpoint[1]}" ] ; then
+		MPT_MENU=($Mountpoint)
+		menubox "" "$gv_Configuration" "$gv_Menupoint" "$MPT_MENU"
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help quota_drive_help
+					menubox "" "$gv_Configuration" "$gv_Menupoint" "$MPT_MENU"
+					;;
+				*)
+					# Auswahl uebernehmen
+					quota_check_fs $gv_Auswahl
+					case "$QFS" in
+						xfs)
+							# XFS Dateisystem# {{{
+							# pruefen, ob xfs_quota ausfuehrbar ist.
+							prog_check_xfs_quota
+							unset -- User_Qu
+							if [ "$Opt" = -c ] ; then
+								ext_ug_quota_check -c
+							else
+								ext_ug_quota_check
+							fi
+							# Daten einlesen
+							read_choice_data
+							#
+							if [ ! -z "$WHAT_QUOTA" ] ; then
+								if [ "$PROJ_CREATE" = yes ] ; then
+									kwquota_config "$QFS" "$QUOTA_PART"
+									break 2
+								elif [ -n "$User_Qu" ] ; then
+									# aendern# {{{
+									C_MENU=($User_Qu)
+									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help share/conf_change_help
+												menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
+												;;
+											*)
+												# Auswahl einlesen und mit Werten belegen# {{{
+												if [ "$WHAT_QUOTA" = User ] ; then
+													USER_ID=${${${(ws: :)${User_Qu[gv_Auswahl]}}[2]}//\"/}
+												elif [ "$WHAT_QUOTA" = Group ] ; then
+													GROUP_ID=${${${(ws: :)${User_Qu[gv_Auswahl]}}[2]}//\"/}
+												else
+													PROJECT_ID=${${${(ws: :)${User_Qu[gv_Auswahl]}}[2]}//\"/}
+												fi
+												# restliche Werte
+												BS_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[3]}//\"/}
+												BH_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[4]}//\"/}
+												IS_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[5]}//\"/}
+												IH_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[6]}//\"/}
+												RTBS_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[7]}//\"/}
+												RTBH_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[8]}//\"/}
+												# Grace Times
+												Tmp="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Blocks grace time*}}[4]}#\[}`"
+												Tmp1="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Blocks grace time*}}[5]}[1]}`"
+												BL_GR_TIME="${Tmp}${Tmp1}"
+												Tmp="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Inodes grace time*}}[4]}#\[}`"
+												Tmp1="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Inodes grace time*}}[5]}[1]}`"
+												I_GR_TIME="${Tmp}${Tmp1}"
+												Tmp="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Realtime Blocks grace time*}}[5]}#\[}`"
+												Tmp1="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Realtime Blocks grace time*}}[6]}[1]}`"
+												RT_BL_GR_TIME="${Tmp}${Tmp1}"
+												# Konfiguration aendern
+												kwquota_config "$QFS" "$QUOTA_PART"
+												break 3
+												## }}}
+												;;
+										esac
+									done
+									## }}}
+								else
+									no_quota_user_group_msg
+									break 2
+								fi
+							fi
+							## }}}
+							;;
+						ext[23]|reiserfs|jfs)
+							# alle anderen Dateisysteme# {{{
+							unset -- User_Qu
+							if [ "$Opt" = -c ] ; then
+								ext_ug_quota_check -c
+							else
+								ext_ug_quota_check
+							fi
+							# Daten einlesen
+							read_choice_data
+							# Gibt es einen User oder eine Gruppe dann wird sie
+							# zur Auswahl angeboten.
+							if [ ! -z "$WHAT_QUOTA" ] ; then
+								if [ -n "$User_Qu" ] ; then
+									# aendern# {{{
+									C_MENU=($User_Qu)
+									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help share/conf_change_help
+												menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
+												;;
+											*)
+												# Auswahl einlesen und mit Werten belegen
+												if [ "$WHAT_QUOTA" = User ] ; then
+													USER_ID=${${${(ws: :)${User_Qu[gv_Auswahl]}}[2]}//\"/}
+													Logfile="$USER_LOGFILE"
+												else
+													GROUP_ID=${${${(ws: :)${User_Qu[gv_Auswahl]}}[2]}//\"/}
+													Logfile="$GROUP_LOGFILE"
+												fi
+												# restliche Werte
+												BS_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[3]}//\"/}
+												BH_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[4]}//\"/}
+												IS_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[5]}//\"/}
+												IH_LIMIT=${${${(ws: :)${User_Qu[gv_Auswahl]}}[6]}//\"/}
+												# Grace Time
+												Tmp="`print ${${${(ws,: ,)${(M)${(f)"$(< $Logfile)"}##Block grace time:*;}}[2]}%;*}`"
+												Tmp1="${${Tmp##*[0-9]}[1]}"
+												BL_GR_TIME="${Tmp%%[a-z]*}${Tmp1}"
+												Tmp="`print ${${(ws,: ,)${(M)${(f)"$(< $Logfile)"}##*Inode grace time:*}}[3]}`"
+												Tmp1="${${Tmp##*[0-9]}[1]}"
+												I_GR_TIME="${Tmp%%[a-z]*}${Tmp1}"
+												# Konfiguration aendern
+												kwquota_config "$QFS" "$QUOTA_PART"
+												break 3
+												;;
+										esac
+									done
+									## }}}
+								else
+									no_quota_user_group_msg
+									break 2
+								fi
+							fi
+							## }}}
+							;;
+						*)
+							# Wird nicht oder noch nicht unterstuetzt.
+							no_quota_fs_msg
+							break 2
+							;;
+					esac
+					;;
+			esac
+			menubox "" "$gv_Configuration" "$gv_Menupoint" "$MPT_MENU"
+		done
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

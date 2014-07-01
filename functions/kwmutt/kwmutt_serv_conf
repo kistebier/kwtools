@@ -1,0 +1,133 @@
+# Funktion (kwmutt_serv_conf), konfiguriert die Server fuer mutt# {{{
+#
+# usage: kwmutt_serv_conf
+#
+kwmutt_serv_conf() {
+	autoload -U check_mail_server parse_mail_host
+	# Translation Variablen# {{{
+	lv_Conf_Name=$(gettext 'Konfigurations-Name')
+	SERV_DCCDB_MENU=($gv_Display \"\" $gv_Create \"\"
+		$gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+	## }}}
+	# Nachricht fuer Standard Mailboxen.# {{{
+	DEFAULT_MB_MSG=$(gettext 'Soll dieses Postfach als Standard deklariert werden (ja/nein)?
+
+Dies dient dazu damit wenn Sie Mutt auf der Konsole aufrufen ein
+Postfach automatisch geoeffnet wird.')
+	DEFAULT_SMTP_MSG=$(gettext 'Sollen diese SMTP Einstellungen als Standard deklariert werden (ja/nein)?')
+	## }}}
+	# Funktion (mutt_conf_file_exist), Nachricht das die Konfiguration schon existiert.# {{{
+	# usage: mutt_conf_file_exist
+	mutt_conf_file_exist() {
+		MSG=$(gettext 'Diese Konfiguration ist schon vorhanden. Aendern Sie bitte die alte Konfiguration oder waehlen einen neuen $lv_Conf_Name.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_folder_msg), Nachricht das der Menuepunkt folder# {{{
+	# noch nicht mit einem Wert belegt wurde.
+	no_folder_msg() {
+		MSG=$(gettext 'Sie muessen erst den Menuepunkt folder mit einem Wert belegen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (serv_conf_menu), Menue fuer die Einstellungen der Server{{{
+	serv_conf_menu() {
+		SERV_TITLE="$lv_Server"
+		SERV_MENU=(\"$lv_Local_Mailbox\" \"\" $lv_Imap \"\"
+		$lv_Pop \"\" $lv_Smtp \"\" $gv_Back \"\")
+		menubox "$1" "$SERV_TITLE" "$gv_Menupoint" "$SERV_MENU"
+	}
+	#}}}
+	# Funktion (default_serv_link), erstellt/loescht einen Default-Link# {{{
+	# auf die Standard Eroeffnungs-Mailbox oder SMTP.
+	#
+	# usage: default_serv_link [ imap | lmb | pop | smtp ] SERVER_FILE
+	#
+	default_serv_link() {
+		if [ "$#" = 2 ] ; then
+			# Funktion (create_default_link)# {{{
+			create_default_link() {
+				# Link auf den Default Server/Mailbox erstellen.
+				if [[ $DEFAULT_SERVER == yes ]] ; then
+					if [ -f "$Default_Serv" ] ; then
+						cd "$MUTT"
+						rm -f "$Link" &>/dev/null
+						ln -sf "${Default_Serv##*/}" "$Link"
+					fi
+				else
+					# Falls es einen Link gibt der auf die Server
+					# Datei zeigt loeschen.
+					LINK_FILE="`readlink -f ${MUTT}/${Link}(@N)`"
+					if [[ $LINK_FILE == $Default_Serv ]] ; then
+						rm -f "${MUTT}/${Link}" &>/dev/null
+					fi
+				fi
+			}
+			## }}}
+			unset -- Default_Serv Protocol Link
+			local Default_Serv
+			Protocol="$1"
+			Default_Serv="$2"
+			#
+			case "$Protocol" in
+				pop|imap|lmb)
+					Link="$L_DEFAULT_SERVER"
+					create_default_link
+					;;
+				smtp)
+					Link="$L_DEFAULT_SMTP"
+					create_default_link
+					;;
+				*)
+					no_para_msg $0
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	serv_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_serv_ips_help
+				serv_conf_menu
+				;;
+			$lv_Local_Mailbox)
+				# Konfiguration einer lokalen Mailbox# {{{
+				autoload -U kwmutt_lmb_serv_conf kwmutt_lmb_serv_config
+				kwmutt_lmb_serv_conf
+				## }}}
+				serv_conf_menu $lv_Local_Mailbox
+				;;
+			$lv_Imap)
+				# Konfiguration eines Imap Server# {{{
+				autoload -U kwmutt_imap_serv_conf kwmutt_imap_serv_config
+				kwmutt_imap_serv_conf
+				## }}}
+				serv_conf_menu $lv_Imap
+				;;
+			$lv_Pop)
+				# Konfiguration eines Pop Server# {{{
+				autoload -U kwmutt_pop_serv_conf kwmutt_pop_serv_config
+				kwmutt_pop_serv_conf
+				## }}}
+				serv_conf_menu $lv_Pop
+				;;
+			$lv_Smtp)
+				# Konfiguration eines Smtp Server# {{{
+				autoload -U kwmutt_smtp_serv_conf kwmutt_smtp_serv_config
+				kwmutt_smtp_serv_conf
+				## }}}
+				serv_conf_menu $lv_Smtp
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

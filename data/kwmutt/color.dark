@@ -1,0 +1,615 @@
+## ========================================================================# {{{
+## File:          $HOME/.kwtools/kwmutt/colors
+## Purpose:       Setup file for the Mail program "Mutt".
+##                Colorization of text for the builtin pager.
+## Latest change: Thu May 04 19:36:54 CET 2009
+## ========================================================================
+## Author: Kai Wilke - <http://www.netzworkk.de/> - <kiste@netzworkk.de>
+## Last-Author: Michael Prokop - <http://www.michael-prokop.at/> - <online@michael-prokop.at>
+## Original-Author: Sven Guckes guckes-mutt-color-body@math.fu-berlin.de
+## ========================================================================
+## Availability: The original file is available as
+## <URL:http://www.math.fu-berlin.de/~guckes/mutt/mutt.color.body>
+## Comments are very very welcome - please send an email!
+## Size:        ca 25K
+## ========================================================================
+
+## =============================================================
+## General remarks
+## =============================================================
+# Words consist in a sequence of letters.
+# While it is still easy for human beings
+# to understand words with interspersed spaces
+# it is not easy for a program to do that.
+# Example:   R E A L L Y  I M P O R T A N T
+# Creating regular expressions which also
+# allow for this kind of "spacing" is not easy.
+# Instead, please indicate emphasis not by
+# chenging the definition of a word but by
+# placing it into asterisks, eg "*important*".
+#
+# Recognition of hyphenated words is difficult, too.
+# So please do not break words across lines at all.
+# Instead, put them on the next line.
+# The same holds for combined words or terms, eg
+# dates like "4th of July".
+
+# I'll need this macro when I do some testing -
+# jsut a simple way to reload this setup file:
+# macro index %  ":source ~/.mutt.color.body"
+## }}}
+
+## From the manual to mutt-1.5:
+##      Objects that you can colorize:
+##      attachment, body (regexpr), bold, error, header, hdrdefault,
+##      index, indicator, markers, message, normal,
+##      quoted, quoted1, ..., quotedN,
+##      search, signature, status, tilde, tree, underline.
+##
+## Color names you can use for "background" and "foreground":
+##      white black green magenta blue cyan yellow red default color
+##
+## NOTE:  Although I'd like to use "default" as the background color,
+##        it somehow does not work out with "xterm".
+##        So I changed it to "black" everywhere.
+##
+
+# Bei einem Vordergrund kann bright (hell) vorangstellt werden. z.B. brightred
+
+## =============================================================
+## COLOR for the BODY - Monochrome Terminal# {{{
+## =============================================================
+
+#    object             attribute
+#
+mono normal             none            # Normaler Text
+mono indicator          reverse         # Die Nachricht, die gerade ausgewählt ist
+mono tree               none            # Die Pfeile, die einen Thread zusammenhalten
+mono status             reverse         # Die Statuszeile
+mono error              bold            # Fehlermeldungen
+mono message            none            # informative Texte
+mono quoted             bold            # gequoteter Text in einer Nachricht
+mono signature          none            # Die Signatur eines Senders
+mono attachment         underline       # MIME attachments
+mono search             reverse         # Ergebnisse einer Suche
+mono tilde              none            # Die »~« am Ende einer Nachricht
+mono markers            bold            # Das »+«, dass eine umgebrochene Zeile anzeigt
+mono hdrdefault         none            # Standardheaderzeilen
+mono bold               bold            # *hervorgehobener* Text im Body
+mono underline          underline       # _unterstrichener_ Text im Body
+#
+#    object      attribute      RegExp
+#mono header      bold           "^(from|subject|reply-to|.*spamblock.*|date):"
+mono header      bold           "^(from|subject|reply-to|date):"
+mono header      bold           "^(.*spam.*):"
+
+# MAIL addresses:
+mono body        underline      "[-a-z_0-9.]+@[-a-z_0-9.]+"
+
+# FTP/HTTP(S) addresses:
+#mono body        underline      "((ftp|http|https)://|(file|mailto|news):|www\\.)[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+mono body        underline      "(finger|ftp|hkp|http|https)://[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+# web address without "http":
+mono body        underline      "www\\.[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+
+# file/mailto/news addresses:
+mono body        underline      "(file|mailto|news):*"
+
+mono body        bold           "(^| )\\*[-a-z0-9äöüß*]+\\*[,.?]?[ \n]"
+mono body        underline      "(^| )_[-a-z0-9äöüß_]+_[,.?]?[ \n]"
+## }}}
+
+### BEGIN KWMUTT COLOR CONFIGURATION ########################## {{{
+
+## ===========================================================
+## COLOR for Miscellaneous# {{{
+## ===========================================================
+# farbige Terminals
+#     object     foreground     background
+#
+color normal     white          black   # Normaler Text
+#color indicator  green          black   # Die ausgewählte Nachricht
+color indicator  black          cyan    # Die ausgewählte Nachricht
+color tree       red            black   # Die Pfeile, die einen Thread zusammenhalten
+color status     brightyellow   blue    # Die Statuszeile
+color error      brightred      black   # Eine Fehlermeldung
+#color message    red            default   # Informative Nachrichten
+color message    black          green   # Informative Nachrichten
+#color signature  red            default   # Die Signatur eines Senders
+color signature  brightred      black   # Die Signatur eines Senders
+color attachment brightgreen    black   # MIME attachments
+color search     brightyellow   red     # Suchergebnisse
+color tilde      brightblue     black   # Die »~« am Anfang einer Nachricht
+color markers    red            black   # Das »+« bei umgebrochenen Zeilen
+#color hdrdefault brightgreen 	black	# Standardheaderzeilen
+color hdrdefault black   		cyan	# Standardheaderzeilen
+color bold       red            black   # *hervorgehobener* Text im Body
+color underline  green          black   # _unterstrichener_ Text im Body
+color quoted     cyan           black   # gequoteter Text
+color quoted1    magenta        black
+color quoted2    red            black
+color quoted3    green          black
+color quoted4    blue           black
+color quoted5    cyan           black
+color quoted6    magenta        black
+color quoted7    red            black
+color quoted8    green          black
+color quoted9    blue           black
+
+# Attribution line:
+# my attribution line starts with '*' and ends with ':'
+# thus making it easier to recognize - eg for coloring.
+#
+# Example:
+#  * VName Name <vname.name@foo.bar> [000907 18:00]:
+#  > quoted text
+color body red  black    "^[*] .*:"
+
+### not verify this Entry.###
+# highlight important keywords
+# is very important for kwmutt. To use kwmutt!
+#
+# [IMPORTANTWORDS]
+color body  brightyellow    blue  "(Netzworkk|kwtools)"
+## }}}
+
+## ==================================================
+## COLOR for the BODY  - Internet Addresses# {{{
+## Mail-Adressen  - cyan/black
+## Internet-Sites - magenta/black
+## IP-Adressen    - white/blue
+## ==================================================
+
+# MAIL addresses:
+color body cyan black  "[-a-z_0-9.+]+@[-a-z_0-9.]+"
+
+# FTP/HTTP(S) addresses:
+#color body       black      magenta    "((ftp|http|https)://|(file|mailto|news):|www\\.)[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+color body       magenta     black    "(finger|ftp|hkp|http|https|telnet)://[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+# web address without "http":
+color body       magenta     black    "www\\.[-a-z0-9_.:]*[a-z0-9](/[^][{} \t\n\r\"<>()]*[^][{} \t\n\r\"<>().,:!])?/?"
+
+# file/mailto/news addresses:
+color body       magenta     black    "(file|E-Mail[-A-Za-z]+|mailto|news):*"
+
+#  special IP Host Adresses:
+#  192.x.x.x
+#  A/B/C-IP-addresses
+#  127.0.0.x
+color body white blue  "10.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"
+color body white blue  "172.[0-9]{1,2}.[0-9]{1,3}.[0-9]{1,3}"
+color body white blue  "192.168.[0-9]{1,3}.[0-9]{1,3}"
+color body white blue  "127.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"
+
+#################################################################
+# TODO:
+# Funktioniert nicht ordentlich
+#color body red   white  " (*)(ACK|ROTFL|LOL|SCNR|BRB|BTW|C|CWYL|FWIW|g|G|bg|vbg|GIWIST|G,D&R|HHOK|HTH|HTHBE|IMHO|IMNSHO|IOW|IRL|ITRW|OTP|OTF|OIC|OTOH|POV|RL|RTFM|ROTFL|TTFN|TTYL|U|WAEF|Y|TIMTOWTDI)(*) "
+#################################################################
+
+#################################################################
+# TODO:
+# ???? Was macht dies?
+#color body red   black  "(^| )\\*[-a-z0-9*]+\\*[,.?]?[ \n]"
+#color body green black  "(^| )_[-a-z0-9_]+_[,.?]?[ \n]"
+#################################################################
+## }}}
+
+### END KWMUTT COLOR CONFIGURATION ########################## }}}
+
+### COLOR CONFIGURATION FERTIG GESTELLT ########################## {{{
+## ===========================================================
+## COLOR for the BODY  - Directories, Filenames, and Variables# {{{
+## Dateien                 - brightblue/black
+## (Windows) Verzeichnisse - brightred/black
+## $HOME                   - brightmagenta/black
+## ===========================================================
+#     object     foreground backg.   RegExp
+
+#  File names ("/path/file")
+#  color body brightgreen black "\\~?\(/[-_.,a-zA-Z0-9{}]+\)+"
+#  this variant includes umlauts, too (damn those krauts! ;-):
+color body brightblue black "\\~?\(/[-_.,a-zA-Z0-9{}äöüß]+\)+"
+#  Example:  /usr/src/linux/include/{asm,linux}
+
+#  DOS/Windows file names
+#  c:\vim\vim60e\runtime\syntax\vim.vim
+color body brightred black "[a-zA-Z]:[-_.a-zA-Z0-9\\]+"
+#
+#  lower case letters should suffice:
+#  color body brightgreen black "[a-z]:[-_.a-z0-9\\]+"
+#  but it's better when there is a minumum length:
+color body brightred black "[a-z]:[-_.a-z0-9\\]{3,}"
+#
+#  spaces are *not* included here, of course.
+#  who puts spaces into his filenames, anyway?  bah!
+
+#  Path names ("/path/")
+color body brightred   black "\(/[-_.a-zA-Z0-9]+\)+/"
+
+#  Variables  ("$HOME")
+color body brightmagenta black "\\$[a-zA-Z][-_a-zA-Z]+"
+## }}}
+## ===========================================================
+## Acronyms, Abbreviations, and "SCREAMING IN CAPS"# {{{
+## ===========================================================
+# big words
+# The following includes umlauts - but that's quite clunky.
+color body brightyellow  black    "[A-ZÄÖÜ][-A-ZÄÖÜ]+[A-ZÄÖÜ][ .!?]?"
+#  This works ok - but fails at the end of lines, of course.
+
+#  Cathing multiple alternatives:
+#  A/B/C/D
+#  color body brightwhite    black   "(\\<\\w+ ?/)+ ?\\w+\\>"
+#  this is fine - but fails on words containing dashes.
+#  however, building a character set with '-' and '\w'
+#  is not possiblem it seems:
+#  color body brightwhite    black   "(\\<[-\\w]+ ?/)+ ?[-\\w]+\\>"
+#
+#  so all you can do is list the characters again:
+color body brightwhite    black   "(\\<[-a-z0-9._]+ ?/)+ ?[-a-z0-9._]+\\>"
+#  example:  foobar.123/foo-123.bar/foo.bar_123
+
+# *Emphasized*, /emphasized/, and _emphasized_ words:
+# color body brightred      black   "[*/_]+ *[- &[:alnum:]]+ *[*/_]+"
+# this would catch false positives of the kind _foo* and /bar_
+# so we should choose matching pairs only:
+color body brightred  white   " ?[*][-[:alnum:]]+[*] "
+color body brightred  white   "/[-[:alnum:]]+/"
+color body brightred  white   " ?_[-[:alnum:]]+_ "
+
+# Smileys: 
+color body green black  "((;|:|8\\:|\\=)(-|=|~|_|-'|%|<|)(\\)|Q|P|\\)%))"
+## Grinning:  "grin" ([g]) and "big grin" ([bg]):
+color body green black "<[Gg]>"
+color body green black "<[Bb][Gg]>"
+
+## }}}
+## ========================================================================
+## LOGFILES# {{{
+## ========================================================================
+# Firewall (iptables) logs:
+color body magenta black "(PROTO=[A-Z]+)|(DPT=[0-9]+)|(SRC=[0-9.]+)"
+
+# Log Dateien al'a kernel: [xxxxxxx.xxxxxx] printk ....
+# x is a number from 0-9.
+color body blue green "[0-9]+[.][0-9]+"
+
+## }}}
+## ========================================================================
+## CHARS# {{{
+## ========================================================================
+#  Border Lines of length three or more.
+#  (Several Newsletters use border lines..)
+color body green black    "[-_=+~/\*]{3,}"
+#
+#  Border lines with spaces in between charcaters:
+#  Allowing for arbitrary space runs in between,
+#  with a minimum length of four:
+#  color body        green  black    "\( *[-+=#*~_]\){4,}"
+#  Examples:
+#  "- - -"  "#####"   "~~~~~~~"  "+-+-+-+-+-+"  "* * * *"
+#  "+ - ~ + === * ~~~" etc
+
+# Extensive use of exclamation and question marks:
+# "!!!"  "???"
+# color body        red    white    "[!?]{3,}"
+color body red    black    "[!?]{3,}"
+
+# Percentages ("Save xx.x %!")
+color body brightgreen black "[.0-9]+ ?%"
+
+## }}}
+## ========================================================================
+## MONEY# {{{
+## ========================================================================
+#  MONEY!  Dollars!  "$"
+#  color body        green  black    "$\d\+.\d\+"
+color body white  red      "\\$[0-9]+[.,0-9]*"
+
+#  Offers in "cents per minute" - eg "c/min"
+color body black yellow "[0-9]+[,.][0-9]* *c/min"
+
+#  Money with "EUR", or "$$$" before number
+#  with an optional dot or comma in between digits
+#  and an optional end 'f "-" to indicate zeros:
+#      matches:  EUR1 EUR10 EUR10,00 EUR10,-  "Euro 30,--"
+#  non-matches:  EUR010  EUR-100
+color body black yellow \
+"(euro?|\\$|dollar) *[1-9][0-9]*([.,][0-9]*-?-?)?"
+#
+# same thing with monetary unit *after* number:
+#  color body black yellow "[1-9][0-9]*([.,][0-9]*-?)* *(EUR|\$\$\$)"
+#  color body black yellow "[1-9][0-9]*[.,]?(--?|[0-9][0-9])? *(EUR\$\$\$)"
+color body black yellow \
+"[1-9][0-9.,]*(--?|[0-9][0-9])? *(euro?|\\$|dollar)"
+#
+# two digits followed by small monitary unit:
+color body black yellow "[1-9][0-9]? *cents"
+
+## }}}
+## ========================================================================
+## COPYRIGHT# {{{
+## ========================================================================
+# Copyright (C) and Registered Trademark (r)
+color body yellow black "[(][cr][)]"
+color body yellow black "\\(c\\)"
+color body yellow black "(©|®)"
+color body yellow black "([Cc]opyright|[Tt]rademark) .*((AG)?|(GmbH)?|(Co? ?KG)?)"
+
+## }}}
+## ========================================================================
+## PHONE# {{{
+## ========================================================================
+#  FAX and TEL Numbers:
+#  "FAX:   (1 123) 4567 890"
+#  "TEL: +1-123-456-78900"
+#  "Tel.:   123/456-789"
+#  "Cell:   123/456-789"
+#  "Tel: +49-(0)30-883-8884"
+#  "Fax: +49-(0)"
+#  color body green black "(fax|tel)\.?:? *[+]?[-+0-9/() ]+"
+#  color body green black "(cell|fax|Fax|FAX|tel|Tel|TEL)[.:]+ *\\+?[-+0-9/()]+"
+#  color body green black "(cell|fax|tel|)?[.:]+ *[+]*[-+0-9/()]+"
+#  color body green black "(cell|fax|tel|)?[.:+ ]+[-+0-9/()]+"
+#  color body blue white "(tele)?(cell|fax|fon|phone|tel)[.: ]+[+]?[- 0-9/()]{4,}[0-9]"
+color body black green \
+"(tele)?(cell|fax|fon|phone|tel)[.: ]+[+]?[- 0-9/()]{4,}[0-9]"
+
+# Phone Numbers:
+#
+#  Phone Numbers:
+#  "(123) 4567890"
+#  color body white red "(tele)?(fon|phone):? *\\([-/ 0-9]{4,}\\)"
+#  color body white red '(tele)?(fon|phone):? *[-/( )0-9]{4,}'
+#  "1-234-4567890"
+#  "1-234 4567890 ext. 123"
+#  color body blue white "1-[0-9]{3}[- ][-0-9]+ +ext.? [0-9]+"
+color body brightyellow red "1-[0-9]{3}[- ][-0-9]+ +ext.? [0-9]+"
+#  Toll Free Numbers:
+#  "1-800-123-456-789"
+#  "(800) 123-456-789 x123"
+#  "(800) 123-456-789 ext 123"
+color body white red "1-?800[-0-9]+"
+color body white red "(1 ?)?\\(800\\) ?[-0-9]+( x[0-9]+)?"
+color body white red "(1 ?)?\\(800\\) ?[-0-9]+( ext ?[0-9]+)?"
+
+#  ISBNs
+#  color body white red "[-0-9]{9,12}[0-9X]"
+## }}}
+## ========================================================================
+## DATE&TIME# {{{
+## ========================================================================
+#
+#  Dates in "yyyy-mm-dd", "yyyy/mm/dd" and "yy/mm/dd"
+#  matches:  1967/04/06       67/04/06
+#  color body white red "\(19|20\)?[0-9][0-9]/[01]?[0-9]/[0123]?[0-9]"
+#  allow only months in range 01-12 and days in range 00-31:
+#  English:
+color body white red \
+"\(19|20\)?[0-9][0-9][/-](0[0-9]|1[012])[/-]([012][0-9]|3[01])"
+#  or inverse:
+#  Dates in "dd-mm-yyyy", "dd/mm/yyyy" and "dd/mm/yy"
+#  matches:  06/04/1967       06/04/67
+#  color body white red "\(19|20\)?[0-9][0-9]/[01]?[0-9]/[0123]?[0-9]"
+#  allow only months in range 01-12 and days in range 00-31:
+color body white red \
+"\([012][0-9]|3[01])[/-](0[0-9]|1[012])[/-](19|20\)?[0-9][0-9]"
+#
+#  matches: 4.6.1967 and "4.6. 1967"  "4. 6. 67"
+#  matches: 04.06.1967 and "04.06. 1967"  "04. 06. 67"
+color body white red \
+"(0?[1-9]|[12][0-9]|3[012])[.] ?(0?[1-9]|1[012])[.] ?(19|20)?([0-9][0-9])?"
+
+
+#  allowing short month names and making both the day and the year optional
+#  leads to false positives with words like "mail" or "augmented".
+#  so you would have to use several color rules with different
+#  combinations, eg "day+month+year" and "day+month" and "month+year".
+
+#  Tag Monat Jahr
+#  "6. Apr. 67"  "6 April 1967"
+#  "06. Apr. 67"  "06 April 1967"
+#  Tag+Monat (German/english month names)
+#  "6.Apr" "6. April 1967"
+color body white red \
+"((0?[1-9]|[12][0-9]|3[012])[.]? ?)?\
+\\<(Jan(uar)?|Feb(ruar)?|M(ä|a|ae)rz|Apr(il)?|Ma(i|y)?|Jun(e|i)?|Jul(i|y)?|Aug(ust)?|\
+Sept(ember)?|O(c|k)t(ober)?|Nov(ember)?|De(c|z)(ember)?)\\>[.]?\
+( *(19|20)?[0-9][0-9])?"
+#((19|20)?[0-9][0-9])?"
+
+#  Month Day
+#  "Jan 1st"  "Feb. 2nd"  "March 3rd 03"  "April 6th 1967"
+color body white red \
+"\\<(Jan(uar)?|Feb(ruar)?|M(ä|a|ae)r(ch|z)?|Apr(il)?|Ma(i|y)?|Jun(e|i)?|Jul(i|y)?|Aug(ust)?|\
+Sept(ember)?|O(c|k)t(ober)?|Nov(ember)?|De(c|z)(ember)?)\\>[.]?\
+( *[0 ]?[1-9]|[12][0-9]|3[012])?(st|nd|rd|th)? *((19|20)?[0-9][0-9])?"
+
+# Times on the clock:
+# matches:
+# 12:07:00
+#     9h  12:00h  12.05Uhr  "12 Uhr c.t."  "16h s.t"
+#     9 pmh  12:00 pmhour  12.05 pmUhr
+# make "h" or "Uhr" compulsory:
+color body blue  green \
+"([01]?[0-9]|2[0-4])([.:][0-5][0-9])?([.:][0-5][0-9])? ?(am|pm)?\
+(h|hour|Uhr)( *[cs][.]t[.])?"
+
+# Time Frames
+# matches: 10:00-12:00  09.30 - 13.30
+color body blue green \
+"[012][0-9][.:][0-5][0-9](am|pm)? ?- ?([012][0-9][.:][0-5][0-9](am|pm)?)?"
+
+# Week Days - long form:
+color body blue  green \
+'\<(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Sonnabend|Samstag|Sonntag)\>'
+color body blue  green \
+'\<(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\>'
+#
+# Week Days - short form:
+# matches Mo. Di. Mi., ....
+color body blue  green "\\<(Mo|Di|Mi|Do|Fr|Sa|So)\\>[.]"
+#  too many false positives as "die" and "mit" are proper german words.
+color body blue  green "\\<(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\>"
+
+## Date: header recognition
+#
+## Date: Thu Apr  6 12:07:00 MEST 1967
+#  Date: + weekday + month(short) + day +
+#  time(hh:mm:ss) + timezone + year
+#  is to Year 2099
+color body brightyellow blue \
+"Date: *\\<(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\>\
+ ?\\<(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\>\
+ ?([ 0]?[1-9]|[12][0-9]|3[012])\
+ ?([01][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9]\
+ ?[A-Z]{3,4}\
+ ?(19[6-9][0-9]|20[0-9][0-9])"
+#
+## Date: Thu,  6 Apr 1967 12:07:00 +0000
+#  is to Year 2099
+color body brightyellow blue \
+"Date: *\\<(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\>,\
+ ?([ 0]?[1-9]|[12][0-9]|3[012])\
+ ?\\<(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\>\
+ ?(19[6-9][0-9]|20[0-9][0-9])\
+ ?([01][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9]\
+ ?[-+][0-9]{4}"
+#
+## Date: Thu,  6 Apr 1967 12:07:00 +0000 (MEST)
+#  is to Year 2099
+color body brightyellow blue \
+"Date: *\\<(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\>,\
+ ?([ 0]?[1-9]|[12][0-9]|3[012])\
+ ?\\<(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\>\
+ ?(19[6-9][0-9]|20[0-9][0-9])\
+ ?([01][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9]\
+ ?[-+][0-9]{4}\
+ ?\\(?[A-Z]{3,4}\\)?"
+#
+# MMM DD HH:MM:SS
+# Nov 16 16:16:16
+color body brightyellow blue \
+"\\<(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\>\
+ ?([ 0]?[1-9]|[12][0-9]|3[012])\
+ ?([01][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9]"
+## }}}
+## ========================================================================
+## GPG/PGP# {{{
+## ========================================================================
+#
+# Sollte GPG oder PGP verwendet werden, so werden hier entsprechende Zeilen eingefaerbt.
+# Signatur good = gruen black
+# Signatur falsch = rot black
+# Signatur erstellt/Warnung = gelb black
+# Signatur schlecht = magenta black
+# Signatur konnte nicht ueberprueft werden = magenta black
+# Anfang u. Ende der Signatur sind brightgreen/black
+# 
+# PGP strings:
+color body green black "-----END PGP PUBLIC KEY BLOCK-----"
+color body green black "-----BEGIN PGP PUBLIC KEY BLOCK-----"
+color body green black "Version: GnuPG v1.[0-9].[0-9] \(GNU/Linux\)"
+color body green black "^gpg: (Good signature|Korrekte Unterschrift).*"
+color body yellow black "^gpg: (Signature made|Unterschrift).*"
+color body brightred black "^gpg: (BAD signature|FALSCHE Unterschrift).*"
+color body brightmagenta black "^gpg: Can't check signature.*"
+color body brightyellow black  "(Öffentlicher Schlüssel nicht gefunden|keine vertrauenswürdige Signatur|Dieser Schlüssel ist verfallen)"
+color body brightgreen black "nicht durch hinreichend vertrauenswürdige Signaturen zertifiziert"
+## }}}
+## ========================================================================
+## other things# {{{
+## ========================================================================
+#
+# Postleitzahlen (aka PLZ)
+# matches:  D-12345 and "D 12345"
+color body yellow red "[A-Z]{1,3}[- ]?[0-9]\{5\}"
+#
+# Also colorize the following word if it starts with a
+# capital letter, assuming that it is the name of the town:
+# matches:  D-12345 City and "D 12345 City"
+color body yellow red "([A-Z]{1,3}?[- ]?)?[0-9]\{5\} *[A-Z]\\w+"
+
+# Lists
+# bulleted list:
+# * one
+# * two
+# * three
+# dashed list:
+# - one
+# - two
+# - three
+# this pattern yields many false positives as it
+# spans lines for which there is no syntax language.
+# this is easier with Vim's syntax coloring.
+color body red black "^ *[-*] +"
+
+# HTML tags
+color body yellow       black '</?\w+>'
+
+# Emphasis by interspersed spaces
+# Example: E M P H A S I S
+color body red black '\<\w( +\w\>)+'
+
+## }}}
+## ========================================================================
+## PC things# {{{
+## ========================================================================
+#
+# matches:
+# " man 1 word", (man 1 word), " manpage 1 word"
+# (manpage 1 word)
+color body black red '[\( ]?man(page)? ?[1-9] ?\w+\)?'
+
+# Linux Distributions and their versions
+# matches: Debian 5, debian 5.0, linux Debian 5.0,
+# Linux Debian Linux 5.0, ...
+color body white red \
+"(centos|debian|fedora|gentoo|mandrake|redhat|(open)?suse|(k|x)?(u)?buntu)"
+color body white red \
+"(linux *)?(centos|debian|fedora|gentoo|mandrake|redhat|(open)?suse|(k|x)?(u)?buntu) *(linux)? *([1-9]|[0-9][.][0-9])"
+# other free OSs:
+color body white red "(freebsd|netbsd|openbsd|solaris)"
+
+# names of Windows[tm]
+# followed by some version
+# matches: windows-3.11, windows-95,
+# windows-nt, win2k, windows xp
+color  body blue yellow \
+'\<[Ww]in(dows)?[- ]?(3[.]11|95|98|9x|(NT|nt)|2k|2000|(ME|me)|(XP|xp)|(V|v)ista)\>'
+
+## }}}
+## ========================================================================
+## Germany federal states# {{{
+## ========================================================================
+color body white blue \
+'\<(bayern|baden-w(ü|ue)rttemberg|berlin|bremen|brandenburg|hamburg|hessen|\
+mecklenburg-vorpommern|niedersachsen|nordrhein-westfalen|rheinland-pfalz|\
+saarland|sachsen|sachsen-anhalt|schleswig-holstein|th(ü|ue)ringen)\>'
+
+## }}}
+
+### END COLOR CONFIGURATION FERTIG GESTELLT ########################## }}}
+
+## ========================================================================
+## Farben für Index/Header einlesen.
+## ========================================================================
+source ~/.kwtools/kwmutt/color.index
+source ~/.kwtools/kwmutt/color.index.friendly
+source ~/.kwtools/kwmutt/color.index.spam
+source ~/.kwtools/kwmutt/color.header
+source ~/.kwtools/kwmutt/color.header.agents
+
+## ========================================================================
+## TEST!
+## ========================================================================
+
+##########################################################
+##########################################################
+
+# example:
+# [ foo | bar | foo bar | foo-bar | baz ]
+#color body brightyellow brightred  '\[ [-a-z ]+ (\| [-a-z ]+)+ \]'
+
+#EOF vim: ft=muttrc

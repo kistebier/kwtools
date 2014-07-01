@@ -1,0 +1,22 @@
+# Funktion um den Status der dns Server mitzuteilen{{{
+#
+# 5 Secunden Pause sollten schon sein zur Sicherheit.
+#
+# usage: dns_status
+#
+dns_status() {
+	sleep 5
+	Status=${$(svstat ${SV_DIR}/${DNS})[2]}
+	if [ "$Status" = up ] ; then
+		MSG=$(gettext 'Die Konfiguration von $DNS wurde korrekt ausgefuehrt.')
+		infobox "$gv_Info" "$MSG" 3
+	else
+		MSG=$(gettext 'Die Konfiguration von $DNS konnte nicht korrekt ausgefuehrt werden.')
+		infobox "$gv_Info" "$MSG" 3
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

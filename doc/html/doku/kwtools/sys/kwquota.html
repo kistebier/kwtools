@@ -1,0 +1,361 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, kwtools, quota, xfs_quota, linux">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2010-03-11">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <r>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/sys/kwpasswd.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwraid.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwquota>kwquota</a></h2>
+                                <p>kwquota ist ein Frontend Script f&uuml;r "quota". Disk Quota wird die
+				Begrenzung des Speicherplatzes auf Speichermedien wie Festplatten f&uuml;r
+				einen einzelnen Benutzer oder eine Gruppe von Benutzern genannt.</p>
+				<p>Ausnahme ist das "xfs" Dateisystem welches auch Projekte unterst&uuml;tzt.</p>
+
+				<p>kwquota zeigt eine Ansicht der "quota" Laufwerke, erstellt/l&ouml;scht
+				und &auml;ndert die "quota" von Benutzern, Gruppen oder Projekten (xfs).
+				Beim start von kwquota werden auch die Dateien (a)quota.user und/oder
+				(a)quota.group erstellt/erneuert. Diese beinhalten den Speicherplatz
+				der Benutzer und/oder Gruppen unter den Dateisystemen ext2/3, jfs und reiserfs.
+				Das Dateisystem "xfs" benötigt diese nicht.</p>
+
+				<p><b>NOTIZ:</b> Ben&ouml;tigt root Rechte. Das Dateisystem "xfs" ist eine Ausnahme und
+				wird auch von kwquota unterst&uuml;tzt. Siehe Manpages zu quota(8), mount(8)
+				und xfs_quota(8).<br>
+				Desweiteren m&uuml;ssen in Ihrem Kernel mindestens die Optionen CONFIG_QUOTA und/oder
+				XFS_QUOTA aktiviert sein.</p>
+				
+				<p><b><font color="Red">ACHTUNG: Wenn Sie ein quota in der Datei /etc/fstab
+				eintragen und/oder das Laufwerk erneut versuchen einzubinden (remount) wird
+				das meist nur bei den Dateisystemen ext2/3, jfs und reiserfs einen gew&uuml;nschten
+				Erfolg haben. Beim Dateisystem "xfs" m&uuml;ssen Sie den Rechner wahrscheinlich neu 
+				starten. Bei allen anderen nur wenn das neu einbinden keinen Erfolg 
+				hat.</font></b></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwquota.html#display">1 Ansicht</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwquota.html#conf">2 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwquota.html#drives">3 Laufwerke</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwquota.html#warning">4 Warn Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=display>1 Ansicht</a></h3>
+                                <p>Detaillierte tabellarische Ansicht von 1 oder mehreren Quota Laufwerken.
+				Beim Dateisystem "xfs" wird das programm "xfs_quota" benutzt, ansonsten
+				"repquota".</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=conf>2 Konfiguration</a></h3>
+                                <p>Konfiguration der einzelnen "quota".</p>
+				<p><b>NOTIZ:</b> Das Hardlimit muss immer gleich oder 
+				gr&ouml;sser dem Softlimit sein. kwquota &uuml;berpr&uuml;ft dies.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=create>2.1 anlegen</a></h4>
+                                <p>Anlegen einer quota f&uuml;r einem Benutzer, einer Gruppe oder eines 
+                                Projekts. Bei einem Projekt kann man die Projekt_ID eingeben (Name),
+				die Projekt_Nr ausw&auml;hlen (Integer Zahl) und das zu &uuml;berwachende 
+				Verzeichnis ausw&auml;hlen. Dabei werden auch die Dateien /etc/projects und
+				/etc/projid mit einbezogen und bearbeitet (man 8 xfs_quota).</p>
+				
+				<p><b>NOTIZ:</b> Bei Benutzer- und Gruppenquota sind die Benutzer oder Gruppen schon 	
+				vorhanden und man w&auml;hlt sie vorher zur Bearbeitung aus.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=change>2.2 &auml;ndern</a></h4>
+                                <p>&Auml;ndern einer quota f&uuml;r einem Benutzer, einer Gruppe oder eines 
+                                Projekts.</p>
+				<p><b>NOTIZ:</b> Keine Bearbeitung der Benutzer_ID, Gruppen_ID oder Projekt_ID
+				m&ouml;glich.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=delete>2.3 l&ouml;schen</a></h4>
+                                <p>L&ouml;schen einer quota f&uuml;r einem Benutzer, einer Gruppe oder eines 
+                                Projekts. Bei Projekten werden die Dateien /etc/projects und
+				/etc/projid mit einbezogen und bearbeitet (man 8 xfs_quota). Die quotas werden 
+				auf Null gestellt und Projekte gel&ouml;scht.</p>
+				<p><b>NOTIZ:</b> L&ouml;schen Sie beim Dateisystem "xfs" immer erst die 
+				Projekte, bevor Sie die "quota" Optionen in der Datei /etc/fstab &auml;ndern.
+				Es kann sonst zu Fehlern in der Ansicht der "quota" Informationen kommen, 
+				wenn Projekte nicht mehr existieren aber immer noch in den Dateien /etc/projects und 
+				/etc/projid stehen. Heisst erst mit kwquota oder manuell die Projekte 
+				l&ouml;schen und dann die die "quota" Option des Laufwerks &auml;ndern.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=conf_opt>2.4 Konfiguration Optionen</a></h4>
+				<p>Ausser bei den Inode (Integer) Einstellungen kann man bei den Limits
+				die Masseinheiten k|K|KB|Kb,...,p|P|PB|Pb benutzen.</p>
+                                <p><b>Benutzer_ID:</b> Ist nur zur Anzeige des Benutzers der gerade bearbeitet wird.</p>
+                                <p><b>Gruppen_ID:</b> Ist nur zur Anzeige der Gruppe die gerade bearbeitet wird.</p>
+                                <p><b>Projekt_ID (xfs):</b> Ist nur zur Anzeige des Projekt Namens das gerade
+				bearbeitet wird, ausser es wird ein neues Projekt erstellt. Dann kann man hier einen 
+				neuen Projekt Namen eingeben.</p>
+                                <p><b>Projekt_Nr (xfs):</b> Beim Anlegen eines neuen Projekts k&ouml;nnen Sie hier
+				eine Projekt Nummer ausw&auml;hlen. Es werden nur die angezeigt die noch nicht vergeben 
+				worden sind (1-100).</p>
+                                <p><b>Projekt_Verz. (xfs):</b> Beim Anlegen eines neuen Projekts k&ouml;nnen Sie 
+				hier ein Verzeichnis ausw&auml;hlen welches vom Projekt &uuml;berwacht werden soll.
+				Es wird &uuml;berpr&uuml;ft ob das Verzeichnis schon &uuml;berwacht wird. Z. B. wenn
+				/mnt/foo/bar &uuml;berwacht wird, kann man nicht /mnt/foo ausw&auml;hlen aber 
+				/mnt/foo/bar1.</p>
+                                <p><b>Block_Hardlimit:</b> Geben Sie die Gr&ouml;sse des Block Hardlimits ein.</p>
+                                <p><b>Block_Softlimit:</b> Geben Sie die Gr&ouml;sse des Block Softlimits ein..</p>
+                                <p><b>Inode_Hardlimit:</b> Geben Sie die Anzahl der Inode (Datei) Hardlimits ein.</p>
+                                <p><b>Inode_Softlimit:</b> Geben Sie die Anzahl des Inode (Datei) Softlimits ein.</p>
+                                <p><b>Realtime_Block_Hardlimit (xfs):</b> Geben Sie die Gr&ouml;sse des Realtime Block
+				Hardlimit ein.</p>
+                                <p><b>Realtime_Block_Softlimit (xfs):</b> Geben Sie die Gr&ouml;sse des Realtime Block 
+				Softlimit ein.</p>
+                                <p><b>Block_Grace_Zeit:</b> W&auml;hlen Sie eine Zeit die beim Block Limit 
+				&uuml;erschritten werden darf. Es stehen die Zeitangaben Sekunden, Minuten, Stunden,
+				Tage, Wochen und Monaten zur Verf&uuml;gung. Standard sind 7 Tage.</p>
+                                <p><b>Inode_Grace_Zeit:</b> W&auml;hlen Sie eine Zeit die beim Inode Limit 
+				&uuml;erschritten werden darf. Es stehen die Zeitangaben Sekunden, Minuten, Stunden,
+				Tage, Wochen und Monaten zur Verf&uuml;gung. Standard sind 7 Tage.</p>
+                                <p><b>Realtime_Block_Grace_Zeit (xfs):</b> W&auml;hlen Sie eine Zeit die beim
+				Resltime Block Limit &uuml;erschritten werden darf. Es stehen die
+				Zeitangaben Sekunden, Minuten, Stunden,
+				Tage, Wochen und Monaten zur Verf&uuml;gung. Standard sind 7 Tage.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name="drives">3 Laufwerke</a></h3>
+                                <p>Als erstes w&auml;hlt man ein Laufwerk aus damit kwquota weiss welches
+				"quota-Programm" es benutzen soll. Danach kann man je nach Dateisystem verschiedene
+				Optionen auf dem Laufwerk ausf&uuml;hren. Im Men&uuml; wird der Status
+				des Laufwerks angezeigt.</p>
+				<p><table cellSpacing=0 cellPadding=0 width="100%" border=0>
+					<tr>
+						<td><img src="../../../images/trans.gif" width="15" height="1" align="left" border="0"></td>
+						<td></td>
+					</tr>
+					<tr>
+						<th colspan="2"><p>Dateisystem xfs:</p></th>
+					</tr>
+					<tr>
+						<td></td>
+						<td width="15"><p><b>einschalten: </b>Quota eines Laufwerks 
+						einschalten.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>Backup_erstellen: </b>Quota Informationen eines Laufwerks
+						in einer Datei sichern. Die Backup Datei heisst 
+						/etc/kwtools/Laufwerk_quotatyp_quota.txt. Z.B. /home wird gesichert
+						dann heisst die Backup Datei /etc/kwtools/home_user_quota.txt.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>Backup_zur&uuml;ck: </b>Quota Informationen aus einer
+						Datei zur&uuml;ck spielen. Die Backup Datei heisst 
+						/etc/kwtools/Laufwerk_quotatyp_quota.txt.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>Platz_schaffen: </b>Platz schaffen auf dem Laufwerk von 
+						einigen Quota Metadaten.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>ausschalten: </b>Quota eines Laufwerks ausschalten.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>komplett_aus: </b>Quota auf dem Laufwerk permannent 
+						ausschalten. Danach muss man das Laufwerk neu einbinden bzw. den
+						Rechner neu starten. Siehe Einf&uuml;hrung.</p></td>
+					</tr>
+					<tr>
+						<th colspan="2"><p>Dateisysteme ext2/3, jfs, reiserfs:</p></th>
+					</tr>
+					<tr>
+						<td></td>
+						<td width="15"><p><b>einschalten: </b>Quota eines Laufwerks 
+						einschalten.</p></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>ausschalten: </b>Quota eines Laufwerks ausschalten.</p></td>
+					</tr>
+					<tr>
+						<th colspan="2"><p>andere Dateisysteme:</p></th>
+					</tr>
+					<tr>
+						<td></td>
+						<td><p><b>(Noch) Keine Unterst&uuml;tzung.</b></p></td>
+					</tr>
+				</table></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name="warning">4 Warn Konfiguration</a></h3>
+			<p>Warnquota &uuml;berpr&uuml;ft das Disk Quota f&uuml;r jedes Dateisystem
+			und emailt eine Warnung an die Benutzer/Gruppe, welche ihr Softlimit erreicht
+			haben. Das wird meist &uuml;ber das Programm cron(8) erledigt.</p>
+			<p>Bei der Konfiguration der Men&uuml;punkte &quot;&#042;Nachrichten und 
+			&#042;Signaturen&quot; sind folgende Ausdr&uuml;cke erlaubt. Die Ausdr&uuml;cke 
+			%i, %h,
+			%d, und %% sind Platzhalter f&uuml;r Benutzer/Gruppen Name, Rechner Name,
+			Domain Name, und &quot;%&quot; entsprechendes. F&uuml;r R&uuml;ckw&auml;rts 
+			Kompatibilit&auml;t gibts noch %s, was sich wie %i benimmt aber nicht
+			mehr benutzt werden sollte.</p>
+			<p><b>Mail Befehl:</b> Geben Sie das Kommando zum versenden der E-Mails ein (Bsp. 
+			/usr/sbin/sendmail -t).</p>
+			<p><b>Betreff:</b> Diese Betreff-Angabe wird als Betreff jeder E-Mail benutzt, die
+			das Warnquota-Hilfswerkzeug verschickt.</p>
+			<p><b>Nachricht:</b> Dieser Text wird als Nachricht in jeder E-Mail verwendet,
+			die von Warnquota-Programm verschickt wird. Einen Zeilenumbruch erhalten Sie mit
+			dem Zeichen &quot;|&quot;. Falls Sie den Text leer lassen, wird die
+			Standard-Nachricht verwendet.</p>
+			<p><b>Gruppen Nachricht:</b> Dieser Text wird als Nachricht in jeder E-Mail
+			verwendet, die von Warnquota-Programm verschickt wird, wenn Benutzergruppen
+			&Uuml;ber Quota sind. Einen Zeilenumbruch erhalten Sie mit dem Zeichen 
+			&quot;|&quot;.
+			Falls Sie den Text leer lassen, wird die Standard-Nachricht verwendet.</p>
+			<p><b>Kopie:</b> Den Text den Sie hier angeben, wird im CC-Feld jeder E-Mail
+			verwendet, die das Warnquota-Hilfswerkzeug versendet.</p>
+			<p><b>Admin Zeitfenster:</b> In der angegebenen Zeit vor Ende der Gnadenfrist
+			wird jede E-Mail auch an den Administrator geschickt. Eine leere Eingabe
+			bedeutet die ganze Gnadenfrist (Bsp. 2 days = 2 Tage).</p>
+			<p><b>Sender:</b> Diese E-Mail-Adresse wird als Absender jeder E-Mail benutzt,
+			die das Warnquota-Programm verschickt.</p>
+			<p><b>Support:</b> Bitte geben Sie eine E-Mail-Adresse ein, die ein Benutzer
+			anschreiben kann, falls er Hilfe zu &Uuml;ber Quota-E-Mail ben&ouml;tigt.
+			Wenn Sie eine Signatur angeben, k&ouml;nnen Sie dieses Feld leer lassen.</p>
+			<p><b>Signatur:</b> Dieser Text wird als Signatur f&uuml;r jede E-Mail verwendet,
+			die vom Warnquota-Programm verschickt wird. Einen Zeilenumbruch erhalten Sie
+			mit dem Zeichen &quot;|&quot;. Falls Sie den Text leer lassen, wird die Standard-Signatur
+			verwendet.</p>
+			<p><b>Gruppen Signatur:</b> Dieser Text wird als Signatur f&uuml;r jede
+			E-Mail verwendet, die vom Warnquota-Programm verschickt wird, wenn
+			Benutzergruppen &Uuml;ber Quota sind. Einen Zeilenumbruch erhalten Sie mit
+			dem Zeichen &quot;|&quot;. Falls Sie den Text leer lassen, wird die Standard-Nachricht
+			verwendet.</p>
+			<p><b>Telefon:</b> Bitte geben Sie eine Telefonnummer ein, die ein Benutzer
+			anrufen kann, falls er Hilfe zu seiner &Uuml;ber Quota-E-Mail ben&ouml;tigt
+			(Bsp. (123) 456-1111). Wenn Sie eine Signatur angeben, k&ouml;nnen Sie die
+			Sie diesen Text leer lassen.</p>
+			<p><b>Zeichensatz:</b> Den Zeichensatz den Sie hier angeben, wird im charset-Feld
+			im MIME-Kopfbereich jeder E-Mail verwendet, die das Warnquota-Hilfswerkzeug
+			versendet (Bsp. ISO-8859-1).</p>
+			<p><b>Mail Laufwerk</b> Falls Sie warnquota auf einem Mail Server laufen lassen
+			und keine Bounces haben wollen, weil die Benutzer die &Uuml;ber Quota-E-Mail
+			nicht erhalten k&ouml;nnen, dann w&auml;hlen Sie &quot;alle&quot; aus.
+			warnquota schickt dann keine E-Mail, f&uuml;r alle Laufwerke. Falls Sie ein
+			Laufwerk ausw&auml;hlen (Bsp. /dev/hdb1) wird nur f&uuml;r dieses Laufwerk
+			keine &Uuml;ber Quota-E-Mail verschickt. F&uuml;r alle anderen Laufwerke schon.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/sys/kwpasswd.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/sys/kwraid.html" target="Context"><img src="../../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

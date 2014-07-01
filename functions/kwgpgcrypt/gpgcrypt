@@ -1,0 +1,153 @@
+# Funktion um ausgewaehlte Dateien und Verzeichnisse zu signieren, verschluesselln{{{
+# entschluesseln, etc
+#
+# benoetigt die Funktion passwort_eingabe
+#
+# usage: gpgcrypt
+#
+gpgcrypt() {
+# Funktion zum verschluesseln und entschluesseln ...{{{
+#
+# usage: gpgcrypt_action
+#
+gpgcrypt_action() {
+	if [ $F_OPT = / ] ; then
+		file_filter -d
+		#
+		# Verzeichnisse rekursiv bearbeiten{{{
+		#
+		if [ "$DF_DIR_ARRAY" ] ; then
+			DIR_MENU=($DF_DIR_ARRAY)
+			DIR_TITLE=$(gettext 'Verzeichnisauswahl')
+			DIR_MSG=$(gettext 'Waehlen Sie ein oder mehrere Verzeichnisse aus.')
+			radiolist "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*) script_help share/data_help
+						radiolist "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+						;;
+					*)	#
+						# In allen ausgewaehlten Verzeichnissen nach Dateien
+						# bearbeiten suchen, die nicht schon mit gpg bearbeitet
+						# wurden.
+						#
+						for d in $gv_Auswahl ; {
+							pushd $d
+							file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
+							#
+							# Nur wenn Dateien zum verschluesseln da 
+							# sind gehts weiter
+							#
+							if [ "$DF_ARRAY_NULL" ] ; then
+								if [ -z "$PASSPHRASE" ] ; then
+									# Passphrase eingeben 
+									password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
+								fi
+								#
+								for i in $DF_ARRAY_NULL ; {
+									gpgcrypt_opt $ACTION "$i"
+									eval $PROG "${=PROG_OPT}"
+								}
+								#
+								# Ursruengliche Dateien loeschen?
+								#
+								del_file -A "$DF_ARRAY_NULL"
+							else
+								MSG=$(gettext 'Es sind keine Dateien zum bearbeiten mittels gpg vorhanden. Entweder sind schon alle bearbeitet worden oder es sind gar keine Dateien vorhanden.')
+								msgbox "$gv_Attention" "$MSG"
+							fi
+							popd
+						}
+						#
+						# Passphrase loeschen
+						#
+						unset -- PASSPHRASE
+						break
+						;;
+				esac
+			done
+		else
+			MSG=$(gettext 'Unter $DIR sind keine Verzeichnisse.')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+		#}}}
+	else
+		#
+		# Dateien ohne gpg Endung bearbeiten{{{
+		#
+		file_filter "$FORMAT" "$SUFFIX" "$A_SUFFIX"
+		#
+		if [ "$DF_ARRAY" ] ; then
+			FILE_MENU=($DF_ARRAY)
+			FILE_TITLE=$(gettext 'Dateiauswahl')
+			FILE_MSG=$(gettext 'Waehlen Sie eine oder mehrere Dateien zur weiteren Bearbeitung aus.')
+			radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*) script_help share/data_help
+						radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+						;;
+					*)	#
+						# Variable gv_Auswahl in Sicherheit bringen
+						ARRAY="$gv_Auswahl"
+						# Passphrase eingeben 
+						password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
+						#
+						for i in $ARRAY ; {
+							gpgcrypt_opt $ACTION "$i"
+							eval $PROG "${=PROG_OPT}"
+						}
+						#
+						# Passphrase loeschen
+						#
+						unset -- PASSPHRASE
+						#
+						del_file -A "$ARRAY"
+						break
+						;;
+				esac
+			done
+			#
+			unset -- PASSPHRASE
+		else
+			MSG=$(gettext 'Es sind keine un/verschluesselten Dateien vorhanden.')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+		#}}}
+	fi
+}
+#}}}
+	#
+	dselect
+	if [ "$VERZ" ] ; then
+		dselect_check "$VERZ"
+		if [ -n "$VERZ" ] ; then
+			user_device_check "$VERZ" AIE
+			cd "$VERZ"
+			PROG=gpg
+			case $ACTION in
+				both|crypt|sign)
+					# signieren oder verschluesseln oder beides
+					#
+					# Ausschluss alle Dateien die auf *.gpg enden.
+					A_SUFFIX="gpg"
+					gpgcrypt_action
+					;;
+				decr*)
+					# entschluesseln
+					SUFFIX=".gpg"
+					FORMAT=""
+					A_SUFFIX=""
+					gpgcrypt_action
+					;;
+			esac
+		fi
+	else
+		no_input_msg
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

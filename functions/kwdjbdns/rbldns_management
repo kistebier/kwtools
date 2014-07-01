@@ -1,0 +1,156 @@
+# Funktion um den rbldns server zu verwalten{{{
+#
+# usage: rbldns_management
+#
+rbldns_management() {
+if [ -d ${SV_DIR}/${DNS} ] ; then
+	cd ${SV_DIR}/${DNS}/root
+	# Programme pruefen und wenn nicht vorhanden beziehungsweise
+	# ausfuehrbar abbrechen.
+	PATH="$PATH:${SV_DIR}/${DNS}/root"
+	prog_check rbldns-data
+	if [[ -n $NO_PROGS ]] ; then
+		break
+	fi
+	# Funktion rbldns_conf_menue{{{
+	RBL_ADMIN_TITLE=(${lv_Administration}::${lv_Rbldns})
+	RBL_ADMIN_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Delete \"\"
+		$lv_Database \"$lv_New_Create\" $gv_Back \"\")
+	#
+	rbldns_conf_menue() {
+		menubox "$1" "$RBL_ADMIN_TITLE" "$gv_Menupoint" "$RBL_ADMIN_MENU"
+	}
+	#}}}
+	rbldns_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfetext fuer rbldns
+				script_help rbldns_help
+				rbldns_conf_menue
+				;;
+			$gv_Display)
+				# Konfigurationsanzeige# {{{
+				if [ -s data ] ; then
+					view_file data
+				else
+					no_entry_msg
+				fi
+				## }}}
+				rbldns_conf_menue $gv_Display
+				;;
+			$gv_Create)
+				# Dateneingabe{{{
+				MSG=$(gettext 'Geben Sie bitte einen Rechner, Netzwerk oder einen Text fuer A records an.')
+				inputbox "$RBL_ADMIN_TITLE" "$MSG"
+				if [ "$gv_Auswahl" ] ; then
+					H_IP="${${${gv_Auswahl/:/}%%:*}%\/*}"
+					# ip_analyse liefert die noetigen Variablen IP1, IP2,...
+					ip_analyse "$H_IP"
+					case $gv_Auswahl in
+						${IP1}.${IP2}.${IP3}.${IP4}/[0-9]*)	
+							# Netzwerk (192.168.0.0/24)
+							if [ -f data ] ; then
+								grep -v "$gv_Auswahl" data >data$$
+								>> data$$ <<< "$gv_Auswahl"
+								mv data$$ data
+							else
+								> data <<< "$gv_Auswahl"
+							fi
+							;;
+						:${IP1}.${IP2}.${IP3}.${IP4}:http://*)	
+							# :IP:Text (Bsp.: http://www.myrbl.de/rbllist.html)
+							if [ -f data ] ; then
+								grep -v "$gv_Auswahl" data >data$$
+								>> data$$ <<< "$gv_Auswahl"
+								mv data$$ data
+							else
+								> data <<< "$gv_Auswahl"
+							fi
+							;;
+						${IP1}.${IP2}.${IP3}.${IP4})	
+							# IP, gv_Ip_Adr wird von ip_analyse belegt.
+							if [ "$gv_Ip_Adr" ] ; then
+								if [ -f data ] ; then
+									grep -v "$gv_Ip_Adr" data >data$$
+									>> data$$ <<< "$gv_Ip_Adr"
+									mv data$$ data
+								else
+									> data <<< "$gv_Ip_Adr"
+								fi
+							fi	
+							;;
+						*)
+							no_input_msg
+							;;		
+					esac
+				else
+					no_input_msg
+				fi
+				#}}}
+				rbldns_conf_menue $gv_Create
+				;;
+			$gv_Delete)
+				# Daten loeschen{{{
+				unset -- D_Menue
+				ANZ=1
+				while read DATA ; do
+					case "$DATA" in
+						[0-9]*.[0-9]*.[0-9]*.[0-9]*)	
+							D_Menue[ANZ]="$DATA "$gv_Host" off"
+							;;
+						[0-9]*.[0-9]*.[0-9]*.0/[0-9]*)	
+							D_Menue[ANZ]="$DATA "$gv_Network" off"
+							;;
+						:[0-9]*.[0-9]*.[0-9]*.[0-9]*:[a-zA-Z:/_-.0-9]*)	
+							D_Menue[ANZ]="\"$DATA\" "$TEXT" off"
+							;;
+					esac
+					(( ANZ++ ))
+				done < data
+				#
+				if [ -n "${D_Menue[1]}" ] ; then
+					DEL_MENU=($D_Menue)
+					checklist "$RBL_ADMIN_TITLE" "$DEL_MSG" "$DEL_MENU"
+					# Eintraege loeschen
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)	script_help share/conf_del_help
+								checklist "$RBL_ADMIN_TITLE" "$DEL_MSG" "$DEL_MENU"
+								;;
+							*)
+								for i in ${=gv_Auswahl} ; {
+									grep -v "^$i" data >data$$
+									mv data$$ data
+								}
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				rbldns_conf_menue $gv_Delete
+				;;
+			$lv_Database)
+				# speichern, falls es eine Datenbank gibt.
+				if [ -s data ] ; then
+					rbldns-data &>/dev/null
+				fi
+				break
+				;;
+			$gv_Back)
+				break
+				;;
+		esac
+	done
+else
+	no_dns_msg $DNS
+fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

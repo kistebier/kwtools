@@ -1,0 +1,46 @@
+# Funktion Datenbank neu erzeugen und Postfix anweisen die Einstellungen neu einzulesen{{{
+#
+# usage: db_new_reread [ -r ] TABFORMAT FILE
+# -r - keine Warnung bei Duplikaten
+# TABFORMAT - Tabellenformat
+# FILE - Tabellendatei
+#
+db_new_reread() {
+	if [ "$#" -ge 2 ] ; then
+		RET=0
+		OPT="$1"
+		case "$OPT" in
+			-r)
+				case "$2" in
+					btree|cdb|dbm|hash|sdbm)
+						postmap -r $3
+						;;
+				esac
+				;;
+			*)
+				case "$1" in
+					btree|cdb|dbm|hash|sdbm)
+						postmap $2 2>&1 | grep duplicate && RET=1
+						;;
+				esac
+				;;
+		esac
+		# Diese Funktion steht im Script kwpostfix
+		if [ "$RET" = 0 ] ; then
+			postfix_start_reload
+		else
+			MSG=$(gettext 'Es wurden Duplikate in der Datenbank gefunden. Die Datenbank wurde zwar erzeugt aber Bitte ueberpruefen Sie ihre Einstellungen.')
+			msgbox "$gv_Attention" "$MSG"
+			postfix_start_reload
+		fi
+	else
+		no_para_msg "$0"
+		return 1
+	fi
+	return 0
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

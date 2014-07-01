@@ -1,0 +1,477 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwgrub, konfiguriert und installiert grub
+# Version: 0.2.13
+
+trap 'setterm -inversescreen off ; setterm -reset ; 
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check grub
+if [ -z "$PROGS" ] ; then
+	exit 0
+else
+	gv_Grub1=yes
+fi
+
+# auf Root pruefen
+root_check
+
+Unset=(APPEND ROOT_PART KERNEL_PART MBR_FLOPPY_PART INITRD VMLINUZ
+	MAKEACTIVE BOOT WERT TITEL_L TITLE_LINUX MBR_FLOPPY_PART FLOPPY ZNR
+	MODULE MODULE1 MEMTEST LOCK HIDDENMENU SPLASH PASS)
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benötigten Funktionen laden.
+autoload -U makeactive_msg memtest_msg default_menu_lst
+
+# Variablen
+lv_Kernel_Part=$(gettext 'Kernel_Partition')
+lv_Boot_Conf=$(gettext 'Boot_Konfiguration')
+lv_Installation=$(gettext 'Installation')
+lv_Disk=$(gettext 'Disk')
+
+# Funktion haupt_menue{{{
+MAIN_MENU=($lv_Boot_Conf \"\" $gv_Configuration \"\"
+$lv_Installation \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion memtest auswählen{{{
+#
+memtest_choice() {
+	if_conf_file "$OS" initrd
+	FORMAT="$IF_MEMTEST"
+	file_choice /boot only
+	#
+	if [ "$WERT" ] ; then
+		if [ ${(M)$(< /proc/mounts)##$VERZ} ] ; then
+			MEMTEST="${WERT}"
+			if [ -n "$MEMTEST" ] ; then
+				memtest_msg
+			fi
+		else
+			gv_Boot="$VERZ"
+			MEMTEST="${gv_Boot}/${WERT}"
+			if [ -n "$MEMTEST" ] ; then
+				memtest_msg
+			fi
+		fi
+	fi
+}
+#}}}
+# Funktion, Kernel Partition auswaehlen{{{
+#
+kernel_part() {
+	partdb -i ' 83 \| fd '
+	if [ -n "$GRUB_PART_DISK_E" ] ; then
+		Tmp_Choice=($GRUB_PART_DISK_E)
+		part_choice "$Tmp_Choice"
+		if [ "$WERT" ] ; then
+			KERNEL_PART="$WERT"
+		fi
+	else
+		no_linux_part_msg
+	fi
+}
+#}}}
+# Funktion, Root Partition auswählen{{{
+#
+# usage: root_part
+root_part() {
+	local Parts
+	partdb
+	# PART_E wird als erstes von der Funktion partdb
+	# belegt.
+	if [ -n "$PART_E" ] ; then
+		Parts="$PART_E"
+	fi
+		# RAID Arrays finden und zur Auswahl stellen.
+		raid_filter -l
+		# Die Variable R_DEVS_E wird von der Funktion raid_filter
+		# belegt.
+		if [ -n "$R_DEVS_E" ] ; then
+			Parts="$Parts $R_DEVS_E"
+		fi
+		# LV's finden.
+		lv
+		# gefundene LV's auflisten
+		if [ -n "$LV_E" ] ; then
+			Parts="$Parts $LV_E"
+		fi
+		# Gefundene Devices zur Auswahl anbieten.
+	if [ -n "$Parts" ] ; then
+		Tmp_Choice=($Parts)
+		part_choice "$Parts"
+		#
+		if [ "$WERT" ] ; then
+			ROOT_PART="$WERT"
+			unset -- MAKEACTIVE
+		fi
+	else
+		no_part_msg
+	fi
+}
+#}}}
+# Funktion default_grub# {{{
+#
+# usage: default_grub
+default_grub() {
+	DEFAULT_BOOT=0
+	HIDDENMENU=yes
+	TIMEOUT=10
+	TAST="$gv_English"
+	egrep -v "^[[:space:]]*(#|$)" $Menu_lst | while read a b c ; do
+		case "$a" in
+			default)
+				# Standard boot Titel
+				DEFAULT_BOOT="$b"
+				;;
+			password)
+				# Passwort
+				PASS="${${c//\\/\\\/}//\$/\\$}"
+				;;
+			hiddenmenu)
+				# Menue anzeigen oder verstecken
+				HIDDENMENU=no
+				;;
+			timeout)
+				# Timeout
+				TIMEOUT="$b"
+				;;
+			splashimage*)
+				# Splash Image herausfinden
+				SPLASH="${a##*=}"
+				;;
+		esac
+	done
+	# Tastatur
+	if [ "`print -l ${(M)${(f)"$(< $Menu_lst)"}##(#s)setkey*y*z}`" ] ; then
+		TAST="$gv_German"
+	else
+		TAST="$gv_English"
+	fi
+}
+## }}}
+# Funktion change_default_grub{{{
+#
+# usage: change_default_grub
+change_default_grub() {
+	# menu.lst splitten
+	local First_Section_Anz
+	First_Section_Anz="`sed -e '/^title/q' $Menu_lst | wc -l`"
+	sed -n -e "1,$[First_Section_Anz-1]p" $Menu_lst >$Menu_lst$$
+	sed -n -e "${First_Section_Anz},\$p" $Menu_lst >${Menu_lst}_last
+	mv $Menu_lst$$ $Menu_lst
+	# Splash und hiddenmenu einstellen
+	# Splashimage einstellen# {{{
+	#
+	if [ -n "$SPLASH" ] ; then
+		if [ "`grep '^splashimage*' $Menu_lst`" ] ; then
+			sed -e "s|^splashimage.*|splashimage=${SPLASH}|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		elif [ "`grep '^#[[:space:]]*splashimage*' $Menu_lst`" ] ; then
+			sed -e "s|^#[[:space:]]*splashimage.*|splashimage=${SPLASH}|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		else
+			>> $Menu_lst <<< "# Splashimage
+splashimage=${SPLASH}
+#"
+		fi
+	else
+		if [ "`grep '^splashimage*' $Menu_lst`" ] ; then
+			sed -e "s|^splashimage.*|# splashimage={SPLASH}|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		fi
+	fi
+	## }}}
+	# Hiddenmenue einstellen# {{{
+	#
+	if [ "$HIDDENMENU" = no ] ; then
+		if [ "`grep '^hiddenmenu' $Menu_lst`" ] ; then
+		elif [ "`grep '^#[[:space:]]*hiddenmenu' $Menu_lst`" ] ; then
+			sed -e "s|^#[[:space:]]*hiddenmenu|hiddenmenu|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		else
+			>> $Menu_lst <<< "# Hiddenmenu
+hiddenmenu
+#"
+		fi
+	else
+		if [ "`grep '^hiddenmenu' $Menu_lst`" ] ; then
+			sed -e "s|^hiddenmenu|# hiddenmenu|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		fi
+	fi
+	## }}}
+	# Passwort einstellen
+	if [ -n "$PASS" ] ; then
+		if [ "`grep '^password*' $Menu_lst`" ] ; then
+			sed -e "s|^password.*|password --md5 ${PASS}|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		elif [ "`grep '^#[[:space:]]*password' $Menu_lst`" ] ; then
+			sed -e "s|^#[[:space:]]*password.*|password --md5 ${PASS}|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		else
+			>> $Menu_lst <<< "# Password
+password --md5 ${PASS}
+#"
+		fi
+	else
+		if [ "`grep '^password*' $Menu_lst`" ] ; then
+			sed -e "s|^password.*|# password --md5 PASSWORD|" $Menu_lst >$Menu_lst$$
+			mv $Menu_lst$$ $Menu_lst
+		fi
+	fi
+	# Timeout erstellen
+	if [ "`grep '^timeout*' $Menu_lst`" ] ; then
+		sed -e "s/^timeout.*/timeout $TIMEOUT/" $Menu_lst >$Menu_lst$$
+		mv $Menu_lst$$ $Menu_lst
+	else
+		sed -e "s/^#.*timeout.*/timeout $TIMEOUT/" $Menu_lst >$Menu_lst$$
+		mv $Menu_lst$$ $Menu_lst
+	fi
+	# Standard Boot einstellen
+	if [ "`grep '^default*' $Menu_lst`" ] ; then
+		sed -e "s/^default.*/default $DEFAULT_BOOT/" $Menu_lst >$Menu_lst$$
+		mv $Menu_lst$$ $Menu_lst
+	else
+		sed -e "s/^#.*default.*/default $DEFAULT_BOOT/" $Menu_lst >$Menu_lst$$
+		mv $Menu_lst$$ $Menu_lst
+	fi
+	# Rest wieder anhaengen
+	< ${Menu_lst}_last >> $Menu_lst
+	rm -f ${Menu_lst}_last &>/dev/null
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+disk
+# Partitionen heraussuchen.
+partdb
+lvm_version -q
+floppy
+os_check
+
+# Variablen belegen
+GRUB_DIR="/boot/grub"
+
+# Falls noch kein grub Verzeichnis angelegt wurde, wird es jetzt getan
+if [ ! -d "$GRUB_DIR" ] ; then
+	create_file -d "$GRUB_DIR"
+	Menu_lst="${GRUB_DIR}/menu.lst"
+	default_menu_lst
+else
+	# pruefen welche Konfigurations Datei zum Einsatz kommt.
+	if [ -f ${GRUB_DIR}/grub.conf ] ; then
+		Menu_lst="${GRUB_DIR}/grub.conf"
+	else
+		Menu_lst="${GRUB_DIR}/menu.lst"
+	fi
+fi
+#
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+   			# Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$lv_Boot_Conf)
+			# Boot Konfiguration
+			autoload -U kwgrub_boot_conf kwgrub_default_notiz
+			kwgrub_boot_conf
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration
+			autoload -U kwgrub_conf kwgrub_config
+			kwgrub_conf
+			haupt_menue
+			;;
+		$lv_Installation)
+			# Grub installieren{{{
+			unset -- ROOT_PART KERNEL_PART MBR_FLOPPY_PART
+			#
+			# Funktion install_grub_menue{{{
+			#
+			lv_Mbr_Floppy_Part=$(gettext 'MBR_Floppy_Partition')
+			lv_Install=$(gettext 'installieren')
+			INSTALL_TITLE=($lv_Installation)
+			#
+			install_grub_menue() {
+				INSTALL_MENU=($lv_Kernel_Part \"$KERNEL_PART\"
+				$lv_Mbr_Floppy_Part \"$MBR_FLOPPY_PART\"
+				$lv_Install \"\" $gv_Back \"\")
+				menubox "$1" "$INSTALL_TITLE" "$gv_Menupoint" "$INSTALL_MENU"
+			}
+			#}}}
+			install_grub_menue
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help install_conf_help
+						install_grub_menue
+						;;
+					$lv_Kernel_Part)
+						# Kernel Partition auswählen
+						kernel_part
+						install_grub_menue $lv_Kernel_Part
+						;;
+					$lv_Mbr_Floppy_Part)
+						# MBR, Floppy oder eine Partition auswählen wohin {{{
+						# grub installiert werden soll.
+						unset -- FLOPPY MBR_FLOPPY_PART DEV_INSTALL_MENU
+						#
+						lv_Floppy=$(gettext 'Floppy')
+						lv_Mbr=$(gettext 'MBR')
+						lv_Partition=$(gettext 'Partition')
+						#
+						if [ -n "$DISK_DEV" ] ; then
+							if [ -n "$PART" ] ; then
+								DEV_INSTALL_MENU=($lv_Mbr \"\" $lv_Partition \"\")
+							fi
+						fi
+						if [ -n "$FLOPPY_DEV" ] ; then
+							DEV_INSTALL_MENU=($lv_Floppy \"\" $DEV_INSTALL_MENU)
+						fi
+						if [ -n "$DEV_INSTALL_MENU" ] ; then
+							DEV_INSTALL_TITLE=$(gettext 'Installation::MBR_Floppy_Partition')
+							DEV_INSTALL_MSG=$(gettext 'Waehlen Sie den Ort der Installation aus.')
+							menubox "" "$DEV_INSTALL_TITLE" "$DEV_INSTALL_MSG" "$DEV_INSTALL_MENU"
+
+							#
+							while [ "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help mbr_floppy_part_help
+										menubox "" "$DEV_INSTALL_TITLE" "$DEV_INSTALL_MSG" "$DEV_INSTALL_MENU"
+										;;
+									$lv_Mbr)
+										# In den MBR welcher Festplatte{{{
+										#
+										MBR_MSG=$(gettext 'Waehlen Sie die Festplatte aus in deren MBR grub installiert werden soll.')
+										menubox "" "$DEV_INSTALL_TITLE" "$MBR_MSG" "$GRUB_DISK"
+										#
+										while [ "$gv_Auswahl" ] ; do
+											case "$gv_Auswahl" in
+												HELP*)	script_help grub_disk_help
+													menubox "" "$DEV_INSTALL_TITLE" "$MBR_MSG" "$GRUB_DISK"
+													;;
+												*)	# übernehmen
+													unset -- FLOPPY
+													MBR_FLOPPY_PART="$gv_Auswahl"
+													break 2
+													;;
+											esac
+										done
+										#}}}
+										;;
+									$lv_Floppy)
+										# uebernehmen
+										MBR_FLOPPY_PART="(fd0)"
+										if [ -c /dev/.devfsd ] ; then
+											FLOPPY=/dev/floppy/0u1440
+										else
+											FLOPPY=/dev/fd0u1440
+										fi
+										break
+										;;
+									$lv_Partition)
+										# In den Bootsector einer Partition installieren
+										#
+										part_choice "$GRUB_PART_DISK_E"
+										if [ "$WERT" ] ; then
+											unset -- FLOPPY
+											MBR_FLOPPY_PART="$WERT"
+										fi
+										break
+										;;
+								esac
+							done
+						else
+							MSG=$(gettext 'Es sind keine Laufwerke vorhanden (Disk,Floppy), um grub zu installieren.')
+							msgbox "$gv_Attention" "$MSG"
+						fi
+						#}}}
+						install_grub_menue $lv_Mbr_Floppy_Part
+						;;
+					$lv_Install)
+						# grub installieren{{{
+						autoload -U install_grub cp_stage
+						#
+						cp_stage
+						if [ "$MBR_FLOPPY_PART" -a "$FLOPPY" ] ; then
+							floppy_format $FLOPPY
+							dd if="/boot/grub/stage1" of="${FLOPPY}" bs="512" count="1" &>/dev/null
+							dd if="/boot/grub/stage2" of="${FLOPPY}" bs="512" seek="1" &>/dev/null
+							unset -- FLOPPY
+							break
+						fi
+						#
+						BOOT=""
+						if [ "$KERNEL_PART" -a "$MBR_FLOPPY_PART" ] ; then
+							B=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##*/boot*}}[2]}
+							if [ ! -z "$B" ] ; then
+								unset -- BOOT
+							else
+								BOOT="/boot"
+							fi
+							install_grub
+						else
+							MSG=$(gettext 'Einer der Menuepunkte Kernel_Partition oder MBR_Floppy_Partition ist nicht belegt.')
+							msgbox "$gv_Attention" "$MSG"
+						fi
+						#}}}
+						install_grub_menue $lv_Install
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue
+			;;
+		$gv_Exit)
+			break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

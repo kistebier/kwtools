@@ -1,0 +1,211 @@
+.\"     Title: KWCRYPTSETUPRC
+.\"    Author: Kai Wilke <kiste@netzworkk.de>
+.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: 
+.\"    Source: Version 0.1.5
+.\"
+.TH "KWCRYPTSETUPRC" "5" "11/15/2013" "Version 0.1.5" "Benutzer Anleitung"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+kwcryptsetuprc \- Konfigurationsdatei f\(:ur kwcryptsetup.
+.SH "BESCHREIBUNG"
+.PP
+Dies ist die Standard Konfigurationsdatei vom Script
+\fBkwcryptsetup\fR\&. Diese Werte werden beim Erstellen von verschl\(:usselten Laufwerken angeboten, auch zur Ver\(:anderung\&. Beginnt eine Zeile mit
+\(lq#\(rq
+oder ist leer wird dies als Kommentar interpretiert\&.
+.SH "VARIABELN"
+.PP
+\fBALIGN\fR
+.RS 4
+Geben Sie ein vielfaches von
+\fB512 Byte\fR
+Sektoren ein (\fB8\fR
+=
+\fB4096 Byte\fR)\&. Das dient f\(:ur die
+\(lq\fBstripe\fR\(rq
+Option auf RAID Laufwerken oder Logischen Volumes (\fILVM\fR)\&. Lesen Sie dazu die Manpages der Programme zur Formatierung\&.
+.RE
+.PP
+\fBGPG\fR
+.RS 4
+Soll
+\(lq\fBgnupg\fR\(rq
+zum entschl\(:usseln der Schl\(:usseldatei verwendet werden (\fByes/no\fR)? Geht nicht zusammen mit der Option
+\(lq\fBSSL\fR\(rq\&.
+.RE
+.PP
+\fBHASH\fR
+.RS 4
+Auswahl des Hashwertes der f\(:ur die die Passphrase verwendet werden soll\&. Standard ist
+\fBripemd160\fR\&.
+.RE
+.PP
+\fBITERATION_TIME\fR
+.RS 4
+Geben Sie die Zeit f\(:ur den Passwort Prozess, in Mikrosekunden (Standard ist
+\fB1\fR) ein\&.
+.RE
+.PP
+\fBKEY_FILE\fR
+.RS 4
+W\(:ahlen Sie hier die Datei aus, die den Schl\(:ussel enth\(:alt\&. Wenn Sie keine Datei ausw\(:ahlen wird
+\(lqnone\(rq
+genommen und Sie m\(:ussen die Passphrase interactiv eingeben\&.
+.sp
+\fBNotiz:\fR
+Bei Verwendung der
+\fBLUKS\fR
+Erweiterung k\(:onnen Sie bis zu 8 Passphrasen in der Schl\(:usseldatei verwenden\&. Soll beim Login das Laufwerk automatisch aktiviert werden, muss die Passphrase gleich dem Login Passwort des Benutzers sein, und Sie ben\(:otigen dazu das Pam Modul
+\(lq\fBpam\-mount\fR\(rq\&. Schauen Sie nach dem richtigen Paketnamen in Ihrer Distribution\&. Wenn Sie bei diesem Szenario das Login Passwort \(:andern m\(:ussen Sie auch die Passphrase des Laufwerks \(:andern\&. Unter Umst\(:anden kann dies die Sicherheit von
+\fBLUKS\fR
+untergraben\&.
+.RE
+.PP
+\fBKEY_SIZE\fR
+.RS 4
+Auswahl der Schl\(:usselgr\(:osse (\fB128, 192, 256\fR)\&. Standard ist
+\fB256 Bit\fR\&.
+.RE
+.PP
+\fBLOUD\fR
+.RS 4
+Soll beim starten des Laufwerks eine Warnung ausgegeben werden, wenn dieses nicht existiert (\fByes/no\fR)?
+.RE
+.PP
+\fBMAKESWAP\fR
+.RS 4
+Soll ein Swap\-Laufwerk erstellt werden (\fByes/no\fR)?
+.RE
+.PP
+\fBMOUNT_PATH\fR
+.RS 4
+Mountverzeichnis ausw\(:ahlen\&. Dieses Verzeichnis muss schon vorher existieren und sollte in der Datei
+\fI/etc/fstab\fR
+konfiguriert sein\&. Dieses dient zum einbinden von externen Laufwerken, die die externe Schl\(:usseldatei enthalten\&.
+.RE
+.PP
+\fBNOAUTO\fR
+.RS 4
+Soll das Laufwerk nicht beim starten des Rechners erstellt werden, sondern manuell (\fByes/no\fR)? Also nicht automatisch\&.
+.sp
+\fBNotiz:\fR
+Bei Benutzung des Pam Moduls
+\(lq\fBpam\-mount\fR\(rq
+sollten Sie immer
+\(lq\fBno\fR\(rq
+benutzen, da es sonst zu Fehlern beim mounten des Laufwerks kommt\&. Das verschl\(:usselte Laufwerk darf noch nicht gestartet sein\&.
+.RE
+.PP
+\fBNOEARLY\fR
+.RS 4
+Soll das Laufwerk verz\(:ogert erstellt werden, zum Beispiel nach dem RAID Arrays oder LVMs erstellt worden sind (\fByes/no\fR)?
+.RE
+.PP
+\fBOFFSET\fR
+.RS 4
+Geben Sie eine Zahl ein um wieviele Sektoren der 1\&. Sektor verschoben werden soll\&. Ab diesem Sektor wird das Laufwerk auf das verschl\(:usselte Laufwerk abgebildet\&. Hat das original Laufwerk
+\fI10000\fR
+Sektoren und
+\(lq\fBOFFSET\fR\(rq
+ist
+\fI300\fR
+wird das original Laufwerk ab Sektor
+\fI300\fR
+bis zum Ende auf das verschl\(:usselte Laufwerk abgebildet\&. Siehe auch die Option
+\(lq\fBSKIP\fR\(rq\&.
+.RE
+.PP
+\fBREADONLY\fR
+.RS 4
+Soll das Laufwerk im Nur Lesemodus erstellt werden (\fByes/no\fR)? Zum Beispiel f\(:ur CD/DVD\&.
+.RE
+.PP
+\fBSIZE\fR
+.RS 4
+Gr\(:osse des Containers\&. Standard Blockgr\(:osse ist
+\fB1 KByte\fR\&. Die Gr\(:osse der zu erstellenden verschl\(:usselten Datei (Container) muss gr\(:osser als
+\fB1 MByte\fR
+sein (LUKS\-Header)\&. Sie k\(:onnen als Masseinheit folgende Zeichen benutzen, [\fIkKmMtTpPeEzZ\fR]
+\fIm|M\-MegaByte\fR\&.
+.RE
+.PP
+\fBSKIP\fR
+.RS 4
+Geben Sie eine Zahl ein wieviele Sektoren am Anfang des verschl\(:usselten Laufwerks zur Berechnung des Initialisierungsvektor (\fBIV\fR) \(:ubersprungen werden sollen\&. Die Berechnung des
+\fBIV\fR
+behandelt Sektor
+\fB0\fR
+des verschl\(:usselten Laufwerks als w\(:are es Sektor
+\fBSKIP\fR=\fIn\fR\&. Dadurch kann man aus der Mitte eines verschl\(:usselten Laufwerks ein St\(:uck rausschneiden und es mit dem Schl\(:ussel des original Laufwerks immer noch korrekt ver\- und vor allem entschl\(:usseln, so dass dasselbe rauskommt, als h\(:atte man Sektor
+\fIn\fR+\fBSKIP\fR
+vom original Laufwerk ver\- bzw\&. entschl\(:usselt\&.
+.RE
+.PP
+\fBSSL\fR
+.RS 4
+Soll
+\fBopenssl\fR
+zum entschl\(:usseln der Schl\(:usseldatei verwendet werden (\fByes/no\fR)? Geht nicht zusammen mit der Option
+\(lq\fBGPG\fR\(rq\&.
+.RE
+.PP
+\fBTIMEOUT\fR
+.RS 4
+Timeout f\(:ur die Passwort\-Abfrage\&. Standard sind
+\fB5\fR
+Sekunden\&.
+.RE
+.PP
+\fBTMPFS\fR
+.RS 4
+W\(:ahlen Sie ein Dateisystem aus mit dem ein tempor\(:ares Laufwerk erstellt werden soll\&. Standard ist
+\(lq\fIext2\fR\(rq
+Dient unter anderem zum testen\&.
+.RE
+.PP
+\fBTRIES\fR
+.RS 4
+Anzahl der Wiederholungen bei der Passwort\-Abfrage\&. Standard ist
+\fB3\fR\&.
+.RE
+.PP
+\fBUSELUKS\fR
+.RS 4
+Soll die Erweiterung
+\fBLUKS\fR
+(Linux Unified Key Setup) verwendet werden (\fByes/no\fR)? Standard ist
+\fByes\fR\&. Dies sollten Sie eigentlich immer ausw\(:ahlen\&. Es ist die sicherste Methode\&.
+.RE
+.PP
+\fBVERIFY\fR
+.RS 4
+Soll die Passphrase nochmal \(:uberpr\(:uft werden (\fByes/no\fR)?
+.RE
+.SH "DATEI"
+.PP
+\fI~/\&.kwtools/kwcryptsetuprc\fR
+.RS 4
+Dies ist die Konfigurations Datei f\(:ur
+\fBkwcryptsetup\fR
+F\(:ur weitere Details siehe
+\fBkwcryptsetup\fR(8)\&.
+.RE
+.SH "SIEHE AUCH"
+.PP
+\fBcryptsetup\fR(8),
+\fBdmsetup\fR(8),
+\fBkwcryptsetup\fR(8)
+.SH "AUTOR"
+.PP
+\fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
+.sp -1n
+.IP "" 4
+Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.SH "COPYRIGHT"
+Copyright \(co 2002-2013 Kai Wilke
+.br

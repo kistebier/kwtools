@@ -1,0 +1,402 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD><TITLE>Berlios:Projekt:netzworkk:Doku:kwtools</TITLE>
+        <meta name="generator" content="quanta">
+        <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, netzworkk, kwtools, rsync">
+        <meta name="description" lang="en" content="">
+        <meta name="author" content="Kai Wilke / netzworkk.de">
+        <meta name="publisher" content="Kai Wilke / netzworkk.de">
+        <meta name="copyright" content="Kai Wilke / netzworkk.de">
+        <meta name="date" content="2012-03-10">
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <meta name="content-language" content="de">
+	<meta name="Robots" content="index,follow">
+	<link rel="icon" href="../../../images/favicon.ico" type="image/ico">
+        <LINK href="../../../css/style.css" type=text/css rel=stylesheet>
+</HEAD>
+<BODY>
+<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+        <TBODY>
+                <TR>
+                        <TD width="2%" height=15></TD>
+                        <TD width="96%"></TD>
+                        <TD width="2%"></TD>
+                </TR>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><center><a href="../../../doku/kwtools/net/kwrsync.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a></center><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h2><a name=kwrsync_backup>kwrsync_backup</a></h2>
+                                <p>kwrsync_backup zieht ein Momentaufnahme (Snapshot) von lokalen wie entfernten 
+				Rechnern. Es benutzt, wie der Name schon vermuten l&auml;sst, das Programm rsync
+				f&uuml;r die Erstellung der Snapshots. Um Speicherplatz zu sparen werden ausgiebig 
+				harte Links benutzt.<br>
+				kwrsync_backup_cron kann vom Cron D&auml;mon gestartet 
+				werden und macht das gleiche wie kwrsync_backup im Hintergrund.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#config">1 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#server_conf">2 Server Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="15" height="1"><a href="kwrsync_backup.html#server_config">2.1 Konfiguration</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="15" height="1"><a href="kwrsync_backup.html#server_conf_exclude">2.2 Exclude Datei</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="15" height="1"><a href="kwrsync_backup.html#server_conf_include">2.3 Include Datei</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#display">3 Ansicht</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#backup">4 Backup</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#info">5 Beachtenswertes</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="15" height="1"><a href="kwrsync_backup.html#nfs">5.1 NFS</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="15" height="1"><a href="kwrsync_backup.html#ssh">5.2 SSH</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><p><img src="../../../images/trans.gif" width="0" height="1"><a href="kwrsync_backup.html#links">6 Links</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=config></a>1 Konfiguration</a></h3>
+				<p>Hier kann man kwrsync_backup global konfigurieren</p>
+				<p><b>Backupverz.</b> In welchem Verzeichnis sollen die Backups gespeichert 
+				werden. Diese liegen dann unter Backupverz/hourly.0, hourly.1, ....</p>
+				<p><b>Bandbreite</b> Manchmal kann es sinnvoll sein die Bandbreite, der 
+				&Uuml;bertragung zu limitieren. Geben Sie hier einen Wert in Kbyte/s an (100 = 100 
+				KByte/s.</p>
+				<p><b>Check_Platz</b> Soll gepr&uuml;ft werden, ob noch ein gewisser Prozentsatz
+				an Plattenplatz und Inodes frei ist (ja/nein)?</p>
+				<p><b>Minimum_Platz</b> Geben Sie hier den Prozentsatz ein der maximal an
+				Plattenplatz benutzt werden darf. Denken Sie daran das die
+				Rotierung der Daten auch etwas Platz ben&ouml;tigt. Integerzahl zwischen
+				0 und <100 (Prozent). Ist die benutzte Kilobyte oder Inode Prozentzahl kleiner
+				als die angegebene maximale Prozentzahl an Plattenplatz
+				($HDMINFREE), wird ein Backup durchgef&uuml;hrt.</p>
+				<p><b>Mountverz.</b> Hier wird das Verzeichnis ausgew&auml;hlt, welches ins
+				Dateisystem vorher eingebunden werden muss, wo sich das Backup
+				Verzeichnis befindet. Es muss bereits in der /etc/fstab konfiguriert
+				sein.</p>
+				<p><b>Remote_shell</b> Welche Shell soll f&uuml;r &Uuml;bertragung genutzt werden.
+				Zur Auswahl stehen ssh und rsh, falls sie installiert sind. Der ssh
+				besitzt eine Kompression und &uuml;bertr&auml;gt alles verschl&uuml;sselt.</p>
+				<p><b>Server</b> Server die zu sichern sind, getrennt durch ein
+				Leerzeichen. Dies k&ouml;nnen IP-Adressen, Rechnernamen oder
+				Rechnenername.domain.de (FQDN) sein.</p>
+				<p><b>Logdatei</b> Logdatei in die die Ausgaben von kwrsync_backup geloggt
+				werden sollen. Standard ist /var/log/kwrsync_backup.log.</p>
+				<p><b>Pre_Script</b> Anngabe eines Script &#043; Argumente (optional).
+				Dieses Sript wird sofort ausgef&uuml;hrt bevor die Snapshots
+				erstellt und rotiert werden.</p>
+				<p><b>Post_Script</b> Angabe eines Script &#043; Argumente (optional).
+				Dieses Sript wird sofort ausgef&uuml;hrt nachdem die Snapshots
+				erstellt und rotiert wurden.</p>
+				<p><b>User</b> W&auml;hlen Sie einen Benutzer aus, der sich anstelle von "root"
+				auf den zu sichernden Rechnern einloggen darf. Es werden
+				nur Benutzer angeboten die auf diesem System installiert
+				sind.</p>
+				<p><b>Dateisystemgrenze</b> Bei &quot;yes&quot; wird das rekursive Sichern &uuml;ber
+				Dateisystemgrenzen hinweg ausgeschaltet (yes/no).</p>
+				<p><b>Hardlinks erstellen</b> Sollen Hardlinks bei identischen Dateien erstellt 
+				werden. Dies ist der beste Weg um spezielle Dateien, wie FIFOs, zu unterst&uuml;tzen 
+				und nat&uuml;rlich um Platz zu sparen. Schalten Sie dies ein (yes), wenn Ihr rsync 
+				(>=2.6.4) dies unterst&uuml;tzt.</p>
+				<p><b>Rotiere stuendlich</b> Geben Sie eine Integer Zahl f&uuml;r die
+				Anzahl der st&uuml;ndlichen Snapshots ein die behalten werden sollen. Standard ist 
+				6.</p>
+				<p><b>Rotiere taeglich</b> Geben Sie eine Integer Zahl f&uuml;r die Anzahl der 
+				t&auml;glichen Snapshots ein die behalten werden sollen. Standard ist 7.</p>
+				<p><b>Rotiere woechentlich</b> Geben Sie eine Integer Zahl f&uuml;r die Anzahl der 
+				w&ouml;chentlichen Snapshots ein die behalten werden sollen. Standard ist 4.</p>
+				<p><b>Rotiere monatlich</b> Geben Sie eine Integer Zahl f&uuml;r die Anzahl der 
+				monatlichen Snapshots ein die behalten werden sollen. Standard ist 6.</p>
+				<p><b>LVM lvcreate</b> Angabe des LVM Programm lvcreate mit vollem Pfad.</p>
+				<p><b>LVM lvremove</b> Angabe des LVM Programm lvremove mit vollem Pfad.</p>
+				<p><b>Snapshot Groesse</b> Angabe der Gr&ouml;sse f&uuml;r den tempor&auml;ren LVM
+				Snapshot.</p>
+				<p><b>Snapshot Name</b> Name des LVM Snapshot. Standard ist lvmsnapshot.</p>
+				<p><b>VG Pfad</b> Verzeichnis unter dem die Volume Groups (VG) liegen.
+				Unter Linux ist dies /dev.</p>
+				<p><b>LVM Mountpunkt</b> Angabe eines Mountpunkts f&uuml;r den tempor&auml;ren LVM
+				Snapshot.</p>
+				<p><b>speichern</b> Beim speichern wird &uuml;berpr&uuml;ft, ob der Benutzer "root"
+				schon eine Datei ~/.ssh/id_dsa.pub besitzt. Wenn nicht wird
+				eine angelegt. Dabei wird auch gleich eine Datei
+				~/.ssh/authorized_keys.rsync angelegt, die den richtigen
+				"rsync" Befehl enth&auml;lt. Diese Datei k&ouml;nnen Sie anschliessend auf
+				die zu sichernden Rechner (~/.ssh/authorized_keys, pr&uuml;fen
+				Sie Ihre "ssh" Konfiguration), in das Verzeichnis des
+				ausgew&auml;hlten Benutzers, kopieren.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=server_conf></a>2 Server Konfiguration</a></h3>
+				<p>F&uuml;r jeden konfigurierten Rechner, beziehungsweise der Konfiguration von 
+				Rsync Servern. wird eine Konfigurationsdatei angelegt und 
+				wenn man eine &quot;exclude&quot; oder &quot;include&quot; Datei
+				ben&ouml;tigt auch diese. Diese befinden sich in:<br>
+				/etc/kwtools/kwrsync_backup.d/rsync.conf<br>
+				/etc/kwtools/kwrsync_backup.d/rsync-exclude.conf<br>
+				/etc/kwtools/kwrsync_backup.d/rsync-include.conf<br>
+				/etc/kwtools/kwrsync_backup.d/Rechnername.conf<br>
+				/etc/kwtools/kwrsync_backup.d/Rechnername-exclude.conf<br>
+				/etc/kwtools/kwrsync_backup.d/Rechnername-include.conf</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td colspan=3><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=server_config></a>2.1 Konfiguration</a></h4>
+				<p><b>Rechner</b> Angabe des Rechners von dem Daten gesichert werden sollen.</p>
+				<p><b>Quelle</b> Angabe der Quelle die gesichert werden soll. Dies kann ein 
+				Verzeichnis oder eine Datei sein.</p>
+				<p><b>Ziel</b> Auswahl des Ziels, relativ zum Backup Verzeichnis, wohin
+				gesichert werden soll. Dies ist meist der Rechnername, kann aber auch ein 
+				Verzeichnis sein. Wenn das Verzeichnis bzw. der Rechnername nicht vorhanden
+				ist geben sie ihn einfach ein. Dieses Unterverzeichnis wird dann erstellt.</p>
+				<p><b>Benutzer</b> W&auml;hlen Sie einen Benutzer aus, der sich anstelle von
+				&quot;root&quot; auf dem zu sichernden Rechnern einloggen darf.</p>
+				<p><b>rsync Argumente</b> Eingabe von zus&auml;tzlichen Argumenten f&uuml;r das
+				Programm &quot;rsync&quot;. Diese m&uuml;ssen mit einem Leerzeichen getrennt
+				sein (man 1 rsync). Standard &quot;rsync&quot; Argumente sind 
+				&quot;-av --numeric-ids --delete --delete-excluded --relative&quot;.</p>
+				<p><b>LVM</b> Auswahl eines Logischen Volume (LV) von dem ein tempor&auml;rer
+				Snapshot erstellt werden soll.</p>
+				<p><b>Script</b> Geben Sie einen Befehl oder ein Script mit vollem Pfad 
+				ein.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td colspan=3><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=server_conf_exclude></a>2.2 Exclude Datei</a></h4>
+				<p><b>Exclude Datei</b> Hier kann man eine Datei bearbeiten, in der die 
+				Verzeichnisse und Dateien stehen die nicht mit ins Backup fliessen sollen.
+				Sie sollten z.B. die Verzeichnisse /proc und /sys nicht mit einbeziehen, da sie
+				nicht f&uuml;r die Wiederherstellung ben&ouml;tigt werden.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td colspan=3><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=server_conf_include></a>2.3 Include Datei</a></h4>
+				<p><b>Include Datei</b> Hier kann man eine Datei bearbeiten, in der die 
+				Verzeichnisse und Dateien stehen die zus&auml;tzlich mit ins Backup fliessen 
+				sollen.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=display></a>3 Ansicht</a></h3>
+				<p>Anzeige der belegten Speichergr&ouml;sse von Snapshots von einem oder mehreren 
+				Rechnern. Dabei wird der Befehl &quot;du -sch&quot; ausgef&uuml;hrt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=backup></a>4 Backup</a></h3>
+				<p>Erstellt eine Momentaufnahme von den Rechnern, die in der Konfigurationsdatei 
+				eingestellt wurden und anhand der Rechnereigenen Konfiguration.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=info></a>5 Beachtenswertes</a></h3></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=nfs></a>5.1 NFS</a></h4>
+			<p>Falls Benutzer ihre eigenen Backups restaurieren wollen muss man etwas Vorarbeit 
+			t&auml;tigen. Der beste Weg um dies zu erreichen ist das Erstellen eines Container
+			Verzeichnis f&uuml;r den Snapshot und dieses read-only f&uuml;r die Benutzer ins
+			Dateisystem einbinden. Das kann &uuml;ber NFS oder Samba geschehen. Hier wird der Weg
+			&uuml;ber NFS auf einem einzelnen Rechner beschrieben.</p>
+			<p>Setzen Sie die Variable BACKUP_PATH in /etc/kwrsync_backup.cf auf 
+			/.private/.snapshots.<br></p>
+			<p>BACKUP_PATH=&quot;/.private/.snapshots&quot;</p>
+			<p>Erstelle das Container Verzeichnis:<br>
+			mkdir -m 700 /.private<br>
+			Erstelle das reale Snapshot Verzeichnis:<br>
+			mkdir -m 755 /.private/.snapshots<br>
+			Erstelle den read-only Snapshot Mountpunkt:<br>
+			mkdir -m 755 /.snapshots<br>
+			In /etc/exports f&uuml;ge /.private/.snapshots/ als einen read-only NFS export dazu:<br>
+			/.private/.snapshots/  127.0.0.1(ro,no_root_squash)<br>
+			In /etc/fstab binde /.private/.snapshots/ read-only unter /.snapshots ein:<br>
+			localhost:/.private/.snapshots/   /.snapshots/   nfs    ro   0 0</p>
+			<p>Sie sollten jetzt den NFS D&auml;mon neu starten.<br>
+			Jetzt binden Sie den Snapshot root read-only ein:<br>
+			mount /.snapshots<br>
+			Zum testen gehe, als root, ins Verzeichnis /.snapshots. root sollte keine Schreibrechte
+			besitzen. Versuche als root:<br>
+			touch /.snapshots/testfile<br>
+			Dies sollte fehlschlagen, wegen fehlender Rechte.</p>
+			<p>Jetzt k&ouml;nnen die Benutzer ins Verzeichnis /.snapshots, den Intervall aussuchen,
+			im darunterliegenden Verzeichnisbaum surfen und Ihre alten Dateien wiederherstellen.
+			Sie k&ouml;nnen aber keine Dateien ver&auml;ndern, l&ouml;schen oder anlegen.</p>
+			<p># NFSv4<br>
+			Bei NFS4 sieht es &auml;hnlich aus. Nur die Eintr&auml;ge in /etc/fstab und /etc/exports
+			sehen etwas anders aus. Erstellen Sie ein Verzeichnis, zum Beispiel /srv/nfsv4.</p>
+			<p>/etc/exports:<br>
+			/srv/nfsv4	127.0.0.1(rw,async,fsid=0,insecure,no_subtree_check,crossmnt)<br>
+			/srv/nfsv4/.privat/.snapshots  127.0.0.1(ro,async,nohide,insecure,no_subtree_check,no_root_squash)</p>
+			<p>/etc/fstab:<br>
+			/.privat/.snapshots	/srv/nfsv4/.snapshots	none	bind	0 0<br>
+			localhost:/.privat/.snapshots    /.snapshots      nfs4	ro	0 0</p><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h4><a name=ssh></a>5.2 SSH</a></h4>
+				<p>Sie sollten einen eigenen Backup User (Bsp.: kwrsyncbackup) f&uuml;r 
+				kwrsync_backup
+				auf dem Backup Rechner und den zu sichernden Rechnern erstellen, damit
+				sich der Benutzer &quot;root&quot; nicht dauernd einloggen muss.
+				Diesen User (kwrsyncbackup) kann man dann mit dem Programm &quot;sudo&quot;
+				das Ausf&uuml;hren des &quot;rsync&quot; Kommandos zulassen.
+				Mit &quot;passwd kwrsyncbackup -l&quot; kann man dem Backup User
+				(kwrsyncbackup) das Login auf dem Backup Rechner verbieten.<br>
+				- Loggen Sie sich auf dem Backup Rechner, als "root", ein und erzeugen einen ssh 
+				Key (ssh-keygen -t dsa), ohne Passphrase. Bei Frage nach der Passphrase einfach 
+				Enter dr&uuml;cken.<br>
+				- Auf dem Backup Rechner kopieren Sie die Datei 
+				/root/.ssh/id-dsa.pub nach /root/.ssh/authorized_keys.rsync. Dort tragen Sie
+				das &quot;rsync&quot; Kommando
+				command=&quot;sudo rsync --server --sender -vlogDtHAXprz  --delete-excluded 
+				--numeric-ids --relative . /&quot; vor dem Key ein
+				(command=&quot;sudo rsync ...&quot; ssh-dss AAA....).<br>
+				- Diese Datei kopieren Sie auf jeden Host der zu sichern ist, 
+				ins Home Verzeichnis des Backup Users (kwrsyncbackup) (~/.ssh/authorized_keys).</p>
+				<p><b>Notiz:</b> Achten Sie darauf das, auf allen Rechnern, in der Datei 
+				/etc/ssh/sshd_config beim Parameter AuthorizedKeysFile      %h/.ssh/authorized_keys 
+				steht. Desweiteren muss die Rechnereigene Konfiguration die zus&auml;tzlichen
+				 &quot;rsync&quot; Argumente &quot;-HAX&quot; besitzen. Standard sind die
+				Argumente &quot;-av --numeric-ids --delete --delete-excluded --relative&quot;.</p>
+				<p>Sichern Sie den Backup User, durch das Programm &quot;sudo&quot; wie im
+				Beispiel ab (Datei /etc/sudoers). F&uuml;r die zu sichernden Rechner
+				k&ouml;nnte das so aussehen:<br>
+				# Host alias specification<br>
+				# in diesem Fall nat&uuml;rlich der lokale Rechner<br>
+				Host_Alias BACKUP_HOST = backuphost.domain.de<br>
+				# User alias specification<br>
+				User_Alias BACKUP_USER = kwrsyncbackup<br>
+				# Cmnd alias specification<br>
+				Cmnd_Alias KWRSYNC_BACKUP_CRON = /usr/bin/rsync<br>
+				# User privilege specification<br>
+				root    ALL=(ALL) ALL<br>
+				BACKUP_USER   BACKUP_HOST=NOPASSWD: KWRSYNC_BACKUP_CRON</p>
+				<p>Der User kwrsyncbackup (BACKUP_USER) darf auf dem Rechner backuphost.domain.de 
+				(BACKUP_HOST) das Kommando (KWRSYNC_BACKUP_CRON) /usr/bin/rsync, ohne 
+				Passwort ausf&uuml;hren.</p>
+												
+				<p><b>Notiz:</b> Programme die auf Dateiebene sichern sollten vor dem Backup ihre 
+				Daten sichern, damit ihre Backups nicht inkonsestent sind (Bsp.: Datenbanken).
+				Bei postresql kann man sich ein Script, mit folgendem Inhalt, schreiben:<br>
+				pg_dumpall | gzip >/var/lib/postgres/fulldump.sql.gz.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><h3><a name=links></a>6 Links</a></h3>
+				<p><a href="http://www.heinlein-support.de/web/wissen/rsync-backup/">http://www.heinlein-su
+				pport.de/web/wissen/rsync-backup/</a><br>
+				<a href="http://www.linux-magazin.de/Artikel/ausgabe/2004/09/backups/backups.html">
+				http://www.linux-magazin.de/Artikel/ausgabe/2004/09/backups/backups.html</a><br>
+				
+				<a href="http://www.rsnapshot.de/">
+				http://www.rsnapshot.org</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><br><hr><br><center><a href="../../../doku/kwtools/net/kwrsync.html" target="Context"><img src="../../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+                                <img src="../../../images/trans.gif" width="15" height="8" border="0">
+                                <a href="../../../doku/kwtools/net.html" target="Context"><img src="../../../images/arraw_h.gif" width="20" height="20" border="0"></a></center></td>
+                        <td></td>
+                </tr>
+        </TBODY>
+</TABLE>
+</BODY>
+</HTML>

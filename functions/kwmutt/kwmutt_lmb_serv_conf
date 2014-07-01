@@ -1,0 +1,364 @@
+# Funktion (kwmutt_lmb_serv_conf), konfiguriert lokale Mailbox fuer mutt# {{{
+#
+# usage: kwmutt_lmb_serv_conf
+kwmutt_lmb_serv_conf() {
+	Unset=(DEFAULT_SERVER DEFAULT_NAME dotlock_program folder mail_check
+	mbox_type postponed spoolfile mailboxes record)
+	unset -- $Unset
+	# Funktion (lmb_empty_var_fill), leere Variable mit Standardwerten fuellen.# {{{
+	#
+	lmb_empty_var_fill() {
+		DEFAULT_SERVER="${DEFAULT_SERVER:-no}"
+		#DEFAULT_NAME="${DEFAULT_NAME}"
+		dotlock_program="${dotlock_program:-/usr/bin/mutt_dotlock}"
+		mailboxes="${mailboxes:-+inbox}"
+		folder="${folder:-~/Mail}"
+		mbox_type="${mbox_type:-mbox}"
+		spoolfile="${spoolfile:-/var/mail/${USER}}"
+		mail_check="${mail_check:-900}"
+		postponed="${postponed:-~/postponed}"
+		record="${record:-~/sent}"
+	}
+	## }}}
+	# Funktion (lmb_serv_conf_menu), Auswahl Menue# {{{
+	#
+	lmb_serv_conf_menu() {
+		menubox "$1" "$LMB_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
+	}
+	## }}}
+	# Funktion (lmb_conf_serv_menu), menu fuer die Imap Konfiguration# {{{
+	LMB_TITLE="$lv_Local_Mailbox"
+	lmb_conf_serv_menu() {
+		if [[ $mbox_type == Maildir ]] ; then
+			LMB_CONF_SERV_MENU=(\"$lv_Default_Mailbox\" \"$DEFAULT_SERVER\"
+			$lv_Conf_Name \"$DEFAULT_NAME\"
+			mbox_type \"$mbox_type\"
+			spoolfile \"$spoolfile\"
+			folder \"$folder\"
+			mailboxes \"$mailboxes\"
+			postponed \"$postponed\"
+			record \"$record\"
+			mail_check \"$mail_check\"
+			$gv_Save \"\"
+			$gv_Back \"\")
+		else
+			LMB_CONF_SERV_MENU=(\"$lv_Default_Mailbox\" \"$DEFAULT_SERVER\"
+			$lv_Conf_Name \"$DEFAULT_NAME\"
+			mbox_type \"$mbox_type\"
+			spoolfile \"$spoolfile\"
+			folder \"$folder\"
+			mailboxes \"$mailboxes\"
+			postponed \"$postponed\"
+			record \"$record\"
+			mail_check \"$mail_check\"
+			dotlock_program \"$dotlock_program\"
+			$gv_Save \"\"
+			$gv_Back \"\")
+		fi
+		menubox "$1" "$LMB_TITLE" "$gv_Menupoint" "$LMB_CONF_SERV_MENU"
+	}
+	## }}}
+	# Funktion (lmb_conf_serv), konfiguriert Lokale Mailbox.#{{{
+	#
+	lmb_conf_serv() {
+		lmb_conf_serv_menu
+		while [ -n "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help kwmutt_lmb_serv_help
+					lmb_conf_serv_menu
+					;;
+				$lv_Default_Mailbox)
+					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
+					yesno "$LMB_TITLE" "$DEFAULT_MB_MSG" "$DEFAULT_SERVER"
+					if [ "$gv_Auswahl" = yes ] ; then
+						DEFAULT_SERVER="yes"
+					else
+						DEFAULT_SERVER="no"
+					fi
+					## }}}
+					lmb_conf_serv_menu $lv_Default_Mailbox
+					;;
+				$lv_Conf_Name)
+					# Eingabe eines Namens fuer die Konfigurationsdatei# {{{
+					MSG=$(gettext 'Geben Sie einen Namen, ohne Leerzeichen, fuer die Konfigurationsdatei ein (Bsp.: lokalmailbox).')
+					inputbox "$LMB_TITLE" "$MSG" "$DEFAULT_NAME"
+					if [ -n "$gv_Auswahl" ] ; then
+						DEFAULT_NAME="$gv_Auswahl"
+					else
+						unset -- DEFAULT_NAME
+					fi
+					## }}}
+					lmb_conf_serv_menu $lv_Conf_Name
+					;;
+				mail_check)
+					# Wie oft soll nach neuen mails in den angegebenen Mailboxen# {{{
+					# geschaut werden, in Sekunden.
+					# Standard sind alle 15 Minuten.
+					MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die ausgewaehlten Mailboxen nach neuen Mails geprueft werden sollen.')
+					number_input "$LMB_TITLE" "$MSG" "$mail_check"
+					if [ -n "$NUMBER" ] ; then
+						mail_check="$NUMBER"
+					else
+						mail_check="900"
+					fi
+					## }}}
+					lmb_conf_serv_menu mail_check
+					;;
+				mbox_type)
+					# Auswahl des MBox Typs.# {{{
+					MBOX_MENU=(Maildir \"\" mbox \"\" MMDF \"\" MH \"\")
+					menubox "$mbox_type" "$MUTTRC_TITLE" "$gv_Menupoint" "$MBOX_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwmutt_lmb_serv_help
+								menubox "$mbox_type" "$MUTTRC_TITLE" "$gv_Menupoint" "$MBOX_MENU"
+								;;
+							*)	# Auswahl uebernehmen
+								mbox_type="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+					## }}}
+					lmb_conf_serv_menu mbox_type
+					;;
+				dotlock_program)
+					# Eingabe/Auswahl der Sperrdatei.# {{{
+					MSG=$(gettext 'Geben Sie das Programm fuer die Sperrdatei ein (Bsp.: /usr/bin/mutt_dotlock).')
+					inputbox "$LMB_TITLE" "$MSG" "$dotlock_program"
+					if [ -n "$gv_Auswahl" ] ; then
+						dotlock_program="$gv_Auswahl"
+					else
+						unset -- dotlock_program
+					fi
+					## }}}
+					lmb_conf_serv_menu dotlock_program
+					;;
+				folder)
+					# Standard Verzeichnis fuer die mailboxen auswaehlen.# {{{
+					dselect $folder
+					if [[ -n $VERZ ]] ; then
+						folder="$VERZ"
+					fi
+					## }}}
+					lmb_conf_serv_menu folder
+					;;
+				mailboxes)
+					# mailboxen die nach neuen mails überprüft werden sollen.# {{{
+					if [[ -n $folder ]] ; then
+						# schon markierte mailboxen mit on markieren ansonsten mit off.
+						generate_is_file "$mailboxes"
+						# vorhandene mailboxen mit einem plus markieren zum vergleichen
+						Tmp=${$(print ${folder}/*(/N:t))//(#s)/+}
+						is_value "$Tmp"
+						# Auswahl der mailboxen.
+						if [ -n "$VALUE_ARRAY" ] ; then
+							MAILBOX_MENU=($VALUE_ARRAY)
+							checklist "$LMB_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help kwmutt_lmb_serv_help
+										checklist "$LMB_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
+										;;
+									*)
+										# Auswahl uebernehmen
+										mailboxes="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+						fi
+					else
+						no_folder_msg
+					fi
+					## }}}
+					lmb_conf_serv_menu mailboxes
+					;;
+				postponed)
+					# Eingabe der Mailbox wo noch nicht abgeschickte/nicht fertige emails# {{{
+					# zwischen gespeichert werden sollen.
+					fselect "${postponed:-~/postponed}"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							postponed="$FILE"
+						else
+							postponed="${postponed:-~/postponed}"
+						fi
+					fi
+					## }}}
+					lmb_conf_serv_menu postponed
+					;;
+				record)
+					# Wo soll eine Kopie der gesendeten mails gespeichert werden.# {{{
+					fselect "$record"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							record="$FILE"
+						else
+							record="${record:-~/sent}"
+						fi
+					fi
+					## }}}
+					lmb_conf_serv_menu record
+					;;
+				spoolfile)
+					# Wo sollen die mails zwischen gespeichert werden? Standard# {{{
+					# ist in /var/mail/$USER.
+					fselect "$spoolfile"
+					if [ -n "$gv_Auswahl" ] ; then
+						fselect_check -c "$gv_Auswahl"
+						if [ -n "$FILE" ] ; then
+							spoolfile="$FILE"
+						else
+							spoolfile=""
+						fi
+					fi
+					## }}}
+					lmb_conf_serv_menu spoolfile
+					;;
+				$gv_Save)
+					# Konfiguration speichern# {{{
+					if [[ -n $spoolfile && -n $DEFAULT_NAME ]] ; then
+						# Pruefen, ob vorhanden Konfiguration geaendert
+						# werden soll oder eine neue angelegt werden
+						# soll.
+						if [[ -n $Old_Value ]] ; then
+							M_LMB_SERV="$Old_Value"
+							kwmutt_lmb_serv_config
+							# Default lokale Mailbox einstellen oder nicht.
+							default_serv_link lmb "$M_LMB_SERV"
+							break
+						else
+							if [[ -f ${MUTT}/${DEFAULT_NAME}.lmb ]] ; then
+								# Nachricht das die Konfiguration schon existiert.
+								mutt_conf_file_exist
+								# zurück zum gleichen Menue.
+								lmb_conf_serv_menu
+							else
+								M_LMB_SERV="${MUTT}/${DEFAULT_NAME}.lmb"
+								kwmutt_lmb_serv_config
+								# Default lokale Mailbox einstellen oder nicht.
+								default_serv_link lmb "$M_LMB_SERV"
+								break
+							fi
+						fi
+						#
+					else
+						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte spoolfile und $lv_Conf_Name mit einem Wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+						lmb_conf_serv_menu
+					fi
+					unset -- $Unset
+					## }}}
+					;;
+				$gv_Back)
+					# ohne speichern abbrechen
+					unset -- $Unset
+					break
+					;;
+			esac
+		done
+	}
+	## }}}
+	#
+	lmb_serv_conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help kwmutt_lmb_serv_help
+				lmb_serv_conf_menu
+				;;
+			$gv_Display)
+				# Anzeige der LMB Konfigurationsdatei{{{
+				read_accounts lmb
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					DISPLAY_MSG=$(gettext 'Waehlen Sie ein Postfach aus um seine Einstellungen anzusehen.')
+					mail_account_choice "$gv_Display" "$DISPLAY_MSG"
+					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					if [ -f "$VALUE" ] ; then
+						view_file "$VALUE"
+					fi
+				else
+					no_entry_msg
+				fi
+				#}}}
+				lmb_serv_conf_menu $gv_Display
+				;;
+			$gv_Create)
+				# LMB Konfigurations Eintraege erstellen{{{
+				unset -- $Unset
+				# Mit Standard Variablen belegen, falls noetig.
+				lmb_empty_var_fill
+				# LMB Konfiguration
+				lmb_conf_serv
+				#}}}
+				lmb_serv_conf_menu $gv_Create
+				;;
+			$gv_Change)
+				# LMB Konfigurations Eintraege veraendern.# {{{
+				read_accounts lmb
+				if [ -n "$ACCOUNT_TMP" ] ; then
+					CHANGE_MENU=($ACCOUNT_TMP)
+					menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_change_help
+								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
+								;;
+							*)	# Uebernahme/aendern 
+								unset -- Old_Value
+								Old_Value="$gv_Auswahl"
+								# alte Konfiguration einlesen.
+								read_conf lmb "$Old_Value"
+								# Mit Standard Variablen belegen, falls noetig.
+								lmb_empty_var_fill
+								# Konfiguration bearbeiten.
+								lmb_conf_serv
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#
+				unset -- Old_Value
+				## }}}
+				lmb_serv_conf_menu $gv_Change
+				;;
+			$gv_Delete)
+				# LMB Kontos loeschen.# {{{
+				read_accounts lmb
+				if [ -n "$ACCOUNT_TMP_M" ] ; then
+					DEL_MENU=($ACCOUNT_TMP_M)
+					checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/conf_del_help
+								checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+								;;
+							*)	# Uebernahme (Konfigurationsdateien) loeschen
+								for i in ${=gv_Auswahl} ; {
+									rm "$i" &>/dev/null
+								}
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				lmb_serv_conf_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

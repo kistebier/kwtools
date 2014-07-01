@@ -1,0 +1,687 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke  <kiste@netzworkk.de> 10.05.2014
+#
+# Script: kwmuttprintcf, konfiguriert muttprint, drucken mit
+# dem mailclienten mutt.
+#
+# Version: 0.0.4
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Pruefen ob muttprint installiert ist.
+prog_check muttprint
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Variablen# {{{
+MUTTPRINTRC="/etc/Muttprintrc"
+LOCAL_MUTTPRINTRC="${HOME}/.muttprintrc"
+#
+lv_Printer=$(gettext 'Drucker')
+lv_Print_Cmd=$(gettext 'Druckerkommando')
+lv_Penguin=$(gettext 'Bildauswahl')
+lv_Xface=$(gettext 'X-Face Bildausdruck')
+lv_Duplex=$(gettext 'Duplexdruck')
+lv_Papersave=$(gettext 'Papiersparmodus')
+lv_Speed=$(gettext 'Druckgeschwindigkeit')
+lv_Font=$(gettext 'Schriftfamilie')
+lv_Frontstyle=$(gettext 'Frontstyle')
+lv_Headrule=$(gettext 'Kopfzeile')
+lv_Footrule=$(gettext 'Fusszeile')
+lv_Paperformat=$(gettext 'Papierformat')
+lv_Remove_Sign=$(gettext 'keine Signatur')
+lv_Sign_Regexp=$(gettext 'Signaturerkennung')
+lv_Remove_Quote=$(gettext 'keine Zitate')
+lv_Print_Header=$(gettext 'Header')
+lv_Debug=$(gettext 'Fehlermeldung')
+lv_Fontsize=$(gettext 'Schriftgroesse')
+lv_Wrapmargin=$(gettext 'Zeilenlaenge')
+lv_Topmargin=$(gettext 'Rand oben')
+lv_Bottommargin=$(gettext 'Rand unten')
+lv_Leftmargin=$(gettext 'Rand links')
+lv_Rightmargin=$(gettext 'Rand rechts')
+lv_Date=$(gettext 'Datum')
+lv_Dateformat=$(gettext 'Datumsformat')
+lv_Verbatim_Normal=$(gettext 'Textformatierung')
+lv_Verbatim_Sig=$(gettext 'Signatur Textformatierung')
+lv_Address_Format=$(gettext 'Adressenformat')
+lv_Latex=$(gettext 'Latex_Code')
+## }}}
+
+# Konfigurationsdateien einlesen wenn vorhanden
+read_file -f $MUTTPRINTRC $LOCAL_MUTTPRINTRC
+
+	# Funktion (main_menu), menu fuer die Drucker Konfiguration# {{{
+	main_menu() {
+		MAIN_MENU=($lv_Printer \"$PRINTER\"
+		$lv_Print_Cmd \"$PRINT_COMMAND\"
+		$lv_Penguin \"$PENGUIN\"
+		\"$lv_Xface\" \"$XFACE\"
+		$lv_Duplex \"$DUPLEX\"
+		$lv_Papersave \"$PAPERSAVE\"
+		$lv_Speed \"$SPEED\"
+		$lv_Font \"$FONT\"
+		$lv_Frontstyle \"$FRONTSTYLE\"
+		$lv_Headrule \"$HEADRULE\"
+		$lv_Footrule \"$FOOTRULE\"
+		$lv_Paperformat \"$PAPER\"
+		\"$lv_Remove_Sign\" \"$REM_SIG\"
+		$lv_Sign_Regexp \"$SIG_REGEXP\"
+		\"$lv_Remove_Quote\" \"$REM_QUOTE\"
+		$lv_Print_Header \"$PRINTED_HEADERS\"
+		$lv_Debug \"$DEBUG\"
+		$lv_Fontsize \"$FONTSIZE\"
+		$lv_Wrapmargin \"$WRAPMARGIN\"
+		\"$lv_Topmargin\" \"$TOPMARGIN\"
+		\"$lv_Bottommargin\" \"$BOTTOMMARGIN\"
+		\"$lv_Leftmargin\" \"$LEFTMARGIN\"
+		\"$lv_Rightmargin\" \"$RIGHTMARGIN\"
+		$lv_Date \"$DATE\"
+		$lv_Dateformat \"$DATE_FORMAT\"
+		$lv_Verbatim_Normal \"$VERBATIMNORMAL\"
+		\"$lv_Verbatim_Sig\" \"$VERBATIMSIG\"
+		$lv_Address_Format \"$ADDRESSFORMAT\"
+		$lv_Latex \"$LATEXCODE\"
+		${lv_Latex}1 \"$LATEXCODE1\"
+		${lv_Latex}2 \"$LATEXCODE2\"
+		${lv_Latex}3 \"$LATEXCODE3\"
+		${lv_Latex}4 \"$LATEXCODE4\"
+		${lv_Latex}5 \"$LATEXCODE5\"
+		$gv_Save \"\"
+		$gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
+	}
+	## }}}
+LATEX_MSG=$(gettext 'Geben Sie hier Latex Code ein um den Text weiter zu gestalten.')
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+main_menu
+while [ -n "$gv_Auswahl" ] ; do
+	case "$gv_Auswahl" in
+		HELP*)	script_help help
+			main_menu
+			;;
+		$lv_Printer)
+			# Druckername oder Druckdatei einstellen# {{{
+			lv_Print_Choice=$(gettext 'Druckerauswahl')
+			lv_File=$(gettext 'Datei')
+			lv_Stdout=$(gettext 'Standardout')
+			#
+			PRINTER_MENU=($lv_Print_Choice \"\" $lv_File \"\" $lv_Stdout \"\" $gv_Back \"\")
+			menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$PRINTER_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$PRINTER_MENU"
+						;;
+					$lv_Print_Choice)	
+						# Drucker auswaehlen/eingeben# {{{
+						unset -- Found_Printer
+						Found_Printer=${${(ws: :)${(M)"$(LC_MESSAGES=us ; lpq -E)"[(f)ready]}}[1]}
+						if [ -n "$Found_Printer" ] ; then
+							for i in $Found_Printer ; {
+								Printer_Menu+=($i \"\")
+							}
+							#
+							FOUND_PRINTER_MENU=($Printer_Menu)
+							menubox "$PRINTER" "$gv_Mainmenu" "$gv_Menupoint" "$FOUND_PRINTER_MENU"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help help
+										menubox "$PRINTER" "$gv_Mainmenu" "$gv_Menupoint" "$FOUND_PRINTER_MENU"
+										;;
+									*)
+										# Auswahl uebernehmen
+										PRINTER="$gv_Auswahl"
+										break
+										;;
+								esac
+							done
+						else
+							MSG=$(gettext 'Es wurde kein Drucker gefunden.')
+							msgbox "$gv_Info" "$MSG"
+						fi
+						## }}}
+						break
+						;;
+					$lv_File)
+						# Datei mit volem Pfad eingeben# {{{
+						local Tmp_Printer
+						case "$PRINTER" in
+							TO_FILE:*)
+								# TO_FILE abschneiden
+								Tmp_Printer="${PRINTER#*:}"
+								;;
+							*)
+								# alles gut
+								Tmp_Printer="$PRINTER"
+								;;
+						esac
+						# Eingabe
+						MSG=$(gettext 'Geben Sie die Datei in die gedruckt werden soll mit vollem Pfad an.')
+						inputbox "$gv_Mainmenu" "$MSG" "$Tmp_Printer"
+						if [ -n "$gv_Auswahl" ] ; then
+							PRINTER="TO_FILE:${gv_Auswahl}"
+						else
+							PRINTER=""
+						fi
+						## }}}
+						break
+						;;
+					$lv_Stdout)
+						# Eingabe aus der Standardausgabe einlesen# {{{
+						PRINTER="-"
+						## }}}
+						break
+						;;
+					$gv_Back)
+						# zurueck
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Printer
+			;;
+		$lv_Print_Cmd)
+			# Druckerkommando eingeben.# {{{
+			MSG=$(gettext 'Geben Sie das Druckkommando ein (z.B. lpr -P\$PRINTER).')
+			inputbox "$gv_Mainmenu" "$MSG" "$PRINT_COMMAND"
+			if [ -n "$gv_Auswahl" ] ; then
+				PRINT_COMMAND="$gv_Auswahl"
+			else
+				PRINT_COMMAND=""
+			fi
+			## }}}
+			main_menu $lv_Print_Cmd
+			;;
+		$lv_Penguin)
+			# Datei als Grafik (oben rechts) zum drucken auswaehlen# {{{
+			FORMAT="ALL_IMAGE"
+			if [ -f "$PENGUIN" ] ; then
+				file_choice "$PENGUIN" only
+			else
+				file_choice `pwd` only
+			fi
+			# Variable mit Wert belegen
+			if [ -n "$WERT" ] ; then
+				PENGUIN="$WERT"
+			else
+				PENGUIN="off"
+			fi
+			## }}}
+			main_menu $lv_Penguin
+			;;
+		$lv_Xface)
+			# Bilder im Mailheader ausdrucken?# {{{
+			MSG=$(gettext 'Sollen kleine Bilder im Mailheader mit ausgedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$XFACE"
+			if [ "$gv_Auswahl" != no ] ; then
+				XFACE="on"
+			else
+				XFACE="off"
+			fi
+			## }}}
+			main_menu $lv_Xface
+			;;
+		$lv_Duplex)
+			# Soll beidseitig gedruckt werden?# {{{
+			MSG=$(gettext 'Soll der beidseitige Druck aktiviert werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$DUPLEX"
+			if [ "$gv_Auswahl" != no ] ; then
+				DUPLEX="on"
+			else
+				DUPLEX="off"
+			fi
+			## }}}
+			main_menu $lv_Duplex
+			;;
+		$lv_Papersave)
+			# Sollen 2 Seiten auf 1 Seite gedruckt werden?# {{{
+			MSG=$(gettext 'Sollen 2 Seiten auf 1 Seite gedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$PAPERSAVE"
+			if [ "$gv_Auswahl" != no ] ; then
+				PAPERSAVE="on"
+			else
+				PAPERSAVE="off"
+			fi
+			## }}}
+			main_menu $lv_Papersave
+			;;
+		$lv_Speed)
+			# Druckgeschwindigkeit fuer 1 Seite eingeben.# {{{
+			# Voreinstellung ist 30 Sekunden
+			MSG=$(gettext 'Geben Sie die Druckgeschwindigkeit in Sekunden fuer 1 Seite ein (z.B. 30)')
+			number_input "$gv_Mainmenu" "$MSG" "$SPEED"
+			if [ -n "$NUMBER" ] ; then
+				SPEED="$NUMBER"
+			else
+				SPEED="30"
+			fi
+			## }}}
+			main_menu $lv_Speed
+			;;
+		$lv_Wait)
+			# Wartezeit zw. geraden und ungeraden Seitendruck.# {{{
+			# Voreinstellung ist 1 Sekunden
+			MSG=$(gettext 'Geben Sie die Zeit in Sekunden an die Muttprint zwischen dem Druck der gereden und ungeraden Seiten warten soll.')
+			number_input "$gv_Mainmenu" "$MSG" "$WAIT"
+			if [ -n "$NUMBER" ] ; then
+				WAIT="$NUMBER"
+			else
+				WAIT="1"
+			fi
+			## }}}
+			main_menu $lv_Wait
+			;;
+		$lv_Font)
+			# Schriftfamilie auswaehlen# {{{
+			FONT_MENU=(Latex \"\" Latex-bright \"\" Latin-Modern \"\"
+			Times \"\" Utopia \"\" Palatino \"\" Charter \"\" Bookman \"\"
+			CentSchool \"\" Chancery \"\" Helvetica \"\" AvantGarde \"\")
+			menubox "$lv_Font" "$gv_Mainmenu" "$gv_Menupoint" "$FONT_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "$lv_Font" "$gv_Mainmenu" "$gv_Menupoint" "$FONT_MENU"
+						;;
+					*)	# uebernehmen
+						FONT="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Font
+			;;
+		$lv_Frontstyle)
+			# Frontstyle auswaehlen# {{{
+			FRONT_MENU=(plain \"\" border \"\" Border \"\"
+			fbox \"\" shadowbox \"\" ovalbox \"\" Ovalbox \"\"
+			doublebox \"\" grey \"\" greybox \"\")
+			menubox "$FRONTSTYLE" "$gv_Mainmenu" "$gv_Menupoint" "$FRONT_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "$FRONTSTYLE" "$gv_Mainmenu" "$gv_Menupoint" "$FRONT_MENU"
+						;;
+					*)	# uebernehmen
+						FRONTSTYLE="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Fontsize
+			;;
+		$lv_Headrule)
+			# Soll nach der Kopfzeile eine Linie gedruckt werden?# {{{
+			MSG=$(gettext 'Soll nach der Kopfzeile eine Linie gedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$HEADRULE"
+			if [ "$gv_Auswahl" != no ] ; then
+				HEADRULE="on"
+			else
+				HEADRULE="off"
+			fi
+			## }}}
+			main_menu $lv_Headrule
+			;;
+		$lv_Footrule)
+			# Soll vor der Fusszeile eine Linie gedruckt werden?# {{{
+			MSG=$(gettext 'Soll vor der Fusszeile eine Linie gedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$FOOTRULE"
+			if [ "$gv_Auswahl" != no ] ; then
+				FOOTRULE="on"
+			else
+				FOOTRULE="off"
+			fi
+			## }}}
+			main_menu $lv_Footrule
+			;;
+		$lv_Paperformat)
+			# Papierformat einstellen# {{{
+			PF_MENU=(A4 \"\" letter \"\")
+			menubox "$PAPER" "$gv_Mainmenu" "$gv_Menupoint" "$PF_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "$PAPER" "$gv_Mainmenu" "$gv_Menupoint" "$PF_MENU"
+						;;
+					*)
+						# Wert uebernehmen
+						PAPER="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Paperformat
+			;;
+		$lv_Remove_Sign)
+			# Soll die Signatur nicht mit gedruckt werden?# {{{
+			MSG=$(gettext 'Soll die Signatur nicht mit gedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$REM_SIG"
+			if [ "$gv_Auswahl" != no ] ; then
+				REM_SIG="on"
+			else
+				REM_SIG="off"
+			fi
+			## }}}
+			main_menu $lv_Remove_Sign
+			;;
+		$lv_Sign_Regexp)
+			# Signaturerkennung eingeben.# {{{
+			MSG=$(gettext 'Geben Sie einen regulaeren Ausdruck (perl-Syntax) zur Signaturerkennung ein.')
+			inputbox "$gv_Mainmenu" "$MSG" "$SIG_REGEXP"
+			if [ -n "$gv_Auswahl" ] ; then
+				SIG_REGEXP="$gv_Auswahl"
+			else
+				SIG_REGEXP="^-- $"
+			fi
+			## }}}
+			main_menu $lv_Sign_Regexp
+			;;
+		$lv_Remove_Quote)
+			# Sollen zitierte Absaetze nicht mit gedruckt werden?# {{{
+			MSG=$(gettext 'Sollen zitierte Absaetze nicht mit gedruckt werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$REM_QUOTE"
+			if [ "$gv_Auswahl" != no ] ; then
+				REM_QUOTE="on"
+			else
+				REM_QUOTE="off"
+			fi
+			## }}}
+			main_menu $lv_Remove_Quote
+			;;
+		$lv_Print_Header)
+			# Header(Reihenfolge) eingeben.# {{{
+			MSG=$(gettext 'Geben Sie die zu druckenden Header ein getrennt durch ein _ (z.B. Date_To_From).')
+			inputbox "$gv_Mainmenu" "$MSG" "$PRINTED_HEADERS"
+			if [ -n "$gv_Auswahl" ] ; then
+				PRINTED_HEADERS="$gv_Auswahl"
+			else
+				PRINTED_HEADERS="Date_To_From_CC_Newsgroups_Subject"
+			fi
+			## }}}
+			main_menu $lv_Print_Header
+			;;
+		$lv_Debug)
+			# Sollen Fehlermeldungen nach /tmp/mutprint.log geschrieben werden?# {{{
+			MSG=$(gettext 'Sollen Fehlermeldungen nach /tmp/mutprint.log geschrieben werden (ja/nein)?')
+			yesno "$gv_Mainmenu" "$MSG" "$DEBUG"
+			if [ "$gv_Auswahl" != no ] ; then
+				DEBUG="on"
+			else
+				DEBUG="off"
+			fi
+			## }}}
+			main_menu $lv_Debug
+			;;
+		$lv_Fontsize)
+			# Schriftgroesse einstellen# {{{
+			FS_MENU=(10pt \"\" 11pt \"\" 12pt \"\")
+			menubox "$FONTSIZE" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "$FONTSIZE" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
+						;;
+					*)
+						# Wert uebernehmen
+						FONTSIZE="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Fontsize
+			;;
+		$lv_Wrapmargin)
+			# max. Zeilenlaenge eingeben# {{{
+			MSG=$(gettext 'Geben Sie die maximale Zeilenlaenge ein (z.B. 72).')
+			number_input "$gv_Mainmenu" "$MSG" "$WRAPMARGIN"
+			if [ -n "$NUMBER" ] ; then
+				WRAPMARGIN="$NUMBER"
+			else
+				WRAPMARGIN="72"
+			fi
+			## }}}
+			main_menu $lv_Wrapmargin
+			;;
+		$lv_Topmargin)
+			# Randabstand oben eingeben# {{{
+			MSG=$(gettext 'Geben Sie den oben Randabstand in Millimetern ein (z.B. 5).')
+			number_input "$gv_Mainmenu" "$MSG" "$TOPMARGIN"
+			if [ -n "$NUMBER" ] ; then
+				TOPMARGIN="$NUMBER"
+			else
+				TOPMARGIN="5"
+			fi
+			## }}}
+			main_menu $lv_Topmargin
+			;;
+		$lv_Bottommargin)
+			# Randabstand unten eingeben# {{{
+			MSG=$(gettext 'Geben Sie den unteren Randabstand in Millimetern ein (z.B. 5).')
+			number_input "$gv_Mainmenu" "$MSG" "$BOTTOMMARGIN"
+			if [ -n "$NUMBER" ] ; then
+				BOTTOMMARGIN="$NUMBER"
+			else
+				BOTTOMMARGIN="5"
+			fi
+			## }}}
+			main_menu $lv_Bottommargin
+			;;
+		$lv_Leftmargin)
+			# Randabstand links eingeben# {{{
+			MSG=$(gettext 'Geben Sie den linken Randabstand in Millimetern ein (z.B. 20).')
+			number_input "$gv_Mainmenu" "$MSG" "$LEFTMARGIN"
+			if [ -n "$NUMBER" ] ; then
+				LEFTMARGIN="$NUMBER"
+			else
+				LEFTMARGIN="20"
+			fi
+			## }}}
+			main_menu $lv_Leftmargin
+			;;
+		$lv_Rightmargin)
+			# Randabstand rechts eingeben# {{{
+			MSG=$(gettext 'Geben Sie den rechten Randabstand in Millimetern ein (z.B. 5).')
+			number_input "$gv_Mainmenu" "$MSG" "$RIGHTMARGIN"
+			if [ -n "$NUMBER" ] ; then
+				RIGHTMARGIN="$NUMBER"
+			else
+				RIGHTMARGIN="5"
+			fi
+			## }}}
+			main_menu $lv_Rightmargin
+			;;
+		$lv_Date)
+			# Datumsanzeige# {{{
+			DATE_MENU=(original \"\" local \"\")
+			menubox "$DATE" "$gv_Mainmenu" "$gv_Menupoint" "$DATE_MENU"
+			while [ -n "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help help
+						menubox "$DATE" "$gv_Mainmenu" "$gv_Menupoint" "$DATE_MENU"
+						;;
+					*)
+						# Wert uebernehmen
+						DATE="$gv_Auswahl"
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Date
+			;;
+		$lv_Dateformat)
+			# Datumsformat eingeben.# {{{
+			MSG=$(gettext 'Geben Sie das Format fuer die Datumsanzeige ein.')
+			inputbox "$gv_Mainmenu" "$MSG" "$DATE_FORMAT"
+			if [ -n "$gv_Auswahl" ] ; then
+				DATE_FORMAT="$gv_Auswahl"
+			else
+				DATE_FORMAT="%A, %d. %B %Y %H:%M:%S"
+			fi
+			## }}}
+			main_menu $lv_Dateformat
+			;;
+		$lv_Verbatim_Normal)
+			# Verbatim-Umgebung Textformatierung (normaler mailtext) eingeben.# {{{
+			MSG=$(gettext 'Geben Sie die Formatierung(en) fuer den normalen Mailtext ein (z.B. fontshape=it.')
+			inputbox "$gv_Mainmenu" "$MSG" "$VERBATIMNORMAL"
+			if [ -n "$gv_Auswahl" ] ; then
+				VERBATIMNORMAL="$gv_Auswahl"
+			else
+				VERBATIMNORMAL=""
+			fi
+			## }}}
+			main_menu $lv_Verbatim_Normal
+			;;
+		$lv_Verbatim_Sig)
+			# Verbatim-Umgebung Textformatierung (Signatur) eingeben.# {{{
+			MSG=$(gettext 'Geben Sie die Formatierung(en) fuer den Signatur Text ein (z.B. fontshape=it.')
+			inputbox "$gv_Mainmenu" "$MSG" "$VERBATIMSIG"
+			if [ -n "$gv_Auswahl" ] ; then
+				VERBATIMSIG="$gv_Auswahl"
+			else
+				VERBATIMSIG=""
+			fi
+			## }}}
+			main_menu $lv_Verbatim_Sig
+			;;
+		$lv_Address_Format)
+			# Adressformat eingeben.# {{{
+			MSG=$(gettext 'Geben Sie das Format an wie die Mailadresse gedruckt werden soll.')
+			inputbox "$gv_Mainmenu" "$MSG" "$ADDRESSFORMAT"
+			if [ -n "$gv_Auswahl" ] ; then
+				ADDRESSFORMAT="$gv_Auswahl"
+			else
+				ADDRESSFORMAT="%r <%a>,\n"
+			fi
+			## }}}
+			main_menu $lv_Address_Format
+			;;
+		$lv_Latex)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE="$gv_Auswahl"
+			else
+				LATEXCODE=""
+			fi
+			## }}}
+			main_menu $lv_Latex
+			;;
+		${lv_Latex}1)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE1"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE1="$gv_Auswahl"
+			else
+				LATEXCODE1=""
+			fi
+			## }}}
+			main_menu ${lv_Latex}1
+			;;
+		${lv_Latex}2)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE2"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE2="$gv_Auswahl"
+			else
+				LATEXCODE2=""
+			fi
+			## }}}
+			main_menu ${lv_Latex}2
+			;;
+		${lv_Latex}3)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE3"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE3="$gv_Auswahl"
+			else
+				LATEXCODE3=""
+			fi
+			## }}}
+			main_menu ${lv_Latex}3
+			;;
+		${lv_Latex}4)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE4"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE4="$gv_Auswahl"
+			else
+				LATEXCODE4=""
+			fi
+			## }}}
+			main_menu ${lv_Latex}4
+			;;
+		${lv_Latex}5)
+			# Latex Code eingeben.# {{{
+			inputbox "$gv_Mainmenu" "$LATEX_MSG" "$LATEXCODE5"
+			if [ -n "$gv_Auswahl" ] ; then
+				LATEXCODE5="$gv_Auswahl"
+			else
+				LATEXCODE5=""
+			fi
+			## }}}
+			main_menu ${lv_Latex}5
+			;;
+		$gv_Save)
+			# Konfiguration speichern
+			autoload -U kwmuttprintcf_config
+			kwmuttprintcf_config
+			break
+			;;
+		$gv_Exit)
+			# beenden
+			unset -- $Unset
+			break
+			;;
+	esac
+done
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

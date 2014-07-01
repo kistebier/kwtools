@@ -1,0 +1,233 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwnarcconf, Firewall Frontend fuer kwnarc
+# 		mittels iptables.
+#       Konfiguriert, startet, stopt die Firewall
+#       und liest die Regeln neu ein, bzw. bietet
+#       eine Ansicht der Regeln.
+#
+#       einst "narc"
+#
+#       http://www.knowplace.org/netfilter/narc.html
+#
+# Version: 0.1.13
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichnisse in denen nach Funktionen gesucht wird
+# und Konfigurationsverz. festlegen.
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+	CONF_PATH=${PREFIX}/etc/kwtools
+else
+	PREFIX=/usr
+	CONF_PATH=/etc/kwtools
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+root_check
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+autoload -U log_conf main_conf main_conf_save
+
+# Variablen
+EXAMPLES_DIR="${PREFIX}/share/doc/kwtools-net-narc/examples"
+MAIN_NARC_CONF=${CONF_PATH}/kwnarc.conf
+CUSTOM_NARC_CONF=${CONF_PATH}/kwnarc-custom.conf
+FORWARD_NARC_CONF=${CONF_PATH}/kwnarc-forward.conf
+lv_Restart=$(gettext 'Neustart')
+lv_Status=$(gettext 'Status')
+lv_Conntrack=$(gettext 'Verbindungen')
+lv_Chains=$(gettext 'Regelketten')
+
+# Funktion haupt_menue{{{
+MAIN_MENU=($gv_Configuration \"\" $lv_Restart \"\" $lv_Status \"\"
+$lv_Conntrack \"\" $lv_Chains \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+net_conf
+kernel_release
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfigration{{{
+			# Funktion conf_menue, Konfigurationsmenue{{{
+			lv_Main_Conf=$(gettext 'Hauptkonfiguration')
+			lv_Log_Conf=$(gettext 'Logkonfiguration')
+			lv_Port_Conf=$(gettext 'Portweiterleitung')
+			lv_Custom_Conf=$(gettext 'Zusatzkonfiguration')
+			#
+			CONF_MENU=($lv_Main_Conf \"\" $lv_Log_Conf \"\"
+			$lv_Port_Conf \"\" $lv_Custom_Conf \"\" $gv_Back \"\")
+			conf_menue() {
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+			}
+			#}}}
+			conf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help conf_help
+						conf_menue
+						;;
+					$lv_Main_Conf)
+						main_conf
+						conf_menue $lv_Main_Conf
+						;;
+					$lv_Port_Conf)
+						# Portforwarding bearbeiten{{{
+						autoload -U forward_conf
+						if [ ! -f "$FORWARD_NARC_CONF" -a ${EXAMPLES_DIR}/kwnarc-forward.conf ] ; then
+							cp ${EXAMPLES_DIR}/kwnarc-forward.conf ${FORWARD_NARC_CONF} &>/dev/null
+						fi
+						# Funktion forward_menu# {{{
+						FORWARD_TITLE=$(gettext '${gv_Configuration}::Weiterleitung')
+						FORWARD_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Change \"\"
+						$gv_Delete \"\" $gv_Back \"\")
+						forward_menu() {
+							menubox "$1" "$FORWARD_TITLE" "$gv_Menupoint" "$FORWARD_MENU"
+						}
+						## }}}
+						forward_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help forward_conf_help
+									forward_menu
+									;;
+								$gv_Display)
+									# Ansicht der FORWARD Regeln.# {{{
+									print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##\#*} >${gv_WorkDir}/forwardcf
+									if [ -s "${gv_WorkDir}/forwardcf" ] ; then
+										view_file "${gv_WorkDir}/forwardcf"
+									else
+										no_entry_msg
+									fi
+									## }}}
+									forward_menu $gv_Display
+									;;
+								$gv_Create)
+									forward_conf -i
+									forward_menu $gv_Create
+									;;
+								$gv_Change)
+									forward_conf -c
+									forward_menu $gv_Change
+									;;
+								$gv_Delete)
+									forward_conf -d
+									forward_menu $gv_Delete
+									;;
+								$gv_Back)	break
+									;;
+							esac
+						done
+						#}}}
+						conf_menue $lv_Port_Conf
+						;;
+					$lv_Log_Conf)
+						# Logging Verhalten
+						log_conf
+						conf_menue $lv_Log_Conf
+						;;
+					$lv_Custom_Conf)
+						# custom Konfigration bearbeiten{{{
+						if [ ! -f "$CUSTOM_NARC_CONF" -a -f ${EXAMPLES_DIR}/kwnarc-custom.conf ] ; then
+							cp ${EXAMPLES_DIR}/kwnarc-custom.conf ${CUSTOM_NARC_CONF} &>/dev/null
+						fi
+						CUSTOM_TITLE=($lv_Custom_Conf)
+						edit_file "$CUSTOM_TITLE" "$CUSTOM_NARC_CONF"
+						#}}}
+						conf_menue $lv_Custom_Conf
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Restart)
+			# Restart/Reload.....# {{{
+			if [ -x "/etc/init.d/kwnarc" ] ; then
+				/etc/init.d/kwnarc restart
+			fi
+			## }}}
+			haupt_menue $lv_Restart
+			;;
+		$lv_Status)
+			# allgemeine Statusanzeige # {{{
+			if [[ -n $PAGER ]] ; then
+				${PREFIX}/sbin/kwnarc status | $PAGER
+			else
+				no_pager_msg
+			fi
+			## }}}
+			haupt_menue $lv_Status
+			;;
+		$lv_Conntrack)
+			# Anzeige der bestehenden Connections# {{{
+			if [[ -n $PAGER ]] ; then
+				${PREFIX}/sbin/kwnarc conntrack | $PAGER
+			else
+				no_pager_msg
+			fi
+			## }}}
+			haupt_menue $lv_Conntrack
+			;;
+		$lv_Chains)
+			# Anzeige der bestehenden Regelketten# {{{
+			if [[ -n $PAGER ]] ; then
+				${PREFIX}/sbin/kwnarc chains | $PAGER
+			else
+				no_pager_msg
+			fi
+			## }}}
+			haupt_menue $lv_Chains
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

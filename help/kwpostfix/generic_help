@@ -1,0 +1,30 @@
+# generic_help fuer kwpostfix{{{
+TITLE="${TAB}::${gv_Help}"
+MSG=$(gettext 'Hier kann man Mailadressen, Domains und Benutzer eingeben, deren
+Absenderadressen im SMTP-Envelope und Mailheader geaendert werden
+sollen. Diese Aenderungen werden nicht vom Postfix Modul "cleanup"
+fuer alle Adressen vorgenommen sondern erst von dem Modul "lmtp"
+oder "smtp".
+
+Damit veraendern die Lookup Tabellen "*_generic_maps" den Absender
+einer Email erst dann, wenn diese das System per SMTP verlaesst.
+Lokale Emails zwischen den Benutzern des eigenen Systems werden
+damit nicht umgeschrieben, solange die Transportmethoden SMTP oder
+LMTP nicht ins Spiel kommen.
+
+Tabellen:
+lmtp_generic_maps
+smtp_generic_maps
+
+Format:
+# Wandelt Nutzer mit lokaler Domain um.
+user\t\t\tuser@domain.de
+# Wandelt pauschal alle Adressen mit dieser Domain um.
+@localdomain.local\tuser@domain.de
+# Wandelt Mailadresse um.
+user@localdomain.local\tuser@domain.de')
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

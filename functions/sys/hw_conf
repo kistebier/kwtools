@@ -1,0 +1,1469 @@
+# Funktion hw_conf #{{{
+#
+# usage: hw_conf
+#
+hw_conf() {
+	# ##### Hardware Funktionen ###### {{{
+	# Funktion (cdrom), Hardware-Erkennung der CD/DVD Laufwerke{{{
+	#
+	# sucht nach ide/scsi CD Laufwerken
+	#
+	# usage: cdrom
+	#
+	cdrom()
+	{
+		local Anz Dev Desc
+		kernel_release
+		if [[ -x ${commands[hwinfo]} ]] && \
+			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
+			# ${gv_WorkDir}/cdrom neu erstellen falls die Datei nicht vorhanden ist.
+			if [ ! -f ${gv_WorkDir}/cdrom ] ; then
+				hwinfo --short --cdrom > ${gv_WorkDir}/cdrom
+			fi
+			# ${gv_WorkDir}/cdrom auslesen
+			if [ "`wc -l < ${gv_WorkDir}/cdrom`" -gt 0 ] ; then
+				Anz=0
+				while read Dev Desc ; do
+					if [ -n "${(M)${Dev}##/dev/*}" ] ; then
+						(( Anz++ ))
+#						#################################
+#						# old Code
+#						#################################
+#						CD_DEV[Anz]="${Dev//sr/scd}"
+#						CD_DEV_E[Anz]="${Dev//sr/scd} \"$Desc\""
+#						CD_DEV_M[Anz]="${Dev//sr/scd} \"$Desc\" off"
+#						device_convert "${Dev//sr/scd}"
+						CD_DEV[Anz]="$Dev"
+						CD_DEV_E[Anz]="$Dev \"$Desc\""
+						CD_DEV_M[Anz]="$Dev \"$Desc\" off"
+						device_convert "$Dev"
+						if [ "$CDROM" ] ; then
+							STL_CD_DEV[Anz]="$CDROM"
+							STL_CD_DEV_E[Anz]="$CDROM \"$Desc\""
+							STL_CD_DEV_M[Anz]="$CDROM \"$Desc\" off"
+						fi
+					fi
+				done < ${gv_WorkDir}/cdrom
+			fi
+		else
+			if [ -f /proc/sys/dev/cdrom/info ] ; then
+				# Bei devfs gibts keine Beschreibung
+				if [ -c /dev/.devfsd ] ; then
+					Anz=0
+					for i in `ls -C /dev/(ide|scsi)/**/cd` ; {
+						(( Anz++ ))
+						CD_DEV[Anz]="$i"
+						CD_DEV_E[Anz]="$i \"\""
+						CD_DEV_M[Anz]="$i \"\" off"
+					}
+				else
+					Anz=0
+					print -l ${(Mo)$(< /proc/sys/dev/cdrom/info)##(hd|scd|sr)*} | \
+					while read Dev ; do
+						(( Anz++ ))
+						case "$Dev" in
+							hd*)
+								# ATAPI
+								Desc=$(< /proc/ide/${Dev}/model)
+								CD_DEV[Anz]="/dev/${Dev}"
+								CD_DEV_E[Anz]="/dev/${Dev} \"$Desc\""
+								CD_DEV_M[Anz]="/dev/${Dev} \"$Desc\" off"
+								device_convert "$Dev"
+								if [ "$CDROM" ] ; then
+									STL_CD_DEV[Anz]="$CDROM"
+									STL_CD_DEV_E[Anz]="$CDROM \"$Desc\""
+									STL_CD_DEV_M[Anz]="$CDROM \"$Desc\" off"
+								fi
+								;;
+							scd*|sr*)
+								# SCSI
+								# sr -> scd
+								if [ "${Dev%[0-9]*}" = sr ] ; then
+									device_convert "scd${Dev#sr}"
+									if [ "$CDROM" ] ; then
+										STL_CD_DEV[Anz]="$CDROM"
+										STL_CD_DEV_E[Anz]="$CDROM \"$DESC\""
+										STL_CD_DEV_M[Anz]="$CDROM \"$DESC\" off"
+									fi
+									CD_DEV[Anz]="/dev/scd${Dev#sr}"
+									CD_DEV_E[Anz]="/dev/scd${Dev#sr} \"$DESC\""
+									CD_DEV_M[Anz]="/dev/scd${Dev#sr} \"$DESC\" off"
+								else
+									device_convert "$Dev"
+									if [ "$CDROM" ] ; then
+										STL_CD_DEV[Anz]="$CDROM"
+										STL_CD_DEV_E[Anz]="$CDROM \"$DESC\""
+										STL_CD_DEV_M[Anz]="$CDROM \"$DESC\" off"
+									fi
+									CD_DEV[Anz]="/dev/${Dev}"
+									CD_DEV_E[Anz]="/dev/${Dev} \"$DESC\""
+									CD_DEV_M[Anz]="/dev/${Dev} \"$DESC\" off"
+								fi
+								;;
+						esac
+					done
+				fi
+			fi
+		fi
+	}
+	#}}}
+	# Funktion (char_device_anzeige), zur Anzeige der vefuegbaren Zeichengeraeten{{{
+	# dabei wird das devfsd beruecksichtigt.
+	#
+	# Zur Zeit nur Drucker, serielle und USB Schnittstellen.
+	#
+	# usage: char_device_anzeige 
+	#
+	char_device_anzeige() {
+		local Anz
+		integer Anz
+		Anz=1
+		for i in /dev/lp* /dev/printers/* /dev/tts/* /dev/ttyS* /dev/usb/* ; { 
+			if [ ! -L "$i" ] ; then
+				if [ -c "$i" ] ; then
+					CHAR_ARRAY[Anz]="$i \"\""
+					(( Anz++ ))
+				fi	
+			fi
+		}
+	}
+	#}}}
+	# Funktion (disk), Hardware-Erkennung der Festplatten{{{
+	#
+	# sucht nach ide/scsi Festplatten und berechnet die Kapazitaet
+	#
+	# benoetigt die Funktion kernel_release
+	#
+	# usage: disk
+	#
+	disk() {
+		kernel_release
+		local Anz Anz1 Block Cyl_Bytes
+		typeset -ax DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP DISK_CYL_BYTES
+		if [[ -x ${commands[hwinfo]} ]] && \
+			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
+			# ${gv_WorkDir}/disk neu erstellen falls die Datei nicht vorhanden ist.
+			if [ ! -f ${gv_WorkDir}/disk ] ; then
+				hwinfo --short --disk > ${gv_WorkDir}/disk
+			fi
+			# ${gv_WorkDir}/disk auslesen
+			if [ "`wc -l < ${gv_WorkDir}/disk`" -gt 0 ] ; then
+				local Dev Rest
+				Anz=0
+				while read Dev Rest ; do
+					if [ -n "${(M)${Dev}##/dev/*}" -a "${${Dev##*/}%%[0-9]*}" != ram ] ; then
+						(( Anz++ ))
+						DISK_DEV[Anz]="$Dev"
+						DISK_DEV_E[Anz]="$Dev \"$Rest\""
+						DISK_DEV_M[Anz]="$Dev \"$Rest\" off"
+						Block="`fdisk -s $Dev 2>/dev/null`"
+						if [ -n "$Block" ] ; then
+							DISK_DEV_CAP[Anz]="$[$Block/1024]"
+						fi
+						FP_INFO[Anz]="$Dev $Rest"
+					fi
+				done < ${gv_WorkDir}/disk
+			fi
+		else
+			# mit devfs
+			if [ -c /dev/.devfsd ] ; then
+				Anz=0
+				for i in `ls -C /dev/(ide|scsi)/**/disc` ; {
+					(( Anz++ ))
+					DISK_DEV[Anz]="$i"
+					DISK_DEV_E[Anz]="$i \"\""
+					DISK_DEV_M[Anz]="$i \"\" off"
+					Block="`fdisk -s $i 2>/dev/null`"
+					if [ -n "$Block" ] ; then
+						DISK_DEV_CAP[Anz]="$[$Block/1024]"
+					fi
+				}
+			else
+				# ohne devfs
+				local Ide_Devs Medium Scsi_Devs
+				typeset -a Ide_Devs Scsi_Devs
+				if [ -d /proc/ide/ide? ] ; then
+					Anz=0
+					for i in /proc/ide/ide?/hd* ; {
+						#
+						# Jetzt wird geprueft ob es sich um eine disk handelt
+						#
+						Medium=`< ${i}/media` 
+						if [ "$Medium" = disk ] ; then
+							(( Anz++ ))
+							Ide_Devs[Anz]="/dev/${i##*/}"
+							Fp_Info[Anz]="$(< ${i}/model)"
+						fi
+					}
+				fi
+				if [ -f /proc/scsi/scsi ] ; then
+					typeset -a Scsi_Devs
+					Anz=0
+					Anz1=1
+					for i in `print ${(M)$(< /proc/scsi/scsi)##Direct-Access}` ; {
+						case "$Anz" in
+							0)	Scsi_Devs[Anz1]=(/dev/sda)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							1)	Scsi_Devs[Anz1]=(/dev/sdb)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							2)	Scsi_Devs[Anz1]=(/dev/sdc)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							3)	Scsi_Devs[Anz1]=(/dev/sdd)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							4)	Scsi_Devs[Anz1]=(/dev/sde)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							5)	Scsi_Devs[Anz1]=(/dev/sdf)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							6)	Scsi_Devs[Anz1]=(/dev/sdg)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							7)	Scsi_Devs[Anz1]=(/dev/sdh)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							8)	Scsi_Devs[Anz1]=(/dev/sdi)
+								(( Anz++ ))
+								;;
+							9)	Scsi_Devs[Anz1]=(/dev/sdj)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							10)	Scsi_Devs[Anz1]=(/dev/sdk)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							11)	Scsi_Devs[Anz1]=(/dev/sdl)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							12)	Scsi_Devs[Anz1]=(/dev/sdm)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							13)	Scsi_Devs[Anz1]=(/dev/sdn)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+							14)	Scsi_Devs[Anz1]=(/dev/sdo)
+								(( Anz++ ))
+								(( Anz1++ ))
+								;;
+						esac
+					}
+				fi
+				Anz=0
+				for i in $Ide_Devs $Scsi_Devs ; {
+					(( Anz++ ))
+					DISK_DEV[Anz]="$i"
+					DISK_DEV_E[Anz]="$i \"\""
+					DISK_DEV_M[Anz]="$i \"\" off"
+					Block="`fdisk -s $i 2>/dev/null`"
+					if [ -n "$Block" ] ; then
+						DISK_DEV_CAP[Anz]="$[$Block/1024]"
+					fi
+					FP_INFO[Anz]="$i ${Fp_Info[Anz]}"
+				}
+			fi
+		fi
+	}
+	#}}}
+	# Funktion (floppy), Hardware-Erkennung der Floppys{{{
+	#
+	floppy()
+	{
+		local Anz Dev Rest
+		if [ -x "${commands[hwinfo]}" -a "$gv_K_Minor" = 6 ] ; then
+			# ${gv_WorkDir}/floppy neu erstellen falls die Datei nicht vorhanden ist.
+			if [ ! -f ${gv_WorkDir}/floppy ] ; then
+				hwinfo --short --floppy > ${gv_WorkDir}/floppy
+			fi
+			# ${gv_WorkDir}/floppy einlesen
+			if [ "`wc -l < ${gv_WorkDir}/floppy`" -gt 0 ] ; then
+				Anz=0
+				while read Dev Rest ; do
+					if [ -n "${(M)${Dev}##/dev/*}" ] ; then
+						(( Anz++ ))
+						FLOPPY_DEV[Anz]="$Dev"
+						FLOPPY_DEV_E[Anz]="$Dev \"$Rest\""
+						FLOPPY_DEV_M[Anz]="$Dev \"$Rest\" off"
+					fi
+				done < ${gv_WorkDir}/floppy
+			fi
+		fi
+	}
+	#}}}
+		# Funktion (limit_size_conf), Limits der Blocks fuer quota einstellen# {{{
+		#
+		# usage: limit_size_conf [ -h | -s ] LIMIT
+		# -h - Hardlimit
+		# -s - softlimit
+		# LIMIT - Block_Hardlimit/Block_Softlimit mit einander vergleichen
+		#         muss mit uebergeben werden, wenn auch leer.
+		#
+		limit_size_conf() {
+			if [ $# = 2 ] ; then
+				unset -- L_Opt
+				local L_Opt
+				L_Opt="$1"
+				O_LIMIT="$2"
+				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (3G = 3GigaByte).')
+				number_input -D "$LIMIT_TITLE" "$LIMIT_MSG" "$SIZE"
+				#
+				if [ -n "$NUMBER" ] ; then
+					if [ -n "$O_LIMIT" -a "${O_LIMIT%%[a-zA-Z]}" -gt 0 ] ; then
+						# Vorhandene Groesse in KByte umrechnen.
+						convert_drive_size "${O_LIMIT##*[0-9]}" "${O_LIMIT%%[a-zA-Z]}"
+						if [ -n "$SIZE_KB" ] ; then
+							Old_Size_Tmp="$SIZE_KB"
+						fi
+						# Laufwerksangaben in KiloByte umrechnen
+						convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+						if [ -n "$SIZE_KB" ] ; then
+							Size_Tmp="$SIZE_KB"
+						fi
+						if [ "$L_Opt" = -h ] ; then
+							if [[ "$Size_Tmp" -ge "$Old_Size_Tmp" ]] ; then
+								SIZE="$NUMBER"
+							else
+								over_limit_size_msg
+								unset -- SIZE
+							fi
+						elif [ "$L_Opt" = -s ] ; then
+							if [[ "$Size_Tmp" -le "$Old_Size_Tmp" ]] ; then
+								SIZE="$NUMBER"
+							else
+								over_limit_size_msg
+								unset -- SIZE
+							fi
+						fi
+					else
+						SIZE="$NUMBER"
+					fi
+				fi
+			else
+				no_para_msg $0
+			fi
+		}
+		## }}}
+	# Funktion (lv), um Logische Volumes (LV) herauszubekommen{{{
+	#
+	# usage: lv
+	lv() {
+		if [ ! -z "$LVM" ] ; then
+			unset -- LV LV_E LV_M
+			local Anz
+			integer Anz
+			if [ "$LVM" = 2 ] ; then
+				Anz=1
+				for i in ${(o)$(lvscan | awk '/dev/{print $2}')} ; {
+					LV_M[Anz]="$i \"Logical Volume\" off"
+					LV_E[Anz]="$i \"Logical Volume\""
+					LV[Anz]="$i"
+					(( Anz++ ))
+				}
+			else
+				Anz=1
+				for i in ${(o)$(lvscan | awk '/dev/{print $4}')} ; {
+					LV_M[Anz]="$i \"Logical Volume\" off"
+					LV_E[Anz]="$i \"Logical Volume\""
+					LV[Anz]="$i"
+					(( Anz++ ))
+				}
+			fi
+		fi
+	}
+	#}}}
+# Funktion (lv_free_size), um die Groesse der LV zu berechnen{{{
+#
+# usage: lv_free_size LV
+lv_free_size() {
+	if [ "$#" -eq 1 ] ; then
+		unset -- LV_SIZE
+		# wird in Megabyte ausgegeben und in KiloByte umgerechnet
+		LV_SIZE=$[${${(s,:,)"${(f)$(lvdisplay -c $1)}"}[7]}/2]
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+	# Funktion (lvm_version), um LVM Version herauszubekommen{{{
+	# Module laden und vorhandene VG's zu aktivieren.
+	#
+	# benoetigt die Funktion kernel_release und load_module
+	# kernel_release wird von der Funktion script_init geladen
+	#
+	# usage: lvm_version [ -q ]
+	# -q -quiet
+	#
+	lvm_version() {
+		autoload -U load_module
+		unset -- LVM NO_LVM
+		export LVM NO_LVM
+		# function messages no_find_lvm_version# {{{
+		no_find_lvm_version() {
+            if [ "$gv_ScriptName" = kwlvm ] ; then
+	    		MSG=$(gettext 'Kann die LVM Version nicht herausfinden. Installieren Sie erst LVM.')
+		    	msgbox "$gv_Attention" "$MSG"
+			    exit 1
+            fi
+		}
+		## }}}
+		# funktion no_lvm_release# {{{
+		# Kernel Release wird nicht unterstuetzt.
+		no_lvm_release() {
+			MSG=$(gettext 'Diese Kernelversion ($gv_K_Release) wird nicht unterstuetzt.')
+			msgbox "$gv_Attention" "$MSG"
+			exit 1
+		}
+		## }}}
+		#
+		if [[ -x ${commands[lvm]} ]] ; then
+			kernel_release
+			#
+			# LVM Module je nach Kernelversion laden.
+			#
+			if [ "$gv_K_Major" -ge 3 ] ; then
+				load_module dm-mod
+			else
+				case "$gv_K_Minor" in
+					6)	load_module dm-mod	;;
+					4)	load_module lvm-mod	;;
+					*)
+						# Kernel Release wird nicht unterstuetzt.
+						no_lvm_release
+						;;
+				esac
+			fi
+			#
+			# alle vorhandenen VG activieren
+			#
+			vgscan &>/dev/null
+			vgchange -a y &>/dev/null
+			#
+			# Welche LVM Version ist installiert.
+			#
+			LVM_VERSION="${${(s:.:)${${(s/ /)${(M)${(f)"$(lvm version)"}##*LVM version:*}}[3]}}[1]}"
+			if [ "$LVM_VERSION" -ge 2 ] ; then
+				LVM=2
+			else
+				LVM=1
+			fi
+		else
+			case "$1" in
+				-q)	# keine Nachricht
+					NO_LVM=yes
+					;;
+				*)	# Nachricht fuer kwlvm+Abbruch
+					no_find_lvm_version
+					;;
+			esac
+		fi
+	}
+	#}}}
+	# Funktion (netcard), um Netzwerkkarten aufzuspueren und abgezaehlt bereit halten{{{
+	#
+	# usage: netcard
+	#
+	netcard() {
+		unset -- Anz Anz1 Net_Devices DEVICE_LIST Bus_Info Driver MAC
+		local Anz Anz1 Net_Devices Bus_Info
+		# fuehrende Nullen streichen (typeset -L)
+		typeset -L Net_Devices
+		typeset -i Anz Anz1
+		typeset -a Driver
+		# Variablen
+		ETH_CARD=$(gettext 'Netzwerk-Karte')
+		FW_CARD=$(gettext 'Firewire-Karte')
+		TR_CARD=$(gettext 'Tokenring-Karte')
+		WLAN_CARD=$(gettext 'WLAN-Karte')
+		Net_Devices=${(o)${(s,:,)${(M)${(f)"$(< /proc/net/dev)"}##(*eth*:|*tr*:|*wlan*:)}}%:}
+		(( Anz = ${(w)#Net_Devices} ))
+		if [ "$Anz" -gt 0 ] ; then
+			Anz1=1
+			for i in ${(ws: :)${Net_Devices}} ; { 
+				unset -- Bus_Info Driver
+				case "$i" in
+					eth*)
+						Bus_Info=${${(s,: ,)${(M)${(f)"$(ethtool -i ${i} 2>/dev/null)"}##bus-info:*}}[2]}
+						Driver=${${(s,: ,)${(M)${(f)"$(ethtool -i ${i} 2>/dev/null)"}##driver:*}}[2]}
+						DRIVER[Anz1]=${Driver:-Auto}
+						if [ "$Bus_Info" = ieee1394 ] ; then
+							DEVICE_LIST[Anz1]="$Anz1 ${i}_${FW_CARD}_${Driver[Anz1]}"
+						else
+							MAC[Anz1]=${${(s, ,)${(M)${(f)"$(export LC_ALL=C ; ifconfig -a ${i})"}##eth*}}[5]}
+							DEVICE_LIST[Anz1]="$Anz1 ${i}_${ETH_CARD}_${MAC[Anz1]}_${DRIVER[Anz1]}"
+						fi
+						;;
+					tr*)
+						####################################
+						# richtig?
+						####################################
+						Bus_Info=${${(s,: ,)${(M)${(f)"$(ethtool -i ${i} 2>/dev/null)"}##bus-info:*}}[2]}
+						Driver=${${(s,: ,)${(M)${(f)"$(ethtool -i ${i} 2>/dev/null)"}##driver:*}}[2]}
+						DRIVER[Anz1]=${Driver:-Auto}
+						MAC[Anz1]=${${(s, ,)${(M)${(f)"$(export LC_ALL=C ; ifconfig -a ${i})"}##eth*}}[5]}
+						DEVICE_LIST[Anz1]="$Anz1 ${i}_${TR_CARD}_${MAC[Anz1]}_${DRIVER[Anz1]}"
+						;;
+					wlan*)
+						Driver=${${(s,: ,)${(M)${(f)"$(ethtool -i ${i} 2>/dev/null)"}##driver:*}}[2]}
+						DRIVER[Anz1]=${Driver:-Auto}
+						MAC[Anz1]=${${(ws, ,)${(M)${(f)"$(export LC_ALL=C ; ifconfig -a)"}##${i}*}}[5]}
+						DEVICE_LIST[Anz1]="$Anz1 ${i}_${WLAN_CARD}_${MAC[Anz1]}_${DRIVER[Anz1]}"
+						;;
+				esac
+				(( Anz1++ ))
+			}
+		else
+			no_netcard_msg
+		fi
+	}
+	#}}}
+	# Funktion (parse_uuid_label), parse UUID= symlinks# {{{
+	#
+	# usage: parse_uuid_label [ UUID | LABEL | DEVICE ]
+	#
+	parse_uuid_label() {
+		if [[ ${#argv} -ge 1 ]] ; then
+			unset -- REALDEV
+			local Dev
+			Dev="$1"
+			for i in ${=Dev} ; {
+			    if [ "${i#UUID=}" != "$i" ] ; then
+			        REALDEV+=($(readlink -f /dev/disk/by-uuid/${i#UUID=}))
+			    elif [ "${i#LABEL=}" != "$i" ] ; then
+			        REALDEV+=($(readlink -f /dev/disk/by-label/${i#LABEL=}))
+				else
+					case "${i}" in
+						/dev*)	#REALDEV+=($(readlink -f $i))
+							REALDEV+=($i)
+							;;
+						*)	if [ -f "$i" ] ; then
+								REALDEV+=($i)
+							else
+								REALDEV+=(/dev/mapper/${i})
+							fi
+							;;
+					esac
+			    fi
+			}
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (part_choice), um Partitionen auszuwaehlen{{{
+	#
+	# benoetigt mindestens die Funktion disk und partdb. Diese muessen vorher
+	# ausgefuehrt werden.
+	#
+	# usage: part_choice [ -m | -s | nichts ] $DEVICE_LIST
+	# -m - mehrfache Auswahl
+	# -s - mehrfache Auswahl, aber nur nur eine Auswahl ist moeglich
+	# DEVICE_LIST muss dieses Format haben:
+	# "$DEV \"DESCRIPTION\" off"
+	# "$DEV \"\" off"
+	# "$DEV \"\" on"
+	#
+	part_choice() {
+		unset -- WERT
+		# Funktion (get_title_msg), TITLE und MSG Variablen erneuern# {{{
+		get_title_msg() {
+			TITLE=$(gettext 'Konfiguration::Laufwerksauswahl')
+			MSG=$(gettext 'Waehlen Sie hier ein/mehrere Laufwerk(e) aus.')
+		}
+		## }}}
+		if [ "$#" -ge 1 ] ; then
+			case $1 in
+			-s)
+				# mehrfache Auswahl, aber nur eine Partition wird ausgewaehlt{{{
+				if [ -n "$2" ] ; then
+					get_title_msg
+					MENU=($2)
+					radiolist "$TITLE" "$MSG" "$MENU"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in 
+							HELP*)
+								script_help share/part_help
+								get_title_msg
+								radiolist "$TITLE" "$MSG" "$MENU"
+								;;
+							*)	# uebernehmen
+								WERT="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					no_para_msg $0
+				fi
+				#}}}
+				;;
+			-m)
+				# mehrfache Auswahl{{{
+				if [ -n "$2" ] ; then
+					get_title_msg
+					MENU=($2)
+					checklist "$TITLE" "$MSG" "$MENU"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in 
+							HELP*)
+								script_help share/part_help
+								get_title_msg
+								checklist "$TITLE" "$MSG" "$MENU"
+								;;
+							*)	# uebernehmen
+								WERT="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					no_para_msg $0
+				fi
+				#}}}
+				;;
+			*)
+				# einfache Auswahl{{{
+				#
+				if [ -n "$1" ] ; then
+					get_title_msg
+					MENU=($1)
+					menubox "" "$TITLE" "$MSG" "$MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in 
+							HELP*)
+								script_help share/part_help
+								get_title_msg
+								menubox "" "$TITLE" "$MSG" "$MENU"
+								;;
+							*)	# uebernehmen
+								WERT="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					no_para_msg $0
+				fi
+				#}}}
+				;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (part_md_lose), Herrausfiltern von schon vergebenen RAID Partitionen.# {{{
+	#
+	# benoetigt vorher die Funktionen disk und partdb -i fd
+	#
+	# usage: part_md_lose
+	#
+	part_md_lose() {
+		unset -- Part_Md_Lose_E
+		for i in ${=PART} ; {
+			if [ -z "`print "${(M)${(f)"$(< /proc/mdstat)"}[(fr)*${i##*/}*]}"`" ] ; then
+				Part_Md_Lose_E+=($i \"\")
+			fi
+		}
+	}
+	## }}}
+	# Funktion (partdb), Partitionstabelle speichern{{{
+	# Hier werden alle Partitionen gesucht die vorhanden sind.
+	#
+	# benoetigt die Funktion disk
+	#
+	# usage: partdb [ -a | /dev.. | -i Partitionstyp ]
+	# -i - Nach Partitionstyp suchen
+	# /dev - eine Festplatte uebergeben, ansonsten werden
+	#        alle vorhandenen benutzt.
+	# nichts - alle Partitionen ausser RAID/LVM
+	#
+	partdb() {
+		unset -- PART_IST PART PART_E PART_TYPE \
+			GRUB_PART_DISK GRUB_PART_DISK_E \
+			GRUB_DISK SWAP_IST SWAP_DEV Anz_G Anz_S
+		#
+		local Anz Anz_G Anz_S Disk_Nr Part_Desc Part_Nr
+		case $1 in
+			/dev*)
+				# nur eine Festplatte durchsuchen, nach Linux# {{{
+				#
+				Anz=0
+				Anz_G=1
+				Anz_S=0
+				Disk_Nr=0
+				(LC_ALL=C ; fdisk -l $1 | grep '^/dev' | grep -v ' 82 ' | grep -v Ext | \
+				sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$)
+				if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
+					while read p REST ; do
+						(( Anz++ ))
+						Part_Desc="${REST#*[0-9] }"
+						PART_M[Anz]="$p \"$Part_Desc\" off"
+						PART_E[Anz]="$p \"$Part_Desc\""
+						PART[Anz]="$p"
+						# Der Bootloader grub1 besitzt eine andere Syntax, die hier auch
+						# eingestellt wird (hd0), (hd0,1)
+						#
+						# Kompalitaet zu grub1
+						if [ "$gv_Grub1" = yes ] ; then
+							Part_Nr="${p##*[a-z]}"
+							GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
+							GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
+							GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
+						fi
+					done<${gv_WorkDir}/partdb$$
+				fi
+				#
+				fdisk -l $1 | grep ' 82 ' | sed -e 's#\*##' | \
+				awk '{print $1,$6,$7}' >${gv_WorkDir}/partdb$$
+				if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
+					while read p REST ; do
+						(( Anz_S++ ))
+						SWAP_DEV[Anz_S]="$p"
+						SWAP_DEV_E[Anz_S]="$p \"$REST\""
+						SWAP_DEV_M[Anz_S]="$p \"$REST\" off"
+					done<${gv_WorkDir}/partdb$$
+				fi
+				## }}}
+				;;
+			-i)
+				# Nach Partitions Type durchsuchen (alle Partitionen)# {{{
+				Anz=0
+				Anz_G=0
+				Disk_Nr=-1
+				for i in $DISK_DEV ; {
+					(( Disk_Nr++ ))
+					fdisk -l $i | grep '^/dev' | grep " $2 " | \
+					sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$
+					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
+						while read p REST ; do
+							(( Anz++ ))
+							Part_Desc="${REST#*[0-9] }"
+							PART_M[Anz]="$p \"$Part_Desc\" off"
+							PART_E[Anz]="$p \"$Part_Desc\""
+							PART[Anz]="$p"
+							# Kompalitaet zu grub1
+							if [ "$gv_Grub1" = yes ] ; then
+								Part_Nr="${p##*[a-z]}"
+								GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
+								GRUB_PART_DISK_M[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\" off"
+								GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
+								(( Anz_G++ ))
+								GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
+							fi
+						done<${gv_WorkDir}/partdb$$
+					fi
+				}
+				## }}}
+				;;
+			*)
+				# alle Partitionen, ausser RAID und LVM{{{
+				#
+				Anz=0
+				Anz_G=0
+				Anz_S=0
+				Disk_Nr=-1
+				for i in $DISK_DEV ; {
+					(( Disk_Nr++ ))
+					# erweiterte Partition, RAID, Linux LVM und swap werden herausgefiltert.
+					(LC_ALL=C ; fdisk -l $i | grep '^/dev' | grep -v ' 82 \| 8e \| fd ' | grep -v Ext | \
+					sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$)
+					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
+						while read p REST ; do
+							(( Anz++ ))
+							#
+							# Der Bootloader grub besitzt eine andere Syntax, die hier auch
+							# eingestellt wird (hd0), (hd0,1)
+							#
+							Part_Desc="${REST#*[0-9] }"
+							PART_M[Anz]="$p \"$Part_Desc\" off"
+							PART_E[Anz]="$p \"$Part_Desc\""
+							PART[Anz]="$p"
+							# Kompalitaet zu grub1
+							if [ "$gv_Grub1" = yes ] ; then
+								Part_Nr="${p##*[a-z]}"
+								GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
+								GRUB_PART_DISK_M[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\" off"
+								GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
+								(( Anz_G++ ))
+								GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
+							fi
+						done<${gv_WorkDir}/partdb$$
+					fi
+					#
+					fdisk -l $i | grep ' 82 ' | sed -e 's#\*##' | \
+					awk '{print $1,$6,$7}' >${gv_WorkDir}/partdb$$
+					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
+						while read p REST ; do
+							(( Anz_S++ ))
+							SWAP_DEV[Anz_S]="$p"
+							SWAP_DEV_E[Anz_S]="$p \"$REST\""
+							SWAP_DEV_M[Anz_S]="$p \"$REST\" off"
+						done<${gv_WorkDir}/partdb$$
+					fi
+				}
+				#}}}
+				;;
+		esac
+	}
+	#}}}
+	# Funktion (raid), Erkennung der RAID-Arrays{{{
+	#
+	# usage: raid
+	#
+	raid() {
+		unset -- MD_DEV MD_DEV_E MD_DEV_M
+		# vorhandende RAID Arrays herausfinden
+		if [ -e /proc/mdstat ] ; then
+			if [ ! -f ${gv_WorkDir}/raid_array ] ; then
+				mdadm -Ebsc partitions >${gv_WorkDir}/raid_array
+			fi
+			# Variablen belegen mit den Werten der vorhandenen RAID
+            # Arrays.
+			for i in `print ${(Mou)$(< ${gv_WorkDir}/raid_array)##/dev/md*<0-255>}` ; {        
+				if [ -b "$i" ] ; then
+					MD_DEV_M+=($i RAID-Array off)                                                  
+					MD_DEV_E+=($i RAID-Array)                                                      
+					MD_DEV+=($i)
+				elif [ -L "$i" ] ; then
+					Dev="`readlink -f $i`"
+					MD_DEV_M+=($Dev RAID-Array off)                                          
+					MD_DEV_E+=($Dev RAID-Array)                                                    
+					MD_DEV+=($Dev)
+				else
+					Minor="${i##*/}"
+					Dir="${i%/*}"
+					Dev="${Dir}${Minor}"
+					if [ -b "${Dev}" ] ; then
+						MD_DEV_M+=($Dev RAID-Array off)                                          
+						MD_DEV_E+=($Dev RAID-Array)                                              
+						MD_DEV+=($Dev)
+					fi
+				fi
+			}
+			#
+		fi
+	}
+	#}}}
+	# Funktion (raid_anz), Anzahl der schon vergebenen RAID Partitionen.# {{{
+	# herausfinden.
+	raid_anz() {
+		if [[ ${#argv} == 1 ]] ; then
+			if [[ -b $1 ]] ; then
+				print ${${(ws: :)$(mdadm --query $1)}[4]}
+			else
+				no_block_device_msg $1
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (raid_enlarge_dev), RAID vergoessern# {{{
+	#
+	# usage: raid_enlarge_dev RAIDDEV
+	#
+	raid_enlarge_dev() {
+		if [[ ${#argv} == 1 ]] ; then
+			RAIDDEV="$1"
+			# Erst das RAID Level herausfinden. vergroessern 
+			# funktioniert nur bei
+			# RAID Level 1,4,5,6
+			RAIDLEVEL=$(raid_is_level $RAIDDEV)
+			#####################################
+			# TODO: Menu fur Level erstellen?
+			#####################################
+			case "$RAIDLEVEL" in
+				raid[1456])
+					# Raid Arrays 1/4/5/6 vergroessern# {{{
+					# Anzahl der RAID-Laufwerke herrausfinden
+					RAID_ANZ=$(raid_anz $RAIDDEV)
+					if [ ! -z "$RAID_ANZ" ] ; then
+						# RAID-Partitionen minus der Laufwerke für Parity-Informationen
+						# einstellen
+						case "$RAIDLEVEL" in
+							raid1)	MINUS_RAID_ANZ=1
+								;;
+							raid[45])	MINUS_RAID_ANZ=1
+								;;
+							raid6)	MINUS_RAID_ANZ=2
+								;;
+						esac
+						(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
+						# Festplatten herrausfinden
+						disk
+						if [ ! -z "${DISK_DEV[1]}" ] ; then
+							# RAID Partitionen herrausfinden
+							partdb -i fd
+							if [ ! -z "${PART[1]}" ] ; then
+								# freie RAID Partitionen zur Auswahl stellen.# {{{
+								part_md_lose
+								if [ ! -z "${Part_Md_Lose_E[1]}" ] ; then
+									# Wenn, Freie RAID Partitionen zur Auswahl stellen.
+									RAID_ENLARGE_ADD_TITLE=$(gettext 'Raid-Arrays::${gv_Enlarge}')
+									RAID_PART_ADD_MENU=($Part_Md_Lose_E)
+									RAID_PART_ADD_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum hinzufuegen aus.')
+									menubox "" "$RAID_ENLARGE_ADD_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)
+												script_help share/part_help
+												menubox "" "$RAID_ENLARGE_ADD_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+												;;
+											/dev*)
+												HDDEV="$gv_Auswahl"
+												One_Raid_Dev_Size=${${${(ws,: ,)${(M)${(f)"$(mdadm -D $RAIDDEV 2>&1)"}##*Used Dev Size :*}}[2]}%% *}
+												(( Old_Raid_Dev_Size = One_Raid_Dev_Size * RAID_ANZ ))
+												# Dateisystem des Arrays
+												# vergroessern
+												resize_fs -r +${One_Raid_Dev_Size} $Old_Raid_Dev_Size $RAIDDEV
+												# alle RAID Arrays neu heraussuchen
+												raid
+												# Konfiguration updaten
+												mdadm_conf_scan
+												break
+												;;
+										esac
+									done
+								else
+									# Meldung ueber keine freien RAID Partitionen
+									MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfuegung.')
+									msgbox "$gv_Attention" "$MSG"
+								fi
+								## }}}
+							else
+								no_part_msg
+							fi
+						else
+							no_disk_msg
+						fi
+					else
+						no_raid_anz_msg
+					fi
+					## }}}
+					;;
+				*)
+					MSG=$(gettext 'In diesem RAIDLEVEL ($RAIDLEVEL) kann diese Software kein Laufwerk hinzufuegen.')
+					msgbox "$gv_Attention" "$MSG"
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (raid_filter), filtert verschiedene RAID Varianten.{{{
+	#
+	# usage: raid_filter [ -t | -l | nichts ]
+	# -t - kein RAID10 mitverwenden, geht mit LVM nicht.
+	# -l - kein RAID in LVM's auflisten
+	#
+	raid_filter() {
+		unset -- R_DEVS R_DEVS_E R_DEVS_M R_Devs R_Ist
+		local Anz R_Devs R_Ist Tmp Tmp1
+		typeset -a R_Devs
+		if [ -e /proc/mdstat ] ; then
+			case "$1" in
+				-t)
+					# nur RAID Laufwerke auflisten die in keinem anderen RAID Laufwerk{{{
+					# vorkommen und kein RAID10 Laufwerk sind.
+					R_Ist="`print ${(u)${(Mo)$(< /proc/mdstat)##md*}%\[*}`"
+					for i in ${=R_Ist} ; {
+						if [ -z ${${(s,:,)${(M)${(f)"$(< /proc/mdstat)"}##*( $i)*}}[1]} ] ; then
+							R_Devs+=($i)
+						fi
+					}
+					if [ -n "$R_Devs" ] ; then
+						for i in ${=R_Devs} ; {
+							Ist=(${(M)${(Mo)${(f)"$(< /proc/mdstat)"}##${i}*}##md})
+							if [ "${#Ist[@]}" -lt 2 ] ; then
+								R_DEVS+=(/dev/${i})
+								R_DEVS_E+=(/dev/${i} \"RAID Array\")
+								R_DEVS_M+=(/dev/${i} \"RAID Array\" off)
+							fi
+						}
+					fi
+					#}}}
+					;;
+				-l)	
+					# nur RAID Laufwerke auflisten die in keinem Logischen Volume{{{
+					# vorkommen.
+					if [ -n "$LVM" ] ; then
+						R_Ist="`print ${(u)${(Mo)$(< /proc/mdstat)##md*}%\[*}`"
+						for i in ${=R_Ist} ; {
+							if [ -z ${${(s,:,)${(M)${(f)"$(< /proc/mdstat)"}##*( $i)*}}[1]} ] ; then
+								R_Devs+=($i)
+							fi
+						}
+						if [ -n "$R_Devs" ] ; then
+							# Wird LVM2 oder LVM1 benutzt? Benoetigt im Vorfeld die
+							# Funktion lvm_version
+							unset -- Tmp
+							if [ "$LVM" = 2 ] ; then
+								Tmp=${(M)$(vgdisplay -v 2>/dev/null | awk '/PV Name/{print $3}')##/dev/md*}
+							else
+								Tmp=${(M)$(vgdisplay -v 2>/dev/null | awk '/PV Name/{print $4}')##/dev/md*}
+							fi
+							if [ -n "$Tmp" ] ; then
+								Tmp1="${${Tmp//\/dev\//}// /|}"
+								print -l ${(R)${R_Devs}##(${Tmp1})} | while read D ; do
+										R_DEVS+=(/dev/${D})
+										R_DEVS_E+=(/dev/${D} \"RAID Array\")
+										R_DEVS_M+=(/dev/${D} \"RAID Array\" off)
+									done
+							else
+								for i in ${=R_Devs} ; {
+									R_DEVS+=(/dev/${i})
+									R_DEVS_E+=(/dev/${i} \"RAID Array\")
+									R_DEVS_M+=(/dev/${i} \"RAID Array\" off)
+								}
+							fi
+						fi
+					else
+						# nur RAID Laufwerke auflisten die in keinem anderen RAID Laufwerk
+						# vorkommen.
+						R_Ist="`print ${(u)${(Mo)$(< /proc/mdstat)##md*}%\[*}`"
+						for i in ${=R_Ist} ; {
+							if [ -z ${${(s,:,)${(M)${(f)"$(< /proc/mdstat)"}##*( $i)*}}[1]} ] ; then
+								R_DEVS+=(/dev/${i})
+								R_DEVS_E+=(/dev/${i} \"RAID Array\")
+								R_DEVS_M+=(/dev/${i} \"RAID Array\" off)
+							fi
+						}
+					fi
+					#}}}
+					;;
+				*)	
+					# nur RAID Laufwerke auflisten die in keinem anderen RAID Laufwerk{{{
+					# vorkommen.
+					R_Ist="`print ${(u)${(Mo)$(< /proc/mdstat)##md*}%\[*}`"
+					for i in ${=R_Ist} ; {
+						if [ -z ${${(s,:,)${(M)${(f)"$(< /proc/mdstat)"}##*( $i)*}}[1]} ] ; then
+							R_DEVS+=(/dev/${i})
+							R_DEVS_E+=(/dev/${i} \"RAID Array\")
+							R_DEVS_M+=(/dev/${i} \"RAID Array\" off)
+						fi
+					}
+					#}}}
+					;;
+			esac
+		fi
+	}
+	#}}}
+	# Funktion (raid_is_level), herausfinden des Levels eines ARRAYs# {{{
+	#
+	# usage: raid_is_level RAIDDEV
+	#
+	raid_is_level() {
+		if [[ ${#argv} == 1 ]] ; then
+			if [[ -b $1 ]] ; then
+				print ${${(s: :)${(M)${(f)"$(mdadm -D $1)"}##*(Raid Level)*}}[4]}
+			else
+				no_block_device_msg $1
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (raid_search_part_state), die Laufwerke des ARRAYs mit Status herausfinden.{{{
+	#
+	# usage: raid_search_part_state RAIDDEV
+	#
+	raid_search_part_state() {
+		if [[ ${#argv} == 1 ]] ; then
+			if [[ -b $1 ]] ; then
+				unset -- PARTS_STATE
+				print -l ${(R)${(R)${(f)"$(mdadm -D $1 2>&1)"}##*:*}##*Number*} | \
+				while read a b c d State ; do
+					PARTS_STATE+=(${State//*\/dev/\/dev} "${State%% *}")
+				done
+			else
+				no_block_device_msg $1
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (raid_reduce_dev), RaidLaufwerk verkleinern # {{{
+	#
+	# usage: raid_reduce_dev RAIDDEV
+	#
+	raid_reduce_dev() {
+		if [[ ${#argv} == 1 ]] ; then
+			RAIDDEV="$1"
+			# Erst das RAID Level herausfinden.
+			# funktioniert nur bei
+			# RAID Level 1,4,5,6
+			RAIDLEVEL=$(raid_is_level $RAIDDEV)
+			#
+			case "$RAIDLEVEL" in
+				raid[1456])
+					# Raid Arrays 1/4/5/6 verkleinern# {{{
+					#
+					# RAID Partitionen zur Auswahl stellen.
+					raid_search_part_state $RAIDDEV
+					if [ ! -z "${PARTS_STATE[1]}" ] ; then
+						# Wenn mehr als benoetigte RAID Partitionen zur Verfuegung stehen
+						# zur Auswahl stellen.
+						RAID_ANZ=$(raid_anz $RAIDDEV)
+						if [ ! -z "$RAID_ANZ" ] ; then
+							# Minimum der RAID-Partitionen einstellen
+							case "$RAIDLEVEL" in
+								raid1)	MIN_RAID_PART=2
+										MINUS_RAID_ANZ=1
+									;;
+								raid[45])	MIN_RAID_PART=3
+										MINUS_RAID_ANZ=1
+									;;
+								raid6)	MIN_RAID_PART=4
+										MINUS_RAID_ANZ=2
+									;;
+							esac
+							#
+							if [[ $RAID_ANZ -gt $MIN_RAID_PART ]] ; then
+								# FP/PART herausfinden
+								RAID_PART_REDUCE_TITLE=$(gettext 'Raid-Arrays::${gv_Reduce}')
+								RAID_PART_REDUCE_MENU=($PARTS_STATE)
+								RAID_PART_REDUCE_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum entfernen aus.')
+								menubox "" "$RAID_PART_REDUCE_TITLE" "$RAID_PART_REDUCE_MSG" "$RAID_PART_REDUCE_MENU"
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)
+											script_help share/part_help
+											menubox "" "$RAID_PART_REDUCE_TITLE" "$RAID_PART_REDUCE_MSG" "$RAID_PART_REDUCE_MENU"
+											;;
+										/dev*)
+											HDDEV="$gv_Auswahl"
+											# Dateisystem des Arrays verkleinern
+											# FS resizen
+											#
+											One_Raid_Dev_Size=${${${(ws,: ,)${(M)${(f)"$(mdadm -D $RAIDDEV 2>&1)"}##*Used Dev Size :*}}[2]}%% *}
+											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
+											(( Old_Raid_Dev_Size = One_Raid_Dev_Size * RAID_ANZ ))
+											resize_fs -r -${One_Raid_Dev_Size} $Old_Raid_Dev_Size $RAIDDEV
+											# alle RAID Arrays neu heraussuchen
+											raid
+											# Konfiguration updaten
+											mdadm_conf_scan
+											break
+											;;
+									esac
+								done
+							else
+								MSG=$(gettext 'Die Anzahl ($RAID_ANZ) der zum Array gehoerigen Laufwerke ist zu klein. Das Array $RAIDDEV wurde nicht verkleinert.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+						else
+							no_raid_anz_msg
+						fi
+					else
+						# Meldung ueber keine RAID Partitionen
+						MSG=$(gettext 'Es sind stehen keine RAID Partitionen zur Verfuegung.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+					#}}}
+					;;
+				*)
+					MSG=$(gettext 'In diesem RAIDLEVEL ($RAIDLEVEL) kann diese Software keine Partition entfernen.')
+					msgbox "$gv_Attention" "$MSG"
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (search_cryptdev), sucht nach verschluesselten Laufwerken# {{{
+	#
+	# usage: search_cryptdev [ -a  | -s | -l ]
+	# -a - suche nach aktiven verschlüsselten Laufwerken, die nicht eingebunden sind
+	#      jedenfalls nicht im mehrstelligen Bereich. 1 eingebundenes Laufwerk kann
+	#      ausgebunden werden.
+	# -l - suche nach nur Luks verschlüsselten Laufwerken
+	# -s - suche nach inaktiven verschlüsselten Laufwerken
+	# nichts - alle verschlüsselten Laufwerke in /etc/crypttab
+	#
+	search_cryptdev() {
+		unset -- MAP_DEV MAP_DEV_E MAP_DEV_M MAP_DST_DEV MAP_DST_DEV_E MAP_DST_DEV_M
+		local Param Active OpenCount
+		Param="$1"
+		TABFILE="/etc/crypttab"
+		case "$Param" in
+			-a)	# nur aktive Cryptdisks
+				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
+				Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
+					if [[ $Active == ACTIVE ]] ; then
+						OpenCount=$(dmsetup info -c --noheadings -o open $Crypt_Dev 2>/dev/null)
+						# >=1 heist vorhandene Laufwerke sind gemountet.
+						if (( $OpenCount == 1 )) ; then
+							# Devices mit LABEL oder UUID Bezeichnung
+							# in richtige Devices umwandeln.
+							parse_uuid_label $Crypt_Dev
+							if [ -n "$REALDEV" ] ; then
+								MAP_DEV_E+=($REALDEV)
+								MAP_DEV+=(${REALDEV##*/} \"\")
+								MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+							fi
+						# =0 heist vorhandenes Laufwerk nicht gemountet.
+						elif (( OpenCount == 0 )) ; then
+							parse_uuid_label $Crypt_Dev
+							if [ -n "$REALDEV" ] ; then
+								MAP_DEV_E+=($REALDEV)
+								MAP_DEV+=(${REALDEV##*/} \"\")
+								MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+							fi
+						fi
+					fi
+				done
+				;;
+			-l)	# nur luks Cryptdisks
+				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read dst src Rest ; do
+					parse_uuid_label $src
+					if [ -n "$REALDEV" ] ; then
+						if cryptsetup isLuks $REALDEV 2>/dev/null ; then
+							MAP_DEV_E+=($REALDEV)
+							MAP_DEV+=($REALDEV \"\")
+							MAP_DEV_M+=($REALDEV \"\" off)
+							MAP_DST_DEV_E+=($dst)
+							MAP_DST_DEV+=($dst \"\")
+							MAP_DST_DEV_M+=($dst \"\" off)
+						fi
+					fi
+				done
+				;;
+			-s)	# alle gestoppten Cryptdisks in /etc/crypttab.
+				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
+				Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
+					if [[ $Active != ACTIVE ]] ; then
+						parse_uuid_label $Crypt_Dev
+						if [ -n "$REALDEV" ] ; then
+							MAP_DEV_E+=($REALDEV)
+							MAP_DEV+=(${REALDEV##*/} \"\")
+							MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+						fi
+					fi
+				done
+				;;
+			*)	# alle Cryptdisks in /etc/crypttab.
+				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
+					parse_uuid_label $Crypt_Dev
+					if [ -n "$REALDEV" ] ; then
+						MAP_DEV_E+=($REALDEV)
+						MAP_DEV+=(${REALDEV##*/} \"\")
+						MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+					fi
+				done
+				;;
+		esac
+	}
+	## }}}
+	# Funktion (vg_display), zum suchen der Volume Groups (VG){{{
+	#
+	# usage: vg_display
+	vg_display() {
+		local Anz
+		integer Anz
+		unset -- VG VG_E VG_M
+		if [ "$LVM" = 2 ] ; then
+			Anz=1
+			for i in ${(o)$(vgscan | awk '/Found volume group/{print $4}')} ; {
+				VG_M[Anz]="\"$i\" \"Volume Group\" off"
+	            VG_E[Anz]="\"$i\" \"Volume Group\""
+	            VG[Anz]="$i"
+	            (( Anz++ ))
+			}
+		else
+			Anz=1
+			for i in ${(o)$(vgscan | awk '/active volume group/{print $7}')} ; {
+				VG_M[Anz]="\"$i\" \"Volume Group\" off"
+	            VG_E[Anz]="\"$i\" \"Volume Group\""
+	            VG[Anz]="$i"
+				(( Anz++ ))
+			}
+		fi
+	}
+	#}}}
+# Funktion (vg_free_size), um die noch frei verbleibende Groesse der VG zu berechnen{{{
+#
+# usage: vg_free_size VG
+#
+vg_free_size() {
+	if [ "$#" -eq 1 ] ; then
+		# PE Size herrausbekommen wird meist in Megabyte ausgegeben
+		print ${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay $1)"}##*PE*}}[3,4]} | while read a b ; do
+			# nach dem Komma/Punkt den Rest abschneiden und in
+			# KiloByte umrechnen
+			case "$b" in
+                KB)
+				    PE_SIZE=$a
+                    ;;
+                MB)
+				    PE_SIZE=$[${a%.*}*1024]
+                    ;;
+                GB)
+				    PE_SIZE=$[${a%.*}*1048576]
+                    ;;
+                TB)
+				    PE_SIZE=$[${a%.*}*1073741824]
+                    ;;
+                PB)
+				    PE_SIZE=$[${a%.*}*1099511627776]
+                    ;;
+                EB)
+				    PE_SIZE=$[${a%.*}*1125899906842624]
+                    ;;
+                ZB)
+				    PE_SIZE=$[${a%.*}*1152921504606846976]
+                    ;;
+#                YB)
+#				    PE_SIZE=$[${a%.*}*1180591620717411303424]
+#                    ;;
+                KiB)
+				    PE_SIZE=$a
+                    ;;
+                MiB)
+				    PE_SIZE=$[${a%.*}*1000]
+                    ;;
+                GiB)
+				    PE_SIZE=$[${a%.*}*1000000]
+                    ;;
+                TiB)
+				    PE_SIZE=$[${a%.*}*1073741824]
+                    ;;
+                PiB)
+				    PE_SIZE=$[${a%.*}*1099511627776]
+                    ;;
+                EiB)
+				    PE_SIZE=$[${a%.*}*1125899906842624]
+                    ;;
+                ZiB)
+				    PE_SIZE=$[${a%.*}*1152921504606846976]
+                    ;;
+#                YiB)
+#				    PE_SIZE=$[${a%.*}*1180591620717411303424]
+#                    ;;
+                *)
+				    PE_SIZE=$a
+                    ;;
+            esac
+		done
+		#
+		VG_SIZE=$[${${(s,:,)"${(f)$(vgdisplay -c $1)}"}[16]}*$PE_SIZE]
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
+	## }}}
+	###### Hardware System Nachrichten ###### {{{
+	# Funktion (no_block_device_msg)# {{{
+	#
+	# usage: no_block_device_msg
+	no_block_device_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			MSG=$(gettext '$1 ist kein Block Geraet.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	# }}}
+	# Funktion (no_dev_cd){{{
+	#
+	# usage: no_dev_cd
+	no_dev_cd() {
+		MSG=$(gettext 'Es ist kein CD-+R(W)/DVD+-R(W)/DVD-RAM Laufwerk vorhanden, oder sie haben keine Rechte auf das Laufwerk.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion (no_disk_msg)# {{{
+	#
+	# usage: no_disk_msg
+	no_disk_msg() {
+		MSG=$(gettext 'Es sind keine Festplatten vorhanden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	# }}}
+	# Funktion (no_linux_part_msg)# {{{
+	#
+	# usage: no_linux_part_msg
+	no_linux_part_msg() {
+		MSG=$(gettext 'Es sind keine Linux Partitionen vorhanden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	# }}}
+	# Funktion (no_lv_msg), Nachricht falls keine LV's vorhanden sind{{{
+	#
+	# usage: no_lv_msg
+	no_lv_msg() {
+		MSG=$(gettext 'Es sind keine Logischen Volumes vorhanden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion (no_netcard_msg)# {{{
+	no_netcard_msg() {
+		MSG=$(gettext 'Es ist keine Netzwerkkarte vorhanden.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_part_choice_msg)# {{{
+	no_part_choice_msg() {
+		MSG=$(gettext 'Sie muessen erst eine Partition auswaehlen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	# }}}
+	# Funktion (no_part_msg)# {{{
+	#
+	# usage: no_part_msg
+	no_part_msg() {
+		MSG=$(gettext 'Es sind keine Partitionen vorhanden. Sie muessen erst Ihre Festplatten partitionieren.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_raid_anz_msg), Nachricht das die Anzahl der zugehoerigen# {{{
+	# Partitionen nicht heraus gefunden werden kann
+	no_raid_anz_msg() {
+		MSG=$(gettext 'Es konnte nicht die Anzahl der zum Array dazu gehoerigen Laufwerke ermittelt werden.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_vg_msg), Nachricht falls keine VG's vorhanden sind{{{
+	#
+	# usage: no_vg_msg
+	no_vg_msg() {
+		MSG=$(gettext 'Es sind keine Volume Groups vorhanden. Sie muessen erst Volume Groups erzeugen und dann darauf, logische Volumes.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+		# Funktion (over_limit_size_msg), Nachricht das ein SoftLimit# {{{
+		# nicht ein Hardlimit ueberschreiten darf, Quota.
+		over_limit_size_msg() {
+			MSG=$(gettext 'Falsche Groessen Angabe. Das Softlimit muss immer gleich oder kleiner als das Hardlimit sein.')
+			msgbox "$gv_Attention" "$MSG"
+		}
+		## }}}
+	## }}}
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

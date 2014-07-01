@@ -1,0 +1,302 @@
+# postscreen (?) Konfiguration einstellen{{{
+
+postscreen_conf() {
+
+	# Variable
+	POSTSCREEN_TITLE="${gv_Configuration}::${lv_Postscreen}"
+	
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)postscreen_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_postscreen_menu), die Postscreen-Parameter einstellen# {{{
+	##############################################
+	# TODO: Hilfe etc. vorbereitet
+	# postscreen_access_list = permit_mynetworks
+	# postscreen_bare_newline_action = ignore
+	# postscreen_bare_newline_enable = no
+	# postscreen_bare_newline_ttl = 30d
+	# postscreen_blacklist_action = ignore
+	# postscreen_cache_cleanup_interval = 12h
+	# postscreen_cache_map = btree:$data_directory/postscreen_cache
+	# postscreen_cache_retention_time = 7d
+	# postscreen_client_connection_count_limit = $smtpd_client_connection_count_limit
+	# postscreen_command_count_limit = 20
+	# postscreen_command_filter =
+	# postscreen_command_time_limit = ${stress?10}${stress:300}s
+	# postscreen_disable_vrfy_command = $disable_vrfy_command
+	# postscreen_discard_ehlo_keyword_address_maps = $smtpd_discard_ehlo_keyword_address_maps
+	# postscreen_discard_ehlo_keywords = $smtpd_discard_ehlo_keywords
+	# postscreen_dnsbl_action = ignore
+	# postscreen_dnsbl_reply_map =
+	# postscreen_dnsbl_sites =
+	# postscreen_dnsbl_threshold = 1
+	# postscreen_dnsbl_ttl = 1h
+	# postscreen_enforce_tls = $smtpd_enforce_tls
+	# postscreen_expansion_filter = $smtpd_expansion_filter
+	# postscreen_forbidden_commands = $smtpd_forbidden_commands
+	# postscreen_greet_action = ignore
+	# postscreen_greet_banner = $smtpd_banner
+	# postscreen_greet_ttl = 1d
+	# postscreen_greet_wait = ${stress?2}${stress:6}s
+	# postscreen_helo_required = $smtpd_helo_required
+	# postscreen_non_smtp_command_action = drop
+	# postscreen_non_smtp_command_enable = no
+	# postscreen_non_smtp_command_ttl = 30d
+	# postscreen_pipelining_action = enforce
+	# postscreen_pipelining_enable = no
+	# postscreen_pipelining_ttl = 30d
+	# postscreen_post_queue_limit = $default_process_limit
+	# postscreen_pre_queue_limit = $default_process_limit
+	# postscreen_reject_footer = $smtpd_reject_footer
+	# postscreen_tls_security_level = $smtpd_tls_security_level
+	# postscreen_use_tls = $smtpd_use_tls
+	# postscreen_watchdog_timeout = 10s
+	# postscreen_whitelist_interfaces = static:all
+	##############################################
+	conf_postscreen_menu() {
+		POSTSCREEN_MENU=(postscreen_access_list \"\$postscreen_access_list\"
+		postscreen_bare_newline_action \"\$postscreen_bare_newline_action\"
+		postscreen_bare_newline_enable \"\$postscreen_bare_newline_enable\"
+		postscreen_bare_newline_ttl \"\$postscreen_bare_newline_ttl\"
+		postscreen_blacklist_action \"\$postscreen_blacklist_action\"
+		postscreen_cache_cleanup_interval \"\$postscreen_cache_cleanup_interval\"
+		postscreen_cache_map \"\$postscreen_cache_map\"
+		postscreen_cache_retention_time \"\$postscreen_cache_retention_time\"
+		postscreen_client_connection_count_limit \"\$postscreen_client_connection_count_limit\"
+		postscreen_command_count_limit \"\$postscreen_command_count_limit\"
+		postscreen_command_filter \"\$postscreen_command_filter\"
+		postscreen_command_time_limit \"\$postscreen_command_time_limit\"
+		postscreen_disable_vrfy_command \"\$postscreen_disable_vrfy_command\"
+		postscreen_discard_ehlo_keyword_address_maps \"\$postscreen_discard_ehlo_keyword_address_maps\"
+		postscreen_discard_ehlo_keywords \"\$postscreen_discard_ehlo_keywords\"
+		postscreen_dnsbl_action \"\$postscreen_dnsbl_action\"
+		postscreen_dnsbl_reply_map \"\$postscreen_dnsbl_reply_map\"
+		postscreen_dnsbl_sites \"\$postscreen_dnsbl_sites\"
+		postscreen_dnsbl_threshold \"\$postscreen_dnsbl_threshold\"
+		postscreen_dnsbl_ttl \"\$postscreen_dnsbl_ttl\"
+		postscreen_enforce_tls \"\$postscreen_enforce_tls\"
+		postscreen_expansion_filter \"\$postscreen_expansion_filter\"
+		postscreen_forbidden_commands \"\$postscreen_forbidden_commands\"
+		postscreen_greet_action \"\$postscreen_greet_action\"
+		postscreen_greet_banner \"\$postscreen_greet_banner\"
+		postscreen_greet_ttl \"\$postscreen_greet_ttl\"
+		postscreen_greet_wait \"\$postscreen_greet_wait\"
+		postscreen_helo_required \"\$postscreen_helo_required\"
+		postscreen_non_smtp_command_action \"\$postscreen_non_smtp_command_action\"
+		postscreen_non_smtp_command_enable \"\$postscreen_non_smtp_command_enable\"
+		postscreen_non_smtp_command_ttl \"\$postscreen_non_smtp_command_ttl\"
+		postscreen_pipelining_action \"\$postscreen_pipelining_action\"
+		postscreen_pipelining_enable \"\$postscreen_pipelining_enable\"
+		postscreen_pipelining_ttl \"\$postscreen_pipelining_ttl\"
+		postscreen_post_queue_limit \"\$postscreen_post_queue_limit\"
+		postscreen_pre_queue_limit \"\$postscreen_pre_queue_limit\"
+		postscreen_reject_footer \"\$postscreen_reject_footer\"
+		postscreen_tls_security_level \"\$postscreen_tls_security_level\"
+		postscreen_use_tls \"\$postscreen_use_tls\"
+		postscreen_watchdog_timeout \"\$postscreen_watchdog_timeout\"
+		postscreen_whitelist_interfaces \"\$postscreen_whitelist_interfaces\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$POSTSCREEN_TITLE" "$gv_Menupoint" "$POSTSCREEN_MENU"
+	}
+	## }}}
+	conf_postscreen_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help postscreen_help
+				conf_postscreen_menu
+				;;
+			postscreen_bare_newline_action)
+				# = ignore
+				conf_postscreen_menu postscreen_bare_newline_action
+				;;
+			postscreen_bare_newline_enable)
+				# = no
+				conf_postscreen_menu postscreen_bare_newline_enable
+				;;
+			postscreen_bare_newline_ttl)
+				# = 30d
+				conf_postscreen_menu postscreen_bare_newline_ttl
+				;;
+			postscreen_blacklist_action)
+				# = ignore
+				conf_postscreen_menu postscreen_blacklist_action
+				;;
+			postscreen_cache_cleanup_interval)
+				# = 12h
+				conf_postscreen_menu postscreen_cache_cleanup_interval
+				;;
+			postscreen_cache_map)
+				# = btree:$data_directory/postscreen_cache
+				conf_postscreen_menu postscreen_cache_map
+				;;
+			postscreen_cache_retention_time)
+				# = 7d
+				conf_postscreen_menu postscreen_cache_retention_time
+				;;
+			postscreen_client_connection_count_limit)
+				# = $smtpd_client_connection_count_limit
+				conf_postscreen_menu postscreen_client_connection_count_limit
+				;;
+			postscreen_command_count_limit)
+				# = 20
+				conf_postscreen_menu postscreen_command_count_limit
+				;;
+			postscreen_command_filter)
+				#
+				conf_postscreen_menu postscreen_command_filter
+				;;
+			postscreen_command_time_limit)
+				# = ${stress?10}${stress:300}s
+				conf_postscreen_menu postscreen_command_time_limit
+				;;
+			postscreen_disable_vrfy_command)
+				# = $disable_vrfy_command
+				conf_postscreen_menu postscreen_disable_vrfy_command
+				;;
+			postscreen_discard_ehlo_keyword_address_maps)
+				# = $smtpd_discard_ehlo_keyword_address_maps
+				conf_postscreen_menu postscreen_discard_ehlo_keyword_address_maps
+				;;
+			postscreen_discard_ehlo_keywords)
+				# = $smtpd_discard_ehlo_keywords
+				conf_postscreen_menu postscreen_discard_ehlo_keywords
+				;;
+			postscreen_dnsbl_action)
+				# = ignore
+				conf_postscreen_menu postscreen_dnsbl_action
+				;;
+			postscreen_dnsbl_reply_map)
+				#
+				conf_postscreen_menu postscreen_dnsbl_reply_map
+				;;
+			postscreen_dnsbl_sites)
+				#
+				conf_postscreen_menu postscreen_dnsbl_sites
+				;;
+			postscreen_dnsbl_threshold)
+				# = 1
+				conf_postscreen_menu postscreen_dnsbl_threshold
+				;;
+			postscreen_dnsbl_ttl)
+				# = 1h
+				conf_postscreen_menu postscreen_dnsbl_ttl
+				;;
+			postscreen_enforce_tls)
+				# = $smtpd_enforce_tls
+				conf_postscreen_menu postscreen_enforce_tls
+				;;
+			postscreen_expansion_filter)
+				# = $smtpd_expansion_filter
+				conf_postscreen_menu postscreen_expansion_filter
+				;;
+			postscreen_forbidden_commands)
+				# = $smtpd_forbidden_commands
+				conf_postscreen_menu postscreen_forbidden_commands
+				;;
+			postscreen_greet_action)
+				# = ignore
+				conf_postscreen_menu postscreen_greet_action
+				;;
+			postscreen_greet_banner)
+				# = $smtpd_banner
+				conf_postscreen_menu postscreen_greet_banner
+				;;
+			postscreen_greet_ttl)
+				# = 1d
+				conf_postscreen_menu postscreen_greet_ttl
+				;;
+			postscreen_greet_wait)
+				# = ${stress?2}${stress:6}s
+				conf_postscreen_menu postscreen_greet_wait
+				;;
+			postscreen_helo_required)
+				# = $smtpd_helo_required
+				conf_postscreen_menu postscreen_helo_required
+				;;
+			postscreen_non_smtp_command_action)
+				# = drop
+				conf_postscreen_menu postscreen_non_smtp_command_action
+				;;
+			postscreen_non_smtp_command_enable)
+				# = no
+				conf_postscreen_menu postscreen_non_smtp_command_enable
+				;;
+			postscreen_non_smtp_command_ttl)
+				# = 30d
+				conf_postscreen_menu postscreen_non_smtp_command_ttl
+				;;
+			postscreen_pipelining_action)
+				# = enforce
+				conf_postscreen_menu postscreen_pipelining_action
+				;;
+			postscreen_pipelining_enable)
+				# = no
+				conf_postscreen_menu postscreen_pipelining_enable
+				;;
+			postscreen_pipelining_ttl)
+				# = 30d
+				conf_postscreen_menu postscreen_pipelining_ttl
+				;;
+			postscreen_post_queue_limit)
+				# = $default_process_limit
+				conf_postscreen_menu postscreen_post_queue_limit
+				;;
+			postscreen_pre_queue_limit)
+				# = $default_process_limit
+				conf_postscreen_menu postscreen_pre_queue_limit
+				;;
+			postscreen_reject_footer)
+				# = $smtpd_reject_footer
+				conf_postscreen_menu postscreen_reject_footer
+				;;
+			postscreen_tls_security_level)
+				# Standard = $smtpd_tls_security_level# {{{
+				default_or_input postscreen_tls_security_level tls_security_level "postscreen" "$postscreen_tls_security_level"
+				if [[ -n $Value ]] ; then
+					postscreen_tls_security_level="$Value"
+					postconf -e postscreen_tls_security_level="$Value"
+				else
+					postscreen_tls_security_level="\$smtpd_tls_security_level"
+					postconf -e postscreen_tls_security_level="\$smtpd_tls_security_level"
+				fi
+				## }}}
+				conf_postscreen_menu postscreen_tls_security_level
+				;;
+			postscreen_use_tls)
+				# Standard = $smtpd_use_tls (no)# {{{
+				default_or_input postscreen_use_tls ja_nein_tausch $POSTSCREEN_TITLE $SMTPD_USE_TLS_MSG
+				if [[ -n $Value ]] ; then
+					postscreen_use_tls="$Value"
+					postconf -e postscreen_use_tls="$Value"
+				fi
+				## }}}
+				conf_postscreen_menu postscreen_use_tls
+				;;
+			postscreen_watchdog_timeout)
+				# = 10s
+				conf_postscreen_menu postscreen_watchdog_timeout
+				;;
+			postscreen_whitelist_interfaces)
+				# = static:all
+				conf_postscreen_menu postscreen_whitelist_interfaces
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

@@ -1,0 +1,273 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwwvdialconf, konfiguriert wvdial (/etc/wvdial.conf)
+#
+# Version: 0.1.2
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+#
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme pruefen.
+prog_check wvdial
+if [ -z "$PROGS" ] ; then
+	exit 0
+fi
+
+# auf Root pruefen.
+root_check
+
+# Nachdem das Script initialiiert wurde, kann man die anderen
+# benötigten Funktionen laden.
+autoload -U wvdialconf_input wvdial_config
+
+# Variablen
+WVDIAL_CONF="/etc/wvdial.conf"
+CHANGE_MSG=$(gettext 'Waehlen Sie einen Konfigurationsabschnitt aus.')
+
+# Funktion main_menu# {{{
+#
+MAIN_MENU="$gv_Display \"\" $gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Exit \"\""
+main_menu() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+## }}}
+# Funktion no_wvdialconf_msg# {{{
+no_wvdialconf_msg() {
+	MSG=$(gettext 'Es ist keine "$WVDIAL_CONF" vorhanden.')
+	msgbox "$gv_Attention" "$MSG"
+}
+## }}}
+# Funktion no_conf_entry_msg# {{{
+no_conf_entry_msg() {
+	MSG=$(gettext 'Es ist kein Konfigurationsabschnitt vorhanden.')
+	msgbox "$gv_Attention" "$MSG"
+}
+## }}}
+# Funktion read_tab_entry# {{{
+#
+read_tab_entry() {
+	unset -- CONF_TAB_MENU
+	grep '^\[Dialer' "$WVDIAL_CONF" | while read p ; do
+	CONF_TAB_MENU+=(\"$p\")
+		CONF_TAB_MENU_E+=(\"$p\" \"\")
+		(( Anz++ ))
+	done
+}
+## }}}
+# Funktion read_conf_entry# {{{
+#
+read_conf_entry() {
+	local Anz
+	integer Anz
+	awk -F ' = ' '/^\[Dialer/{if(/'"${${DIAL_CONF_CHAPTER/\[/\\[}/\]/\\]}"'/){found=1}else{found=0}}
+        /^Modem /{if(found){MODEM=$NF}}
+        /^Baud /{if(found){SPEED=$NF}}
+        /^Init /{if(found){INIT=$NF}}
+        /^Init1 /{if(found){INIT1=$NF}}
+        /^Init2 /{if(found){INIT2=$NF}}
+        /^Init3 /{if(found){INIT3=$NF}}
+		/^Phone /{if(found){PHONE=$NF}}
+		/^Username /{if(found){USER_NAME=$NF}}
+		/^Password /{if(found){PASS=$NF}}
+		END{print MODEM"\n"SPEED"\n"INIT"\n"INIT1"\n"INIT2"\n"INIT3"\n"PHONE"\n"USER_NAME"\n"PASS}' "$WVDIAL_CONF" >${gv_WorkDir}/wvdial_conf
+	Anz=1
+	while read a ; do
+		case "$Anz" in
+			1)
+			if [ "${a#* }" != = ] ; then
+					MODEM="$a"
+				else
+					MODEM=""
+				fi
+				(( Anz++ ))
+				;;
+			2)
+				if [ "${a#* }" != = ] ; then
+					SPEED="$a"
+				else
+					SPEED=""
+				fi
+				(( Anz++ ))
+				;;
+			3)
+				if [ "${a#* }" != = ] ; then
+					INIT="$a"
+				else
+					INIT=""
+				fi
+				(( Anz++ ))
+				;;
+			4)
+				if [ "${a#* }" != = ] ; then
+					INIT1="$a"
+				else
+					INIT1=""
+				fi
+				(( Anz++ ))
+				;;
+			5)
+				if [ "${a#* }" != = ] ; then
+					INIT2="$a"
+				else
+					INIT2=""
+				fi
+				(( Anz++ ))
+				;;
+			6)
+				if [ "${a#* }" != = ] ; then
+					INIT3="$a"
+				else
+					INIT3=""
+				fi
+				(( Anz++ ))
+				;;
+			7)
+				if [ "${a#* }" != = ] ; then
+					PHONE="$a"
+				else
+					PHONE=""
+				fi
+				(( Anz++ ))
+				;;
+			8)
+				if [ "${a#* }" != = ] ; then
+					USER_NAME="$a"
+				else
+					USER_NAME=""
+				fi
+				(( Anz++ ))
+				;;
+			9)
+				if [ "${a#* }" != = ] ; then
+					PASS="$a"
+				else
+					PASS=""
+				fi
+				(( Anz++ ))
+				;;
+		esac
+	done <${gv_WorkDir}/wvdial_conf
+}
+## }}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+main_menu
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox, help ist hier
+			# $PREFIX/share/${gv_ScriptName}/help/${LANGUAGE}/help
+			script_help help
+			main_menu
+			;;
+		$gv_Display)
+			# Ansicht von $WVDIAL_CONF# {{{
+			if [ -f "$WVDIAL_CONF" ] ; then
+				if [ "`wc -l < $WVDIAL_CONF`" -gt 0 ] ; then
+					view_file "$WVDIAL_CONF"
+				else
+					no_conf_entry_msg
+				fi
+			else
+				no_wvdialconf_msg
+			fi
+			## }}}
+			main_menu $gv_Display
+			;;
+		$gv_Create)
+			# eine neue Konfiguration anlegen# {{{
+			# Standard Variablen belegen und loeschen.
+			export CREATE=yes
+			SPEED=57600
+			INIT=ATZ
+			unset -- DIAL_CONF_CHAPTER USER_NAME INIT1 INIT2 INIT3 MODEM PASS PHONE
+			#
+			INPUT_DIAL_MSG=$(gettext 'Geben Sie einen Namen fuer diese Verbindung ein.')
+			inputbox "$gv_Configuration" "$INPUT_DIAL_MSG"
+			if [ -n "$gv_Auswahl" ] ; then
+				# Pruefen ob dieser Verbindungsname schon existiert.
+				if [ -z "`grep "\[Dialer.*${gv_Auswahl}\]" "$WVDIAL_CONF"`" ] ; then
+					DIAL_CONF_CHAPTER="$gv_Auswahl"
+					wvdialconf_input
+				else
+					unset -- DIAL_CONF_CHAPTER
+					MSG=$(gettext 'Dieser Verbindungsname ($gv_Auswahl) ist schon vorhanden.')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+			else
+				unset -- DIAL_CONF_CHAPTER
+				no_input_msg
+			fi
+			## }}}
+			main_menu $gv_Create
+			;;
+		$gv_Change)
+			# Eintraege veraendern# {{{
+			if [ -f "$WVDIAL_CONF" ] ; then
+				export CREATE=no
+				autoload -U wvdialconf_change
+				wvdialconf_change
+			else
+				no_wvdialconf_msg
+			fi
+			## }}}
+			main_menu $gv_Change
+			;;
+		$gv_Delete)
+			# Eintraege loeschen# {{{
+			if [ -f "$WVDIAL_CONF" ] ; then
+				autoload -U wvdialconf_delete
+				wvdialconf_delete
+			else
+				no_wvdialconf_msg
+			fi
+			## }}}
+			main_menu $gv_Delete
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

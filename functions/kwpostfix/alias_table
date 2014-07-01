@@ -1,0 +1,190 @@
+# Funktion alias_table{{{
+#
+alias_table() {
+	FILE="$1"
+	autoload -U no_adr_and_adr_msg
+	# Funktion alias_menue{{{
+	alias_menue() {
+		ALIAS_MENU=(\"$lv_Local_Recipient\" \"$ADR\" \"$lv_Other_Recipient\" \"$EXT_ADR\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$ALIAS_MENU"
+	}
+	#}}}
+		# Funktion local_recipient_menu# {{{
+		#
+		local_recipient_menu() {
+			menubox "$1" "$TABLE_TITLE" "$USER_AUSWAHL_MSG" "$USER_AUSWAHL_MENU"
+		}
+		## }}}
+	# Funktion alias_aendern{{{
+	#
+	alias_aendern() {
+	alias_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl"  in
+			HELP*)	script_help "$TAB_HELP"
+				alias_menue
+				;;
+			$lv_Local_Recipient)
+				# lokalen Empfaenger eingeben{{{
+				user_group_check -p
+				if [ "$U_G_ARRAY" ] ; then
+					USER_AUSWAHL_MENU=($U_G_ARRAY)
+					USER_AUSWAHL_MSG=$(gettext 'Waehen Sie einen lokalen Benutzer/Empfaenger aus')
+					local_recipient_menu "$ADR"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/user_help
+								local_recipient_menu "$ADR"
+								;;
+							*)	# uebernehmen
+								ADR="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				fi
+				#}}}
+				alias_menue $lv_Local_Recipient
+				;;
+			$lv_Other_Recipient)
+				# andere Empfaenger eingeben{{{
+				OTHER_USER_MSG=$(gettext 'Geben Sie hier bitte einen oder mehrere Empfaenger ein, an die die Mail weitergeleitet werden soll. Getrennt mit einem Komma und Leerzeichen. Dies koennen auch externe Adressen sein (Bsp. user1, user2 | freund@domain.de).')
+				inputbox "$TABLE_TITLE" "$OTHER_USER_MSG" "$EXT_ADR"
+				if [ "${(w)#gv_Auswahl}" -gt 1 ] ; then
+					case "$gv_Auswahl" in
+						[a-zA-Z0-9]*,\ [a-zA-Z0-9]*[^,])
+							EXT_ADR="$gv_Auswahl"
+							;;
+						*)	no_input_msg
+							;;
+					esac
+				elif [ "${(w)#gv_Auswahl}" = 1 ] ; then
+					EXT_ADR="${gv_Auswahl%,}"
+				else
+					no_input_msg
+				fi
+				#}}}
+				alias_menue $lv_Other_Recipient
+				;;
+			$gv_Save)
+				# Einstellungen speichern{{{
+				if [ -n "$ADR" -a -n "$EXT_ADR" ] ; then
+					if [ "$AENDERN_ADR" ] ; then
+						sed -e "s#^${AENDERN_ADR}:[[:space:]]${AENDERN_ADR1}#${ADR}:\t${EXT_ADR}#" $FILE >$FILE$$
+						mv $FILE$$ $FILE
+					else
+						grep -v "^${ADR}:" $FILE >$FILE$$
+						>> $FILE$$ <<< "${ADR}: $EXT_ADR"
+						mv $FILE$$ $FILE
+					fi
+					break
+				else
+					no_adr_and_adr_msg
+					alias_menue
+				fi
+				#}}}
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	}
+	#}}}
+	tabellen_menue
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help tab_help
+				tabellen_menue
+				;;
+			$gv_Display)
+				# Ansicht der Eintraege
+				tab_ansicht
+				tabellen_menue $gv_Display
+				;;
+			$gv_Create)
+				# Werte anlegen
+				unset -- ADR EXT_ADR AENDERN_ADR AENDERN_ADR1
+				alias_aendern
+				tabellen_menue $gv_Create
+				;;
+			$gv_Edit)
+				# Eintraege bearbeiten# {{{
+				edit_file "$TABLE_TITLE" "$FILE"
+				## }}}
+				tabellen_menue $gv_Edit
+				;;
+			$gv_Change)
+				# Eintraege aendern{{{
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL[1]} ]] ; then
+					CHANGE_MENU=($AUSWAHL)
+					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help tabs_help
+								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								;;
+							*)
+								# Auswahl veraendern
+								C_CHOICE="$gv_Auswahl"
+								ADR="${${${=gv_Auswahl}[1]}%:}"
+								EXT_ADR="${${=gv_Auswahl}[2,$]}"
+								AENDERN_ADR="$ADR"
+								AENDERN_ADR1="$EXT_ADR"
+								#
+								alias_aendern
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Change
+				;;
+			$gv_Delete)
+				# Eintraege loeschen{{{
+				#
+				key_value "$FILE"
+				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
+					DEL_MENU=($AUSWAHL_MULTI)
+					U_OPT=no
+					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help kwpostfix_del_help
+								U_OPT=no
+								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								;;	
+							*)	# Loeschen
+								while read ADRESS REST ; do
+									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
+									mv $FILE$$ $FILE
+								done < $gv_LogFile$$
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				#}}}
+				tabellen_menue $gv_Delete
+				;;
+			$lv_Db)
+				# Datenbank neu einlesen
+				db_new_reread "$TAB_FM" "$FILE"
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

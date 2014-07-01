@@ -1,0 +1,626 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+#
+# Script: kwrip, rippt ganze Audio und Video CD's
+#
+# Version: 0.0.10
+
+trap 'setterm -inversescreen off ; setterm -reset ;
+rm -rf $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+autoload -U script_init
+
+# Scriptinitialisierung und Arbeitsverzeichnis erstellen
+script_init
+
+# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+if [ -f "${gv_HomePath}/.kwtools/cdriprc" -a ! -f "${gv_HomePath}/.kwtools/kwriprc" ] ; then
+	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
+	if [ "$gv_Auswahl" != no ] ; then
+		mv "${gv_HomePath}/.kwtools/cdriprc" "${gv_HomePath}/.kwtools/kwriprc" &>/dev/null
+	else
+		rm "${gv_HomePath}/.kwtools/cdriprc" &>/dev/null
+	fi
+fi
+
+# Konfiguration einlesen
+read_file kwriprc
+export PROXY
+
+# Pruefen ob Optionen zum rippen eingestellt worden sind
+# ansonsten wird "-w" genommen
+# -w - Output wav
+if [ -z "$AUDIO_OPTIONS" ] ; then
+	AUDIO_OPTIONS="-w"
+fi
+ENC_MSG=$(gettext 'und encodiere die Datei nach')
+
+# Funktion haupt_menue{{{
+#
+lv_Audio=$(gettext 'Audio')
+lv_Video=$(gettext 'Video-CD')
+lv_Rip=$(gettext 'rippen')
+#
+MAIN_MENU=($gv_Configuration \"\" $lv_Audio \"\" $lv_Video \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+net_conf
+cdrom
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			autoload -U kwrip_conf kwrip_config
+			kwrip_conf
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Audio)
+			# Audio CD rippen.{{{
+			AUDIO_RIP_TITLE="${lv_Audio}::${lv_Rip}"
+			AUDIO_RIP_ONLY_MSG=$(gettext 'rippe Lied: ')
+			AUDIO_RIP_ALL_MSG=$(gettext 'rippe ganze CD - Lied: ')
+			lv_Choice=$(gettext 'Auswahl')
+			lv_Complete=$(gettext 'komplett')
+			lv_Input=$(gettext 'Eingabe')
+			# Funktion audio_rip_menu# {{{
+			AUDIO_RIP_MENU=($lv_Choice \"\" $lv_Complete \"\" $gv_Back \"\")
+			audio_rip_menu() {
+				menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$AUDIO_RIP_MENU"
+			}
+			## }}}
+			# Funktion audio_select_menu# {{{
+			AUDIO_SELECT_MSG=$(gettext 'Waehlen Sie bitte die Lieder aus die Sie rippen moechten.')
+			audio_select_menu() {
+				AUDIO_TRACK_MENU=($AUDIO_TRACK_M)
+				checklist "$AUDIO_RIP_TITLE" "$AUDIO_SELECT_MSG" "$AUDIO_TRACK_MENU"
+			}
+			## }}}
+			# Funktion change_name_track, Umbenennung der Tracks# {{{
+			# beim rippen ohne Encodierung.
+			#
+			# usage: change_name_track TRACK_NR
+			change_name_track() {
+				if [ "$#" = "1" ] ; then
+					if [ -f "$CD_INFO_FILE" ] ; then
+						Nr="$1"
+						if [ "$Nr" -lt 10 ] ; then
+							Nr="0${Nr}"
+						fi
+						T_File="`print track${Nr}.cdda.*`"
+						T_Nr="${${T_File%%.*}#track}"
+						T_Suffix="${T_File##*.}"
+						# Die Titel in der $CD_INFO_FILE fangen bei 0
+						# an zu zaehlen und nicht bei 1.
+						Int="${T_Nr#0}"
+						(( Int-- ))
+						Name=${(M)${(f)"$(< $CD_INFO_FILE)"}[(r)(TTITLE${Int})*]}
+						# Leerzeichen durch Unterstrich ersetzen.
+						Target="${${${Name#*=}//\ /_}//\//-}"
+						# umbenennen
+						mv "$T_File" ${T_Nr}_${Target}.${T_Suffix}
+					fi
+				else
+					no_para_msg "$0"
+				fi
+			}
+			## }}}
+			# Funktion get_disc-id# {{{
+			get_disc-id() {
+				DISC_ID=${${(s: :)$(cd-discid $READ_DEVICE)}[1]}
+			}
+			## }}}
+			# Funktion get_info_cddb # {{{
+			get_info_cddb() {
+				# Daten von der CDDB-Datenbank abfragen.
+				if [ ! -f "`print ${HOME}/.cddb/**/${DISC_ID}`" ] ; then
+					if [ -n "$PROXY" -a -n "$DISC_ID" ] ; then
+						for c in `print ${(o)$(cddbcmd -m http -p $PROXY cddb lscat)}` ; {
+							create_file -d ${HOME}/.cddb/${c}
+							print -l ${(M)${(f)"$(cddbcmd -m http -p $PROXY cddb read $c $DISC_ID 2>/dev/null)"}##(#s)(DTITLE|TTITLE|EXTT|PLAYORDER)*} >${HOME}/.cddb/${c}/${DISC_ID}
+							if [ "`wc -l < "${HOME}/.cddb/${c}/${DISC_ID}"`" -le 1 ] ; then
+								rm -f "${HOME}/.cddb/${c}/${DISC_ID}" &>/dev/null
+							fi
+						}
+					elif [ -n "$DISC_ID" ] ; then
+						for c in `print ${(o)$(cddbcmd cddb lscat)}` ; {
+							create_file -d ${HOME}/.cddb/${c}
+							print -l ${(M)${(f)"$(cddbcmd cddb read $c $DISC_ID 2>/dev/null)"}##(#s)(DTITLE|TTITLE|EXTT|PLAYORDER)*} >"${HOME}/.cddb/${c}/${DISC_ID}"
+							if [ "`wc -l < "${HOME}/.cddb/${c}/${DISC_ID}"`" -le 1 ] ; then
+								rm -f "${HOME}/.cddb/${c}/${DISC_ID}" &>/dev/null
+							fi
+						}
+					fi
+				fi
+			}
+			## }}}
+			# Funktion (artist_album_input), Artist/Album eingeben# {{{
+			artist_album_input() {
+				# Funktion (artist_album_menu)# {{{
+				lv_Album=$(gettext 'Album')
+				lv_Artist=$(gettext 'Artist')
+				artist_album_menu() {
+					ARTIST_ALBUM_MENU=($lv_Artist \"$ARTIST\"
+					$lv_Album \"$ALBUM\" $gv_Back \"\")
+					menubox "$1" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_ALBUM_MENU"
+				}
+				## }}}
+				artist_album_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help artist_album_help
+							artist_album_menu
+							;;
+						$lv_Artist)
+							# Artist eingeben# {{{
+							ARTIST_INPUT_MSG=$(gettext 'Geben Sie bitte den Namen des Artisten ein.')
+							inputbox "$AUDIO_RIP_TITLE" "$ARTIST_INPUT_MSG" "$ARTIST"
+							if [ -n "$gv_Auswahl" ] ; then
+								ARTIST="$gv_Auswahl"
+							else
+								unset -- ARTIST
+							fi
+							## }}}
+							artist_album_menu $lv_Artist
+							;;
+						$lv_Album)	
+							# Album eingeben# {{{
+							ALBUM_INPUT_MSG=$(gettext 'Geben Sie bitte den Namen des Albums ein.')
+							inputbox "$AUDIO_RIP_TITLE" "$ALBUM_INPUT_MSG" "$ALBUM"
+							if [ -n "$gv_Auswahl" ] ; then
+								ALBUM="$gv_Auswahl"
+							else
+								unset -- ALBUM
+							fi
+							## }}}
+							artist_album_menu $lv_Album
+							;;
+						$gv_Back)	# abbrechen
+							break
+							;;
+					esac
+				done
+				# Variablen pruefen und wenn sie leer sind
+				# trotzdem mit einem Wert belegen
+				if [ -z "$ALBUM" ] ; then
+					ALBUM="unknown"
+				fi
+				if [ -z "$ARTIST" ] ; then
+					ARTIST="unknown"
+				fi
+			}
+			## }}}
+			# Funktion read_cddb# {{{
+			read_cddb() {
+				local Anz Artist_Album
+				integer Anz
+				unset -- ARTIST ALBUM AUDIO_TRACK_M AUDIO_TRACK Artist_Album
+				if [ -n "`print ${HOME}/.cddb/**/${DISC_ID}(.N)`" -a "$CDDB" = yes ] ; then
+					# Gibt es eine CD Information wird eine Auswahl
+					# angeboten
+					Anz=0
+					for i in `print -l ${HOME}/.cddb/**/${DISC_ID}(.N)` ; {
+						(( Anz++ ))
+						CD_INFO_FILE[Anz]="$i"
+						Artist_Album=${(M)${(f)"$(< $i)"}[(r)(DTITLE)*]}
+						ARTIST[Anz]="$Anz \"${${${Artist_Album#*=}%% /*}//\ /_}\""
+						ALBUM[Anz]="${${${Artist_Album#*=}##*/ }//\ /_}"
+					}
+					#
+					BREAK=1
+					ARTIST_MENU=($lv_Input \"\" $ARTIST)
+					menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help multi_cdid_help
+								BREAK=1
+								menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
+								;;
+							$lv_Input)
+								# Artist/Album eingeben
+								unset -- ARTIST ALBUM
+								artist_album_input
+								# Lieder zusammenzaehlen in den Arrays
+								# AUDIO_TRACK_M und AUDIO_TRACK
+								Anz=0
+								Anz1="`cdparanoia -Q -d $READ_DEVICE 2>&1 | egrep -v '^[ \t]*$|^TOTAL' | tail -1 | awk '{print $1 + 0}'`"
+								while [ "$Anz" -lt "$Anz1" ] ; do
+									(( Anz++ ))
+									AUDIO_TRACK_M[Anz]="$Anz track${Anz} \"\""
+									AUDIO_TRACK[Anz]="track${Anz}"
+								done
+								unset -- CD_INFO_FILE
+								break
+								;;
+							*)	# Auswahl uebernehmen
+								CD_INFO_FILE=${CD_INFO_FILE[gv_Auswahl]}
+								ARTIST="${${${ARTIST[gv_Auswahl]}##<-> }//\"/}"
+								ALBUM="${ALBUM[gv_Auswahl]}"
+								Anz=0
+								while read t ; do
+									if [ "${(M)${t}##TTITLE}" = TTITLE ] ; then
+										(( Anz++ ))
+										AUDIO_TRACK_M[Anz]="$Anz \"${${${t#*=}//\ /_}//\//-}\" \"\""
+										AUDIO_TRACK[Anz]="${${${t#*=}//\ /_}//\//-}"
+									fi
+								done <"$CD_INFO_FILE"
+								break
+								;;
+						esac
+					done
+				else
+					# Artist/Album eingeben
+					unset -- ARTIST ALBUM
+					artist_album_input
+					Anz=0
+					Anz1="`cdparanoia -Q -d $READ_DEVICE 2>&1 | egrep -v '^[ \t]*$|^TOTAL' | tail -1 | awk '{print $1 + 0}'`"
+					while [ "$Anz" -lt "$Anz1" ] ; do
+						(( Anz++ ))
+						AUDIO_TRACK_M[Anz]="$Anz track${Anz} \"\""
+						AUDIO_TRACK[Anz]="track${Anz}"
+					done
+					if [ "$CDDB" = yes ] ; then
+						MSG=$(gettext 'Fuer diese CD gibt es keine Information in der $CDDB_SRV CDDB-Datenbank. Alle Lieder werden im ausgewaehlten Verzeichnis ${AUDIO_DIR}/../${ARTIST}/${ALBUM} gespeichert.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+				fi
+			}
+			## }}}
+			# Funktion (audio_rip_exec), die das Audio CD rippen ausfuehrt# {{{
+			audio_rip_exec() {
+				dselect "$AUDIO_DIR"
+				if [ "$VERZ" ] ; then
+					dselect_check -c "$VERZ"
+					if [ -d "$VERZ" ] ; then
+						cd "$VERZ" &>/dev/null
+						create_file -d ${(qq)ARTIST}/${(qq)ALBUM}
+						cd ${ARTIST}/${ALBUM}
+						# Audio-CD rippen
+						# zuerst nach bestimmter Auswahl der Lieder,
+						# mit Fortschrittbalken.
+						if [ -n "${TRACK_NR[1]}" ] ; then
+							local Anz Anz1 Anz3 PERCENT1 Track_Msg
+							typeset -F2 Anz3 PERCENT PERCENT1
+							integer Anz Anz1
+							Anz="${#TRACK_NR}"
+							Anz1=0
+							Anz3="$Anz"
+							(( PERCENT1 = 100.00 / Anz3 ))
+							(( PERCENT = 100.00 - Anz3 * $PERCENT1 ))
+							# mit Encodierung oder ohne
+							if [ "$ENCODE" = yes ] ; then
+								# gauge braucht in diesem Fall
+								# "setopt shwordsplit"
+								setopt shwordsplit
+								while [ "$Anz1" -lt "$Anz" ] ; do
+									(( Anz1++ ))
+									(( PERCENT = PERCENT+PERCENT1 ))
+									echo "$PERCENT"
+									TR_NR="${TRACK_NR[Anz1]}"
+									if [ "$TR_NR" -lt 10 ] ; then
+										NR="0${TR_NR}"
+									else
+										NR="$TR_NR"
+									fi
+									ENC_SUFFIX_MSG="$ENC_MSG ${NR}_${AUDIO_TRACK[TR_NR]}.${ENC_SUFFIX}"
+									Track_Msg="${AUDIO_RIP_ONLY_MSG} ${AUDIO_TRACK[TR_NR]} ${ENC_SUFFIX_MSG} ..." | \
+									gauge "$AUDIO_RIP_TITLE" "$Track_Msg" 2 ; cdparanoia $AUDIO_OPTIONS ${TRACK_NR[Anz1]} -d $READ_DEVICE - 2>/dev/null | \
+									"$ENCODE_PROG" $ENCODE_OPT "${NR}_${AUDIO_TRACK[NR]}.${ENC_SUFFIX}" &>/dev/null
+								done
+								unsetopt shwordsplit
+								# CD/DVD auswerfen?
+								if [[ $EJECT == yes ]] ; then
+									eject "$READ_DEVICE"
+								fi
+							else
+								# ohne Encodierung
+								while [ "$Anz1" -lt "$Anz" ] ; do
+									(( Anz1++ ))
+									(( PERCENT = PERCENT+PERCENT1 ))
+									echo "$PERCENT"
+									TR_NR="${TRACK_NR[Anz1]}"
+									Track_Msg="${AUDIO_RIP_ONLY_MSG} ${AUDIO_TRACK[TR_NR]} ..." | \
+									gauge "$AUDIO_RIP_TITLE" "$Track_Msg" 2 ; cdparanoia $AUDIO_OPTIONS ${TRACK_NR[Anz1]} -d $READ_DEVICE -B &>/dev/null
+									change_name_track "${TRACK_NR[Anz1]}"
+								done
+								# CD/DVD auswerfen?
+								if [[ $EJECT == yes ]] ; then
+									eject "$READ_DEVICE"
+								fi
+							fi
+						else
+							# Ganze CD rippen, mit Fortschrittbalken.
+							local Anz Anz1 Anz3 PERCENT1 Track_Msg
+							typeset -F2 Anz3 PERCENT PERCENT1
+							integer Anz Anz1
+							Anz="${#AUDIO_TRACK}"
+							Anz1=0
+							Anz3="$Anz"
+							(( PERCENT1 = 100.00 / Anz3 ))
+							(( PERCENT = 100.00 - Anz3 * $PERCENT1 ))
+							# mit Encodierung oder ohne
+							if [ "$ENCODE" = yes ] ; then
+								# gauge brauch setopt shwordsplit
+								setopt shwordsplit
+								while [ "$Anz1" -lt "$Anz" ] ; do
+									(( Anz1++ ))
+									(( PERCENT = PERCENT+PERCENT1 ))
+									echo "$PERCENT"
+									if [ "$Anz1" -lt 10 ] ; then
+										Anz2="0${Anz1}"
+									else
+										Anz2="$Anz1"
+									fi
+									ENC_SUFFIX_MSG="$ENC_MSG ${Anz2}_${AUDIO_TRACK[Anz1]}.${ENC_SUFFIX}"
+									Track_Msg="${AUDIO_RIP_ALL_MSG} ${AUDIO_TRACK[Anz1]} ${ENC_SUFFIX_MSG} ..." | \
+									gauge "$AUDIO_RIP_TITLE" "$Track_Msg" 2 ; cdparanoia $AUDIO_OPTIONS $Anz1 -d $READ_DEVICE - 2>/dev/null | \
+									"$ENCODE_PROG" $ENCODE_OPT "${Anz2}_${AUDIO_TRACK[Anz1]}.${ENC_SUFFIX}" &>/dev/null
+								done
+								unsetopt shwordsplit
+								# CD/DVD auswerfen?
+								if [[ $EJECT == yes ]] ; then
+									eject "$READ_DEVICE"
+								fi
+							else
+								# ohne Encodierung
+								while [ "$Anz1" -lt "$Anz" ] ; do
+									(( Anz1++ ))
+									(( PERCENT = PERCENT+PERCENT1 ))
+									echo "$PERCENT"
+									Track_Msg="${AUDIO_RIP_ALL_MSG} ${AUDIO_TRACK[Anz1]} ..." | \
+									gauge "$AUDIO_RIP_TITLE" "$Track_Msg" 2 ; cdparanoia $AUDIO_OPTIONS $Anz1 -d $READ_DEVICE -B &>/dev/null
+									change_name_track "$Anz1"
+								done
+								# CD/DVD auswerfen?
+								if [[ $EJECT == yes ]] ; then
+									eject "$READ_DEVICE"
+								fi
+							fi
+						fi
+					fi
+				fi
+			}
+			## }}}
+			# Funktion (encode_opt), fuer die Encodierungsoptionen# {{{
+			#
+			# usage: encode_opt
+			#
+			encode_opt() {
+				# Pruefen ob es Encodierungsoptionen gibt.
+				if [ -n "$FM_PROG" -a "$FM_PROG" = lame ] ; then
+					ENC_SUFFIX=mp3
+					#ENC_SUFFIX_MSG="$ENC_MSG $ENC_SUFFIX"
+					if [ -n "$ENC_OPT" ] ; then
+						ENCODE_OPT="$LAME_ENC_OPT -"
+						ENCODE_PROG="$FM_PROG"
+					else
+						ENCODE_OPT="--r3mix -b112 -"
+						ENCODE_PROG="$FM_PROG"
+					fi
+				elif [ -n "$FM_PROG" -a "$FM_PROG" = oggenc ] ; then
+					ENC_SUFFIX=ogg
+					#ENC_SUFFIX_MSG="$ENC_MSG $ENC_SUFFIX"
+					if [ -n "$ENC_OPT" ] ; then
+						ENCODE_OPT="$OGG_ENC_OPT - -o"
+						ENCODE_PROG="$FM_PROG"
+					else
+						ENCODE_OPT="-b 128 - -o"
+						ENCODE_PROG="$FM_PROG"
+					fi
+				else
+					MSG=$(gettext 'Ausser lame und den vorbis-tools wird noch kein weiteres Programm unterstuetzt. Es werden alle Audiodateien in WAV Format (trackn.cdda.wav) gespeichert. Installieren Sie diese Programme und konfigurieren Sie sie.')
+					msgbox "$gv_Info" "$MSG"
+					unset -- ENCODE_PROG ENCODE_OPT ENCODE ENC_SUFFIX_MSG ENC_SUFFIX
+				fi
+			}
+			## }}}
+			if [ "$READ_DEVICE" ] ; then
+				prog_check cdparanoia
+				if [ -n "$PROGS" ] ; then
+					# CD Device auf Leserechte pruefen
+					user_device_check $READ_DEVICE A
+					# Geraet fuer andere user sperren
+					DEVICES="$READ_DEVICE"
+					lock $DEVICES
+					if cdparanoia -Q -d $READ_DEVICE 2>/dev/null ; then
+						audio_rip_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help audio_rip_help
+									audio_rip_menu
+									;;
+								$lv_Choice)
+									# Liedauswahl rippen# {{{
+									get_disc-id
+									# CDDB Daten holen falls nicht schon getan.
+									if [ "$CDDB" = yes ] ; then
+										get_info_cddb
+									fi
+									# CDDB Informationen einlesen
+									read_cddb
+									if [ -n "$AUDIO_TRACK_M" ] ; then
+										audio_select_menu
+										while [ -n "$gv_Auswahl" ] ; do
+											case "$gv_Auswahl" in
+												HELP*)	script_help audio_select_help
+													audio_select_menu
+													;;
+												*)
+													# Liedauswahl uebernehmen
+													encode_opt
+													unset -- TRACK_NR
+													for n in ${=gv_Auswahl} ; {
+														TRACK_NR+=($n)
+													}
+													audio_rip_exec
+													break
+													;;
+											esac
+										done
+									fi
+									## }}}
+									audio_rip_menu
+									;;
+								$lv_Complete)
+									# ganze CD rippen# {{{
+									get_disc-id
+									# CDDB Daten holen falls nicht schon getan.
+									if [ "$CDDB" = yes ] ; then
+										get_info_cddb
+									fi
+									# CDDB Informationen einlesen
+									read_cddb
+									if [ -n "$AUDIO_TRACK_M" ] ; then
+										unset -- TRACK_NR
+										encode_opt
+										audio_rip_exec
+									else
+										MSG=$(gettext 'Fuer diese CD gibt es keine Information ueber die Liedanzahl (kaputt?).')
+										msgbox "$gv_Info" "$MSG"
+									fi
+									## }}}
+									audio_rip_menu
+									;;
+								$gv_Back)	break	
+									;;
+							esac
+						done
+					else
+						MSG=$(gettext 'Sie muessen erst eine Audio CD in ihr Laufwerk einlegen.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+					# entsperren
+					lock -r $DEVICES
+				fi
+			else
+				no_dev_cd
+			fi
+			#}}}
+			haupt_menue $lv_Audio
+			;;
+		$lv_Video)	
+			# Videos rippen, mittels vcdxrip{{{
+			#
+			# Funktion (exec_vcdxrip), ript die Video-CD's# {{{
+			#
+			exec_vcdxrip () {
+				PROG=vcdxrip
+				user_device_check $READ_DEVICE A
+				# Device locken und Programm ausfuehren
+				DEVICES="$READ_DEVICE"
+				lock $DEVICES
+				# ausfuehren
+				VCD_MSG=$(gettext 'Rippe: Video-CD $VCD_NAME')
+				$PROG -p -o ${VCD_NAME}.xml --cdrom-device=${READ_DEVICE} | \
+				progressbox "$V_TITLE" "$VCD_MSG" || prog_failure
+				lock -r $DEVICES
+				#
+				# Video umbenennen und die *xml Datei loeschen.
+				#
+				for i in avseq*.mpg(:r) ; {
+					NR="${i#avseq}"
+					mv ${i}.mpg ${VCD_NAME}-${NR}.mpg &>/dev/null
+					mv ${i}.xml ${VCD_NAME}-${NR}.xml &>/dev/null
+				}
+				# CD/DVD auswerfen?
+				if [[ $EJECT == yes ]] ; then
+					eject "$READ_DEVICE"
+				fi
+			}
+			## }}}
+			if [ "$READ_DEVICE" ] ; then
+				prog_check vcd-info
+				if [ -n "$PROGS" ] ; then
+					if vcd-info -P -C $READ_DEVICE &>/dev/null ; then
+						dselect "$VIDEO_DIR"
+						if [ "$VERZ" ] ; then
+							dselect_check -c "$VERZ"
+							if [ -d "$VERZ" ] ; then
+								cd "$VERZ" &>/dev/null
+								#
+								# Video Namen eingeben
+								#
+								V_TITLE="${lv_Video-CD}::${lv_Rip}"
+								V_MSG=$(gettext 'Geben Sie bitte den Namen des Films an.')
+								inputbox "$V_TITLE" "$V_MSG"
+								# (-e $gv_Auswahl wird noch nicht richtig ausgewertet)
+								if [ -n "$gv_Auswahl" ] ; then
+									if ls ${gv_Auswahl}-<->*.mpg(.) &>/dev/null ; then
+										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese ueberschrieben werden (ja/nein)?')
+										yesno "$gv_Info" "$MSG" "no"
+										if [[ $gv_Auswahl == yes ]] ; then
+											VCD_NAME="$gv_Auswahl"
+											exec_vcdxrip
+										else
+											unset -- VCD_NAME
+										fi
+									else
+										VCD_NAME="$gv_Auswahl"
+										exec_vcdxrip
+									fi
+								else
+									VCD_NAME="no_name"
+									exec_vcdxrip
+								fi
+							fi
+						fi
+					else
+						MSG=$(gettext 'Sie muessen erst eine Video CD in ihr Laufwerk einlegen.')
+						msgbox "$gv_Attention" "$MSG"
+					fi
+				fi
+			else
+				no_dev_cd
+			fi
+			#}}}
+			haupt_menue $lv_Video
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+# umounten der Mount-Verzeichnisse
+for i in $AUDIO_MOUNT_PATH $VIDEO_MOUNT_PATH ; {
+	mount_check -u $i
+}
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

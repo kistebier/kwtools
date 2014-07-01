@@ -1,0 +1,78 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.10.2012
+#
+# Script: kwrsync_cron, führt eine Syncronisation von Verzeichnissen
+#         aus. (cron)
+#
+# Version: 0.1.2
+
+trap 'rm -rf $gv_WorkDir &>/dev/null ; lock -r $gv_ScriptName' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+Kwrsync_Fpath=${PREFIX}/share/kwtools/functions/kwrsync
+if [ -z ${(M)${FPATH}##*${Kwrsync_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init -o
+
+# Dieses Cron Script locken.
+lock -s $gv_ScriptName
+
+# Wenn eine ~/.kwtools/kwrsyncrc Datei vorhanden ist einlesen.
+#
+KWRSYNCTAB="${gv_HomePath}/.kwtools/kwrsynctab"
+KWRSYNCRC="${gv_HomePath}/.kwtools/kwrsyncrc"
+
+if [ -f "$KWRSYNCRC" ] ; then
+	read_file kwrsyncrc
+else
+	MSG=$(gettext 'Es ist keine Konfigurationsdatei $KWRSYNCRC vorhanden.')
+	> ${gv_WorkDir}/kwrsync_cron <<< "$MSG"
+	mail -s "${gv_ScriptName}: kwrsyncrc Error" $USER < ${gv_WorkDir}/kwrsync_cron
+	exit 1
+fi
+
+# rsync standard Argumente
+DEFAULT_ARGS=(-avu --numeric-ids --delete --delete-excluded --backup --suffix=_`date +%d.%m.%Y`)
+IFSBAK="$IFS"
+
+autoload -U kwrsync_home_exec kwrsync_exec check_remote_sh
+if [ "$HOME_SYNC_CRON" = yes ] ; then
+	# Home Verzeichnisse syncronisieren
+	kwrsync_home_exec
+fi
+# Verzeichnisse syncronisieren
+kwrsync_exec
+
+# Lockfile loeschen
+lock -r $gv_ScriptName
+
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

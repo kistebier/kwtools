@@ -1,0 +1,114 @@
+# Funktion um kwrsync zu konfigurieren, nur Standard und cron.{{{
+#
+# usage: kwrsync_conf
+#
+kwrsync_conf() {
+	lv_Bandwith=$(gettext 'Bandbreite')
+	lv_Home_Sync_Cron=$(gettext 'Home_Sync_Cron')
+	lv_Crontab=$(gettext 'crontab')
+	lv_Crontab_Change=$(gettext 'bearbeiten (dialog)')
+	#
+	# Funktion kwrsync_conf_menue{{{
+	#
+	# usage: kwrsync_conf_menue
+	kwrsync_conf_menue() {
+		CONF_MENU=($lv_Remote_Host \"$R_HOST\"
+		$lv_Remote_Shell \"$RSYNC_RSH\" $lv_Bandwith \"$BW_LIMIT\"
+		$lv_Home_Sync_Cron \"$HOME_SYNC_CRON\"
+		$lv_Crontab \"$lv_Crontab_Change\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+	}
+	#}}}
+	kwrsync_conf_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help conf_help
+				kwrsync_conf_menue
+				;;
+			$lv_Remote_Host)
+				# Zielrechner auswaehlen{{{
+				HOSTNAME_MSG=$(gettext 'Geben Sie bitte die/den Namen oder IP(s) der/des Zielrechner(s) ein.')
+				conf_hostname -a "$HOSTNAME_MSG" "$R_HOST"
+				if [ -n "$gv_Hostname" ] ; then
+					R_HOST="$gv_Hostname"
+				else
+					unset -- R_HOST
+				fi
+				#}}}
+				kwrsync_conf_menue $lv_Remote_Host
+				;;
+			$lv_Remote_Shell)
+				# Standard Transport Auswahl{{{
+				remote_sh
+				if [ "${R_SHELL[1]}" ] ; then
+					REMOTE_TITLE=(${gv_Configuration}::${lv_Remote_Shell})
+					REMOTE_MENU=($gv_None \"\" $R_SHELL)
+					REMOTE_MSG=$(gettext 'Waehlen Sie ihre Remote Shell aus.')
+					menubox "$RSYNC_RSH" "$REMOTE_TITLE" "$REMOTE_MSG" "$REMOTE_MENU"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/remote_shell_help
+								menubox "$RSYNC_RSH" "$REMOTE_TITLE" "$REMOTE_MSG" "$REMOTE_MENU"
+								;;
+							$gv_None)	# nichts
+								unset -- RSYNC_RSH
+								break
+								;;
+							*)	RSYNC_RSH="$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					unset -- RSYNC_RSH
+					no_remote_shell_msg
+				fi
+				#}}}
+				kwrsync_conf_menue $lv_Remote_Shell
+				;;
+			$lv_Bandwith)
+				# Bandbreite limitieren.{{{
+				B_TITLE=(${gv_Configuration}::${lv_Bandwith})
+				B_MSG=$(gettext 'Geben Sie hier ein Limit fuer die Bandbreite, in Kbyte/s, bei der Uebertragung ein (256=256Kb/s).')
+				number_input "$B_TITLE" "$B_MSG" "$BW_LIMIT"
+				if [ "$NUMBER" ] ; then
+					BW_LIMIT="$gv_Auswahl"
+				else
+					BW_LIMIT=0
+				fi
+				#}}}
+				kwrsync_conf_menue $lv_Bandwith
+				;;
+			$lv_Home_Sync_Cron)
+				# Homesynchronisation per cronob ausfuehren# {{{
+				HOME_SYNC_CRON_TITLE=(${lv_Configuration}::${lv_Home_Sync_Cron})
+				HOME_SYNC_CRON_MSG=$(gettext 'Soll das Homeverzeichnis auch per Cron synchronisiert werden (ja/nein)?')
+				yesno "$HOME_SYNC_CRON_TITLE" "$HOME_SYNC_CRON_MSG" "$HOME_SYNC_CRON"
+				if [ "$gv_Auswahl" = yes ] ; then
+					HOME_SYNC_CRON="yes"
+				else
+					HOME_SYNC_CRON="no"
+				fi
+				## }}}
+				kwrsync_conf_menue $lv_Home_Sync_Cron
+				;;
+			$lv_Crontab)
+				# Users crontab fuer kwrsync konfigurieren.
+				crontbconf kwrsync_cron
+				kwrsync_conf_menue $lv_Crontab
+				;;
+			$gv_Save)
+				# Konfiguration speichern
+				kwrsync_config
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac		
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

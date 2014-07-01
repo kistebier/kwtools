@@ -1,0 +1,205 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+#
+# Script: kwgrub2, konfiguriert und installiert grub2
+# Version: 0.0.6
+
+trap 'setterm -inversescreen off ; setterm -reset ; 
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Root pruefen
+root_check
+
+# Nachdem das Script initialisiert wurde, kann man die anderen
+# benoetigten Funktionen laden.
+
+# Variablen
+lv_Actual=$(gettext 'Aktualisierung')
+lv_Security=$(gettext 'Sicherheit')
+lv_Installation=$(gettext 'Installation')
+
+# Funktion haupt_menue{{{
+MAIN_MENU=($gv_Configuration \"\" $lv_Security \"\" $lv_Actual \"\"
+$lv_Installation \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion (check_write_part), prueft ob das Geraet read-write eingebunden ist.# {{{
+#
+check_write_part() {
+	unset -- Read_Only Tmp READ_WRITE
+	local Tmp Read_Only
+	for i in /boot/grub /boot / ; {
+		if mountpoint $i &>/dev/null ; then
+			if ! touch ${GRUB_DIR}/testfile$$ &>/dev/null ; then
+				unset -- READ_WRITE
+				break
+			else
+				READ_WRITE=yes
+				rm -rf ${GRUB_DIR}/testfile$$ &>/dev/null
+				break
+			fi
+		fi
+	}
+#						Tmp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)*[[:space]]*${i}[[:space:]]*}}[4]}
+#						if [ -n "$Tmp" ] ; then
+#							Read_Only=${(M)$(print $Tmp)##(ro,|,ro|[[:space:]]*ro[[:space:]])*}
+#							if [ -n "$Read_Only" ] ; then
+#								no_read_write_msg
+#								break
+#							fi
+#						fi
+#					fi
+#				}
+}
+## }}}
+# Funktion (no_read_write_msg), Grub Laufwerk ist nicht schreibbar eingebunden# {{{
+#
+no_read_write_msg() {
+	MSG=$(gettext 'Das Verzeichnis /boot/grub ist nicht schreibbar ins Dateisystem eingebunden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+					# Funktion (no_conf_msg), Grub2 Konfigurations Datei konnte nicht gefunden werden.# {{{
+					#
+					no_conf_msg() {
+						MSG=$(gettext 'Grub2 Bootmenue Datei ($GRUB_CONFFILE) konnte nicht gefunden werden. Erstellen Sie erst eine mittels der Menuepunkte $gv_Configuration und $lv_Actual.')
+						msgbox "$gv_Info" "$MSG"
+					}
+					## }}}
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+# Festplatten heraussuchen
+disk
+partdb
+# Distributor herausfinden
+os_check
+
+#################################################
+# INFO:
+# if_conf_file "$OS" grub2 machen lassen.
+# CentOS und Fedora haben kein grub2 Paket.
+#################################################
+if_conf_file "$OS" grub2
+
+# auf Programme pruefen.# {{{
+if [[ $OS == SUSE ]] ; then
+	prog_check grub2-mkconfig
+	if [ -n "$PROGS" ] ; then
+		UPDATE_GRUB="$PROGS"
+		UPDATE_PROG_OPT="-o $GRUB_CONFFILE"
+	else
+		exit 0
+	fi
+else
+	prog_check grub-mkconfig
+	if [ -n "$PROGS" ] ; then
+		UPDATE_GRUB="$PROGS"
+		UPDATE_PROG_OPT="-o $GRUB_CONFFILE"
+	else
+		exit 0
+	fi
+fi
+## }}}
+# Falls noch kein grub Verzeichnis angelegt wurde, wird es jetzt getan# {{{
+if [ ! -d "$GRUB_DIR" ] ; then
+	check_write_part
+	if [[ $READ_WRITE == yes ]] ; then
+		create_file -d "$GRUB_DIR"
+		# Grub files kopieren
+		if [ ! -f ${GRUB_DIR}/halt.mod ] ; then
+			cp -au ${GRUB_LIBDIR}/*/*(.) $GRUB_DIR
+		fi
+	else
+		no_read_write_msg
+	fi
+fi
+## }}}
+
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+   			# Hilfe Messagebox
+			script_help help
+			haupt_menue
+			;;
+		$gv_Configuration)
+			# Konfiguration
+			autoload -U kwgrub2_conf kwgrub2_config
+			kwgrub2_conf
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Security)
+			# Grub2 Sicherheit einstellen
+			autoload -U kwgrub2_security kwgrub2_config
+			kwgrub2_security
+			haupt_menue $lv_Security
+			;;
+		$lv_Actual)
+			# Grub2 Konfigurationsdatei updaten# {{{
+			#
+			# Pruefen, ob das Verzeichnis/Laufwerk mit den Bootloader
+			# Konfigurationsdateien read-write eingebunden ist?
+			check_write_part
+			if [[ $READ_WRITE == yes ]] ; then
+				ACTUAL_TITLE=(${gv_Mainmenu}::${lv_Actual})
+				ACTUAL_MSG=$(gettext 'Update der $GRUB_CONFFILE Datei.')
+				"$UPDATE_GRUB" "${=UPDATE_PROG_OPT}" 2>&1 | progressbox "$ACTUAL_TITLE" "$ACTUAL_MSG"
+			else
+				no_read_write_msg
+			fi
+			## }}}
+			haupt_menue $lv_Actual
+			;;
+		$lv_Installation)
+			# Grub installieren{{{
+			autoload -U kwgrub2_install
+			kwgrub2_install
+			#}}}
+			haupt_menue $lv_Installation
+			;;
+		$gv_Exit)
+			break
+			;;
+	esac
+done	
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

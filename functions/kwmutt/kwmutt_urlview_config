@@ -1,0 +1,41 @@
+# Funktion (kwmutt_urlview_config), schreibt die urlview Konfigurationsdatei # {{{
+# fuer "mutt".
+#
+# usage: kwmutt_urlview_config
+#
+kwmutt_urlview_config() {
+#
+# Konfiguration schreiben.
+#
+> $M_URI <<< "# Beginn $M_URI
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# Mit Hilfe von UrlView koennen die Urls in einer Mail direkt aus Mutt 
+# mit einem Browser seiner Wahl angesurft werden. Hierzu muss das
+# Programm \"urlview\" natuerlich installiert und funktionsfaehig sein.
+# Mit der Tastenkombination STRG+B kann dann in der geoeffneten Mail
+# eine Liste mit saemtlichen Urls in dieser Mail angezeigt und durch
+# Auswahl mit den Coursertasten und Enter besucht werden.
+#
+# Macros fuer urlview"
+case "$argv" in
+	-d)
+		>> $M_URI <<< "# macro index \cb |urlview\n
+# macro pager \cb |urlview\n
+
+# End $M_URI"
+		;;
+	*)
+		>> $M_URI <<< "macro index \cb |urlview\n
+macro pager \cb |urlview\n
+
+# End $M_URI"
+		;;
+esac
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

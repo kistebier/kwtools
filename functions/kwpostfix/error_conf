@@ -1,0 +1,223 @@
+# error (Fehler ?) Konfiguration einstellen{{{
+
+error_conf() {
+
+	# Variable
+	ERROR_TITLE="${gv_Configuration}::${lv_Error}"
+
+	# Bestehende Konfiguration einlesen# {{{
+	print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)error_*} | \
+		sed -e 's#\"#\\\"#g ; s# = #="#g ; s# =#="#g ;
+		s#\$#\\\$#g ; s#$#"#g' >${gv_WorkDir}/postfix$$
+	read_file -f ${gv_WorkDir}/postfix$$
+	rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
+	## }}}
+	# Funktion (conf_error_menu), die Fehler-Parameter einstellen# {{{
+	conf_error_menu() {
+		ERROR_MENU=(error_delivery_slot_cost \"\$error_delivery_slot_cost\"
+		error_delivery_slot_discount \"\$error_delivery_slot_discount\"
+		error_delivery_slot_loan \"\$error_delivery_slot_loan\"
+		error_destination_concurrency_failed_cohort_limit \"\$error_destination_concurrency_failed_cohort_limit\"
+		error_destination_concurrency_limit \"\$error_destination_concurrency_limit\"
+		error_destination_concurrency_negative_feedback \"\$error_destination_concurrency_negative_feedback\"
+		error_destination_concurrency_positive_feedback \"\$error_destination_concurrency_positive_feedback\"
+		error_destination_rate_delay \"\$error_destination_rate_delay\"
+		error_destination_recipient_limit \"\$error_destination_recipient_limit\"
+		error_extra_recipient_limit \"\$error_extra_recipient_limit\"
+		error_initial_destination_concurrency \"\$error_initial_destination_concurrency\"
+		error_minimum_delivery_slots \"\$error_minimum_delivery_slots\"
+		error_notice_recipient \"\$error_notice_recipient\"
+		error_recipient_limit \"\$error_recipient_limit\"
+		error_recipient_refill_delay \"\$error_recipient_refill_delay\"
+		error_recipient_refill_limit \"\$error_recipient_refill_limit\"
+		error_time_limit \"\$error_time_limit\"
+		postfix \"reload\"
+		$gv_Back \"\")
+		menubox "$1" "$ERROR_TITLE" "$gv_Menupoint" "$ERROR_MENU"
+	}
+	## }}}
+	conf_error_menu
+	while [ "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)	script_help error_help
+				conf_error_menu
+				;;
+			error_delivery_slot_cost)
+				# Standard = $default_delivery_slot_cost# {{{
+				default_or_input error_delivery_slot_cost number_input -i $error_delivery_slot_cost
+				if [[ -n $Value ]] ; then
+					error_delivery_slot_cost="$Value"
+					postconf -e error_delivery_slot_cost="$Value"
+				fi
+				#	# }}}
+				conf_error_menu error_delivery_slot_cost
+				;;
+			error_delivery_slot_discount)
+				# Standard = $default_delivery_slot_discount# {{{
+				default_or_input error_delivery_slot_discount number_input -i $error_delivery_slot_discount
+				if [[ -n $Value ]] ; then
+					error_delivery_slot_discount="$Value"
+					postconf -e error_delivery_slot_discount="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_delivery_slot_discount
+				;;
+			error_delivery_slot_loan)
+				# Standard = $default_delivery_slot_loan# {{{
+				default_or_input error_delivery_slot_loan number_input -i $error_delivery_slot_loan
+				if [[ -n $Value ]] ; then
+					error_delivery_slot_loan="$Value"
+					postconf -e error_delivery_slot_loan="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_delivery_slot_loan
+				;;
+			error_destination_concurrency_failed_cohort_limit)
+				# Standard = $default_destination_concurrency_failed_cohort_limit# {{{
+				default_or_input error_destination_concurrency_failed_cohort_limit number_input -i $error_destination_concurrency_failed_cohort_limit
+				if [[ -n $Value ]] ; then
+					error_destination_concurrency_failed_cohort_limit="$Value"
+					postconf -e error_destination_concurrency_failed_cohort_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_concurrency_failed_cohort_limit
+				;;
+			error_destination_concurrency_limit)
+				# Standard = $default_destination_concurrency_limit# {{{
+				default_or_input error_destination_concurrency_limit number_input -i $error_destination_concurrency_limit
+				if [[ -n $Value ]] ; then
+					error_destination_concurrency_limit="$Value"
+					postconf -e error_destination_concurrency_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_concurrency_limit
+				;;
+			error_destination_concurrency_negative_feedback)
+				# Standard = $default_destination_concurrency_negative_feedback# {{{
+				default_or_input error_destination_concurrency_negative_feedback number_input -i $error_destination_concurrency_negative_feedback
+				if [[ -n $Value ]] ; then
+					error_destination_concurrency_negative_feedback="$Value"
+					postconf -e error_destination_concurrency_negative_feedback="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_concurrency_negative_feedback
+				;;
+			error_destination_concurrency_positive_feedback)
+				# Standard = $default_destination_concurrency_positive_feedback# {{{
+				default_or_input error_destination_concurrency_positive_feedback number_input -i $error_destination_concurrency_positive_feedback
+				if [[ -n $Value ]] ; then
+					error_destination_concurrency_positive_feedback="$Value"
+					postconf -e error_destination_concurrency_positive_feedback="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_concurrency_positive_feedback
+				;;
+			error_destination_rate_delay)
+				# Standard = $default_destination_rate_delay# {{{
+				default_or_input error_destination_rate_delay number_input '-a "$ERROR_TITLE" "$DEFAULT_DESTINATION_RATE_DELAY_MSG"' $error_destination_rate_delay
+				if [[ -n $Value ]] ; then
+					error_destination_rate_delay="$Value"
+					postconf -e error_destination_rate_delay="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_rate_delay
+				;;
+			error_destination_recipient_limit)
+				# Standard = $default_destination_recipient_limit# {{{
+				default_or_input error_destination_recipient_limit number_input -i $error_destination_recipient_limit
+				if [[ -n $Value ]] ; then
+					error_destination_recipient_limit="$Value"
+					postconf -e error_destination_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_destination_recipient_limit
+				;;
+			error_extra_recipient_limit)
+				# Standard = $default_extra_recipient_limit# {{{
+				default_or_input error_extra_recipient_limit number_input -i $error_extra_recipient_limit
+				if [[ -n $Value ]] ; then
+					error_extra_recipient_limit="$Value"
+					postconf -e error_extra_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_extra_recipient_limit
+				;;
+			error_initial_destination_concurrency)
+				# Standard = $initial_destination_concurrency# {{{
+				default_or_input error_initial_destination_concurrency number_input -i $error_initial_destination_concurrency
+				if [[ -n $Value ]] ; then
+					error_initial_destination_concurrency="$Value"
+					postconf -e error_initial_destination_concurrency="$Value"
+				fi
+				## }}}
+				conf_error_menu error_initial_destination_concurrency
+				;;
+			error_minimum_delivery_slots)
+				# Standard = $default_minimum_delivery_slots# {{{
+				default_or_input error_minimum_delivery_slots number_input -i $error_minimum_delivery_slots
+				if [[ -n $Value ]] ; then
+					error_minimum_delivery_slots="$Value"
+					postconf -e error_minimum_delivery_slots="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_minimum_delivery_slots
+				;;
+			error_notice_recipient)
+				# Standard = postmaster# {{{
+				ERR_NOTICE_MSG=$(gettext 'Geben Sie bitte einen Benutzer ein, an dem eine Mail geschickt werden soll wenn es zu Fehlern kommt.')
+				inputbox "$gv_Configuration" "$ERR_NOTICE_MSG" $error_notice_recipient
+				if [[ -n $gv_Auswahl ]] ; then
+					error_notice_recipient="$gv_Auswahl"
+					postconf -e error_notice_recipient="$gv_Auswahl"
+				else
+					error_notice_recipient=""
+					postconf -e error_notice_recipient=""
+				fi
+				## }}}
+				conf_error_menu error_notice_recipient
+				;;
+			error_recipient_limit)
+				# Standard = $default_recipient_limit# {{{
+				default_or_input error_recipient_limit number_input -i $error_recipient_limit
+				if [[ -n $Value ]] ; then
+					error_recipient_limit="$Value"
+					postconf -e error_recipient_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_recipient_limit
+				;;
+			error_recipient_refill_delay)
+				# Standard = $default_recipient_refill_delay# {{{
+				default_or_input error_recipient_refill_delay number_input -s ${error_recipient_refill_delay%?}
+				if [[ -n $Value ]] ; then
+					error_recipient_refill_delay="$Value"
+					postconf -e error_recipient_refill_delay="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_recipient_refill_delay
+				;;
+			error_recipient_refill_limit)
+				# Standard = $default_recipient_refill_limit# {{{
+				default_or_input error_recipient_refill_limit number_input -i $error_recipient_refill_limit
+				if [[ -n $Value ]] ; then
+					error_recipient_refill_limit="$Value"
+					postconf -e error_recipient_refill_limit="$Value"
+				fi	
+				## }}}
+				conf_error_menu error_recipient_refill_limit
+				;;
+			postfix)
+				# postfix, Konfiguration neu einlesen
+				postfix_start_reload
+				break
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

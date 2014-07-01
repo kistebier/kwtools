@@ -1,0 +1,53 @@
+# Funktion um Physikalische Volumes zu finden{{{
+# 
+# Es besteht Abwärtskompalität zu Kernel-2.4.* mit LVM1
+#
+# usage: search_pv
+search_pv() {
+	unset -- PV PV_E PV_M Ist
+	local Pv_Ist Pv_Dev
+	# Funktion, pv_list{{{
+	#
+	pv_list() {
+		case "$1" in
+			/dev/md*)
+				Dev=$1
+				# keine RAID10 Laufwerke auflisten
+				raid_filter -t
+				if [ -n "$R_DEVS" ] ; then
+					Ist=${(M)${R_DEVS}[(wr)${Dev}]}
+					if [ -n "$Ist" ] ; then
+						PV+=($Ist)
+						PV_E+=($Ist \"Physical Volumes\")
+						PV_M+=($Ist \"Physical Volumes\" off)
+					fi
+				fi
+				;;
+			*)
+				Pv_Dev=$(readlink -f $1)
+				PV+=($Pv_Dev)
+				PV_E+=($Pv_Dev \"Physical Volumes\")
+				PV_M+=($Pv_Dev \"Physical Volumes\" off)
+				;;
+		esac
+	}
+	#}}}
+	if [ "$LVM" = 2 ] ; then
+		print ${(o)$(pvscan | awk '/PV/{print $2}')} | while read Pv_Ist ; do
+			for i in ${=Pv_Ist} ; {
+				pv_list $i
+			}
+		done
+	else
+		print ${(o)$(pvscan | awk '/PV/{print $5}')} | while read Pv_Ist ; do
+			for i in ${=Pv_Ist} ; {
+				pv_list $i
+			}
+		done
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

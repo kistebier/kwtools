@@ -1,0 +1,47 @@
+## ========================================================================
+## File:          $HOME/.kwtools/kwmutt/autoview
+## Purpose:       Setup file for the Mail program "Mutt".
+##                MIME and auto_view
+## Latest change: Sat Apr 18 17:11:54 CET 2009
+## ========================================================================
+## Author: Kai Wilke - <http://www.netzworkk.de/> - <kiste@netzworkk.de>
+## ========================================================================
+#
+## ============================================================================
+## MIME-Types which should be automatically displayed. If a copiousoutput
+## exists, use it and display it in internal pager.
+## (if $implicit_autoview is set, this is automated for MIME types where
+## an entry with copiousoutput exists in the mailcap)
+## ============================================================================
+
+# remove all old entries
+unauto_view *
+auto_view text/richtext text/html text/x-sgml text/x-vcard text/x-sh \
+	text/x-csrc text/tex text/-xtex text/english \
+	application/x-tex application/x-dvi \
+	application/x-gzip-dvi application/x-diff-gzip application/x-gzip \
+	application/x-gunzip application/x-bzip2 \
+	application/x-cpio application/x-gtar \
+	application/x-tar application/x-tar-gz application/x-rar-compressed \
+	application/x-zip-compressed application/zip application/x-csh \
+	application/x-sh application/x-script application/x-shellscript \
+	application/x-latex application/x-tex application/x-shar \
+	application/x-troff application/x-troff-man application/x-troff-me \
+	application/x-pgp-message application/msword \
+	application/ms-tnef application/ms-word application/excel \
+	application/rtf \
+	application/octet-stream application/x-tcl application/x-perl \
+	application/x-debian-package message/partial
+
+# MIME Lookup: Don't use mailcap directly for these MIME types but
+# look into mime-types first to find a better MIME-Type:
+# remove all from list
+unmime_lookup *
+mime_lookup application/octet-stream
+
+# List of MIME-Types to give a priority when reading multipart/alternative
+# remove all old entries
+unalternative_order *
+alternative_order text/enriched text/plain text/html
+
+#EOF vim: ft=muttrc

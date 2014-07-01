@@ -1,0 +1,1435 @@
+# Funktion fs_conf, zum managen des/der Dateisysteme# {{{
+#
+# usage: fs_conf
+#
+fs_conf() {
+	###### Dateisystem Funktionen ###### {{{
+	# Funktion (check_part_fs), Filesystem heraus bekommen# {{{
+	#
+	# usage: check_part_fs FP
+	# FP - Festplatten Partition/Laufwerk
+	#
+	##############################
+	# TODO: weiter unter Beobachtung, gerade crypto und raid.
+	check_part_fs() {
+		if [[ ${#argv} == 1 ]] ; then
+			# Pruefen, ob blkid vorhanden und ausführbar ist, ansonsten
+			# wird abgebrochen.
+			if [[ ! -x ${commands[blkid]} ]] ; then
+				no_prog_exec_msg blkid
+				exit 0
+			fi
+
+			unset -- gv_Fs
+			local Fs_Dev Part_Fs_Tmp
+			Fs_Dev="$1"
+			# Filesystem heraus bekommen.
+			Part_Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
+			if [ ! -z "$Part_Fs_Tmp" ] ; then
+				case "$Part_Fs_Tmp" in
+					LVM*|*_raid_*|crypto*)
+						gv_Fs="$gv_Unknown"
+						;;
+					*)
+						gv_Fs="$Part_Fs_Tmp"
+						;;
+				esac
+			else
+				gv_Fs="$gv_Unknown"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (copy_fs), kopiert Dateisysteme{{{
+	#
+	# usage: copy_fs SRC DST
+	# SRC - Variable welche das Quell Laufwerk enthaelt.
+	# DST - Variable welche das Ziel Laufwerk enthaelt.
+	#
+	copy_fs() {
+		if [ "$#" -eq 4 ] ; then
+			unset -- Src Dst Fs_Src Fs_Dst Work_Dir_Mt_Src \
+				Work_Dir_Mt_Dst Src_Current_Blocks \
+				Src_Current_Blocksize Src_Current_Size \
+				Src_To_Dst_Size Src_Blocksize_Tmp \
+				Src_Blocks_Tmp Src_Mp Dst_Current_Fdblocks \
+				Src_Bytes_Size Dst_Current_Blocksize \
+				Dst_Current_Size Dst_Blocksize_Tmp Dst_Mp
+			local Src Dst Fs_Src Fs_Dst Work_Dir_Mt_Src \
+				Work_Dir_Mt_Dst Src_Current_Blocks \
+				Src_Current_Blocksize Src_Current_Size \
+				Src_To_Dst_Size Src_Blocksize_Tmp \
+				Src_Blocks_Tmp Src_Mp Dst_Current_Fdblocks \
+				Src_Bytes_Size Dst_Current_Blocksize \
+				Dst_Current_Size Dst_Blocksize_Tmp Dst_Mp
+			Fs_Src="$1"
+			Src="$2"
+			Fs_Dst="$3"
+			Dst="$4"
+			COPY_TITLE=$(gettext 'Dateisystem klonen')
+			COPY_MSG=$(gettext 'Soll das kopierte Dateisystem auf dem Ziel Laufwerk an die korrekte Groesse des Laufwerks angepasst werden (ja/nein)?')
+			# Dateisystem kopieren
+			if [ "$Fs_Src" = fat16 -o "$Fs_Src" = fat32 ] ; then
+				# FAT16/32 Dateisysteme kopieren# {{{
+				mount_check -a $Src
+				if [ "$U_MOUNT" = yes ] ; then
+					mount_check -a $Dst
+				fi
+				if [ "$U_MOUNT" = yes ] ; then
+					# auf Ausfuehrbarkeit von dosfsck pruefen.
+					prog_check "dd dosfsck"
+					if [ -n "$PROGS" ] ; then
+						# Quell Laufwerksgroesse ausrechnen
+						Src_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Src" 2>/dev/null)"}##[[:space:]]*data[[:space:]]clusters*}}[1]}`"
+						Src_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Src" 2>/dev/null)"}##[[:space:]]*bytes[[:space:]]per[[:space:]]cluster*}}[1]}`"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
+						# Src_Bytes_Size wird fuer dia Statusanzeige von
+						# dd benoetigt.
+						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
+						#
+						# Ziel Laufwerksgroesse ausrechnen
+						Dst_Current_Fdblocks="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Dst" 2>/dev/null)"}##[[:space:]]*data[[:space:]]clusters*}}[1]}`"
+						Dst_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Dst" 2>/dev/null)"}##[[:space:]]*bytes[[:space:]]per[[:space:]]cluster*}}[1]}`"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
+						#
+						if [ "$Src_Current_Size" -le "$Dst_Current_Size" ] ; then
+							# evtl. andere Fehlercodes(?), siehe man 8 dosfsck und
+							# return ( exit_status == 0 || exit_status == 1
+							# || exit_status == 256 ) ;
+							#
+							# mittels dd (diskdump) das dateisystem kopieren.
+							# Weiss grad nichts anderes und die dosfsprogs sind auch nicht gerade
+							# (fuer mich) informativ.
+							DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							#########################################################################
+							# dos Dateisysteme kann man noch nicht vergroessern.
+							#########################################################################
+							# Dateisystem pruefen
+							dosfsck -a -w -v $Dst &>/dev/null || prog_failure
+						else
+							no_copy_fs_msg
+						fi
+					fi
+				fi
+				#}}}
+			elif [ "$Fs_Src" = ext2 -o "$Fs_Src" = ext3 -o "$Fs_Src" = ext4 ] ; then
+				# EXT* Dateisysteme kopieren# {{{
+				mount_check -a $Src
+				if [ "$U_MOUNT" = yes ] ; then
+					mount_check -a $Dst
+				fi
+				if [ "$U_MOUNT" = yes ] ; then
+					# auf Ausfuehrbarkeit von dd dumpe2fs, resize2fs und e2fsck pruefen.
+					prog_check "dd dumpe2fs e2fsck resize2fs"
+					if [ -n "$PROGS" ] ; then
+						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
+						# Quell Laufwerksgroesse ausrechnen
+						Src_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Src" 2>/dev/null)"}##(#s)Block[[:space:]]count:[[:space:]]*}}[3]}`"
+						Src_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Src" 2>/dev/null)"}##(#s)Block[[:space:]]size:*}}[3]}`"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
+						# Src_Bytes_Size wird fuer dia Statusanzeige von
+						# dd benoetigt.
+						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
+						#
+						# Ziel Laufwerksgroesse ausrechnen
+						Dst_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Block[[:space:]]count:[[:space:]]*}}[3]}`"
+						#Dst_Current_Fdblocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Free[[:space:]]blocks:*}}[3]}`"
+						Dst_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Block[[:space:]]size:*}}[3]}`"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Dst_Current_Size = Dst_Current_Blocks * Dst_Current_Blocksize / 1024 ))
+						#
+						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
+							# evtl. andere Fehlercodes(?), siehe man 8 e2fscheck und
+							# exitstatus 256 isn't documented, but it's returned when
+							# the 'FILESYSTEM IS MODIFIED' this is quite normal
+							# (especially after a copy) so we let the function return true...
+							# return ( exit_status == 0 || exit_status == 1 || exit_status == 2
+							# || exit_status == 256 ) ;
+							#
+							# mittels dd (diskdump) das dateisystem kopieren.
+							# Weiss grad nichts anderes und die e2fsprogs sind auch nicht gerade
+							# (fuer mich) informativ.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen
+							e2fsck -f -y $Dst &>/dev/null || prog_failure
+							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
+							# korrekte Groesse des Laufwerks angepasst werden soll.
+							yesno "$COPY_TITLE" "$COPY_MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								resize2fs $Dst &>/dev/null || prog_failure
+							fi
+						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
+							# mittels dd (diskdump) das dateisystem kopieren.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen
+							e2fsck -f -y $Dst &>/dev/null || prog_failure
+						else
+							no_copy_fs_msg
+						fi
+					fi
+				fi
+				#}}}
+#			elif [ "$Fs_Src" = hfs -o "$Fs_Src" = hfsplus ] ; then
+#				# hfs* Dateisysteme kopieren ++++++++++++# {{{
+#				mount_check -a $Src
+#				if [ "$U_MOUNT" = yes ] ; then
+#					mount_check -a $Dst
+#				fi
+#				if [ "$U_MOUNT" = yes ] ; then
+#					
+#				fi
+				#}}}
+#			elif [ "$Fs_Src" = jfs ] ; then
+#				# jfs Dateisysteme kopieren ++++++++++++# {{{
+#				mount_check -a $Src
+#				if [ "$U_MOUNT" = yes ] ; then
+#					mount_check -a $Dst
+#				fi
+#				if [ "$U_MOUNT" = yes ] ; then
+#				fi
+#				#}}}
+			elif [ "$Fs_Src" = ntfs ] ; then
+				# NTFS Dateisysteme kopieren# {{{
+				mount_check -a $Src
+				if [ "$U_MOUNT" = yes ] ; then
+					mount_check -a $Dst
+				fi
+				if [ "$U_MOUNT" = yes ] ; then
+					# auf Ausfuehrbarkeit von ntfsresize und ntfsclone pruefen.
+					prog_check "ntfsclone ntfsresize"
+					if [ -n "$PROGS" ] ; then
+						# Quell Laufwerksgroesse
+						Src_Current_Size=${${(s. .)$(ntfsresize -i -f -v $Src | grep 'Current[[:space:]]volume[[:space:]]size:')}[4]}
+						# Ziel Laufwerksgroesse
+						Dst_Current_Size=${${(s. .)$(ntfsresize -i -f -v $Dst | grep 'Current[[:space:]]volume[[:space:]]size:')}[4]}
+						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
+							# -f - egal ob Fehler kopieren.
+							ntfsclone -f --overwrite $Dst $Src || prog_failure
+							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
+							# korrekte Groesse des Laufwerks angepasst werden soll.
+							yesno "$COPY_TITLE" "$COPY_MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								(( Src_To_Dst_Size = Dst_Current_Size / 1024 ))
+								ntfsresize -P -f -s ${Src_To_Dst_Size}k $Dst || prog_failure
+							fi
+						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
+							# -f - egal ob Fehler kopieren.
+							ntfsclone -f --overwrite $Dst $Src || prog_failure
+						else
+							no_copy_fs_msg
+						fi
+					fi
+				fi
+				#}}}
+			elif [ "$Fs_Src" = reiserfs ] ; then
+				# Reiserfs Dateisystem kopieren# {{{
+				mount_check -a $Src
+				if [ "$U_MOUNT" = yes ] ; then
+					mount_check -a $Dst
+				fi
+				if [ "$U_MOUNT" = yes ] ; then
+					# auf Ausfuehrbarkeit von benoetigten reiserfs Programmen pruefen.
+					prog_check "debugreiserfs reiserfsck resize_reiserfs"
+					if [ -n "$PROGS" ] ; then
+						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
+						# Quell Laufwerksgroesse ausrechnen, gesamte Blockanzahl
+						Src_Current_Blocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Src" 2>/dev/null)"}##(#s)Count[[:space:]]of[[:space:]]*device:[[:space:]]*}}[2]}`"
+						# Blockgroesse.
+						Src_Current_Blocksize="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Src" 2>/dev/null)"}##(#s)Blocksize:[[:space:]]*}}[2]}`"
+						# in KiloByte $[blocks*blocksize/1024]
+						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
+						# Src_Bytes_Size wird fuer dia Statusanzeige von
+						# dd benoetigt.
+						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
+						#
+						# Ziel Laufwerksgroesse ausrechnen, freie Blockanzahl
+						#Dst_Current_Fdblocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Free[[:space:]]blocks[[:space:]]*}}[2]}`"
+						# Ziel Laufwerksgroesse ausrechnen, Blockanzahl
+						Dst_Current_Fdblocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Count[[:space:]]of[[:space:]]*device:[[:space:]]*}}[2]}`"
+						# Blockgroesse
+						Dst_Current_Blocksize="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Blocksize:[[:space:]]*}}[2]}`"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
+						#
+						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
+							# mittels dd (diskdump) das dateisystem kopieren.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen.
+							reiserfsck -y $Dst || prog_failure
+							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
+							# korrekte Groesse des Laufwerks angepasst werden soll.
+							yesno "$COPY_TITLE" "$COPY_MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								resize_reiserfs $Dst || prog_failure
+							fi
+						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
+							# mittels dd (diskdump) das dateisystem kopieren.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen.
+							reiserfsck -y $Dst || prog_failure
+						else
+							no_copy_fs_msg
+						fi
+					fi
+				fi
+				#}}}
+			elif [ "$Fs_Src" = reiser4 ] ; then
+				# Reiser4 Dateisystem kopieren, kann ich grad nicht testen# {{{
+				mount_check -a $Src
+				if [ "$U_MOUNT" = yes ] ; then
+					mount_check -a $Dst
+				fi
+				if [ "$U_MOUNT" = yes ] ; then
+					# auf Ausfuehrbarkeit von benoetigten reiserfs Programmen pruefen.
+					prog_check "debugfs.reiser4 fsck.reiser4"
+					if [ -n "$PROGS" ] ; then
+						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
+						# Quell Laufwerksgroesse ausrechnen, gesamte Blockanzahl.
+						typeset -L Src_Blocksize_Tmp Src_Blocks_Tmp
+						Src_Current_Blocks="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Src" 2>/dev/null)"}##(#s)blocks:[[:space:]]*}}[2]}`"
+						# Blockgroesse
+						Src_Blocksize_Tmp="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Src" 2>/dev/null)"}##(#s)blksize:[[:space:]][0-9]*}}[2]}`"
+						Src_Current_Blocksize="${Src_Blocksize_Tmp%% *}"
+						# in KiloByte $[blocks*blocksize/1024]
+						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
+						# Src_Bytes_Size wird fuer dia Statusanzeige von
+						# dd benoetigt.
+						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
+						#
+						# Ziel Laufwerksgroesse ausrechnen.
+						typeset -L Dst_Current_Fdblocks Dst_Blocksize_Tmp
+						# Ziel Blockanzahl
+						Dst_Current_Fdblocks="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Dst" 2>/dev/null)"}##(#s)blocks:[[:space:]]*}}[2]}`"
+						Dst_Blocksize_Tmp="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Dst" 2>/dev/null)"}##(#s)blksize:[[:space:]][0-9]*}}[2]}`"
+						# Blockgroesse
+						Dst_Current_Blocksize="${Dst_Blocksize_Tmp%% *}"
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
+						#
+						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
+							# mittels dd (diskdump) das dateisystem kopieren.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen.
+							fsck.reiser4 -y $Dst || prog_failure
+						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
+							# mittels dd (diskdump) das dateisystem kopieren.
+							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
+							# Dateisystem pruefen.
+							fsck.reiser4 -y $Dst || prog_failure
+						else
+							no_copy_fs_msg
+						fi
+					fi
+				fi
+				#}}}
+#			elif [ "$Fs_Src" = ufs ] ; then
+#				# ufs Dateisysteme kopieren ++++++++++++# {{{
+#				mount_check -a $Src
+#				if [ "$U_MOUNT" = yes ] ; then
+#					mount_check -a $Dst
+#				fi
+#				if [ "$U_MOUNT" = yes ] ; then
+#				fi
+				#}}}
+			elif [ "$Fs_Src" = xfs ] ; then
+				# XFS Dateisysteme kopieren# {{{
+				# Sind die FSs schon gemountet kann man sie problemlos kopieren.
+				# 1. das Quell Laufwerk testen, ob es schon gemountet ist.
+				if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]}`" ] ; then
+					Src_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]*}}[2]}
+				else
+					# Ins Arbeitsverz. mounten
+					Work_Dir_Mt_Src="${gv_WorkDir}/${Src##*/}"
+					create_file -d "$Work_Dir_Mt_Src"
+					mount -t xfs "$Src" "$Work_Dir_Mt_Src" || prog_failure
+					if [ "$?" = 0 ] ; then
+						Src_Mp="$Work_Dir_Mt_Src"
+					else
+						unset -- Src_Mp
+					fi
+				fi
+				# 2. das Ziel Laufwerk testen, ob es schon gemountet ist.
+				if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]}`" ] ; then
+					Dst_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]*}}[2]}
+				else
+					# Ins Arbeitsverz. mounten
+					Work_Dir_Mt_Dst="${gv_WorkDir}/${Dst##*/}"
+					create_file -d "$Work_Dir_Mt_Dst"
+					mount -t xfs "$Dst" "$Work_Dir_Mt_Dst" || prog_failure
+					if [ "$?" = 0 ] ; then
+						Dst_Mp="$Work_Dir_Mt_Dst"
+					else
+						unset -- Dst_Mp
+					fi
+				fi
+				# xfs Filesystem kopieren und umounten.
+				if [ -n "$Src_Mp" -a -n "$Dst_Mp" ] ; then
+					# auf Ausfuehrbarkeit von xfsdump, xfs_db, xfs_growfs und xfsrestore pruefen.
+					prog_check "xfsdump xfsrestore xfs_db xfs_growfs"
+					if [ -n "$PROGS" ] ; then
+						# Quell Laufwerksgroesse ausrechnen
+						# gesamte Anzahl der Bloecke
+						Src_Current_Dblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print dblocks' -r $Src)}[3]}
+						Src_Current_Fdblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print fdblocks' -r $Src)}[3]}
+						# Blockgroesse
+						Src_Current_Blocksize=${${(s. .)$(xfs_db -c 'sb 0' -c 'print blocksize' -r $Src)}[3]}
+						(( Src_Current_Blocks = Src_Current_Dblocks - Src_Current_Fdblocks ))
+						# in KiloByte $[blocks*blocksize/1024]
+						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
+						#
+						# Ziel Laufwerksgroesse ausrechnen
+						Dst_Current_Dblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print dblocks' -r $Dst)}[3]}
+						#Dst_Current_Fdblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print fdblocks' -r $Dst)}[3]}
+						Dst_Current_Blocksize=${${(s. .)$(xfs_db -c 'sb 0' -c 'print blocksize' -r $Dst)}[3]}
+						#(( Dst_Current_Blocks = Dst_Current_Dblocks - Dst_Current_Fdblocks ))
+						# in KiloByte $[fdblocks*blocksize/1024]
+						(( Dst_Current_Size = Dst_Current_Dblocks * Dst_Current_Blocksize / 1024 ))
+						#
+						if [ "$Src_Current_Size" -le "$Dst_Current_Size" ] ; then
+							xfsdump -J - "$Src_Mp" &>/dev/null | xfsrestore -J - "$Dst_Mp" 1>/dev/null || prog_failure
+							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
+							# korrekte Groesse des Laufwerks angepasst werden soll.
+							yesno "$COPY_TITLE" "$COPY_MSG" ""
+							if [ "$gv_Auswahl" = yes ] ; then
+								xfs_growfs $Dst_Mp 1>/dev/null || prog_failure
+							fi
+							# ohne Frage umounten.
+							if [ -n "$Work_Dir_Mt_Src" ] ; then
+								mount_check -a "$Src"
+							fi
+							# ohne Frage umounten.
+							if [ -n "$Work_Dir_Mt_Dst" ] ; then
+								mount_check -a "$Dst"
+							fi
+						else
+							no_copy_fs_msg
+							mount_check -a $Src
+							mount_check -a $Dst
+						fi
+						# Falls das Arbeitsverz. $gv_WorkDir nicht benutzt wurde, mit Nachfrage
+						# evtl. umounten.
+						if [ -z "$Work_Dir_Mt_Src" -a -z "$Work_Dir_Mt_Dst" ] ; then
+							for i in $Src $Dst ; {
+								mount_check -u $i
+							}
+						fi
+					fi
+				fi
+				## }}}
+			else
+				mount_check -a $Src
+				mount_check -a $Dst
+				no_fs_support_msg "$Fs_Src"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (floppy_format), Floppy mit fdformat formatieren ###### {{{
+	#
+	# benoetigt die Funktionen yesno, format und formatprogs_check
+	#
+	# usage: floppy_format "$FLOPPY"
+	#
+	floppy_format() {
+		if [ "$#" -eq 1 ] ; then
+			# pruefen, ob Programm ausfuehrbar ist.
+			FTITLE=$(gettext 'Formatierung')
+			prog_check fdformat
+			if [ -z "$NO_PROGS" ] ; then
+				Floppy="$1"
+				if [ -b "$Floppy" ] ; then
+					fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+					while [ $? = 1 ] ; do
+						MSG=$(gettext 'Es ist keine Diskette im Laufwerk. Schieben sie bitte eine rein. Wollen Sie fortfahren (ja/nein)?')
+						yesno "$gv_Attention" "$MSG" ""
+					    if [ "$gv_Auswahl" = yes ] ; then
+					    	fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+						else
+					    	break
+					    fi
+					done
+				else
+	                no_block_dev_msg "$Floppy"
+				fi
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (format), Formatierung{{{
+	#
+	# benoetigt die Funktionen no_format_msg, kernel_release und load_module
+	# kernel_release wird von der Funktion script_init geladen und wird von
+	# load_module benoetigt.
+	#
+	# usage: format "$Device-Array" [ FS ]
+	# FS - optional das Filesystem mit uebergeben, wenn schon vorher bekannt
+	#      durch die Funktion formatprogs_check.
+	format() {
+		# Funktion (mkfs_fs), erstellt das Filesystem# {{{
+		#
+		# usage: mkfs_fs FS
+		#
+		mkfs_fs() {
+			FS="$1"
+			case $FS in
+				ext2)
+					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# mit hinzu.
+					if [ "$gv_ScriptName" = kwraid ] ; then
+						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+					else
+						unset -- PROG_OPT
+					fi
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ext[34])
+					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# mit hinzu.
+					if [ "$gv_ScriptName" = kwraid ] ; then
+						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+					else
+						unset -- PROG_OPT
+					fi
+					PROG=mkfs.${FS}
+					load_module "jbd $FS"
+					for i in $F_PART ; {
+						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				fat16)
+					# fat16 benoetigt -F 16.# {{{
+					load_module vfat
+					for i in $F_PART ; {
+						mkfs.vfat -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				fat32)
+					# fat32 benoetigt -F 32.# {{{
+					load_module vfat
+					for i in $F_PART ; {
+						mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				hfs)
+					# hfs benoetigt die Option -c, sonst wird# {{{
+					# ein hfs+ FS erstellt.
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				jfs)
+					# Bei jfs muss ein Y an mkfs.jfs# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.jfs
+					load_module $FS
+					for i in $F_PART ; {
+						echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ntfs)
+					# ntfs benoetigt nichts weiter.# {{{
+					# -f - fast
+					PROG=mk${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				reiserfs)
+					# Bei reiserfs muss ein y an mkfs.reiser*# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.reiserfs
+					load_module $FS
+					for i in $F_PART ; {
+						echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				reiser4)
+					# Bei reiser4 muss kein y an mkfs.reiser*# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.reiser4
+					load_module reiserfs
+					for i in $F_PART ; {
+						$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				swap)
+					# Swap Partition erstellen# {{{
+					for i in $F_PART ; {
+						mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				xfs)
+					# -f fuer force, falls schon ein Dateisystem auf der Partition ist.# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				*)
+					# alles andere benoetigt nichts weiter.# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+			esac
+		}
+		## }}}
+		if [ ${#argv} -ge 1 ] ; then
+			unset -- F_FS
+			F_PART="$1"
+			F_FS="$2"
+			MSG=$(gettext 'Soll das Laufwerk ($F_PART) wirklich formatiert werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+			yesno "$gv_Attention" "$MSG" ""
+			if [ "$gv_Auswahl" != yes ] ; then
+			   	#break
+			   	return 1
+			fi
+			#
+			if [ -z "$F_FS" ] ; then
+				formatprogs_check
+				#
+				# Die Variable FM_Menue wird vorher von der Funktion formatprogs_check belegt.
+				#
+				if [ -n "${FM_Menue[1]}" ] ; then
+					kernel_release
+					FTITLE=$(gettext 'Formatierung')
+					FMSG=$(gettext 'Waehlen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
+					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/format_help
+								menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
+								;;
+							*)	
+								FS=$gv_Auswahl
+								mkfs_fs "$FS"
+								break
+								#
+								;;
+						esac
+					done
+				fi
+			else
+				mkfs_fs "$F_FS"
+			fi
+		else
+			no_para_msg $0
+		fi
+		return 0
+	}
+	#}}}
+	# Funktion (formatprogs_check), checkt welche Formatierungs Werkzeuge installiert sind{{{
+	#
+	# usage: formatprogs_check [ -p (parted)| -s (swap) ]
+	# nichts - alle von den kwtools unterstuetzen FSs.
+	#
+	formatprogs_check() {
+		unset -- FM_Menue Fs
+		local Fs Anz
+		integer Anz
+		case "$1" in
+			-p)	Fs=(ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs linux-swap ntfs reiserfs reiser4 ufs xfs)
+				;;
+			-s)	Fs=swap
+				;;
+			*)	Fs=(ext2 ext3 ext4 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
+				;;
+		esac
+		#
+		Anz=0
+		for i in $Fs ; {
+			case $i in
+				fat16|fat32)
+					if [[ -x ${commands[mkfs.vfat]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				ntfs)
+					if [[ -x ${commands[mk${i}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				*swap) # Das * steht fuer Kompalitaet zu kwparted (linux-swap).
+					if [[ -x ${commands[mk${i##*-}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				*)
+					if [[ -x ${commands[mkfs.${i}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+			esac
+		}
+		if [ -z "${FM_Menue[1]}" ] ; then
+			MSG=$(gettext 'Sie haben keine Formatierungs Werkzeuge installiert oder der PATH ist nicht bekannt (Variable PATH).')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+	}
+	#}}}
+	# Funktion (mdadm_conf_scan), erstellt eine aktuelle $RAIDTAB{{{
+	# Bei inactiven Arrays kommt ein Rückgabewert von 1.
+	#
+	mdadm_conf_scan() {
+		mdadm -Dbsc partitions >${gv_WorkDir}/raid_array 2>/dev/null
+		if [ "`wc -l < ${gv_WorkDir}/raid_array`" -gt 0 ] ; then
+			print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
+			>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
+			mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
+		fi
+	}
+	#}}}
+	# Funktion (resize_fs), um Dateisysteme zu ver(kleinern/groessern)# {{{
+	#
+	# usage: resize_fs [ -l | -p | -r ] [[+|-]SIZE OLD_SIZE DEVICE
+	# -l - LVM
+	# -p - Normale Partition
+	# -r - RAID
+	# + - vergroessern
+	# - - verkleinern
+	# SIZE - neue Groesse in KiloByte
+	# OLD_SIZE - alte Groesse in KiloByte
+	# DEVICE - Laufwerk/Device
+	#
+	resize_fs() {
+		# Funktion (no_reduce_fs_msg), Das Dateisystem kann man# {{{
+		# nicht verkleinern.
+		#
+		# usage: no_reduce_fs_msg FS
+		# FS - Dateisystem
+		#
+		no_reduce_fs_msg() {
+			MSG=$(gettext 'Das $FS Dateisystem kann man nicht verkleinern.')
+			msgbox "$gv_Attention" "$MSG"
+			# Wurde eine Partition ins Arbeitsverz. gemountet, wird sie wieder
+			# umountet.
+			mount_check -w "$gv_WorkDir"
+			if [[ $MOUNT == yes ]] ; then
+				mount_check -a "$gv_WorkDir"
+			fi
+		}
+		## }}}
+		# Funktion resize_cryptdisk# {{{
+		resize_cryptdisk() {
+			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+				# Cryptdisk starten/verkleinern/vergroessern
+				cryptdisk_start -r "${MAP_DEV##*/}"
+			fi
+		}
+		## }}}
+		# Funktion resize_cryptdisk_stop# {{{
+		resize_cryptdisk_stop() {
+			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+				# Cryptdisk stoppen
+				cryptdisk_stop -c "${MAP_DEV##*/}"
+			fi
+		}
+		## }}}
+		# Funktion lv_resize{{{
+		#
+		lv_resize() {
+			mount_check -fs "$MAP_DEV"
+			if [ "$FS" ] ; then
+				case "$FS" in
+					crypto*)
+						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+						use_kwcryptsetup_msg
+						## }}}
+						;;
+					ext[234])
+						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "$LVM" = 2 ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# LV vergroessern
+									lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+									# Dateisystem ext2/3/4 vergroessern
+									resize2fs -p $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Dateisystem ext2/3/4 reduzieren
+									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+									resize2fs -p $MAP_DEV ${Resize_Size%.*}k 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# LV reduzieren
+									echo y | lvreduce -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							else
+								e2fsadm -L${NEW_SIZE}k $DEV 2>&1 | progressbox "${gv_Reduce}/${gv_Enlarge}" $MAP_DEV || prog_failure
+							fi
+						fi
+						#}}}
+						;;
+					jfs)
+						# JFS Dateisystem vergroessern{{{
+						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop
+							# LV vergroessern
+							lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+							resize_cryptdisk
+							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $MAP_DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Dateisystem jfs vergroessern
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								mount -o remount,resize $MAP_DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						else
+							no_reduce_fs_msg
+						fi
+						#}}}
+						;;
+					ntfs)
+						# NTFS Dateisystem vergroessern/verkleinern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV vergroessern
+								lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Dateisystem ntfs vergroessern
+								(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+								echo y | ntfsresize -f -s ${Resize_Size%.*}k $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+                                # NTFS Probleme checken und fixen
+                                ntfsfix $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							else
+								# Dateisystem ntfs reduzieren
+								(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+								echo y | ntfsresize -f -s ${Resize_Size%.*}k $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+                                # NTFS Probleme checken und fixen
+                                ntfsfix $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV reduzieren
+								echo y | lvreduce -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+							fi
+						fi
+						#}}}
+						;;
+					reiserfs)
+						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV vergroessern
+								lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Dateisystem reiserfs vergroessern
+								resize_reiserfs -s ${NEW_SIZE%.*}k $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							else
+								# Dateisystem reiserfs verkleinern
+								echo y | resize_reiserfs -s ${NEW_SIZE%.*}k $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV reduzieren
+								echo y | lvreduce -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+							fi
+						fi
+						#}}}
+						;;
+					swap)
+						# Swap verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV vergroessern
+								lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Dateisystem swap vergroessern
+								mkswap -f $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Swap wieder einbinden
+								mount_check -s $MAP_DEV
+							else
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# LV reduzieren
+								echo y | lvreduce -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Dateisystem swap verkleinern
+								mkswap -f $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Swap wieder einbinden
+								mount_check -s $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					xfs*)
+						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop
+							# LV vergroessern
+							lvextend -L${NEW_SIZE%.*}k $DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+							resize_cryptdisk
+							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $MAP_DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Ist das LV schon gemountet kann man das FS problemlos vergroessern.
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								xfs_growfs $MOUNTPOINT 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						else
+							no_reduce_fs_msg
+						fi
+						#}}}
+						;;
+					*)
+						# Dieses FS wird noch nicht unterstuetzt
+						mount_check -a "$MAP_DEV"
+						no_fs_support_msg "$FS"
+						;;
+				esac
+			fi
+		}
+		#}}}
+		# Funktion raid_resize{{{
+		#
+		raid_resize() {
+			mount_check -fs "$MAP_DEV"
+			if [ "$FS" ] ; then
+				# Funktion (raid_add), hinzufuegen eines Laufwerks# {{{
+				raid_add() {
+					# RAID ARRAY vergroessern
+					# Laufwerk addieren
+					# -a - addieren
+					mdadm $RAIDDEV -a $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+					# Laufwerksanzahl heraus finden
+					RAID_ANZ=$(raid_anz $RAIDDEV)
+					# um 1 hoeher zaehlen da das addierte device
+					# erstmal eine Sparedevice ist.
+					(( RAID_ANZ++ ))
+					# Array vergroessern
+					# -G - grow
+					# -n - Laufwerksanzahl
+					mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+					sleep 1
+					# Fortschrittsbalken
+					raid_gauge
+				}
+				## }}}
+				# Funktion (raid_minus), entfernen eines Laufwerks# {{{
+				raid_minus() {
+					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+						# RAID ARRAY reduzieren
+						# Laufwerk entfernen
+						# -f - als faulty markieren
+						# -r - entfernen
+						mdadm $RAIDDEV -f $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						# sleep wird benoetigt, da das faulty setzen
+						# an Zeit braucht.
+						sleep 1
+						# entfernen
+						mdadm $RAIDDEV -r $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						# Array verkleinern
+						# -G - grow
+						mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+						sleep 1
+						# Array vergroessern
+						RAID_ANZ=$(raid_anz $RAIDDEV)
+						(( RAID_ANZ-- ))
+						mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+						# Fortschrittsbalken
+						raid_gauge
+					else
+						# RAID ARRAY reduzieren
+						mdadm $RAIDDEV -f $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						# sleep wird benoetigt, da das faulty setzen
+						# an Zeit braucht.
+						sleep 1
+						# entfernen
+						mdadm $RAIDDEV -r $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						# Array vergroessern
+						RAID_ANZ=$(raid_anz $RAIDDEV)
+						(( RAID_ANZ-- ))
+						mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+						# Fortschrittsbalken
+						raid_gauge
+					fi
+				}
+				## }}}
+				case "$FS" in
+					crypto*)
+						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+						use_kwcryptsetup_msg
+						## }}}
+						;;
+					ext[234])
+						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# RAID ARRAY vorbereiten/Laufwerk addieren
+								raid_add
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Array vergroessern
+									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || (BREAK=2 ; prog_failure)
+									# Dateisystem ext2/3/4 vergroessern
+									resize2fs -p $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Falls dieses Laufwerk verschluesselt war, starten.
+									resize_cryptdisk
+								fi
+							else
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Dateisystem ext2/3/4 reduzieren
+									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+									resize2fs -p $MAP_DEV ${Resize_Size%.*}k 2>&1 | progressbox $gv_Reduce $MAP_DEV || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								else
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+						fi
+						#}}}
+						;;
+					jfs)
+						# JFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop
+							# RAID ARRAY vorbereiten/Laufwerk addieren
+							raid_add
+							# Ist das Raidlevel >1 muss die Dateisystemgroesse
+							# eingestellt werden, bei Level 1 (Spiegel) ist sie
+							# immer gleich gross.
+							if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+								# Array vergroessern
+								(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+								mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
+								mount_check -c $MAP_DEV
+								if [[ $MOUNT == no ]] ; then
+									mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+									MOUNTPOINT="$gv_WorkDir"
+								fi
+								# Dateisystem jfs vergroessern
+								if [ ! -z "$MOUNTPOINT" ] ; then
+									# Ist das RAID-ARRAY schon gemountet kann man das FS
+									# problemlos vergroessern.
+									mount -o remount,resize $MAP_DEV || prog_failure
+								fi
+								# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+								# umountet.
+								mount_check -a "$gv_WorkDir"
+							else
+								# Falls dieses Laufwerk verschluesselt war,
+								# starten und Groesse anpassen.
+								resize_cryptdisk
+							fi
+						else
+							no_reduce_fs_msg
+						fi
+						#}}}
+						;;
+					ntfs)
+						# NTFS Dateisystem vergroessern/verkleinern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# RAID ARRAY vorbereiten/Laufwerk addieren
+								raid_add
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Array vergroessern
+									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem ntfs vergroessern
+									echo y | ntfsresize -f -s ${Resize_Size}k $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || (BREAK=2 ; prog_failure)
+									# NTFS Probleme checken und fixen
+									ntfsfix $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							else
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Dateisystem reiserfs reduzieren
+									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+									echo y | ntfsresize -f -s ${Resize_Size%.*}k $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || (BREAK=2 ; prog_failure)
+                                	# NTFS Probleme checken und fixen
+                               		ntfsfix $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								else
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+						fi
+						#}}}
+						;;
+					reiserfs)
+						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# RAID ARRAY vorbereiten/Laufwerk addieren
+								raid_add
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Array vergroessern
+									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem reiserfs vergroessern
+									# ohne Parameter wird das ganze Array vergroessert
+									echo y | resize_reiserfs -s ${Resize_Size}k $MAP_DEV 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							else
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Dateisystem reiserfs reduzieren
+									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+									echo y | resize_reiserfs -s ${Resize_Size}k $MAP_DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || (BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								else
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+						fi
+						#}}}
+						;;
+					xfs*)
+						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop
+							# RAID ARRAY vorbereiten/Laufwerk addieren
+							raid_add
+							# Ist das Raidlevel >1 muss die Dateisystemgroesse
+							# eingestellt werden, bei Level 1 (Spiegel) ist sie
+							# immer gleich gross.
+							if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+								# Array vergroessern
+								(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
+								mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || (BREAK=2 ; prog_failure)
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk
+								# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
+								mount_check -c $MAP_DEV
+								if [[ $MOUNT == no ]] ; then
+									mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+									MOUNTPOINT="$gv_WorkDir"
+								fi
+								# Dateisystem xfs vergroessern
+								if [ ! -z "$MOUNTPOINT" ] ; then
+									# Ist das RAID-ARRAY schon gemountet kann man das FS
+									# problemlos vergroessern.
+									xfs_growfs "$MOUNTPOINT" 2>&1 | progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								fi
+								# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+								# umountet.
+								mount_check -a "$gv_WorkDir"
+							else
+								# Falls dieses Laufwerk verschluesselt war,
+								# starten und Groesse anpassen.
+								resize_cryptdisk
+							fi
+						else
+							no_reduce_fs_msg
+						fi
+						#}}}
+						;;
+					LVM*)
+						# LVM muss extra bearbeitet werden# {{{
+						mount_check -a "$MAP_DEV"
+						MSG=$(gettext 'Dieses RAID Array besitzt ein LVM und muss extra bearbeitet werden. Starten Sie bitte das Script kwlvm, um das Dateisystem anzupassen.')
+						msgbox "$gv_Info" "$MSG"
+						## }}}
+						;;
+					*)
+						# Dieses FS wird noch nicht unterstuetzt
+						mount_check -a "$MAP_DEV"
+						no_fs_support_msg "$FS"
+						;;
+				esac
+			fi
+		}
+		#}}}
+		#
+		case $1 in
+			-l)
+				# LVM# {{{
+				if [ "$#" -eq 4 ] ; then
+					autoload -U no_fs_support_msg
+					unset -- DEV NEW_SIZE OLD_SIZE OPT MAP_DEV
+					typeset -i OLD_SIZE
+					OPT="$1"
+					NEW_SIZE="$2"
+					OLD_SIZE="$3"
+					DEV="$4"
+					if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+						MAP_DEV=/dev/mapper/${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
+					else
+						MAP_DEV="$DEV"
+					fi
+					# LVM Dateisystem vergroessern/verkleinern
+					lv_resize 
+				else
+					no_para_msg $0
+				fi
+				## }}}
+				;;
+			-p)
+				# Partitionen
+				########################################
+				# TODO: hier fehlt noch was
+				########################################
+				;;
+			-r)
+				# SW-RAID# {{{
+				if [ "$#" -eq 4 ] ; then
+					autoload -U no_fs_support_msg
+					unset -- DEV NEW_SIZE OLD_SIZE OPT MAP_DEV
+					typeset -i OLD_SIZE
+					OPT="$1"
+					NEW_SIZE="$2"
+					OLD_SIZE="$3"
+					DEV="$4"
+					if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+						MAP_DEV=/dev/mapper/${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
+					else
+						MAP_DEV="$DEV"
+					fi
+					# RAID Dateisystem vergroessern/verkleinern
+					raid_resize 
+				else
+					no_para_msg $0
+				fi
+				## }}}
+				;;
+			*)
+				no_para_msg $0
+				;;
+		esac
+	}
+	## }}}
+## }}}
+	###### Dateisystem Nachrichten ###### {{{
+	# Funktion no_copy_fs_msg# {{{
+	no_copy_fs_msg() {
+		MSG=$(gettext 'Dieses Dateisystem kann man nicht kopieren, da die Groesse des Ziel Laufwerks zu klein ist.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion no_fs_support_msg# {{{
+	#
+	# usage: no_fs_support_msg FILESYSTEM
+	#
+	no_fs_support_msg() {
+		# Dieses FS wird noch nicht unterstuetzt
+		if [ "$#" -eq 1 ] ; then
+			Fs="$1"
+			MSG=$(gettext 'Das Dateisystem ($Fs) wird (noch) nicht unterstuetzt.')
+			msgbox "$gv_Info" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion no_space_fp_msg{{{
+	#
+	# usage: no_space_fp_msg [ -e DST_SIZE SRC_SIZE ]
+	# -e - erweiterte Fehlermeldung mit Anzeige der Laufwerksgroessen.
+	# DST_SIZE - Zielgroesse des Laufwerks.
+	# SRC_SIZE - vorhandene Groesse des Laufwerks.<br>
+	# nichts - Fehlermeldung das der Platz nicht mehr ausreicht.
+	#
+	no_space_fp_msg() {
+		if [ "$#" -eq 3 ] ; then
+			local Opt Tmp Tmp1
+			unset -- Opt Tmp Tmp1
+			Opt="$1"
+			Tmp="$2"
+			Tmp1="$3"
+			case "$Opt" in
+				-e)
+					# erweiterte Meldung
+					if [ -n "$Tmp" -a -n "$Tmp1" ] ; then
+						MSG=$(gettext 'Die Groesse ($Tmp) ueberschreitet den noch zu vergebenden Plattenplatz (${Tmp1}Kb).')
+						msgbox "$gv_Attention" "$MSG"
+					else
+						no_para_msg $0
+					fi
+					;;
+				*)
+					no_para_msg $0
+					;;
+			esac
+		else
+			MSG=$(gettext 'Es ist nicht mehr genug Platz vorhanden.')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+	}
+	#}}}
+	# Funktion (use_kwcryptsetup_msg), Kryptodateisystem muss mit dem Script# {{{
+	# kwcryptsetup bearbeitet werden
+	#
+	# usage: use_kwcryptsetup_msg
+	use_kwcryptsetup_msg() {
+		MSG=$(gettext 'Dieses RAID Array besitzt ein Crypto-Dateisystem und muss extra bearbeitet werden. Starten Sie bitte das Script kwcryptsetup, um das Dateisystem anzupassen.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	## }}}
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
