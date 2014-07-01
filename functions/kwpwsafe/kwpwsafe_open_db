@@ -165,20 +165,20 @@ ${lv_Notes}:
 				unset -- $UNSET
 				read_pwsafe_entry "$DB_FILE"
 				if [ -n "${PW_ENTRY_M[1]}" ] ; then
+					U_OPT="no"
 					DEL_MENU=($PW_ENTRY_M)
 					checklist "$OPEN_DB_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_list_help
+								U_OPT="no"
 								checklist "$OPEN_DB_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)
 								# Auswahl loeschen
-								set -x
-								for i in ${=gv_Auswahl} ; {
-									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" 1>/dev/null || prog_failure
-								}
-								set +x
+								while read i ; do
+									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" &>/dev/null || prog_failure
+								done < ${gv_LogFile}$$
 								break
 								;;
 						esac
