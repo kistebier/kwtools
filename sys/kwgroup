@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 18.05.2013
+# Autor: Kai Wilke <kiste@netzworkk.de> 02.07.2014
 #
 # Script: kwgroup, anlegen, aendern und loeschen von Gruppen.
 # Version: 0.2.7
@@ -190,6 +190,18 @@ group_konf() {
 	done
 }
 #}}}
+# Funktion (no_del_group_msg), konnte die User nicht loeschen# {{{
+no_del_user_msg() {
+	if [[ ${#argv} == 1 ]] ; then
+		local Group
+		User="$1"
+		MSG=$(gettext 'Konnte die Gruppe "$Group" nicht loeschen.')
+		msgbox "$gv_Attention" "$MSG"
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
 ##################################################################
 #
 # Hauptprogramm
@@ -277,7 +289,8 @@ while [ "$gv_Auswahl" ] ; do
 						*)
 							# Gruppen loeschen.
 							for i in ${=gv_Auswahl} ; do
-								groupdel $i &>/dev/null
+								groupdel "$i" &>/dev/null || \
+								no_del_group_msg "$1"
 							done
 							unset -- NGROUP NGROUP_ID
 							break

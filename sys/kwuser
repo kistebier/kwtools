@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 18.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 02.07.2014
 #
 # Script: kwuser, legt an, aendert und loescht User
 # Version: 1.0.4
@@ -856,6 +856,18 @@ user_konf() {
 	done
 }
 #}}}
+# Funktion (no_del_user_msg), konnte die User nicht loeschen# {{{
+no_del_user_msg() {
+	if [[ ${#argv} == 1 ]] ; then
+		local User
+		User="$1"
+		MSG=$(gettext 'Konnte den Benutzer "$User" nicht loeschen.')
+		msgbox "$gv_Attention" "$MSG"
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
 # Funktion (no_prefix_existed_msg), Nachricht Benutzer existiert nicht.# {{{
 no_prefix_existed_msg() {
 	MSG=$(gettext 'Dieser Benutzer Prefix ($gv_Auswahl) existiert nicht.')
@@ -1041,7 +1053,8 @@ while [ "$gv_Auswahl" ] ; do
 									# Gibts es einen Prefix+Nr werden alle Benutzer
 									# mit diesem geloescht.
 									for i in ${=P_IS_USER} ; {
-										userdel -r $i >/dev/null || prog_failure
+										userdel -r "$i" &>/dev/null || \
+										no_del_user_msg "$1"
 									}
 									unset -- NUSER NUSER_ID NGROUP NGROUPS COMMENT HOME_V U_SHELL
 								fi
@@ -1068,7 +1081,8 @@ while [ "$gv_Auswahl" ] ; do
 									*)
 										# User loeschen
 										for i in ${=gv_Auswahl} ; do
-											userdel -r $i &>/dev/null
+											userdel -r $i &>/dev/null || \
+												no_del_user_msg "$i"
 										done
 										unset -- NUSER NUSER_ID NGROUP NGROUPS COMMENT HOME_V U_SHELL
 										break
