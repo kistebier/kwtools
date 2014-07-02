@@ -2,7 +2,7 @@
 #
 kwpwsafe_open_db() {
 	autoload -U kwpwsafe_db_conf
-	# Variablen
+	# Variablen# {{{
 	lv_Entries=$(gettext 'Eintraege')
 	lv_User_Cp=$(gettext 'Benutzer kopieren')
 	lv_Pw_Cp=$(gettext 'Passwort kopieren')
@@ -14,6 +14,19 @@ kwpwsafe_open_db() {
 	UNSET=(PW_NAME PW_GROUP PW_USER PW_PASSWD PW_NOTES)
 	DATA_MSG=$(gettext 'Waehlen Sie einen Eintrag aus der Liste der Datenbank $DB_FILE.')
 	OPEN_DB_TITLE="$lv_Db::${DB_FILE##*/}"
+	## }}}
+	# Funktion (no_delete_data_msg), konnte die Datensaetze nicht loeschen# {{{
+	no_delete_data_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Data
+			Data="$1"
+			MSG=$(gettext 'Konnte den Datensatz "$Data" nicht loeschen.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
 	# Auswahl Abfrage, eingabe, aendern, loeschen
 	# Funktion (open_db_menu)# {{{
 	#
@@ -177,7 +190,8 @@ ${lv_Notes}:
 							*)
 								# Auswahl loeschen
 								while read i ; do
-									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" &>/dev/null || prog_failure
+									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" &>/dev/null || \
+									no_delete_data_msg "$i"
 								done < ${gv_LogFile}$$
 								break
 								;;

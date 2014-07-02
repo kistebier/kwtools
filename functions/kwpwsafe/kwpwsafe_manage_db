@@ -3,7 +3,7 @@
 # usage: kwpwsafe_manage_db
 #
 kwpwsafe_manage_db() {
-	# Variablen
+	# Variablen# {{{
 	MANAGE_TITLE=$(gettext 'Datenbankverwaltung')
 	lv_Delete_Db=$(gettext 'Datenbank loeschen')
 	lv_Export_Db=$(gettext 'Datenbank exportieren')
@@ -14,7 +14,7 @@ kwpwsafe_manage_db() {
 	INCORRECT_PW_DB_MSG=$(gettext 'Sie haben das falsche Passwort eingegeben. Wiederholen (ja/nein)?')
 	IMPORT_OK_MSG=$(gettext 'Der Import der Datenbank wurde erfolgreich durchgefuehrt.')
 	IMPORT_NOOK_MSG=$(gettext 'Der Import der Datenbank ist fehlgschlagen.')
-	#
+	## }}}
 	# Funktion (manage_db_menu)# {{{
 	MANAGE_DB_MENU=(\"$lv_Create_Db\" \"\"
 	\"$lv_Export_Db\" \"\"
@@ -175,7 +175,9 @@ expect {
 }
 stty echo
 expect eof"
-														(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null)
+														(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null) || \
+														(del_expect ; prog_failure)
+														del_expect
 														## }}}
 													fi
 													# Exit Code ueberpruefen# {{{
@@ -298,7 +300,9 @@ expect {
 }
 stty echo
 expect eof"
-														(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null)
+														(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null) || \
+														(del_expect ; prog_failure)
+														del_expect
 														# EXIT Wert uerberpruefen# {{{
 														case "$?" in
 															10)
@@ -360,16 +364,18 @@ expect eof"
 				list_db
 				if [[ -n ${DB_FILES_DEL_M[1]} ]] ; then
 					DEL_MENU=($DB_FILES_DEL_M)
+					U_OPT="no"
 					checklist "$MANAGE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_db_help
+								U_OPT="no"
 								checklist "$MANAGE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	# Auswahl uebernehmen und loeschen (auch das Backup)
-								for i in ${=gv_Auswahl} ; {
-									rm -f $i ${i}~ &>/dev/null
-								}
+								while read i ; do
+									rm -f $i ${i}~ >/dev/null || prog_failure
+								done < ${gv_LogFile}$$
 								break
 								;;
 						esac
