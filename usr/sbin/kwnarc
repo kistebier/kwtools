@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 16.12.2013
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.07.2014
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -8,11 +8,14 @@
 # NARC - Netfilter Automatic Rule Configurator v0.7
 # Copyright (c) 2001, Shane Chen (shane@knowplace.org).
 #
-# Version: 0.0.8
+# Version: 0.0.9
 #
 setopt extendedglob
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# ZSH colors-Modul laden und ausfuehren
+autoload -U colors && colors
 
 # checken der Konfigurationsdatei.
 if [ -f /etc/kwtools/kwnarc.conf ] ; then
@@ -33,13 +36,13 @@ ABORT="KWNARC start aborted!"
 # Check terminal
 if [ "$TERM" != "raw" -a -f "${CONFIG%/*}/main.cf" ] ; then
 	. ${CONFIG%/*}/main.cf
-	RCOK="$BOLD$GREEN$OK$NORMAL"
-	RCFAIL="$BOLD$RED$FAIL$NORMAL"
-	RCCONF_ERR="Please check the $BOLD$CONFIG$NORMAL for errors!"
-	RCABORT="$RED$ABORT$NORMAL"
+	RCOK="${B_GREEN}${OK}${NORMAL}"
+	RCFAIL="${B_RED}${FAIL}${NORMAL}"
+	RCCONF_ERR="Please check the ${B_WHITE}${CONFIG}${NORMAL} for errors!"
+	RCABORT="${RED}${ABORT}${NORMAL}"
 else
 	RCOK="$OK"
-	RCFAIL="$FAILED"
+	RCFAIL="$FAIL"
 	RCCONF_ERR="$CONF_ERR"
 	RCABORT="$ABORT"
 fi
@@ -83,13 +86,13 @@ fi
 if [ ! -z "$CONFIG" ] ; then
 	. $CONFIG
 else
-	echo "KWNARC error: Cannot find $CONFIG! Aborting." || exit 1
+	echo $RED"KWNARC error:$NORMAL Cannot find $CONFIG! Aborting." || exit 1
 	abortexit
 fi
 
 # Check for the iptables binary
 if [[ ! -x $IPTABLES ]] ; then
-	echo $RED"Conf error:$NORMAL $BOLD$IPTABLES$NORMAL executable missing."
+	echo $RED"Conf error:$NORMAL ${B_WHITE}${IPTABLES}${NORMAL} executable missing."
 	confexit
 fi
 
@@ -100,17 +103,17 @@ fi
 case "$1" in
 	start)
 		echo
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Starting iptables and creating all chains"
 		;;
 	status)
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Displaying active rules"
 		$IPTABLES -L --line -nv || abortexit
 		exit 0
 		;;
 	conntrack)
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		if [[ -r /proc/net/ip_conntrack ]] ; then
 			echo "Displaying current connection tracking info:"
 			cat /proc/net/ip_conntrack
@@ -121,7 +124,7 @@ case "$1" in
 		;;
 	stop)
 		echo
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Stopping iptables and deleting all chains"
 		$IPTABLES -F || abortexit
 		$IPTABLES -X || abortexit
@@ -142,14 +145,14 @@ case "$1" in
 			fi
 		else
 			echo -n "Disabling IP forwarding: "
-			echo "0" >/proc/sys/net/ipv4/ip_forward && echo $RCOK$BOLD || echo $RCFAIL
+			echo "0" >/proc/sys/net/ipv4/ip_forward && echo $RCOK || echo $RCFAIL
 		fi
 		$IPTABLES -L --line -nv | grep Chain || abortexit
 		echo $NORMAL"All rules unloaded (yum: cracker box)"
 		exit 0
 		;;
 	chains)
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Displaying current chains:"
 		if [[ -r /proc/net/ip_tables_names ]] ; then
 			while read table ; do
@@ -160,7 +163,7 @@ case "$1" in
 		exit 0
 		;;
 	* )
-		echo $BOLD"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
+		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Usage: $0 {chains|conntrack|start|stop|status}"
 		exit 1
 		;;
@@ -174,26 +177,26 @@ esac
 removetemp
 /sbin/lsmod > $TMPDIR/kwnarc.tmp
 if grep ipchains $TMPDIR/kwnarc.tmp &>/dev/null ; then
-	echo $BOLD"ipchains$NORMAL is loaded. Please disable it before attempting to start iptables"
+	echo $B_WHITE"ipchains$NORMAL is loaded. Please disable it before attempting to start iptables"
 	abortexit
 fi
 
 # Is there an external interface?
 if [ "$EXTERNAL_INTERFACE" = '' ] ; then
-	echo $RED"Conf error:$NORMAL Missing ${BOLD}EXTERNAL_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL Missing ${B_WHITE}EXTERNAL_INTERFACE${NORMAL}"
 	confexit
 fi
 
 # Check/auto-obtain external IP address
 if [ "$DYNAMIC_EXTERNAL_IP" = 'no' ] ; then
 	if [ "$EXTERNAL_INTERFACE_IP" = '' ] ; then
-		echo $RED"Conf error:$NORMAL Missing ${BOLD}EXTERNAL_INTERFACE_IP$NORMAL"
+		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}EXTERNAL_INTERFACE_IP${NORMAL}"
 		confexit
 	fi
 else
 	EXTERNAL_INTERFACE_IP="`print ${${${(s,:,)${(M)${(f)"$(export LC_ALL=C ; /sbin/ifconfig $EXTERNAL_INTERFACE)"}##*inet addr*}}[2]}%% *}`"
 	if [ "$EXTERNAL_INTERFACE_IP" = '' ] ; then
-		echo $RED"KWNARC error:$NORMAL Unable to auto-obtain IP for $BOLD$EXTERNAL_INTERFACE$NORMAL"
+		echo $RED"KWNARC error:$NORMAL Unable to auto-obtain IP for ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL}"
 		abortexit
 	fi
 fi
@@ -201,59 +204,59 @@ fi
 # Make sure there's an interface to masq to
 if [ "$MASQUERADE" = 'yes' ] ; then
 	if [[ "$LAN_INTERFACE" == '' && "$DMZ_INTERFACE" == '' ]] ; then
-		echo $RED"Conf error:$NORMAL Missing ${BOLD}LAN_INTERFACE$NORMAL or ${BOLD}DMZ_INTERFACE$NORMAL"
+		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}LAN_INTERFACE$NORMAL or ${B_WHITE}DMZ_INTERFACE$NORMAL"
 		confexit
 	fi
 fi
 
 # Make sure the proper interfaces exist
 if [[ "$ALLOW_TCP_LAN" != '' && "$LAN_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_TCP_LAN$NORMAL requires ${BOLD}LAN_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_TCP_LAN$NORMAL requires ${B_WHITE}LAN_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_TCP_LAN_RANGE" != '' && "$LAN_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_TCP_LAN_RANGE$NORMAL requires ${BOLD}LAN_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_TCP_LAN_RANGE$NORMAL requires ${B_WHITE}LAN_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_UDP_LAN" != '' && "$LAN_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_UDP_LAN$NORMAL requires ${BOLD}LAN_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_UDP_LAN$NORMAL requires ${B_WHITE}LAN_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_UDP_LAN_RANGE" != '' && "$LAN_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_UDP_LAN_RANGE$NORMAL requires ${BOLD}LAN_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_UDP_LAN_RANGE$NORMAL requires ${B_WHITE}LAN_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_TCP_DMZ" != '' && "$DMZ_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_TCP_DMZ$NORMAL requires ${BOLD}DMZ_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_TCP_DMZ$NORMAL requires ${B_WHITE}DMZ_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_TCP_DMZ_RANGE" != '' && "$DMZ_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_TCP_DMZ_RANGE$NORMAL requires ${BOLD}DMZ_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_TCP_DMZ_RANGE$NORMAL requires ${B_WHITE}DMZ_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_UDP_DMZ" != '' && "$DMZ_INTERFACE" == '' ]] ; then
-	echo $RED"Conf error:$NORMAL $${BOLD}ALLOW_UDP_DMZ$NORMAL requires ${BOLD}DMZ_INTERFACE$NORMAL"
+	echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_UDP_DMZ$NORMAL requires ${B_WHITE}DMZ_INTERFACE$NORMAL"
 	confexit
 fi
 if [[ "$ALLOW_UDP_DMZ_RANGE" != '' && "$DMZ_INTERFACE" = '' ]] ; then
-    echo $RED"Conf error:$NORMAL ${BOLD}ALLOW_UDP_DMZ_RANGE$NORMAL requires ${BOLD}DMZ_INTERFACE$NORMAL"
+    echo $RED"Conf error:$NORMAL ${B_WHITE}ALLOW_UDP_DMZ_RANGE$NORMAL requires ${B_WHITE}DMZ_INTERFACE$NORMAL"
     confexit
 fi
 if [[ "$FORWARD_LAN_TO_DMZ" == 'yes' || "$FORWARD_DMZ_TO_LAN" == 'yes' ]] ; then
 	if [[ "$LAN_INTERFACE" = '' || "$DMZ_INTERFACE" = '' ]] ; then
-		echo $RED"Conf error:$NORMAL Missing ${BOLD}LAN_INTERFACE$NORMAL or ${BOLD}DMZ_INTERFACE$NORMAL required for forwarding"
+		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}LAN_INTERFACE$NORMAL or ${B_WHITE}DMZ_INTERFACE$NORMAL required for forwarding"
 		confexit
 	fi
 fi
 if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
 	if [ "$LAN_INTERFACE" = '' ] ; then
-		echo $RED"Conf error: Cannot ${BOLD}PROTECT_FROM_LAN$NORMAL without $BOLD$LAN_INTERFACE$NORMAL"
+		echo $RED"Conf error: Cannot ${B_WHITE}PROTECT_FROM_LAN$NORMAL without ${B_WHITE}${LAN_INTERFACE}${NORMAL}"
 		confexit
 	fi
 fi
 if [ "$PROTECT_FROM_DMZ" = 'yes' ] ; then
 	if [ "$DMZ_INTERFACE" = '' ] ; then
-		echo $RED"Conf error: Cannot ${BOLD}PROTECT_FROM_DMZ$NORMAL without $BOLD$DMZ_INTERFACE$NORMAL"
+		echo $RED"Conf error: Cannot ${B_WHITE}PROTECT_FROM_DMZ$NORMAL without ${B_WHITE}${DMZ_INTERFACE}${NORMAL}"
 		confexit
 	fi
 fi
@@ -261,13 +264,13 @@ fi
 # Avoid extraneous rules
 if [ "$PROTECT_FROM_LAN" = 'no' ] ; then
 	if [[ "$ALLOW_TCP_LAN" != '' || "$ALLOW_TCP_LAN_RANGE" != '' || "$ALLOW_UDP_LAN" != '' || "$ALLOW_UDP_LAN_RANGE" != '' ]] ; then
-		echo $RED"Conf error:$NORMAL There's no need to explicitly open ports for the LAN if ${BOLD}PROTECT_FROM_LAN$NORMAL is disabled"
+		echo $RED"Conf error:$NORMAL There's no need to explicitly open ports for the LAN if ${B_WHITE}PROTECT_FROM_LAN${NORMAL} is disabled"
 		confexit
 	fi
 fi
 if [ "$PROTECT_FROM_DMZ" = 'no' ] ; then
 	if [[ "$ALLOW_TCP_DMZ" != '' || "$ALLOW_TCP_DMZ_RANGE" != '' || "$ALLOW_UDP_DMZ" != '' || "$ALLOW_UDP_DMZ_RANGE" != '' ]] ; then
-		echo $RED"Conf error:$NORMAL There's no need to explicitly open ports for the DMZ if ${BOLD}PROTECT_FROM_DMZ$NORMAL is disabled"
+		echo $RED"Conf error:$NORMAL There's no need to explicitly open ports for the DMZ if ${B_WHITE}PROTECT_FROM_DMZ${NORMAL} is disabled"
 		confexit
 	fi
 fi
@@ -275,11 +278,11 @@ fi
 # Make sure there's something to port foward to if enabled
 if [ "$PORT_FORWARD" = 'yes' ] ; then
 	if ! test -f $FORWARD_CONF ; then
-		echo $RED"Conf error:$NORMAL $BOLD$FORWARD_CONF$NORMAL not found"
+		echo $RED"Conf error:$NORMAL ${B_WHITE}${FORWARD_CONF}${NORMAL} not found"
 		confexit
 	fi
 	if [[ "$DMZ_INTERFACE" == '' && "$LAN_INTERFACE" == '' ]] ; then
-		echo $RED"Conf error:$NORMAL Missing ${BOLD}DMZ_INTERFACE$NORMAL or ${BOLD}LAN_INTERFACE$NORMAL"
+		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}DMZ_INTERFACE$NORMAL or ${B_WHITE}LAN_INTERFACE$NORMAL"
 		confexit
 	fi
 fi
@@ -288,7 +291,7 @@ fi
 if [ "$CHECK_SYN_PACKET_LENGTH" != 'no' ] ; then
 	if [[ ! -f /lib/xtables/libxt_length.so && ! -f /usr/lib/xtables/libxt_length.so \
 	&& ! -f /usr/local/lib/xtables/libxt_length.so ]] ; then
-		echo $RED"Conf error:$NORMAL ${BOLD}CHECK_SYN_PACKET_LENGTH$NORMAL requires CONFIG_NETFILTER_XT_MATCH_LENGTH"
+		echo $RED"Conf error:$NORMAL ${B_WHITE}CHECK_SYN_PACKET_LENGTH$NORMAL requires CONFIG_NETFILTER_XT_MATCH_LENGTH"
 		echo "Missing libxt_length.so"
 		confexit
 	fi
@@ -298,12 +301,12 @@ fi
 if [ "$ENABLE_LIMIT_RATE" != 'no' ] ; then
 	if [[ ! -f /lib/xtables/libxt_limit.so && ! -f /usr/lib/xtables/libxt_limit.so \
 	&& ! -f /usr/local/lib/xtables/libxt_limit.so ]] ; then
-		echo $RED"Conf error:$NORMAL ${BOLD}ENABLE_LIMIT_RATE$NORMAL requires CONFIG_NETFILTER_XT_MATCH_LIMIT"
+		echo $RED"Conf error:$NORMAL ${B_WHITE}ENABLE_LIMIT_RATE$NORMAL requires CONFIG_NETFILTER_XT_MATCH_LIMIT"
 		echo "Missing libxt_limit.so"
 		confexit
 	fi
 	if [[ "$LIMIT_RATE" == '' || "$LIMIT_BURST" == '' ]] ; then
-		echo $RED"Conf error:$NORMAL ${BOLD}ENABLE_LIMIT_RATE$NORMAL requires ${BOLD}LIMIT_RATE$NORMAL and ${BOLD}LIMIT_BURST$NORMAL"
+		echo $RED"Conf error:$NORMAL ${B_WHITE}ENABLE_LIMIT_RATE$NORMAL requires ${B_WHITE}LIMIT_RATE$NORMAL and ${B_WHITE}LIMIT_BURST$NORMAL"
 		confexit
 	fi
 fi
@@ -319,7 +322,7 @@ if [ "$ENABLE_IPLIMIT" != 'no' ] ; then
 		CONNMODULE="connlimit"
 	fi
 	if [ "$CONNMODULE" == '' ] ; then
-		echo $RED"Conf error:$NORMAL ${BOLD}ENABLE_IPLIMIT$NORMAL requires CONFIG_NETFILTER_XT_MATCH_IPRANGE or CONFIG_NETFILTER_XT_MATCH_CONNLIMIT"
+		echo $RED"Conf error:$NORMAL ${B_WHITE}ENABLE_IPLIMIT$NORMAL requires CONFIG_NETFILTER_XT_MATCH_IPRANGE or CONFIG_NETFILTER_XT_MATCH_CONNLIMIT"
 		echo "Missing xt_iprange.ko or libxt_iprange.so, xt_connlimit.ko or libxt_connlimit.so"
 		confexit
 	else
@@ -329,7 +332,7 @@ fi
 
 if [ "$EXECUTE_CUSTOM_SCRIPT" = 'yes' ] ; then
 	if ! test -f $CUSTOM_SCRIPT ; then
-		echo $RED"Conf error:$NORMAL Missing $BOLD$CUSTOM_SCRIPT$NORMAL"
+		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}${CUSTOM_SCRIPT}${NORMAL}"
 		confexit
 	fi
 fi
@@ -340,7 +343,7 @@ fi
 
 # First setup some of the kernel features - Note: Setting these options only affect this host.  It has no
 # on the rest of the network.
-echo $BOLD"Initializing firewall (iptables)$NORMAL"
+echo $B_WHITE"Initializing firewall (iptables)$NORMAL"
 
 # Disable forwarding - should be already disabled, but just in case.
 if [ "$ALWAYS_FORWARD" != 'yes' ] ; then
@@ -364,8 +367,8 @@ fi
 if [ "$ACCEPT_SOURCE_ROUTE" != 'yes' ] ; then
 	echo -n "Disabling source-routed packet support: "
 	for interface in /proc/sys/net/ipv4/conf/* ; {
-		echo "0" >$interface/accept_source_route && echo -n "[ $BOLD$interface$NORMAL - $RCOK ] " \
-		|| echo -n "[ $BOLD$interface$NORMAL - $RCFAIL ] "
+		echo "0" >$interface/accept_source_route && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " \
+		|| echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
 	echo
 fi
@@ -374,8 +377,8 @@ fi
 if [ "$INGRESS_FILTER" != '' ] ; then
 	echo -n "Enabling ingress filtering (level $INGRESS_FILTER) via rp_filter on interface: "
 	for interface in /proc/sys/net/ipv4/conf/* ; {
-		echo $INGRESS_FILTER >$interface/rp_filter && echo -n "[ $BOLD$interface$NORMAL - $RCOK ] " || echo -n \
-		"[ $BOLD$interface$NORMAL - $RCFAIL ] "
+		echo $INGRESS_FILTER >$interface/rp_filter && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " || echo -n \
+		"[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
 	echo
 fi
@@ -385,8 +388,8 @@ fi
 if [ "$LOG_MARTIANS" = 'yes' ] ; then
 	echo -n "Log Martians on interface: "
 	for interface in /proc/sys/net/ipv4/conf/* ; {
-		echo "1" >$interface/log_martians && echo -n "[ $BOLD$interface$NORMAL - $RCOK ] " || echo -n \
-		"[ $BOLD$interface$NORMAL - $RCFAIL ] "
+		echo "1" >$interface/log_martians && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " || echo -n \
+		"[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
 	echo
 fi
@@ -398,7 +401,7 @@ if [ "$DYNAMIC_EXTERNAL_IP" = 'yes' ] ; then
 fi
 
 # Disable TCP explicit congestion notification (tcp_ecn)
-echo -n "TCP Explicit Congestion Notification: $BOLD"
+echo -n "TCP Explicit Congestion Notification: $B_WHITE"
 if [ "$ENABLE_TCP_ECN" = 'no' ] ; then
 	echo "0" >/proc/sys/net/ipv4/tcp_ecn && echo DISABLED$NORMAL || echo FAILED
 else
@@ -410,8 +413,8 @@ if [ "$LOAD_MODULES" = 'yes' ] ; then
 	echo -n "Loading module: "
 	for module in ${=PRELOAD_IP_MODULES} ; {
 	    if ! grep $module /var/tmp/kwnarc.tmp > /dev/null 2>&1 ; then
-			/sbin/modprobe $module && echo -n "[ $BOLD$module$NORMAL - $RCOK ] " || echo -n \
-			"[ $BOLD$module$NORMAL - $RCFAIL ] "
+			/sbin/modprobe $module && echo -n "[ ${B_WHITE}${module}${NORMAL} - $RCOK ] " || echo -n \
+			"[ ${B_WHITE}${module}${NORMAL} - $RCFAIL ] "
 		fi
 	}
 	echo
@@ -427,7 +430,7 @@ $IPTABLES -F -t mangle || abortexit
 $IPTABLES -X -t mangle || abortexit
 
 # Set default policies
-echo "Setting default policies: $BOLD"
+echo "Setting default policies: $B_WHITE"
 $IPTABLES -P INPUT DROP || abortexit
 $IPTABLES -P OUTPUT ACCEPT || abortexit
 $IPTABLES -P FORWARD DROP || abortexit
@@ -441,11 +444,11 @@ echo -n $NORMAL"Creating chains: "
 for newchain in ${=NEW_CHAINS} ; {
 	if [ "$LOG_DROPS" != 'no' ] ; then
 		$IPTABLES -N $newchain || abortexit
-		echo -n "$BOLD$newchain$NORMAL "
+		echo -n "${B_WHITE}${newchain}${NORMAL} "
 	else
 		if [ "$newchain" != "CUST_LOG" ] ; then
 			$IPTABLES -N $newchain || abortexit
-			echo -n "$BOLD$newchain$NORMAL "
+			echo -n "${B_WHITE}${newchain}${NORMAL} "
 		fi
 	fi
 }
@@ -503,31 +506,31 @@ fi
 
 if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 	if [ "$BROADCAST_NETWORKS" != '' ] ; then
-	echo -n "Dropping Broadcasts on $BOLD$EXTERNAL_INTERFACE$NORMAL to: "
+	echo -n "Dropping Broadcasts on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} to: "
 		for network in ${=BROADCAST_NETWORKS} ; {
 			$IPTABLES -t mangle -A PREROUTING -m state --state NEW -d $network \
 			-i $EXTERNAL_INTERFACE -j DROP || abortexit
-			echo -n "$BOLD$network$NORMAL "
+			echo -n "${B_WHITE}${network}${NORMAL} "
 		}
 		echo
 		if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
 			if [ "$LAN_INTERFACE" != '' ] ; then
-				echo -n "Dropping Broadcasts on $BOLD$LAN_INTERFACE$NORMAL to: "
+				echo -n "Dropping Broadcasts on ${B_WHITE}${LAN_INTERFACE}${NORMAL} to: "
 				for network in ${=BROADCAST_NETWORKS} ; {
 					$IPTABLES -t mangle -A PREROUTING -m state --state NEW \
 					-d $network -i $LAN_INTERFACE -j DROP || abortexit
-				echo -n "$BOLD$network$NORMAL "
+				echo -n "${B_WHITE}${network}${NORMAL} "
 			}
 				echo
 			fi
 		fi
 		if [ "$PROTECT_FROM_DMZ" = 'yes' ] ; then
 			if [ "$DMZ_INTERFACE" != '' ] ; then
-				echo -n "Dropping Broadcasts on $BOLD$DMZ_INTERFACE$NORMAL to: "
+				echo -n "Dropping Broadcasts on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} to: "
 				for network in ${=BROADCAST_NETWORKS} ; {
 					$IPTABLES -t mangle -A PREROUTING -m state --state NEW \
 					-d $network -i $DMZ_INTERFACE -j DROP || abortexit
-					echo -n "$BOLD$network$NORMAL "
+					echo -n "${B_WHITE}${network}${NORMAL} "
 				}
 				echo
 			fi
@@ -540,16 +543,16 @@ fi
 #
 
 if [ "$RESERVED_NETWORKS" != '' ] ; then
-	echo -n "Enabling spoof checking on $BOLD$EXTERNAL_INTERFACE$NORMAL for reserved network(s): "
+	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for reserved network(s): "
 	for network in ${=RESERVED_NETWORKS} ; {
 		$IPTABLES -A SPOOF_CHK -s $network -i $EXTERNAL_INTERFACE -j $SPOOF_TARGET || abortexit
-		echo -n "$BOLD$network$NORMAL "
+		echo -n "${B_WHITE}${network}${NORMAL} "
 	}
 	echo
 fi
 
 if [ "$PRIVATE_NETWORKS" != '' ] ; then
-	echo -n "Enabling spoof checking on $BOLD$EXTERNAL_INTERFACE$NORMAL for private network(s): "
+	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for private network(s): "
 	for network in ${=PRIVATE_NETWORKS} ; {
 		IPVAL2="${EXTERNAL_INTERFACE_IP%%.*}"
 		NETVAL2="${network%%.*}"
@@ -566,7 +569,7 @@ if [ "$PRIVATE_NETWORKS" != '' ] ; then
 				fi
 		fi
 		if [ "$DONOTHING" != 1 ] ; then
-			echo -n "$BOLD$network$NORMAL "
+			echo -n "${B_WHITE}${network}${NORMAL} "
 		fi
 	}
 	echo
@@ -586,7 +589,7 @@ if [ "$ILLEGAL_TCP_FLAGS" != '' ] ; then
 	echo -n "Enabling checking for illegal TCP flag types: "
 	for flags in ${=ILLEGAL_TCP_FLAGS} ; {
 		$IPTABLES -A SANITY_CHK -p tcp --tcp-flags ALL $flags -j $ILLEGAL_TARGET || abortexit
-		echo -n "$BOLD$flags$NORMAL "
+		echo -n "${B_WHITE}${flags}${NORMAL} "
 	}
 	echo
 	$IPTABLES -A SANITY_CHK -p tcp --tcp-flags ALL FIN -j $ILLEGAL_TARGET || abortexit
@@ -652,18 +655,18 @@ fi
 
 # Allowed TCP ports - external access
 if [ "$ALLOW_TCP_EXT" != '' ] ; then
-	echo -n "Allow external connections on $BOLD$EXTERNAL_INTERFACE$NORMAL TCP ports: "
+	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} TCP ports: "
 	$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
 		--dport $ALLOW_TCP_EXT --syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
-	echo -n "$BOLD$ALLOW_TCP_EXT$NORMAL"
+	echo -n "${B_WHITE}${ALLOW_TCP_EXT}${NORMAL} "
 	echo
 fi
 if [ "$ALLOW_TCP_EXT_RANGE" != '' ] ; then
-	echo -n "Allow external connections on $BOLD$EXTERNAL_INTERFACE$NORMAL TCP ports: "
+	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} TCP ports: "
 	for ports in ${=ALLOW_TCP_EXT_RANGE} ; {
 		$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
 			--syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ports$NORMAL "
+		echo -n "${B_WHITE}${ports}${NORMAL} "
 	}
 	echo
 fi
@@ -671,18 +674,18 @@ fi
 # Allowed TCP ports - LAN access
 if [ "$PROTECT_FROM_LAN" != 'no' ] ; then
 	if [[ "$ALLOW_TCP_LAN" != '' && "$LAN_INTERFACE" != '' ]] ; then
-		echo -n "Allow LAN connections on $BOLD$LAN_INTERFACE$NORMAL TCP ports: "
+		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} TCP ports: "
 		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT}  \
 			--dport $ALLOW_TCP_LAN --syn -i $LAN_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ALLOW_TCP_LAN$NORMAL"
+		echo -n "${B_WHITE}${ALLOW_TCP_LAN}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_TCP_LAN_RANGE" != '' ] ; then
-		echo -n "Allow LAN connections on $BOLD$LAN_INTERFACE$NORMAL TCP ports: "
+		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} TCP ports: "
 		for ports in ${=ALLOW_TCP_LAN_RANGE} ; {
 			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
 				--syn -i $LAN_INTERFACE -j ACCEPT || abortexit
-			echo -n "$BOLD$ports$NORMAL "
+			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
 	fi
@@ -691,18 +694,18 @@ fi
 # Allowed TCP ports - DMZ access
 if [ "$PROTECT_FROM_DMZ" != 'no' ] ; then
 	if [ "$ALLOW_TCP_DMZ" != '' ] ; then
-		echo -n "Allow DMZ connections on $BOLD$DMZ_INTERFACE$NORMAL TCP ports: "
+		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} TCP ports: "
 		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} \
 			--dport $ALLOW_TCP_DMZ --syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ALLOW_TCP_DMZ$NORMAL"
+		echo -n "${B_WHITE}${ALLOW_TCP_DMZ}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_TCP_DMZ_RANGE" != '' ] ; then
-		echo -n "Allow DMZ connections on $BOLD$DMZ_INTERFACE$NORMAL TCP ports: "
+		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} TCP ports: "
 		for ports in ${=ALLOW_TCP_DMZ_RANGE} ; {
 			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
 				--syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
-			echo -n "$BOLD$ports$NORMAL "
+			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
 	fi
@@ -728,18 +731,18 @@ $IPTABLES -A TCP_CHK -j $DEFAULT_TARGET || abortexit
 
 # Allowed UDP ports
 if [ "$ALLOW_UDP_EXT" != '' ] ; then
-	echo -n "Allow external connections on $BOLD$EXTERNAL_INTERFACE$NORMAL UDP ports: "
+	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} UDP ports: "
 	$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_EXT \
 		-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
-	echo -n "$BOLD$ALLOW_UDP_EXT$NORMAL"
+	echo -n "${B_WHITE}${ALLOW_UDP_EXT}${NORMAL} "
 	echo
 fi
 if [ "$ALLOW_UDP_EXT_RANGE" != '' ] ; then
-	echo -n "Allow external connections on $BOLD$EXTERNAL_INTERFACE$NORMAL UDP ports: "
+	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} UDP ports: "
 	for ports in ${=ALLOW_UDP_EXT_RANGE} ; {
 		$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 			-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ports$NORMAL "
+		echo -n "${B_WHITE}${ports}${NORMAL} "
 	}
 	echo
 fi
@@ -747,18 +750,18 @@ fi
 # Allowed UDP ports - LAN access
 if [ "$PROTECT_FROM_LAN" != 'no' ] ; then
 	if [ "$ALLOW_UDP_LAN" != '' ] ; then
-		echo -n "Allow LAN connections on $BOLD$LAN_INTERFACE$NORMAL UDP ports: "
+		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} UDP ports: "
 		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_LAN \
 			-i $LAN_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ALLOW_UDP_LAN$NORMAL"
+		echo -n "${B_WHITE}${ALLOW_UDP_LAN}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_UDP_LAN_RANGE" != '' ] ; then
-		echo -n "Allow LAN connections on $BOLD$LAN_INTERFACE$NORMAL UDP ports: "
+		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} UDP ports: "
 		for ports in ${=ALLOW_UDP_LAN_RANGE} ; {
 			$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 				-i $LAN_INTERFACE -j ACCEPT || abortexit
-			echo -n "$BOLD$ports$NORMAL "
+			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
 	fi
@@ -767,18 +770,18 @@ fi
 # Allowed UDP ports - DMZ access
 if [ "$PROTECT_FROM_DMZ" != 'no' ] ; then
 	if [ "$ALLOW_UDP_DMZ" != '' ] ; then
-		echo -n "Allow DMZ connections on $BOLD$DMZ_INTERFACE$NORMAL UDP ports: "
+		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} UDP ports: "
 		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_DMZ \
 			-i $DMZ_INTERFACE -j ACCEPT || abortexit
-		echo -n "$BOLD$ALLOW_UDP_DMZ$NORMAL"
+		echo -n "${B_WHITE}${ALLOW_UDP_DMZ}${NORMAL} "
 	echo
 	fi
 	if [ "$ALLOW_UDP_DMZ_RANGE" != '' ] ; then
-		echo -n "Allow DMZ connections on $BOLD$DMZ_INTERFACE$NORMAL UDP ports: "
+		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} UDP ports: "
 		for ports in ${=ALLOW_UDP_DMZ_RANGE} ; {
 			$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 				-i $DMZ_INTERFACE -j ACCEPT || abortexit
-			echo -n "$BOLD$ports$NORMAL "
+			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
 	fi
@@ -821,7 +824,7 @@ if [ "$ALLOW_ICMP_MESSAGE" != '' ] ; then
 	for mtype in ${=ALLOW_ICMP_MESSAGE} ; {
 		$IPTABLES -A ICMP_CHK -p icmp --icmp-type $mtype -m limit --limit $PING_RATE \
 			--limit-burst $BURST_MAX -j ACCEPT || abortexit
-		echo -n "$BOLD$mtype$NORMAL "
+		echo -n "${B_WHITE}${mtype}${NORMAL} "
 	}
 	echo
 fi
@@ -930,14 +933,14 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_PROBES" == 'yes' ]] ; then
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE -j DROP || abortexit
 		fi
-		echo -n "$BOLD$TCP_PROBE$NORMAL"
+		echo -n "${B_WHITE}${TCP_PROBE}${NORMAL}"
 		if [ "$TCP_PROBE2" != '' ] ; then
 			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j LOG --log-level $WARN_LOG_LEVEL \
 			--log-tcp-options --log-ip-options --log-prefix "PROBE " || abortexit
 			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 				$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j DROP || abortexit
 			fi
-			echo -n "$BOLD,$TCP_PROBE2$NORMAL"
+			echo -n "${B_WHITE},${TCP_PROBE2}${NORMAL}"
 		fi
 		echo
 	fi
@@ -948,14 +951,14 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_PROBES" == 'yes' ]] ; then
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 			$IPTABLES -A CUST_LOG -m multiport -p udp --dport $UDP_PROBE -j DROP || abortexit
 		fi
-		echo -n "$BOLD$UDP_PROBE$NORMAL"
+		echo -n "${B_WHITE}${UDP_PROBE}${NORMAL}"
 		if [ "$UDP_PROBE2" != '' ] ; then
 			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j LOG --log-level $WARN_LOG_LEVEL \
 			--log-ip-options --log-prefix "PROBE " || abortexit
 			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 				$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j DROP || abortexit
 			fi
-			echo -n "$BOLD,$UDP_PROBE2$NORMAL"
+			echo -n "${B_WHITE},${UDP_PROBE2}${NORMAL}"
 		fi
 		echo
 	fi
@@ -1080,7 +1083,7 @@ if [ "$LOOPBACK_ACCEPT" = 'yes' ] ; then
 			$IPTABLES -I INPUT 4 -m state --state NEW -i lo -j ACCEPT || abortexit
 		;;
 		* )
-			echo $RED"Conf error:$NORMAL Check ${BOLD}LOOPBACK_MODE$NORMAL"
+			echo $RED"Conf error:$NORMAL Check ${B_WHITE}LOOPBACK_MODE$NORMAL"
 			confexit
 		;;
 	esac
@@ -1098,8 +1101,8 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 		echo -n "Enabling network masquerading: "
 		for module in ${=NAT_MODULES} ; {
 			if ! grep $module /var/tmp/kwnarc.tmp > /dev/null 2>&1 ; then
-				/sbin/modprobe $module && echo -n "[ $BOLD$module$NORMAL - $RCOK ] " || echo -n \
-				"[ $BOLD$module$NORMAL - $RCFAIL ] "
+				/sbin/modprobe $module && echo -n "[ ${B_WHITE}${module}${NORMAL} - $RCOK ] " || echo -n \
+				"[ ${B_WHITE}${module}${NORMAL} - $RCFAIL ] "
 			fi
 		}
 		echo
@@ -1203,12 +1206,12 @@ if [ "$PORT_FORWARD" = 'yes' ] ; then
 				$IPTABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state --state NEW \
 				-d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
 			fi
-			echo "Forwarding $BOLD$PROTOCOL $ORIG_IP:$ORIG_PORT$NORMAL to $INTERFACE:$BOLD$NEW_IP:$NEW_PORT$NORMAL"
+			echo "Forwarding ${B_WHITE}${PROTOCOL} ${ORIG_IP}:${ORIG_PORT}${NORMAL} to ${INTERFACE}:${B_WHITE}${NEW_IP}:${NEW_PORT}${NORMAL}"
 			FWDSUCCESS='true'
 		fi
 	}
 	if [ "$FWDSUCCESS" != 'true' ] ; then
-		echo $RED"Conf error:$NORMAL No ports to forward.  Check $BOLD$FORWARD_CONF$NORMAL for errors."
+		echo $RED"Conf error:$NORMAL No ports to forward.  Check ${B_WHITE}${FORWARD_CONF}${NORMAL} for errors."
 		abortexit
 	fi
 fi
@@ -1221,13 +1224,13 @@ if [ "$EXECUTE_CUSTOM_SCRIPT" = 'yes' ] ; then
 	echo "Executing custom commands:"
 	LINELENGTH=`grep -v "^ *#" $CUSTOM_SCRIPT | wc -L`
 	if [ `expr $LINELENGTH \< 1` = 1 ] ; then
-		echo $RED"Conf error:$NORMAL (non-fatal) No commands to execute in ${BOLD}$CUSTOM_SCRIPT$NORMAL"
+		echo $RED"Conf error:$NORMAL (non-fatal) No commands to execute in ${B_WHITE}${CUSTOM_SCRIPT}${NORMAL}"
 	else
 		grep -v "^ *#" $CUSTOM_SCRIPT | \
 			( while read line ; do
 			if [ "$line" != '' ] ; then
-				eval $line && echo "$BOLD$line$NORMAL - $RCOK" || \
-					echo "$BOLD$line$NORMAL - $RCFAIL"
+				eval $line && echo "${B_WHITE}${line}${NORMAL} - $RCOK" || \
+					echo "${B_WHITE}${line}${NORMAL} - $RCFAIL"
 			fi
 			done )
 		echo "Finished executing custom commands"
@@ -1236,7 +1239,7 @@ fi
 
 # End
 removetemp
-echo $BOLD"Finished firewall (iptables) initialization$NORMAL"
+echo $B_WHITE"Finished firewall (iptables) initialization$NORMAL"
 ### Modeline {{{
 ### vim:ft=zsh:foldmethod=marker
 ### vim:set ts=4:                                                                               
