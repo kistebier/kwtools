@@ -56,6 +56,11 @@ autoload -U fs_conf hw_conf net_conf multi_conf sys_conf
 # Scripts benoetigt werden.
 sys_conf
 
+# colors-Modul laden und ausfuehren. Dadurch werden Arrays mit
+# lesbaren Farbnamen beratgestellt und man benoetigt keine
+# ANSI-Farbcodes.
+autoload -U colors && colors
+
 # Builtin Programme
 echo="builtin echo"
 which="builtin which"
@@ -93,15 +98,12 @@ if [ -z "$LANGUAGE" ] ; then
     LANGUAGE="de"
 fi
 
-if [ -z "$TMP_PATH" ] ; then
-    TMP_PATH="/var/tmp"
-	if [ ! -d "$TMP_PATH" ] ; then
-		mkdir -p "$TMP_PATH"
-	fi
-fi
 #
 # Temporaeres Verzeichnis fuer log und kurzzeitige Berechnungen/Ausgaben
 #
+if [ -z "$TMP_PATH" ] ; then
+    TMP_PATH="/var/tmp"
+fi
 if [ ! -d "$TMP_PATH" ] ; then
 	mkdir -p "$TMP_PATH"
 fi
