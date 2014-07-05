@@ -32,6 +32,7 @@ package-sys-lvm=kwtools-sys-lvm
 package-sys-parted=kwtools-sys-parted
 package-sys-quota=kwtools-sys-quota
 package-sys-raid=kwtools-sys-raid
+package-sys-rc=kwtools-sys-rc
 package-utils=kwtools-utils
 package-utils-pim=kwtools-utils-pim
 package-utils-ssl=kwtools-utils-ssl
@@ -233,21 +234,21 @@ install: build
 
 	# kwtools-sys
 	cp -a sys/kwauth sys/kwclock sys/kwgroup sys/kwlogrotate sys/kwnetconf \
-		sys/kwuser sys/kwwvdialconf sys/kwrunlevconf \
+		sys/kwuser sys/kwwvdialconf \
 		$(CURDIR)/debian/$(package-sys)$(exec_path)/sys
 	cp -a kwnetcardconf $(CURDIR)/debian/$(package-sys)$(exec_path)
 	cp -a help/kwauth help/kwclock help/kwgroup help/kwlogrotate \
 		help/kwnetconf \
 		help/kwnetcardconf help/kwuser help/kwwvdialconf \
-		help/kwrunlevconf $(CURDIR)/debian/$(package-sys)$(help_path)
+		$(CURDIR)/debian/$(package-sys)$(help_path)
 #	cp -a help/kwadmin/sys_kwgroup_help help/kwadmin/sys_kwlog*_help \
 #		help/kwadmin/sys_kwn*_help \
 #		 help/kwadmin/sys_kwu*_help help/kwadmin/sys_kwwv*_help \
-#		help/kwadmin/sys_kwrunlevconf_help help/kwadmin/sys_kwclock_help \
+#		help/kwadmin/sys_kwclock_help \
 #		$(CURDIR)/debian/$(package-sys)$(kwhelp_path)
 	cp -a functions/kwauth functions/kwclock functions/kwnetcardconf \
 		functions/kwlogrotate \
-		functions/kwwvdialconf functions/kwrunlevconf functions/kwuser \
+		functions/kwwvdialconf functions/kwuser \
 		$(CURDIR)/debian/$(package-sys)$(func_path)
 	cp -a man/de/man5/kwuserrc.5 \
 		$(CURDIR)/debian/$(package-sys)$(man_path)/de/man5
@@ -255,13 +256,13 @@ install: build
 		man/de/man8/kwlogrotate.8 \
 		man/de/man8/kwnetcardconf.8 man/de/man8/kwnetconf.8 \
 		man/de/man8/kwuser.8 man/de/man8/kwwvdialconf.8 \
-		man/de/man8/kwrunlevconf.8 man/de/man8/kwclock.8 \
+		man/de/man8/kwclock.8 \
 		$(CURDIR)/debian/$(package-sys)$(man_path)/de/man8
 	cp -a debian/po/kwauth/usr debian/po/kwgroup/usr \
 		debian/po/kwlogrotate/usr \
 		debian/po/kwnetcardconf/usr debian/po/kwnetconf/usr \
 		debian/po/kwuser/usr debian/po/kwwvdialconf/usr \
-		debian/po/kwrunlevconf/usr debian/po/kwclock/usr \
+		debian/po/kwclock/usr \
 		$(CURDIR)/debian/$(package-sys)
 
 	# kwtools-sys-fuse
@@ -350,6 +351,13 @@ install: build
 	cp -a man/de/man8/kwraid.8 \
 		$(CURDIR)/debian/$(package-sys-raid)$(man_path)/de/man8
 	cp -a debian/po/kwraid/usr $(CURDIR)/debian/$(package-sys-raid)
+
+	# kwtools-sys-rc
+	cp -a sys/kwrunlevconf $(CURDIR)/debian/$(package-sys-rc)$(exec_path)/sys
+	cp -a help/kwrunlevconf $(CURDIR)/debian/$(package-sys-rc)$(help_path)
+	cp -a functions/kwrunlevconf $(CURDIR)/debian/$(package-sys-rc)$(func_path)
+	cp -a man/de/man8/kwrunlevconf.8 $(CURDIR)/debian/$(package-sys-rc)$(man_path)/de/man8
+	cp -a debian/po/kwrunlevconf/usr $(CURDIR)/debian/$(package-sys-rc)
 
 	# kwtools-utils
 	cp -a utils/kwgpgcrypt utils/kwmuttprintcf utils/kwpwsafe \

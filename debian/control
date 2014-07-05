@@ -41,6 +41,7 @@ Depends: ${misc:Depends},
  kwtools-sys-parted (>= ${source:Version}),
  kwtools-sys-quota (>= ${source:Version}),
  kwtools-sys-raid (>= ${source:Version}),
+ kwtools-sys-rc (>= ${source:Version}),
  kwtools-utils (>= ${source:Version}),
  kwtools-utils-pim (>= ${source:Version}),
  kwtools-utils-ssl (>= ${source:Version})
@@ -206,7 +207,7 @@ Package: kwtools-sys
 Section: admin
 Priority: optional
 Architecture: all
-Depends: ethtool, ${misc:Depends}, kwtools-common (>= ${source:Version}), libpam-runtime (>=1.0.1-6), logrotate, sysv-rc (>= 2.88dsf-42)| file-rc, zsh (>= 4.2.0)
+Depends: ethtool, ${misc:Depends}, kwtools-common (>= ${source:Version}), libpam-runtime (>=1.0.1-6), logrotate, zsh (>= 4.2.0)
 Suggests: kwtools-bin, dhcp-client (>=2.0) | dhcp3-client, isdnutils-base, ntpdate | ntp, pppoeconf, sudo, wvdial
 Description: System scripts
  Includes several scripts for system administration.
@@ -219,10 +220,6 @@ Description: System scripts
  kwnetconf: Frontend to varous connection tools.
  kwlogrotate: An administration script for log files. It uses logrotate for
         this purpose.
- kwrunlevconf: Can configure your runlevel scripts in a very sophisticated
-        manner. It generates and also deletes /usr/sbin/rcinitscriptname links.
-        This is intended to save the administrator time and effort typing.
-        It supported the systems file-rc and sysv-rc.
  kwuser: Can be used to create, change and delete users.
  kwwvdialconf: Configures the file wvdial.conf from program wvdial.
 Homepage: http://www.netzworkk.org
@@ -357,6 +354,21 @@ Description: Script for software RAID administration
         6 and 10 are only available from Kernel >=2.5 onwards.
  .
  NOTE: may not work with several spare discs. I am afraid I couldn't check this.
+Homepage: http://www.netzworkk.org
+
+Package: kwtools-sys-rc
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), sysv-rc (>= 2.88dsf-42)| file-rc, zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo, sysvinit-core
+Description: Script for runlevel administration
+ Includes a script to manage runlevel.
+ .
+ kwrunlevconf: Can configure your runlevel scripts in a very sophisticated
+        manner. It generates and also deletes /usr/sbin/rcinitscriptname links.
+        This is intended to save the administrator time and effort typing.
+        It supported the systems file-rc and sysv-rc.
 Homepage: http://www.netzworkk.org
 
 Package: kwtools-utils
