@@ -5782,7 +5782,7 @@ kernel_choice() {
 # Funktion (search_fdisks), um nach Partitionierungstools zu suchen{{{
 #
 # In dieser Reihenfolge werden die Partitionierungs-tools gesucht:
-# kwparted, cfdisk, fdisk.
+# parted, kwparted, cfdisk, fdisk.
 #
 # usage: search_fdisks
 #
@@ -5791,52 +5791,46 @@ search_fdisks() {
 	PART_DISK_TITLE=$(gettext 'Partitionierung')
 	PART_DISK_MSG=$(gettext 'Waehlen Sie eine Festplatte zum partitionieren aus.')
 	#
-	if [ -x "${commands[kwparted]}" -a -x "${commands[parted]}" ] ; then
+	# Funktion (exec_part_cmd), Partitionierungstool ausfuehren# {{{
+	exec_part_cmd() {
+		if [ -n "${DISK_DEV_E[1]}" ] ; then
+			menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help share/part_only_help
+						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
+						;;
+					/dev*)
+						Disk="$gv_Auswahl"
+						$Cmd "$Disk"
+						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
+						;;
+					$gv_Back) break
+						;;
+				esac
+			done
+		else
+			no_disk_msg
+		fi
+	}
+	## }}}
+	#
+	if [ -x "${commands[kwparted]}" ] ; then
 		kwparted
+	elif [ -x "${commands[parted]}" ] ; then
+		disk
+		Cmd="parted"
+		exec_part_cmd
 	elif [ -x "${commands[cfdisk]}" ] ; then
 		disk
-		if [ -n "${DISK_DEV_E[1]}" ] ; then
-			menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-			while [ "$gv_Auswahl" ] ; do
-				case "$gv_Auswahl" in
-					HELP*)	script_help share/part_only_help
-						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-						;;
-					/dev*)
-						Disk="$gv_Auswahl"
-						cfdisk "$gv_Auswahl"
-						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-						;;
-					$gv_Back) break
-						;;
-				esac
-			done
-		else
-			no_disk_msg
-		fi
+		Cmd="cfdisk"
+		exec_part_cmd
 	elif [ -x "${commands[fdisk]}" ] ; then
 		disk
-		if [ -n "${DISK_DEV_E[1]}" ] ; then
-			menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-			while [ "$gv_Auswahl" ] ; do
-				case "$gv_Auswahl" in
-					HELP*)	script_help share/part_only_help
-						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-						;;
-					/dev*)
-						Disk="$gv_Auswahl"
-						fdisk "$gv_Auswahl"
-						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
-						;;
-					$gv_Back) break
-						;;
-				esac
-			done
-		else
-			no_disk_msg
-		fi
+		Cmd="fdisk"
+		exec_part_cmd
 	else
-		MSG=$(gettext 'Es wurde keines der Programme, kwparted, cfdisk oder fdisk gefunden.')
+		MSG=$(gettext 'Es wurde keines der Programme, kwparted, parted, cfdisk oder fdisk gefunden.')
 		msgbox "$gv_Attention" "$MSG"
 	fi
 }
