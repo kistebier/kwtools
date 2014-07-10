@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2010-06-16">
+        <meta name="date" content="2014-07-10">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -96,9 +96,8 @@
                         <td></td>
                         <td vAlign=top><b><a name="cdrom">cdrom</a></b>
 			<p>Sucht nach (E)IDE und SCSI CD/DVD Laufwerken und speichert sie in den Array's
-			CD_DEV, CD_DEV_E und CD_DEV_M um sie zur Auswahl anzubieten. Wenn kernel >=2.5 l&auml;ft
-			und hwinfo installiert ist, kommt hwinfo zum Einsatz. Ansonsten wird in
- 			/proc/sys/dev/cdrom/info gesucht, falls vorhanden.<br>
+			CD_DEV, CD_DEV_E und CD_DEV_M um sie zur Auswahl anzubieten. Dazu ben&ouml;tigt
+			man eine kernel Release >=2.6.0 und hwinfo.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			CD_DEV - CD/DVD Laufwerke<br>
 			CD_DEV_E - CD/DVD Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
@@ -126,18 +125,16 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="disk">disk</a></b>
-			<p>Hier werden alle Festplatten, ATAPI, SCSI, wie SATA herausgesucht. Wenn kernel
-			>=2.5 l&auml;uft und hwinfo installiert ist, kommt hwinfo zum Einsatz.
-			Es wird alles in den Variablen DISK_DEV, DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP DISK_CYL_BYTES
+			<p>Hier werden alle Festplatten, ATAPI, SCSI, wie SATA herausgesucht, wenn kernel
+			>=2.6.0 l&auml;uft und hwinfo installiert ist.
+			Es wird alles in den Variablen DISK_DEV, DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP
 			und FP_INFO gespeichert.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			DISK_DEV - Festplatten<br>
 			DISK_DEV_E - Festplattenanzeige fuer die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
 			DISK_DEV_M - Festplattenanzeige fuer die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a><br>
 			DISK_DEV_CAP - Gr&ouml;sse der Festplatte<br>
-			DISK_CYL_BYTES - Gr&ouml;sse der Cylinder in Bytes.
-			FP_INFO - Festplatteninformation, Modell und Hersteller (nur bei
-			Verwendung von hwinfo)</p></td>
+			FP_INFO - Festplatteninformation, Modell und Hersteller</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -146,10 +143,10 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="floppy">floppy</a></b>
-			<p>Sucht nach Disketten Laufwerken und speichert sie in den Array's FLOPPY_DEV, Floppy_dev_E und 
-			FLOPPY_DEV_M, um sie zur Auswahl anzubieten.
-			Als Programm kommt hwinfo zum Einsatz, falls installiert. Ansonsten
-			werden die Variablen nicht belegt.<br>
+			<p>Hier werden alle Disketten Laufwerke herausgesucht, wenn kernel
+			>=2.6.0 l&auml;uft und hwinfo installiert ist.
+			Es wird alles in den Variablen FLOPPY_DEV, FLOPPY_DEV_E und 
+			FLOPPY_DEV_M gespeichert.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			FLOPPY_DEV - Laufwerke<br>
 			FLOPPY_DEV_E - Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
@@ -302,31 +299,22 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="partdb">partdb</a></b>
-			<p>Sucht nach allen Partitionen auf den Festplatten die, die
-			Funktion <a target="_self" href="hw.html#disk">disk</a> gefunden hat und speichert sie in verschiedenen Arrays,
-			damit man sie zur Auswahl anbieten kann.<br>
-			partdb [ "$DISK" | -i "$TYPE-NR" ]<br>
-			partdb "$DISK" = nur diese Festplatte nach Linux Partitionen
+			<p>Sucht nach Partitionen auf den Festplatten und speichert
+			sie in verschiedenen Arrays, damit man sie zur Auswahl anbieten kann.<br>
+			partdb [ "$DISK" | -i "TYPE-NR TYPE-NR ..." ]<br>
+			partdb "$DISK" = nur diese Festplatte nach Linux und Swap Partitionen
 			durchsuchen.<br>
-			partdb -i "$TYPE-NR" = nach Partitionstyp suchen, auf allen
+			partdb -i "$TYPE-NR" = nach Partitionstyp(en) suchen, auf allen
 			Festplatten.<br>
 			partdb = alle Linux Partitionen suchen, auf allen Festplatten.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			PART - Partionen.<br>
 			PART_E - Partitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br>
 			PART_M - Partitionsanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.<br>
-			PART_DESC - Partitionsbeschreibung.<br>
-			GRUB_PART_DISK - Partitionen im grubspezifischen Format.<br>
-			GRUB_PART_DISK_E - Partitionsanzeige im grubspezifischen
-			Format (Bsp: (hd0,1)) f&uuml;r die Funktion <a target="_blank" href="fs.html" name="menubox">menubox</a>.<br>
-			GRUB_PART_DISK_M - Partitionsanzeige im grubspezifischen Format f&uuml;r
-			die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.<br>
 			SWAP_DEV - Swappartitionen.<br>
 			SWAP_DEV_E - Swappartitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br> 
 			SWAP_DEV_M - Swappartitionsanzeige f&uuml;r die Funktionen
-			<a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.<br>
-			GRUB_DISK - Festplatten im grubspezifischen Format f&uuml;r
-			die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a></p></td>
+			<a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.</p></td>
                         <td></td>
                 </tr>
                 <tr>
