@@ -12,98 +12,33 @@ hw_conf() {
 	#
 	cdrom()
 	{
-		local Anz Dev Desc
+		unset -- CD_DEV CD_DEV_E CD_DEV_M STL_CD_DEV STL_CD_DEV_E STL_CD_DEV_M
+		local Dev Desc
 		kernel_release
 		if [[ -x ${commands[hwinfo]} ]] && \
 			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
 			# ${gv_WorkDir}/cdrom neu erstellen falls die Datei nicht vorhanden ist.
 			if [ ! -f ${gv_WorkDir}/cdrom ] ; then
-				hwinfo --short --cdrom > ${gv_WorkDir}/cdrom
+				hwinfo --short --cdrom 2>/dev/null >${gv_WorkDir}/cdrom
 			fi
 			# ${gv_WorkDir}/cdrom auslesen
 			if [ "`wc -l < ${gv_WorkDir}/cdrom`" -gt 0 ] ; then
-				Anz=0
 				while read Dev Desc ; do
 					if [ -n "${(M)${Dev}##/dev/*}" ] ; then
-						(( Anz++ ))
-#						#################################
-#						# old Code
-#						#################################
-#						CD_DEV[Anz]="${Dev//sr/scd}"
-#						CD_DEV_E[Anz]="${Dev//sr/scd} \"$Desc\""
-#						CD_DEV_M[Anz]="${Dev//sr/scd} \"$Desc\" off"
-#						device_convert "${Dev//sr/scd}"
-						CD_DEV[Anz]="$Dev"
-						CD_DEV_E[Anz]="$Dev \"$Desc\""
-						CD_DEV_M[Anz]="$Dev \"$Desc\" off"
+						CD_DEV+=($Dev)
+						CD_DEV_E+=($Dev \"$Desc\")
+						CD_DEV_M+=($Dev \"$Desc\" off)
 						device_convert "$Dev"
 						if [ "$CDROM" ] ; then
-							STL_CD_DEV[Anz]="$CDROM"
-							STL_CD_DEV_E[Anz]="$CDROM \"$Desc\""
-							STL_CD_DEV_M[Anz]="$CDROM \"$Desc\" off"
+							STL_CD_DEV+=($CDROM)
+							STL_CD_DEV_E+=($CDROM \"$Desc\")
+							STL_CD_DEV_M+=($CDROM \"$Desc\" off)
 						fi
 					fi
 				done < ${gv_WorkDir}/cdrom
 			fi
 		else
-			if [ -f /proc/sys/dev/cdrom/info ] ; then
-				# Bei devfs gibts keine Beschreibung
-				if [ -c /dev/.devfsd ] ; then
-					Anz=0
-					for i in `ls -C /dev/(ide|scsi)/**/cd` ; {
-						(( Anz++ ))
-						CD_DEV[Anz]="$i"
-						CD_DEV_E[Anz]="$i \"\""
-						CD_DEV_M[Anz]="$i \"\" off"
-					}
-				else
-					Anz=0
-					print -l ${(Mo)$(< /proc/sys/dev/cdrom/info)##(hd|scd|sr)*} | \
-					while read Dev ; do
-						(( Anz++ ))
-						case "$Dev" in
-							hd*)
-								# ATAPI
-								Desc=$(< /proc/ide/${Dev}/model)
-								CD_DEV[Anz]="/dev/${Dev}"
-								CD_DEV_E[Anz]="/dev/${Dev} \"$Desc\""
-								CD_DEV_M[Anz]="/dev/${Dev} \"$Desc\" off"
-								device_convert "$Dev"
-								if [ "$CDROM" ] ; then
-									STL_CD_DEV[Anz]="$CDROM"
-									STL_CD_DEV_E[Anz]="$CDROM \"$Desc\""
-									STL_CD_DEV_M[Anz]="$CDROM \"$Desc\" off"
-								fi
-								;;
-							scd*|sr*)
-								# SCSI
-								# sr -> scd
-								if [ "${Dev%[0-9]*}" = sr ] ; then
-									device_convert "scd${Dev#sr}"
-									if [ "$CDROM" ] ; then
-										STL_CD_DEV[Anz]="$CDROM"
-										STL_CD_DEV_E[Anz]="$CDROM \"$DESC\""
-										STL_CD_DEV_M[Anz]="$CDROM \"$DESC\" off"
-									fi
-									CD_DEV[Anz]="/dev/scd${Dev#sr}"
-									CD_DEV_E[Anz]="/dev/scd${Dev#sr} \"$DESC\""
-									CD_DEV_M[Anz]="/dev/scd${Dev#sr} \"$DESC\" off"
-								else
-									device_convert "$Dev"
-									if [ "$CDROM" ] ; then
-										STL_CD_DEV[Anz]="$CDROM"
-										STL_CD_DEV_E[Anz]="$CDROM \"$DESC\""
-										STL_CD_DEV_M[Anz]="$CDROM \"$DESC\" off"
-									fi
-									CD_DEV[Anz]="/dev/${Dev}"
-									CD_DEV_E[Anz]="/dev/${Dev} \"$DESC\""
-									CD_DEV_M[Anz]="/dev/${Dev} \"$DESC\" off"
-								fi
-								;;
-						esac
-					done
-				fi
-			fi
+			no_prog_exec_msg hwinfo
 		fi
 	}
 	#}}}
@@ -138,8 +73,8 @@ hw_conf() {
 	#
 	disk() {
 		kernel_release
-		local Anz Anz1 Block Cyl_Bytes
-		typeset -ax DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP DISK_CYL_BYTES
+		local Cap
+		unset -- DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP
 		if [[ -x ${commands[hwinfo]} ]] && \
 			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
 			# ${gv_WorkDir}/disk neu erstellen falls die Datei nicht vorhanden ist.
@@ -148,135 +83,27 @@ hw_conf() {
 			fi
 			# ${gv_WorkDir}/disk auslesen
 			if [ "`wc -l < ${gv_WorkDir}/disk`" -gt 0 ] ; then
-				local Dev Rest
-				Anz=0
+				local Dev Rest Tmp
 				while read Dev Rest ; do
 					if [ -n "${(M)${Dev}##/dev/*}" -a "${${Dev##*/}%%[0-9]*}" != ram ] ; then
-						(( Anz++ ))
-						DISK_DEV[Anz]="$Dev"
-						DISK_DEV_E[Anz]="$Dev \"$Rest\""
-						DISK_DEV_M[Anz]="$Dev \"$Rest\" off"
-						Block="`fdisk -s $Dev 2>/dev/null`"
-						if [ -n "$Block" ] ; then
-							DISK_DEV_CAP[Anz]="$[$Block/1024]"
+						DISK_DEV+=($Dev)
+						DISK_DEV_E+=($Dev \"$Rest\")
+						DISK_DEV_M+=($Dev \"$Rest\" off)
+						# in Bytes umrechnen
+						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
+						if [ "$Tmp" -gt 0 ] ; then
+							# Bytes in bessere Lesbarkeit umrechnen
+							convert_si_size -i $Tmp
+							DISK_DEV_CAP+=($SIZE_B)
+						else
+							DISK_DEV_CAP+=(0)
 						fi
-						FP_INFO[Anz]="$Dev $Rest"
+						FP_INFO+=($Dev $Rest)
 					fi
 				done < ${gv_WorkDir}/disk
 			fi
 		else
-			# mit devfs
-			if [ -c /dev/.devfsd ] ; then
-				Anz=0
-				for i in `ls -C /dev/(ide|scsi)/**/disc` ; {
-					(( Anz++ ))
-					DISK_DEV[Anz]="$i"
-					DISK_DEV_E[Anz]="$i \"\""
-					DISK_DEV_M[Anz]="$i \"\" off"
-					Block="`fdisk -s $i 2>/dev/null`"
-					if [ -n "$Block" ] ; then
-						DISK_DEV_CAP[Anz]="$[$Block/1024]"
-					fi
-				}
-			else
-				# ohne devfs
-				local Ide_Devs Medium Scsi_Devs
-				typeset -a Ide_Devs Scsi_Devs
-				if [ -d /proc/ide/ide? ] ; then
-					Anz=0
-					for i in /proc/ide/ide?/hd* ; {
-						#
-						# Jetzt wird geprueft ob es sich um eine disk handelt
-						#
-						Medium=`< ${i}/media` 
-						if [ "$Medium" = disk ] ; then
-							(( Anz++ ))
-							Ide_Devs[Anz]="/dev/${i##*/}"
-							Fp_Info[Anz]="$(< ${i}/model)"
-						fi
-					}
-				fi
-				if [ -f /proc/scsi/scsi ] ; then
-					typeset -a Scsi_Devs
-					Anz=0
-					Anz1=1
-					for i in `print ${(M)$(< /proc/scsi/scsi)##Direct-Access}` ; {
-						case "$Anz" in
-							0)	Scsi_Devs[Anz1]=(/dev/sda)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							1)	Scsi_Devs[Anz1]=(/dev/sdb)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							2)	Scsi_Devs[Anz1]=(/dev/sdc)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							3)	Scsi_Devs[Anz1]=(/dev/sdd)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							4)	Scsi_Devs[Anz1]=(/dev/sde)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							5)	Scsi_Devs[Anz1]=(/dev/sdf)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							6)	Scsi_Devs[Anz1]=(/dev/sdg)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							7)	Scsi_Devs[Anz1]=(/dev/sdh)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							8)	Scsi_Devs[Anz1]=(/dev/sdi)
-								(( Anz++ ))
-								;;
-							9)	Scsi_Devs[Anz1]=(/dev/sdj)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							10)	Scsi_Devs[Anz1]=(/dev/sdk)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							11)	Scsi_Devs[Anz1]=(/dev/sdl)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							12)	Scsi_Devs[Anz1]=(/dev/sdm)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							13)	Scsi_Devs[Anz1]=(/dev/sdn)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-							14)	Scsi_Devs[Anz1]=(/dev/sdo)
-								(( Anz++ ))
-								(( Anz1++ ))
-								;;
-						esac
-					}
-				fi
-				Anz=0
-				for i in $Ide_Devs $Scsi_Devs ; {
-					(( Anz++ ))
-					DISK_DEV[Anz]="$i"
-					DISK_DEV_E[Anz]="$i \"\""
-					DISK_DEV_M[Anz]="$i \"\" off"
-					Block="`fdisk -s $i 2>/dev/null`"
-					if [ -n "$Block" ] ; then
-						DISK_DEV_CAP[Anz]="$[$Block/1024]"
-					fi
-					FP_INFO[Anz]="$i ${Fp_Info[Anz]}"
-				}
-			fi
+			no_prog_exec_msg hwinfo
 		fi
 	}
 	#}}}
@@ -284,24 +111,27 @@ hw_conf() {
 	#
 	floppy()
 	{
-		local Anz Dev Rest
-		if [ -x "${commands[hwinfo]}" -a "$gv_K_Minor" = 6 ] ; then
+		unset -- FLOPPY_DEV FLOPPY_DEV_E FLOPPY_DEV_M
+		local Dev Rest
+		kernel_release
+		if [[ -x ${commands[hwinfo]} ]] && \
+			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
 			# ${gv_WorkDir}/floppy neu erstellen falls die Datei nicht vorhanden ist.
 			if [ ! -f ${gv_WorkDir}/floppy ] ; then
-				hwinfo --short --floppy > ${gv_WorkDir}/floppy
+				hwinfo --short --floppy 2>/dev/null >${gv_WorkDir}/floppy
 			fi
 			# ${gv_WorkDir}/floppy einlesen
 			if [ "`wc -l < ${gv_WorkDir}/floppy`" -gt 0 ] ; then
-				Anz=0
 				while read Dev Rest ; do
 					if [ -n "${(M)${Dev}##/dev/*}" ] ; then
-						(( Anz++ ))
-						FLOPPY_DEV[Anz]="$Dev"
-						FLOPPY_DEV_E[Anz]="$Dev \"$Rest\""
-						FLOPPY_DEV_M[Anz]="$Dev \"$Rest\" off"
+						FLOPPY_DEV+=($Dev)
+						FLOPPY_DEV_E+=($Dev \"$Rest\")
+						FLOPPY_DEV_M+=($Dev \"$Rest\" off)
 					fi
 				done < ${gv_WorkDir}/floppy
 			fi
+		else
+			no_prog_exec_msg hwinfo
 		fi
 	}
 	#}}}
@@ -670,7 +500,7 @@ lv_free_size() {
 	#}}}
 	# Funktion (part_md_lose), Herrausfiltern von schon vergebenen RAID Partitionen.# {{{
 	#
-	# benoetigt vorher die Funktionen disk und partdb -i fd
+	# benoetigt vorher die Funktionen partdb -i fd
 	#
 	# usage: part_md_lose
 	#
@@ -686,138 +516,123 @@ lv_free_size() {
 	# Funktion (partdb), Partitionstabelle speichern{{{
 	# Hier werden alle Partitionen gesucht die vorhanden sind.
 	#
-	# benoetigt die Funktion disk
-	#
-	# usage: partdb [ -a | /dev.. | -i Partitionstyp ]
-	# -i - Nach Partitionstyp suchen
+	# usage: partdb [ /dev.. | -i 'Partitionstyp Partitionstyp ...' ]
+	# -i - alle Partitionen nach Partitionstyp suchen,
+	#      Linux = 83, Linux SWAP = 82, ...
 	# /dev - eine Festplatte uebergeben, ansonsten werden
 	#        alle vorhandenen benutzt.
-	# nichts - alle Partitionen ausser RAID/LVM
+	# nichts - alle Partitionen ausser RAID/LVM/crypto*
 	#
 	partdb() {
-		unset -- PART_IST PART PART_E PART_TYPE \
-			GRUB_PART_DISK GRUB_PART_DISK_E \
-			GRUB_DISK SWAP_IST SWAP_DEV Anz_G Anz_S
+		unset -- PART PART_E PART_M SWAP_DEV SWAP_DEV_E SWAP_DEV_M
+		local Fp_Tmp Part_Id Part_Ids Part_Desc
 		#
-		local Anz Anz_G Anz_S Disk_Nr Part_Desc Part_Nr
+		kernel_release
+		if [[ -x ${commands[hwinfo]} ]] && \
+			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
+			# ${gv_WorkDir}/partdb neu erstellen falls die Datei nicht vorhanden ist.
+			if [ ! -f ${gv_WorkDir}/partdb ] ; then
+				hwinfo --short --partition 2>/dev/null >${gv_WorkDir}/partdb
+			fi
+		else
+			no_prog_exec_msg hwinfo
+			return 1
+		fi
+		#
 		case $1 in
 			/dev*)
 				# nur eine Festplatte durchsuchen, nach Linux# {{{
 				#
-				Anz=0
-				Anz_G=1
-				Anz_S=0
-				Disk_Nr=0
-				(LC_ALL=C ; fdisk -l $1 | grep '^/dev' | grep -v ' 82 ' | grep -v Ext | \
-				sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$)
-				if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
-					while read p REST ; do
-						(( Anz++ ))
-						Part_Desc="${REST#*[0-9] }"
-						PART_M[Anz]="$p \"$Part_Desc\" off"
-						PART_E[Anz]="$p \"$Part_Desc\""
-						PART[Anz]="$p"
-						# Der Bootloader grub1 besitzt eine andere Syntax, die hier auch
-						# eingestellt wird (hd0), (hd0,1)
-						#
-						# Kompalitaet zu grub1
-						if [ "$gv_Grub1" = yes ] ; then
-							Part_Nr="${p##*[a-z]}"
-							GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
-							GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
-							GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
-						fi
-					done<${gv_WorkDir}/partdb$$
-				fi
-				#
-				fdisk -l $1 | grep ' 82 ' | sed -e 's#\*##' | \
-				awk '{print $1,$6,$7}' >${gv_WorkDir}/partdb$$
-				if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
-					while read p REST ; do
-						(( Anz_S++ ))
-						SWAP_DEV[Anz_S]="$p"
-						SWAP_DEV_E[Anz_S]="$p \"$REST\""
-						SWAP_DEV_M[Anz_S]="$p \"$REST\" off"
-					done<${gv_WorkDir}/partdb$$
+				Fp_Tmp="$1"
+				# ${gv_WorkDir}/partdb auslesen
+				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
+					while read part Rest ; do
+						case "$part" in
+							$Fp_Tmp*)
+								Part_Desc=$(blkid -o value -s TYPE -p $part)
+								case "$Part_Desc" in
+									swap)
+										SWAP_DEV+=($part)
+										SWAP_DEV_E+=($part \"$Part_Desc\")
+										SWAP_DEV_M=($part \"$Part_Desc\" off)
+										;;
+									LVM*|*_raid_*|crypto*)
+										;;
+									*)
+										Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
+										if [[ $Part_Id == 0x83 ]] ; then
+											PART+=($part)
+											PART_E+=($part \"$Part_Desc\")
+											PART_M+=($part \"$Part_Desc\" off)
+										fi
+										;;
+								esac
+								;;
+							*)
+								;;
+						esac
+					done < ${gv_WorkDir}/partdb
 				fi
 				## }}}
 				;;
 			-i)
-				# Nach Partitions Type durchsuchen (alle Partitionen)# {{{
-				Anz=0
-				Anz_G=0
-				Disk_Nr=-1
-				for i in $DISK_DEV ; {
-					(( Disk_Nr++ ))
-					fdisk -l $i | grep '^/dev' | grep " $2 " | \
-					sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$
-					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
-						while read p REST ; do
-							(( Anz++ ))
-							Part_Desc="${REST#*[0-9] }"
-							PART_M[Anz]="$p \"$Part_Desc\" off"
-							PART_E[Anz]="$p \"$Part_Desc\""
-							PART[Anz]="$p"
-							# Kompalitaet zu grub1
-							if [ "$gv_Grub1" = yes ] ; then
-								Part_Nr="${p##*[a-z]}"
-								GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
-								GRUB_PART_DISK_M[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\" off"
-								GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
-								(( Anz_G++ ))
-								GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
-							fi
-						done<${gv_WorkDir}/partdb$$
-					fi
-				}
+				# Nach Partitions Typ durchsuchen (alle Partitionen)# {{{
+				#
+				Part_Ids="$2"
+				# ${gv_WorkDir}/partdb auslesen
+				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
+					while read part Rest ; do
+						case "$part" in
+							/dev/*)
+								Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
+								Part_Desc=$(blkid -o value -s TYPE -p $part)
+									for i in ${=Part_Ids} ; {
+										if [[ $Part_Id == 0x${i} ]] ; then
+											PART+=($part)
+											PART_E+=($part \"$Part_Desc\")
+											PART_M+=($part \"$Part_Desc\" off)
+											continue 2
+										fi
+									}
+								;;
+							*)
+								;;
+						esac
+					done < ${gv_WorkDir}/partdb
+				fi
 				## }}}
 				;;
 			*)
-				# alle Partitionen, ausser RAID und LVM{{{
-				#
-				Anz=0
-				Anz_G=0
-				Anz_S=0
-				Disk_Nr=-1
-				for i in $DISK_DEV ; {
-					(( Disk_Nr++ ))
-					# erweiterte Partition, RAID, Linux LVM und swap werden herausgefiltert.
-					(LC_ALL=C ; fdisk -l $i | grep '^/dev' | grep -v ' 82 \| 8e \| fd ' | grep -v Ext | \
-					sed -e 's#\*##' | awk '{print $1,$6,$7,$8}' >${gv_WorkDir}/partdb$$)
-					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
-						while read p REST ; do
-							(( Anz++ ))
-							#
-							# Der Bootloader grub besitzt eine andere Syntax, die hier auch
-							# eingestellt wird (hd0), (hd0,1)
-							#
-							Part_Desc="${REST#*[0-9] }"
-							PART_M[Anz]="$p \"$Part_Desc\" off"
-							PART_E[Anz]="$p \"$Part_Desc\""
-							PART[Anz]="$p"
-							# Kompalitaet zu grub1
-							if [ "$gv_Grub1" = yes ] ; then
-								Part_Nr="${p##*[a-z]}"
-								GRUB_PART_DISK_E[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\""
-								GRUB_PART_DISK_M[Anz]="\"(hd${Disk_Nr},$[$Part_Nr-1])\" \"$Part_Desc\" off"
-								GRUB_PART_DISK[Anz]="(hd${Disk_Nr},$[$Part_Nr-1])"
-								(( Anz_G++ ))
-								GRUB_DISK[Anz_G]="\"(hd${Disk_Nr})\" \"\""
-							fi
-						done<${gv_WorkDir}/partdb$$
-					fi
-					#
-					fdisk -l $i | grep ' 82 ' | sed -e 's#\*##' | \
-					awk '{print $1,$6,$7}' >${gv_WorkDir}/partdb$$
-					if [ "`wc -l < ${gv_WorkDir}/partdb$$`" -gt 0 ] ; then
-						while read p REST ; do
-							(( Anz_S++ ))
-							SWAP_DEV[Anz_S]="$p"
-							SWAP_DEV_E[Anz_S]="$p \"$REST\""
-							SWAP_DEV_M[Anz_S]="$p \"$REST\" off"
-						done<${gv_WorkDir}/partdb$$
-					fi
-				}
+				# alle Partitionen, ausser RAID, LVM und crypto_LUKS{{{
+				# ${gv_WorkDir}/partdb auslesen
+				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
+					while read part Rest ; do
+						case "$part" in
+							/dev/*)
+								Part_Desc=$(blkid -o value -s TYPE -p $part)
+								case "$Part_Desc" in
+									swap)
+										SWAP_DEV+=($part)
+										SWAP_DEV_E+=($part \"$Part_Desc\")
+										SWAP_DEV_M=($part \"$Part_Desc\" off)
+										;;
+									LVM*|*_raid_*|crypto*)
+										;;
+									*)
+										Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
+										if [[ $Part_Id == 0x83 ]] ; then
+											PART+=($part)
+											PART_E+=($part \"$Part_Desc\")
+											PART_M+=($part \"$Part_Desc\" off)
+										fi
+										;;
+								esac
+								;;
+							*)
+								;;
+						esac
+					done < ${gv_WorkDir}/partdb
+				fi
 				#}}}
 				;;
 		esac
