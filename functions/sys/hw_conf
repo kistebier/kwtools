@@ -588,9 +588,18 @@ lv_free_size() {
 								Part_Desc=$(blkid -o value -s TYPE -p $part)
 									for i in ${=Part_Ids} ; {
 										if [[ $Part_Id == 0x${i} ]] ; then
-											PART+=($part)
-											PART_E+=($part \"$Part_Desc\")
-											PART_M+=($part \"$Part_Desc\" off)
+											case "$Part_Desc" in
+												swap)
+													SWAP_DEV+=($part)
+													SWAP_DEV_E+=($part \"$Part_Desc\")
+													SWAP_DEV_M=($part \"$Part_Desc\" off)
+													;;
+												*)
+													PART+=($part)
+													PART_E+=($part \"$Part_Desc\")
+													PART_M+=($part \"$Part_Desc\" off)
+													;;
+											esac
 											continue 2
 										fi
 									}
