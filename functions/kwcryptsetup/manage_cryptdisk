@@ -243,7 +243,7 @@ manage_cryptdisk() {
 	#      LVMs und RAID Laufwerken.
 	#      Der Rest fuer verschluesselte Container.
 	create_action() {
-		local Part_Size Opt
+		local Part_Size Opt Sectors
 		Opt="$1"
 		DD_MSG=$(gettext 'Status beim ueberschreiben von Laufwerk ${CRYPT_PATH}/${CRYPT_FILE}.')
 		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufaelliger Werte uebershrieben werden (ja/nein)?
@@ -251,7 +251,10 @@ manage_cryptdisk() {
 Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Groesse nicht stimmt.')
 		# Grösse des Laufwerks berechnen
 		if [ "$Opt" = -p ] ; then
-			Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
+			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
+			Sectors=$(blkid -o value -s PART_ENTRY_SIZE -p ${CRYPT_PATH}/${CRYPT_FILE})
+			# in Bytes umrechnen
+			(( Part_Size = Sectors * 512 ))
 		else
 			convert_drive_size "${SIZE##*[0-9]}" "${SIZE%%[a-zA-Z]*}"
 			if [ -n "$SIZE_KB" ] ; then
