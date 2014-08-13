@@ -754,17 +754,20 @@ fs_conf() {
 	#
 	# usage: resize_fs -l [+|-]SIZE DEVICE
 	# usage: resize_fs -p [+|-]SIZE END_SIZE DEVICE
-	# usage: resize_fs -r [+|-]SIZE OLD_SIZE DEVICE
+	# usage: resize_fs -r [+|-]SIZE DEVICE OTHER_DEVICE
 	# -l - LVM
 	# -p - Normale Partition
 	# -r - RAID
 	# + - vergroessern
 	# - - verkleinern
 	# SIZE - neue Groesse in Byte
-	# OLD_SIZE - alte Groesse in Byte
 	# END_SIZE - Groesse vom Ende einer Partition in Byte
-	# DEVICE - Laufwerk/Device
+	# DEVICE - Partition/LV/RAID Laufwerk
+	# OTHER_DEVICE - Partition/LV/RAID Laufwerk das in/aus dem RAID Array soll
 	#
+	###################################################################
+	# TODO: auf installierte Programme pruefen.
+	# Funktion prog_exec ....
 	resize_fs() {
 		# Funktion (no_reduce_fs_msg), Das Dateisystem kann man# {{{
 		# nicht verkleinern.
@@ -1322,21 +1325,24 @@ fs_conf() {
 						;;
 					*ufs)
 						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# Partition vergroessern
-							parted_resize
-							# Falls dieses Laufwerk verschluesselt war, starten 
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
-							(( Resize_Size = ${NEW_SIZE#+} / 512 ))
-							# Dateisystem vergroessern.
-							growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
-								progressbox $gv_Enlarge $MAP_DEV || prog_failure
-						else
-							no_reduce_fs_msg
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# Partition vergroessern
+								parted_resize
+								# Falls dieses Laufwerk verschluesselt war, starten 
+								# und Groesse anpassen.
+								resize_cryptdisk
+								# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
+								(( Resize_Size = ${NEW_SIZE#+} / 512 ))
+								# Dateisystem vergroessern.
+								growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							else
+								no_reduce_fs_msg
+							fi
 						fi
 						#}}}
 						;;
@@ -1388,6 +1394,8 @@ fs_conf() {
 		# Funktion raid_resize{{{
 		#
 		raid_resize() {
+			####################################
+			# TODO: Was ist mit BREAK=2?
 			mount_check -fs "$MAP_DEV"
 			if [ "$FS" ] ; then
 				# Funktion (raid_add), hinzufuegen eines Laufwerks# {{{
@@ -1395,16 +1403,17 @@ fs_conf() {
 					# RAID ARRAY vergroessern
 					# Laufwerk addieren
 					# -a - addieren
-					mdadm $RAIDDEV -a $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -a $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 					# Laufwerksanzahl heraus finden
-					RAID_ANZ=$(raid_anz $RAIDDEV)
+					RAID_ANZ=$(raid_anz $DEV)
 					# um 1 hoeher zaehlen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
 					# Array vergroessern
 					# -G - grow
 					# -n - Laufwerksanzahl
-					mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
+						(BREAK=2 ; prog_failure)
 					sleep 1
 					# Fortschrittsbalken
 					raid_gauge
@@ -1417,35 +1426,36 @@ fs_conf() {
 						# Laufwerk entfernen
 						# -f - als faulty markieren
 						# -r - entfernen
-						mdadm $RAIDDEV -f $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 						# sleep wird benoetigt, da das faulty setzen
 						# an Zeit braucht.
 						sleep 1
 						# entfernen
-						mdadm $RAIDDEV -r $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 						# Array verkleinern
 						# -G - grow
-						mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+						mdadm $DEV -G --array-size=${NEW_SIZE#-} >/dev/null || \
 							(BREAK=2 ; prog_failure)
 						sleep 1
 						# Array vergroessern
-						RAID_ANZ=$(raid_anz $RAIDDEV)
+						RAID_ANZ=$(raid_anz $DEV)
 						(( RAID_ANZ-- ))
-						mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
 						# Fortschrittsbalken
 						raid_gauge
 					else
 						# RAID ARRAY reduzieren
-						mdadm $RAIDDEV -f $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 						# sleep wird benoetigt, da das faulty setzen
 						# an Zeit braucht.
 						sleep 1
 						# entfernen
-						mdadm $RAIDDEV -r $HDDEV >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 						# Array vergroessern
-						RAID_ANZ=$(raid_anz $RAIDDEV)
+						RAID_ANZ=$(raid_anz $DEV)
 						(( RAID_ANZ-- ))
-						mdadm $RAIDDEV -G -n $RAID_ANZ --backup-file=/root/${${RAIDDEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+						mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
+							(BREAK=2 ; prog_failure)
 						# Fortschrittsbalken
 						raid_gauge
 					fi
@@ -1472,8 +1482,7 @@ fs_conf() {
 								#
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 									# Array vergroessern
-									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
-									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+									mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
 										(BREAK=2 ; prog_failure)
 									# Falls dieses Laufwerk verschluesselt war, starten 
 									# und Groesse anpassen.
@@ -1484,7 +1493,8 @@ fs_conf() {
 										(BREAK=2 ; prog_failure)
 									# Dateisystem ext2/3/4 vergroessern
 									resize2fs -p $MAP_DEV 2>&1 | \
-										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+										progressbox $gv_Enlarge $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
 								else
 									# Falls dieses Laufwerk verschluesselt war, starten.
 									resize_cryptdisk
@@ -1497,10 +1507,10 @@ fs_conf() {
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 									# Dateisystem checken
 									e2fsck -f -y $MAP_DEV 2>&1 | \
-										progressbox $gv_Reduce $MAP_DEV || prog_failure
+										progressbox $gv_Reduce $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
 									# Dateisystem ext2/3/4 reduzieren
-									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
-									resize2fs -p $MAP_DEV ${Resize_Size%.*}k 2>&1 | \
+									resize2fs -p $MAP_DEV ${NEW_SIZE#-} 2>&1 | \
 										progressbox $gv_Reduce $MAP_DEV || \
 										(BREAK=2 ; prog_failure)
 									# Falls dieses Laufwerk verschluesselt ist, stoppen.
@@ -1537,8 +1547,7 @@ fs_conf() {
 							# immer gleich gross.
 							if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 								# Array vergroessern
-								(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
-								mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+								mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
 									(BREAK=2 ; prog_failure)
 								# Falls dieses Laufwerk verschluesselt war, starten 
 								# und Groesse anpassen.
@@ -1547,14 +1556,16 @@ fs_conf() {
 								# mounten.
 								mount_check -c $MAP_DEV
 								if [[ $MOUNT == no ]] ; then
-									mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+									mount -t $FS $MAP_DEV $gv_WorkDir || \
+										(BREAK=2 ; prog_failure)
 									MOUNTPOINT="$gv_WorkDir"
 								fi
 								# Dateisystem jfs vergroessern
 								if [ ! -z "$MOUNTPOINT" ] ; then
 									# Ist das RAID-ARRAY schon gemountet kann man das FS
 									# problemlos vergroessern.
-									mount -o remount,resize $MAP_DEV || prog_failure
+									mount -o remount,resize $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
 								fi
 								# Wurde ein Laufwerk ins Arbeitsverz. gemountet, 
 								# wird es wieder umountet.
@@ -1584,15 +1595,14 @@ fs_conf() {
 								#
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 									# Array vergroessern
-									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
-									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+									mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
 										(BREAK=2 ; prog_failure)
 									# Falls dieses Laufwerk verschluesselt war, starten 
 									# und Groesse anpassen.
 									resize_cryptdisk
 									# Dateisystem ntfs vergroessern
 									echo y | \
-										ntfsresize -f -s ${Resize_Size}k $MAP_DEV 2>&1 | \
+										ntfsresize -f -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
 										progressbox $gv_Enlarge $MAP_DEV || \
 										(BREAK=2 ; prog_failure)
 									# NTFS Probleme checken und fixen
@@ -1608,10 +1618,9 @@ fs_conf() {
 								# eingestellt werden, bei Level 1 (Spiegel) ist sie
 								# immer gleich gross.
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-									# Dateisystem reiserfs reduzieren
-									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
+									# Dateisystem reduzieren
 									echo y | \
-										ntfsresize -f -s ${Resize_Size%.*}k $MAP_DEV 2>&1 | \
+										ntfsresize -f -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
 										progressbox $gv_Reduce $MAP_DEV || \
 										(BREAK=2 ; prog_failure)
                                 	# NTFS Probleme checken und fixen
@@ -1653,8 +1662,7 @@ fs_conf() {
 								#
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 									# Array vergroessern
-									(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
-									mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+									mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
 										(BREAK=2 ; prog_failure)
 									# Falls dieses Laufwerk verschluesselt war, starten 
 									# und Groesse anpassen.
@@ -1662,8 +1670,9 @@ fs_conf() {
 									# Dateisystem reiserfs vergroessern
 									# ohne Parameter wird das ganze Array vergroessert
 									echo y | \
-										resize_reiserfs -s ${Resize_Size}k $MAP_DEV 2>&1 | \
-										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+										resize_reiserfs -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
 								else
 									# Falls dieses Laufwerk verschluesselt war, starten 
 									# und Groesse anpassen.
@@ -1675,9 +1684,8 @@ fs_conf() {
 								# immer gleich gross.
 								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 									# Dateisystem reiserfs reduzieren
-									(( Resize_Size = OLD_SIZE-${NEW_SIZE#-} ))
 									echo y | \
-										resize_reiserfs -s ${Resize_Size}k $MAP_DEV 2>&1 | \
+										resize_reiserfs -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
 										progressbox $gv_Reduce $MAP_DEV || \
 										(BREAK=2 ; prog_failure)
 									# Falls dieses Laufwerk verschluesselt ist, stoppen.
@@ -1701,8 +1709,103 @@ fs_conf() {
 						#}}}
 						;;
 					*swap)
+						# Swap verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# RAID ARRAY vorbereiten/Laufwerk addieren
+								raid_add
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Array vergroessern
+									mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
+										(BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem swap anlegen
+									mkswap -f $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
+									# Swap wieder einbinden
+									mount_check -s $MAP_DEV
+								else
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							else
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem swap anlegen
+									mkswap -f $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
+									# Swap wieder einbinden
+									mount_check -s $MAP_DEV
+								else
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Raid-Array reduzieren
+									raid_minus
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+						fi
+						#}}}
 						;;
 					*ufs)
+						# UFS Dateisystem kann man nicht verkleinern nur vergroessern# {{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop
+								# RAID ARRAY vorbereiten/Laufwerk addieren
+								raid_add
+								# Ist das Raidlevel >1 muss die Dateisystemgroesse
+								# eingestellt werden, bei Level 1 (Spiegel) ist sie
+								# immer gleich gross.
+								#
+								if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+									# Array vergroessern
+									mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
+										(BREAK=2 ; prog_failure)
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
+									(( Resize_Size = ${NEW_SIZE#+} / 512 ))
+									# Dateisystem vergroessern.
+									growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || \
+										(BREAK=2 ; prog_failure)
+								else
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							else
+								no_reduce_fs_msg
+							fi
+						fi
+						## }}}
 						;;
 					xfs*)
 						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
@@ -1716,8 +1819,7 @@ fs_conf() {
 							# immer gleich gross.
 							if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
 								# Array vergroessern
-								(( Resize_Size = OLD_SIZE+${NEW_SIZE#+} ))
-								mdadm $RAIDDEV -G --array-size=${Resize_Size} >/dev/null || \
+								mdadm $RAIDDEV -G --array-size=${NEW_SIZE#+} >/dev/null || \
 									(BREAK=2 ; prog_failure)
 								# Falls dieses Laufwerk verschluesselt war, starten 
 								# und Groesse anpassen.
@@ -1726,7 +1828,8 @@ fs_conf() {
 								# Arbeitsverzeichnis mounten.
 								mount_check -c $MAP_DEV
 								if [[ $MOUNT == no ]] ; then
-									mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+									mount -t $FS $MAP_DEV $gv_WorkDir || \
+										(BREAK=2 ; prog_failure)
 									MOUNTPOINT="$gv_WorkDir"
 								fi
 								# Dateisystem xfs vergroessern
@@ -1735,7 +1838,7 @@ fs_conf() {
 									# problemlos vergroessern.
 									xfs_growfs "$MOUNTPOINT" 2>&1 | \
 										progressbox $gv_Enlarge $MAP_DEV || \
-										prog_failure
+										(BREAK=2 ; prog_failure)
 								fi
 								# Wurde ein Laufwerk ins Arbeitsverz. gemountet, 
 								# wird es wieder umountet.
@@ -1805,11 +1908,11 @@ fs_conf() {
 			-r)
 				# SW-RAID# {{{
 				if [ "$#" -eq 4 ] ; then
-					unset -- DEV NEW_SIZE OLD_SIZE OPT MAP_DEV
+					unset -- DEV NEW_SIZE OPT MAP_DEV
 					OPT="$1"
 					NEW_SIZE="$2"
-					OLD_SIZE="$3"
-					DEV="$4"
+					DEV="$3"
+					O_DEV="$4"
 					# DEV auf UUID/LABEL pruefen
 					check_crypt_map_dev
 					# RAID Dateisystem vergroessern/verkleinern

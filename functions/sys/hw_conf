@@ -658,6 +658,7 @@ lv_free_size() {
 	#
 	raid() {
 		unset -- MD_DEV MD_DEV_E MD_DEV_M
+		local Minor Dir Dev
 		# vorhandende RAID Arrays herausfinden
 		if [ -e /proc/mdstat ] ; then
 			if [ ! -f ${gv_WorkDir}/raid_array ] ; then
@@ -691,7 +692,7 @@ lv_free_size() {
 	}
 	#}}}
 	# Funktion (raid_anz), Anzahl der schon vergebenen RAID Partitionen.# {{{
-	# herausfinden.
+	# herausfinden. Ohne Sparedisk.
 	raid_anz() {
 		if [[ ${#argv} == 1 ]] ; then
 			if [[ -b $1 ]] ; then
@@ -709,6 +710,7 @@ lv_free_size() {
 	# usage: raid_enlarge_dev RAIDDEV
 	#
 	raid_enlarge_dev() {
+		unset -- RAID_ANZ
 		if [[ ${#argv} == 1 ]] ; then
 			RAIDDEV="$1"
 			# Erst das RAID Level herausfinden. vergroessern 
@@ -757,11 +759,19 @@ lv_free_size() {
 												;;
 											/dev*)
 												HDDEV="$gv_Auswahl"
-												One_Raid_Dev_Size=${${${(ws,: ,)${(M)${(f)"$(mdadm -D $RAIDDEV 2>&1)"}##*Used Dev Size :*}}[2]}%% *}
-												(( Old_Raid_Dev_Size = One_Raid_Dev_Size * RAID_ANZ ))
-												# Dateisystem des Arrays
-												# vergroessern
-												resize_fs -r +${One_Raid_Dev_Size} $Old_Raid_Dev_Size $RAIDDEV
+												# gesamte Groesse des Arrays in Byte umrechnen.
+												(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+												# Groesse eines Laufwerks vom Array
+												# berechnen.
+												(( Tmp = ARRAY_SIZE / RAID_ANZ ))
+												# Raidanzahl um 1 erhöhen, da ja ein RAID
+												# Laufwerk hinzu kommt.
+												(( RAID_ANZ++ ))
+												# neue gesamt Groesse des werdenden
+												# Arrays berechnen.
+												(( NEW_ARRAY_SIZE = Tmp * RAID_ANZ ))
+												# Dateisystem des Arrays vergroessern
+												resize_fs -r +${NEW_ARRAY_SIZE} $RAIDDEV $HDDEV
 												# alle RAID Arrays neu heraussuchen
 												raid
 												# Konfiguration updaten
@@ -981,13 +991,21 @@ lv_free_size() {
 											;;
 										/dev*)
 											HDDEV="$gv_Auswahl"
-											# Dateisystem des Arrays verkleinern
-											# FS resizen
-											#
-											One_Raid_Dev_Size=${${${(ws,: ,)${(M)${(f)"$(mdadm -D $RAIDDEV 2>&1)"}##*Used Dev Size :*}}[2]}%% *}
+											# gesamte Groesse des Arrays in Byte umrechnen.
+											(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+											# reale Raidanzahl die zur Verfuegung steht.
 											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
-											(( Old_Raid_Dev_Size = One_Raid_Dev_Size * RAID_ANZ ))
-											resize_fs -r -${One_Raid_Dev_Size} $Old_Raid_Dev_Size $RAIDDEV
+											# Groesse eines Laufwerks vom Array
+											# berechnen.
+											(( Tmp = ARRAY_SIZE / RAID_ANZ ))
+											# Raidanzahl um 1 reduzieren, da ja ein RAID
+											# Laufwerk entfernt wird.
+											(( RAID_ANZ-- ))
+											# neue gesamt Groesse des werdenden
+											# Arrays berechnen.
+											(( NEW_ARRAY_SIZE = Tmp * RAID_ANZ ))
+											# Dateisystem des Arrays vergroessern
+											resize_fs -r -${NEW_ARRAY_SIZE} $RAIDDEV $HDDEV
 											# alle RAID Arrays neu heraussuchen
 											raid
 											# Konfiguration updaten
