@@ -13,16 +13,15 @@ lv_volumes() {
 		lv_LV_Name=$(gettext 'LV_Name')
 		lv_Size=$(gettext 'Groesse')
 		#
-		# Funktion (drive_size_to_kb), Laufwerksangaben in KiloByte umrechnen# {{{
-		drive_size_to_kb() {
+		# Funktion (number_size_to_b), Laufwerksangaben in Byte umrechnen# {{{
+		number_size_to_b() {
+			local Tmp
+			unset -- LV_SIZE_B
 			convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
 			if [ -n "$SIZE_KB" ] ; then
-				New_Size_Tmp="$SIZE_KB"
-			fi
-			# Vorhandene Groesse in KByte umrechnen.
-			convert_drive_size "$SIZE_KB1_ME" "$SIZE_KB1"
-			if [ -n "$SIZE_KB" ] ; then
-				Old_Size_Tmp="$SIZE_KB"
+				# in Byte umrechnen
+				(( Tmp = SIZE_KB * 1024 ))
+				LV_SIZE_B="$Tmp:r"
 			fi
 		}
 		## }}}
@@ -187,7 +186,7 @@ lv_volumes() {
 				$lv_Enlarge)
 					# LV vergroessern{{{
 					lv
-					if [ "${LV[1]}" ] ; then
+					if [ -n "${LV[1]}" ] ; then
 						LV_ENLARGE_MENU=($LV_M)
 						LV_ENLARGE_TITLE=(${lv_Logical_Vol}::${lv_Enlarge})
 						LV_ENLARGE_MSG=$(gettext 'Waehlen Sie eine LV zum vergroessern aus.')
@@ -200,30 +199,38 @@ lv_volumes() {
 									;;
 								*)
 									LV_DEV="$gv_Auswahl"
-									LV_DEV1=${LV_DEV%/*}
+									VG_NAME="${${LV_DEV%/*}##*/}"
 									#
-									# Die Variable VG_SIZE wird von der Funktion vg_free_size
-									# belegt.
-									vg_free_size "${LV_DEV1##*/}"
-									convert_drive_size -i "$VG_SIZE"
-									SIZE_KB1="$SIZE_KB"
-									SIZE_KB1_ME="$SIZE_KB_ME"
-									#
-									LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ein, um die ihr LV vergroessert werden soll (3G = 3 GigaByte). Es sind noch "${SIZE_KB1}${SIZE_KB1_ME}" frei.')
-									number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
-									#
-									while [ -n "$NUMBER" ] ; do
-										# Laufwerksangaben in KiloByte umrechnen
-										drive_size_to_kb
-										if [[ "$New_Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
-											# Dateisystem checken und verkleinern.
-											resize_fs -l +${New_Size_Tmp} $Old_Size_Tmp "$LV_DEV"
-											break
-										else
-											over_size_msg
-											number_input -D "$RESIZE_TITLE" "$LV_ENLARGE_SIZE_MSG"
-										fi
-									done
+									# vorhandene LV Groesse heraus finden.
+									lv_free_size "$LV_DEV"
+									# Nach noch freien Platz auf der VG suchen.
+									vg_free_size "$VG_NAME"
+									# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
+									# werden von der Funktion vg_free_size belegt.
+									if [ "$VG_FREE_SIZE" != 0 ] ; then
+										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein um die das LV vergroessert werden soll (1G = 1 GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+										number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
+										#
+										while [ -n "$NUMBER" ] ; do
+											# Laufwerksangaben in Byte umrechnen
+											number_size_to_b
+											if [ "$LV_SIZE_B" -le "$VG_FREE_SIZE" ] ; then
+												# vorhandene LV Size  + neue LV Size.
+												# Die Variable LV_SIZE wird von der
+												# Funktion lv_free_size belegt.
+												(( LV_NEW_SIZE = LV_SIZE + LV_SIZE_B ))
+												# Dateisystem checken und vergroessern.
+												resize_fs -l +${LV_NEW_SIZE} "$LV_DEV"
+												break
+											else
+												over_size_msg
+												number_input -D "$RESIZE_TITLE" "$LV_ENLARGE_SIZE_MSG"
+											fi
+										done
+									else
+										MSG=$(gettext 'Es ist kein freier Platz mehr auf dem LV vorhanden.')
+										msgbox "$gv_Info" "$MSG"
+									fi
 									break
 									;;
 							esac
@@ -231,15 +238,12 @@ lv_volumes() {
 					else
 						no_lv_msg
 					fi
-					#
-					unset -- LV_DEV SIZE
 					#}}}
 					lv_menue $lv_Enlarge
 					;;
 				$lv_Reduce)
 					# LV verkleinern{{{
 					lv
-					#
 					if [ "${LV[1]}" ] ; then
 						LV_REDUCE_MENU=($LV_M)
 						LV_REDUCE_TITLE=(${lv_Logical_Vol}::${lv_Reduce})
@@ -254,19 +258,22 @@ lv_volumes() {
 								*)	LV_DEV="$gv_Auswahl"
 									# Variable LV_SIZE belegen.
 									lv_free_size $LV_DEV
-									convert_drive_size -i "$LV_SIZE"
-									SIZE_KB1="${SIZE_KB}.${SIZE_KOMMA}"
-									SIZE_KB1_ME="$SIZE_KB_ME"
+									# Die Variablen LV_SIZE, LV_SIZE_ME
+									# wird von der Funktion lv_free_size belegt.
 									#
-									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr LV verkleinert werden soll (300m = 300MByte). Diese LV besitzt insgesamt "${SIZE_KB1}${SIZE_KB_ME}".')
+									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr LV verkleinert werden soll (100m = 100MegaByte = 102400 KiloByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
 									number_input -D "$LV_REDUCE_TITLE" "$LV_REDUCE_SIZE_MSG"
 									#
 									while [ -n "$NUMBER" ] ; do
-										# Laufwerksangaben in KiloByte umrechnen
-										drive_size_to_kb
-										if [[ "$New_Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
+										# Laufwerksangaben in Byte umrechnen
+										number_size_to_b
+										if [ "$LV_SIZE_B" -le "$LV_SIZE" ] ; then
+											# vorhandene LV Size  - neue LV Size.
+											# Die Variable LV_SIZE wird von der
+											# Funktion lv_free_size belegt.
+											(( LV_NEW_SIZE = LV_SIZE - LV_SIZE_B ))
 											# Dateisystem checken und verkleinern.
-											resize_fs -l -${New_Size_Tmp} $Old_Size_Tmp "$LV_DEV"
+											resize_fs -l -${LV_NEW_SIZE} "$LV_DEV"
 											break
 										else
 											over_size_msg
@@ -280,8 +287,6 @@ lv_volumes() {
 					else
 						no_lv_msg
 					fi
-					#
-					unset -- LV_DEV SIZE
 					#}}}
 					lv_menue $lv_Reduce
 					;;
