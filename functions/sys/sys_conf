@@ -1666,10 +1666,7 @@ sys_conf() {
 					# KiloBytes umrechnen in die beste lesbare Form.# {{{
 					unset -- SIZE_KB SIZE_KB_ME
 					local Size
-					case "$2" in
-						*.*)	Size=$2	;;
-						*)	Size="${2}.0"	;;
-					esac
+					Size="$2"
 #					# nach YByte umrechnen# {{{
 #					if [[ "$Size" -ge 1180591620717411303424 ]] ; then
 #						Size_Kb_Tmp=$Size/1180591620717411303424.0
@@ -1725,7 +1722,14 @@ sys_conf() {
 					Opt="$1"
 					Size="${2//,/.}"
 					Tmp="$Size:r"
-					Tmp1="$Size:e"
+					# evtl. mit Nullen auffuellen
+					if [ ${#Size:e} -eq 1 ] ; then
+						Tmp1="${Size:e}00"
+					elif [ ${#Size:e} -eq 2 ] ; then
+						Tmp1="${Size:e}0"
+					else
+						Tmp1="$Size:e"
+					fi
 					case "$Opt" in
 						m|M|MB|Mb)	# in KiloByte umrechnen
 							# 2hoch20 1MB=1.048.576Byte# {{{
@@ -1914,13 +1918,13 @@ sys_conf() {
 					Opt="$1"
 					Size="${2//,/.}"
 					case "$Opt" in
-						k|K|K[i]B|K[i]b)	# in KibiByte umrechnen
+						k|K|KB|Kb)	# in KibiByte umrechnen
 							# 10hoch3 1KB=1.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						m|M|M[i]B|M[i]b)	# in KibiByte umrechnen
+						m|M|MB|Mb)	# in KibiByte umrechnen
 							# 10hoch6 1MB=1.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000 ))
 							SIZE_B="$Size_B_Tmp"
