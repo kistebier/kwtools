@@ -19,7 +19,7 @@ hw_conf() {
 			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
 			# ${gv_WorkDir}/cdrom neu erstellen falls die Datei nicht vorhanden ist.
 			if [ ! -f ${gv_WorkDir}/cdrom ] ; then
-				hwinfo --short --cdrom 2>/dev/null >${gv_WorkDir}/cdrom
+				hwinfo --short --cdrom | grep -v '^cdrom:' 2>/dev/null >${gv_WorkDir}/cdrom
 			fi
 			# ${gv_WorkDir}/cdrom auslesen
 			if [ "`wc -l < ${gv_WorkDir}/cdrom`" -gt 0 ] ; then
@@ -74,13 +74,11 @@ hw_conf() {
 	disk() {
 		kernel_release
 		local Cap
-		unset -- DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP
+		unset -- DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP DISK_DEV_CAP_BYTE
 		if [[ -x ${commands[hwinfo]} ]] && \
 			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
-			# ${gv_WorkDir}/disk neu erstellen falls die Datei nicht vorhanden ist.
-			if [ ! -f ${gv_WorkDir}/disk ] ; then
-				hwinfo --short --disk > ${gv_WorkDir}/disk
-			fi
+			# ${gv_WorkDir}/disk immer neu erstellen falls eine Festplatte hinzu kam.
+			hwinfo --short --disk | grep -v '^disk:' > ${gv_WorkDir}/disk
 			# ${gv_WorkDir}/disk auslesen
 			if [ "`wc -l < ${gv_WorkDir}/disk`" -gt 0 ] ; then
 				local Dev Rest Tmp
@@ -92,13 +90,15 @@ hw_conf() {
 						# in Bytes umrechnen
 						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
 						if [ "$Tmp" -gt 0 ] ; then
+							DISK_DEV_CAP_BYTE+=(${Tmp}B)
 							# Bytes in bessere Lesbarkeit umrechnen
 							convert_si_size -i $Tmp
 							DISK_DEV_CAP+=($SIZE_B)
 						else
+							DISK_DEV_CAP_BYTE+=(0B)
 							DISK_DEV_CAP+=(0)
 						fi
-						FP_INFO+=($Dev $Rest)
+						FP_INFO+=("$Dev $Rest")
 					fi
 				done < ${gv_WorkDir}/disk
 			fi
@@ -221,9 +221,14 @@ hw_conf() {
 # usage: lv_free_size LV
 lv_free_size() {
 	if [ "$#" -eq 1 ] ; then
-		unset -- LV_SIZE
-		# wird in Megabyte ausgegeben und in KiloByte umgerechnet
-		LV_SIZE=$[${${(s,:,)"${(f)$(lvdisplay -c $1)}"}[7]}/2]
+		unset -- LV_SIZE LV_SIZE_KB LV_SIZE_ME
+		# vorhandene LV Size in Bytes heraus bekommen.
+		LV_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; lvdisplay --units b $1)"}##*LV*Size*}}[3]}
+		# in KiloByte umrechnen, wegen convert_drive_size.
+		(( LV_SIZE_KB = LV_SIZE / 1024 ))
+		# in eine besser lesbare Form umrechnen
+		convert_drive_size -i "$LV_SIZE_KB"
+		LV_SIZE_ME="${SIZE_KB}${SIZE_KB_ME}"
 	else
 		no_para_msg $0
 	fi
@@ -1130,67 +1135,15 @@ lv_free_size() {
 # usage: vg_free_size VG
 #
 vg_free_size() {
+	unset -- VG_FREE_SIZE VG_FREE_SIZE_KB VG_FREE_SIZE_ME
 	if [ "$#" -eq 1 ] ; then
-		# PE Size herrausbekommen wird meist in Megabyte ausgegeben
-		print ${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay $1)"}##*PE*}}[3,4]} | while read a b ; do
-			# nach dem Komma/Punkt den Rest abschneiden und in
-			# KiloByte umrechnen
-			case "$b" in
-                KB)
-				    PE_SIZE=$a
-                    ;;
-                MB)
-				    PE_SIZE=$[${a%.*}*1024]
-                    ;;
-                GB)
-				    PE_SIZE=$[${a%.*}*1048576]
-                    ;;
-                TB)
-				    PE_SIZE=$[${a%.*}*1073741824]
-                    ;;
-                PB)
-				    PE_SIZE=$[${a%.*}*1099511627776]
-                    ;;
-                EB)
-				    PE_SIZE=$[${a%.*}*1125899906842624]
-                    ;;
-                ZB)
-				    PE_SIZE=$[${a%.*}*1152921504606846976]
-                    ;;
-#                YB)
-#				    PE_SIZE=$[${a%.*}*1180591620717411303424]
-#                    ;;
-                KiB)
-				    PE_SIZE=$a
-                    ;;
-                MiB)
-				    PE_SIZE=$[${a%.*}*1000]
-                    ;;
-                GiB)
-				    PE_SIZE=$[${a%.*}*1000000]
-                    ;;
-                TiB)
-				    PE_SIZE=$[${a%.*}*1073741824]
-                    ;;
-                PiB)
-				    PE_SIZE=$[${a%.*}*1099511627776]
-                    ;;
-                EiB)
-				    PE_SIZE=$[${a%.*}*1125899906842624]
-                    ;;
-                ZiB)
-				    PE_SIZE=$[${a%.*}*1152921504606846976]
-                    ;;
-#                YiB)
-#				    PE_SIZE=$[${a%.*}*1180591620717411303424]
-#                    ;;
-                *)
-				    PE_SIZE=$a
-                    ;;
-            esac
-		done
-		#
-		VG_SIZE=$[${${(s,:,)"${(f)$(vgdisplay -c $1)}"}[16]}*$PE_SIZE]
+		# Freie PE Size in Bytes heraus bekommen.
+		VG_FREE_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay --units b $1)"}##*Free*PE*}}[7]}
+		# in KiloByte umrechnen, wegen convert_drive_size.
+		(( VG_FREE_SIZE_KB = VG_FREE_SIZE / 1024 ))
+		# in eine besser lesbare Form umrechnen
+		convert_drive_size -i "$VG_FREE_SIZE_KB"
+		VG_FREE_SIZE_ME="${SIZE_KB}${SIZE_KB_ME}"
 	else
 		no_para_msg $0
 	fi
