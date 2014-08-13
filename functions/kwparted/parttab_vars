@@ -1,0 +1,74 @@
+# Funktion (parttab_vars), belegt einige Variablen für# {{{
+# unterschiedliche Partitions-Tabellen-Typen.
+#
+# Zur Zeit geht werden nur die Typen "gpt" und "msdos"
+# unterstuetzt.
+#
+# usage: parttab_vars DISK
+#
+parttab_vars() {
+	local Fp
+	if [[ -b $1 ]] ; then
+		Fp="$1"
+		disklabel "$Fp"
+	else
+		MSG=$(gettext '$1 ist kein blockorientiertes Geraet, also keine Festplatte.')
+		msgbox "$gv_Info" "$MSG"
+		return 1
+	fi
+
+	case "FPDISKLABEL" in
+#		bsd)
+#			# Groesse vom MBR und der Partitionseintraege
+#			# Sektor=512Byte * Anzahl=1 == 512Byte
+#			HEADER_COUNT=1
+#			START_PART1=512B
+#			;;
+		gpt)
+			# Groesse vom MBR und der Partitionseintraege
+			# Sektor=512Byte * Anzahl=34 == 17408Byte
+			HEADER_COUNT=34
+			#START_PART1=17408B
+			START_PART1=1048576B
+			;;
+#		mac)
+#			# Groesse vom MBR und der Partitionseintraege
+#			# Sektor=512Byte * Anzahl=64 == 32768Byte
+#			HEADER_COUNT=1
+#			START_PART1=32768B
+#			;;
+		dos)
+			# Groesse vom MBR und der Partitionseintraege
+			# Sektor=512Byte * Anzahl=1 == 512Byte
+			HEADER_COUNT=1
+			# Sektor=512Byte * Anzahl=63 == 32256Byte
+			#START_PART1=32256B
+			START_PART1=1048576B
+			;;
+#		pc98)
+#			# Groesse vom MBR und der Partitionseintraege
+#			# Sektor=512Byte * Anzahl=15500 == 7936000Byte
+#			HEADER_COUNT=15500
+#			START_PART1=7936000B
+#			;;
+#		loop|sun)
+#			# Groesse vom MBR und der Partitionseintraege
+#			# Sektor=512Byte * Anzahl=0 == 0Byte
+#			HEADER_COUNT=1
+#			START_PART1=0B
+#			;;
+		*)
+			# bsd|dvh|loop|mac|pc98|sun
+			# Diese Partitionstabellentypen werden von kwparted
+			# noch nicht unterstuetzt.
+			no_support_pttype_msg
+			return 1
+			;;
+	esac
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

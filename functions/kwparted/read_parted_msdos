@@ -1,0 +1,43 @@
+# Funktion (read_parted_msdos) liest den speziefischen Teil fuer die msdos{{{
+# Partitionstabelle ein.
+#
+# usage: read_parted_msdos
+#
+read_parted_msdos() {
+	if [[ -n ${Fs_Type[Anz1]} ]] && [[ -n ${Flag[Anz1]} ]] ; then
+		# lvm und raid sind raw access Laufwerke,
+		# also FS unbekannt
+		case "${Flag[Anz1]}" in
+			lvm|raid)
+				FLAG[Anz1]="${Flag[Anz1]}"
+				PART_FS[Anz1]="$gv_None"
+				;;
+			*)
+				FLAG[Anz1]="${Flag[Anz1]}"
+				PART_FS[Anz1]="${Fs_Type[Anz1]}"
+				;;
+		esac
+	elif [[ -n ${Fs_Type[Anz1]} ]] ; then
+		case "${Fs_Type[Anz1]}" in
+			boot|lba|lvm|palo|raid|root|swap)
+				FLAG[Anz1]="${Fs_Type[Anz1]}"
+				PART_FS[Anz1]="$gv_None"
+				;;
+			*)	PART_FS[Anz1]="${Fs_Type[Anz1]}"
+				if [ "${Flag[Anz1]}" ] ; then
+					FLAG[Anz1]="${Flag[Anz1]}"
+				else
+					FLAG[Anz1]=""
+				fi
+				;;
+		esac
+	else
+		FLAG[Anz1]=""
+		PART_FS[Anz1]="$gv_None"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

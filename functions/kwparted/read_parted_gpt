@@ -1,0 +1,51 @@
+# Funktion (read_parted_gpt) liest den speziefischen Teil fuer die gpt{{{
+# Partitionstabelle ein.
+#
+# usage: read_parted_gpt
+#
+read_parted_gpt() {
+	if [[ -n ${Fs_Type[Anz1]} ]] && [[ -n ${NAME[Anz1]} ]] && \
+		[[ -n ${Flag[Anz1]} ]] ; then
+		# lvm und raid sind raw access Laufwerke,
+		# also FS unbekannt
+		case "${Flag[Anz1]}" in
+			lvm|raid)
+				FLAG[Anz1]="${Flag[Anz1]}"
+				NAME[Anz1]="${NAME[Anz1]}"
+				PART_FS[Anz1]="$gv_None"
+				;;
+			*)
+				FLAG[Anz1]="${Flag[Anz1]}"
+				NAME[Anz1]="${NAME[Anz1]}"
+				PART_FS[Anz1]="${Fs_Type[Anz1]}"
+				;;
+		esac
+	elif [[ -n ${Fs_Type[Anz1]} ]] && [[ -n ${NAME[Anz1]} ]] ; then
+		case "${NAME[Anz1]}" in
+			lvm|raid)
+				FLAG[Anz1]="${NAME[Anz1]}"
+				NAME[Anz1]="${Fs_Type[Anz1]}"
+				PART_FS[Anz1]="$gv_None"
+				;;
+			*)
+				FLAG[Anz1]=""
+				NAME[Anz1]="${NAME[Anz1]}"
+				PART_FS[Anz1]="${Fs_Type[Anz1]}"
+				;;
+		esac
+	elif [[ -n ${Fs_Type[Anz1]} ]] ; then
+		FLAG[Anz1]=""
+		NAME[Anz1]="${Fs_Type[Anz1]}"
+		PART_FS[Anz1]="$gv_None"
+#	else
+#		# Falls das Filesystem unbekannt ist, wird
+#		# versucht es hier heraus zu bekommen.
+#		check_part_fs ${PART[Anz1]}
+#		PART_FS[Anz1]="${gv_Fs:-$gv_Unknown}"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}

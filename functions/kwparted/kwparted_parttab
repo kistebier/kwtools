@@ -14,17 +14,17 @@ kwparted_parttab() {
 	#}}}
 	# Funktion (no_parttab_msg)# {{{
 	#
-	# usage: no_parttab_msg
+	# usage: no_parttab_msg DISK
+	#
 	no_parttab_msg() {
 		if [ $# = 1 ] ; then
-			unset -- D
 			local D
 			D="$1"
 			MSG=$(gettext 'Das Laufwerk $D hat keine Partitionstabelle oder es ist kein Medium vorhanden.')
+			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
 		fi
-		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
 	parttab_menue
@@ -42,15 +42,15 @@ kwparted_parttab() {
 				#
 				label_create_menu() {
 					unset -- Disk_Part_Cr
-					for i in $DISK_DEV ; {
-						if [ -z "`parted -s $i print 2>/dev/null`" ] ; then
+					for i in ${=DISK_DEV} ; {
+						if ! parted -s $i print &>/dev/null ; then
 							Disk_Part_Cr+=($i \"\")
 						fi	
 					}
 					#
 					# Gibt es keine Partitionstabelle wird eine Information darueber angezeigt
 					# und abgebrochen.
-					if [ -z "$Disk_Part_Cr" ] ; then
+					if [ -z "${Disk_Part_Cr[1]}" ] ; then
 						MSG=$(gettext 'Alle Festplatten haben schon eine Partitionstabelle.')
 						msgbox "$gv_Info" "$MSG"
 						break
@@ -88,14 +88,14 @@ kwparted_parttab() {
 				#
 				backup_delete_menu() {
 					unset -- Disk_Part_Del
-					for i in $DISK_DEV ; {
-						if [ "`parted -s $i print 2>/dev/null`" ] ; then
+					for i in ${=DISK_DEV} ; {
+						if parted -s $i print 2>/dev/null ; then
 							Disk_Part_Del+=($i \"\")
 						fi	
 					}
 					# Gibt es keine Partitionstabelle wird eine Information darueber angezeigt
 					# und abgebrochen.
-					if [ -z "$Disk_Part_Del" ] ; then
+					if [ -z "${Disk_Part_Del[1]}" ] ; then
 						MSG=$(gettext 'Es ist keine Partitionstabelle vorhanden.')
 						msgbox "$gv_Info" "$MSG"
 						break
@@ -112,15 +112,11 @@ kwparted_parttab() {
 						unset -- Fp_Part_Del
 						local Fp_Part_Del
 						Fp_Part_Del="$1"
-						# verschieden grosse Partitionstabellen.
-						if [ "$FP_DiskLabel" = loop ] ; then
-							COUNT=3
-						elif [ "$FP_DiskLabel" = dvh ] ; then
-							COUNT=2
-						else
-							COUNT=1
-						fi
-						dd if=/dev/zero of=${Fp_Part_Del} bs=512 count=$COUNT &>/dev/null
+						# check, da verschieden grosse Platzbelegung fuer Partitionstabellen.
+						parttab_vars "$Fp_Part_Del"
+						# Variable HEADER_COUNT wird durch die Funktion
+						# parttab_vars erstellt.
+						dd if=/dev/zero of=${Fp_Part_Del} bs=512 count=${HEADER_COUNT:-1} &>/dev/null
 					else
 						no_para_msg $0
 					fi
@@ -134,15 +130,15 @@ kwparted_parttab() {
 							;;
 						$Disk_Choice_ALL)
 							# alle Festplatten Partitionstabellen loeschen.# {{{
-							for i in $DISK_DEV ; {
-								disk_delete_parttab $i
+							for i in ${=DISK_DEV} ; {
+								disk_delete_parttab "$i"
 							}
 							## }}}
 							backup_delete_menu
 							;;
 						/dev*)
 							# eine Partitionstabelle loeschen
-							disk_delete_parttab $gv_Auswahl
+							disk_delete_parttab "$gv_Auswahl"
 							backup_delete_menu
 							;;
 						$gv_Back)	break
@@ -173,13 +169,21 @@ kwparted_parttab() {
 						Backup_Fp="$1"
 						# wird gespeichert als hda.parttab-${Date}.txt
 						Backup_Pt_File="/boot/${Backup_Fp##*/}.parttab-${Date}.txt"
-						Backup_Mbr_File="/boot/${Backup_Fp##*/}-${Date}.mbr"
+						Backup_Mbr_File="/boot/${Backup_Fp##*/}-${Date}.pmbr"
 						# Gibt es eine Partitionstabelle wird sie gespeichert.
 						# Und zwar in Form von Byte und Compact.
-						if [ "`parted -s $Backup_Fp print`" ] ; then
-							PROG_OPT="-s $Backup_Fp unit co print free unit b print free >/dev/null > $Backup_Pt_File"
-							eval parted ${=PROG_OPT}
-							dd if=$Backup_Fp bs=512 count=1 of="$Backup_Mbr_File" &>/dev/null
+						if parted -s $Backup_Fp print &>/dev/null ; then
+							if touch /boot/testfile ; then
+								rm -f /boot/testfile &>/dev/null
+								parted -s $Backup_Fp unit co print free unit b print free \
+									2>/dev/null > $Backup_Pt_File
+								parttab_vars $Backup_Fp
+								dd if=$Backup_Fp bs=512 count="${HEADER_COUNT:-1}" \
+									of="$Backup_Mbr_File" &>/dev/null
+							else
+								MSG=$(gettext 'Das Verzeichnis /boot ist nicht beschreibbar. Ist /boot readonly eingebunden?')
+								msgbox "$gv_Info" "$MSG"
+							fi
 						else
 							no_parttab_msg $Backup_Fp
 						fi
@@ -196,8 +200,8 @@ kwparted_parttab() {
 							;;
 						$Disk_Choice_ALL)
 							# alle Festplatten Partitionstabellen sichern.# {{{
-							for i in $DISK_DEV ; {
-								backup_part_mbr $i
+							for i in ${=DISK_DEV} ; {
+								backup_part_mbr "$i"
 							}
 							## }}}
 							backup_create_menu
@@ -237,7 +241,7 @@ kwparted_parttab() {
 							;;
 						$lv_Mbr)
 							# Sicherungsdatei auswaehlen# {{{
-							SUFFIX=".mbr"
+							SUFFIX=".pmbr"
 							FORMAT=""
 							file_choice /boot only "$MBR"
 							if [[ -n $WERT ]] ; then

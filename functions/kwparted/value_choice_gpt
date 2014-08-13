@@ -1,0 +1,58 @@
+# Funktion (value_choice_gpt), gpt Auswahl zerpfluecken{{{
+#
+value_choice_gpt() {
+	unset -- Fs_Type Fs_Type_Old SIZE SIZE_OLD Flag Ist_Part_Type L_PART_END \
+		L_PART_START L_PART_SIZE L_PART_OLD_SIZE CHOICE_NR Max_Part_Start \
+		Max_Part_End max_size MAX_SIZE Part_Auswahl Ist_Part_Name
+	CHOICE_NR="$gv_Auswahl"
+	Part_Auswahl=${${${(ws: :)${PART_ANZ_NR[gv_Auswahl]}}[2]}//\"/}
+	if [ "${NAME[gv_Auswahl]}" = --${FREE}-- ] ; then
+		Fs_Type="$gv_None"
+		Fs_Type_Old="$Fs_Type"
+		Max_Part_Start=${START_NR[gv_Auswahl]}
+		Max_Part_End=${END_NR[gv_Auswahl]}
+	elif [ "${NAME[gv_Auswahl+1]}" = --${FREE}-- ] ; then
+		Fs_Type=${PART_FS[gv_Auswahl]}
+		Fs_Type_Old="$Fs_Type"
+		Max_Part_Start=${START_NR[gv_Auswahl]}
+		Max_Part_End=${END_NR[gv_Auswahl+1]}
+	else
+		Fs_Type=${PART_FS[gv_Auswahl]}
+		Fs_Type_Old="$Fs_Type"
+		Max_Part_Start=${START_NR[gv_Auswahl]}
+		Max_Part_End=${END_NR[gv_Auswahl]}
+	fi
+	#
+	Ist_Part_Name=${NAME[gv_Auswahl]}
+	# vorhandene Groesse speichern
+	SIZE=${PART_ANZ_SIZE_NR[gv_Auswahl]}
+	# Die Variable SIZE_OLD dient fuer die MSG
+	# beim anlegen/verkleinern der Partition.
+	SIZE_OLD="$SIZE"
+	L_PART_END=$Max_Part_End
+	L_PART_START=$Max_Part_Start
+	L_PART_SIZE=${PART_SIZE[gv_Auswahl]}
+	L_PART_OLD_SIZE=$L_PART_SIZE
+	# Flags
+	if [ ! -z `print ${${FLAG[gv_Auswahl]}%%,*}` ] ; then
+		Flag="${${FLAG[gv_Auswahl]}%%,*} on"
+	fi
+	sleep 5
+	# MAX_SIZE Variable belegen und in Max_Size
+	# die moegliche Groesse speichern.
+	# Die Variable MAX_SIZE dient fuer die MSG
+	# beim vergroessern der Partition.
+	(( Max_Size = Max_Part_End-Max_Part_Start ))
+	# Max_Size in eine besser lesbare Form umrechnen.
+	# muss erst in KiloByte umgerechnet werden (convert_drive_size).
+	(( Tmp = Max_Size / 1024 ))
+	convert_drive_size -i "$Tmp"
+	if [[ -n $SIZE_KB ]] ; then
+		MAX_SIZE="${SIZE_KB}${SIZE_KB_ME}"
+	fi
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
