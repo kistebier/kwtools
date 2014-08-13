@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 12.08.2014
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -47,11 +47,23 @@ prog_check parted
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
+# Version pruefen
+Parted_Version=${${(ws: :)${(M)${(f)"$(parted -v)"}##*GNU*parted*}}[4]}
+if [[ $Parted_Version -le 3.0 ]] ; then
+	MSG=$(gettext 'Diese Version ($Parted_Version) ist zu alt. Sie benoetigen mindestens eine Version >3.0.')
+	msgbox "$gv_Info" "$MSG"
+	exit 0
+fi
 
 # auf Root pruefen
 root_check
 
-# Variablen festlegen
+# Nachdem das Script initialisiert wurde, kann man die anderen
+# benötigten Funktionen laden. Die Funktion sys_conf wird bereits
+# von der Funktion script_init ausgefuehrt.
+autoload -U parttab_vars
+
+# Variablen festlegen# {{{
 FREE=$(gettext 'frei')
 Disk_Choice_ALL=$(gettext 'alle')
 MODELL=$(gettext 'Modell')
@@ -64,43 +76,62 @@ lv_Status=$(gettext 'Status')
 lv_Size=$(gettext 'Groesse')
 lv_Filesystem=$(gettext 'Dateisystem')
 lv_Flags=$(gettext 'Flags')
+lv_Name=$(gettext 'Name')
 lv_Part_Typ=$(gettext 'Partitions_Typ')
 lv_Format=$(gettext 'formatieren')
-
+## }}}
+# Funktion (search_disk), sucht nach Festplatten# {{{
 #
-# Funktion (fp_cap), Festplattenkapazitaet und Disklabel{{{
-#
-fp_cap() {
-	unset -- FP_Cap FP_CAP_B FP_DiskLabel FP_Cap1
-	FP_DiskLabel=${${(s: :)${(M)${(f)"$(< $gv_WorkDir/partdb$$)"}[(fr)*Partition[[:space:]]Table:*]}}[3]}
-	case "$FP_DiskLabel" in
-		msdos)
-			# msdos wird voll unterstuetzt
-			FP_Cap1=${${(s: :)${(M)${(f)"$(< $gv_WorkDir/partdb$$)"}[(fr)*Disk*]}}[3]}
-			FP_Cap="${FP_Cap1%%[a-zA-Z]*}"
-			convert_si_size -i "$FP_Cap"
-			if [ -n "$SIZE_B" ] ; then
-				FP_CAP_B="${SIZE_B}${SIZE_B_ME}"
-			fi
-			;;
-		bsd|dvh|gpt|loop|mac|pc98|sun)
-			# alle anderen Disk Labels werden von kwparted
-			# noch nicht unterstuetzt.
-			MSG=$(gettext 'Dieser Partitionstabellen Typ ($FP_DiskLabel) wird noch nicht unterstuetzt.')
-			msgbox "$gv_Info" "$MSG"
-			;;
-		*)
-			;;
-	esac
+search_disk() {
+	disk
+	if [ -z "${DISK_DEV[1]}" ] ; then
+		no_disk_msg
+		exit 0
+	fi
 }
-#}}}
+## }}}
+# Funktion (disk_cap), zur Festplatte die richtige gesamt# {{{
+# Groesse ermitteln.
+#
+# usage disk_cap DISK
+#
+disk_cap() {
+	unset -- DISK_CAP DISK_CAP_B DISK_CAP_OB
+	local Index
+	if [[ -b "$1" ]] ; then
+		Index=$DISK_DEV[(i)$1]
+		DISK_CAP="${DISK_DEV_CAP[Index]}"
+		DISK_CAP_B="${DISK_DEV_CAP_BYTE[Index]}"
+		DISK_CAP_OB="${${DISK_DEV_CAP_BYTE[Index]}%%[a-zA-Z]*}"
+	fi
+}
+## }}}
+# Funktion (disklabel), prueft welcher Partitionstabellentyp# {{{
+#
+# usage disklabel DISK
+#
+disklabel() {
+	unset -- FPDISKLABEL
+	if [[ -b "$1" ]] ; then
+		FPDISKLABEL="$(blkid -o value -s PTTYPE -p $1)"
+	fi
+}
+## }}}
+# Funktion (no_support_pttype_msg), Nachricht das alle anderen Disk Labels# {{{
+# von kwparted noch nicht unterstuetzt werden.
+#
+no_support_pttype_msg() {
+	MSG=$(gettext 'Dieser Partitionstabellentyp ($FPDISKLABEL) wird noch nicht unterstuetzt.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
 # Funktion (read_parted), fuer die Partitionstabelle von parted# {{{
 #
-# usage: read_parted FESTPLATTE
+# usage: read_parted FESTPLATTE [ OPT ]
 read_parted() {
 	unset -- PART PART_E PART_NR PART_FS START_NR END_NR PART_TYPE \
 		PART_ANZ_NR Anz PART_SIZE Fs_Type Flag FLAG P_Opt Disk PART_ANZ_START_NR \
-		PART_ANZ_END_NR PART_ANZ_SIZE_NR
+		PART_ANZ_END_NR PART_ANZ_SIZE_NR NAME
 	local P_Opt
 	if [ $# -eq 2 ] ; then
 		Disk=$1
@@ -108,31 +139,46 @@ read_parted() {
 	else
 		Disk=$1
 	fi
-	# Festplatte und Partitionstabelle# {{{
-	$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit b print $P_Opt 2>/dev/null >${gv_WorkDir}/partdb$$)
-	fp_cap
+	# Festplattenkapazitaet und Partitionstabellentyp# {{{
+	disk_cap "$Disk"
+	disklabel "$Disk"
 	#
-	# Gibt es keine Partitionstabelle, wird man gefragt ob man eine
+	# Gibt es keinen Partitionstabellentyp, wird man gefragt ob man einen
 	# anlegen will (s. man 1 parted).
 	#
-	if [[ -z "$FP_Cap" ]] ; then
-		yesno "$gv_Attention" "$NO_PARTTAB" ""
+	if [[ -z $FPDISKLABEL ]] ; then
+		yesno "$gv_Attention" "$NO_PARTTAB" "yes"
 		if [ "$gv_Auswahl" = yes ] ; then
 			disk_create_parttab $Disk
-			#
-			if [ -n "$LABEL" ] ; then
-				$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit b print $P_Opt 2>/dev/null >${gv_WorkDir}/partdb$$)
-				# Festplattenkapazitaet herrausfinden
-				fp_cap
-			else
-				no_input_msg
-			fi
+		else
+			# Abbruch
+			return 1
 		fi
+	fi
+	# Auf Partitionstabellentyp pruefen und eventuell abbrechen.
+	if [[ -n $FPDISKLABEL ]] ; then
+		case "$FPDISKLABEL" in
+			gpt|dos)
+				# Partitionstabelle in einer temporaeren Datei speichern
+				$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit b print $P_Opt 2>/dev/null >${gv_WorkDir}/partdb$$)
+				;;
+			*)
+				# bsd|dvh|loop|mac|pc98|sun
+				# Diese Partitionstabellentypen werden von kwparted
+				# noch nicht unterstuetzt.
+				no_support_pttype_msg
+				return 1
+				;;
+		esac
+	else
+		MSG=$(gettext 'Diese Festplatte besitzt keine Partitionstabelle. Es wird abgebrochen.')
+		msgbox "$gv_Info" "$MSG"
+		return 1
 	fi
 	## }}}
 	# Ist die Partitionstabelle nicht leer wird als erstes
 	# das Ende der letzten Partition eingelesen.
-	if [ ! -z ${(M)$(< ${gv_WorkDir}/partdb$$)[(fr)(extended|primary|logical)]} ] ; then
+	if [ ! -z ${${(M)${(f)"$(< ${gv_WorkDir}/partdb$$)"}##(#s) [0-9]}[1]} ] ; then
 		# Partitionstabelle einlesen# {{{
 		setopt shwordsplit
 		# IFS sichern
@@ -150,180 +196,162 @@ read_parted() {
 			(( Anz1++))
 			case "$1" in
 				[1-9]|[1-9][0-9])
+					# vorhandene Partitionen bearbeiten# {{{
 					PART[Anz1]="${Disk}${1}"
 					PART_E[Anz1]="${Disk}${1}"
 					PART_NR[Anz1]="$1"
 					START_NR[Anz1]="${2%%[a-zA-Z]*}"
-					START_NR_ME[Anz1]="${2##*[0-9]}"
-					convert_si_size -i "${START_NR[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_START_NR[Anz1]="$SIZE_B"
-					fi
 					END_NR[Anz1]="${3%%[a-zA-Z]*}"
-					END_NR_ME[Anz1]="${3##*[0-9]}"
-					convert_si_size -i "${END_NR[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_END_NR[Anz1]="$SIZE_B"
-					fi
 					PART_SIZE[Anz1]="${4%%[a-zA-Z]*}"
-					PART_SIZE_ME[Anz1]="${4##*[0-9]}"
-					convert_si_size -i "${PART_SIZE[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_SIZE_NR[Anz1]="${SIZE_B}${SIZE_B_ME}"
+					(( Tmp = ${PART_SIZE[Anz1]} / 1024 ))
+					convert_drive_size -i "$Tmp"
+					if [ -n "$SIZE_KB" ] ; then
+						PART_ANZ_SIZE_NR[Anz1]="${SIZE_KB}${SIZE_KB_ME}"
 					fi
-					# restliche Werte belegen
-					PART_TYPE[Anz1]="$5"
-					Fs_Type[Anz1]="$6"
-					Flag[Anz1]="$7"
-					#
-					if [ "${Fs_Type[Anz1]}" -a "${Flag[Anz1]}" ] ; then
-						# lvm und raid sind raw access Laufwerke,
-						# also FS unbekannt
-						case "${Flag[Anz1]}" in
-							lvm|raid)
-								FLAG[Anz1]="${Flag[Anz1]}"
-								PART_FS[Anz1]="$gv_Unknown"
-								;;
-							*)
-								FLAG[Anz1]="${Flag[Anz1]}"
-								PART_FS[Anz1]="${Fs_Type[Anz1]}"
-								;;
-						esac
-					elif [ "${Fs_Type[Anz1]}" ] ; then
-						case "${Fs_Type[Anz1]}" in
-								boot|lba|lvm|palo|raid|root|swap) FLAG[Anz1]="${Fs_Type[Anz1]}"
-									# Falls das Filesystem unbekannt ist, wird
-									# versucht es hier heraus zu bekommen.
-									check_part_fs ${PART[Anz1]}
-									PART_FS[Anz1]="$gv_Fs"
-									;;
-								*)	PART_FS[Anz1]="${Fs_Type[Anz1]}"
-									if [ "${Flag[Anz1]}" ] ; then
-										FLAG[Anz1]="${Flag[Anz1]}"
-									else
-										FLAG[Anz1]=""
-									fi
-									;;
-						esac
-					else
-						PART_FS[Anz1]="$gv_Unknown"
-					fi
+					# restliche Werte belegen, einlesen.
+					case "$FPDISKLABEL" in
+						gpt)
+							# den speziefischen gpt Teil einlesen
+							autoload -U read_parted_gpt
+							# pruefen ob kein Dateisystem vielleicht
+							# sowas wie RAID oder crypto ist.
+							if [ -z "$5" ] ; then
+								check_part_fs "${PART[Anz1]}"
+								Fs_Type[Anz1]="$gv_NoFs"
+							else
+								Fs_Type[Anz1]="$5"
+							fi
+							NAME[Anz1]="$6"
+							Flag[Anz1]="$7 $8"
+							#
+							read_parted_gpt
+							;;
+						dos)
+							# den speziefischen msdos Teil einlesen
+							autoload -U read_parted_msdos
+							PART_TYPE[Anz1]="$5"
+							# pruefen ob kein Dateisystem vielleicht
+							# sowas wie RAID oder crypto ist.
+							if [ -z "$6" ] ; then
+								check_part_fs "${PART[Anz1]}"
+								Fs_Type[Anz1]="$gv_NoFs"
+							else
+								Fs_Type[Anz1]="$6"
+							fi
+							Flag[Anz1]="$7 $8"
+							#
+							read_parted_msdos
+							;;
+					esac
+					## }}}
 					;;
 				*)
+					# freier Platz# {{{
 					PART[Anz1]="${Disk}-1"
 					PART_E[Anz1]="${Disk}-1"
 					PART_NR[Anz1]="$Anz1"
 					START_NR[Anz1]="${1%%[a-zA-Z]*}"
-					START_NR_ME[Anz1]="${1##*[0-9]}"
-					convert_si_size -i "${START_NR[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_START_NR[Anz1]="$SIZE_B"
-					fi
 					END_NR[Anz1]="${2%%[a-zA-Z]*}"
-					END_NR_ME[Anz1]="${2##*[0-9]}"
-					convert_si_size -i "${END_NR[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_END_NR[Anz1]="$SIZE_B"
-					fi
 					PART_SIZE[Anz1]="${3%%[a-zA-Z]*}"
-					PART_SIZE_ME[Anz1]="${3##*[0-9]}"
-					convert_si_size -i "${PART_SIZE[Anz1]}"
-					if [ -n "$SIZE_B" ] ; then
-						PART_ANZ_SIZE_NR[Anz1]="${SIZE_B}${SIZE_B_ME}"
+					(( Tmp = ${PART_SIZE[Anz1]} / 1024 ))
+					convert_drive_size -i "$Tmp"
+					if [ -n "$SIZE_KB" ] ; then
+						PART_ANZ_SIZE_NR[Anz1]="${SIZE_KB}${SIZE_KB_ME}"
 					fi
 					# restliche Werte belegen
-					PART_TYPE[Anz1]="$4 $5"
-					PART_FS[Anz1]="--${FREE}--"
-					Flag[Anz1]=""
+					case "$FPDISKLABEL" in
+						gpt)
+							PART_FS[Anz1]="$4 $5"
+							NAME[Anz1]="--${FREE}--"
+							Flag[Anz1]=""
+							;;
+						dos)
+							PART_TYPE[Anz1]="$4 $5"
+							PART_FS[Anz1]="--${FREE}--"
+							Flag[Anz1]=""
+							;;
+					esac
+					## }}}
 					;;
 			esac
 			(( Anz++ ))
 		done
 		unsetopt shwordsplit
 		## }}}
-		# Partitions Variablen belegen
+		# Partitions Variablen belegen# {{{
 		Part_Anz=${#PART_NR[@]}
 		Anz=1
 		while [ "$Anz" -le "$Part_Anz" ] ; do
-			# Partitionstyp setzen
-			# Freie Partitionen sind vom Partitions_Typ her unbekannt.
-			case "${PART_TYPE[Anz]}" in
-				Free*)
-					PART_TYPE[Anz]="$gv_Unknown"
-					;;
-			esac
-			PART_ANZ_NR[Anz]="$Anz \"${PART[Anz]} ${PART_FS[Anz]} ${PART_TYPE[Anz]} ${PART_ANZ_SIZE_NR[Anz]} ${FLAG[Anz]}\""
-			(( Anz++ ))
-		done
-	else
-		if [ -n "$FP_Cap" ] ; then
-			Anz=1
-			PART_TYPE[Anz]=primary
-			PART_FS[Anz]="--${FREE}--"
-			PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${PART_TYPE[Anz]} $FP_CAP_B\""
-			PART_ANZ_SIZE_NR[Anz]="$FP_CAP_B"
-			# Disklabel heraus finden und die Variable START_NR belegen.
-			# Disklabel:
-			# bsd - faengt ab 512Byte 1 Partition an
-			# dvh - faengt ab 2097152Byte 11 Partition an?
-			# gpt - faengt ab 17408Byte 1 Partition an
-			# loop - faengt ab 0Byte an und nimmt die ganze Platte egal was man eingibt.
-			# msdos - faengt ab 32256 1 Partition an
-			# mac - faengt ab 32768Byte 2 Partition an.
-			# pc98 - faengt ab 8225280Byte 1 Partition an. Berechnung der Groesse
-			# ist immer ein Vielfachen von 7MB und immer primary übergeben?
-			# sun - faengt ab 0Byte 1 Partition an. kein Partitionstyp vergeben,
-			# aber Erstellung geht nicht vernuenftig
-			##################################################
-			# Diskalabel die kwparted unterstuetzt heraus filtern
-			##################################################
-			case "$FP_DiskLabel" in
-				bsd)
-					# BSD
-					START_NR[Anz]="512"
-					;;
-				dvh)
-					# dvh
-					START_NR[Anz]="2097152"
-					;;
+			case "$FPDISKLABEL" in
 				gpt)
-					# GPT
-					START_NR[Anz]="17408"
+					# Partitionstyp setzen
+					# Freie Partitionen sind vom Dateisystem her unbekannt.
+					case "${PART_FS[Anz]}" in
+						Free*)
+							PART_FS[Anz]="$gv_None"
+							;;
+					esac
+					PART_ANZ_NR[Anz]="$Anz \"${PART[Anz]} ${PART_FS[Anz]} ${NAME[Anz]} ${PART_ANZ_SIZE_NR[Anz]} ${FLAG[Anz]}\""
+					(( Anz++ ))
 					;;
-				msdos)
-					# msdos
-					START_NR[Anz]="32256"
-					;;
-				pc98)
-					# pc98
-					START_NR[Anz]="8225280"
-					;;
-				*)
-					# alle anderen noch keine Ahnung
-					START_NR[Anz]="0"
+				dos)
+					# Partitionstyp setzen
+					# Freie Partitionen sind vom Partitions_Typ her unbekannt.
+					case "${PART_TYPE[Anz]}" in
+						Free*)
+							PART_TYPE[Anz]="$gv_None"
+							;;
+					esac
+					PART_ANZ_NR[Anz]="$Anz \"${PART[Anz]} ${PART_FS[Anz]} ${PART_TYPE[Anz]} ${PART_ANZ_SIZE_NR[Anz]} ${FLAG[Anz]}\""
+					(( Anz++ ))
 					;;
 			esac
-			END_NR[Anz]="$FP_Cap"
-		fi
+		done
+		## }}}
+	else
+		# leere Partitionstabelle# {{{
+		parttab_vars "$Disk"
+		case $FPDISKLABEL in
+			gpt)
+				Anz=1
+				NAME[Anz]="--${FREE}--"
+				PART_FS[Anz]="$gv_None"
+				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${NAME[Anz]} $DISK_CAP\""
+				PART_ANZ_SIZE_NR[Anz]="$DISK_CAP"
+				START_NR[Anz]="$START_PART1"
+				END_NR[Anz]="$DISK_CAP_OB"
+				;;
+			dos)
+				Anz=1
+				PART_TYPE[Anz]=primary
+				PART_FS[Anz]="--${FREE}--"
+				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${PART_TYPE[Anz]} $DISK_CAP\""
+				PART_ANZ_SIZE_NR[Anz]="$DISK_CAP"
+				START_NR[Anz]="$START_PART1"
+				END_NR[Anz]="$FP_CAP_OB"
+				;;
+		esac
+		## }}}
 	fi
+	return 0
 }
 ## }}}
 # Funktion (set_flag), zum Flags zu aendern{{{
 #
-# usage: set_flag
+# usage: set_flag PARTITIONSNR
+#
 set_flag() {
-	if [ x"${Flag}" != x ] ; then
-		if [ $# = 1 ] ; then
-			unset -- Opt
-			local Opt
-			Opt="$1"
-			if [ x"${Flag_Del}" != x ] ; then
+	if [[ -n $Flag ]] ; then
+		if [[ ${#argv} == 1 ]] ; then
+			local PartNr
+			PartNr="$1"
+			if [[ -n $Flag_Del ]] ; then
 				# erst alte Flags loeschen.
-				parted -s $FP set $Opt $Flag_Del
+				parted -s $FP set $PartNr $Flag_Del 2>/dev/null
 				# Und dann alle Werte fuer die Flags setzen.
-				parted -s $FP set $Opt $Flag
+				parted -s $FP set $PartNr $Flag 2>/dev/null
 			else
-				parted -s $FP set $Opt $Flag
+				parted -s $FP set $PartNr $Flag 2>/dev/null
 			fi
 			unset -- Flag Flag_Del
 		else
@@ -334,26 +362,30 @@ set_flag() {
 #}}}
 # Funktion (disk_create_parttab), kreiert Partitionstabellen# {{{
 #
+# usage: disk_create_parttab DISK
+#
 disk_create_parttab() {
-	if [ $# = 1 ] ; then
+	if [[ ${#argv} == 1 ]] ; then
 		local Label_Fp_Cr
 		Label_Fp_Cr="$1"
 		#
-		DISK_LABEL=(bsd \"\" dvh \"\" gpt \"\" loop \"\" mac \"\"
-		msdos \"\" pc98 \"\" sun \"\" $gv_Back \"\")
-		menubox "$LABEL" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
+#		DISK_LABEL=(bsd \"\" dvh \"\" gpt \"\" loop \"\" mac \"\"
+#		msdos \"\" pc98 \"\" sun \"\" $gv_Back \"\")
+		DISK_LABEL=(gpt \"\" msdos \"\" $gv_Back \"\")
+		menubox "$Label" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*) script_help parttab_typ_help
-					menubox "$LABEL" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
+					menubox "$Label" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
 					;;
 				$gv_Back)
-					unset -- LABEL
 					break
 					;;
 				*)
-					LABEL=$gv_Auswahl
-					parted -s $Label_Fp_Cr mklabel $LABEL
+					# check ob der Partitionstabellentyp schon existiert.
+					Label=$gv_Auswahl
+					parted -s $Label_Fp_Cr mklabel $Label
+					disklabel "$Label_Fp_Cr"
 					break
 					;;
 			esac
@@ -363,6 +395,998 @@ disk_create_parttab() {
 	fi
 }
 ## }}}
+# Funktion (parted_edit), Festplattenpartitionen bearbeiten# {{{
+#
+# usage: parted_edit
+#
+parted_edit() {
+	FP=$gv_Auswahl
+	DISK_INFO=$(gettext 'Laufwerks-Info')
+	KWPARTED_DISK_INFO=$(gettext 'Festpatteninformation')
+	PARTED_TITLE=$(gettext 'Partitionierung')
+	read_parted $FP free
+	#
+	# Funktion parted_menue{{{
+	# Die Variable gv_Back wird in der Funktion script_init belegt.
+	parted_menue() {
+		PARTED_MENU=($DISK_INFO \"$FP\" $PART_ANZ_NR $gv_Back \"\")
+		menubox "$1" "$PARTED_TITLE" "$gv_Menupoint" "$PARTED_MENU"
+	}
+	#}}}
+	set -x
+	parted_menue
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)	script_help parted_help
+				parted_menue
+				;;
+			$DISK_INFO)
+				# Laufwerks-Information ansehen{{{
+				if [ -n "${#FP_INFO[@]}" ] ; then
+					unset -- Info_Nr
+		                        local Info_Nr Info_Anz
+		                        integer Info_Anz
+		                        # Die Variable FP_INFO wird von der Funktion disk erstellt/belegt.
+		                        Info_Anz=${#FP_INFO[@]}
+		                        for ((i=1 ; i<=Info_Anz; i++)) ; {
+		                            if [ -n "${(M)${FP_INFO[i]}##${FP}*}" ] ; then
+		                                Info_Nr=$i
+		                            fi
+		                        }
+					#
+		                        if [ -n "$Info_Nr" ] ; then
+						DISK_MODELL="${${(ws: :)${FP_INFO[Info_Nr]}}[2,$]}"
+						msgbox "$KWPARTED_DISK_INFO" "${DISK_INFO}\n${MODELL}: ${DISK_MODELL}\n${DISK_SIZE_ALL}: ${DISK_CAP}"
+					fi
+				else
+					MSG=$(gettext 'Es sind keine Informationen ueber diese Festplatte ($FP) vorhanden.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+				#}}}
+				parted_menue $DISK_INFO
+				;;
+			[0-9]*)
+				# Partitionen anlegen, veraendern etc.{{{
+				ACTION_PART_TITLE=$(gettext 'Partition::anlegen/aendern')
+				# Array Index Nr speichern
+				PART_DEST_NR="$gv_Auswahl"
+				# Funktion (extended_part_msg), Nachricht das man erweiterte# {{{
+				# Partitionen nur anlegen/loeschen kann.
+				extended_part_msg() {
+					MSG=$(gettext 'Erweiterte Partitionen kann man nur anlegen und loeschen.')
+					msgbox "$gv_Info" "$MSG"
+				}
+				## }}}
+				# Funktion choice_flags, Flags auswählen (z.B. boot){{{
+				choice_flags() {
+					unset -- Flag_Del
+					local FLAGs
+					# Ist die Variable Fs_Type = linux-swap, benoetigt man kein Flag mehr.
+					# Genauso bei erweiterten Partitionen.
+					if [[ ${Ist_Part_Type} != extended ]] ; then
+						if [[ $Fs_Type != linux-swap* ]] ; then
+							PART_FLAG_TITLE=$(gettext 'Partitions-Flag')
+							PART_FLAG_MSG=$(gettext 'Waehlen Sie das Partitions-Flag aus.')
+							# Funktion part_flags_menue{{{
+							#
+							part_flags_menue() {
+								local Part_Flag
+								Flag_Old="$Flag"
+								FLAGs="$Flag_Old"
+								Part_Flag+=($gv_None \"\" off)
+								for i in boot lba lvm palo raid root swap ; {
+									Fl="${i%,}"
+									if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
+										Part_Flag+=($i \"\" on)
+									else
+										Part_Flag+=($i \"\" off)
+									fi
+								}
+								PART_FLAG_MENU=($Part_Flag)
+								radiolist "$PART_FLAG_TITLE" "$PART_FLAG_MSG" "$PART_FLAG_MENU"
+							}
+							#}}}
+							part_flags_menue
+							while [ -n "$gv_Auswahl" ] ; do
+								case $gv_Auswahl in
+									HELP*)	script_help flag_help
+										part_flags_menue
+										;;
+									$gv_None)
+										unset -- FLAGs
+										break
+										;;
+									*)
+										#
+										FLAGs="$gv_Auswahl on"
+										break
+										;;
+								esac
+							done
+							# flags ueberpruefen
+							if [ -z "$FLAGs" ] ; then
+								Flag_Del="${Flag_Old//on/off}"
+								Flag="$Flag_Del"
+							else
+								Flag="$FLAGs"
+							fi
+						else
+							MSG=$(gettext 'Wenn das Dateisystem schon als swap gekennzeichnet ist, kann man kein weiteres Flag vergeben.')
+							msgbox "$gv_Info" "$MSG"
+						fi
+					else
+						# Information fuer erweiterte Partitionen.
+						extended_part_msg
+					fi
+				}
+				#}}}
+				# Funktion action_parted_menue{{{
+				action_parted_menue() {
+					unset -- ACTION_PART_MENU
+					local FsTmp
+					###########################################################
+					# TODO:
+					# Zur Zeit kann man nur auf der selben Festplate kopieren?
+					# Testen auch auf Dateisysteme
+					###########################################################
+					# Kommen nach der erweiterten Partition keine
+					# logischen Laufwerke, kann man das Laufwerk loeschen,
+					# oder man bekommt eine Nachricht über das was man machen kann. 
+					if [[ ${${(M)${PART_ANZ_NR[ACTION_NR]}##*extended}##* } == extended ]] ; then
+						if [[ ${(M)$(< ${gv_WorkDir}/partdb$$)[(fr)logical]} != logical ]] ; then
+							ACTION_PART_MENU=($gv_Delete \"\" $gv_Back \"\")
+						else
+							# Information fuer erweiterte Partitionen.
+							extended_part_msg
+						fi
+					# Kommt nach der aktuellen Partition noch freier Platz
+					# koennen bestimmte Dateisysteme vergroessert, verkleinert,
+					# kopiert, geaendert und geloescht werden.
+					elif [[ ${${(M)${PART_ANZ_NR[ACTION_NR+1]}##*--${FREE}--}##* } == --${FREE}-- ]] ; then
+						# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
+						# wird.
+						######################################################
+						# TODO: nochmal pruefen, welches FS-Tool was kann.
+						# Was ist mit format?
+						# ext* ist fertig
+						######################################################
+						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
+						case $FsTmp in
+							exfat)
+								# exfat kann man kopieren, aendern, pruefen
+								# und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
+							ext[234])
+								# ext2/3/4 kann man kopieren, aendern, vergroessern,
+								# verkleinern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Check \"\"
+								$gv_Delete \"\" $gv_Back \"\")
+								;;
+							fat16|fat32|*swap*)
+								# fat16, fat32, linux-swap kann man kopieren, aendern
+								# vergroessern, verkleinern, pruefen und loeschen
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Check \"\"
+							 	$gv_Delete \"\" $gv_Back \"\")
+								;;
+							jfs)
+								# jfs kann man kopieren, aendern, pruefen
+								# und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
+							hfs*)
+								# hfs(+) kann man kopieren, aendern,
+								# pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
+							ntfs)
+								# ntfs kann man kopieren, aendern, vergroessern,
+								# verkleinern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Check \"\"
+								$gv_Delete \"\" $gv_Back \"\")
+								;;
+							reiserfs)
+								# reiserfs kann man kopieren, aendern, vergroessern,
+								# verkleinern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Check \"\"
+								$gv_Delete \"\" $gv_Back \"\")
+								;;
+							reiser4)
+								# reiser4 kann man kopieren, aendern, pruefen
+								# und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
+							*ufs)
+								# ufs Dateisysteme kann man kopieren, aendern,
+								# vergroessern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Check \"\" $gv_Delete \"\"
+								$gv_Back \"\")
+								;;
+							xfs)
+								# xfs kann man kopieren, aendern,
+								# vergroessern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Check \"\" $gv_Delete \"\"
+								$gv_Back \"\")
+								;;
+							$gv_None)
+								# "nichts" Dateisysteme kann man aendern, vergroessern,
+								# verkleinern und loeschen,
+								ACTION_PART_MENU=($gv_Change \"\" $gv_Enlarge \"\"
+								$gv_Reduce \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
+							*)
+								# alle anderen Dateisysteme werden
+								# noch nicht unterstuetzt.
+								ACTION_PART_MENU=($gv_Back \"\")
+								;;
+						esac
+						#}}}
+					else
+						# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
+						# wird.
+						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
+						case $FsTmp in
+							ext[234]|fat16|fat32|ntfs|reiserfs|*swap*)
+								# Diese Dateisysteme kann man kopieren, aendern,
+								# verkleinern, pruefen und loeschen.
+								###############################################
+								# jfs Kopieren? wird noch nicht unterstuetzt.
+								###############################################
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Reduce \"\" $gv_Check \"\" $gv_Delete \"\"
+								$gv_Back \"\")
+								;;
+							exfat|hfs*|jfs|reiser4|*ufs|xfs)
+								# Diese Dateisysteme kann man kopieren, aendern,
+								# pruefen und loeschen.
+								###############################################
+								# hfs*|*ufs|... Kopieren?
+								# wird noch nicht unterstuetzt.
+								###############################################
+								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\"
+								$gv_Back \"\")
+								;;
+							$gv_None)
+								# "nichts" Dateisysteme kann man aendern, verkleinern
+								# und loeschen,
+								ACTION_PART_MENU=($gv_Change \"\" $gv_Reduce \"\"
+								$gv_Delete \"\" $gv_Back \"\")
+								;;
+							*)
+								# alle anderen Dateisysteme werden
+								# noch nicht unterstuetzt.
+								ACTION_PART_MENU=($gv_Back \"\")
+								;;
+						esac
+						## }}}
+					fi
+					# Checken ob das Dateisystem unterstuetzt wurde,
+					# ansonsten kommt eine Meldung.
+					if [ ! -z "${ACTION_PART_MENU[1]}" ] ; then
+						menubox "$FsTmp" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ACTION_PART_MENU"
+					else
+						# Dateisystem wird nicht unterstuetzt.
+						if [ -n "$FsTmp" ] ; then
+							no_fs_support_msg "$FsTmp"
+						fi
+						unset -- gv_Auswahl
+					fi
+				}
+				#}}}
+				# Funktion create_parted_menue{{{
+				create_parted_menue() {
+					case "$FPDISKLABEL" in
+						gpt)
+							CREATE_PART_MENU=($lv_Size \"$SIZE\"
+							$lv_Filesystem \"$Fs_Type\" $lv_Flags \"$Flag\"
+							$lv_Name \"$Ist_Part_Name\" $gv_Create \"\"
+							$gv_Back \"\")
+							;;
+						dos)
+							CREATE_PART_MENU=($lv_Size \"$SIZE\"
+							$lv_Filesystem \"$Fs_Type\" $lv_Flags \"$Flag\"
+							$lv_Part_Typ \"$Ist_Part_Type\" $gv_Create \"\"
+							$gv_Back \"\")
+							;;
+					esac
+					menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$CREATE_PART_MENU"
+				}
+				#}}}
+				# Funktion change_parted_menue{{{
+				change_parted_menue() {
+					CHANGE_PART_MENU=($lv_Filesystem \"$Fs_Type\"
+					$lv_Flags \"$Flag\" $lv_Format \"\"
+					$gv_Change \"\" $gv_Back \"\")
+					menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$CHANGE_PART_MENU"
+				}
+				#}}}
+				# Funktion enlarge_parted_menue{{{
+				enlarge_parted_menue() {
+					ENLARGE_PART_MENU=($lv_Size \"$SIZE\" $gv_Enlarge \"\" $gv_Back \"\")
+					menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ENLARGE_PART_MENU"
+				}
+				#}}}
+				# Funktion reduce_parted_menue{{{
+				reduce_parted_menue() {
+					REDUCE_PART_MENU=($lv_Size \"$SIZE\" $gv_Reduce \"\" $gv_Back \"\")
+					menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$REDUCE_PART_MENU"
+				}
+				#}}}
+				# Funktion (check_part_nr), pruefen ob die Partitions Nr. bekannt ist# {{{
+				#
+				# usage:
+				check_part_nr() {
+					if [ "$#" = 1 ] ; then
+						unset -- Opt
+						local Opt
+						Opt="$1"
+						case $Opt in
+							*-[0-9]*)
+								# Partition wird angelegt, dadurch
+								# kennt man nicht die Partitions Nr,
+								# da eine Partitions Tabelle auch
+								# in einer unsortierten Reihenfolge
+								# erstellt worden sein kann.
+								#
+								# parted Tabelle 
+								$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit b print free 2>/dev/null >${gv_WorkDir}/partdb.diff)
+								PART_NR=${${(ws: :)${(M)${(f)"$(diff -u ${gv_WorkDir}/partdb$$ ${gv_WorkDir}/partdb.diff)"}##(#s)+[[:space:]][0-9]*}}[2]}
+								;;
+							*)
+								# Partitions Nr. ist bekannt?
+								# pruefen?
+								PART_NR="${PART_NR[PART_DEST_NR]}"
+								;;
+						esac
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				# Funktion (convert_start_end_size),# {{{
+				# Start und End Groesse belegen
+				#
+				# usage: convert_start_end_size
+				convert_start_end_size() {
+					unset -- Part_Start_Tmp Part_End_Tmp
+					Part_Start_Tmp="$L_PART_START"
+					Part_End_Tmp="$L_PART_END"
+				}
+				## }}}
+				# Funktion (check_make_fstype), auf Dateisystem pruefen# {{{
+				# und dementsprechend die Variable
+				# Make_Fs belegen.
+				#
+				check_make_fstype() {
+					unset -- Make_Fs
+					case "$Fs_Type" in
+						hfs+|hfsplus)
+							Make_Fs="hfsplus"
+							;;
+						*ufs)
+							# freebsd-ufs|ufs
+							Make_Fs="ufs"
+							;;
+						$gv_None)
+							# Bei Dateisystemtyp "nichts" werden die Flags
+							# geprueft ob der Dateisystemtyp garnicht
+							# gebraucht wird
+							case "$Flag" in
+								lvm*|raid*)
+									unset -- Fs_Type
+									;;
+								*)
+									# Nachricht das das Dateisystem nicht geht.
+									no_fs_type_msg "$Fs_Type"
+									unset -- Fs_Type
+									;;
+							esac
+							;;
+						*)
+							Make_Fs="$Fs_Type"
+							;;
+					esac
+				}
+				## }}}
+				# Funktion create_parted# {{{
+				create_parted() {
+					if [[ ${#argv} == 1 ]] ; then
+						Menu="$1"
+						$Menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)	script_help create_parted_help
+									$Menu
+									;;
+								$lv_Size)
+									# Groesse der Partition eingeben # {{{
+									PART_SIZE_TITLE=$(gettext 'Partitions_Groesse')
+									number_input -D "$PART_SIZE_TITLE" "$PART_SIZE_MSG" "$SIZE"
+									# Ist die Grösse gleich der alten, wird
+									# auch die alte Groesse benutzt.
+									if [ "$NUMBER" -a "$NUMBER" != "$SIZE_OLD" ] ; then
+										# umrechnen der Groesse in KiloByte
+										convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+										# und dann in Byte.
+										(( SIZE_B = SIZE_KB * 1024 ))
+										if [[ $SIZE_B:r -le $Max_Size ]] ; then
+											SIZE=$NUMBER
+											L_PART_SIZE="$SIZE_B:r"
+											(( L_PART_END = L_PART_START + $SIZE_B:r ))
+										else
+											over_size_msg
+											SIZE=$SIZE_OLD
+										fi
+									else
+										SIZE=$SIZE_OLD
+									fi
+									#}}}
+									$Menu $lv_Size
+									;;
+								$lv_Filesystem)
+									# Filesystem_type auswählen{{{
+									if [ "$Ist_Part_Type" != extended ] ; then
+										Fs_Type_Old="$Fs_Type"
+										FS_TYPE_TITLE="$lv_Filesystem"
+										FS_TYPE_MSG=$(gettext 'Waehlen Sie das Dateisystem aus.')
+										formatprogs_check -p
+										if [ -n "${FM_Menue[1]}" ] ; then
+											FS_TYPE_MENU=($FM_Menue)
+										fi
+										menubox "$Fs_Type" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
+										while [ "$gv_Auswahl" ] ; do
+											case $gv_Auswahl in
+												HELP*)	script_help create_parted_help
+													menubox "$Fs_Type" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
+													;;
+												*)	Fs_Type="$gv_Auswahl"
+													# Wurde nichts geaendert wird die
+													# Variable Fs_Type_Old geloescht.
+													if [ "$Fs_Type" != "$Fs_Type_Old" ] ; then
+														unset -- Fs_Type_Old
+													fi
+													# Ist Fs_Type = linux-swap wird die Variable "Flag"
+													# gelöscht.
+													if [ "$Fs_Type" = linux-swap ] ; then
+														######################################
+														# TODO: Flag - swap off
+														unset -- Flag
+													fi
+													break
+													;;
+											esac
+										done
+									else
+										MSG=$(gettext 'Einer erweiterten Partition kann man keinen Dateisystem geben.')
+										msgbox "$gv_Attention" "$MSG"
+										Fs_Type="$gv_None"
+									fi
+									#}}}
+									$Menu $lv_Filesystem
+									;;
+								$lv_Name)
+									# Name eingeben, beim Partitionstyp "gpt" ein muss# {{{
+									NAME_MSG=$(gettext 'Geben Sie einen Namen fuer die Partition ein, ohne Leerzeichen.')
+									inputbox "$lv_Name" "$NAME_MSG" "$Ist_Part_Name"
+									if [ -n "$gv_Auswahl" ] ; then
+										Ist_Part_Name="$gv_Auswahl"
+									else
+										Ist_Part_Name="--${FREE}--"
+									fi
+									## }}}
+									$Menu $lv_Name
+									;;
+								$lv_Flags)
+									# bisher nur Flags der Partitionen aendern
+									choice_flags
+									$Menu $lv_Flags
+									;;
+								$lv_Part_Typ)	
+									# Partitionstype auswählen# {{{
+									# Funktion part_type_menue# {{{
+									part_type_menue() {
+										# Ist noch keine erweiterte Partition angelegt und die Anzahl
+										# der primaeren Partitionen kleiner als 4, kann man primaere 
+										# oder eine erweiterte Partitionen anlegen.
+										# Gibt es schon eine erweiterte Partition, dann
+										# nur logische Partitionen oder auf freien Partitionen vor der
+										# erweiterten.
+										Extented_Part=${(M)${PART_TYPE}[(fr)extended]}
+										Primary_Part=${(w)#${(M)${PART_TYPE}##primary}}
+										if [ -z "$Extented_Part" -a "$Primary_Part" -lt 4 ] ; then
+											PARTED_TYPE_MENU=(primary \"\" extended \"\" $gv_Back \"\")
+										elif [ -n "$Extented_Part" -a "$Primary_Part" -lt 3 -a "$CHOICE_NR" -lt 4 ] ; then
+											PARTED_TYPE_MENU=(primary \"\" logical \"\" $gv_Back \"\")
+										elif [ -n "$Extented_Part" ] ; then
+											PARTED_TYPE_MENU=(logical \"\" $gv_Back \"\")
+										else
+											MSG=$(gettext 'Diesen Partitionstyp koennen Sie nicht aendern.')
+											msgbox "$gv_Attention" "$MSG"
+										fi
+										PARTED_TYPE_TITLE="$lv_Part_Typ"
+										PARTED_TYPE_MSG=$(gettext 'Waehlen Sie den Partitions-Typ aus.')
+										menubox "" "$PARTED_TYPE_TITLE" "$PARTED_TYPE_MSG" "$PARTED_TYPE_MENU"
+									}
+									# }}}
+									part_type_menue
+									while [ "$gv_Auswahl" ] ; do
+										case $gv_Auswahl in
+											HELP*)	script_help create_parted_help
+												part_type_menue
+												;;
+											$gv_Back)	break
+												;;
+											*)	
+												if [ "$gv_Auswahl" = extended ] ; then
+													Ist_Part_Type="$gv_Auswahl"
+													Fs_Type="$gv_None"
+												else
+													Ist_Part_Type="$gv_Auswahl"
+												fi
+												break
+												;;
+										esac
+									done
+									# }}}
+									$Menu $lv_Part_Typ
+									;;
+								$gv_Create)
+									# Partition erzeugen{{{
+									#
+									# Dateisysteme pruefen
+									check_make_fstype
+									case "$FPDISKLABEL" in
+										gpt)
+											# Ist der Name = frei, wird# {{{
+											# die Variable Ist_Part_Name geloescht.
+											if [[ $Ist_Part_Name == --${FREE}-- ]] ; then
+												unset -- Ist_Part_Name
+											fi
+											#
+											if [ "$SIZE" -a "$Ist_Part_Name" ] ; then
+												convert_start_end_size
+												PROG_OPT="-a optimal -s $FP unit B mkpart $Ist_Part_Name $Fs_Type $Part_Start_Tmp $Part_End_Tmp"
+												parted ${=PROG_OPT} || prog_failure
+												# Partitions nummer pruefen
+												check_part_nr $Part_Auswahl
+												# Flags setzen
+												set_flag $PART_NR
+												# Dem Kernel die neue Partitionstabelle bekanntgeben
+												partprobe $FP
+												sleep 3
+												# Falls ein Filesystem angegeben wurde,
+												# die Partition damit formatieren.
+												# Dabei muessen die Filesystem eig. tools
+												# ausgefuehrt werden.
+												if [ -n "$Make_Fs" -a -n "$PART_NR" ] ; then
+													format "${FP}${PART_NR}" "$Make_Fs"
+												fi
+											else
+												MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Groesse und Name (kein --${FREE}--) mit den richtigen Werten belegen.')
+												msgbox "$gv_Attention" "$MSG"
+											fi
+											## }}}
+											;;
+										dos)
+											# Ist der Partitionstyp = unbekannt, wird# {{{
+											# die Variable Ist_Part_Type geloescht.
+											if [ "$Ist_Part_Type" = "$gv_None" ] ; then
+												unset -- Ist_Part_Type
+											fi
+											#
+											if [ "$SIZE" -a "$Ist_Part_Type" ] ; then
+												convert_start_end_size
+												PROG_OPT="-a optimal -s $FP unit B mkpart $Ist_Part_Type $Fs_Type $Part_Start_Tmp $Part_End_Tmp"
+												parted ${=PROG_OPT} || prog_failure
+												# Partitions nummer pruefen
+												check_part_nr $Part_Auswahl
+												# Flags setzen
+												set_flag $PART_NR
+												# Dem Kernel die neue Partitionstabelle bekanntgeben
+												partprobe $FP
+												sleep 3
+												# Falls ein Filesystem angegeben wurde,
+												# die Partition damit formatieren.
+												# Dabei muessen die Filesystem eig. tools
+												# ausgefuehrt werden.
+												if [ -n "$Make_Fs" -a -n "$PART_NR" ] ; then
+													format "${FP}${PART_NR}" "$Make_Fs"
+												fi
+											else
+												MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Groesse und Partitions_Typ mit den richtigen Werten belegen.')
+												msgbox "$gv_Attention" "$MSG"
+											fi
+											## }}}
+											;;
+									esac
+									#
+									unset -- Fs_Type SIZE Flag Ist_Part_Type \
+										Size_Old SIZE_OLD Ist_Part_Type Ist_Part_Name
+									break
+									#}}}
+									;;
+								$gv_Change)
+									# Partitionen aendern# {{{
+									# Dateisysteme pruefen
+									check_make_fstype
+									# Partitions nummer pruefen
+									check_part_nr $Part_Auswahl
+									# formatieren, falls das ausgewaehlte Dateisystem
+									# geaendert wurde.
+									if [[ $Fs_Type_Old != $Fs_Type ]] && \
+										[[ -n $Make_Fs ]] && [[ -n $PART_NR ]] ; then
+										format "${FP}${PART_NR}" "$Make_Fs"
+									fi
+									# Flags setzen
+									set_flag $PART_NR
+									partprobe "$FP"
+									sleep 3
+									unset -- Fs_Type Fs_Type_Old Flag
+									read_parted "$FP" free
+									break
+									## }}}
+									;;
+								$lv_Format)
+									# vorhandenes Dateisystem formatieren# {{{
+									# Dateisysteme pruefen
+									check_make_fstype
+									# Auf Partitionsnummer pruefen
+									check_part_nr $Part_Auswahl
+									# formatieren, auch falls das ausgewaehlte Dateisystem
+									# nicht geaendert wurde.
+									if [ -n "$Make_Fs" -a -n "$PART_NR" ] ; then
+										format "${FP}${PART_NR}" "$Make_Fs"
+									fi
+									unset -- Fs_Type Fs_Type_Old Flag
+									read_parted "$FP" free
+									break
+									## }}}
+									;;
+								$gv_Enlarge)
+									# vergroessern# {{{
+									# Pruefen ob sich die Partitionsgroesse sich
+									# geaendert hat.
+									if [[ "$L_PART_SIZE" -gt "$L_PART_OLD_SIZE" ]] ; then
+										# Partitions nummer pruefen
+										check_part_nr $Part_Auswahl
+										resize_fs -p +${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
+										#
+										unset -- Fs_Type SIZE Flag Ist_Part_Type \
+											Size_Old Size_Old_Kb SIZE_OLD Ist_Part_Name
+										read_parted $FP free
+									fi
+									break
+									## }}}
+									;;
+								$gv_Reduce)
+									# verkleinern# {{{
+									# Pruefen ob sich die Partitionsgroesse sich
+									# geaendert hat.
+									if [[ "$L_PART_SIZE" -lt "$L_PART_OLD_SIZE" ]] ; then
+										# Partitions nummer pruefen
+										check_part_nr $Part_Auswahl
+										# vorhandenes Dateisystem verkleinern.
+										if [ -n "$Fs_Type" ] ; then
+											resize_fs -p -${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
+										fi
+										#
+										unset -- Fs_Type SIZE Flag Ist_Part_Type \
+											Size_Old Size_Old_Kb SIZE_OLD Ist_Part_Name
+										read_parted $FP free
+									fi
+									break
+									## }}}
+									;;
+								$gv_Back)	break
+									;;
+							esac
+						done
+					else
+						no_para_msg $0
+					fi
+				}
+				# }}}
+				# Funktion (check_src_dst), prueft ob src und dst# {{{
+				# unterschiedliche Partitionen sind, wenn auf der selben
+				# Festplatte kopiert werden soll. Auf verschiedenen Festplatten
+				# ist es egal.
+				check_src_dst() {
+					if [ $# = 2 ] ; then
+						unset -- Src Dst
+						local Src Dst
+						Src=$1
+						Dst=$2
+						if [ "$FP" != "$FP_DST" ] ; then
+							FP_DIFF=yes
+						else
+							if [ $Src = $Dst ] ; then
+								# Nachricht das Src und Dst
+								# Partition unterschiedlich sein
+								# muessen.
+								MSG=$(gettext 'Die Quell und Ziel Partition muessen unterschiedliche Laufwerke sein.')
+								msgbox "$gv_Info" "$MSG"
+								break
+							fi
+							unset -- FP_DIFF
+						fi
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				# Funktion (exec_copy_parted), kopiert den Inhalt der Partitionen# {{{
+				#
+				# usage: exec_copy_parted DESTINATION_FESTPLATTE
+				exec_copy_parted() {
+					if [ $# = 1 ] ; then
+						unset -- FP_DST
+						FP_DST="$1"
+						read_parted "$FP_DST"
+						if [ -n "$PART_ANZ_NR" ] ; then
+							COPY_MENU=($PART_ANZ_NR)
+							menubox "$NR" "$ACTION_PART_TITLE" "$gv_Menupoint" "$COPY_MENU"
+							while [ -n "$gv_Auswahl" ] ; do
+								case "$gv_Auswahl" in
+									HELP*)	script_help share/copyfs_help
+										menubox "$NR" "$ACTION_PART_TITLE" "$gv_Menupoint" "$COPY_MENU"
+										;;
+									*)	
+										# Dateisystem kopieren
+										NR="$gv_Auswahl"
+										PART_DST_FS=${${PART_ANZ_NR[gv_Auswahl]}[3]}
+												#########################################
+												# TODO: ?, check
+										# Ist das Src Dateisystem nicht das selbe wie das Dst Dateisystem dann
+										# kommt eine Meldung das beide Dateisysteme identisch sein muessen.
+										if [ "$PART_DST_FS" != "$gv_None" -a "$PART_DST_FS" = "$CP_FS" ] ; then
+											# Berechnung der Groessen uebernimmt copy_fs und
+											# die Dateisystem eigenen Tools.
+											if [ -n "$SELF_CREATE_FS" ] ; then
+												PART_SRC="$Part_Auswahl"
+												PART_DST=${${${(ws: :)${PART_ANZ_NR[gv_Auswahl]}}[2]}//\"/}
+												check_src_dst $PART_SRC $PART_DST
+												copy_fs $SELF_CREATE_FS "$PART_SRC" $SELF_CREATE_FS "$PART_DST"
+											else
+												#########################################
+												# TODO: weg
+												# kopieren von fat ohne Berechnung bei gleicher Groesse
+												# fat32 -> fat16 = fat32
+												# fat32 -> fat32 = fat32
+												# fat16 -> * = fat32
+												if [ "$PARTED" = yes ] ; then
+													# Keine Berechnung noetigt fuer linux-swap/fat32,
+													#################################################
+													# TODO:
+													# fat32 geht gerade nicht? parted (grml) zu alt.
+													#################################################
+													PART_SRC="${Part_Auswahl##*[a-z]}"
+													PART_DST=${${${${(ws: :)${PART_ANZ_NR[gv_Auswahl]}}[2]}//\"/}##*[a-z]}
+													# Wenn die Festplatten auch unterschiedlich sind
+													# PROG_OPT erweitern
+													# parted -s /dev/hda cp /dev/hdb 2 3
+													# kopiert die 2 Partition der Quellfestplatte auf
+													# die 3. Partition der Zielfestplatte.
+													check_src_dst $PART_SRC $PART_DST
+													if [ "$FP_DIFF" = yes ] ; then
+														PROG_OPT="-s $FP cp $FP_DST $PART_SRC $PART_DST"
+													else
+														PROG_OPT="-s $FP cp $PART_SRC $PART_DST"
+													fi
+													# evtl. gemountete Laufwerke umounten
+													mount_check -a $Part_Auswahl
+													if [ "$U_MOUNT" = yes ] ; then
+														mount_check -a ${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
+													fi
+													if [ "$U_MOUNT" = yes ] ; then
+														parted ${=PROG_OPT} || prog_failure
+													else
+														no_umount_msg
+													fi
+												elif [ "$CP_FS" = fat16 ] ; then
+													PART_SRC="${Part_Auswahl##*[a-z]}"
+													PART_DST=${${${${(ws: :)${PART_ANZ_NR[gv_Auswahl]}}[2]}//\"/}##*[a-z]}
+													PART_DST_SIZE="${PART_SIZE[gv_Auswahl]}"
+													# Wenn die Fetsplatten auch unterschiedlich sind
+													# PROG_OPT erweitern
+													check_src_dst $PART_SRC $PART_DST
+													if [ "$FP_DIFF" = yes ] ; then
+														PROG_OPT="-s $FP cp $FP_DST $PART_SRC $PART_DST"
+													else
+														PROG_OPT="-s $FP cp $PART_SRC $PART_DST"
+													fi
+													# evtl. gemountete Laufwerke umounten
+													mount_check -a $Part_Auswahl
+													if [ "$U_MOUNT" = yes ] ; then
+														mount_check -a ${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
+													fi
+													if [ "$U_MOUNT" = yes ] ; then
+														if [ "$PART_SRC_SIZE" -le "$PART_DST_SIZE" ] ; then
+															parted ${=PROG_OPT} || prog_failure
+														else
+															no_copy_fs_msg
+														fi
+													else
+														no_umount_msg
+													fi
+												fi
+											fi
+										else
+											MSG=$(gettext 'Das Dateisystem des Quell und Ziellaufwerks muessen gleich sein.')
+											msgbox "$gv_Attention" "$MSG"
+										fi
+										read_parted $FP free
+										break
+										;;
+								esac
+							done
+						fi
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				case "$FPDISKLABEL" in
+					gpt)
+						# Auswahl fuer den Partitionstabellentyp "gpt" zerpfluecken.
+						autoload -U value_choice_gpt
+						value_choice_gpt
+						;;
+					dos)
+						# Auswahl fuer den Partitionstabellentyp "msdos" zerpfluecken.
+						autoload -U value_choice_msdos
+						value_choice_msdos
+						;;
+				esac
+				# Partition erstellen
+				PART_SIZE_MSG=$(gettext 'Geben Sie bitte die neue Groesse dieser Partition ein (3G = 3 GigaByte). Es stehen $MAX_SIZE zur Verfuegung.')
+				if [[ ${${(M)${PART_ANZ_NR[gv_Auswahl]}##*--${FREE}--}##* } == --${FREE}-- ]] ; then
+					create_parted create_parted_menue
+					# Partitionstabelle neu einlesen
+					read_parted $FP free
+				else
+					# Partitionen veraendern, vergroessern, ... oder verkleinern.
+					ACTION_NR="$gv_Auswahl"
+					action_parted_menue
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help action_help
+								action_parted_menue
+								;;
+							$gv_Copy)
+								# Partitionen kopieren.# {{{
+								#########################################
+								# TODO: no extended
+								# erweiterte Partitionen kann man nicht kopieren.
+								#########################################
+								# Dateisysteme die noch nicht von parted unterstuetzt# {{{
+								# werden (eig. Dateisystem Tools).
+								unset -- SELF_CREATE_FS PARTED CP_FS PART_SRC_SIZE
+								case "$Fs_Type" in
+									hfs+)
+										CP_FS=hfsplus
+										PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
+										;;
+									$gv_None)
+										# Nachricht das das Dateisystem nicht geht.
+										no_fs_type_msg "$Fs_Type"
+										unset -- Fs_Type
+										;;
+									*)
+										CP_FS="$Fs_Type"
+										PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
+										;;
+								esac
+								## }}}
+								# Funktion disk_menu{{{
+								disk_menu() {
+									DISK_MENU=($DISK_DEV_E $gv_Back \"\")
+									menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
+								}
+								#}}}
+								disk_menu
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help share/disk_help
+											disk_menu
+											;;
+										$gv_Back)	break 3
+											;;
+										*)
+											# Partitionsinhalt kopieren
+											exec_copy_parted $gv_Auswahl
+											break 3
+											;;
+									esac
+								done
+								## }}}
+								;;
+							$gv_Create)
+								create_parted create_parted_menue
+								break
+								;;
+							$gv_Change)
+								create_parted change_parted_menue
+								break
+								;;
+							$gv_Enlarge)
+								# vergroessern von Partitionen
+								create_parted enlarge_parted_menue
+								break
+								;;
+							$gv_Reduce)
+								# verkleinern von Partitionen
+								create_parted reduce_parted_menue
+								break
+								;;
+							$gv_Delete)
+								# Partitionen löschen{{{
+								# freie Partitionen kann man nicht löschen
+								Nr="${Part_Auswahl##*[a-z/]}"
+								if [ "$Nr" != -1 ] ; then
+									mount_check -u "$Part_Auswahl"
+									# Soll die erweiterte Partition geloescht
+									# werden, dann werden auch alle logischen
+									# Partitionen geloescht.
+									if [ "`print ${(M)${(M)${(f)"$(< ${gv_WorkDir}/partdb$$)"}##(s#)$Nr*}##*extended*}`" ] ; then
+										for i in ${(O)${(M)${(M)${(f)"$(< ${gv_WorkDir}/partdb$$)"}##*logical*}##(s#)[0-9]?}} ; {
+											parted -s $FP rm $i || prog_failure
+										}
+									else
+										parted -s $FP rm $Nr || prog_failure
+									fi
+									# 
+									partprobe $FP
+									sleep 3
+									unset -- Fs_Type SIZE Flag Ist_Part_Type \
+										Size_Old SIZE_OLD FLAG Ist_Part_Name
+									read_parted $FP free
+								else
+									MSG=$(gettext 'Leeren Festplattenplatz koennen Sie nicht loeschen.')
+									msgbox "$gv_Attention" "$MSG"
+									unset -- Fs_Type SIZE Flag Ist_Part_Type \
+										Size_Old SIZE_OLD FLAG Ist_Part_Name
+								fi
+								#}}}
+								break
+								;;
+							$gv_Check)
+								# Ausrichtung ueberpruefen# {{{
+								check_part_nr $Part_Auswahl
+								if parted -s $FP align-check optimal $PART_NR ; then
+									MSG=$(gettext 'Die optimale Ausrichtung, fuer beste Performance, ist in Ordnung.')
+								else
+									MSG=$(gettext 'Die optimale Ausrichtung, fuer beste Performance, ist NICHT in Ordnung.')
+								fi
+								msgbox "$gv_Info" "$MSG"
+								## }}}
+								break
+								;;
+							$gv_Back)	break
+								;;
+						esac
+					done
+				fi
+				#}}}
+				parted_menue $PART_DEST_NR
+				;;
+			$gv_Back) break
+				;;
+		esac
+	done
+set +x
+}
+## }}}
 
 ##################################################################
 #
@@ -370,15 +1394,10 @@ disk_create_parttab() {
 #
 ##################################################################
 hw_conf
-disk
-if [ -z "$DISK_DEV" ] ; then
-	no_disk_msg
-	exit 0
-fi
+search_disk
 
 # installierte Pakete herausbekommen{{{
-KWLVM="`which kwlvm`"
-KWRAID="`which kwraid`"
+# Auf reiserfs und reiser4 prüfen
 for d in /lib /usr/lib /usr/local/lib ; {
 	if ls ${d}/libreiserfs*.so* &>/dev/null ; then
 		ReiserFs=yes
@@ -389,10 +1408,10 @@ for d in /lib /usr/lib /usr/local/lib ; {
 }
 # Packages Variable dient fuer das Hauptmenue, hier wird zusammengezaehlt.
 unset -- Packages
-if [ -x "$KWLVM" ] ; then
+if [ -x "${commands[kwlvm]}" ] ; then
 	Packages+=(lvm \"\")
 fi
-if [ -x "$KWRAID" ] ; then
+if [ -x "${commands[kwraid]}" ] ; then
 	Packages+=(raid \"\")
 fi
 #}}}
@@ -422,1167 +1441,39 @@ while [ "$gv_Auswahl" ] ; do
 			>> $gv_LogFile <<< "$TABLE_HEADER"
 			< "${HELP_PATH}/${gv_ScriptName}/status_help" >> $gv_LogFile
 			view_file $gv_LogFile
+			# nach Festplatten suchen
+			search_disk
 			## }}}
 			haupt_menue $lv_Status
 			;;
 		$PART_TAB)
-			# Partitionstabellen aller Festplatten bearbeiten
+			# Partitionstabellen(typ) aller Festplatten bearbeiten# {{{
 			autoload -U kwparted_parttab
 			kwparted_parttab
+			# nach Festplatten suchen
+			search_disk
+			## }}}
 			haupt_menue $PART_TAB
 			;;
 		/*)	
-			# Festplatte auswaehlen und deren Partitionen anzeigen # {{{
-			FP=$gv_Auswahl
-			DISK_INFO=$(gettext 'Laufwerks-Info')
-			KWPARTED_DISK_INFO=$(gettext 'Festpatteninformation')
-			PARTED_TITLE=$(gettext 'Partitionierung')
-			read_parted $FP free
-			#
-			# Funktion parted_menue{{{
-			# Die Variable gv_Back wird in der Funktion script_init belegt.
-			parted_menue() {
-				PARTED_MENU=($DISK_INFO \"$FP\" $PART_ANZ_NR $gv_Back \"\")
-				menubox "$1" "$PARTED_TITLE" "$gv_Menupoint" "$PARTED_MENU"
-			}
-			#}}}
-			parted_menue
-			while [ "$gv_Auswahl" ] ; do
-				case $gv_Auswahl in
-					HELP*)	script_help parted_help
-						parted_menue
-						;;
-					$DISK_INFO)
-						# Laufwerks-Information ansehen{{{
-						if [ -n "$FP_INFO" ] ; then
-							unset -- Info_Nr
-	                        local Info_Nr Info_Anz
-	                        integer Info_Anz
-	                        # Die Variable FP_INFO wird von der Funktion disk erstellt/belegt.
-	                        Info_Anz=${#FP_INFO[@]}
-	                        for ((i=1 ; i<=Info_Anz; i++)) ; {
-	                            if [ -n "${(M)${FP_INFO[i]}##${FP}*}" ] ; then
-	                                Info_Nr=$i
-	                            fi
-	                        }
-							#
-	                        if [ -n "$Info_Nr" ] ; then
-								DISK_MODELL="${${(s: :)${FP_INFO[Info_Nr]}}[2,6]}"
-								# Ist die Partitionstabelle der Festplatte leer
-								# wird auch keine FP. Groesse angezeigt.
-								if [ -n "${FP_CAP_B%%[a-zA-Z]*}" ] ; then
-									DISK_SIZE="$FP_CAP_B"
-								fi
-								msgbox "$KWPARTED_DISK_INFO" "${DISK_INFO}\n${MODELL}: ${DISK_MODELL}\n${DISK_SIZE_ALL}: ${DISK_SIZE}"
-							fi
-						else
-							MSG=$(gettext 'Es sind keine Informationen ueber diese Festplatte ($FP) vorhanden.')
-							msgbox "$gv_Info" "$MSG"
-						fi
-						#}}}
-						parted_menue $DISK_INFO
-						;;
-					[0-9]*)
-						# Partitionen anlegen, veraendern etc.{{{
-						ACTION_PART_TITLE=$(gettext 'Partition::anlegen/aendern')
-						# Array Index Nr speichern
-						PART_DEST_NR="$gv_Auswahl"
-						# Funktion (part_size_msg), Nachricht mit der# {{{
-						# maximalen Groesse auffrischen
-						part_size_msg() {
-							PART_SIZE_MSG=$(gettext 'Geben Sie bitte die neue Groesse dieser Partition ein (3G = 3 GigaByte). Diese Partition besitzt $MAX_SIZE.')
-						}
-						## }}}
-						# Funktion value_choice Auswahl zerpfluecken{{{
-						value_choice() {
-							unset -- Fs_Type Fs_Type_Old SIZE Flag Ist_Part_Type L_PART_END L_PART_START \
-								CHOICE_NR Max_Part_Start Max_Part_End Part_Auswahl SIZE_OLD
-							CHOICE_NR="$gv_Auswahl"
-							Part_Auswahl=${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
-							if [ "${PART_FS[gv_Auswahl]}" = --${FREE}-- ] ; then
-								Fs_Type="$gv_Unknown"
-								Fs_Type_Old="$Fs_Type"
-								CALC_SIZE=normal
-								Max_Part_Start=${START_NR[gv_Auswahl]}
-								Max_Part_End=${END_NR[gv_Auswahl]}
-							elif [ "${PART_FS[gv_Auswahl-1]}" = --${FREE}-- -a "${PART_FS[gv_Auswahl+1]}" = --${FREE}-- ] ; then
-								Fs_Type=${PART_FS[gv_Auswahl]}
-								Fs_Type_Old="$Fs_Type"
-								CALC_SIZE=normal
-								Max_Part_Start=${START_NR[gv_Auswahl-1]}
-								Max_Part_End=${END_NR[gv_Auswahl+1]}
-							elif [ "${PART_FS[gv_Auswahl-1]}" = --${FREE}-- ] ; then
-								Fs_Type=${PART_FS[gv_Auswahl]}
-								Fs_Type_Old="$Fs_Type"
-								CALC_SIZE=endminus
-								Max_Part_Start=${START_NR[gv_Auswahl-1]}
-								Max_Part_End=${END_NR[gv_Auswahl]}
-							elif [ "${PART_FS[gv_Auswahl+1]}" = --${FREE}-- ] ; then
-								Fs_Type=${PART_FS[gv_Auswahl]}
-								Fs_Type_Old="$Fs_Type"
-								CALC_SIZE=normal
-								Max_Part_Start=${START_NR[gv_Auswahl]}
-								Max_Part_End=${END_NR[gv_Auswahl+1]}
-							else
-								Fs_Type=${PART_FS[gv_Auswahl]}
-								Fs_Type_Old="$Fs_Type"
-								CALC_SIZE=normal
-								Max_Part_Start=${START_NR[gv_Auswahl]}
-								Max_Part_End=${END_NR[gv_Auswahl]}
-							fi
-							Ist_Part_Type=${PART_TYPE[gv_Auswahl]}
-							if [ "$Ist_Part_Type" = none ] ; then
-								MSG=$(gettext 'Diesen Partitionsplatz kann man nicht aendern.')
-								msgbox "$gv_Attention" "$MSG"
-								break
-							fi
-							SIZE=${PART_ANZ_SIZE_NR[gv_Auswahl]}
-							if [ ! -z ${FLAG[gv_Auswahl]} ] ; then
-								Flag="${FLAG[gv_Auswahl]} on"
-							fi
-							# Wenn das die letzte Partition ist, minus
-							# 511 Byte rechnen.
-							if [[ "${#PART_ANZ_NR[@]}" = "$CHOICE_NR" ]] ; then
-								Max_Part_End_Tmp=${END_NR[gv_Auswahl]}
-								(( Max_Part_End = Max_Part_End_Tmp - 511 ))
-							fi
-							# nach Komma abschneiden.
-							L_PART_END=$Max_Part_End:r
-							L_PART_START=$Max_Part_Start:r
-							# MAX_SIZE Variable belegen und in Max_Size
-							# die mögliche Zylinder Anzahl speichern.
-							(( Max_Size = Max_Part_End-Max_Part_Start ))
-							# Max_Size in eine besser lesbare Form umrechnen.
-							convert_si_size -i "$Max_Size:r"
-							if [ -n "$SIZE_B" ] ; then
-								MAX_SIZE="${SIZE_B}"
-							fi
-						}
-						#}}}
-						# Funktion choice_flags, Flags auswählen (z.B. boot){{{
-						choice_flags() {
-							local FLAGs Flag_Del
-							# Ist die Variable Fs_Type = linux-swap, benoetigt man kein Flag mehr.
-							# Genauso bei erweiterten Partitionen.
-							if [ x${Ist_Part_Type} != xextended ] ; then
-								if [ "$Fs_Type" != linux-swap ] ; then
-									PART_FLAG_TITLE=$(gettext 'Partitions-Flag')
-									PART_FLAG_MSG=$(gettext 'Waehlen Sie das Partitions-Flag aus.')
-									# Funktion part_flags_menue{{{
-									#
-									part_flags_menue() {
-										local Part_Flag
-										Flag_Old="$Flag"
-										for i in boot lba lvm palo raid root swap ; {
-											Fl="${i%,}"
-											if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
-												Part_Flag+=($i \"\" on)
-											else
-												Part_Flag+=($i \"\" off)
-											fi
-										}
-										PART_FLAG_MENU=($Part_Flag)
-										checklist "$PART_FLAG_TITLE" "$PART_FLAG_MSG" "$PART_FLAG_MENU"
-									}
-									#}}}
-									part_flags_menue
-									while [ -n "$gv_Auswahl" ] ; do
-										case $gv_Auswahl in
-											HELP*)	script_help flag_help
-												part_flags_menue
-												;;
-											*)
-												#
-												FLAGs="$gv_Auswahl"
-												PART_FLAG_MSG=$(gettext 'Sollen die Flags (${FLAGs// /, }) aktiviert werden (ja/nein)?')
-												yesno "$PART_FLAG_TITLE" "$PART_FLAG_MSG" ""
-												if [ ! -z "$gv_Auswahl" ] ; then
-													if [ "$gv_Auswahl" = yes ] ; then
-														# Variable Flag fuers Menue auf on stellen und
-														# die alten Einstellungen zum loeschen kennzeichnen.
-														Flag_Del="${Flag_Old//on/off}"
-														Flag="${FLAGs// / on, } on"
-													else
-														Flag="${FLAGs// / off, } off"
-														unset -- Flag_Del
-													fi
-												fi
-												break
-												;;
-										esac
-									done
-									if [ -z "$FLAGs" ] ; then
-										# Variable Flag fuers Menue auf off stellen und zum loeschen kennzeichnen.
-										Flag_Del="${Flag_Old//on/off}"
-										Flag="$Flag_Del"
-									fi
-								else
-									MSG=$(gettext 'Wenn das Dateisystem schon als linux-swap gekennzeichnet ist, kann man kein weiteres Flag vergeben.')
-									msgbox "$gv_Info" "$MSG"
-								fi
-							else
-								MSG=$(gettext 'Erweiterte Partitionen kann man nur anlegen und loeschen.')
-								msgbox "$gv_Info" "$MSG"
-							fi
-						}
-						#}}}
-						# Funktion action_parted_menue{{{
-						action_parted_menue() {
-							unset -- ACTION_PART_MENU FsTmp
-							local FsTmp
-							###########################################################
-							# Zur Zeit kann man nur auf der selben Festplate kopieren?
-							# Testen auch auf Dateisysteme
-							###########################################################
-							# Ist die vorherige Partition leer kann man Partitionen
-							# kopieren, aendern, loeschen. Vergrössern oder verkleinern
-							# haengt vom Dateisystem ab.
-							if [ x${${(ws: :)${PART_ANZ_NR[ACTION_NR-1]}}[3]} = x--${FREE}-- ] ; then
-								# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
-								# wird.
-								FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
-								case "$FsTmp" in
-									ext[23]|hfs*|jfs)
-										#####################################
-										# ext2/3, hfs(+), jfs(?) kann man kopieren,
-										#####################################
-										# aendern, verkleinern, loeschen.
-										# parted - StartCyl ist nicht fest
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Reduce \"\" $gv_Delete \"\" $gv_Check \"\"
-										$gv_Back \"\")
-										;;
-									ntfs)
-										# ntfs kann man kopieren, aendern
-										#####################################
-										# verkleinern vergroessern.
-										# Muss ntfs erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist davor nicht dahinter.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									xfs)
-										# xfs kann man kopieren, aendern,
-										######################################
-										# vergroessern.
-										# Muss xfs erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist davor nicht dahinter.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									reiserfs)
-										# reiserfs kann man kopieren, aendern,
-										# parted - wenn StartCyl fest ist
-										######################################
-										# verkleinern.
-										# Muss reiserfs erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist davor nicht dahinter.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									reiser4)
-										# reiser4 kann man kopieren, aendern,
-										# parted - wenn StartCyl fest ist
-										######################################
-										# verkleinern.
-										# Muss reiser4 erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist davor nicht dahinter.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									fat16|fat32|*swap)
-										# Diese Dateisysteme werden komplett
-										# unterstuetzt.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									ufs)
-										# ufs Dateisysteme kann man aendern, loeschen,
-										# pruefen unterstuetzt.
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\"
-										$gv_Check \"\" $gv_Back \"\")
-										;;
-									$gv_Unknown)
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Enlarge \"\"
-										$gv_Reduce \"\" $gv_Delete \"\" $gv_Back \"\")
-										;;
-									*)
-										# alle anderen Dateisysteme werden
-										# noch nicht unterstuetzt.
-										ACTION_PART_MENU=($gv_Back \"\")
-										;;
-								esac
-								## }}}
-								# Kommen nach der erweiterten Partition keine
-								# logischen Laufwerke, kann man das Laufwerk loeschen,
-								# oder man bekommt eine Nachricht über das was man machen kann. 
-							elif [ x${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[4]} = xextended ] ; then
-								# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
-								# wird.
-								unset -- Nr Tmp_Ok Tmp_Nr Tmp1_Nr
-								integer Nr Tmp_Nr Tmp1_Nr
-								Tmp_Nr="${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[1]}"
-								Tmp1_Nr="${#PART_ANZ_NR[@]}"
-								for Nr in {$Tmp_Nr..$Tmp1_Nr} ; {
-									if [ ${${(ws: :)${PART_ANZ_NR[Nr]}}[4]} != logical ] ; then
-										Tmp_Ok=yes
-									fi
-								}
-								# Variable pruefen
-								if [ "$Tmp_Ok" = yes ] ; then
-									ACTION_PART_MENU=($gv_Delete \"\" $gv_Back \"\")
-								else
-									###################################
-									# Funktion erstellen, da 2x vorkommt.
-									###################################
-									MSG=$(gettext 'Erweiterte Partitionen kann man nur anlegen und loeschen.')
-									msgbox "$gv_Info" "$MSG"
-								fi
-								## }}}
-							elif [ x${${(ws: :)${PART_ANZ_NR[ACTION_NR+1]}}[3]} = x--${FREE}-- ] ; then
-								# Kommt nach der aktuellen Partition noch freier Platz
-								# koennen bestimmte Dateisysteme vergroessert, verkleinert,
-								# kopiert, geaendert und geloescht werden.
-								# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
-								# wird.
-								FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
-								case $FsTmp in
-									ext2)
-										#####################################
-										# ext2 kann man kopieren, aendern, vergroessern,
-										# verkleinern und loeschen.
-										#####################################
-										# parted - StartCyl ist fest
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Enlarge \"\" $gv_Reduce \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									ext3|jfs)
-										#####################################
-										# ext3/jfs kann man kopieren, aendern, loeschen.
-										#####################################
-										# Muss wahrscheinlich FS erledigen, geht
-										# das hier überhaupt?
-										# parted - StartCyl ist fest
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									hfs*)
-										#####################################
-										# hfs(+) kann man kopieren, aendern, verkleinern,
-										# und loeschen.
-										#####################################
-										# parted - StartCyl ist fest
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Reduce \"\" $gv_Delete \"\"
-										$gv_Check \"\" $gv_Back \"\")
-										;;
-									ntfs)
-										# ntfs kann man kopieren, aendern und loeschen 
-										#####################################
-										# Muss ntfs erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist fest.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									reiserfs)
-										# reiser* kann man kopieren, aendern
-										# und loeschen.
-										# parted - wenn StartCyl fest ist
-										######################################
-										# Muss reiser* erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist fest.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									reiser4)
-										# reiser4 kann man kopieren, aendern
-										# und loeschen.
-										# parted - wenn StartCyl fest ist
-										######################################
-										# Muss reiser4 erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist fest.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									xfs)
-										# xfs kann man kopieren, aendern
-										# und loeschen.
-										######################################
-										# Muss xfs erledigen, geht das hier überhaupt?
-										# parted - StartCyl ist fest.
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									fat16|fat32|*swap)
-										# fat16, fat32, linux-swap kann man kopieren, aendern
-										# vergroessern, verkleinern und loeschen
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Delete \"\"
-										$gv_Check \"\" $gv_Back \"\")
-										;;
-									ufs)
-										# ufs Dateisysteme kann man aendern, loeschen,
-										# pruefen unterstuetzt.
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\"
-										$gv_Check \"\" $gv_Back \"\")
-										;;
-									$gv_Unknown)
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Enlarge \"\"
-										$gv_Reduce \"\" $gv_Delete \"\" $gv_Back \"\")
-										;;
-									*)
-										# alle anderen Dateisysteme werden
-										# noch nicht unterstuetzt.
-										ACTION_PART_MENU=($gv_Back \"\")
-										;;
-								esac
-								#}}}
-							else
-								# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
-								# wird.
-								FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
-								case $FsTmp in
-									ext3|jfs|ntfs|reiser*|xfs)
-										# Diese Dateisysteme kann man aendern, loeschen.
-										###############################################
-										# jfs Kopieren? wird noch nicht unterstuetzt.
-										###############################################
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Delete \"\" $gv_Check \"\" $gv_Back \"\")
-										;;
-									ext2|fat16|fat32|hfs*|*swap)
-										# Diese Dateisysteme kann man auch
-										# verkleinern.
-										###############################################
-										# hfs* Kopieren? wird noch nicht unterstuetzt.
-										###############################################
-										ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
-										$gv_Reduce \"\" $gv_Delete \"\" $gv_Check \"\"
-										$gv_Back \"\")
-										;;
-									ufs)
-										# ufs Dateisysteme kann man aendern, loeschen,
-										# pruefen unterstuetzt.
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\"
-										$gv_Check \"\" $gv_Back \"\")
-										;;
-									$gv_Unknown)
-										ACTION_PART_MENU=($gv_Change \"\" $gv_Reduce \"\"
-										$gv_Delete \"\" $gv_Back \"\")
-										;;
-									*)
-										# alle anderen Dateisysteme werden
-										# noch nicht unterstuetzt.
-										ACTION_PART_MENU=($gv_Back \"\")
-										;;
-								esac
-								## }}}
-							fi
-							# Checken ob das Dateisystem unterstuetzt wurde,
-							# ansonsten kommt eine Meldung.
-							if [ ! -z "${ACTION_PART_MENU[1]}" ] ; then
-								menubox "$FsTmp" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ACTION_PART_MENU"
-							else
-								# Dateisystem wird nicht unterstuetzt.
-								no_fs_support_msg "$FsTmp"
-								unset -- gv_Auswahl
-							fi
-						}
-						#}}}
-						# Funktion create_parted_menue{{{
-						create_parted_menue() {
-							CREATE_PART_MENU=($lv_Size \"$SIZE\" $lv_Filesystem \"$Fs_Type\"
-							$lv_Flags \"$Flag\" $lv_Part_Typ \"$Ist_Part_Type\"
-							$gv_Create \"\" $gv_Back \"\")
-							menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$CREATE_PART_MENU"
-						}
-						#}}}
-						# Funktion change_parted_menue{{{
-						change_parted_menue() {
-							CHANGE_PART_MENU=($lv_Filesystem \"$Fs_Type\"
-							$lv_Flags \"$Flag\" $lv_Format \"\"
-							$gv_Change \"\" $gv_Back \"\")
-							menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$CHANGE_PART_MENU"
-						}
-						#}}}
-						# Funktion enlarge_parted_menue{{{
-						enlarge_parted_menue() {
-							ENLARGE_PART_MENU=($lv_Size \"$SIZE\" $gv_Enlarge \"\" $gv_Back \"\")
-							menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ENLARGE_PART_MENU"
-						}
-						#}}}
-						# Funktion reduce_parted_menue{{{
-						reduce_parted_menue() {
-							REDUCE_PART_MENU=($lv_Size \"$SIZE\" $gv_Reduce \"\" $gv_Back \"\")
-							menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$REDUCE_PART_MENU"
-						}
-						#}}}
-						# Pruefen (check_part_nr), ob die Partitions Nr. bekannt ist# {{{
-						#
-						# usage:
-						check_part_nr() {
-							if [ "$#" = 1 ] ; then
-								unset -- Opt
-								local Opt
-								Opt="$1"
-								case $Opt in
-									*-[0-9]*)
-										# Partition wird angelegt, dadurch
-										# kennt man nicht die Partitions Nr,
-										# da eine Partitions Tabelle auch
-										# in einer unsortierten Reihenfolge
-										# erstellt worden sein kann.
-										#
-										# parted Tabelle 
-										$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit b print free 2>/dev/null >${gv_WorkDir}/partdb.diff)
-										PART_NR=${${(ws: :)${(M)${(f)"$(diff -u ${gv_WorkDir}/partdb$$ ${gv_WorkDir}/partdb.diff)"}##(#s)+[[:space:]][0-9]*}}[2]}
-										;;
-									*)
-										# Partitions Nr. ist bekannt?
-										# pruefen?
-										PART_NR="${PART_NR[PART_DEST_NR]}"
-										;;
-								esac
-							else
-								no_para_msg $0
-							fi
-						}
-						## }}}
-						# Funktion (convert_start_end_size),# {{{
-						# Start und End Groesse berechnen, den
-						# Rest macht parted.
-						#
-						# usage: convert_start_end_size
-						#
-						convert_start_end_size() {
-							unset -- Part_Start_Tmp Part_End_Tmp
-							convert_si_size -i "$L_PART_START"
-							if [ ! -z "$SIZE_B" ] ; then
-								Part_Start_Tmp="${SIZE_B}${SIZE_B_ME}"
-							fi
-							convert_si_size -i "$L_PART_END"
-							if [ ! -z "$SIZE_B" ] ; then
-								Part_End_Tmp="${SIZE_B}${SIZE_B_ME}"
-							fi
-						}
-						## }}}
-						# Funktion create_parted# {{{
-						create_parted() {
-							if [ $# = 1 ] ; then
-								Menu="$1"
-								$Menu
-								while [ -n "$gv_Auswahl" ] ; do
-									case $gv_Auswahl in
-										HELP*)	script_help create_parted_help
-											$Menu
-											;;
-										$lv_Size)
-											# Groesse, alte und neue Groessen speichern # {{{
-											if [ -z "$SIZE_OLD" ] ; then
-												SIZE_OLD=${PART_ANZ_SIZE_NR[PART_DEST_NR]}
-											fi
-											# Groesse der Partition eingeben.
-											PART_SIZE_TITLE=$(gettext 'Partitions_Groesse')
-											number_input -D "$PART_SIZE_TITLE" "$PART_SIZE_MSG" "$SIZE_OLD"
-											# Ist die Grösse gleich der alten, wird
-											# auch die alte Groesse benutzt.
-											if [ "$NUMBER" -a "$NUMBER" != "$SIZE_OLD" ] ; then
-												# umrechnen der Groesse in Cylinder
-												convert_si_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-												if [[ "$SIZE_B:r" -le "$Max_Size:r" ]] ; then
-													SIZE=$NUMBER
-													case "$CALC_SIZE" in
-														normal)
-															(( L_PART_END = L_PART_START + SIZE_B ))
-															;;
-														endminus)
-															(( L_PART_START = L_PART_END - SIZE_B ))
-															;;
-													esac
-												else
-													over_size_msg
-													SIZE=$SIZE_OLD
-												fi
-											else
-												SIZE=$SIZE_OLD
-											fi
-											#}}}
-											$Menu $lv_Size
-											;;
-										$lv_Filesystem)
-											# Filesystem_type auswählen{{{
-											if [ "$Ist_Part_Type" != extended ] ; then
-												Fs_Type_Old="$Fs_Type"
-												FS_TYPE_TITLE="$lv_Filesystem"
-												FS_TYPE_MSG=$(gettext 'Waehlen Sie das Dateisystem aus.')
-												formatprogs_check -p
-												if [ -n "$FM_Menue" ] ; then
-													FS_TYPE_MENU=($FM_Menue)
-												fi
-												menubox "$Fs_Type" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
-												while [ "$gv_Auswahl" ] ; do
-													case $gv_Auswahl in
-														HELP*)	script_help create_parted_help
-															menubox "$Fs_Type" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
-															;;
-														*)	Fs_Type="$gv_Auswahl"
-															# Wurde nichts geaendert wird die
-															# Variable Fs_Type_Old geloescht.
-															if [ "$Fs_Type" != "$Fs_Type_Old" ] ; then
-																unset -- Fs_Type_Old
-															fi
-															# Ist Fs_Type = linux-swap wird die Variable "Flag"
-															# gelöscht.
-															if [ "$Fs_Type" = linux-swap ] ; then
-																unset -- Flag
-															fi
-															break
-															;;
-													esac
-												done
-											else
-												MSG=$(gettext 'Einer erweiterten Partition kann man keinen Dateisystem geben.')
-												msgbox "$gv_Attention" "$MSG"
-												Fs_Type="$gv_Unknown"
-											fi
-											#}}}
-											$Menu $lv_Filesystem
-											;;
-										$lv_Flags)
-											# bisher nur Flags der Partitionen aendern
-											choice_flags
-											$Menu $lv_Flags
-											;;
-										$lv_Part_Typ)	
-											# Partitionstype auswählen# {{{
-											# Funktion part_type_menue# {{{
-											part_type_menue() {
-												# Ist noch keine erweiterte Partition angelegt und die Anzahl
-												# der primaeren Partitionen kleiner als 4, kann man primaere 
-												# oder eine erweiterte Partitionen anlegen.
-												# Gibt es schon eine erweiterte Partition, dann
-												# nur logische Partitionen oder auf freien Partitionen vor der
-												# erweiterten.
-												Extented_Part=${(M)${PART_TYPE}[(fr)extended]}
-												Primary_Part=${(w)#${(M)${PART_TYPE}##primary}}
-												if [ -z "$Extented_Part" -a "$Primary_Part" -lt 4 ] ; then
-													PARTED_TYPE_MENU=(primary \"\" extended \"\" $gv_Back \"\")
-												elif [ -n "$Extented_Part" -a "$Primary_Part" -lt 3 -a "$CHOICE_NR" -lt 4 ] ; then
-													PARTED_TYPE_MENU=(primary \"\" logical \"\" $gv_Back \"\")
-												elif [ -n "$Extented_Part" ] ; then
-													PARTED_TYPE_MENU=(logical \"\" $gv_Back \"\")
-												else
-													MSG=$(gettext 'Diesen Partitionstyp koennen Sie nicht aendern.')
-													msgbox "$gv_Attention" "$MSG"
-												fi
-												PARTED_TYPE_TITLE="$lv_Part_Typ"
-												PARTED_TYPE_MSG=$(gettext 'Waehlen Sie den Partitions-Typ aus.')
-												menubox "" "$PARTED_TYPE_TITLE" "$PARTED_TYPE_MSG" "$PARTED_TYPE_MENU"
-											}
-											# }}}
-											part_type_menue
-											while [ "$gv_Auswahl" ] ; do
-												case $gv_Auswahl in
-													HELP*)	script_help create_parted_help
-														part_type_menue
-														;;
-													$gv_Back)	break
-														;;
-													*)	
-														if [ "$gv_Auswahl" = extended ] ; then
-															Ist_Part_Type="$gv_Auswahl"
-															Fs_Type="$gv_Unknown"
-														else
-															Ist_Part_Type="$gv_Auswahl"
-														fi
-														break
-														;;
-												esac
-											done
-											# }}}
-											$Menu $lv_Part_Typ
-											;;
-										$gv_Create)
-											# Partition erzeugen{{{
-											#
-											# Dateisysteme die noch nicht von parted unterstuetzt
-											# werden (anlegen).
-											unset -- SELF_CREATE_FS
-											case "$Fs_Type" in
-												ext3|hfs*|jfs|ntfs|reiser*|ufs|xfs)
-													if [ "$Fs_Type" = hfs+ ] ; then
-														SELF_CREATE_FS="hfsplus"
-													else
-														SELF_CREATE_FS="$Fs_Type"
-													fi
-													unset -- Fs_Type
-													;;
-												$gv_Unknown)	unset -- Fs_Type
-											esac
-											# Ist der Partitionstyp = unbekannt, wird
-											# die Variable Ist_Part_Type geloescht.
-											if [ "$Ist_Part_Type" = "$gv_Unknown" ] ; then
-												unset -- Ist_Part_Type
-											fi
-											#
-											if [ "$SIZE" -a "$Ist_Part_Type" -a "$Fs_Type" ] ; then
-												convert_start_end_size
-												PROG_OPT="-s $FP unit co mkpartfs $Ist_Part_Type $Fs_Type $Part_Start_Tmp $Part_End_Tmp"
-												eval parted ${=PROG_OPT} || prog_failure
-												# Partitions nummer pruefen
-												check_part_nr $Part_Auswahl
-												# Flags setzen
-												set_flag $PART_NR
-												partprobe $FP
-												sleep 3
-											elif [ "$SIZE" -a "$Ist_Part_Type" ] ; then
-												convert_start_end_size
-												PROG_OPT="-s $FP unit co mkpart $Ist_Part_Type $Part_Start_Tmp $Part_End_Tmp"
-												eval parted ${=PROG_OPT} || prog_failure
-												# Dem Kernel die neue Partitionstabelle bekanntgeben
-												partprobe $FP
-												sleep 3
-												# Partitions nummer pruefen
-												check_part_nr $Part_Auswahl
-												# Flags setzen
-												set_flag $PART_NR
-												# Filesysteme die nicht von parted unterstuetzt,
-												# werden, muessen ihre eig. tools ausfuehren.
-												if [ -n "$SELF_CREATE_FS" ] ; then
-													format "${FP}${PART_NR}" "$SELF_CREATE_FS"
-												fi
-											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte Groesse, Partitions_Typ, und/oder Dateisystem/Flag mit richtigen Werten belegen.')
-												msgbox "$gv_Attention" "$MSG"
-											fi
-											unset -- Fs_Type SIZE Flag Ist_Part_Type Size_Old SIZE_OLD Ist_Part_Type
-											break
-											#}}}
-											;;
-										$gv_Change)
-											# Partitionen aendern# {{{
-											# Partitions nummer pruefen
-											check_part_nr $Part_Auswahl
-											# Dateisysteme die noch nicht von parted unterstuetzt
-											# werden (eig. Dateisystem Tools).
-											unset -- SELF_CREATE_FS
-											case "$Fs_Type" in
-												ext3|hfs*|jfs|ntfs|reiser*|ufs|xfs)
-													if [ "$Fs_Type" = hfs+ ] ; then
-														SELF_CREATE_FS="hfsplus"
-													else
-														SELF_CREATE_FS="$Fs_Type"
-													fi
-													unset -- Fs_Type
-													;;
-											esac
-											# formatieren, falls das ausgewaehlte Dateisystem
-											# geaendert wurde.
-											if [ -z "$Fs_Type_Old" -a -n "$SELF_CREATE_FS" ] ; then
-												format "${FP}${PART_NR}" "$SELF_CREATE_FS"
-											elif [ -z "$Fs_Type_Old" -a -n "$Fs_Type" ] ; then
-												parted -s $FP mkfs $PART_NR $Fs_Type || prog_failure
-											fi
-											# Flags setzen
-											set_flag $PART_NR
-											partprobe "$FP"
-											sleep 3
-											unset -- Fs_Type Fs_Type_Old Flag
-											read_parted "$FP" free
-											break
-											## }}}
-											;;
-										$lv_Format)
-											# vorhandenes Dateisystem formatieren# {{{
-											# Partitions nummer pruefen
-											check_part_nr $Part_Auswahl
-											# Dateisysteme die noch nicht von parted unterstuetzt
-											# werden (eig. Dateisystem Tools).
-											unset -- SELF_CREATE_FS
-											case "$Fs_Type" in
-												ext3|hfs*|jfs|ntfs|reiser*|ufs|xfs)
-													if [ "$Fs_Type" = hfs+ ] ; then
-														SELF_CREATE_FS="hfsplus"
-													else
-														SELF_CREATE_FS="$Fs_Type"
-													fi
-													unset -- Fs_Type
-													;;
-											esac
-											# formatieren, falls das ausgewaehlte Dateisystem
-											# geaendert wurde.
-											if [ -n "$SELF_CREATE_FS" ] ; then
-												format "${FP}${PART_NR}" "$SELF_CREATE_FS"
-											elif [ -z "$Fs_Type_Old" -a -n "$Fs_Type" ] ; then
-												parted -s $FP mkfs $PART_NR $Fs_Type || prog_failure
-											fi
-											unset -- Fs_Type Fs_Type_Old Flag
-											read_parted "$FP" free
-											break
-											## }}}
-											;;
-										$gv_Enlarge)
-											# vergroessern# {{{
-											if [ "$L_PART_START" != "$L_PART_END" ] ; then
-												convert_start_end_size
-												PROG_OPT="-s $FP unit co resize ${Part_Auswahl##*[a-z/]} $Part_Start_Tmp $Part_End_Tmp"
-												eval parted ${=PROG_OPT} || prog_failure
-												# Dem Kernel die neue Partitionstabelle bekanntgeben
-												partprobe $FP
-												sleep 3
-												unset -- Fs_Type SIZE Flag Ist_Part_Type Size_Old Size_Old_Kb SIZE_OLD
-												read_parted $FP free
-											fi
-											break
-											## }}}
-											;;
-										$gv_Reduce)
-											# verkleinern# {{{
-											if [ "$L_PART_START" != "$L_PART_END" ] ; then
-												convert_start_end_size
-												PROG_OPT="-s $FP unit co resize ${Part_Auswahl##*[a-z/]} $Part_Start_Tmp $Part_End_Tmp"
-												eval parted ${=PROG_OPT} || prog_failure
-												# Dem Kernel die neue Partitionstabelle bekanntgeben
-												partprobe $FP
-												sleep 3
-												unset -- Fs_Type SIZE Flag Ist_Part_Type Size_Old Size_Old_Kb SIZE_OLD
-												read_parted $FP free
-											fi
-											break
-											## }}}
-											;;
-										$gv_Back)	break
-											;;
-									esac
-								done
-							else
-								no_para_msg $0
-							fi
-						}
-						# }}}
-						value_choice
-						# Partition erstellen
-						if [ x${${(ws: :)${PART_ANZ_NR[gv_Auswahl]}}[3]} = x--${FREE}-- ] ; then
-							PART_SIZE_MSG=$(gettext 'Geben Sie bitte die Groesse dieser Partition ein (3G = 3 GigaByte). Es sind noch $SIZE_OLD frei.')
-							create_parted create_parted_menue
-							# Partitionstabelle neu einlesen
-							read_parted $FP free
-						else
-							# Partitionen veraendern, vergroessern, ... oder verkleinern.
-							ACTION_NR="$gv_Auswahl"
-							action_parted_menue
-							while [ -n "$gv_Auswahl" ] ; do
-								case "$gv_Auswahl" in
-									HELP*)	script_help action_help
-										action_parted_menue
-										;;
-									$gv_Copy)
-										# Partitionen kopieren.# {{{
-										# erweiterte Partitionen kann man nicht kopieren.
-										# Dateisysteme die noch nicht von parted unterstuetzt# {{{
-										# werden (eig. Dateisystem Tools).
-										unset -- SELF_CREATE_FS PARTED CP_FS PART_SRC_SIZE
-										case "$Fs_Type" in
-											ext[23]|hfs*|jfs|ntfs|reiser*|ufs|xfs)
-												if [ "$Fs_Type" = hfs+ ] ; then
-													SELF_CREATE_FS="hfsplus"
-												else
-													SELF_CREATE_FS="$Fs_Type"
-												fi
-												CP_FS=$SELF_CREATE_FS
-												PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
-												;;
-											fat16)
-												CP_FS=$Fs_Type
-												PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
-												;;
-											fat32|linux-swap)
-												PARTED=yes
-												CP_FS=$Fs_Type
-												PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
-												;;
-										esac
-										## }}}
-										# Funktion (check_src_dst), prueft ob src und dst# {{{
-										# unterschiedliche Partitionen sind, wenn auf der selben
-										# Festplatte kopiert werden soll. Auf verschiedenen Festplatten
-										# ist es egal.
-										check_src_dst() {
-											if [ $# = 2 ] ; then
-												unset -- Src Dst
-												local Src Dst
-												Src=$1
-												Dst=$2
-												if [ "$FP" != "$FP_DST" ] ; then
-													FP_DIFF=yes
-												else
-													if [ $Src = $Dst ] ; then
-														# Nachricht das
-														# Src und Dst Partition unterschiedlich sein muessen.
-														MSG=$(gettext 'Die Quell und Ziel Partition muessen unterschiedlich Laufwerke sein.')
-														msgbox "$gv_Info" "$MSG"
-														break
-													fi
-													unset -- FP_DIFF
-												fi
-											else
-												no_para_msg $0
-											fi
-										}
-										## }}}
-										# Funktion (exec_copy_parted), kopiert den Inhalt der Partitionen# {{{
-										#
-										# usage: exec_copy_parted DESTINATION_FESTPLATTE
-										exec_copy_parted() {
-											if [ $# = 1 ] ; then
-												unset -- FP_DST
-												FP_DST="$1"
-												read_parted "$FP_DST"
-												if [ -n "$PART_ANZ_NR" ] ; then
-													COPY_MENU=($PART_ANZ_NR)
-													menubox "$NR" "$ACTION_PART_TITLE" "$gv_Menupoint" "$COPY_MENU"
-													while [ -n "$gv_Auswahl" ] ; do
-														case "$gv_Auswahl" in
-															HELP*)	script_help share/copyfs_help
-																menubox "$NR" "$ACTION_PART_TITLE" "$gv_Menupoint" "$COPY_MENU"
-																;;
-															*)	
-																# Dateisystem kopieren
-																NR="$gv_Auswahl"
-																PART_DST_FS=${${PART_ANZ_NR[gv_Auswahl]}[3]}
-																# Ist das Src Dateisystem nicht das selbe wie das Dst Dateisystem dann
-																# kommt eine Meldung das beide Dateisysteme identisch sein muessen.
-																if [ "$PART_DST_FS" != "$gv_Unknown" -a "$PART_DST_FS" = "$CP_FS" ] ; then
-																	# Berechnung der Groessen uebernimmt copy_fs und
-																	# die Dateisystem eigenen Tools.
-																	if [ -n "$SELF_CREATE_FS" ] ; then
-																		PART_SRC="$Part_Auswahl"
-																		PART_DST=${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
-																		check_src_dst $PART_SRC $PART_DST
-																		copy_fs $SELF_CREATE_FS "$PART_SRC" $SELF_CREATE_FS "$PART_DST"
-																	else
-																		# kopieren von fat ohne Berechnung bei gleicher Groesse
-																		# fat32 -> fat16 = fat32
-																		# fat32 -> fat32 = fat32
-																		# fat16 -> * = fat32
-																		if [ "$PARTED" = yes ] ; then
-																			# Keine Berechnung noetigt fuer linux-swap/fat32,
-																			#################################################
-																			# fat32 geht gerade nicht? parted (grml) zu alt.
-																			#################################################
-																			PART_SRC="${Part_Auswahl##*[a-z]}"
-																			PART_DST=${${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}##*[a-z]}
-																			# Wenn die Festplatten auch unterschiedlich sind
-																			# PROG_OPT erweitern
-																			# parted -s /dev/hda cp /dev/hdb 2 3
-																			# kopiert die 2 Partition der 1 Festplatte auf
-																			# die 3. Partition der 2. Festplatte.
-																			check_src_dst $PART_SRC $PART_DST
-																			if [ "$FP_DIFF" = yes ] ; then
-																				PROG_OPT="-s $FP cp $FP_DST $PART_SRC $PART_DST"
-																			else
-																				PROG_OPT="-s $FP cp $PART_SRC $PART_DST"
-																			fi
-																			# evtl. gemountete Laufwerke umounten
-																			mount_check -a $Part_Auswahl
-																			if [ "$U_MOUNT" = yes ] ; then
-																				mount_check -a ${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
-																			fi
-																			if [ "$U_MOUNT" = yes ] ; then
-																				eval parted ${=PROG_OPT} || prog_failure
-																			else
-																				no_umount_msg
-																			fi
-																		elif [ "$CP_FS" = fat16 ] ; then
-																			PART_SRC="${Part_Auswahl##*[a-z]}"
-																			PART_DST=${${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}##*[a-z]}
-																			PART_DST_SIZE="${PART_SIZE[gv_Auswahl]}"
-																			# Wenn die Fetsplatten auch unterschiedlich sind
-																			# PROG_OPT erweitern
-																			check_src_dst $PART_SRC $PART_DST
-																			if [ "$FP_DIFF" = yes ] ; then
-																				PROG_OPT="-s $FP cp $FP_DST $PART_SRC $PART_DST"
-																			else
-																				PROG_OPT="-s $FP cp $PART_SRC $PART_DST"
-																			fi
-																			# evtl. gemountete Laufwerke umounten
-																			mount_check -a $Part_Auswahl
-																			if [ "$U_MOUNT" = yes ] ; then
-																				mount_check -a ${${${PART_ANZ_NR[gv_Auswahl]}[2]}//\"/}
-																			fi
-																			if [ "$U_MOUNT" = yes ] ; then
-																				if [ "$PART_SRC_SIZE" -le "$PART_DST_SIZE" ] ; then
-																					eval parted ${=PROG_OPT} || prog_failure
-																				else
-																					no_copy_fs_msg
-																				fi
-																			else
-																				no_umount_msg
-																			fi
-																		fi
-																	fi
-																else
-																	MSG=$(gettext 'Das Dateisystem des Quell und Ziellaufwerks muessen gleich sein.')
-																	msgbox "$gv_Attention" "$MSG"
-																fi
-																read_parted $FP free
-																break
-																;;
-														esac
-													done
-												fi
-											else
-												no_para_msg $0
-											fi
-										}
-										## }}}
-										# Funktion disk_menu{{{
-										disk_menu() {
-											DISK_MENU=($DISK_DEV_E $gv_Back \"\")
-											menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
-										}
-										#}}}
-										disk_menu
-										while [ -n "$gv_Auswahl" ] ; do
-											case "$gv_Auswahl" in
-												HELP*)	script_help share/disk_help
-													disk_menu
-													;;
-												$gv_Back)	break 3
-													;;
-												*)
-													# Partitionsinhalt kopieren
-													exec_copy_parted $gv_Auswahl
-													break 3
-													;;
-											esac
-										done
-										## }}}
-										;;
-									$gv_Create)
-										part_size_msg
-										create_parted create_parted_menue
-										break
-										;;
-									$gv_Change)
-										create_parted change_parted_menue
-										break
-										;;
-									$gv_Enlarge)
-										# vergroessern von Partitionen
-										part_size_msg
-										create_parted enlarge_parted_menue
-										break
-										;;
-									$gv_Reduce)
-										# verkleinern von Partitionen
-										part_size_msg
-										create_parted reduce_parted_menue
-										break
-										;;
-									$gv_Delete)
-										# Partitionen löschen{{{
-										# freie Partitionen kann man nicht löschen
-										Nr="${Part_Auswahl##*[a-z/]}"
-										if [ "$Nr" != -1 ] ; then
-											mount_check -u "$Part_Auswahl"
-											# Soll die erweiterte Partition geloescht
-											# werden, dann werden auch alle logischen
-											# Partitionen geloescht.
-											if [ "`print ${(M)${(M)${(f)"$(< ${gv_WorkDir}/partdb$$)"}##(s#)$Nr*}##*extended*}`" ] ; then
-												for i in ${(O)${(M)${(M)${(f)"$(< ${gv_WorkDir}/partdb$$)"}##*logical*}##(s#)[0-9]?}} ; {
-													parted -s $FP rm $i || prog_failure
-												}
-											else
-												parted -s $FP rm $Nr || prog_failure
-											fi
-											# 
-											partprobe $FP
-											sleep 3
-											unset -- Fs_Type SIZE Flag Ist_Part_Type Size_Old SIZE_OLD FLAG
-											read_parted $FP free
-										else
-											MSG=$(gettext 'Leeren Festplattenplatz koennen Sie nicht loeschen.')
-											msgbox "$gv_Attention" "$MSG"
-											unset -- Fs_Type SIZE Flag Ist_Part_Type Size_Old SIZE_OLD FLAG
-										fi
-										#}}}
-										break
-										;;
-									$gv_Check)
-										# Dateisystem ueberpruefen# {{{
-										# Funktion (check_msg), Nachricht das# {{{
-										# alles in Orndnung ist
-										check_msg() {
-											if [ "$RET" = 0 ] ; then
-												MSG=$(gettext 'Das Dateisystem ist in Ordnung.')
-												msgbox "$gv_Info" "$MSG"
-											fi
-										}
-										## }}}
-										# Dateisysteme die noch nicht von parted unterstuetzt
-										# werden (eig. Dateisystem Tools).
-										unset -- SELF_CREATE_FS PARTED
-										case "$Fs_Type" in
-											ext3|hfs*|jfs|ntfs|reiser*|ufs|xfs)
-												case "$Fs_Type" in
-													hfs+)
-														# hfs+ in hfsplus umbenennen.
-														SELF_CREATE_FS="fsck.hfsplus"
-														;;
-													xfs)
-														SELF_CREATE_FS="xfs_check"
-														;;
-													*)
-														# Fs_Type uebernehmen.
-														SELF_CREATE_FS="fsck.${Fs_Type}"
-														;;
-												esac
-												;;
-											linux-swap|fat*|ext2)	PARTED=yes ;;
-										esac
-										# Dateisystem Tools zum checken nutzen
-										if [ -n "$SELF_CREATE_FS" ] ; then
-											mount_check -u "$Part_Auswahl"
-											$SELF_CREATE_FS $Part_Auswahl >/dev/null || prog_failure
-											# Nachricht das alles in Ordnung ist,
-											# ansonsten gibt die Funktion prog_failure
-											# die fehleranzeige.
-											check_msg
-										elif [ "$PARTED" = yes ] ; then
-											# parted zum checken nutzen
-											mount_check -u "$Part_Auswahl"
-											Nr="${Part_Auswahl##*[a-z/]}"
-											parted -s $FP check $Nr || prog_failure
-											check_msg
-										fi
-										## }}}
-										break
-										;;
-									$gv_Back)	break
-										;;
-								esac
-							done
-						fi
-						#}}}
-						parted_menue $PART_DEST_NR
-						;;
-					$gv_Back) break
-						;;
-				esac
-			done
+			parted_edit
+			# nach Festplatten suchen
+			search_disk
 			#}}}
 			haupt_menue $FP
 			;;
 		lvm)
 			# LVMs creieren
 			kwlvm
+			# nach Festplatten suchen
+			search_disk
 			haupt_menue lvm
 			;;
 		raid)
 			# RAID Arrays creieren
 			kwraid
+			# nach Festplatten suchen
+			search_disk
 			haupt_menue raid
 			;;
 		$gv_Exit)	break
