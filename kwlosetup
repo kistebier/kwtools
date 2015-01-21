@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 12.10.2014
 #
 # Script: kwlosetup, verschluesselt Partitionen oder ganze Laufwerke
 # Version: 0.1.13
@@ -169,10 +169,10 @@ create_cont() {
 	if [ -n "$gv_Loop_Dev" -a "$Dev" = ok ] ; then
 		if [ "$MULTI_KEY" = yes ] ; then
 			if [ -n "$KEY_FILE_PATH" ] ; then
-				# Groesse in KByte umrechnen
+				# Groesse in Byte umrechnen
 				convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
-				if [ -n "$SIZE_KB" ] ; then
-					dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_KB || prog_failure
+				if [ -n "$SIZE_B" ] ; then
+					dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
 				else
 					break
 				fi
@@ -203,10 +203,10 @@ create_cont() {
 			fi
 		else
 			# ohne KEY_FILE erstellen
-			# Groesse in KByte umrechnen
+			# Groesse in Byte umrechnen
 			convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
-			if [ -n "$SIZE_KB" ] ; then
-				dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_KB || prog_failure
+			if [ -n "$SIZE_B" ] ; then
+				dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
 			else
 				break
 			fi

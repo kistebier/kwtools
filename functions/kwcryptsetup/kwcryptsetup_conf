@@ -199,13 +199,13 @@ kwcryptsetup_conf() {
 					unset -- SIZE
 				}
 				## }}}
-				SIZE_MSG=$(gettext 'Geben Sie die Groesse des Containers ein (>2MByte). Es gehen die Groesenangaben [kKmMgGtTpPzZ].')
+				SIZE_MSG=$(gettext 'Geben Sie die Groesse des Containers ein (>2MByte).')
 				number_input -D "$gv_Configuration" "$SIZE_MSG" "$SIZE"
 				if [ -n "$NUMBER" ] ; then
 					# Laufwerksangaben in KiloByte umrechnen
 					convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-					if [ -n "$SIZE_KB" ] ; then
-						if [[ "$SIZE_KB" -gt 2048 ]] ; then
+					if [ -n "$SIZE_B" ] ; then
+						if [[ "$SIZE_B" -gt 2048 ]] ; then
 							SIZE="$NUMBER"
 						else
 							no_2mb_size_msg

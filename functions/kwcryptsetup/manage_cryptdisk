@@ -50,28 +50,28 @@ manage_cryptdisk() {
 										break
 										;;
 									*)
-										# LVMs ; VG_SIZE wird von der Funktion vg_free_size# {{{
-										# belegt.
+										# LVMs ; vorhandene LV Groesse heraus finden.
+										lv_free_size "$CRYPT_DEV"
+										# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
+										# werden von der Funktion vg_free_size belegt.
 										vg_free_size "${CRYPT_DEV%/*}"
-										convert_drive_size -i "$VG_SIZE"
-										SIZE_KB1="$SIZE_KB"
 										#
-										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ein, um die ihr LV vergroessert werden soll (3G = 3 GigaByte). Es sind noch "${SIZE_KB1}${SIZE_KB_ME}" frei.')
+										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ein, um die ihr LV vergroessert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 										number_input -D "$RESIZE_TITLE" "$LV_ENLARGE_SIZE_MSG"
 										#
 										while [ -n "$NUMBER" ] ; do
-											# Laufwerksangaben in KiloByte umrechnen
+											# Laufwerksangaben in Byte umrechnen
 											convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-											if [ -n "$SIZE_KB" ] ; then
-												Size_Tmp="$SIZE_KB"
+											if [ -n "$SIZE_B" ] ; then
+												Size_Tmp="$SIZE_B"
 											fi
-											convert_drive_size "$SIZE_KB_ME" "$SIZE_KB1"
-											if [ -n "$SIZE_KB" ] ; then
-												Old_Size_Tmp="$SIZE_KB"
-											fi
-											if [[ "$Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
+											if [[ "$Size_Tmp" -le "$VG_FREE_SIZE" ]] ; then
+												# vorhandene Size_Tmp + alte Size.
+												# Die Variable LV_SIZE wird von der
+												# Funktion lv_free_size belegt.
+												(( LV_NEW_SIZE = Size_Tmp + LV_SIZE ))
 												# Dateisystem checken und vergroessern
-												resize_fs -l +${Size_Tmp} $Old_Size_Tmp "$CRYPT_DEV"
+												resize_fs -l +${LV_NEW_SIZE} "$CRYPT_DEV"
 												break
 											else
 												over_size_msg
@@ -107,23 +107,21 @@ manage_cryptdisk() {
 											# LVMs ; LV_SIZE wird von der Funktion lv_free_size
 											# belegt.
 											lv_free_size "$CRYPT_DEV"
-											convert_drive_size -i "$LV_SIZE"
-											SIZE_KB1="$SIZE_KB"
-											LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die das LV verkleinert werden soll (3G = 3 GigaByte). Diese LV besitzt insgesamt "${SIZE_KB1}${SIZE_KB_ME}".')
+											LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die das LV verkleinert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
 											number_input -D "$RESIZE_TITLE" "$LV_REDUCE_SIZE_MSG"
 											while [ -n "$NUMBER" ] ; do
-												# Laufwerksangaben in KiloByte umrechnen
+												# Laufwerksangabe in Byte umrechnen
 												convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-												if [ -n "$SIZE_KB" ] ; then
-													Size_Tmp="$SIZE_KB"
+												if [ -n "$SIZE_B" ] ; then
+													Size_Tmp="$SIZE_B"
 												fi
-												convert_drive_size "$SIZE_KB_ME" "$SIZE_KB1"
-												if [ -n "$SIZE_KB" ] ; then
-													Old_Size_Tmp="$SIZE_KB"
-												fi
-												if [[ "$Size_Tmp" -lt "$Old_Size_Tmp" ]] ; then
+												# ist die Groesse um die verkleinert werden soll
+												# kleiner als die ganze Groesse der LV dann wird
+												# verkleinert.
+												if [[ "$Size_Tmp" -lt "$LV_SIZE" ]] ; then
+													(( LV_NEW_SIZE = LV_SIZE - Size_Tmp ))
 													# Dateisystem checken und verkleinern.
-													resize_fs -l -${Size_Tmp} $Old_Size_Tmp "$CRYPT_DEV"
+													resize_fs -l -${LV_NEW_SIZE} "$CRYPT_DEV"
 													break
 												else
 													over_size_msg
@@ -254,13 +252,15 @@ Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschr
 			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
 			Sectors=$(blkid -o value -s PART_ENTRY_SIZE -p ${CRYPT_PATH}/${CRYPT_FILE})
 			# in Bytes umrechnen
+			# ###############################
+			#  TODO: 512?? oder Festplattensectorgroesse
+			#  erst einmal heraus finden.
+			# ###############################
 			(( Part_Size = Sectors * 512 ))
 		else
 			convert_drive_size "${SIZE##*[0-9]}" "${SIZE%%[a-zA-Z]*}"
-			if [ -n "$SIZE_KB" ] ; then
-				Size="${SIZE_KB%%.*}"
-				# nochmal KB in Byte umrechnen, fuer dd_gauge
-				(( Part_Size = Size * 1024 ))
+			if [ -n "$SIZE_B" ] ; then
+			Part_Size="${SIZE_B%%.*}"
 			fi
 		fi
 		
