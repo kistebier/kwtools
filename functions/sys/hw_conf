@@ -74,7 +74,8 @@ hw_conf() {
 	disk() {
 		kernel_release
 		local Cap
-		unset -- DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP DISK_DEV_CAP_BYTE
+		unset -- DISK_DEV DISK_DEV_E DISK_DEV_M DISK_DEV_CAP DISK_DEV_CAP_BYTE \
+			HW_SECTOR_SIZE
 		if [[ -x ${commands[hwinfo]} ]] && \
 			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
 			# ${gv_WorkDir}/disk immer neu erstellen falls eine Festplatte hinzu kam.
@@ -90,6 +91,8 @@ hw_conf() {
 						# in Bytes umrechnen
 						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
 						if [ "$Tmp" -gt 0 ] ; then
+							###########
+							#TODO:
 							DISK_DEV_CAP_BYTE+=(${Tmp}B)
 							# Bytes in bessere Lesbarkeit umrechnen
 							convert_si_size -i $Tmp
@@ -99,6 +102,9 @@ hw_conf() {
 							DISK_DEV_CAP+=(0)
 						fi
 						FP_INFO+=("$Dev $Rest")
+						# Sector Groesse der Festplatte heraus bekommen.
+						# Meist 512Byte >= 3TByte, 4096Byte >= 3 TByte.
+						HW_SECTOR_SIZE+=$(</sys/block/${Dev#/dev/}/queue/hw_sector_size)
 					fi
 				done < ${gv_WorkDir}/disk
 			fi
@@ -149,20 +155,20 @@ hw_conf() {
 				local L_Opt
 				L_Opt="$1"
 				O_LIMIT="$2"
-				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (3G = 3GigaByte).')
+				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (1GiB = 1GigaByte = 1024 MegaByte).')
 				number_input -D "$LIMIT_TITLE" "$LIMIT_MSG" "$SIZE"
 				#
 				if [ -n "$NUMBER" ] ; then
 					if [ -n "$O_LIMIT" -a "${O_LIMIT%%[a-zA-Z]}" -gt 0 ] ; then
-						# Vorhandene Groesse in KByte umrechnen.
+						# Vorhandene Groesse in Byte umrechnen.
 						convert_drive_size "${O_LIMIT##*[0-9]}" "${O_LIMIT%%[a-zA-Z]}"
-						if [ -n "$SIZE_KB" ] ; then
-							Old_Size_Tmp="$SIZE_KB"
+						if [ -n "$SIZE_B" ] ; then
+							Old_Size_Tmp="$SIZE_B"
 						fi
-						# Laufwerksangaben in KiloByte umrechnen
+						# neue Laufwerksangabe in Byte umrechnen
 						convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-						if [ -n "$SIZE_KB" ] ; then
-							Size_Tmp="$SIZE_KB"
+						if [ -n "$SIZE_B" ] ; then
+							Size_Tmp="$SIZE_B"
 						fi
 						if [ "$L_Opt" = -h ] ; then
 							if [[ "$Size_Tmp" -ge "$Old_Size_Tmp" ]] ; then
@@ -221,14 +227,12 @@ hw_conf() {
 # usage: lv_free_size LV
 lv_free_size() {
 	if [ "$#" -eq 1 ] ; then
-		unset -- LV_SIZE LV_SIZE_KB LV_SIZE_ME
+		unset -- LV_SIZE LV_SIZE_ME
 		# vorhandene LV Size in Bytes heraus bekommen.
 		LV_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; lvdisplay --units b $1)"}##*LV*Size*}}[3]}
-		# in KiloByte umrechnen, wegen convert_drive_size.
-		(( LV_SIZE_KB = LV_SIZE / 1024 ))
 		# in eine besser lesbare Form umrechnen
-		convert_drive_size -i "$LV_SIZE_KB"
-		LV_SIZE_ME="${SIZE_KB}${SIZE_KB_ME}"
+		convert_drive_size -i "$LV_SIZE"
+		LV_SIZE_ME="${SIZE_B}${SIZE_B_ME}"
 	else
 		no_para_msg $0
 	fi
@@ -1153,15 +1157,13 @@ lv_free_size() {
 # usage: vg_free_size VG
 #
 vg_free_size() {
-	unset -- VG_FREE_SIZE VG_FREE_SIZE_KB VG_FREE_SIZE_ME
+	unset -- VG_FREE_SIZE VG_FREE_SIZE_ME
 	if [ "$#" -eq 1 ] ; then
 		# Freie PE Size in Bytes heraus bekommen.
 		VG_FREE_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay --units b $1)"}##*Free*PE*}}[7]}
-		# in KiloByte umrechnen, wegen convert_drive_size.
-		(( VG_FREE_SIZE_KB = VG_FREE_SIZE / 1024 ))
 		# in eine besser lesbare Form umrechnen
-		convert_drive_size -i "$VG_FREE_SIZE_KB"
-		VG_FREE_SIZE_ME="${SIZE_KB}${SIZE_KB_ME}"
+		convert_drive_size -i "$VG_FREE_SIZE"
+		VG_FREE_SIZE_ME="${SIZE_B}${SIZE_B_ME}"
 	else
 		no_para_msg $0
 	fi

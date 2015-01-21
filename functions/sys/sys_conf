@@ -757,11 +757,16 @@ sys_conf() {
 							;;
 						*)
 							case "${gv_Auswahl##*[0-9]}" in
-								k|K|kb|KB|Kb|g|G|gb|GB|Gb|m|M|mb|MB|Mb|t|T|tb|TB|Tb|p|P|pb|PB|Pb|e|E|eb|EB|Eb|z|Z|zb|ZB|Zb|y|Y|yb|YB|Yb)
+								kb|KB|Kb|gb|GB|Gb|mb|MB|Mb|tb|TB|Tb|pb|PB|Pb|eb|EB|Eb)
+#								kb|KB|Kb|gb|GB|Gb|mb|MB|Mb|tb|TB|Tb|pb|PB|Pb|eb|EB|Eb|zb|ZB|Zb|yb|YB|Yb)
+									check_number -z "${gv_Auswahl%[kKmMgGtTpPeEzZyY]*}" "${gv_Auswahl##*[0-9]}"
+									;;
+								kib|KiB|Kib|gib|GiB|Gib|mib|MiB|Mib|tib|TiB|Tib|pib|PiB|Pib|eib|EiB|Eib)
+#								kib|KiB|Kib|gib|GiB|Gib|mib|MiB|Mib|tib|TiB|Tib|pib|PiB|Pib|eib|EiB|Eib|zib|ZiB|Zib|yib|YiB|Yib)
 									check_number -z "${gv_Auswahl%[kKmMgGtTpPeEzZyY]*}" "${gv_Auswahl##*[0-9]}"
 									;;
 								*)
-									MSG=$(gettext 'Sie haben eine falsche Masseinheit angegeben. Es gehen nur k|K|KB|Kb - KiloByte... y|Y|YB|Yb - YottaByte.')
+									MSG=$(gettext 'Sie haben eine falsche Masseinheit angegeben. Es gehen nur die Masseinheiten kb|KB|Kb - KiloByte...eb|EB|Eb - ExaByte oder kib|KiB|Kib KibiByte...eib|EiB|Eib ExbiByte.')
 									msgbox "$gv_Attention" "$MSG"
 									;;
 							esac
@@ -1566,6 +1571,45 @@ sys_conf() {
 		fi
 	}
 	#}}}
+	# Funktion (check_part_fs), Filesystem heraus bekommen# {{{
+	#
+	# usage: check_part_fs FP
+	# FP - Festplatten Partition/Laufwerk
+	#
+	##############################
+	# TODO: weiter unter Beobachtung, gerade crypto und raid.
+	check_part_fs() {
+		if [[ ${#argv} == 1 ]] ; then
+			# Pruefen, ob blkid vorhanden und ausführbar ist, ansonsten
+			# wird abgebrochen.
+			if [[ ! -x ${commands[blkid]} ]] ; then
+				no_prog_exec_msg blkid
+				exit 0
+			fi
+
+			unset -- gv_Fs gv_NoFs
+			local Fs_Dev Part_Fs_Tmp
+			Fs_Dev="$1"
+			# Filesystem heraus bekommen.
+			Part_Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
+			if [ ! -z "$Part_Fs_Tmp" ] ; then
+				case "$Part_Fs_Tmp" in
+#					LVM*|*_raid_*|crypto*)
+#						gv_Fs="$gv_Unknown"
+#						gv_NoFs="$Part_Fs_Tmp"
+#						;;
+					*)
+						gv_Fs="$Part_Fs_Tmp"
+						;;
+				esac
+			else
+				gv_Fs="$gv_Unknown"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
 	# Funktion (check_size), prueft den vorhandenen Platz im jeweiligen Verzeichnis# {{{
 	# wird in Bytes ausgegeben
 	#
@@ -1643,82 +1687,89 @@ sys_conf() {
 	# Funktion (convert_drive_size), Laufwerks Groesse umrechnen.# {{{
 	#
 	# usage: convert_drive_size -i SIZE
-	# usage: convert_drive_size [ m|M|MB|Mb | g|G|GB|Gb | t|T|TB|Tb ] SIZE
-	# usage: convert_drive_size [ p|P|PB|Pb | e|E|EB|Eb | z|Z|ZB|Zb ] SIZE
-	# usage: convert_drive_size [ y|Y|YB|Yb ] SIZE
+	# usage: convert_drive_size [ kib|KiB|Kib | mib|MiB|Mib | gib|GiB|Gib | tib|TiB|Tib ] SIZE
+	# usage: convert_drive_size [ pib|PiB|Pib | eib|EiB|Eib | zib|ZiB|Zib ] SIZE
+	# usage: convert_drive_size [ yib|YiB|Yib ] SIZE
 	# -i - inverse, Zahl wird in die best lesbare Form umgerechnet.
-	# m|M|MB|Mb - MegaByte
-	# g|G|GB|Gb - GigaByte
-	# t|T|TB|Tb - TerraByte
-	# p|P|PB|Pb - PetaByte
-	# e|E|EB|Eb - ExaByte
-	# z|Z|ZB|Zb - ZettaByte
-	# y|Y|YB|Yb - YottaByte
-	# nichts - KiloByte
+	# kib|KiB|Kib - KibiByte
+	# mib|MiB|Mib - MebiByte
+	# gib|GiB|Gib - GibiByte
+	# tib|TiB|Tib - TebiByte
+	# pib|PiB|Pib - PebiByte
+	# eib|EiB|Eib - ExbiByte
+	# zib|ZiB|Zib - ZebiByte # geht noch nicht, Zahlen zu lang
+	# yib|YiB|Yib - YobiByte # geht noch nicht, Zahlen zu lang
+	# nichts - Byte
 	# SIZE - ZAHL
 	#
 	convert_drive_size() {
 		unset -- Size_Kb_Tmp
-		typeset -F3 Size_Kb_Tmp
+		typeset -F3 Size_B_Tmp
 		if [ "$#" -ge 2 ] ; then
 			case "$1" in
 				-i) 
-					# KiloBytes umrechnen in die beste lesbare Form.# {{{
-					unset -- SIZE_KB SIZE_KB_ME
+					# Bytes umrechnen in die beste lesbare Form.# {{{
+					unset -- SIZE_B SIZE_B_ME
 					local Size
 					Size="$2"
-#					# nach YByte umrechnen# {{{
-#					if [[ "$Size" -ge 1180591620717411303424 ]] ; then
-#						Size_Kb_Tmp=$Size/1180591620717411303424.0
-#						SIZE_KB="$Size_Kb_Tmp"
-#						SIZE_KB_ME=YB
+#					# nach YobiByte umrechnen# {{{
+#					if [[ "$Size" -ge 1208925819614629174706176 ]] ; then
+#						Size_B_Tmp=$Size/1208925819614629174706176.0
+#						SIZE_B="$Size_B_Tmp"
+#						SIZE_B_ME=YiB
 #						## }}}
-						# nach ZByte umrechnen# {{{
+#					# nach ZebiByte umrechnen# {{{
+#					if [[ "$Size" -ge 1180591620717411303424 ]] ; then
+#						Size_B_Tmp=$Size/1180591620717411303424.0
+#						SIZE_B="$Size_B_Tmp"
+#						SIZE_B_ME=ZiB
+#						## }}}
+						# nach ExbiByte umrechnen# {{{
 					if [[ "$Size" -ge 1152921504606846976 ]] ; then
-						Size_Kb_Tmp=$Size/1152921504606846976.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=ZB
+						Size_B_Tmp=$Size/1152921504606846976.0
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=EiB
 						## }}}
-						# nach EByte umrechnen# {{{
+						# nach PebiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1125899906842624 ]] ; then
-						Size_Kb_Tmp=$Size/1125899906842624.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=EB
+						Size_B_Tmp=$Size/1125899906842624.0
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=PiB
 						## }}}
-						# nach PByte umrechnen# {{{
+						# nach TebiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1099511627776 ]] ; then
-						Size_Kb_Tmp=$Size/1099511627776.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=TB
+						Size_B_Tmp=$Size/1099511627776.0
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=TiB
 						## }}}
-						# nach TByte umrechnen# {{{
+						# nach GibiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1073741824 ]] ; then
-						Size_Kb_Tmp=$Size/1073741824.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=TB
+						(( Size_B_Tmp = $Size / 1073741824.0 ))
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=GiB
 						## }}}
-						# nach GByte umrechnen# {{{
+						# nach MebiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1048576 ]] ; then
-						Size_Kb_Tmp=$Size/1048576.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=GB
+						Size_B_Tmp=$Size/1048576.0
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=MiB
 						## }}}
-						# nach MByte umrechnen# {{{
+						# nach KibiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1024 ]] ; then
-						Size_Kb_Tmp=$Size/1024.0
-						SIZE_KB="$Size_Kb_Tmp"
-						SIZE_KB_ME=MB
+						Size_B_Tmp=$Size/1024.0
+						SIZE_B="$Size_B_Tmp"
+						SIZE_B_ME=KiB
 						## }}}
 					else
-						SIZE_KB="$Size"
-						SIZE_KB_ME=KB
+						SIZE_B="$Size"
+						SIZE_B_ME=B
 					fi
 					## }}}
 					;;
 				*)	
-					# MegaBytes, GigaBytes, ... in KiloBytes umrechnen# {{{
-					unset -- SIZE_KB
-					local Size
+					# MebiBytes, GibiBytes, ... nach Bytes umrechnen# {{{
+					unset -- SIZE_B
+					local Opt Size
 					Opt="$1"
 					Size="${2//,/.}"
 					Tmp="$Size:r"
@@ -1731,62 +1782,68 @@ sys_conf() {
 						Tmp1="$Size:e"
 					fi
 					case "$Opt" in
-						m|M|MB|Mb)	# in KiloByte umrechnen
-							# 2hoch20 1MB=1.048.576Byte# {{{
-							(( Size_Kb_Tmp = Tmp * 1024.0 + Tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
+						kib|KiB|Kib)	# in Byte umrechnen
+							# 2hoch10 1KB=1024Byte# {{{
+							(( Size_b_Tmp = Tmp * 1024.0 + Tmp1 ))
+							SIZE_B="$Size_b_Tmp"
 							## }}}
 							;;
-						g|G|GB|Gb)	# in KiloByte umrechnen
+						mib|MiB|Mib)	# in Byte umrechnen
+							# 2hoch20 1MB=1.048.576Byte# {{{
+							(( Size_b_Tmp = Tmp * 1024.0 + Tmp1 ))
+							SIZE_B="$Size_b_Tmp"
+							## }}}
+							;;
+						gib|GiB|Gib)	# in Byte umrechnen
 							# 2hoch30 1GB=1.073.741.824Byte# {{{
 							(( Size_tmp = Tmp * 1048576.0 ))
 							(( Size_tmp1 = Tmp1 * 1024 ))
-							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
+							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+							SIZE_B="$Size_b_Tmp"
 							## }}}
 							;;
-						t|T|TB|Tb)	# in KiloByte umrechnen
+						tib|TiB|Tib)	# in Byte umrechnen
 							# 2hoch40 1TB=1.099.511.627.776Byte# {{{
 							(( Size_Tmp = Size * 1073741824.0 ))
 							(( Size_tmp1 = Tmp1 * 1048576 ))
-							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
+							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+							SIZE_B="$Size_b_Tmp"
 							## }}}
 							;;
-						p|P|PB|Pb)	# in KiloByte umrechnen
+						pib|PiB|Pib)	# in Byte umrechnen
 							# 2hoch50 1PB=1.125.899.906.842.624Byte# {{{
 							(( Size_Tmp = Size * 1099511627776.0 ))
 							(( Size_tmp1 = Tmp1 * 1073741824 ))
-							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
+							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+							SIZE_B="$Size_b_Tmp"
 							## }}}
 							;;
-						e|E|EB|Eb)	# in KiloByte umrechnen
+						eib|EiB|Eib)	# in Byte umrechnen
 							# 2hoch60 1EB=1.152.921.504.606.846.976Byte# {{{
 							(( Size_tmp = Tmp * 1125899906842624.0 ))
 							(( Size_Tmp1 = Tmp1 * 1099511627776 ))
-							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
+							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+							SIZE_B="$Size_b_Tmp"
 							## }}}
 							;;
-						z|Z|ZB|Zb)	# in KiloByte umrechnen
-							# 2hoch70 1ZB=1.180.591.620.717.411.303.424Byte# {{{
-							(( Size_tmp = Tmp * 1152921504606846976.0 ))
-							(( Size_Tmp1 = Tmp1 * 1125899906842624 ))
-							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_KB="$Size_Kb_Tmp"
-							## }}}
-							;;
-#						y|Y|YB|Yb)	# in KiloByte umrechnen
+#						zib|ZiB|Zib)	# in Byte umrechnen
+#							# 2hoch70 1ZB=1.180.591.620.717.411.303.424Byte# {{{
+#							(( Size_tmp = Tmp * 1152921504606846976.0 ))
+#							(( Size_Tmp1 = Tmp1 * 1125899906842624 ))
+#							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+#							SIZE_B="$Size_b_Tmp"
+#							## }}}
+#							;;
+#						yib|YiB|Yib)	# in Byte umrechnen
 #							# 2hoch80 1YB=1.208.925.819.614.629.174.706.176Byte# {{{
 #							(( Size_tmp = Tmp * 1180591620717411303424.0 ))
 #							(( Size_Tmp1 = Tmp1 * 1152921504606846976 ))
-#							(( Size_Kb_Tmp = Size_tmp + Size_tmp1 ))
-#							SIZE_KB="$Size_Kb_Tmp"
+#							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
+#							SIZE_B="$Size_b_Tmp"
 #							## }}}
 #							;;
-						*)	# ist schon KiloByte
-							SIZE_KB="$Size"
+						*)	# ist schon Byte
+							SIZE_B="$Size"
 							;;
 					esac
 					## }}}
@@ -1800,18 +1857,18 @@ sys_conf() {
 	# Funktion (convert_si_size), Laufwerks Groesse nach SI System (Dezimal) umrechnen.# {{{
 	#
 	# usage: convert_si_size -i SIZE
-	# usage: convert_si_size [ k|K|KB|Kb | m|M|MB|Mb | g|G|GB|Gb | t|T|TB|Tb ] SIZE
-	# usage: convert_si_size [ p|P|PB|Pb | e|E|EB|Eb | z|Z|ZB|Zb ] SIZE
-	# usage: convert_si_size [ y|Y|YB|Yb ] SIZE
+	# usage: convert_si_size [ kb|KB|Kb | mb|MB|Mb | gb|GB|Gb | tb|TB|Tb ] SIZE
+	# usage: convert_si_size [ pb||PB|Pb | eb|EB|Eb | zb|ZB|Zb ] SIZE
+	# usage: convert_si_size [ yb|YB|Yb ] SIZE
 	# -i - inverse, Zahl wird in die best lesbare Form umgerechnet.
-	# k|K|KB|Kb - KebiByte
-	# m|M|MB|Mb - MebiByte
-	# g|G|GB|Gb - GibiByte
-	# t|T|TB|Tb - TebiByte
-	# p|P|PB|Pb - PebiByte
-	# e|E|EB|Eb - ExbiByte
-	# z|Z|ZB|Zb - ZebiByte
-	# y|Y|YB|Yb - YobiByte
+	# kb||KB|Kb - KiloByte
+	# mb|MB|Mb - MegaByte
+	# gb|GB|Gb - GigaByte
+	# tb|TB|Tb - TeraByte
+	# pb|PB|Pb - PetaByte
+	# eb|EB|Eb - ExaByte
+	# zb|ZB|Zb - ZettaByte  # geht noch nicht, Zahlen zu lang
+	# yb||YB|Yb - YottaByte # geht noch nicht, Zahlen zu lang
 	# nichts - Byte
 	# SIZE - ZAHL
 	#
@@ -1912,55 +1969,55 @@ sys_conf() {
 					## }}}
 					;;
 				*)
-					# SI-Prefix Dezimal verwenden 1Mbyte = 1000Kibibyte# {{{
+					# SI-Prefix Dezimal verwenden 1Megabyte = 1000Kilobyte# {{{
 					unset -- SIZE_B
 					local Size Size_B_Tmp Opt
 					Opt="$1"
 					Size="${2//,/.}"
 					case "$Opt" in
-						k|K|KB|Kb)	# in KibiByte umrechnen
+						kb|KB|Kb)	#  KiloByte nach Byte umrechnen
 							# 10hoch3 1KB=1.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						m|M|MB|Mb)	# in KibiByte umrechnen
+						mb|MB|Mb)	# nach Byte umrechnen
 							# 10hoch6 1MB=1.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						g|G|GB|Gb)	# in KibiByte umrechnen
+						gb|GB|Gb)	# nach Byte umrechnen
 							# 10hoch9 1GB=1.000.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						t|T|TB|Tb)	# in KibiByte umrechnen
+						tb|TB|Tb)	# nach Byte umrechnen
 							# 10hoch12 1MB=1.000.000.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000000000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						p|P|PB|Pb)	# in KibiByte umrechnen
+						pb|PB|Pb)	# nach Byte umrechnen
 							# 10hoch15 1MB=1.000.000.000.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000000000000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-						e|E|EB|Eb)	# in KibiByte umrechnen
+						eb|EB|Eb)	# nach Byte umrechnen
 							# 10hoch18 1MB=1.000.000.000.000.000.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000000000000000000 ))
 							SIZE_B="$Size_B_Tmp"
 							## }}}
 							;;
-#						z|Z|ZB|Zb)	# in KibiByte umrechnen
+#						zb|ZB|Zb)	# nach Byte umrechnen
 #							# 10hoch21 1MB=1.000.000.000.000.000.000.000Byte# {{{
 #							(( Size_B_Tmp = Size * 1000000000000000000000 ))
 #							SIZE_B="$Size_B_Tmp"
 #							## }}}
 #							;;
-#						y|Y|YB|Yb)	# in KibiByte umrechnen
+#						yb|YB|Yb)	# nach Byte umrechnen
 #							# 10hoch24 1MB=1.000.000.000.000.000.000.000.000Byte# {{{
 #							(( Size_B_Tmp = Size * 1000000000000000000000000 ))
 #							SIZE_B="$Size_B_Tmp"
@@ -1988,9 +2045,9 @@ sys_conf() {
 		if [ $# = 2 ] ; then
 			unset -- IS_SIZE DATA_SIZE
 			convert_drive_size -i "$1"
-			DATA_SIZE="${SIZE_KB}${SIZE_KB_ME}"
+			DATA_SIZE="${SIZE_B}${SIZE_B_ME}"
 			convert_drive_size -i "$2"
-			IS_SIZE="${SIZE_KB}${SIZE_KB_ME}"
+			IS_SIZE="${SIZE_B}${SIZE_B_ME}"
 		else
 			no_para_msg $0
 		fi
@@ -4933,7 +4990,7 @@ kernel_choice() {
 	#
 	# benoetigt die Funktionen check_part_fs, no_fs_type_msg
 	#
-	# usage: mount_check [ -a | -c | -fs | -m | -s | -u | -w ] $PARTITION, 
+	# usage: mount_check [ -a | -c | -fs | -m | -s | -u ] $PARTITION, 
 	#        (u)mount,filesystemtype
 	# -a - automatisch ohne Fragen umounten
 	# -c - checken, ob gemountet ist oder nicht.
@@ -5000,7 +5057,7 @@ kernel_choice() {
 					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
 					if [ "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
-							/|/bin|/dev|/etc|/lib|/proc|/sbin|/sys|/udev)
+							/|/bin|/dev|/etc|/lib|/proc|/run|/sbin|/sys|/udev)
 								no_umount_os_msg
 								U_MOUNT=no
 								;;
@@ -5073,7 +5130,7 @@ kernel_choice() {
 					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
 					if [ -n "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
-							/|/bin|/dev|/etc|/lib|/proc|/sbin|/sys|/udev)
+							/|/bin|/dev|/etc|/lib|/proc|/run|/sbin|/sys|/udev)
 								no_umount_os_msg
 								U_MOUNT=no
 								;;
@@ -6409,7 +6466,7 @@ no_backup_path_msg() {
 			unset -- Lw
 			local Lw
 			Lw="$1"
-			MSG=$(gettext 'Es konnte kein Dateisystemtyp fuer das Laufwerk $Lw festgestellt werden. Lesen Sie bitte die Hilfe.')
+			MSG=$(gettext 'Es konnte kein Dateisystemtyp fuer das Laufwerk ($Lw) festgestellt werden. Lesen Sie bitte die Hilfe.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
