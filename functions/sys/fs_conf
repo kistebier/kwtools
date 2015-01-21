@@ -4,46 +4,945 @@
 #
 fs_conf() {
 	###### Dateisystem Funktionen ###### {{{
-	# Funktion (check_part_fs), Filesystem heraus bekommen# {{{
+	# Funktion (check_crypt_map_dev), prueft beim Script# {{{
+	# kwcryptsetup auf UUID und LABEL und belegt darauf
+	# hin die Variable MAP_DEV mit dem richtigen Pfad zum
+	# Device.
 	#
-	# usage: check_part_fs FP
-	# FP - Festplatten Partition/Laufwerk
+	# Das Script kwcryptsetup benutzt UUID/LABEL
+	# und DEVICE.
 	#
-	##############################
-	# TODO: weiter unter Beobachtung, gerade crypto und raid.
-	check_part_fs() {
+	check_crypt_map_dev() {
+		unset -- MAP_DEV
 		if [[ ${#argv} == 1 ]] ; then
-			# Pruefen, ob blkid vorhanden und ausführbar ist, ansonsten
-			# wird abgebrochen.
-			if [[ ! -x ${commands[blkid]} ]] ; then
-				no_prog_exec_msg blkid
-				exit 0
-			fi
-
-			unset -- gv_Fs gv_NoFs
-			local Fs_Dev Part_Fs_Tmp
-			Fs_Dev="$1"
-			# Filesystem heraus bekommen.
-			Part_Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
-			if [ ! -z "$Part_Fs_Tmp" ] ; then
-				case "$Part_Fs_Tmp" in
-					LVM*|*_raid_*|crypto*)
-						gv_Fs="$gv_Unknown"
-						gv_NoFs="$Part_Fs_Tmp"
-						;;
-					*)
-						gv_Fs="$Part_Fs_Tmp"
-						;;
-				esac
+			local Dev Tmp
+			Dev="$1"
+			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+				Uuid="`blkid -o value -s UUID -p $Dev`"
+				Label="`blkid -o value -s LABEL -p $Dev`"
+				if [ -n "$Uuid" -a -z "$Tmp" ] ; then
+					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*UUID=${Uuid}*}##(s#)\#}}[1]}
+				fi
+				if [ -n "$Label" -a -z "$Tmp" ] ; then
+					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*LABEL=${Label}*}##(s#)\#}}[1]}
+				fi
+				if [ -z "$Tmp" ] ; then
+					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${Dev}*}##(s#)\#}}[1]}
+				fi
+				MAP_DEV="/dev/mapper/${Tmp}"
+				#MAP_DEV=/dev/mapper/${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
 			else
-				gv_Fs="$gv_Unknown"
+				MAP_DEV="$Dev"
 			fi
 		else
 			no_para_msg $0
 		fi
 	}
 	## }}}
-	# Funktion (copy_fs), kopiert Dateisysteme{{{
+	# Funktion (copy_fs), kopiert ein Dateisystem von einer Partition# {{{
+	# auf eine andere.
+	#
+	# usage: copy_fs FS SRC DST [ SRC_SIZE ]
+	# FS  - Dateisystem des Quell Laufwerks
+	# SRC - Quell Laufwerks
+	# DST - Ziel Laufwerks
+	# SRC_SIZE - Groesse des Quell Dateisystem in Byte
+	#
+	copy_fs() {
+		if [[ ${#argv} -ge 3 ]] ; then
+			local Dst Fs Src Src_Size
+			Fs="$1"
+			Src="$2"
+			Dst="$3"
+			Src_Size="$4"
+			COPY_TITLE=$(gettext 'Partition kopieren')
+			COPY_MSG=$(gettext 'Status beim kopieren von Laufwerk $Src -> $Dst.')
+			case "$Fs" in
+				ext[234])
+					# ext* Dateisysteme kopieren
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von e2image pruefen.
+						prog_check e2image
+						if [ -n "$PROGS" ] ; then
+							e2image -ra -p "$Src" "$Dst" | \
+								progressbox "$COPY_TITLE" "$COPY_MSG" || \
+								prog_failure
+						fi
+					fi
+					#
+					;;
+				fat16|fat32)
+					# FAT Dateisysteme kopieren
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						# Src_Size wird fuer die Berechnung von dd_gauge
+						# benoetigt.
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
+					fi
+					#
+					;;
+				jfs)
+					# JFS Dateisystem kopieren
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						###############################
+						# TODO: hier gehts weiter
+					fi
+					;;
+				*)
+					no_fs_support_msg "$Fs"
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (floppy_format), Floppy mit fdformat formatieren ###### {{{
+	#
+	# benoetigt die Funktionen yesno, format und formatprogs_check
+	#
+	# usage: floppy_format "$FLOPPY"
+	#
+	floppy_format() {
+		if [ "$#" -eq 1 ] ; then
+			# pruefen, ob Programm ausfuehrbar ist.
+			FTITLE=$(gettext 'Formatierung')
+			prog_check fdformat
+			if [ -z "$NO_PROGS" ] ; then
+				Floppy="$1"
+				if [ -b "$Floppy" ] ; then
+					fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+					while [ $? = 1 ] ; do
+						MSG=$(gettext 'Es ist keine Diskette im Laufwerk. Schieben sie bitte eine rein. Wollen Sie fortfahren (ja/nein)?')
+						yesno "$gv_Attention" "$MSG" ""
+					    if [ "$gv_Auswahl" = yes ] ; then
+					    	fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+						else
+					    	break
+					    fi
+					done
+				else
+	                no_block_dev_msg "$Floppy"
+				fi
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (format), Formatierung{{{
+	#
+	# benoetigt die Funktionen no_format_msg, kernel_release und load_module
+	# kernel_release wird von der Funktion script_init geladen und wird von
+	# load_module benoetigt.
+	#
+	# usage: format "$Device-Array" [ FS ]
+	# FS - optional das Filesystem mit uebergeben, wenn schon vorher bekannt
+	#      durch die Funktion formatprogs_check.
+	format() {
+		# Funktion (mkfs_fs), erstellt das Filesystem# {{{
+		#
+		# usage: mkfs_fs FS
+		#
+		mkfs_fs() {
+			FS="$1"
+			case $FS in
+				exfat)
+					# exfat Dateisystem erstellen.# {{{
+					PROG=mkfs.${FS}
+					for i in $F_PART ; {
+						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				fat16)
+					# fat16 benoetigt -F 16.# {{{
+					PROG=mkfs.vfat
+					load_module vfat
+					for i in $F_PART ; {
+						$PROG -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				fat32)
+					# fat32 benoetigt -F 32.# {{{
+					PROG=mkfs.vfat
+					load_module vfat
+					for i in $F_PART ; {
+						mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ext2)
+					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# mit hinzu.
+					if [ "$gv_ScriptName" = kwraid ] ; then
+						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+					else
+						unset -- PROG_OPT
+					fi
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ext[34])
+					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# mit hinzu.
+					if [ "$gv_ScriptName" = kwraid ] ; then
+						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+					else
+						unset -- PROG_OPT
+					fi
+					PROG=mkfs.${FS}
+					load_module "jbd $FS"
+					for i in $F_PART ; {
+						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				hfs)
+					# hfs benoetigt die Option -h, sonst wird# {{{
+					# ein hfs+ FS erstellt.
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				hfsplus)
+					# hfs+ erstellen# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				jfs)
+					# Bei jfs muss ein Y an mkfs.jfs# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.jfs
+					load_module $FS
+					for i in $F_PART ; {
+						echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ntfs)
+					# ntfs benoetigt nichts weiter.# {{{
+					# -f - fast
+					PROG=mk${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				reiserfs)
+					# Bei reiserfs muss ein y an mkfs.reiser*# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.reiserfs
+					load_module $FS
+					for i in $F_PART ; {
+						echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				reiser4)
+					# Bei reiser4 muss kein y an mkfs.reiser*# {{{
+					# uebergeben werden.
+					#
+					PROG=mkfs.reiser4
+					load_module reiserfs
+					for i in $F_PART ; {
+						$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				swap)
+					# Swap Partition erstellen# {{{
+					for i in $F_PART ; {
+						mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				ufs)
+					# ufs Dateisystem erstellen.# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				xfs)
+					# -f fuer force, falls schon ein Dateisystem auf der Partition ist.# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+				*)
+					# alles andere benoetigt nichts weiter.# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in $F_PART ; {
+						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					}
+					## }}}
+					;;
+			esac
+		}
+		## }}}
+		if [[ ${#argv} -ge 1 ]] ; then
+			unset -- F_FS
+			F_PART="$1"
+			F_FS="$2"
+			MSG=$(gettext 'Soll das Laufwerk ($F_PART) wirklich formatiert werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+			yesno "$gv_Attention" "$MSG" ""
+			if [ "$gv_Auswahl" != yes ] ; then
+			   	#break
+			   	return 1
+			fi
+			#
+			if [ -z "$F_FS" ] ; then
+				formatprogs_check
+				#
+				# Die Variable FM_Menue wird vorher von der Funktion formatprogs_check belegt.
+				#
+				if [ -n "${FM_Menue[1]}" ] ; then
+					kernel_release
+					FTITLE=$(gettext 'Formatierung')
+					FMSG=$(gettext 'Waehlen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
+					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
+					#
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help share/format_help
+								menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
+								;;
+							*)	
+								FS=$gv_Auswahl
+								mkfs_fs "$FS"
+								break
+								#
+								;;
+						esac
+					done
+				fi
+			else
+				mkfs_fs "$F_FS"
+			fi
+		else
+			no_para_msg $0
+		fi
+		return 0
+	}
+	#}}}
+	# Funktion (formatprogs_check), checkt welche Formatierungs Werkzeuge installiert sind{{{
+	#
+	# usage: formatprogs_check [ -p (parted)| -s (swap) ]
+	# nichts - alle von den kwtools unterstuetzen FSs.
+	#
+	formatprogs_check() {
+		unset -- FM_Menue Fs
+		local Fs Anz
+		integer Anz
+		case "$1" in
+			-p)	Fs=(exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs linux-swap ntfs reiserfs reiser4 ufs xfs)
+				;;
+			-s)	Fs=swap
+				;;
+			*)	Fs=(ext2 ext3 ext4 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
+				;;
+		esac
+		#
+		Anz=0
+		for i in $Fs ; {
+			case $i in
+				fat16|fat32)
+					if [[ -x ${commands[mkfs.vfat]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				ntfs)
+					if [[ -x ${commands[mk${i}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				*swap) # Das * steht fuer Kompalitaet zu (kw)parted (linux-swap).
+					if [[ -x ${commands[mk${i##*-}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+				*)
+					if [[ -x ${commands[mkfs.${i}]} ]] ; then
+						(( Anz++ ))
+						FM_Menue[Anz]="$i \"\""
+					fi
+					;;
+			esac
+		}
+		if [ -z "${FM_Menue[1]}" ] ; then
+			MSG=$(gettext 'Sie haben keine Formatierungs Werkzeuge installiert oder der PATH ist nicht bekannt (Variable PATH).')
+			msgbox "$gv_Attention" "$MSG"
+		fi
+	}
+	#}}}
+	# Funktion (mdadm_conf_scan), erstellt eine aktuelle $RAIDTAB{{{
+	# Bei inactiven Arrays kommt ein Rückgabewert von 1.
+	#
+	mdadm_conf_scan() {
+		mdadm -Dbsc partitions >${gv_WorkDir}/raid_array 2>/dev/null
+		if [ "`wc -l < ${gv_WorkDir}/raid_array`" -gt 0 ] ; then
+			print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
+			>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
+			mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
+		fi
+	}
+	#}}}
+		# Funktion lv_resize{{{
+		#
+		# usage: lv_resize [+|-]SIZE DEVICE
+		# + - vergroessern
+		# - - verkleinern
+		# SIZE - neue Groesse in Byte
+		# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
+		#          werden soll
+		###############################
+		# TODO: mount_check -fs bearbeiten
+		# alles reduzieren
+		# vergroessern/verkleinern und nur vergroessern
+		#
+		lv_resize() {
+		if [[ ${#argv} == 2 ]] ; then
+			local DEV New_Size
+			New_Size="$1"
+			DEV="$2"
+			# DEV auf UUID/LABEL pruefen
+			check_crypt_map_dev "$DEV"
+			# Dateisystem herausfinden
+			mount_check -fs "$MAP_DEV"
+			if [ -n "$FS" ] ; then
+				case "$FS" in
+					crypto*)
+						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+						use_kwcryptsetup_msg
+						## }}}
+						;;
+					ext[234])
+						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV vergroessern
+								lvextend -L${New_Size#+}b $DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, 
+								# starten und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem ext* vergroessern
+								resize_fs $New_Size $MAP_DEV
+							else
+								# Dateisystem ext* reduzieren
+								resize_fs $New_Size $MAP_DEV
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV reduzieren
+								echo y | lvreduce -L${New_Size#-}b $DEV 2>&1 | \
+									progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, 
+								# starten und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					fat16|fat32)
+						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Falls dieses Laaufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV vergroessern
+								lvextend -L${New_Size#+}b $DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und
+								# Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem fat* vergroessern
+								resize_fs $New_Size $MAP_DEV
+							else
+								# Dateisystem fat* reduzieren
+								resize_fs $New_Size $MAP_DEV
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV reduzieren
+								echo y | lvreduce -L${New_Size#-}b $DEV 2>&1 | \
+									progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und
+								# Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					jfs)
+						# JFS Dateisystem vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop $MAP_DEV
+							# LV vergroessern
+							lvextend -L${New_Size#+}b $DEV 2>&1 | \
+								progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							# Falls dieses Laufwerk verschluesselt war, starten 
+							# und Groesse anpassen.
+							resize_cryptdisk $MAP_DEV
+							# Dateisystem jfs vergroessern
+							resize_fs $New_Size $MAP_DEV
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					ntfs)
+						# NTFS Dateisystem vergroessern/verkleinern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV vergroessern
+								lvextend -L${New_Size#+}b $DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten
+								# und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem ntfs vergroessern
+								resize_fs $New_Size $MAP_DEV
+							else
+								# Dateisystem ntfs reduzieren
+								resize_fs $New_Size $MAP_DEV
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV reduzieren
+								echo y | lvreduce -L${New_Size#-} $DEV 2>&1 | \
+									progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten
+								# und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					reiserfs)
+						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV vergroessern
+								lvextend -L${New_Size#+}b $DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten
+								# und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem reiserfs vergroessern
+								resize_fs $New_Size $MAP_DEV
+							else
+								# Dateisystem reiserfs verkleinern
+								resize_fs $New_Size $MAP_DEV
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV reduzieren
+								echo y | lvreduce -L${New_Size#-}b $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					*swap)
+						# Swap verkleinern/vergroessern{{{
+						mount_check -a "$MAP_DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV vergroessern
+								lvextend -L${New_Size#+}b $DEV 2>&1 | \
+									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten
+								# und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem anpassen
+								resize_fs $New_Size $MAP_DEV
+							else
+								# Falls dieses Laufwerk verschluesselt ist, stoppen.
+								resize_cryptdisk_stop $MAP_DEV
+								# LV reduzieren
+								echo y | lvreduce -L${New_Size#-}b $DEV 2>&1 | \
+									progressbox $gv_Reduce $MAP_DEV || prog_failure
+								# Falls dieses Laufwerk verschluesselt war, starten
+								# und Groesse anpassen.
+								resize_cryptdisk $MAP_DEV
+								# Dateisystem anpassen
+								resize_fs $New_Size $MAP_DEV
+							fi
+						fi
+						#}}}
+						;;
+					*ufs)
+						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop $MAP_DEV
+							# LV vergroessern
+							lvextend -L${New_Size#+}b $DEV 2>&1 | \
+								progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							# Falls dieses Laufwerk verschluesselt war, starten
+							# und Groesse anpassen.
+							resize_cryptdisk $MAP_DEV
+							# Dateisystem anpassen
+							resize_fs $New_Size $MAP_DEV
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					xfs*)
+						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop $MAP_DEV
+							# LV vergroessern
+							lvextend -L${New_Size#+}b $DEV 2>&1 | \
+								progressbox $gv_Enlarge $MAP_DEV || prog_failure
+							# Falls dieses Laufwerk verschluesselt war, starten
+							# und Groesse anpassen.
+							resize_cryptdisk $MAP_DEV
+							# Dateisystem anpassen
+							resize_fs $New_Size $MAP_DEV
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					*)
+						# Dieses FS wird noch nicht unterstuetzt
+						mount_check -a "$MAP_DEV"
+						no_fs_support_msg "$FS"
+						;;
+				esac
+			fi
+		else
+			no_para_msg $0
+		fi
+		}
+		#}}}
+	# Funktion (part_resize), eine Partition vergroessern/verkleinern{{{
+	#
+	# usage: part_resize SIZE PARTITION
+	#
+	# SIZE - neue Groesse der Partition in B
+	# PARTITION - Partition die vergroessert/verkleinert werden soll
+	#
+	part_resize() {
+		if [[ ${#argv} == 2 ]] ; then
+			local End_Size Fp Part_Nr
+			End_Size="$1"
+			Fp="${2%%[0-9]*}"
+			Part_Nr="${2##*[a-z]}"
+			# DEV auf UUID/LABEL pruefen
+			check_crypt_map_dev "$2"
+			if [ -n "$MAP_DEV" ] ; then
+				# Laufwerk umounten
+				mount_check -a "$MAP_DEV"
+				if [ "$U_MOUNT" = yes ] ; then
+					prog_check parted
+					if [ -n "$PROGS" ] ; then
+						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						resize_cryptdisk_stop "$MAP_DEV"
+						# Partition vergroessern
+						parted -s $Fp unit B resizepart \
+							$Part_Nr $End_Size || prog_failure
+						# Dem Kernel die neue Partitionstabelle bekanntgeben
+						partprobe $Fp
+						sleep 3
+						# Falls dieses Laufwerk verschluesselt war, starten und
+						# Groesse anpassen.
+						resize_cryptdisk "$MAP_DEV"
+						##################################
+						# TODO: resize_fs einbauen
+					fi
+				fi
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	#}}}
+	# Funktion (resize_fs), um Dateisysteme zu verkleinern/vergroessern# {{{
+	#
+	# usage: resize_fs [+|-]SIZE DEVICE
+	# + - vergroessern
+	# - - verkleinern
+	# SIZE - neue Groesse in Byte
+	# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
+	#          werden soll
+	#
+	###################################################################
+	# TODO: auf installierte Programme pruefen.
+	# Funktion prog_exec ....
+	resize_fs() {
+		if [[ ${#argv} == 2 ]] ; then
+			local DEV New_Size
+			New_Size="$1"
+			DEV="$2"
+			mount_check -fs "$DEV"
+			if [ -n "$FS" ] ; then
+				case "$FS" in
+					crypto*)
+						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+						use_kwcryptsetup_msg
+						## }}}
+						;;
+					ext[234])
+						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Dateisystem checken
+								e2fsck -f -y $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+								# Dateisystem ext2/3/4 vergroessern
+								resize2fs -p $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							else
+								# Dateisystem checken
+								e2fsck -f -y $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+								# Dateisystem ext2/3/4 reduzieren
+								resize2fs -p $DEV ${New_Size#-} 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+							fi
+						fi
+						#}}}
+						;;
+					fat16|fat32)
+						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Dateisystem vergroessern
+								fatresize -s ${New_Size#+} -p $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							else
+								# Dateisystem reduzieren
+								fatresize -s ${New_Size#-} -p $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+							fi
+						fi
+						#}}}
+						;;
+					jfs)
+						# JFS Dateisystem vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $FS $DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Dateisystem jfs vergroessern
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								mount -o remount,resize $DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					ntfs)
+						# NTFS Dateisystem vergroessern/verkleinern{{{
+						mount_check -a "$DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Dateisystem ntfs vergroessern
+								echo y | ntfsresize -f -s ${New_Size#+} $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+                                # NTFS Probleme checken und fixen
+                                ntfsfix $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							else
+								# Dateisystem ntfs reduzieren
+								echo y | ntfsresize -f -s ${New_Size#-} $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+                                # NTFS Probleme checken und fixen
+                                ntfsfix $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+							fi
+						fi
+						#}}}
+						;;
+					reiserfs)
+						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+						mount_check -a "$DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Dateisystem reiserfs vergroessern
+								resize_reiserfs -s ${New_Size#+} $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							else
+								# Dateisystem reiserfs verkleinern
+								echo y | resize_reiserfs -s ${New_Size#-} $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+							fi
+						fi
+						#}}}
+						;;
+					*swap*)
+						# Swap verkleinern/vergroessern{{{
+						mount_check -a "$DEV"
+						if [ "$U_MOUNT" = yes ] ; then
+							if [ "${New_Size%%[0-9]*}" = + ] ; then
+								# Dateisystem swap vergroessern
+								mkswap -f $DEV 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+								# Swap wieder einbinden
+								mount_check -s $DEV
+							else
+								# Dateisystem swap verkleinern
+								mkswap -f $DEV 2>&1 | \
+									progressbox $gv_Reduce $DEV || prog_failure
+								# Swap wieder einbinden
+								mount_check -s $DEV
+							fi
+						fi
+						#}}}
+						;;
+					*ufs)
+						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# New_Size nach Sectoren umrechnen. 1Sector = 512Byte
+							(( Resize_Size = ${New_Size#+} / 512 ))
+							# Dateisystem vergroessern.
+							growfs.ufs -s $Resize_Size $DEV 2>&1 | \
+								progressbox $gv_Enlarge $DEV || prog_failure
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					xfs*)
+						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $FS $DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Ist das DEV schon gemountet kann man das FS problemlos
+							# vergroessern.
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								xfs_growfs $MOUNTPOINT 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						else
+							no_reduce_fs_msg "$FS"
+						fi
+						#}}}
+						;;
+					LVM*)
+						# LVM muss extra bearbeitet werden# {{{
+						mount_check -a "$DEV"
+						MSG=$(gettext 'Diese Partition besitzt ein LVM und muss extra bearbeitet werden. Starten Sie bitte das Script kwlvm, um das Dateisystem anzupassen.')
+						msgbox "$gv_Info" "$MSG"
+						## }}}
+						;;
+					*)
+						# Dieses FS wird noch nicht unterstuetzt
+						mount_check -a "$DEV"
+						no_fs_support_msg "$FS"
+						;;
+				esac
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (resize_cryptdisk)# {{{
+	resize_cryptdisk() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Dev
+			Dev="$1"
+			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+				# Cryptdisk starten/verkleinern/vergroessern
+				cryptdisk_start -r "${Dev##*/}"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (resize_cryptdisk_stop)# {{{
+	resize_cryptdisk_stop() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Dev
+			Dev="$1"
+			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+				# Cryptdisk stoppen
+				cryptdisk_stop -c "${Dev##*/}"
+			fi
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+
+	# Funktion (copy_fs_old), kopiert Dateisysteme{{{
 	#
 	# usage: copy_fs FS_SRC SRC FS_DST DST
 	# FS_SRC - Variable welche das Dateisystem des Quell Laufwerks enthaelt.
@@ -51,7 +950,7 @@ fs_conf() {
 	# FS_DST - Variable welche das Dateisystem des Ziel Laufwerks enthaelt.
 	# DST    - Variable welche das Ziel Laufwerk enthaelt.
 	#
-	copy_fs() {
+	copy_fs_old() {
 		if [ "$#" -eq 4 ] ; then
 			local Src Dst Fs_Src Fs_Dst Work_Dir_Mt_Src \
 				Work_Dir_Mt_Dst Src_Current_Blocks \
@@ -142,7 +1041,7 @@ fs_conf() {
 						(( Dst_Current_Size = Dst_Current_Blocks * Dst_Current_Blocksize / 1024 ))
 						#
 						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
-							# evtl. andere Fehlercodes(?), siehe man 8 e2fscheck und
+							# evtl. andere Fehlercodes(?), siehe man 8 e2fsck und
 							# exitstatus 256 isn't documented, but it's returned when
 							# the 'FILESYSTEM IS MODIFIED' this is quite normal
 							# (especially after a copy) so we let the function return true...
@@ -435,326 +1334,11 @@ fs_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (floppy_format), Floppy mit fdformat formatieren ###### {{{
+	# Funktion (resize_fs_dev), um Dateisysteme zu ver(kleinern/groessern)# {{{
 	#
-	# benoetigt die Funktionen yesno, format und formatprogs_check
-	#
-	# usage: floppy_format "$FLOPPY"
-	#
-	floppy_format() {
-		if [ "$#" -eq 1 ] ; then
-			# pruefen, ob Programm ausfuehrbar ist.
-			FTITLE=$(gettext 'Formatierung')
-			prog_check fdformat
-			if [ -z "$NO_PROGS" ] ; then
-				Floppy="$1"
-				if [ -b "$Floppy" ] ; then
-					fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
-					while [ $? = 1 ] ; do
-						MSG=$(gettext 'Es ist keine Diskette im Laufwerk. Schieben sie bitte eine rein. Wollen Sie fortfahren (ja/nein)?')
-						yesno "$gv_Attention" "$MSG" ""
-					    if [ "$gv_Auswahl" = yes ] ; then
-					    	fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
-						else
-					    	break
-					    fi
-					done
-				else
-	                no_block_dev_msg "$Floppy"
-				fi
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	## }}}
-	# Funktion (format), Formatierung{{{
-	#
-	# benoetigt die Funktionen no_format_msg, kernel_release und load_module
-	# kernel_release wird von der Funktion script_init geladen und wird von
-	# load_module benoetigt.
-	#
-	# usage: format "$Device-Array" [ FS ]
-	# FS - optional das Filesystem mit uebergeben, wenn schon vorher bekannt
-	#      durch die Funktion formatprogs_check.
-	format() {
-		# Funktion (mkfs_fs), erstellt das Filesystem# {{{
-		#
-		# usage: mkfs_fs FS
-		#
-		mkfs_fs() {
-			FS="$1"
-			case $FS in
-				exfat)
-					# exfat Dateisystem erstellen.# {{{
-					PROG=mkfs.${FS}
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				fat16)
-					# fat16 benoetigt -F 16.# {{{
-					PROG=mkfs.vfat
-					load_module vfat
-					for i in $F_PART ; {
-						$PROG -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				fat32)
-					# fat32 benoetigt -F 32.# {{{
-					PROG=mkfs.vfat
-					load_module vfat
-					for i in $F_PART ; {
-						mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				ext2)
-					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
-					# mit hinzu.
-					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
-					else
-						unset -- PROG_OPT
-					fi
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				ext[34])
-					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
-					# mit hinzu.
-					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
-					else
-						unset -- PROG_OPT
-					fi
-					PROG=mkfs.${FS}
-					load_module "jbd $FS"
-					for i in $F_PART ; {
-						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				hfs)
-					# hfs benoetigt die Option -h, sonst wird# {{{
-					# ein hfs+ FS erstellt.
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				hfsplus)
-					# hfs+ erstellen# {{{
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				jfs)
-					# Bei jfs muss ein Y an mkfs.jfs# {{{
-					# uebergeben werden.
-					#
-					PROG=mkfs.jfs
-					load_module $FS
-					for i in $F_PART ; {
-						echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				ntfs)
-					# ntfs benoetigt nichts weiter.# {{{
-					# -f - fast
-					PROG=mk${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				reiserfs)
-					# Bei reiserfs muss ein y an mkfs.reiser*# {{{
-					# uebergeben werden.
-					#
-					PROG=mkfs.reiserfs
-					load_module $FS
-					for i in $F_PART ; {
-						echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				reiser4)
-					# Bei reiser4 muss kein y an mkfs.reiser*# {{{
-					# uebergeben werden.
-					#
-					PROG=mkfs.reiser4
-					load_module reiserfs
-					for i in $F_PART ; {
-						$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				swap)
-					# Swap Partition erstellen# {{{
-					for i in $F_PART ; {
-						mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				ufs)
-					# ufs Dateisystem erstellen.# {{{
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				xfs)
-					# -f fuer force, falls schon ein Dateisystem auf der Partition ist.# {{{
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-				*)
-					# alles andere benoetigt nichts weiter.# {{{
-					PROG=mkfs.${FS}
-					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
-					}
-					## }}}
-					;;
-			esac
-		}
-		## }}}
-		if [ ${#argv} -ge 1 ] ; then
-			unset -- F_FS
-			F_PART="$1"
-			F_FS="$2"
-			MSG=$(gettext 'Soll das Laufwerk ($F_PART) wirklich formatiert werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
-			yesno "$gv_Attention" "$MSG" ""
-			if [ "$gv_Auswahl" != yes ] ; then
-			   	#break
-			   	return 1
-			fi
-			#
-			if [ -z "$F_FS" ] ; then
-				formatprogs_check
-				#
-				# Die Variable FM_Menue wird vorher von der Funktion formatprogs_check belegt.
-				#
-				if [ -n "${FM_Menue[1]}" ] ; then
-					kernel_release
-					FTITLE=$(gettext 'Formatierung')
-					FMSG=$(gettext 'Waehlen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
-					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
-					#
-					while [ "$gv_Auswahl" ] ; do
-						case "$gv_Auswahl" in
-							HELP*)	script_help share/format_help
-								menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
-								;;
-							*)	
-								FS=$gv_Auswahl
-								mkfs_fs "$FS"
-								break
-								#
-								;;
-						esac
-					done
-				fi
-			else
-				mkfs_fs "$F_FS"
-			fi
-		else
-			no_para_msg $0
-		fi
-		return 0
-	}
-	#}}}
-	# Funktion (formatprogs_check), checkt welche Formatierungs Werkzeuge installiert sind{{{
-	#
-	# usage: formatprogs_check [ -p (parted)| -s (swap) ]
-	# nichts - alle von den kwtools unterstuetzen FSs.
-	#
-	formatprogs_check() {
-		unset -- FM_Menue Fs
-		local Fs Anz
-		integer Anz
-		case "$1" in
-			-p)	Fs=(exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs linux-swap ntfs reiserfs reiser4 ufs xfs)
-				;;
-			-s)	Fs=swap
-				;;
-			*)	Fs=(ext2 ext3 ext4 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
-				;;
-		esac
-		#
-		Anz=0
-		for i in $Fs ; {
-			case $i in
-				fat16|fat32)
-					if [[ -x ${commands[mkfs.vfat]} ]] ; then
-						(( Anz++ ))
-						FM_Menue[Anz]="$i \"\""
-					fi
-					;;
-				ntfs)
-					if [[ -x ${commands[mk${i}]} ]] ; then
-						(( Anz++ ))
-						FM_Menue[Anz]="$i \"\""
-					fi
-					;;
-				*swap) # Das * steht fuer Kompalitaet zu (kw)parted (linux-swap).
-					if [[ -x ${commands[mk${i##*-}]} ]] ; then
-						(( Anz++ ))
-						FM_Menue[Anz]="$i \"\""
-					fi
-					;;
-				*)
-					if [[ -x ${commands[mkfs.${i}]} ]] ; then
-						(( Anz++ ))
-						FM_Menue[Anz]="$i \"\""
-					fi
-					;;
-			esac
-		}
-		if [ -z "${FM_Menue[1]}" ] ; then
-			MSG=$(gettext 'Sie haben keine Formatierungs Werkzeuge installiert oder der PATH ist nicht bekannt (Variable PATH).')
-			msgbox "$gv_Attention" "$MSG"
-		fi
-	}
-	#}}}
-	# Funktion (mdadm_conf_scan), erstellt eine aktuelle $RAIDTAB{{{
-	# Bei inactiven Arrays kommt ein Rückgabewert von 1.
-	#
-	mdadm_conf_scan() {
-		mdadm -Dbsc partitions >${gv_WorkDir}/raid_array 2>/dev/null
-		if [ "`wc -l < ${gv_WorkDir}/raid_array`" -gt 0 ] ; then
-			print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
-			>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
-			mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
-		fi
-	}
-	#}}}
-	# Funktion (resize_fs), um Dateisysteme zu ver(kleinern/groessern)# {{{
-	#
-	# usage: resize_fs -l [+|-]SIZE DEVICE
-	# usage: resize_fs -p [+|-]SIZE END_SIZE DEVICE
-	# usage: resize_fs -r [+|-]SIZE DEVICE OTHER_DEVICE
+	# usage: resize_fs_dev -l [+|-]SIZE DEVICE
+	# usage: resize_fs_dev -p [+|-]SIZE END_SIZE DEVICE
+	# usage: resize_fs_dev -r [+|-]SIZE DEVICE OTHER_DEVICE
 	# -l - LVM
 	# -p - Normale Partition
 	# -r - RAID
@@ -768,501 +1352,122 @@ fs_conf() {
 	###################################################################
 	# TODO: auf installierte Programme pruefen.
 	# Funktion prog_exec ....
-	resize_fs() {
-		# Funktion (no_reduce_fs_msg), Das Dateisystem kann man# {{{
-		# nicht verkleinern.
-		#
-		# usage: no_reduce_fs_msg FS
-		# FS - Dateisystem
-		#
-		no_reduce_fs_msg() {
-			MSG=$(gettext 'Das $FS Dateisystem kann man nicht verkleinern.')
-			msgbox "$gv_Attention" "$MSG"
-			# Wurde eine Partition ins Arbeitsverz. gemountet, wird sie wieder
-			# umountet.
-			mount_check -w "$gv_WorkDir"
-			if [[ $MOUNT == yes ]] ; then
-				mount_check -a "$gv_WorkDir"
-			fi
-		}
-		## }}}
-		# Funktion resize_cryptdisk# {{{
-		resize_cryptdisk() {
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				# Cryptdisk starten/verkleinern/vergroessern
-				cryptdisk_start -r "${MAP_DEV##*/}"
-			fi
-		}
-		## }}}
-		# Funktion resize_cryptdisk_stop# {{{
-		resize_cryptdisk_stop() {
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				# Cryptdisk stoppen
-				cryptdisk_stop -c "${MAP_DEV##*/}"
-			fi
-		}
-		## }}}
-		# Funktion (check_crypt_map_dev), prueft beim Script# {{{
-		# kwcryptsetup auf UUID und LABEL und belegt darauf
-		# hin die Variaable MAP_DEV mit dem richtigen Pfad zum
-		# Device.
-		#
-		# Das Script kwcryptsetup benutzt UUID/LABEL
-		# und DEVICE.
-		#
-		check_crypt_map_dev() {
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				Uuid="`blkid -o value -s UUID -p $DEV`"
-				Label="`blkid -o value -s LABEL -p $DEV`"
-				if [ -n "$Uuid" -a -z "$Dev" ] ; then
-					Dev=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*UUID=${Uuid}*}##(s#)\#}}[1]}
-				fi
-				if [ -n "$Label" -a -z "$Dev" ] ; then
-					Dev=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*LABEL=${Label}*}##(s#)\#}}[1]}
-				fi
-				if [ -z "$Dev" ] ; then
-					Dev=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
-				fi
-				MAP_DEV="/dev/mapper/${Dev}"
-				#MAP_DEV=/dev/mapper/${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
-			else
-				MAP_DEV="$DEV"
-			fi
-		}
-		## }}}
-		# Funktion lv_resize{{{
-		#
-		lv_resize() {
-			mount_check -fs "$MAP_DEV"
-			if [ "$FS" ] ; then
-				case "$FS" in
-					crypto*)
-						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
-						use_kwcryptsetup_msg
-						## }}}
-						;;
-					ext[234])
-						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV vergroessern
-								lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, 
-								# starten und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem checken
-								e2fsck -f -y $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Dateisystem ext2/3/4 vergroessern
-								resize2fs -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem checken
-								e2fsck -f -y $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Dateisystem ext2/3/4 reduzieren
-								resize2fs -p $MAP_DEV ${NEW_SIZE#-} 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV reduzieren
-								echo y | lvreduce -L${NEW_SIZE#-}b $DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, 
-								# starten und Groesse anpassen.
-								resize_cryptdisk
-							fi
-						fi
-						#}}}
-						;;
-					fat16|fat32)
-						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV vergroessern
-								lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem vergroessern
-								fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem reduzieren
-								fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV reduzieren
-								echo y | lvreduce -L${NEW_SIZE#-}b $DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
-							fi
-						fi
-						#}}}
-						;;
-					jfs)
-						# JFS Dateisystem vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# LV vergroessern
-							lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-								progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							# Falls dieses Laufwerk verschluesselt war, starten 
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
-							mount_check -c $MAP_DEV
-							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
-								MOUNTPOINT="$gv_WorkDir"
-							fi
-							# Dateisystem jfs vergroessern
-							if [ ! -z "$MOUNTPOINT" ] ; then
-								mount -o remount,resize $MAP_DEV || prog_failure
-							fi
-							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
-							# umountet.
-							mount_check -a "$gv_WorkDir"
-						else
-							no_reduce_fs_msg
-						fi
-						#}}}
-						;;
-					ntfs)
-						# NTFS Dateisystem vergroessern/verkleinern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV vergroessern
-								lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem ntfs vergroessern
-								echo y | ntfsresize -f -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-                                # NTFS Probleme checken und fixen
-                                ntfsfix $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem ntfs reduzieren
-								echo y | ntfsresize -f -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-                                # NTFS Probleme checken und fixen
-                                ntfsfix $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV reduzieren
-								echo y | lvreduce -L${NEW_SIZE#-} $DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-							fi
-						fi
-						#}}}
-						;;
-					reiserfs)
-						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV vergroessern
-								lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem reiserfs vergroessern
-								resize_reiserfs -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem reiserfs verkleinern
-								echo y | resize_reiserfs -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV reduzieren
-								echo y | lvreduce -L${NEW_SIZE#-}b $DEV 2>&1 | progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten und Groesse anpassen.
-								resize_cryptdisk
-							fi
-						fi
-						#}}}
-						;;
-					*swap)
-						# Swap verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV vergroessern
-								lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem swap vergroessern
-								mkswap -f $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Swap wieder einbinden
-								mount_check -s $MAP_DEV
-							else
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# LV reduzieren
-								echo y | lvreduce -L${NEW_SIZE#-}b $DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem swap verkleinern
-								mkswap -f $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Swap wieder einbinden
-								mount_check -s $MAP_DEV
-							fi
-						fi
-						#}}}
-						;;
-					*ufs)
-						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# LV vergroessern
-							lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-								progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							# Falls dieses Laufwerk verschluesselt war, starten
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
-							(( Resize_Size = ${NEW_SIZE#+} / 512 ))
-							# Dateisystem vergroessern.
-							growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
-								progressbox $gv_Enlarge $MAP_DEV || prog_failure
-						else
-							no_reduce_fs_msg
-						fi
-						#}}}
-						;;
-					xfs*)
-						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# LV vergroessern
-							lvextend -L${NEW_SIZE#+}b $DEV 2>&1 | \
-								progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							# Falls dieses Laufwerk verschluesselt war, starten
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
-							mount_check -c $MAP_DEV
-							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
-								MOUNTPOINT="$gv_WorkDir"
-							fi
-							# Ist das LV schon gemountet kann man das FS problemlos
-							# vergroessern.
-							if [ ! -z "$MOUNTPOINT" ] ; then
-								xfs_growfs $MOUNTPOINT 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							fi
-							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
-							# umountet.
-							mount_check -a "$gv_WorkDir"
-						else
-							no_reduce_fs_msg
-						fi
-						#}}}
-						;;
-					*)
-						# Dieses FS wird noch nicht unterstuetzt
-						mount_check -a "$MAP_DEV"
-						no_fs_support_msg "$FS"
-						;;
-				esac
-			fi
-		}
-		#}}}
+	resize_fs_dev() {^
+#		# Funktion resize_cryptdisk# {{{
+#		resize_cryptdisk() {
+#			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+#				# Cryptdisk starten/verkleinern/vergroessern
+#				cryptdisk_start -r "${MAP_DEV##*/}"
+#			fi
+#		}
+#		## }}}
+#		# Funktion resize_cryptdisk_stop# {{{
+#		resize_cryptdisk_stop() {
+#			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
+#				# Cryptdisk stoppen
+#				cryptdisk_stop -c "${MAP_DEV##*/}"
+#			fi
+#		}
+#		## }}}
 		# Funktion part_resize{{{
+		###############################
+		# TODO: resize_fs noch einbauen?
+		# s. xfs*)
 		#
 		part_resize() {
-			# Funktion (parted_resize)# {{{
-			#
-			parted_resize() {
-				parted -s ${DEV%%[0-9]*} unit B resizepart \
-					${DEV##*[a-z]} $END_SIZE || prog_failure
-				# Dem Kernel die neue Partitionstabelle bekanntgeben
-				partprobe ${DEV%%[0-9]*}
-				sleep 3
-			}
-			## }}}
-			mount_check -fs "$MAP_DEV"
-			if [ "$FS" ] ; then
-				case "$FS" in
-					crypto*)
-						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
-						use_kwcryptsetup_msg
-						## }}}
-						;;
-					ext[234])
-						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition vergroessern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem checken
-								e2fsck -f -y $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Dateisystem ext2/3/4 vergroessern
-								resize2fs -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem checken
-								e2fsck -f -y $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Dateisystem ext2/3/4 reduzieren
-								resize2fs -p $MAP_DEV ${NEW_SIZE#-} 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition verkleinern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
+			if [ "$#" -eq 3 ] ; then
+				unset -- DEV NEW_SIZE END_SIZE
+				typeset -i END_SIZE
+				NEW_SIZE="$1"
+				END_SIZE="$2"
+				DEV="$3"
+				# DEV auf UUID/LABEL pruefen
+				check_crypt_map_dev $DEV
+				# Funktion (parted_resize)# {{{
+				parted_resize() {
+					parted -s ${DEV%%[0-9]*} unit B resizepart \
+						${DEV##*[a-z]} $END_SIZE || prog_failure
+					# Dem Kernel die neue Partitionstabelle bekanntgeben
+					partprobe ${DEV%%[0-9]*}
+					sleep 3
+				}
+				## }}}
+				mount_check -fs "$MAP_DEV"
+				if [ "$FS" ] ; then
+					case "$FS" in
+						crypto*)
+							# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+							use_kwcryptsetup_msg
+							## }}}
+							;;
+						ext[234])
+							# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten und
+									# Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+									# Dateisystem ext2/3/4 vergroessern
+									resize2fs -p $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Dateisystem checken
+									e2fsck -f -y $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Dateisystem ext2/3/4 reduzieren
+									resize2fs -p $MAP_DEV ${NEW_SIZE#-} 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition verkleinern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten und
+									# Groesse anpassen.
+									resize_cryptdisk
+								fi
 							fi
-						fi
-						#}}}
-						;;
-					fat16|fat32)
-						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition vergroessern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem vergroessern
-								fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								# Dateisystem reduzieren
-								fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition verkleinern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten und
-								# Groesse anpassen.
-								resize_cryptdisk
+							#}}}
+							;;
+						fat16|fat32)
+							# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten und
+									# Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem vergroessern
+									fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Dateisystem reduzieren
+									fatresize -s ${NEW_SIZE#+} -p $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition verkleinern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten und
+									# Groesse anpassen.
+									resize_cryptdisk
+								fi
 							fi
-						fi
-						#}}}
-						;;
-					jfs)
-						# JFS Dateisystem vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# Partition vergroessern
-							parted_resize
-							# Falls dieses Laufwerk verschluesselt war, starten 
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
-							mount_check -c $MAP_DEV
-							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
-								MOUNTPOINT="$gv_WorkDir"
-							fi
-							# Dateisystem jfs vergroessern
-							if [ ! -z "$MOUNTPOINT" ] ; then
-								mount -o remount,resize $MAP_DEV || prog_failure
-							fi
-							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
-							# umountet.
-							mount_check -a "$gv_WorkDir"
-						else
-							no_reduce_fs_msg
-						fi
-						#}}}
-						;;
-					ntfs)
-						# NTFS Dateisystem vergroessern/verkleinern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition vergroessern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, 
-								# starten und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem ntfs vergroessern
-								echo y | ntfsresize -f -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-                                # NTFS Probleme checken und fixen
-                                ntfsfix $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								##########################################
-								# TODO: ein Sector kleiner als Partition?
-								# s. man ntfsresize
-								# Dateisystem ntfs reduzieren
-								echo y | ntfsresize -f -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-                                # NTFS Probleme checken und fixen
-                                ntfsfix $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition verkleinern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten
-								# und Groesse anpassen.
-								resize_cryptdisk
-							fi
-						fi
-						#}}}
-						;;
-					reiserfs)
-						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
+							#}}}
+							;;
+						jfs)
+							# JFS Dateisystem vergroessern{{{
 							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
 								# Falls dieses Laufwerk verschluesselt ist, stoppen.
 								resize_cryptdisk_stop
@@ -1271,28 +1476,152 @@ fs_conf() {
 								# Falls dieses Laufwerk verschluesselt war, starten 
 								# und Groesse anpassen.
 								resize_cryptdisk
-								# Dateisystem reiserfs vergroessern
-								resize_reiserfs -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
+								mount_check -c $MAP_DEV
+								if [[ $MOUNT == no ]] ; then
+									mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
+									MOUNTPOINT="$gv_WorkDir"
+								fi
+								# Dateisystem jfs vergroessern
+								if [ ! -z "$MOUNTPOINT" ] ; then
+									mount -o remount,resize $MAP_DEV || prog_failure
+								fi
+								# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+								# umountet.
+								mount_check -a "$gv_WorkDir"
 							else
-								# Dateisystem reiserfs verkleinern
-								echo y | resize_reiserfs -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition verkleinern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten 
-								# und Groesse anpassen.
-								resize_cryptdisk
+								no_reduce_fs_msg "$FS"
 							fi
-						fi
-						#}}}
-						;;
-					*swap)
-						# Swap verkleinern/vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
+							#}}}
+							;;
+						ntfs)
+							# NTFS Dateisystem vergroessern/verkleinern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, 
+									# starten und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem ntfs vergroessern
+									echo y | ntfsresize -f -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+	                                # NTFS Probleme checken und fixen
+	                                ntfsfix $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									##########################################
+									# TODO: ein Sector kleiner als Partition?
+									# s. man ntfsresize
+									# Dateisystem ntfs reduzieren
+									echo y | ntfsresize -f -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+	                                # NTFS Probleme checken und fixen
+	                                ntfsfix $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition verkleinern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten
+									# und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+							#}}}
+							;;
+						reiserfs)
+							# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem reiserfs vergroessern
+									resize_reiserfs -s ${NEW_SIZE#+} $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									# Dateisystem reiserfs verkleinern
+									echo y | resize_reiserfs -s ${NEW_SIZE#-} $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition verkleinern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+								fi
+							fi
+							#}}}
+							;;
+						*swap)
+							# Swap verkleinern/vergroessern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem swap vergroessern
+									mkswap -f $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+									# Swap wieder einbinden
+									mount_check -s $MAP_DEV
+								else
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition verkleinern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# Dateisystem swap verkleinern
+									mkswap -f $MAP_DEV 2>&1 | \
+										progressbox $gv_Reduce $MAP_DEV || prog_failure
+									# Swap wieder einbinden
+									mount_check -s $MAP_DEV
+								fi
+							fi
+							#}}}
+							;;
+						*ufs)
+							# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+							mount_check -a "$MAP_DEV"
+							if [ "$U_MOUNT" = yes ] ; then
+								if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
+									# Falls dieses Laufwerk verschluesselt ist, stoppen.
+									resize_cryptdisk_stop
+									# Partition vergroessern
+									parted_resize
+									# Falls dieses Laufwerk verschluesselt war, starten 
+									# und Groesse anpassen.
+									resize_cryptdisk
+									# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
+									(( Resize_Size = ${NEW_SIZE#+} / 512 ))
+									# Dateisystem vergroessern.
+									growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
+										progressbox $gv_Enlarge $MAP_DEV || prog_failure
+								else
+									no_reduce_fs_msg "$FS"
+								fi
+							fi
+							#}}}
+							;;
+						xfs*)
+							# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
 							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
 								# Falls dieses Laufwerk verschluesselt ist, stoppen.
 								resize_cryptdisk_stop
@@ -1301,97 +1630,36 @@ fs_conf() {
 								# Falls dieses Laufwerk verschluesselt war, starten 
 								# und Groesse anpassen.
 								resize_cryptdisk
-								# Dateisystem swap vergroessern
-								mkswap -f $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-								# Swap wieder einbinden
-								mount_check -s $MAP_DEV
+								# Dateisystem anpassen
+								resize_fs $NEW_SIZE $MAP_DEV
 							else
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition verkleinern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten 
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# Dateisystem swap verkleinern
-								mkswap -f $MAP_DEV 2>&1 | \
-									progressbox $gv_Reduce $MAP_DEV || prog_failure
-								# Swap wieder einbinden
-								mount_check -s $MAP_DEV
+								no_reduce_fs_msg "$FS"
 							fi
-						fi
-						#}}}
-						;;
-					*ufs)
-						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						mount_check -a "$MAP_DEV"
-						if [ "$U_MOUNT" = yes ] ; then
-							if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-								# Falls dieses Laufwerk verschluesselt ist, stoppen.
-								resize_cryptdisk_stop
-								# Partition vergroessern
-								parted_resize
-								# Falls dieses Laufwerk verschluesselt war, starten 
-								# und Groesse anpassen.
-								resize_cryptdisk
-								# NEW_SIZE nach Sectoren umrechnen. 1Sector = 512Byte
-								(( Resize_Size = ${NEW_SIZE#+} / 512 ))
-								# Dateisystem vergroessern.
-								growfs.ufs -s $Resize_Size $MAP_DEV 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							else
-								no_reduce_fs_msg
-							fi
-						fi
-						#}}}
-						;;
-					xfs*)
-						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						if [ "${NEW_SIZE%%[0-9]*}" = + ] ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
-							resize_cryptdisk_stop
-							# Partition vergroessern
-							parted_resize
-							# Falls dieses Laufwerk verschluesselt war, starten 
-							# und Groesse anpassen.
-							resize_cryptdisk
-							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
-							mount_check -c $MAP_DEV
-							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $MAP_DEV $gv_WorkDir || prog_failure
-								MOUNTPOINT="$gv_WorkDir"
-							fi
-							# Ist das LV schon gemountet kann man das FS problemlos vergroessern.
-							if [ ! -z "$MOUNTPOINT" ] ; then
-								xfs_growfs $MOUNTPOINT 2>&1 | \
-									progressbox $gv_Enlarge $MAP_DEV || prog_failure
-							fi
-							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
-							# umountet.
-							mount_check -a "$gv_WorkDir"
-						else
-							no_reduce_fs_msg
-						fi
-						#}}}
-						;;
-					LVM*)
-						# LVM muss extra bearbeitet werden# {{{
-						mount_check -a "$MAP_DEV"
-						MSG=$(gettext 'Diese Partition besitzt ein LVM und muss extra bearbeitet werden. Starten Sie bitte das Script kwlvm, um das Dateisystem anzupassen.')
-						msgbox "$gv_Info" "$MSG"
-						## }}}
-						;;
-					*)
-						# Dieses FS wird noch nicht unterstuetzt
-						mount_check -a "$MAP_DEV"
-						no_fs_support_msg "$FS"
-						;;
-				esac
+							#}}}
+							;;
+						LVM*)
+							# LVM muss extra bearbeitet werden# {{{
+							mount_check -a "$MAP_DEV"
+							MSG=$(gettext 'Diese Partition besitzt ein LVM und muss extra bearbeitet werden. Starten Sie bitte das Script kwlvm, um das Dateisystem anzupassen.')
+							msgbox "$gv_Info" "$MSG"
+							## }}}
+							;;
+						*)
+							# Dieses FS wird noch nicht unterstuetzt
+							mount_check -a "$MAP_DEV"
+							no_fs_support_msg "$FS"
+							;;
+					esac
+				fi
+			else
+				no_para_msg $0
 			fi
 		}
 		#}}}
 		# Funktion raid_resize{{{
+		###############################
+		# TODO: resize_fs noch einbauen
+		# s. xfs*)
 		#
 		raid_resize() {
 			####################################
@@ -1437,7 +1705,7 @@ fs_conf() {
 						mdadm $DEV -G --array-size=${NEW_SIZE#-} >/dev/null || \
 							(BREAK=2 ; prog_failure)
 						sleep 1
-						# Array vergroessern
+						# Array vergroessern/anpassen
 						RAID_ANZ=$(raid_anz $DEV)
 						(( RAID_ANZ-- ))
 						mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
@@ -1451,7 +1719,7 @@ fs_conf() {
 						sleep 1
 						# entfernen
 						mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-						# Array vergroessern
+						# Array vergroessern/anpassen
 						RAID_ANZ=$(raid_anz $DEV)
 						(( RAID_ANZ-- ))
 						mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
@@ -1879,9 +2147,9 @@ fs_conf() {
 					NEW_SIZE="$2"
 					DEV="$3"
 					# DEV auf UUID/LABEL pruefen
-					check_crypt_map_dev
-					# LVM Dateisystem vergroessern/verkleinern
-					lv_resize 
+					#check_crypt_map_dev $DEV
+					# LVM und Dateisystem vergroessern/verkleinern
+					lv_resize $NEW_SIZE $DEV
 				else
 					no_para_msg $0
 				fi
@@ -1897,9 +2165,13 @@ fs_conf() {
 					END_SIZE="$3"
 					DEV="$4"
 					# DEV auf UUID/LABEL pruefen
-					check_crypt_map_dev
+					check_crypt_map_dev $DEV
 					# Partitionen und deren Dateisystem vergroessern/verkleinern
-					part_resize 
+					part_resize $NEW_SIZE $END_SIZE $DEV
+					###########################
+					# TODO: nach part_resize?
+					# Dateisystem vergroessern/verkleinern
+					resize_fs $NEW_SIZE $MAP_DEV
 				else
 					no_para_msg $0
 				fi
@@ -1914,7 +2186,7 @@ fs_conf() {
 					DEV="$3"
 					O_DEV="$4"
 					# DEV auf UUID/LABEL pruefen
-					check_crypt_map_dev
+					check_crypt_map_dev $DEV
 					# RAID Dateisystem vergroessern/verkleinern
 					raid_resize 
 				else
@@ -1946,6 +2218,29 @@ fs_conf() {
 			Fs="$1"
 			MSG=$(gettext 'Das Dateisystem ($Fs) wird (noch) nicht unterstuetzt.')
 			msgbox "$gv_Info" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
+	# Funktion (no_reduce_fs_msg), Das Dateisystem kann man# {{{
+	# nicht verkleinern.
+	#
+	# usage: no_reduce_fs_msg FS
+	# FS - Dateisystem
+	#
+	no_reduce_fs_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Fs
+			Fs="$1"
+			MSG=$(gettext 'Das $Fs Dateisystem kann man nicht verkleinern.')
+			msgbox "$gv_Attention" "$MSG"
+			# Wurde eine Partition ins Arbeitsverz. gemountet, wird sie wieder
+			# umountet.
+			mount_check -c "$gv_WorkDir"
+			if [[ $MOUNT == yes ]] ; then
+				mount_check -a "$gv_WorkDir"
+			fi
 		else
 			no_para_msg $0
 		fi
