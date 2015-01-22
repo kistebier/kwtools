@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 12.10.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.01.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -1115,7 +1115,7 @@ parted_edit() {
 									if [[ "$L_PART_SIZE" -gt "$L_PART_OLD_SIZE" ]] ; then
 										# Partitions nummer pruefen
 										check_part_nr $Part_Auswahl
-										resize_fs -p +${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
+										part_resize +${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
 										#
 										unset -- Fs_Type SIZE Flag Ist_Part_Type \
 											Size_Old Size_Old_Kb SIZE_OLD Ist_Part_Name
@@ -1133,7 +1133,7 @@ parted_edit() {
 										check_part_nr $Part_Auswahl
 										# vorhandenes Dateisystem verkleinern.
 										if [ -n "$Fs_Type" ] ; then
-											resize_fs -p -${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
+											part_resize -${L_PART_SIZE} "$L_PART_END" "${FP}${PART_NR}"
 										fi
 										#
 										unset -- Fs_Type SIZE Flag Ist_Part_Type \
@@ -1215,6 +1215,8 @@ parted_edit() {
 									echo "resize_fs +${L_PART_SIZE} "$PART_DST""
 									#resize_fs +${L_PART_SIZE} "$PART_DST"
 								else
+									##########################################
+									# TODO: msgbox "Sie muessen erst eine Groesse auswaehlen"
 								fi
 								break
 								;;
