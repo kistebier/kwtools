@@ -71,7 +71,7 @@ manage_cryptdisk() {
 												# Funktion lv_free_size belegt.
 												(( LV_NEW_SIZE = Size_Tmp + LV_SIZE ))
 												# Dateisystem checken und vergroessern
-												resize_fs -l +${LV_NEW_SIZE} "$CRYPT_DEV"
+												lv_resize +${LV_NEW_SIZE} "$CRYPT_DEV"
 												break
 											else
 												over_size_msg
@@ -121,7 +121,7 @@ manage_cryptdisk() {
 												if [[ "$Size_Tmp" -lt "$LV_SIZE" ]] ; then
 													(( LV_NEW_SIZE = LV_SIZE - Size_Tmp ))
 													# Dateisystem checken und verkleinern.
-													resize_fs -l -${LV_NEW_SIZE} "$CRYPT_DEV"
+													lv_resize -${LV_NEW_SIZE} "$CRYPT_DEV"
 													break
 												else
 													over_size_msg
