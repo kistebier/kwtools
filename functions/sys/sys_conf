@@ -5470,14 +5470,14 @@ kernel_choice() {
 					# pruefen, ob Programm ausfuehrbar ist.
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
-							setterm -clear
-							setterm -inversescreen on
+							setterm --clear all
+							setterm --inversescreen on
 							eval "$Prog" "$3"
 							if [ "$?" != 0 ] ; then
 								prog_failure
 							fi
-							setterm -inversescreen off
-							setterm -clear
+							setterm --inversescreen off
+							setterm --clear all
 						else
 							eval "$Prog" "$3"
 							if [ "$?" != 0 ] ; then
@@ -5495,7 +5495,7 @@ kernel_choice() {
 					# pruefen, ob Programm ausfuehrbar ist.
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
-							setterm -clear
+							setterm --clear all
 							eval "$Prog" "$3"
 						else
 							eval "$Prog" "$3"
@@ -5510,7 +5510,7 @@ kernel_choice() {
 					Prog="$1"
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
-							setterm -clear
+							setterm --clear all
 							eval "$Prog" "$2"
 							if [ "$?" != 0 ] ; then
 								prog_failure
@@ -6639,7 +6639,7 @@ no_use_dir_msg() {
 		MSG=$(gettext 'Achtung Fehler:\nSchauen Sie sich bitte die letzten Meldungen an.\nMit shift+bild (hoch/runter) koennen Sie scrollen.\nDruecken sie ENTER danach.')
 		print "$MSG"
 		print $NORMAL
-		setterm -clear
+		setterm --clear all
 		read
 		#
 		if [ "$BREAK" ] ; then
