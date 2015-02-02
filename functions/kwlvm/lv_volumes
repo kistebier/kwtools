@@ -155,7 +155,7 @@ lv_volumes() {
 								;;
 							$gv_Create)
 								# LV erzeugen{{{
-								if [-n "$VG_AUSWAHL" -a -n "$LV_NAME" -a -n "$CREATE_SIZE" ] ; then
+								if [ -n "$VG_AUSWAHL" -a -n "$LV_NAME" -a -n "$CREATE_SIZE" ] ; then
 									lvcreate -v -n $LV_NAME -L${CREATE_SIZE} $VG_AUSWAHL 2>&1 | 
 										progressbox $gv_Create "$LV_NAME" || prog_failure
 									#
@@ -201,7 +201,6 @@ lv_volumes() {
 									vg_free_size "$VG_NAME"
 									# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
 									# werden von der Funktion vg_free_size belegt.
-									set -x
 									if [ "$VG_FREE_SIZE" != 0 ] ; then
 										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein um die das LV vergroessert werden soll (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 										number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
@@ -226,7 +225,6 @@ lv_volumes() {
 										MSG=$(gettext 'Es ist kein freier Platz mehr auf dem LV vorhanden.')
 										msgbox "$gv_Info" "$MSG"
 									fi
-									set +x
 									break
 									;;
 							esac
