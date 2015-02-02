@@ -47,9 +47,10 @@ fs_conf() {
 	# SRC - Quell Laufwerks
 	# DST - Ziel Laufwerks
 	# SRC_SIZE - Groesse des Quell Dateisystem in Byte
+	# SRC_SIZE wird fuer die Anzeige mittels "dd_gauge" benoetigt.
 	#
 	copy_fs() {
-		if [[ ${#argv} -ge 3 ]] ; then
+		if [[ ${#argv} -eq 4 ]] ; then
 			local Dst Fs Src Src_Size
 			Fs="$1"
 			Src="$2"
@@ -59,7 +60,7 @@ fs_conf() {
 			COPY_MSG=$(gettext 'Status beim kopieren von Laufwerk $Src -> $Dst.')
 			case "$Fs" in
 				ext[234])
-					# ext* Dateisysteme kopieren
+					# ext* Dateisysteme kopieren# {{{
 					# Src und Dst Laufwerk umounten.
 					mount_check -a $Src
 					if [ "$U_MOUNT" = yes ] ; then
@@ -74,10 +75,10 @@ fs_conf() {
 								prog_failure
 						fi
 					fi
-					#
+					## }}}
 					;;
 				fat16|fat32)
-					# FAT Dateisysteme kopieren
+					# FAT Dateisysteme kopieren# {{{
 					# Src und Dst Laufwerk umounten.
 					mount_check -a $Src
 					if [ "$U_MOUNT" = yes ] ; then
@@ -93,19 +94,181 @@ fs_conf() {
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
 						fi
 					fi
-					#
+					## }}}
 					;;
-				jfs)
-					# JFS Dateisystem kopieren
+				hfs|hfsplus)
+					# HFS[+] Dateisysteme kopieren# {{{
 					# Src und Dst Laufwerk umounten.
 					mount_check -a $Src
 					if [ "$U_MOUNT" = yes ] ; then
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						###############################
-						# TODO: hier gehts weiter
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						# Src_Size wird fuer die Berechnung von dd_gauge
+						# benoetigt.
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
 					fi
+					## }}}
+					;;
+				jfs)
+					# JFS Dateisystem kopieren# {{{
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
+					fi
+					## }}}
+					;;
+				ntfs)
+					# NTFS Dateisystem kopieren# {{{
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von ntfsclone pruefen.
+						prog_check ntfsclone
+						if [ -n "$PROGS" ] ; then
+							# -f - egal ob Fehler kopieren.
+							ntfsclone -f --overwrite $Dst $Src | \
+								progressbox "$COPY_TITLE" "$COPY_MSG" || \
+								prog_failure
+						fi
+					fi
+					## }}}
+					;;
+				reiserfs)
+					# reiserfs Dateisysteme kopieren# {{{
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						# Src_Size wird fuer die Berechnung von dd_gauge
+						# benoetigt.
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
+					fi
+					## }}}
+					;;
+				reiser4)
+					# reiser4 Dateisysteme kopieren# {{{
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						# Src_Size wird fuer die Berechnung von dd_gauge
+						# benoetigt.
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
+					fi
+					## }}}
+					;;
+				ufs)
+					# UFS Dateisysteme kopieren# {{{
+					# #########################
+					# TODO: ufs tools checken
+					# Src und Dst Laufwerk umounten.
+					mount_check -a $Src
+					if [ "$U_MOUNT" = yes ] ; then
+						mount_check -a $Dst
+					fi
+					if [ "$U_MOUNT" = yes ] ; then
+						# auf Ausfuehrbarkeit von dd pruefen.
+						prog_check dd
+						# Src_Size wird fuer die Berechnung von dd_gauge
+						# benoetigt.
+						if [ -n "$PROGS" ] ; then
+							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
+							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
+						fi
+					fi
+					## }}}
+					;;
+				xfs)
+					# XFS Dateisysteme kopieren# {{{
+					# Src und Dst Laufwerk umounten.
+					# Sind die FSs schon gemountet kann man sie problemlos kopieren.
+					# 1. das Quell Laufwerk testen, ob es schon gemountet ist.
+					if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]}`" ] ; then
+						Src_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]*}}[2]}
+					else
+						# Ins Arbeitsverz. mounten
+						Work_Dir_Mt_Src="${gv_WorkDir}/${Src##*/}"
+						create_file -d "$Work_Dir_Mt_Src"
+						mount -t xfs "$Src" "$Work_Dir_Mt_Src" || prog_failure
+						if [ "$?" = 0 ] ; then
+							Src_Mp="$Work_Dir_Mt_Src"
+						else
+							unset -- Src_Mp
+						fi
+					fi
+					# 2. das Ziel Laufwerk testen, ob es schon gemountet ist.
+					if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]}`" ] ; then
+						Dst_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]*}}[2]}
+					else
+						# Ins Arbeitsverz. mounten
+						Work_Dir_Mt_Dst="${gv_WorkDir}/${Dst##*/}"
+						create_file -d "$Work_Dir_Mt_Dst"
+						mount -t xfs "$Dst" "$Work_Dir_Mt_Dst" || prog_failure
+						if [ "$?" = 0 ] ; then
+							Dst_Mp="$Work_Dir_Mt_Dst"
+						else
+							unset -- Dst_Mp
+						fi
+					fi
+					# xfs Filesystem kopieren und umounten.
+					if [ -n "$Src_Mp" -a -n "$Dst_Mp" ] ; then
+						# auf Ausfuehrbarkeit von xfsdump und xfsrestore pruefen.
+						# Diese werden anstelle von xfs_copy benutzt, falls
+						# die Groessenunterschiede beider Laufwerke zu gross
+						# sind (man 8 xfs_copy).
+						###############################
+						# TODO: 1>/dev/null pruefen
+						prog_check xfsdump xfsrestore
+						if [ -n "$PROGS" ] ; then
+							xfsdump -J - "$Src_Mp" &>/dev/null | \
+								xfsrestore -J - "$Dst_Mp" 1>/dev/null | \
+								progressbox "$COPY_TITLE" "$COPY_MSG" || \
+								prog_failure
+						fi
+					else
+						no_copy_fs_msg
+					fi
+					# ohne Frage umounten.
+					if [ -n "$Work_Dir_Mt_Src" ] ; then
+						mount_check -a "$Work_Dir_Mt_Src"
+					fi
+					# ohne Frage umounten.
+					if [ -n "$Work_Dir_Mt_Dst" ] ; then
+						mount_check -a "$Work_Dir_Mt_Dst"
+					fi
+					## }}}
 					;;
 				*)
 					no_fs_support_msg "$Fs"
@@ -933,399 +1096,6 @@ fs_conf() {
 		fi
 	}
 	## }}}
-
-	# Funktion (copy_fs_old), kopiert Dateisysteme{{{
-	#
-	# usage: copy_fs FS_SRC SRC FS_DST DST
-	# FS_SRC - Variable welche das Dateisystem des Quell Laufwerks enthaelt.
-	# SRC    - Variable welche das Quell Laufwerk enthaelt.
-	# FS_DST - Variable welche das Dateisystem des Ziel Laufwerks enthaelt.
-	# DST    - Variable welche das Ziel Laufwerk enthaelt.
-	#
-	copy_fs_old() {
-		if [ "$#" -eq 4 ] ; then
-			local Src Dst Fs_Src Fs_Dst Work_Dir_Mt_Src \
-				Work_Dir_Mt_Dst Src_Current_Blocks \
-				Src_Current_Blocksize Src_Current_Size \
-				Src_To_Dst_Size Src_Blocksize_Tmp \
-				Src_Blocks_Tmp Src_Mp Dst_Current_Fdblocks \
-				Src_Bytes_Size Dst_Current_Blocksize \
-				Dst_Current_Size Dst_Blocksize_Tmp Dst_Mp
-			Fs_Src="$1"
-			Src="$2"
-			Fs_Dst="$3"
-			Dst="$4"
-			COPY_TITLE=$(gettext 'Dateisystem klonen')
-			COPY_MSG=$(gettext 'Soll das kopierte Dateisystem auf dem Ziel Laufwerk an die korrekte Groesse des Laufwerks angepasst werden (ja/nein)?')
-			# Dateisystem kopieren
-			if [ "$Fs_Src" = fat16 -o "$Fs_Src" = fat32 ] ; then
-				# FAT16/32 Dateisysteme kopieren# {{{
-				mount_check -a $Src
-				if [ "$U_MOUNT" = yes ] ; then
-					mount_check -a $Dst
-				fi
-				if [ "$U_MOUNT" = yes ] ; then
-					# auf Ausfuehrbarkeit von dosfsck pruefen.
-					prog_check "dd dosfsck"
-					if [ -n "$PROGS" ] ; then
-						# Quell Laufwerksgroesse ausrechnen
-						Src_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Src" 2>/dev/null)"}##[[:space:]]*data[[:space:]]clusters*}}[1]}`"
-						Src_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Src" 2>/dev/null)"}##[[:space:]]*bytes[[:space:]]per[[:space:]]cluster*}}[1]}`"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
-						# Src_Bytes_Size wird fuer dia Statusanzeige von
-						# dd benoetigt.
-						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
-						#
-						# Ziel Laufwerksgroesse ausrechnen
-						Dst_Current_Fdblocks="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Dst" 2>/dev/null)"}##[[:space:]]*data[[:space:]]clusters*}}[1]}`"
-						Dst_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dosfsck -a -v "$Dst" 2>/dev/null)"}##[[:space:]]*bytes[[:space:]]per[[:space:]]cluster*}}[1]}`"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
-						#
-						if [ "$Src_Current_Size" -le "$Dst_Current_Size" ] ; then
-							# evtl. andere Fehlercodes(?), siehe man 8 dosfsck und
-							# return ( exit_status == 0 || exit_status == 1
-							# || exit_status == 256 ) ;
-							#
-							# mittels dd (diskdump) das dateisystem kopieren.
-							# Weiss grad nichts anderes und die dosfsprogs sind auch nicht gerade
-							# (fuer mich) informativ.
-							DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							#########################################################################
-							# dos Dateisysteme kann man noch nicht vergroessern.
-							#########################################################################
-							# Dateisystem pruefen
-							dosfsck -a -w -v $Dst &>/dev/null || prog_failure
-						else
-							no_copy_fs_msg
-						fi
-					fi
-				fi
-				#}}}
-			elif [ "$Fs_Src" = ext2 -o "$Fs_Src" = ext3 -o "$Fs_Src" = ext4 ] ; then
-				# EXT* Dateisysteme kopieren# {{{
-				mount_check -a $Src
-				if [ "$U_MOUNT" = yes ] ; then
-					mount_check -a $Dst
-				fi
-				if [ "$U_MOUNT" = yes ] ; then
-					# auf Ausfuehrbarkeit von dd dumpe2fs, resize2fs und e2fsck pruefen.
-					prog_check "dd dumpe2fs e2fsck resize2fs"
-					if [ -n "$PROGS" ] ; then
-						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
-						# Quell Laufwerksgroesse ausrechnen
-						Src_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Src" 2>/dev/null)"}##(#s)Block[[:space:]]count:[[:space:]]*}}[3]}`"
-						Src_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Src" 2>/dev/null)"}##(#s)Block[[:space:]]size:*}}[3]}`"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
-						# Src_Bytes_Size wird fuer die Statusanzeige von
-						# dd benoetigt.
-						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
-						#
-						# Ziel Laufwerksgroesse ausrechnen
-						Dst_Current_Blocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Block[[:space:]]count:[[:space:]]*}}[3]}`"
-						#Dst_Current_Fdblocks="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Free[[:space:]]blocks:*}}[3]}`"
-						Dst_Current_Blocksize="`print ${${(s. .)${(M)${(f)"$(dumpe2fs -h "$Dst" 2>/dev/null)"}##(#s)Block[[:space:]]size:*}}[3]}`"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Dst_Current_Size = Dst_Current_Blocks * Dst_Current_Blocksize / 1024 ))
-						#
-						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
-							# evtl. andere Fehlercodes(?), siehe man 8 e2fsck und
-							# exitstatus 256 isn't documented, but it's returned when
-							# the 'FILESYSTEM IS MODIFIED' this is quite normal
-							# (especially after a copy) so we let the function return true...
-							# return ( exit_status == 0 || exit_status == 1 || exit_status == 2
-							# || exit_status == 256 ) ;
-							#
-							# mittels dd (diskdump) das dateisystem kopieren.
-							# Weiss grad nichts anderes und die e2fsprogs sind auch nicht gerade
-							# (fuer mich) informativ.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen
-							e2fsck -f -y $Dst &>/dev/null || prog_failure
-							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
-							# korrekte Groesse des Laufwerks angepasst werden soll.
-							yesno "$COPY_TITLE" "$COPY_MSG" ""
-							if [ "$gv_Auswahl" = yes ] ; then
-								resize2fs $Dst &>/dev/null || prog_failure
-							fi
-						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
-							# mittels dd (diskdump) das dateisystem kopieren.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen
-							e2fsck -f -y $Dst &>/dev/null || prog_failure
-						else
-							no_copy_fs_msg
-						fi
-					fi
-				fi
-				#}}}
-#			elif [ "$Fs_Src" = hfs -o "$Fs_Src" = hfsplus ] ; then
-#				# hfs* Dateisysteme kopieren ++++++++++++# {{{
-#				mount_check -a $Src
-#				if [ "$U_MOUNT" = yes ] ; then
-#					mount_check -a $Dst
-#				fi
-#				if [ "$U_MOUNT" = yes ] ; then
-#					
-#				fi
-				#}}}
-#			elif [ "$Fs_Src" = jfs ] ; then
-#				# jfs Dateisysteme kopieren ++++++++++++# {{{
-#				mount_check -a $Src
-#				if [ "$U_MOUNT" = yes ] ; then
-#					mount_check -a $Dst
-#				fi
-#				if [ "$U_MOUNT" = yes ] ; then
-#				fi
-#				#}}}
-			elif [ "$Fs_Src" = ntfs ] ; then
-				# NTFS Dateisysteme kopieren# {{{
-				mount_check -a $Src
-				if [ "$U_MOUNT" = yes ] ; then
-					mount_check -a $Dst
-				fi
-				if [ "$U_MOUNT" = yes ] ; then
-					# auf Ausfuehrbarkeit von ntfsresize und ntfsclone pruefen.
-					prog_check "ntfsclone ntfsresize"
-					if [ -n "$PROGS" ] ; then
-						# Quell Laufwerksgroesse
-						Src_Current_Size=${${(s. .)$(ntfsresize -i -f -v $Src | grep 'Current[[:space:]]volume[[:space:]]size:')}[4]}
-						# Ziel Laufwerksgroesse
-						Dst_Current_Size=${${(s. .)$(ntfsresize -i -f -v $Dst | grep 'Current[[:space:]]volume[[:space:]]size:')}[4]}
-						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
-							# -f - egal ob Fehler kopieren.
-							ntfsclone -f --overwrite $Dst $Src || prog_failure
-							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
-							# korrekte Groesse des Laufwerks angepasst werden soll.
-							yesno "$COPY_TITLE" "$COPY_MSG" ""
-							if [ "$gv_Auswahl" = yes ] ; then
-								(( Src_To_Dst_Size = Dst_Current_Size / 1024 ))
-								ntfsresize -P -f -s ${Src_To_Dst_Size}k $Dst || prog_failure
-							fi
-						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
-							# -f - egal ob Fehler kopieren.
-							ntfsclone -f --overwrite $Dst $Src || prog_failure
-						else
-							no_copy_fs_msg
-						fi
-					fi
-				fi
-				#}}}
-			elif [ "$Fs_Src" = reiserfs ] ; then
-				# Reiserfs Dateisystem kopieren# {{{
-				mount_check -a $Src
-				if [ "$U_MOUNT" = yes ] ; then
-					mount_check -a $Dst
-				fi
-				if [ "$U_MOUNT" = yes ] ; then
-					# auf Ausfuehrbarkeit von benoetigten reiserfs Programmen pruefen.
-					prog_check "debugreiserfs reiserfsck resize_reiserfs"
-					if [ -n "$PROGS" ] ; then
-						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
-						# Quell Laufwerksgroesse ausrechnen, gesamte Blockanzahl
-						Src_Current_Blocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Src" 2>/dev/null)"}##(#s)Count[[:space:]]of[[:space:]]*device:[[:space:]]*}}[2]}`"
-						# Blockgroesse.
-						Src_Current_Blocksize="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Src" 2>/dev/null)"}##(#s)Blocksize:[[:space:]]*}}[2]}`"
-						# in KiloByte $[blocks*blocksize/1024]
-						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
-						# Src_Bytes_Size wird fuer dia Statusanzeige von
-						# dd benoetigt.
-						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
-						#
-						# Ziel Laufwerksgroesse ausrechnen, freie Blockanzahl
-						#Dst_Current_Fdblocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Free[[:space:]]blocks[[:space:]]*}}[2]}`"
-						# Ziel Laufwerksgroesse ausrechnen, Blockanzahl
-						Dst_Current_Fdblocks="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Count[[:space:]]of[[:space:]]*device:[[:space:]]*}}[2]}`"
-						# Blockgroesse
-						Dst_Current_Blocksize="`print ${${(s.: .)${(M)${(f)"$(debugreiserfs "$Dst" 2>/dev/null)"}##(#s)Blocksize:[[:space:]]*}}[2]}`"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
-						#
-						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
-							# mittels dd (diskdump) das dateisystem kopieren.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen.
-							reiserfsck -y $Dst || prog_failure
-							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
-							# korrekte Groesse des Laufwerks angepasst werden soll.
-							yesno "$COPY_TITLE" "$COPY_MSG" ""
-							if [ "$gv_Auswahl" = yes ] ; then
-								resize_reiserfs $Dst || prog_failure
-							fi
-						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
-							# mittels dd (diskdump) das dateisystem kopieren.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen.
-							reiserfsck -y $Dst || prog_failure
-						else
-							no_copy_fs_msg
-						fi
-					fi
-				fi
-				#}}}
-			elif [ "$Fs_Src" = reiser4 ] ; then
-				# Reiser4 Dateisystem kopieren, kann ich grad nicht testen# {{{
-				mount_check -a $Src
-				if [ "$U_MOUNT" = yes ] ; then
-					mount_check -a $Dst
-				fi
-				if [ "$U_MOUNT" = yes ] ; then
-					# auf Ausfuehrbarkeit von benoetigten reiserfs Programmen pruefen.
-					prog_check "debugfs.reiser4 fsck.reiser4"
-					if [ -n "$PROGS" ] ; then
-						DD_MSG=$(gettext 'Status beim klonen von Laufwerk $Src -> $Dst.')
-						# Quell Laufwerksgroesse ausrechnen, gesamte Blockanzahl.
-						typeset -L Src_Blocksize_Tmp Src_Blocks_Tmp
-						Src_Current_Blocks="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Src" 2>/dev/null)"}##(#s)blocks:[[:space:]]*}}[2]}`"
-						# Blockgroesse
-						Src_Blocksize_Tmp="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Src" 2>/dev/null)"}##(#s)blksize:[[:space:]][0-9]*}}[2]}`"
-						Src_Current_Blocksize="${Src_Blocksize_Tmp%% *}"
-						# in KiloByte $[blocks*blocksize/1024]
-						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
-						# Src_Bytes_Size wird fuer dia Statusanzeige von
-						# dd benoetigt.
-						(( Src_Bytes_Size = Src_Current_Blocks * Src_Current_Blocksize ))
-						#
-						# Ziel Laufwerksgroesse ausrechnen.
-						typeset -L Dst_Current_Fdblocks Dst_Blocksize_Tmp
-						# Ziel Blockanzahl
-						Dst_Current_Fdblocks="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Dst" 2>/dev/null)"}##(#s)blocks:[[:space:]]*}}[2]}`"
-						Dst_Blocksize_Tmp="`print ${${(s.:.)${(M)${(f)"$(debugfs.reiser4 "$Dst" 2>/dev/null)"}##(#s)blksize:[[:space:]][0-9]*}}[2]}`"
-						# Blockgroesse
-						Dst_Current_Blocksize="${Dst_Blocksize_Tmp%% *}"
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Dst_Current_Size = Dst_Current_Fdblocks * Dst_Current_Blocksize / 1024 ))
-						#
-						if [ "$Src_Current_Size" -lt "$Dst_Current_Size" ] ; then
-							# mittels dd (diskdump) das dateisystem kopieren.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen.
-							fsck.reiser4 -y $Dst || prog_failure
-						elif [ "$Src_Current_Size" -eq "$Dst_Current_Size" ] ; then
-							# mittels dd (diskdump) das dateisystem kopieren.
-							dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize} >/dev/null 2>$gv_LogFile &
-							dd_gauge "dd if=${Src} of=${Dst} bs=${Src_Current_Blocksize}" "$Src_Bytes_Size" "$DD_MSG"  
-							# Dateisystem pruefen.
-							fsck.reiser4 -y $Dst || prog_failure
-						else
-							no_copy_fs_msg
-						fi
-					fi
-				fi
-				#}}}
-#			elif [ "$Fs_Src" = ufs ] ; then
-#				# ufs Dateisysteme kopieren ++++++++++++# {{{
-#				mount_check -a $Src
-#				if [ "$U_MOUNT" = yes ] ; then
-#					mount_check -a $Dst
-#				fi
-#				if [ "$U_MOUNT" = yes ] ; then
-#				fi
-				#}}}
-			elif [ "$Fs_Src" = xfs ] ; then
-				# XFS Dateisysteme kopieren# {{{
-				# Sind die FSs schon gemountet kann man sie problemlos kopieren.
-				# 1. das Quell Laufwerk testen, ob es schon gemountet ist.
-				if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]}`" ] ; then
-					Src_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Src}[[:space:]]*}}[2]}
-				else
-					# Ins Arbeitsverz. mounten
-					Work_Dir_Mt_Src="${gv_WorkDir}/${Src##*/}"
-					create_file -d "$Work_Dir_Mt_Src"
-					mount -t xfs "$Src" "$Work_Dir_Mt_Src" || prog_failure
-					if [ "$?" = 0 ] ; then
-						Src_Mp="$Work_Dir_Mt_Src"
-					else
-						unset -- Src_Mp
-					fi
-				fi
-				# 2. das Ziel Laufwerk testen, ob es schon gemountet ist.
-				if [ -n "`print ${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]}`" ] ; then
-					Dst_Mp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)${Dst}[[:space:]]*}}[2]}
-				else
-					# Ins Arbeitsverz. mounten
-					Work_Dir_Mt_Dst="${gv_WorkDir}/${Dst##*/}"
-					create_file -d "$Work_Dir_Mt_Dst"
-					mount -t xfs "$Dst" "$Work_Dir_Mt_Dst" || prog_failure
-					if [ "$?" = 0 ] ; then
-						Dst_Mp="$Work_Dir_Mt_Dst"
-					else
-						unset -- Dst_Mp
-					fi
-				fi
-				# xfs Filesystem kopieren und umounten.
-				if [ -n "$Src_Mp" -a -n "$Dst_Mp" ] ; then
-					# auf Ausfuehrbarkeit von xfsdump, xfs_db, xfs_growfs und xfsrestore pruefen.
-					prog_check "xfsdump xfsrestore xfs_db xfs_growfs"
-					if [ -n "$PROGS" ] ; then
-						# Quell Laufwerksgroesse ausrechnen
-						# gesamte Anzahl der Bloecke
-						Src_Current_Dblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print dblocks' -r $Src)}[3]}
-						Src_Current_Fdblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print fdblocks' -r $Src)}[3]}
-						# Blockgroesse
-						Src_Current_Blocksize=${${(s. .)$(xfs_db -c 'sb 0' -c 'print blocksize' -r $Src)}[3]}
-						(( Src_Current_Blocks = Src_Current_Dblocks - Src_Current_Fdblocks ))
-						# in KiloByte $[blocks*blocksize/1024]
-						(( Src_Current_Size = Src_Current_Blocks * Src_Current_Blocksize / 1024 ))
-						#
-						# Ziel Laufwerksgroesse ausrechnen
-						Dst_Current_Dblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print dblocks' -r $Dst)}[3]}
-						#Dst_Current_Fdblocks=${${(s. .)$(xfs_db -c 'sb 0' -c 'print fdblocks' -r $Dst)}[3]}
-						Dst_Current_Blocksize=${${(s. .)$(xfs_db -c 'sb 0' -c 'print blocksize' -r $Dst)}[3]}
-						#(( Dst_Current_Blocks = Dst_Current_Dblocks - Dst_Current_Fdblocks ))
-						# in KiloByte $[fdblocks*blocksize/1024]
-						(( Dst_Current_Size = Dst_Current_Dblocks * Dst_Current_Blocksize / 1024 ))
-						#
-						if [ "$Src_Current_Size" -le "$Dst_Current_Size" ] ; then
-							xfsdump -J - "$Src_Mp" &>/dev/null | xfsrestore -J - "$Dst_Mp" 1>/dev/null || prog_failure
-							# Fragen ob das kopierte Dateisystem auf dem Ziel Laufwerk an die
-							# korrekte Groesse des Laufwerks angepasst werden soll.
-							yesno "$COPY_TITLE" "$COPY_MSG" ""
-							if [ "$gv_Auswahl" = yes ] ; then
-								xfs_growfs $Dst_Mp 1>/dev/null || prog_failure
-							fi
-							# ohne Frage umounten.
-							if [ -n "$Work_Dir_Mt_Src" ] ; then
-								mount_check -a "$Src"
-							fi
-							# ohne Frage umounten.
-							if [ -n "$Work_Dir_Mt_Dst" ] ; then
-								mount_check -a "$Dst"
-							fi
-						else
-							no_copy_fs_msg
-							mount_check -a $Src
-							mount_check -a $Dst
-						fi
-						# Falls das Arbeitsverz. $gv_WorkDir nicht benutzt wurde, mit Nachfrage
-						# evtl. umounten.
-						if [ -z "$Work_Dir_Mt_Src" -a -z "$Work_Dir_Mt_Dst" ] ; then
-							for i in $Src $Dst ; {
-								mount_check -u $i
-							}
-						fi
-					fi
-				fi
-				## }}}
-			else
-				mount_check -a $Src
-				mount_check -a $Dst
-				no_fs_support_msg "$Fs_Src"
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	#}}}
 ## }}}
 	###### Dateisystem Nachrichten ###### {{{
 	# Funktion no_copy_fs_msg# {{{
