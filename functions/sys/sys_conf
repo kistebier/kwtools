@@ -49,8 +49,7 @@ sys_conf() {
 	#
 	# benoetigt die Funktion return_check
 	#
-	# usage: checklist [ -d DEFAULT-ITEM ] "$TITLE" "$MSG" "$ARRAY" [ VAR ]
-	#        -d - fuer --default-item
+	# usage: checklist "DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY" [ VAR ]
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
 	#        TITLE - Der TITLE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen
@@ -65,45 +64,21 @@ sys_conf() {
 	#
 	checklist() {
 		unset -- V_WERT
-		if [ "$#" -ge 3 ] ; then
-			case "$1" in
-				-d)
-					# Anzeige mit --default-item
-					# vorherige Werte speichern.
-					if [ -n "$6" ] ; then
-						V_WERT="$6"
-					fi
-					# Fenstergroesse (Zeilen) berechnen.
-					count_display_line -o 7 "$5"
-					# Fenstergroesse (Spalten) berechnen.
-		            count_display_col "$5"
-					# Laenge des Titel berechnen
-					count_title_string "$3" "$DisplayColumns"
+		if [[ ${#argv} -ge 4 ]] ; then
+			# vorherige Werte speichern.
+			if [[ ${#argv} == 5 ]] ; then
+				V_WERT="$5"
+			fi
+			# Fenstergroesse (Zeilen) berechnen.
+			count_display_line -m 7 "$4"
+			# Fenstergroesse (Spalten) berechnen.
+            count_display_col "$4"
+			# Laenge des Titel berechnen
+			count_title_string "$2" "$DisplayColumns"
 
-					dialoglabel "$2"
-		
-					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --separate-output --checklist \"$4\" $DisplayLines $DisplayColumns $Elemente $5"
-					;;
-				*)
-					# normale Anzeige ohne --default-item
-					# vorherige Werte speichern.
-					if [ -n "$4" ] ; then
-						V_WERT="$4"
-					fi
-					# Fenstergroesse (Zeilen) berechnen.
-					count_display_line -o 7 "$3"
-					# Fenstergroesse (Spalten) berechnen.
-		            count_display_col "$3"
-					# Laenge des Titel berechnen
-					count_title_string "$1" "$DisplayColumns"
-
-					dialoglabel
-		
-					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --separate-output --checklist \"$2\" $DisplayLines $DisplayColumns $Elemente $3"
-					;;
-			esac
+			DialogLabel="--help-button --default-item \"$1\""
+			DialogTitle="--title \"$T_String\" $DialogBackTitle"
+			DialogPara="--clear --separate-output --checklist \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
 
 			eval $Dialog $DialogLabel $DialogTitle $DialogPara $DialogReDirect
 			
@@ -299,7 +274,7 @@ sys_conf() {
 	#
 	# benoetigt die Funktion return_check
 	#
-	# usage: inputbox "$TITLE" "$MSG" ("$INIT")
+	# usage: inputbox "$TITLE" "$MSG" ["$INIT"]
 	#        TITLE - Der TITLE wird aus 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen
 	#        MSG - Die MESSAGE wird aus
@@ -310,7 +285,11 @@ sys_conf() {
 	#
 	inputbox() {
 		unset -- V_WERT
-		if [ "$#" -ge 2 ] ; then
+		if [ "${#argv}" -ge 2 ] ; then
+			# vorherige Werte speichern.
+			if [[ ${#argv} == 3 ]] ; then
+				V_WERT="$3"
+			fi
             # Berechnung der uebergebenen Zeichen der Nachricht und
             # dementsprechend die Zeilengroesse einstellen.
             count_char_to_line "$2"
@@ -324,10 +303,6 @@ sys_conf() {
 			# Laenge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
-			# vorherige Werte speichern.
-			if [ -n "$3" ] ; then
-				V_WERT="$3"
-			fi
 	
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
 			DialogPara="--clear --inputbox \"$2\" $DisplayLines $DisplayColumns \"$3\""
@@ -365,9 +340,9 @@ sys_conf() {
 			# Laenge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
-			DialogLabel="--help-button --nook --cancel-label "$gv_Back""
+			DialogLabel="--help-button --nook --cancel-label "$gv_Back" --default-item \"$1\""
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
-			DialogPara="--default-item \"$1\" --clear --inputmenu \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
+			DialogPara="--clear --inputmenu \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
 			eval $Dialog $DialogLabel $DialogTitle $DialogPara $DialogReDirect
 			
 			return_check
@@ -412,9 +387,9 @@ sys_conf() {
 			# Laenge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
-			DialogLabel="--help-button"
+			DialogLabel="--help-button --default-item \"$1\""
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
-			DialogPara="--default-item \"$1\" --clear --menu \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
+			DialogPara="--clear --menu \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
 
 			eval $Dialog $DialogLabel $DialogTitle $DialogPara $DialogReDirect
 			
@@ -885,8 +860,7 @@ sys_conf() {
 	#
 	# benoetigt die Funktion return_check
 	#
-	# usage: radiolist [ -d DEFAULT-ITEM ] "$TITLE" "$MSG" "$ARRAY" [ VAR ]
-	#        -d - fuer --default-item
+	# usage: radiolist "DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY" [ VAR ]
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
 	#        TITLE - Der TITLE wird aus der
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen
@@ -901,45 +875,21 @@ sys_conf() {
 	#
 	radiolist() {
 		unset -- V_WERT
-		if [[ ${#argv} -ge 3 ]] ; then
-			case "$1" in
-				-d)
-					# Anzeige mit --default-item
-					# vorherige Werte speichern.
-					if [ -n "$6" ] ; then
-						V_WERT="$6"
-					fi
-					# Fenstergroesse (Zeilen) berechnen.
-					count_display_line -o 7 "$5"
-					# Fenstergroesse (Spalten) berechnen.
-		            count_display_col "$5"
-					# Laenge des Titel berechnen
-					count_title_string "$3" "$DisplayColumns"
+		if [[ ${#argv} -ge 4 ]] ; then
+			# vorherige Werte speichern.
+			if [[ ${#argv} == 5 ]] ; then
+				V_WERT="$5"
+			fi
+			# Fenstergroesse (Zeilen) berechnen.
+			count_display_line -m 7 "$4"
+			# Fenstergroesse (Spalten) berechnen.
+            count_display_col "$4"
+			# Laenge des Titel berechnen
+			count_title_string "$2" "$DisplayColumns"
 
-					dialoglabel "$2"
-		
-					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --radiolist \"$4\" $DisplayLines $DisplayColumns $Elemente $5"
-					;;
-				*)
-					# normale Anzeige ohne --default-item
-					# vorherige Werte speichern.
-					if [ -n "$4" ] ; then
-						V_WERT="$4"
-					fi
-					# Fenstergroesse (Zeilen) berechnen.
-					count_display_line -o 7 "$3"
-					# Fenstergroesse (Spalten) berechnen.
-		            count_display_col "$3"
-					# Laenge des Titel berechnen
-					count_title_string "$1" "$DisplayColumns"
-
-					dialoglabel
-		
-					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --radiolist \"$2\" $DisplayLines $DisplayColumns $Elemente $3"
-					;;
-			esac
+			DialogLabel="--help-button --default-item \"$1\""
+			DialogTitle="--title \"$T_String\" $DialogBackTitle"
+			DialogPara="--clear --radiolist \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
 
 			eval $Dialog $DialogLabel $DialogTitle $DialogPara $DialogReDirect
 			
@@ -2578,12 +2528,13 @@ sys_conf() {
 						is_value "`print {0..59}`"
 						#
 						U_OPT=ok
-						checklist "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
+						checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									checklist "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
+									DEFAULT_VALUE=${gv_Auswahl##HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									MIN="$gv_Auswahl"
@@ -2605,12 +2556,13 @@ sys_conf() {
 						is_value "`print {0..23}`"
 						#
 						U_OPT=ok
-						checklist "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
+						checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									checklist "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
+									DEFAULT_VALUE=${gv_Auswahl##HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									STD="$gv_Auswahl"
@@ -2632,12 +2584,13 @@ sys_conf() {
 						is_value "`print {1..31}`"
 						#
 						U_OPT=ok
-						checklist "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
+						checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									checklist "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
+									DEFAULT_VALUE=${gv_Auswahl##HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									DOM="$gv_Auswahl"
@@ -2659,12 +2612,13 @@ sys_conf() {
 						is_value "`print {1..12}`"
 						#
 						U_OPT=ok
-						checklist "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
+						checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									checklist "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
+									DEFAULT_VALUE=${gv_Auswahl##HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									MON="$gv_Auswahl"
@@ -2686,12 +2640,13 @@ sys_conf() {
 						is_value "`print {0..7}`"
 						#
 						U_OPT=ok
-						checklist "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
+						checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									checklist "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
+									DEFAULT_VALUE=${gv_Auswahl##HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									DOW="$gv_Auswahl"
@@ -2708,7 +2663,7 @@ sys_conf() {
 					$gv_Save)
 						# speichern der Einstellungen{{{
 						#
-						if [ -n "EXTRA_CHAR" ] ; then
+						if [ -n "$EXTRA_CHAR" ] ; then
 							TIME="$EXTRA_CHAR"
 						else
 							if [ -n "$MIN" ] ; then
@@ -3017,18 +2972,6 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 		fi
 	}
 	#}}}
-	# Funktion (dialoglabel), Anzeige mit oder ohne --default-item# {{{
-	#
-	# usage: dialoglabel
-	#
-	dialoglabel() {
-		if [[ ${#argv} == 1 ]] ; then
-			DialogLabel="--help-button --default-item \"$1\""
-		else
-			DialogLabel="--help-button"
-		fi
-	}
-	## }}}
 	# Function (dir_file_choice, veraltet), ganzes Verzeichnis oder{{{
 	# nur einzelne Dateien auswaehlen
 	#
@@ -3306,12 +3249,12 @@ file_choice() {
 						multi)
 							FILE_MENU=($DF_ARRAY)
 							FILE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Dateien aus.')
-							checklist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+							checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										checklist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
 									*)	# alles andere wird uebernommen und im neuen Array WERT
 										# gespeichert
@@ -3327,13 +3270,13 @@ file_choice() {
 							#
 							FILE_MENU=($gv_Create \"\" on $DF_ARRAY)
 							FILE_MSG=$(gettext 'Waehlen Sie eine Datei aus oder legen eine neue an.')
-							radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+							radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
-													;;
+										radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										;;
 									$gv_Create)
 										# Dateinamen vergeben
 										MSG=$(gettext 'Geben Sie hier bitte einen neuen Namen fuer die Datei ein.')
@@ -3358,12 +3301,12 @@ file_choice() {
 						only)
 							FILE_MENU=($DF_ARRAY)
 							FILE_MSG=$(gettext 'Waehlen Sie eine Datei aus.')
-							radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+							radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										radiolist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
 									*)	# alles andere wird uebernommen und im neuen Array WERT
 										# gespeichert
@@ -4702,7 +4645,7 @@ initrd_choice() {
 # VALUE - Werte mit denen in $gv_IsValue_File vergleichen
 #
 is_value() {
-	unset -- VALUE_ARRAY
+	unset -- VALUE_ARRAY DEFAULT_VALUE
 	if [ "$#" -eq 1 ] ; then
 		Values="$1"
 		local Is
@@ -4711,6 +4654,7 @@ is_value() {
 				Is="`print ${(u)${(M)${(f)"$(< $gv_IsValue_File)"}##$i *}}`"
 				if [[ ${Is%% *} == $i ]] ; then
 					VALUE_ARRAY+=(${(qq)i} \"\" on)
+					DEFAULT_VALUE+=($i)
 				else
 					VALUE_ARRAY+=(${(qq)i} \"\" off)
 				fi

@@ -9,18 +9,18 @@ raidstat() {
 		RAIDSTAT_MENU=($MD_DEV_M)
 		RAIDSTAT_TITLE=$(gettext '${lv_Status}::RAID_Auswahl')
 		RAIDSTAT_MSG=$(gettext 'Waehlen Sie ein oder mehrere RAID Arrays aus.')
-		checklist "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
+		checklist "" "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help raiddev_help
-					checklist "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
+					checklist "" "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
 					;;
 				*)	
 					# einzeln oder mehrere Array Daten anzeigen
 					mdadm -D ${=gv_Auswahl} >${gv_WorkDir}/raidstat
 					view_file ${gv_WorkDir}/raidstat
 					#
-					checklist "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
+					checklist "" "$RAIDSTAT_TITLE" "$RAIDSTAT_MSG" "$RAIDSTAT_MENU"
 					;;
 			esac
 		done

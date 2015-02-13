@@ -105,17 +105,17 @@ vg_groups() {
 					VG_DISPLAY_MENU=($VG_M)
 					VG_DISPLAY_TITLE=(${lv_Vol_Groups}::${gv_Display})
 					VG_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere VGs zur Anzeige aus.')
-					checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+					checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl"  in
 							HELP*)	script_help vg_help
-								checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+								checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
 								;;
 							[a-z,A-Z]*)
 								# Anzeige der ausgewaehlten VG
 								vgdisplay ${=gv_Auswahl} >${gv_WorkDir}/vgdisplay
 								view_file ${gv_WorkDir}/vgdisplay
-								checklist "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_M"
+								checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_M"
 								;;
 							*)	break 2
 								;;
@@ -152,12 +152,12 @@ vg_groups() {
 							$lv_Backup_Create)
 								# Sicherung erstellen{{{
 								VG_BACKUP_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zur Sicherung aus.')
-								checklist "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
+								checklist "" "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
 								#
 								while [ "$gv_Auswahl" ] ; do
 									case $gv_Auswahl in
 										HELP*) script_help vg_auswahl_help
-											checklist "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
+											checklist "" "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
 											;;
 										*)	# Auswahl sichern.
 											S_Vg="$gv_Auswahl"
@@ -267,11 +267,11 @@ vg_groups() {
 								VG_PV_MENU=($PV_PARTS_M)
 								VG_PV_TITLE=(${lv_Vol_Groups}::${lv_Physic_Vol})
 								VG_PV_MSG=$(gettext 'Waehlen Sie eine oder mehrere PVs fuer diese Volume Group aus.')
-								checklist "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
+								checklist "" "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
 								while [ "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help share/part_help
-											checklist "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
+											checklist "" "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
 											;;
 										*)	PV_AUSWAHL="$gv_Auswahl"
 											break
@@ -351,18 +351,18 @@ vg_groups() {
 					VG_CONVERT_MENU=($VG_M)
 					VG_CONVERT_TITLE=(${lv_Vol_Groups}::${lv_Convert})
 					VG_CONVERT_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zum konvertieren aus.')
-					checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
+					checklist "" "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl"  in
 							HELP*)	script_help vg_convert_help
-								checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
+								checklist "" "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
 								;;
 							[a-z,A-Z]*)
 								# ausgewaehlte VG's konvertieren
 								Vg="$gv_Auswahl"
 								lvm_type
 								vgconvert -v -M ${LVM_TYPE:-2} $Vg 2>&1 | progressbox $lv_Convert $Vg || prog_failure
-								checklist "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_M"
+								checklist "" "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_M"
 								;;
 							*)	break 2
 								;;
@@ -437,12 +437,12 @@ vg_groups() {
 									if [ "$ANZ_PV" -gt 0 ] ; then
 										PV_CHOICE_MENU=($PV_IN_VG_M)
 										PV_CHOICE_MSG=$(gettext 'Waehlen Sie eine oder mehrere PVs dieser VG aus.')
-										checklist "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
+										checklist "" "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
 										#
 										while [ "$gv_Auswahl" ] ; do
 											case $gv_Auswahl in
 												HELP*) script_help pv_auswahl_help
-													checklist "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
+													checklist "" "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
 													;;
 												*)	#
 													PV_AUSWAHL="$gv_Auswahl"
@@ -633,7 +633,7 @@ vg_groups() {
 					VG_DEL_TITLE=(${lv_Vol_Groups}::${gv_Delete})
 					VG_DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zum loeschen aus.')
 					vg_delete_menue() {
-						checklist "$VG_DEL_TITLE" "$VG_DEL_MSG" "$VG_DEL_MENU"  
+						checklist "" "$VG_DEL_TITLE" "$VG_DEL_MSG" "$VG_DEL_MENU"  
 					}
 					#}}}
 					vg_delete_menue

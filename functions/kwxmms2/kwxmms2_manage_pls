@@ -239,11 +239,11 @@ kwxmms2_manage_pls() {
 															if [ "${DF_DIR_ARRAY[1]}" ] ; then
 																DIR_MENU=($DF_DIR_ARRAY)
 																DIR_MSG=$(gettext 'Waehlen Sie ein oder mehrere Verzeichnisse aus.')
-																checklist "$PLS_TITLE" "$DIR_MSG" "$DIR_MENU"
+																checklist "" "$PLS_TITLE" "$DIR_MSG" "$DIR_MENU"
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			checklist "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+																			checklist "" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 																			;;
 																		*)	
 																			# Auswahl uebernehmen
@@ -278,11 +278,11 @@ kwxmms2_manage_pls() {
 															if [ "${DF_ARRAY[1]}" ] ; then
 																FILE_MENU=($DF_ARRAY)
 																FILE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Lieder aus.')
-																checklist "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
+																checklist "" "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			checklist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+																			checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 																			;;
 																		*)
 																			# Auswahl uebernehmen
@@ -383,11 +383,7 @@ kwxmms2_manage_pls() {
 						pls_del_song_menu() {
 							PLS_DEL_SONG_MSG=$(gettext 'Waehlen Sie eine Playliste aus, aus deren ausgewaehlte Lieder geloescht werden sollen.')
 							PLS_DEL_SONG_MENU=($PLS_LIST_M)
-							if [ -n "$DEFAULT_ITEM" ] ; then
-								radiolist -d "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
-							else
-								radiolist "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
-							fi
+							radiolist "" "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
 						}
 						## }}}
 						pls_del_song_menu
@@ -407,7 +403,7 @@ kwxmms2_manage_pls() {
 										# Funktion (pls_del_songs_menu), Songauswahl loeschen# {{{
 										pls_del_songs_menu() {
 											SONGS_MENU=($SONG_LIST_E_M)
-											checklist "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
+											checklist "" "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
 										}
 										## }}}
 										pls_del_songs_menu
@@ -449,11 +445,7 @@ kwxmms2_manage_pls() {
 						pls_clear_menu() {
 							PLS_CLEAR_MSG=$(gettext 'Waehlen Sie eine oder mehrere Playlisten aus die geleert werden sollen.')
 							PLS_CLEAR_MENU=($PLS_LIST_M)
-							if [ -n "$DEFAULT_ITEM" ] ; then
-								checklist -d "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
-							else
-								checklist "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
-							fi
+							checklist "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
 						}
 						## }}}
 						pls_clear_menu
@@ -628,11 +620,7 @@ kwxmms2_manage_pls() {
 						pls_del_menu() {
 							PLS_DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Playlisten aus die geloescht werden sollen.')
 							PLS_DEL_MENU=($PLS_LIST_M)
-							if [ -n "$DEFAULT_ITEM" ] ; then
-								checklist -d "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
-							else
-								checklist "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
-							fi
+							checklist "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
 						}
 						## }}}
 						pls_del_menu

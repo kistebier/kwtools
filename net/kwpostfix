@@ -153,13 +153,13 @@ cert_match() {
 	is_value "hostname nexthop dot-nexthop"
 	#
 	SMTP_TLS_FP_CERT_MATCH_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen aus, wie die Sicherheitsueberpruefung stattfinden soll.')
-	checklist "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
+	checklist "" "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
 	if [[ -n $gv_Auswahl ]] ; then
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help tls_cert_match_help
-					checklist "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
+					checklist "" "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
 					;;
 				*)	# uebernehmen
 					WERT="$gv_Auswahl"
@@ -426,13 +426,13 @@ mail_mechanism() {
 	generate_is_file ${OldVar//,/}
 	is_value "noactive noanonymous nodictionary noplaintext mutual_auth"
 	U_OPT=k
-	checklist "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
+	checklist "" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
 	#
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help security_options_help
 				U_OPT=k
-				checklist "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
+				checklist "" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
 				;;
 			*)	# übernehmen
 				WERT="$gv_Auswahl"
@@ -556,12 +556,12 @@ tls_protocols() {
 			TLS_PROTOCOL_MENU=($VALUE_ARRAY)
 		fi
 		#
-		checklist "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
+		checklist "" "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
 		if [[ -n $gv_Auswahl ]] ; then
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help tls_protocols_help
-						checklist "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
+						checklist "" "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
 						;;
 					*)	WERT="$gv_Auswahl"
 						break
