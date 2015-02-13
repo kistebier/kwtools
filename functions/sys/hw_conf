@@ -509,7 +509,7 @@ lv_free_size() {
 	#}}}
 	# Funktion (part_md_lose), Herrausfiltern von schon vergebenen RAID Partitionen.# {{{
 	#
-	# benoetigt vorher die Funktionen partdb -i fd
+	# benoetigt vorher die Funktionen partdb -i 0xfd
 	#
 	# usage: part_md_lose
 	#
@@ -525,11 +525,11 @@ lv_free_size() {
 	# Funktion (partdb), Partitionstabelle speichern{{{
 	# Hier werden alle Partitionen gesucht die vorhanden sind.
 	#
-	# usage: partdb [ /dev.. | -i 'Partitionstyp Partitionstyp ...' ]
+	# usage: partdb [ /dev.. ][ -i 'Partitionstyp | Partitionstyp |...' ]
 	# -i - alle Partitionen nach Partitionstyp suchen,
-	#      Linux = 83, Linux SWAP = 82, ...
-	# /dev - eine Festplatte uebergeben, ansonsten werden
-	#        alle vorhandenen benutzt.
+	#      SW RAID = 0xfd, LVM = 0x8e (LVM1/2_member), NTFS = 0x7, ...
+	# /dev - eine Festplatte uebergeben, auf der nach linux und Linux swap
+	#        gesucht wird.
 	# nichts - alle Partitionen ausser RAID/LVM/crypto*
 	#
 	partdb() {
@@ -550,7 +550,7 @@ lv_free_size() {
 		#
 		case $1 in
 			/dev*)
-				# nur eine Festplatte durchsuchen, nach Linux# {{{
+				# nur eine Festplatte nach Linux durchsuchen# {{{
 				#
 				Fp_Tmp="$1"
 				# ${gv_WorkDir}/partdb auslesen
@@ -558,22 +558,20 @@ lv_free_size() {
 					while read part Rest ; do
 						case "$part" in
 							$Fp_Tmp*)
+								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)(0x83|0x82)]}
 								Part_Desc=$(blkid -o value -s TYPE -p $part)
-								case "$Part_Desc" in
-									swap)
+								case "$Part_Id" in
+									0x82)
 										SWAP_DEV+=($part)
 										SWAP_DEV_E+=($part \"$Part_Desc\")
 										SWAP_DEV_M=($part \"$Part_Desc\" off)
 										;;
-									LVM*|*_raid_*|crypto*)
+									0x83)
+										PART+=($part)
+										PART_E+=($part \"$Part_Desc\")
+										PART_M+=($part \"$Part_Desc\" off)
 										;;
 									*)
-										Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
-										if [[ $Part_Id == 0x83 ]] ; then
-											PART+=($part)
-											PART_E+=($part \"$Part_Desc\")
-											PART_M+=($part \"$Part_Desc\" off)
-										fi
 										;;
 								esac
 								;;
@@ -593,25 +591,17 @@ lv_free_size() {
 					while read part Rest ; do
 						case "$part" in
 							/dev/*)
-								Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
+								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)($Part_Ids)]}
 								Part_Desc=$(blkid -o value -s TYPE -p $part)
-									for i in ${=Part_Ids} ; {
-										if [[ $Part_Id == 0x${i} ]] ; then
-											case "$Part_Desc" in
-												swap)
-													SWAP_DEV+=($part)
-													SWAP_DEV_E+=($part \"$Part_Desc\")
-													SWAP_DEV_M=($part \"$Part_Desc\" off)
-													;;
-												*)
-													PART+=($part)
-													PART_E+=($part \"$Part_Desc\")
-													PART_M+=($part \"$Part_Desc\" off)
-													;;
-											esac
-											continue 2
-										fi
-									}
+								case "$Part_Id" in
+									$Part_Ids)
+										PART+=($part)
+										PART_E+=($part \"$Part_Desc\")
+										PART_M+=($part \"$Part_Desc\" off)
+										;;
+									*)
+										;;
+								esac
 								;;
 							*)
 								;;
@@ -627,22 +617,30 @@ lv_free_size() {
 					while read part Rest ; do
 						case "$part" in
 							/dev/*)
+								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)0x*]}
+								Part_Id=$(partx --show --output TYPE $part)
 								Part_Desc=$(blkid -o value -s TYPE -p $part)
-								case "$Part_Desc" in
-									swap)
+								case "$Part_Id" in
+									0x82)
 										SWAP_DEV+=($part)
 										SWAP_DEV_E+=($part \"$Part_Desc\")
 										SWAP_DEV_M=($part \"$Part_Desc\" off)
 										;;
-									LVM*|*_raid_*|crypto*)
+									0x8e|0xfd|0x5)
+										# ohne extended (0x5), LVM (0x8e) und RAID (0xfd)
+										# Partition
 										;;
 									*)
-										Part_Id=$(blkid -o value -s PART_ENTRY_TYPE -p $part)
-										if [[ $Part_Id == 0x83 ]] ; then
-											PART+=($part)
-											PART_E+=($part \"$Part_Desc\")
-											PART_M+=($part \"$Part_Desc\" off)
-										fi
+										Part_Desc=$(blkid -o value -s TYPE -p $part)
+										case $Part_Desc in
+											crypto*)
+												;;
+											*)
+												PART+=($part)
+												PART_E+=($part \"$Part_Desc\")
+												PART_M+=($part \"$Part_Desc\" off)
+												;;
+										esac
 										;;
 								esac
 								;;
@@ -745,7 +743,7 @@ lv_free_size() {
 						disk
 						if [ ! -z "${DISK_DEV[1]}" ] ; then
 							# RAID Partitionen herrausfinden
-							partdb -i fd
+							partdb -i 0xfd
 							if [ ! -z "${PART[1]}" ] ; then
 								# freie RAID Partitionen zur Auswahl stellen.# {{{
 								part_md_lose
