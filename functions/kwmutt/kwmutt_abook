@@ -203,26 +203,24 @@ alias $MAIL_ALIAS $MAIL_ADR"
 					# Adressbuch einlesen
 					read_address_file
 					if [ -n "$Abook_M" ] ; then
-						U_OPT=no
 						DEL_MENU=($Abook_M)
 						checklist "$ADDRESSBOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help kwmutt_abook_conf_help
-									U_OPT=no
 									checklist "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 									;;
 								*)
 									# Auswahl loeschen
 									# erst einmal in einer Datei speichern.
-									for i in $gv_Auswahl ; {
+									while read i ; do
 										if [ -f "${gv_WorkDir}/del_abook" ] ; then
 											print "$i" >> "${gv_WorkDir}/del_abook"
 										else
 											print "$i" > "${gv_WorkDir}/del_abook"
 										fi
-									}
-									# Datei auslesen und Eintrga loeschen.
+									done < ${gv_LogFile}$$
+									# Datei auslesen und Eintraege loeschen.
 									if [ -f "${gv_WorkDir}/del_abook" ] ; then
 										while read A ; do
 											print -l ${(R)${(f)"$(< $alias_file)"}##alias[[:space:]]${A}*} >${gv_WorkDir}/abook

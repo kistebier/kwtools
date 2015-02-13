@@ -130,19 +130,16 @@ relay_clientcerts_table() {
 				;;
 			$gv_Delete)
 				# Einträge löschen{{{
-				#
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
-					U_OPT=no
 					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								U_OPT=no
 								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# Löschen
+							*)	# löschen
 								while read e ; do
 									grep -v "^${e}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

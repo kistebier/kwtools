@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de>, 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de>, 06.02.2015
 #
 # Script: kwtex-cal, zum ausdrucken von Jahreskalendern mit Bundesland-
 # spezifischen Feiertagen und eigenen. Die eigenen Feiertage werden aus
 # dem Terminkalender (kwtermin) extrahiert.
 # Datei: ~/.kwtools/kwplaner/termin.
 #
-# Version: 0.2.14
+# Version: 0.2.15
 #
 #######################################################################
 # Es benutzt die Scripte und Dateien von Rene Scholz 
@@ -15,7 +15,7 @@
 #######################################################################
 #
 
-trap 'setterm -inversescreen off ; setterm -reset ;
+trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
@@ -124,7 +124,6 @@ while [ -n "$gv_Auswahl" ] ; do
 			# Geburtstage und Feiertage fuer den Kalender auswaehlen.# {{{
 			read_holiday
 			if [ -n "${Extra_M[1]}" ] ; then
-				U_OPT=no
 				EXTRA_MENU=($Extra_M)
 				EXTRA_TITLE=($lv_Extra)
 				EXTRA_MSG=$(gettext 'Waehlen Sie ein oder mehrere Geburtstage/Feiertage fuer Ihren Kalender aus.')
@@ -132,7 +131,6 @@ while [ -n "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl"  in
 						HELP*)	script_help extra_help
-							U_OPT=no
 							checklist "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
 							;;
 						*)

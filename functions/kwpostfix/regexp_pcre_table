@@ -17,7 +17,6 @@ regexp_pcre_table() {
 				$lv_Text \"$TEXT\" $gv_Save \"\" $gv_Back \"\")
 				;;
 			*)
-				U_OPT=regexp
 				case "$ACTION" in
 					FILTER)
 						# mit transport:destination Eingabe
@@ -69,7 +68,6 @@ regexp_pcre_table() {
 					;;
 				$lv_String)
 					# Zeichenkette eingeben{{{
-					U_OPT=regexp
 					STRING_MSG=$(gettext 'Geben Sie bitte eine Zeichenkette ein nach der gesucht werden soll (man 5 ${TAB_FM}_table).')
 					inputbox "$TABLE_TITLE" "$STRING_MSG" "$STRING"
 					if [ -n "$gv_Auswahl" ] ; then
@@ -374,12 +372,10 @@ regexp_pcre_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
-					U_OPT=regexp
 					menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								U_OPT=regexp
 								menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
@@ -484,12 +480,10 @@ regexp_pcre_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
-					U_OPT=no
 					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								U_OPT=no
 								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# Löschen

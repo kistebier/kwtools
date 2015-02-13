@@ -1,12 +1,12 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
 #
 # Script: kwvcdburn, kreiert und brennt (S)VCD Filme
-# Version: 0.0.9
+# Version: 0.1.0
 #
 
-trap 'setterm -inversescreen off ; setterm -reset ;
+trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
@@ -104,8 +104,7 @@ while [ "$gv_Auswahl" ] ; do
 			PROG=vcdimager
 			FORMAT="MPEG sequence"
 			SUFFIX=".mpg .mpeg .MPG .MPEG"
-			# Werte auch in $gv_LogFile$$ schreiben
-			U_OPT=no
+			# Dateien auswaehlen
 			file_choice "$FILM_DIR" multi
 			#
 			if [ "${WERT[1]}" ] ; then
@@ -114,7 +113,7 @@ while [ "$gv_Auswahl" ] ; do
 				# Programm vcdimager ausfuehren.
 				#
 				typeset -L V_Anz
-				V_Anz=`wc -l <$gv_LogFile$$`
+				V_Anz=`wc -l <${gv_LogFile}$$`
 				#
 				# Soll eine VCD Struktur fuer alle Dateien erstellt werden,
 				# wenn es mehr als eine Datei gibt (ja/nein)?

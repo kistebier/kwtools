@@ -1120,20 +1120,17 @@ ZERO 00:02:00 // post-gap"
 				if [ "$gv_Format" = iso ] ; then
 					file_filter "$FORMAT" "$SUFFIX"
 					if [ "$DF_ARRAY" ] ; then
-						U_OPT=no
 						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
 									#
 									file_filter "$FORMAT" "$SUFFIX"
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 							esac
@@ -1141,7 +1138,7 @@ ZERO 00:02:00 // post-gap"
 					else
 						no_file_msg "${FORMAT#\^}"
 					fi
-					unset -- gv_Auswahl U_OPT
+					unset -- gv_Auswahl
 					#}}}
 				# Video-CD{{{
 				#
@@ -1180,7 +1177,7 @@ ZERO 00:02:00 // post-gap"
 											return 1
 										fi
 										# cdrdao Brennoption
-										# CDD rauswerfen
+										# CD auswerfen
 										simulate_eject_check $CDROM
 										PROG_OPT="$Write -v 2 $Eject --device $WRITE_DEVICE --driver $CD_WRITE_DRIVER --speed ${WRITE_SPEED:-12} --overburn --force $BR_DATEI"
 										#
@@ -1214,7 +1211,7 @@ ZERO 00:02:00 // post-gap"
 					else
 						no_file_msg "${FORMAT#\^}"
 					fi
-					unset -- gv_Auswahl U_OPT
+					unset -- gv_Auswahl
 					#}}}
 				# Video-DVD{{{
 				#
@@ -1284,7 +1281,7 @@ ZERO 00:02:00 // post-gap"
 						MSG=$(gettext 'Es gibt keine Inhalts Tabelle fuer diese DVD oder Sie sind im falschen Verzeichnis ($VERZ). Benutzen Sie kwvdvdburn um die Inhalts Tabelle zu erstellen.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
-					unset -- gv_Auswahl U_OPT
+					unset -- gv_Auswahl
 					#}}}
 				# ausgewaehlte ogg | mp3 | photo Dateien{{{
 				#
@@ -1292,20 +1289,17 @@ ZERO 00:02:00 // post-gap"
 					# nur im lokalen Verzeichnis suchen.
 					file_filter "$FORMAT" "$SUFFIX"
 					if [ "$DF_ARRAY" ] ; then
-						U_OPT=no
 						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
 									#
 									file_filter "$FORMAT" "$SUFFIX"
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 							esac
@@ -1313,20 +1307,18 @@ ZERO 00:02:00 // post-gap"
 					else
 						no_file_msg "${FORMAT#\^}"
 					fi
-					unset -- gv_Auswahl U_OPT
+					unset -- gv_Auswahl
 					#}}}
 				# ausgewaehlte wav Dateien{{{
 				#
 				elif [ "$gv_Format" = wav ] ; then
 					file_filter "$FORMAT" "$SUFFIX"
 					if [ "$DF_ARRAY" ] ; then
-						U_OPT=no
 						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
@@ -1402,7 +1394,6 @@ FILE \"`pwd`/${i}\" 0"
 							esac
 							#
 							file_filter "$FORMAT" "$SUFFIX"
-							U_OPT=no
 							checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						done
 					else
@@ -1446,18 +1437,15 @@ FILE \"`pwd`/${i}\" 0"
 					}
 					#
 					if [ "$DF_ARRAY" ] ; then
-						U_OPT=no
 						checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
-									U_OPT=no
 									checklist "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 							esac

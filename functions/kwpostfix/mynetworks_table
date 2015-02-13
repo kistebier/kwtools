@@ -120,15 +120,13 @@ mynetworks_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					CHOICE_MULTI_MENU=($AUSWAHL_MULTI)
-					U_OPT=no
 					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								U_OPT=no
 								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
 								;;	
-							*)	# Löschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE > $FILE$$
 									mv $FILE$$ $FILE

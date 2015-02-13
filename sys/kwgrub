@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.02.2015
 #
 # Script: kwgrub, konfiguriert und installiert grub
-# Version: 0.2.13
+# Version: 0.2.14
 
-trap 'setterm -inversescreen off ; setterm -reset ; 
+trap 'setterm --inversescreen off ; setterm --reset ; 
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
@@ -91,7 +91,7 @@ memtest_choice() {
 # Funktion, Kernel Partition auswaehlen{{{
 #
 kernel_part() {
-	partdb -i ' 83 \| fd '
+	partdb
 	if [ -n "$GRUB_PART_DISK_E" ] ; then
 		Tmp_Choice=($GRUB_PART_DISK_E)
 		part_choice "$Tmp_Choice"

@@ -187,10 +187,10 @@ ${lv_Notes}:
 								;;
 							*)
 								# Auswahl loeschen
-								for i in ${=gv_Auswahl} ; {
+								while read i ; do
 									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" &>/dev/null || \
 									no_delete_data_msg "$i"
-								}
+								done <${gv_LogFile}$$
 								break
 								;;
 						esac

@@ -239,12 +239,10 @@ kwxmms2_manage_pls() {
 															if [ "${DF_DIR_ARRAY[1]}" ] ; then
 																DIR_MENU=($DF_DIR_ARRAY)
 																DIR_MSG=$(gettext 'Waehlen Sie ein oder mehrere Verzeichnisse aus.')
-																U_OPT=no
 																checklist "$PLS_TITLE" "$DIR_MSG" "$DIR_MENU"
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			U_OPT=no
 																			checklist "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 																			;;
 																		*)	
@@ -280,12 +278,10 @@ kwxmms2_manage_pls() {
 															if [ "${DF_ARRAY[1]}" ] ; then
 																FILE_MENU=($DF_ARRAY)
 																FILE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Lieder aus.')
-																U_OPT=no
 																checklist "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			U_OPT=no
 																			checklist "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 																			;;
 																		*)
@@ -422,7 +418,9 @@ kwxmms2_manage_pls() {
 													;;
 												*)
 													# Auswahl uebernehmen und Songs loeschen
-													nyxmms2 remove -p "$DEFAULT_PLS" ${=gv_Auswahl} || prog_failure
+													while read i ; do
+														nyxmms2 remove -p "$DEFAULT_PLS" "$i" || prog_failure
+													done < ${gv_LogFile}$$
 													break
 													;;
 											esac
@@ -467,9 +465,9 @@ kwxmms2_manage_pls() {
 									pls_clear_menu
 									;;
 								*)	# ausgewaehlte Playlisten leerem
-									for i in ${=gv_Auswahl} ; {
+									while read i ; d
 										nyxmms2 playlist clear "$i" || prog_failure
-									}
+									done < ${gv_LogFile}$$
 									del_listsongs
 									break
 									;;
@@ -646,9 +644,9 @@ kwxmms2_manage_pls() {
 									pls_del_menu
 									;;
 								*)	# ausgewaehlte Playlisten loeschen
-									for i in ${=gv_Auswahl} ; {
+									while read i ; do
 										nyxmms2 playlist remove "$i" || prog_failure
-									}
+									done < ${gv_LogFile}$$
 									del_listsongs
 									break
 									;;

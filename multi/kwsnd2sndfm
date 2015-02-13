@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
 #
 # Script: kwsnd2sndfm, konvertiert soundformate
-# Version: 0.0.10
+# Version: 0.0.11
 
-trap 'setterm -inversescreen off ; setterm -reset ;
+trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
@@ -239,13 +239,12 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					mp3-w*)
 						# mp3 --> wav{{{
-						U_OPT=no
 						FORMAT="MP3"
 						SUFFIX=".mp3 .Mp3 .MP3"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
-						if [ "$WERT" ] ; then
+						if [ -n "$WERT" ] ; then
 							while read FILE ; do
 								lame ${=LAME_DEC_OPT} ${FILE} ${${FILE%.*}//\ /_}.wav || prog_failure
 							done <$gv_LogFile$$
@@ -257,10 +256,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					ogg-w*)
 						# ogg --> wav{{{
-						U_OPT=no
 						FORMAT="OGG"
 						SUFFIX=".ogg .Ogg .OGG"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -282,10 +280,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					mp3-r*)
 						# mp3 --> raw{{{
-						U_OPT=no
 						FORMAT="MP3"
 						SUFFIX=".mp3 .Mp3 .MP3"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -300,10 +297,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					ogg-r*)
 						# ogg --> raw{{{
-						U_OPT=no
 						FORMAT="OGG"
 						SUFFIX=".ogg .Ogg .OGG"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -346,10 +342,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					raw-m*)	
 						# raw --> mp3{{{
-						U_OPT=no
 						FORMAT="WAVE"
 						SUFFIX=".raw .Raw .RAW"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -364,10 +359,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					raw-o*)	
 						# raw --> ogg{{{
-						U_OPT=no
 						FORMAT="WAVE"
 						SUFFIX=".raw .Raw .RAW"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -382,10 +376,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					wav-m*)	
 						# wav --> mp3{{{
-						U_OPT=no
 						FORMAT="WAVE"
 						SUFFIX=".wav .Wav .WAV"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						if [ "$WERT" ] ; then
 							while read FILE ; do
@@ -399,10 +392,9 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					wav-o*)	
 						# wav --> ogg{{{
-						U_OPT=no
 						FORMAT="WAVE"
 						SUFFIX=".wav .Wav .WAV"
-						#
+						# Dateien auswaehlen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then

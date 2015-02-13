@@ -34,7 +34,6 @@ mailbox_command_table() {
 			$lv_Cmd)
 				# Befehl eingeben{{{
 				CMD_MSG=$(gettext 'Geben Sie einen Befehl fuer den jeweiligen Benutzer ein (Bsp.: /usr/bin/procmail -t -a "$EXTENSION" "$USER").')
-				U_OPT=regexp
 				inputbox "$TABLE_TITLE" "$CMD_MSG" "$CMD"
 				if [ "$gv_Auswahl" ] ; then
 					CMD="${${gv_Auswahl//\$/\\\$}//\"/\\\"}"
@@ -97,12 +96,10 @@ mailbox_command_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
-					U_OPT=regexp
 					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								U_OPT=regexp
 								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)

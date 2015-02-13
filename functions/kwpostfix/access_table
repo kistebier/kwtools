@@ -70,7 +70,6 @@ access_table() {
 					;;
 				$lv_Address)
 					# Adresse eingeben{{{
-					U_OPT=regexp
 					ADR_MSG=$(gettext 'Geben Sie bitte eine Mailadresse, User, IP, Domain, ... ein (Bsp. user@ | @domain.de | user@domain.de | 192.168. | 192.168.0.1 ).')
 					inputbox "$TABLE_TITLE" "$ADR_MSG" "$ADR"
 					if [ "$gv_Auswahl" ] ; then
@@ -383,7 +382,6 @@ access_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
-					U_OPT=regexp
 					menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -480,12 +478,10 @@ access_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
-					U_OPT=no
 					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								U_OPT=no
 								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# Löschen

@@ -127,21 +127,16 @@ smtpd_sender_login_table() {
 				;;
 			$gv_Delete)
 				# Eintraege loeschen{{{
-				#
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
-					U_OPT=no
 					checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								U_OPT=no
 								checklist "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# Loeschen, die Werte zum loschen stehen
-								# durch die Variable U_OPT=no in der
-								# Datei $gv_LogFile$$.
+							*)	# loeschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" ${FILE} >$FILE$$
 									mv $FILE$$ $FILE
