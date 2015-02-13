@@ -83,7 +83,7 @@ sys_conf() {
 					dialoglabel "$2"
 		
 					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --checklist \"$4\" $DisplayLines $DisplayColumns $Elemente $5"
+					DialogPara="--clear --separate-output --checklist \"$4\" $DisplayLines $DisplayColumns $Elemente $5"
 					;;
 				*)
 					# normale Anzeige ohne --default-item
@@ -101,7 +101,7 @@ sys_conf() {
 					dialoglabel
 		
 					DialogTitle="--title \"$T_String\" $DialogBackTitle"
-					DialogPara="--clear --checklist \"$2\" $DisplayLines $DisplayColumns $Elemente $3"
+					DialogPara="--clear --separate-output --checklist \"$2\" $DisplayLines $DisplayColumns $Elemente $3"
 					;;
 			esac
 
@@ -3379,6 +3379,7 @@ file_choice() {
 					# TODO:
 					# durch die Funktion filetype - andere Nachricht
 					# allimg = keine Bilder vorhanden.
+					# file --mime-type benutzen
 					#############################################
 					no_file_msg "$FORMAT"
 				fi
@@ -5720,22 +5721,22 @@ kernel_choice() {
 	#          bleiben nicht erhalten
 	# U_OPT=hk Hochkommata werden zwischen den Werten geloescht.
 	# U_OPT=k Bis auf das letzte Wort bekommt jedes Wort 1 Komma und 1 Leerzeichen angehaengt.
-	# U_OPT=no Werte in Datei schreiben und Leerzeile loeschen und
-	#          Apostrophe+Leerzeichen in neue Zeilen umwandeln.
+#	# U_OPT=no Werte in Datei schreiben und Leerzeile loeschen und
+#	#          Apostrophe+Leerzeichen in neue Zeilen umwandeln.
 	# U_OPT=regexp_file Alles wird so eingelesen wie gespeichert und etwas anders
 	#          in eine Datei geschrieben. Heisst mit Apostrophe ausser
 	#          Apostroph+Leerzeichen+Apostroph wird ersetzt durch nur ein EOL-Zeichen.
 	# U_OPT=ok Bis auf das letzte Wort bekommt jedes Wort 1 Komma angehaengt, keine Leerzeichen.
-	# U_OPT=regexp Alles wird so eingelesen wie gespeichert. Heisst mit Apostrophe etc..
+#	# U_OPT=regexp Alles wird so eingelesen wie gespeichert. Heisst mit Apostrophe etc..
 	#
 	return_check() {
 		case $? in
 			0)	if [ "$U_OPT" = - ] ; then
 					Tmp=${$(< ${DialogReDirect##*>})//\"/}
 					gv_Auswahl=${Tmp// /}
-				elif [ "$U_OPT" = no ] ; then
-					gv_Auswahl="`< ${DialogReDirect##*>} | tr -t '\" ' '\n' | grep -v '^ *$' | tee ${gv_LogFile}$$`"
-					#gv_Auswahl="${Tmp//\" /\"\\\n}"
+#				elif [ "$U_OPT" = no ] ; then
+#					gv_Auswahl="`< ${DialogReDirect##*>} | tr -t '\" ' '\n' | grep -v '^ *$' | tee ${gv_LogFile}$$`"
+#					#gv_Auswahl="${Tmp//\" /\"\\\n}"
 				elif [ "$U_OPT" = hk ] ; then
 					gv_Auswahl=${$(< ${DialogReDirect##*>})//\'/}
 				elif [ "$U_OPT" = k ] ; then
@@ -5752,12 +5753,13 @@ kernel_choice() {
 						(( ANZ-- ))
 						gv_Auswahl="`echo "$gv_Auswahl" | sed -e "s/\>./,/${ANZ} ; s/  / /"`"
 					done
-				elif [ "$U_OPT" = regexp ] ; then
-					gv_Auswahl=$(< ${DialogReDirect##*>})
+#				elif [ "$U_OPT" = regexp ] ; then
+#					gv_Auswahl=$(< ${DialogReDirect##*>})
 				elif [ "$U_OPT" = regexp_file ] ; then
 					gv_Auswahl="`print $(< ${DialogReDirect##*>}) | sed -e 's#\" \"#\n#g' | tee ${gv_LogFile}$$`"
 				else
-					gv_Auswahl=${$(< ${DialogReDirect##*>})//\"/}
+					#gv_Auswahl=${$(< ${DialogReDirect##*>})//\"/}
+					gv_Auswahl="$(< ${DialogReDirect##*>} | tee ${gv_LogFile}$$)"
 				fi
 				;;
 			1 | 255 )
