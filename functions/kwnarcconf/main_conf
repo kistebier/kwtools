@@ -940,11 +940,12 @@ main_conf() {
 				is_value "$IST_NAT"
 				if [ -n "$VALUE_ARRAY" ] ; then
 					NAT_MENU=($VALUE_ARRAY)
-					checklist "" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
+					checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help main_conf_help
-								checklist "" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
+								DEFAULT_VALUE=${gv_Auswahl#HELP }
+								checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
 								;;
 							*)	# Wert uebernehmen
 								NAT_MODULES="$gv_Auswahl"
@@ -1006,10 +1007,12 @@ main_conf() {
 				is_value "$IST_MOD"
 				if [ -n "$VALUE_ARRAY" ] ; then
 					PRELOAD_MOD_MENU=($VALUE_ARRAY)
-					checklist "" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
+					checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help main_conf_help
+								DEFAULT_VALUE=${gv_Auswahl#HELP }
+								checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
 								;;
 							*)	# Wert uebernehmen
 								PRELOAD_IP_MODULES="$gv_Auswahl"

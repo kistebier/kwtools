@@ -81,11 +81,12 @@ kwuser_conf() {
 					if [ -n "$VALUE_ARRAY" ] ; then
 						KW_GROUPS_TITLE=(${gv_Configuration}::${lv_Groups})
 						KW_GROUPS_MSG=$(gettext 'Waehlen Sie hier die Gruppen aus zu denen die zu erstellenden Benutzer standardmaessig gehoeren sollen.')
-						checklist "" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
+						checklist "${DEFAULT_VALUE[1]}" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/group_help
-									checklist "" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
+									DEFAULT_VALUE=${gv_Auswahl#HELP }
+									checklist "${DEFAULT_VALUE[1]}" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
 									;;
 								*)
 									# Gruppen uebernehmen

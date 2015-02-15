@@ -13,13 +13,14 @@ pix_workarounds() {
 		is_value "disable_esmtp delay_dotcrlf"
 		#
 		U_OPT=k
-		checklist "" "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
+		checklist "${DEFAULT_VALUE[1]}" "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
 		if [[ -n $gv_Auswahl ]] ; then
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help pix_workarounds_value_help
 						U_OPT=k
-						checklist "" "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$PIX_TITLE" "$PIX_WORKAROUNDS_MSG" "$VALUE_ARRAY"
 						;;
 					*)	# uebernehmen
 						VALUE="$gv_Auswahl"

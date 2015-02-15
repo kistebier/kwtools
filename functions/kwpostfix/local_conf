@@ -164,13 +164,14 @@ local_conf() {
 				#
 				LOCAL_HEADER_REWRITE_CLIENTS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
 				U_OPT=k
-				checklist "" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
+				checklist "${DEFAULT_VALUE[1]}" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
 				if [[ -n $gv_Auswahl ]] ; then
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help local_header_rewrite_clients_help
 								U_OPT=k
-								checklist "" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
+								DEFAULT_VALUE=${gv_Auswahl#HELP }
+								checklist "${DEFAULT_VALUE[1]}" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
 								;;
 							*)	# uebernehmen oder auf check_address_map
 								# pruefen

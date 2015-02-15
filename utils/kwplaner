@@ -5,7 +5,7 @@
 # Script: kwplaner, für Termine, Kalender etc.
 # Version: 0.0.7
 
-trap 'setterm -inversescreen off ; setterm -reset ;
+trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
@@ -171,14 +171,10 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					$lv_Calendar)
 						# vorhandene Kalender zur Anzeige heraussuchen{{{
-						#
 						unset -- Files
 						# vergleichen, ob sie schon ausgewaehlt wurde.
 						generate_is_file "$CAL"
 						Files=(${FEIERTAG_DIR%/}/(*/)#calendar.*(.N) ${FEIERTAG_DIR_HOME}/(*/)#*(.N))
-						########################################
-						#Files="`ls ${FEIERTAG_DIR%/}/(*/)#calendar.*(.N) ${FEIERTAG_DIR_HOME}/(*/)#*(.N) 2>/dev/null`"
-						########################################
 						is_value "$Files"
 						#
 						if [ "$VALUE_ARRAY" ] ; then
@@ -188,7 +184,7 @@ while [ "$gv_Auswahl" ] ; do
 							CONF_CAL_TITLE=$(gettext 'Konfiguration::Kalender')
 							CONF_CAL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Kalenderdateien aus.')
 							conf_cal_menue() {
-								checklist "" "$CONF_CAL_TITLE" "$CONF_CAL_MSG" "$CONF_CAL_MENU"
+								checklist "${DEFAULT_VALUE[1]}" "$CONF_CAL_TITLE" "$CONF_CAL_MSG" "$CONF_CAL_MENU"
 							}
 							#}}}
 							conf_cal_menue
@@ -196,6 +192,7 @@ while [ "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)
 										script_help conf_cal_help
+										DEFAULT_VALUE=${gv_Auswahl#HELP }
 										conf_cal_menue
 										;;
 									*)	#

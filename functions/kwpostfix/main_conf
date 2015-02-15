@@ -399,12 +399,13 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "alias forward include"
 			#
 			U_OPT=k
-			checklist "" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
 						;;
 					*)	# uebernehmen
 						allow_mail_to_commands="$gv_Auswahl"
@@ -424,12 +425,13 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			is_value "alias forward include"
 			U_OPT=k
-			checklist "" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
 						;;
 					*)	# uebernehmen
 						allow_mail_to_files="$gv_Auswahl"
@@ -990,13 +992,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			U_OPT=k
 			QU_MSG=$(gettext 'Waehlen Sie die Warteschlangen aus, in denen ein Hashstruktur aufgebaut werden soll.')
-			checklist "" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
 			#
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
 						;;
 					*)	# uebernehmen
 						if [ "`echo "$gv_Auswahl" | grep 'defer'`" ] ; then
@@ -1195,13 +1198,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			U_OPT=k
 			MASK_MSG=$(gettext 'Waehlen Sie ein oder mehrere Bereiche in denen Postfix Mailadressen maskieren soll.')
-			checklist "" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
 			#
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
 						;;
 					*)	# uebernehmen
 						masquerade_classes="$gv_Auswahl"
@@ -1412,13 +1416,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			U_OPT=k
 			N_MSG=$(gettext 'Waehlen Sie die Bereiche aus, bei denen der Postmaster informiert wird.')
-			checklist "" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
 			#
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
 						;;
 					*)	# uebernehmen
 						notify_classes="$gv_Auswahl"
@@ -1451,13 +1456,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			U_OPT=k
 			P_MSG=$(gettext 'Waehlen Sie die Paremeter aus in denen ein Domainangabe automatisch auch deren Subdomain miterfasst.')
-			checklist "" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
 			#
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
 						;;
 					*)	# uebernehmen
 						parent_domain_matches_subdomains="$gv_Auswahl"
@@ -1511,11 +1517,12 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "command file forward"
 			#
 			D_MSG=$(gettext 'Waehlen Sie die Faelle aus bei denen ein \"Delivered-To:\" Header eingefuegt werden soll.')
-			checklist "" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
-						checklist "" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
 						;;
 					*)	# uebernehmen
 						prepend_delivered_header="$gv_Auswahl"
@@ -1550,13 +1557,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			U_OPT=k
 			PR_MSG=$(gettext 'Waehlen Sie die Tabellen aus in denen auch Mailerweiterungen beruecksichtig werden sollen.')
-			checklist "" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
+			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
 			#
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						checklist "" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
+						DEFAULT_VALUE=${gv_Auswahl#HELP }
+						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
 						;;
 					*)	# uebernehmen
 						propagate_unmatched_extensions="$gv_Auswahl"

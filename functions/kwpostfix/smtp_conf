@@ -431,13 +431,14 @@ smtp_conf() {
 				#
 				SMTP_DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
 				U_OPT=k
-				checklist "" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 				if [[ -n $gv_Auswahl ]] ; then
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help dns_resolver_options_help
 								U_OPT=k
-								checklist "" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+								DEFAULT_VALUE=${gv_Auswahl#HELP }
+								checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 								;;
 							*)	# uebernehmen
 								smtp_dns_resolver_options="$gv_Auswahl"
@@ -833,12 +834,13 @@ smtp_conf() {
 				#
 				SMTP_SASL_MECHANISM_MSG=$(gettext 'Waehlen Sie bitte die Mechanismen die erlaubt werden sollen')
 				U_OPT=k
-				checklist "" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help smtp_help
 							U_OPT=k
-							checklist "" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+							DEFAULT_VALUE=${gv_Auswahl#HELP }
+							checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 							;;
 						*)
 							smtp_sasl_mechanism_filter="$gv_Auswahl"

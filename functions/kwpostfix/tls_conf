@@ -122,13 +122,14 @@ tls_conf() {
 				#
 				U_OPT=k
 				TLS_DISABLE_WORKAROUND_MSG=$(gettext 'Waehlen Sie ein oder mehrere OpenSSL Bug Workarounds aus die abgeschaltet werden sollen (Siehe man 3 SSL_CTX_set_options.')
-				checklist "" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
+				checklist "${DEFAULT_VALUE[1]}" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
 				#
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help tls_help
 							U_OPT=k
-							checklist "" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
+							DEFAULT_VALUE=${gv_Auswahl#HELP }
+							checklist "${DEFAULT_VALUE[1]}" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
 							;;
 						*)	# uebernehmen
 							tls_disable_workarounds="$gv_Auswahl"
