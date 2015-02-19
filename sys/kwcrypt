@@ -10,7 +10,7 @@
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
-trap 'setterm -inversescreen off ; setterm -reset ;
+trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
 
 gv_ScriptName=${0##*/}
