@@ -22,7 +22,7 @@ server_conf() {
 		# IFS=Return
 		IFS=$'\r'
 		#
-		read -A BackupList <<< "`grep -v "^#" $SERVER_CONF_FILE | tr "\n" "$IFS"`"
+		read -A BackupList <<< "`awk  '!/^#|^$/{print}' $SERVER_CONF_FILE | tr "\n" "$IFS"`"
 		# IFS=Tab
 		IFS=$'\t'
 		Anz=1
@@ -54,7 +54,7 @@ server_conf() {
 							DST[Anz1]="$3"
 							RSYNC_ARGS[Anz1]="$4"
 							HOSTNAME[Anz1]="${Tmp#*@}"
-							R_RSYNC[Anz1]="rsync://${HOSTNAME}"
+							R_RSYNC[Anz1]="rsync://${HOSTNAME[Anz1]}"
 							;;
 						rsync://*)
 							(( Anz1++ ))
@@ -64,7 +64,7 @@ server_conf() {
 							DST[Anz1]="$3"
 							RSYNC_ARGS[Anz1]="$4"
 							HOSTNAME[Anz1]="$Tmp"
-							R_RSYNC[Anz1]="rsync://${HOSTNAME}"
+							R_RSYNC[Anz1]="rsync://${HOSTNAME[Anz1]}"
 							;;
 						*@*)
 							(( Anz1++ ))
@@ -238,7 +238,7 @@ server_conf() {
 						server_input
 						# Konfigurationsdaten neu einlesen
 						backup_change_list
-						if [ -n "$BackupList" ] ; then
+						if [ -n "${BackupList[1]}" ] ; then
 							backup_change_list_menu
 							backup_change_menu
 						else
