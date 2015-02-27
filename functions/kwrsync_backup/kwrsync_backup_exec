@@ -192,7 +192,7 @@ kwrsync_backup_exec() {
 	# einzelnen Server und darauf rsync, RLVM, ... ausfuehren.
 	backup_exec() {
 		unset -- BackupList $SERVER_UNSET
-		for S in ${=SERVER} ; {
+		for S in rsync ${=SERVER} ; {
 			# rsync Argumente aus der globalen Konfiguration belegen
 			rsync_conf_args
 			# Rechner in Logdatei schreiben
@@ -226,7 +226,7 @@ kwrsync_backup_exec() {
 				# IFS=Return
 				IFS=$'\r'
 				#
-				read -A BackupList <<< "`grep -v "^#" ${KWRSYNC_CF_DIR}/${S}.conf | tr "\n" "$IFS"`"
+				read -A BackupList <<< "`awk  '!/^#|^$/{print}' ${KWRSYNC_CF_DIR}/${S}.conf | tr "\n" "$IFS"`"
 				# IFS=Tab
 				IFS=$'\t'
 				Nr=1
