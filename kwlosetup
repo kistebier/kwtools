@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 12.10.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
 #
 # Script: kwlosetup, verschluesselt Partitionen oder ganze Laufwerke
-# Version: 0.1.13
+# Version: 0.1.14
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -255,7 +255,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			haupt_menue "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration{{{
@@ -279,7 +279,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help conf_help
-						conf_menue
+						conf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Blocksize)
 						# Blockgroesse des Containers/Laufwerks/Partition{{{
@@ -290,7 +290,7 @@ while [ "$gv_Auswahl" ] ; do
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help block_size_help
-									menubox "$BLOCK_SIZE" "$BLOCK_SIZE_TITLE" "$BLOCK_SIZE_MSG" "$BLOCK_SIZE_MENU"
+									menubox "${gv_Auswahl#HELP }" "$BLOCK_SIZE_TITLE" "$BLOCK_SIZE_MSG" "$BLOCK_SIZE_MENU"
 									;;
 								*)	BLOCK_SIZE="$gv_Auswahl"
 									break
@@ -357,7 +357,7 @@ while [ "$gv_Auswahl" ] ; do
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help key_help
-									menubox "$ENCRYPT" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+									menubox "${gv_Auswahl#HELP }" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
 									;;
 								*)
 									ENCRYPT="$gv_Auswahl"

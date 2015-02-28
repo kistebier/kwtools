@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de>, 06.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de>, 28.02.2015
 #
 # Script: kwtex-cal, zum ausdrucken von Jahreskalendern mit Bundesland-
 # spezifischen Feiertagen und eigenen. Die eigenen Feiertage werden aus
 # dem Terminkalender (kwtermin) extrahiert.
 # Datei: ~/.kwtools/kwplaner/termin.
 #
-# Version: 0.2.15
+# Version: 0.2.16
 #
 #######################################################################
 # Es benutzt die Scripte und Dateien von Rene Scholz 
@@ -67,7 +67,7 @@ lv_Extra=$(gettext 'Extra')
 MAIN_MENU=($lv_Extra \"\" $gv_Create \"\" $gv_Exit \"\")
 # Funktion (main_menu), Hauptmenue# {{{
 main_menu() {
-	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
 # Funktion (read_holiday), Geburtstage und Feiertage einlesen# {{{
@@ -118,7 +118,7 @@ while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Extra)
 			# Geburtstage und Feiertage fuer den Kalender auswaehlen.# {{{
@@ -131,7 +131,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl"  in
 						HELP*)	script_help extra_help
-							checklist "" "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
+							checklist "${gv_Auswahl#HELP }" "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
 							;;
 						*)
 							# Auswahl uerbenommen
@@ -149,7 +149,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				rm $Holiday_File &>/dev/null
 			fi
 			## }}}
-			main_menu
+			main_menu $lv_Extra
 			;;
 		$gv_Create)
 			# Kalender erstellen# {{{
@@ -187,7 +187,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				fi
 			fi
 			## }}}
-			main_menu
+			main_menu $gv_Create
 			;;
 		$lv_Exit)	break
 			;;

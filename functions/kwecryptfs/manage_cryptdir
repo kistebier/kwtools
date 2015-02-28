@@ -15,7 +15,7 @@ manage_cryptdir() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help manage_dir_help
-				manage_menu
+				manage_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Create)
 	            # verschluesselte Verzeichnisse erstellen# {{{
@@ -46,7 +46,7 @@ manage_cryptdir() {
 	                    case "$gv_Auswahl" in
 	                        HELP*)
 	                            script_help share/conf_change_help
-	                            menubox "$NR" "$gv_Change" "$gv_Menupoint" "$FSTAB_VALUES_E"
+	                            menubox "${gv_Auswahl#HELP }" "$gv_Change" "$gv_Menupoint" "$FSTAB_VALUES_E"
 	                            ;;
 	                        *)
 	                            # uebernehmen
@@ -75,17 +75,17 @@ manage_cryptdir() {
 			$gv_Delete)
 	            # verschluesselte Verzeichnisse loeschen# {{{
 	            read_fstab ecryptfs
-	            if [ -n "$FSTAB_VALUES_M" ] ; then
+	            if [ -n "${FSTAB_VALUES_M[1]}" ] ; then
 					checklist "" "$gv_Delete" "$gv_Delete_MSG" "$FSTAB_VALUES_M"
 	                while [ -n "$gv_Auswahl" ] ; do
 	                    case "$gv_Auswahl" in
 	                        HELP*)
 	                            script_help share/conf_del_help
-	                            checklist "" "$gv_Delete" "$gv_Delete_MSG" "$FSTAB_VALUES_M"
+	                            checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$FSTAB_VALUES_M"
 	                            ;;
 	                        *)
 	                            # uebernehmen
-								for i in $gv_Auswahl ; {
+								for i in ${=gv_Auswahl} ; {
 	                				# erstmal Verzeichnis umounten
 	                            	mount_check -a "${${FSTAB_VALUES[i]}%% *}"
 	                				# fstab schreiben

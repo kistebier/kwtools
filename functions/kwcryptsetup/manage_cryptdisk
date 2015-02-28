@@ -26,7 +26,7 @@ manage_cryptdisk() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help resize_help
-					menubox "" "$RESIZE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$RESIZE_MENU"
+					menubox "${gv_Auswahl#HELP }" "$RESIZE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$RESIZE_MENU"
 					;;
 				*)	# Auswahl uebernehmen
 					CRYPT_DEV="$gv_Auswahl"
@@ -346,7 +346,7 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help manage_help
-				manage_menu
+				manage_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Konfigurations Datei /etc/crypttab# {{{
@@ -370,14 +370,14 @@ Bei \"nein\" wird abgebrochen.')
 				CREATE_MENU=($lv_Container \"\" $lv_Partition \"\"
 				$gv_Back \"\")
 				create_menu() {
-					menubox "" "$CREATE_TITLE" "$gv_Menupoint" "$CREATE_MENU"
+					menubox "$1" "$CREATE_TITLE" "$gv_Menupoint" "$CREATE_MENU"
 				}
 				## }}}
 				create_menu
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help create_help
-							create_menu
+							create_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Container)
 							# Verzeichnis auswaehlen und Dateinamen eingeben.# {{{
@@ -427,7 +427,7 @@ Bei \"nein\" wird abgebrochen.')
 								fi
 							fi
 							## }}}
-							create_menu
+							create_menu $lv_Container
 							;;
 						$lv_Partition)
 							# Partitionen/LVM/RAID verschluesseln# {{{
@@ -493,7 +493,7 @@ Bei \"nein\" wird abgebrochen.')
 								no_part_msg
 							fi
 							## }}}
-							create_menu
+							create_menu $lv_Partition
 							;;
 						$gv_Back)	break
 							;;
@@ -514,7 +514,7 @@ Bei \"nein\" wird abgebrochen.')
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help change_help
-								menubox "$DEVICE" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 								;;
 							*)	# Auswahl veraendern
 								DEVICE="$gv_Auswahl"
@@ -590,7 +590,7 @@ Bei \"nein\" wird abgebrochen.')
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help del_help
-								checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 								;;
 							*)	# Auswahl loeschen
 								for L in ${=gv_Auswahl} ; {

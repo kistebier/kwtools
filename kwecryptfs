@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke  <kiste@netzworkk.de> 28.02.2015
 #
 # Script: kwecryptfs, erstellt ein verschluesseltes Dateisystem
 #         ueber einem Verzeichnis.
 #
-# Version: 0.0.5
+# Version: 0.0.6
 
 # Ausfuehren von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -345,7 +345,7 @@ while [ "$gv_Auswahl" ] ; do
         $gv_Start)
             # verschluesselte Verzeichnisse starten# {{{
 			read_fstab ecryptfs
-            if [ -n "$FSTAB_VALUES" ] ; then
+            if [ -n "${FSTAB_VALUES[1]}" ] ; then
 				# Pruefen ob verschluesseltes Verzeichnis eingebunden ist oder nicht.
 				check_no_activ no
 				if [ -n "$A_DIR_M" ] ; then
@@ -354,7 +354,7 @@ while [ "$gv_Auswahl" ] ; do
 	                    case "$gv_Auswahl" in
 	                        HELP*)
 	                            script_help help
-	                			checklist "" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
+	                			checklist "${gv_Auswahl#HELP }" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
 	                            ;;
 	                        *)
 								# Verzeichnisse mounten (f.E. USB_Keyfile).
@@ -391,7 +391,7 @@ while [ "$gv_Auswahl" ] ; do
 	                    case "$gv_Auswahl" in
 	                        HELP*)
 	                            script_help help
-	                			checklist "" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
+	                			checklist "${gv_Auswahl#HELP }" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
 	                            ;;
 	                        *)
 								# Verzeichnisse umounten.

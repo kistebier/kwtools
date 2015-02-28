@@ -69,7 +69,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Selber weiter machen ;-) oder nachfolgendes Beispiel

@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 12.10.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschluesselten
 # Devices mittels cryptsetup.
@@ -9,7 +9,7 @@
 # /lib/cryptsetup/cryptdisks.functions übernommen, korrigiert
 # oder erweitert.
 #
-# Version: 0.1.6
+# Version: 0.1.7
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -992,7 +992,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration
@@ -1011,7 +1011,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help state_help
-							checklist "" "$STATE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_MENU"
+							checklist "${gv_Auswahl#HELP }" "$STATE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_MENU"
 							;;
 						*)	# Auswahl anzeigen
 							rm -f ${gv_WorkDir}/dmstate &>/dev/null
@@ -1075,10 +1075,10 @@ while [ "$gv_Auswahl" ] ; do
 					MAP_DEV_MENU=($MAP_DEV_M)
 					START_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus, die Sie starten wollen.')
 					checklist "" "$START_TITLE" "$START_MSG" "$MAP_DEV_MENU"
-					while [ -n "$gv_Auswahl" ] ; do
+					while [ -n "${gv_Auswahl[1]}" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help start_help
-								checklist "" "$START_TITLE" "$START_MSG" "$MAP_DEV_MENU"
+								checklist "${gv_Auswahl#HELP }" "$START_TITLE" "$START_MSG" "$MAP_DEV_MENU"
 								;;
 							*)	# Auswahl starten
 								for i in ${=gv_Auswahl} ; {
@@ -1108,10 +1108,10 @@ while [ "$gv_Auswahl" ] ; do
 					MAP_DEV_MENU=($MAP_DEV_M)
 					STOP_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus, die Sie stoppen wollen. Diese werden dann aus dem Dateisystem ausgebunden und gestoppt.')
 					checklist "" "$STOP_TITLE" "$STOP_MSG" "$MAP_DEV_MENU"
-					while [ -n "$gv_Auswahl" ] ; do
+					while [ -n "${gv_Auswahl[1]}" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help stop_help
-								checklist "" "$STOP_TITLE" "$STOP_MSG" "$MAP_DEV_MENU"
+								checklist "${gv_Auswahl#HELP }" "$STOP_TITLE" "$STOP_MSG" "$MAP_DEV_MENU"
 								;;
 							*)	# Auswahl stoppen
 								for i in ${=gv_Auswahl} ; {

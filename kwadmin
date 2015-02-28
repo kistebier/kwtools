@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Author: Kai Wilke <kiste@netzworkk.de>, 13.05.2014
+# Author: Kai Wilke <kiste@netzworkk.de>, 28.02.2015
 #
 # Script: kwadmin ist eine Oberfläche für verschiedene Scripte, die
 # die Arbeit mit Linux erleichtern sollen.
-# Version: 0.3.2
+# Version: 0.3.3
 
 trap 'setterm --inversescreen off ; setterm --reset ; 
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -90,10 +90,10 @@ haupt_menue() {
 haupt_menue
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
-		HELP*)	#
+		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			haupt_menue "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			autoload -U kwadmin_conf
@@ -113,11 +113,11 @@ while [ "$gv_Auswahl" ] ; do
 					HELP*)
 						# Hilfetext
 						script_help utils
-						menubox "$U_PROG" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						menubox "${gv_Auswahl#HELP }" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
 						;;
 					$gv_Back) break
 						;;
-					*)	#
+					*)
 						U_PROG="$gv_Auswahl"
 						$gv_Auswahl
 						menubox "$U_PROG" "$UTILS_TITLE" "$ALL_MSG" "$PROG_MENU"
@@ -139,11 +139,11 @@ while [ "$gv_Auswahl" ] ; do
 					HELP*)
 						# Hilfetext
 						script_help graphic
-						menubox "$G_PROG" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
+						menubox "${gv_Auswahl#HELP }" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
 						;;
 					$gv_Back) break
 						;;
-					*)	#
+					*)
 						G_PROG="$gv_Auswahl"
 						$gv_Auswahl
 						menubox "$G_PROG" "$GRAPHIC_TITLE" "$ALL_MSG" "$PROG_MENU"
@@ -165,11 +165,11 @@ while [ "$gv_Auswahl" ] ; do
 					HELP*)
 						# Hilfetext
 						script_help multi
-						menubox "$M_PROG" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
+						menubox "${gv_Auswahl#HELP }" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
 						;;
 					$gv_Back)	break
 						;;
-					*)	#
+					*)
 						M_PROG="$gv_Auswahl"
 						$gv_Auswahl
 						menubox "$M_PROG" "$MULTI_TITLE" "$ALL_MSG" "$PROG_MENU"
@@ -187,13 +187,13 @@ while [ "$gv_Auswahl" ] ; do
 			menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
 			while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
-					HELP*)	#
+					HELP*)
 						script_help net
-						menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
+						menubox "${gv_Auswahl#HELP }" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
 						;;
 					$gv_Back)	break
 						;;
-					*)	#
+					*)
 						N_PROG="$gv_Auswahl"
 						$gv_Auswahl
 						menubox "$N_PROG" "$NET_TITLE" "$ALL_MSG" "$PROG_MENU"
@@ -211,14 +211,14 @@ while [ "$gv_Auswahl" ] ; do
 			menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
 			while [ "$gv_Auswahl"  ] ; do
 				case $gv_Auswahl in
-					HELP*)	#
+					HELP*)
 						# Hilfetext
 						script_help sys
-						menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
+						menubox "${gv_Auswahl#HELP }" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"
 						;;
 					$gv_Back)	break
 						;;
-					*)	#
+					*)
 						S_PROG="$gv_Auswahl"
 						$gv_Auswahl
 						menubox "$S_PROG" "$SYS_TITLE" "$ALL_MSG" "$PROG_MENU"

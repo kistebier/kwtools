@@ -167,7 +167,7 @@ luks_extension() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help luks_help
-				luks_ext_menu
+				luks_ext_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Luksinfo)
 				# Luksinformationen von verschluesselten Laufwerken anzeigen (/etc/crypttab)# {{{
@@ -176,7 +176,7 @@ luks_extension() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help luks_help
-							checklist "" "$INFO_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+							checklist "${gv_Auswahl#HELP }" "$INFO_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
 							;;
 						*)	# Auswahl anzeigen
 							rm -f ${gv_WorkDir}/dmstate &>/dev/null
@@ -230,7 +230,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_addkey_help
-							addkey_menu
+							addkey_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks das einen neuen Schluessel# {{{
@@ -239,7 +239,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_addkey_help
-										menubox "$DEVICE" "$ADDKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										menubox "${gv_Auswahl#HELP }" "$ADDKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -267,7 +267,7 @@ luks_extension() {
 									while [ -n "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
 											HELP*)	script_help luks_addkey_help
-												menubox "$SLOT" "$ADDKEY_TITLE" "$SLOT_MSG" "$SLOT_NRD"
+												menubox "${gv_Auswahl#HELP }" "$ADDKEY_TITLE" "$SLOT_MSG" "$SLOT_NRD"
 												;;
 											*)	# Auswahl übernehmen
 												SLOT="$gv_Auswahl"
@@ -313,7 +313,6 @@ luks_extension() {
 									SLOT_PARAM="-S $SLOT"
 								fi
 
-								set -x
 								# Keyscript exitiert, Datei mit neuem Schlüssel existiert,
 								# Slot ist angegeben.
 								if [ -n "$KEYSCRIPT" ] && [ -f "$NEWKEY" ] ; then
@@ -395,7 +394,6 @@ luks_extension() {
 									# Passphrase schreddern.
 									clean_keys
 								fi
-								set +x
 
 								if [ "$result" = fail ] ; then
 									MSG=$(gettext 'Das hinzufuegen einer neuen Passphrase ist fehlgeschlagen.')
@@ -436,7 +434,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_changekey_help
-							changekey_menu
+							changekey_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks von dem der Schluessel# {{{
@@ -445,7 +443,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_changekey_help
-										menubox "$DEVICE" "$CHANGEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										menubox "${gv_Auswahl#HELP }" "$CHANGEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -474,7 +472,7 @@ luks_extension() {
 									while [ -n "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
 											HELP*)	script_help luks_changekey_help
-												menubox "$SLOT" "$CHANGEKEY_TITLE" "$SLOT_MSG" "$SLOT_NR" "$SLOTS"
+												menubox "${gv_Auswahl#HELP }" "$CHANGEKEY_TITLE" "$SLOT_MSG" "$SLOT_NR" "$SLOTS"
 												;;
 											*)	# Auswahl übernehmen
 												SLOT="$gv_Auswahl"
@@ -656,7 +654,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_removekey_help
-							removekey_menu
+							removekey_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks von dem der Schluessel# {{{
@@ -665,7 +663,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_removekey_help
-										menubox "$DEVICE" "$REMOVEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										menubox "${gv_Auswahl#HELP }" "$REMOVEKEY_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -775,7 +773,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_bak_help
-							bak_menu
+							bak_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines oder mehrerer Laufwerke# {{{
@@ -783,7 +781,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_bak_help
-										checklist "" "$BAK_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+										checklist "${gv_Auswahl#HELP }" "$BAK_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -851,7 +849,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_restore_help
-							restore_menu
+							restore_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks# {{{
@@ -859,7 +857,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_restore_help
-										menubox "$DEVICE" "$RESTORE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										menubox "${gv_Auswahl#HELP }" "$RESTORE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -920,7 +918,7 @@ luks_extension() {
 				suspend_menu() {
 					SUSPEND_MENU=($lv_Device \"$DEVICE\"
 					$lv_Suspend \"\" $gv_Back \"\")
-					menubox "" "$SUSPEND_TITLE" "$gv_Menupoint" "$SUSPEND_MENU"
+					menubox "$1" "$SUSPEND_TITLE" "$gv_Menupoint" "$SUSPEND_MENU"
 				}
 				## }}}
 				suspend_menu
@@ -928,7 +926,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_suspend_help
-							suspend_menu
+							suspend_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines oder mehrerer Laufwerke die# {{{
@@ -939,7 +937,7 @@ luks_extension() {
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help luks_suspend_help
-											checklist "" "$SUSPEND_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$RESUME_DEV_M"
+											checklist "${gv_Auswahl#HELP }" "$SUSPEND_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$RESUME_DEV_M"
 											;;
 										*)	# Auswahl übernehmen
 											DEVICE="$gv_Auswahl"
@@ -991,7 +989,7 @@ luks_extension() {
 				resume_menu() {
 					RESUME_MENU=($lv_Device \"$DEVICE\"
 					$lv_Resume \"\" $gv_Back \"\")
-					menubox "" "$RESUME_TITLE" "$gv_Menupoint" "$RESUME_MENU"
+					menubox "$1" "$RESUME_TITLE" "$gv_Menupoint" "$RESUME_MENU"
 				}
 				## }}}
 				resume_menu
@@ -999,7 +997,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_resume_help
-							resume_menu
+							resume_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks das# {{{
@@ -1010,7 +1008,7 @@ luks_extension() {
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help luks_resume_help
-											checklist "" "$RESUME_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$SUSPEND_DEV_M"
+											checklist "${gv_Auswahl#HELP }" "$RESUME_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$SUSPEND_DEV_M"
 											;;
 										*)	# Auswahl übernehmen
 											DEVICE="$gv_Auswahl"
@@ -1097,7 +1095,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_killslot_help
-							killslot_menu
+							killslot_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines Laufwerks von dem Slots geloescht# {{{
@@ -1106,7 +1104,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_killslot_help
-										menubox "$DEVICE" "$KILLSLOT_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
+										menubox "${gv_Auswahl#HELP }" "$KILLSLOT_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$MAP_DEV"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"
@@ -1136,7 +1134,7 @@ luks_extension() {
 									while [ -n "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
 											HELP*)	script_help luks_killslot_help
-												checklist "" "$KILLSLOT_TITLE" "$SLOT_MSG" "$SLOT_NR_M" "$SLOTS"
+												checklist "${gv_Auswahl#HELP }" "$KILLSLOT_TITLE" "$SLOT_MSG" "$SLOT_NR_M" "$SLOTS"
 												;;
 											*)	# Auswahl übernehmen
 												SLOTS="$gv_Auswahl"
@@ -1215,7 +1213,7 @@ luks_extension() {
 					case "$gv_Auswahl" in
 						HELP*)
 							script_help luks_erase_help
-							erase_menu
+							erase_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Device)
 							# Auswahl eines oder mehrerer Laufwerke# {{{
@@ -1223,7 +1221,7 @@ luks_extension() {
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help luks_erase_help
-										checklist "" "$ERASE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
+										checklist "${gv_Auswahl#HELP }" "$ERASE_TITLE" "$MULTI_BLOCK_DEVICE_MSG" "$MAP_DEV_M"
 										;;
 									*)	# Auswahl übernehmen
 										DEVICE="$gv_Auswahl"

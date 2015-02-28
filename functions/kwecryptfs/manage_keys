@@ -12,14 +12,14 @@ manage_keys() {
 	# Funktionen manage_key_menu# {{{
 	KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
 	manage_key_menu() {
-		menubox "" "$gv_Key" "$gv_Menupoint" "$KEY_MENU"
+		menubox "$1" "$gv_Key" "$gv_Menupoint" "$KEY_MENU"
 	}
 	## }}}
 	manage_key_menu
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help manage_key_help
-				manage_key_menu
+				manage_key_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Create)
 				# Schluessel anlegen# {{{
@@ -38,7 +38,7 @@ manage_keys() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help manage_create_key_help
-							create_key_menu
+							create_key_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Filename)
 							# Dateinamen vergeben# {{{
@@ -95,7 +95,7 @@ manage_keys() {
 								case "$gv_Auswahl" in
 									HELP*)
 										script_help manage_create_key_help
-										key_type_menu
+										key_type_menu "${gv_Auswahl#HELP }"
 										;;
 									gpg)
 										hier_ist_noch_nichts $gv_Auswahl
@@ -150,6 +150,7 @@ manage_keys() {
 										break
 									else
 										unset -- FILE_OPT KEY_FILE_NAME
+										break
 									fi
 								else
 									> "$KEY_FILE_NAME" <<< "${FILE_OPT}=${KEY_CRYPT}"
@@ -162,25 +163,25 @@ manage_keys() {
 								msgbox "$gv_Info" "$MSG"
 							fi
 							## }}}
-							create_key_menu
+							create_key_menu $gv_Filename
 							;;
 						$gv_Back)	break
 							;;
 					esac
 				done
 				## }}}
-				manage_key_menu
+				manage_key_menu $gv_Create
 				;;
 			$gv_Delete)
 				# Schluesseldatei loeschen# {{{
 				file_choice "${KEY_FILE%/*}" multi
-				if [ -n "$WERT" ] ; then
-					for i in "$WERT" ; {
+				if [ -n "${WERT[1]}" ] ; then
+					for i in ${=WERT} ; {
 						rm "${VERZ}/${i}" &&>/dev/null
 					}
 				fi
 				## }}}
-				manage_key_menu
+				manage_key_menu $gv_Delete
 				;;
 			$gv_Back)	break
 				;;

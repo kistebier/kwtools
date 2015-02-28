@@ -44,7 +44,7 @@ kwecryptfs_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help conf_help
-				conf_menu
+				conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xattr)
 				# Metadaten in den erweiterten Attributen des Dateisystems speichern?.# {{{
@@ -67,7 +67,7 @@ kwecryptfs_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help conf_help
-							menubox "${CIPHER:-aes}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
+							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 							;;
 						*)
 							# Auswahl uebernehmen
@@ -107,7 +107,7 @@ kwecryptfs_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help conf_help
-							menubox "${KEY_SIZE:-16}" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
+							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
 							;;
 						*)	# Wert uebernehmen
 							KEY_SIZE="$gv_Auswahl"
@@ -161,15 +161,15 @@ kwecryptfs_conf() {
 				KEY_TYPE_MENU=(gpg \"\" openssl \"\" passphrase \"\"
 				pkcs11-helper \"\" tspi \"\" $gv_Back \"\")
 				key_typ_menu() {
-					menubox "$KEY_TYPE" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
+					menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
 				}
 				## }}}
 				# Auswahl anbieten
-				key_typ_menu
+				key_typ_menu "$KEY_TYPE"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help keytype_help
-							key_typ_menu
+							key_typ_menu "${gv_Auswahl#HELP }"
 							;;
 						*)
 							# Auswahl uebernehmen# {{{
@@ -188,7 +188,7 @@ kwecryptfs_conf() {
 										case "$gv_Auswahl" in
 											HELP*)
 												script_help keytype_help
-												menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
+												menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
 												;;
 											openssl_keyfile)
 												# openssl private RSA SSL Schluessel Datei auswaehlen# {{{
@@ -204,7 +204,7 @@ kwecryptfs_conf() {
 													while [ -n "$gv_Auswahl" ] ; do
 														case "$gv_Auswahl" in
 															HELP*)	script_help keytype_help
-																menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_OPT_MENU"
+																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_OPT_MENU"
 																;;
 															$lv_Manual)
 																# uebernehmen, interactive Eingabe der Passphrase.
@@ -220,8 +220,8 @@ kwecryptfs_conf() {
 																else
 																	unset -- KEY_TYPE KEY_OPT
 																fi
-																break
 																## }}}
+																break
 																;;
 															openssl_passwd_file)
 																# openssl_passwd_file Datei auswaehlen# {{{
@@ -233,8 +233,8 @@ kwecryptfs_conf() {
 																	unset -- KEY_TYPE KEY_OPT
 																	no_input_msg
 																fi
-																break
 																## }}}
+																break
 																;;
 															$gv_Back)
 																break
@@ -275,7 +275,7 @@ kwecryptfs_conf() {
 													while [ -n "$gv_Auswahl" ] ; do
 														case "$gv_Auswahl" in
 															HELP*)	script_help keytype_help
-																menubox "" "$gv_Configuration" "$gv_Menupoint" "$KEY_OPT_MENU"
+																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$KEY_OPT_MENU"
 																;;
 															$lv_Manual)
 																# uebernehmen, interactive Eingabe der Passphrase.
@@ -291,8 +291,8 @@ kwecryptfs_conf() {
 																else
 																	unset -- KEY_TYPE KEY_OPT
 																fi
-																break
 																## }}}
+																break
 																;;
 															openssl_keyfile)
 																# openssl private RSA SSL Schluessel Datei auswaehlen# {{{
@@ -304,8 +304,8 @@ kwecryptfs_conf() {
 																	unset -- KEY_TYPE KEY_OPT
 																	no_input_msg
 																fi
-																break
 																## }}}
+																break
 																;;
 															$gv_Back)
 																break
@@ -333,7 +333,7 @@ kwecryptfs_conf() {
 										case "$gv_Auswahl" in
 											HELP*)
 												script_help keytype_help
-												menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
+												menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
 												;;
 											passphrase_passwd)
 												# Password eingeben# {{{

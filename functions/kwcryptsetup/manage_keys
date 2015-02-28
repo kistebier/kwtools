@@ -7,14 +7,14 @@ manage_keys() {
 KEY_TITLE=($lv_Key)
 KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
 manage_key_menu() {
-	menubox "" "$KEY_TITLE" "$gv_Menupoint" "$KEY_MENU"
+	menubox "$1" "$KEY_TITLE" "$gv_Menupoint" "$KEY_MENU"
 }
 ## }}}
 manage_key_menu
 while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help manage_key_help
-			manage_key_menu
+			manage_key_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Create)
 			# Schluessel anlegen# {{{
@@ -33,7 +33,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help manage_key_help
-						create_key_menu
+						create_key_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Filename)
 						# Dateinamen vergeben# {{{
@@ -66,14 +66,14 @@ while [ -n "$gv_Auswahl" ] ; do
 							#
 							ENCRYPT_TITLE=(${lv_Key}::${lv_Encryption})
 							ENCRYPT_MENU=($gv_None \"\" $ENCRYPT_PROG $gv_Back \"\")
-							menubox "$KEY_CRYPT" "$ENCRYPT_TITLE" "$gv_Menupoint" "$ENCRYPT_MENU"
+							menubox "$1" "$ENCRYPT_TITLE" "$gv_Menupoint" "$ENCRYPT_MENU"
 						}
 						## }}}
-						choice_encrypt_menu
+						choice_encrypt_menu "$KEY_CRYPT"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help manage_key_help
-									choice_encrypt_menu
+									choice_encrypt_menu "${gv_Auswahl#HELP }"
 									;;
 								$gv_None)
 									unset -- KEY_CRYPT
@@ -133,18 +133,18 @@ while [ -n "$gv_Auswahl" ] ; do
 				esac
 			done
 			## }}}
-			manage_key_menu
+			manage_key_menu $gv_Create
 			;;
 		$gv_Delete)
 			# Schluessel loeschen# {{{
 			file_choice "${KEY_FILE%/*}" multi
-			if [ -n "$WERT" ] ; then
-				for i in "$WERT" ; {
+			if [ -n "${WERT[1]}" ] ; then
+				for i in "${=WERT}" ; {
 					rm "${VERZ}/${i}" &>/dev/null
 				}
 			fi
 			## }}}
-			manage_key_menu
+			manage_key_menu $gv_Delete
 			;;
 		$gv_Back)	break
 			;;

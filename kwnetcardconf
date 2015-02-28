@@ -1,12 +1,12 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
 #
 # Script: kwnetcardconf, Konfiguriert ihre Netzwerkkarten und deren
 #	      IP Adressen. Zur Zeit nur WLAN und Ethernet. DSL wird noch
 #	      nicht konfiguriert, dazu ist pppoeconf zustaendig.
 #
-# Version: 0.1.14
+# Version: 0.1.15
 
 trap 'setterm --inversescreen off ; setterm --reset ; rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
 
@@ -78,9 +78,8 @@ while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
-	        #
 			script_help help
-			haupt_menue "$NR"
+			haupt_menue "${gv_Auswahl#HELP }"
 			;;
 		[0-9]*)
 			# Karte konfigurieren# {{{
@@ -126,7 +125,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case $gv_Auswahl in
 						HELP*)	script_help netartauswahl_help
-							menubox "" "$gv_Configuration" "$CONF_MSG" "$CONF_MENU"
+							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$CONF_MSG" "$CONF_MENU"
 							;;
 						$lv_Dhcp)
 							# ueber dhcp einstellen
