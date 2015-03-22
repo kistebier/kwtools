@@ -35,7 +35,7 @@ read_parted_gpt() {
 		esac
 	elif [[ -n ${Fs_Type[Anz1]} ]] ; then
 		case "${Fs_Type[Anz1]}" in
-			exfat|ext[234]|fat16|fat32|hfs*|jfs|ntfs|reiserfs|reiser4|linux-swap*|*ufs|xfs|*LVM*|*_raid_*)
+			exfat|ext[234]|fat16|fat32|vfat|hfs*|jfs|ntfs|reiserfs|reiser4|linux-swap*|*ufs|xfs|*LVM*|*_raid_*)
 				FLAG[Anz1]=""
 				NAME[Anz1]=""
 				PART_FS[Anz1]="${Fs_Type[Anz1]}"
@@ -49,7 +49,7 @@ read_parted_gpt() {
 #	else
 #		# Falls das Filesystem unbekannt ist, wird
 #		# versucht es hier heraus zu bekommen.
-#		check_part_fs ${PART[Anz1]}
+#		check_fs ${PART[Anz1]}
 #		PART_FS[Anz1]="${gv_Fs:-$gv_Unknown}"
 	fi
 }
