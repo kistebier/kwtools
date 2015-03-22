@@ -1521,14 +1521,12 @@ sys_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (check_part_fs), Filesystem heraus bekommen# {{{
+	# Funktion (check_fs), Filesystem heraus bekommen# {{{
 	#
-	# usage: check_part_fs FP
+	# usage: check_fs FP
 	# FP - Festplatten Partition/Laufwerk
 	#
-	##############################
-	# TODO: weiter unter Beobachtung, gerade crypto und raid.
-	check_part_fs() {
+	check_fs() {
 		if [[ ${#argv} == 1 ]] ; then
 			# Pruefen, ob blkid vorhanden und ausführbar ist, ansonsten
 			# wird abgebrochen.
@@ -1537,27 +1535,37 @@ sys_conf() {
 				exit 0
 			fi
 
-			unset -- gv_Fs gv_NoFs
-			local Fs_Dev Part_Fs_Tmp
-			Fs_Dev="$1"
-			# Filesystem heraus bekommen.
-			Part_Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
-			if [ ! -z "$Part_Fs_Tmp" ] ; then
-				case "$Part_Fs_Tmp" in
-#					LVM*|*_raid_*|crypto*)
-#						gv_Fs="$gv_Unknown"
-#						gv_NoFs="$Part_Fs_Tmp"
-#						;;
-					*)
-						gv_Fs="$Part_Fs_Tmp"
-						;;
-				esac
+			########################################
+			#TODO: fat1? ueberpruefen
+			########################################
+			if [[ -b $1 ]] ; then
+				unset -- gv_Fs gv_NoFs
+				local Fs_Dev Fs_Tmp
+				Fs_Dev="$1"
+				# Filesystem heraus bekommen.
+				Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
+				if [ ! -z "$Fs_Tmp" ] ; then
+					case "$Fs_Tmp" in
+#						LVM*|*_raid_*|crypto*)
+#							gv_Fs="$gv_Unknown"
+#							gv_NoFs="$Fs_Tmp"
+#							;;
+						*)
+							gv_Fs="$Fs_Tmp"
+							;;
+					esac
+				else
+					gv_Fs="$gv_Unknown"
+				fi
 			else
-				gv_Fs="$gv_Unknown"
+				no_block_dev_msg "$1"
+				return 1
 			fi
 		else
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	## }}}
 	# Funktion (check_size), prueft den vorhandenen Platz im jeweiligen Verzeichnis# {{{
@@ -1694,7 +1702,7 @@ sys_conf() {
 						## }}}
 						# nach GibiByte umrechnen# {{{
 					elif [[ "$Size" -ge 1073741824 ]] ; then
-						(( Size_B_Tmp = $Size / 1073741824.0 ))
+						Size_B_Tmp=$Size/1073741824.0
 						SIZE_B="$Size_B_Tmp"
 						SIZE_B_ME=GiB
 						## }}}
@@ -1722,74 +1730,54 @@ sys_conf() {
 					local Opt Size
 					Opt="$1"
 					Size="${2//,/.}"
-					Tmp="$Size:r"
-					# evtl. mit Nullen auffuellen
-					if [ ${#Size:e} -eq 1 ] ; then
-						Tmp1="${Size:e}00"
-					elif [ ${#Size:e} -eq 2 ] ; then
-						Tmp1="${Size:e}0"
-					else
-						Tmp1="$Size:e"
-					fi
+#					Tmp="$Size:r"
+#					# evtl. mit Nullen auffuellen
+#					if [ ${#Size:e} -eq 1 ] ; then
+#						Tmp1="${Size:e}00"
+#					elif [ ${#Size:e} -eq 2 ] ; then
+#						Tmp1="${Size:e}0"
+#					else
+#						Tmp1="$Size:e"
+#					fi
 					case "$Opt" in
 						kib|KiB|Kib)	# in Byte umrechnen
 							# 2hoch10 1KB=1024Byte# {{{
-							(( Size_b_Tmp = Tmp * 1024.0 + Tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1024 ))
 							## }}}
 							;;
 						mib|MiB|Mib)	# in Byte umrechnen
 							# 2hoch20 1MB=1.048.576Byte# {{{
-							(( Size_b_Tmp = Tmp * 1024.0 + Tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1048576 ))
 							## }}}
 							;;
 						gib|GiB|Gib)	# in Byte umrechnen
 							# 2hoch30 1GB=1.073.741.824Byte# {{{
-							(( Size_tmp = Tmp * 1048576.0 ))
-							(( Size_tmp1 = Tmp1 * 1024 ))
-							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1073741824 ))
 							## }}}
 							;;
 						tib|TiB|Tib)	# in Byte umrechnen
 							# 2hoch40 1TB=1.099.511.627.776Byte# {{{
-							(( Size_Tmp = Size * 1073741824.0 ))
-							(( Size_tmp1 = Tmp1 * 1048576 ))
-							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1099511627776 ))
 							## }}}
 							;;
 						pib|PiB|Pib)	# in Byte umrechnen
 							# 2hoch50 1PB=1.125.899.906.842.624Byte# {{{
-							(( Size_Tmp = Size * 1099511627776.0 ))
-							(( Size_tmp1 = Tmp1 * 1073741824 ))
-							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1125899906842624 ))
 							## }}}
 							;;
 						eib|EiB|Eib)	# in Byte umrechnen
 							# 2hoch60 1EB=1.152.921.504.606.846.976Byte# {{{
-							(( Size_tmp = Tmp * 1125899906842624.0 ))
-							(( Size_Tmp1 = Tmp1 * 1099511627776 ))
-							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-							SIZE_B="$Size_b_Tmp"
+							(( SIZE_B = Size * 1152921504606846976 ))
 							## }}}
 							;;
 #						zib|ZiB|Zib)	# in Byte umrechnen
 #							# 2hoch70 1ZB=1.180.591.620.717.411.303.424Byte# {{{
-#							(( Size_tmp = Tmp * 1152921504606846976.0 ))
-#							(( Size_Tmp1 = Tmp1 * 1125899906842624 ))
-#							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-#							SIZE_B="$Size_b_Tmp"
+#							(( SIZE_B = Size * 1180591620717411303424 ))
 #							## }}}
 #							;;
 #						yib|YiB|Yib)	# in Byte umrechnen
 #							# 2hoch80 1YB=1.208.925.819.614.629.174.706.176Byte# {{{
-#							(( Size_tmp = Tmp * 1180591620717411303424.0 ))
-#							(( Size_Tmp1 = Tmp1 * 1152921504606846976 ))
-#							(( Size_b_Tmp = Size_tmp + Size_tmp1 ))
-#							SIZE_B="$Size_b_Tmp"
+#							(( SIZE_B = Size * 1208925819614629174706176 ))
 #							## }}}
 #							;;
 						*)	# ist schon Byte
@@ -1871,7 +1859,7 @@ sys_conf() {
 				-i) 
 					# Bytes umrechnen in die beste lesbare Form.# {{{
 					unset -- SIZE_B
-					local Size
+					local Size Size_Tmp
 					Size=$2
 #					# nach YByte umrechnen# {{{
 #					if [[ "$Size" -ge 1000000000000000000000000 ]] ; then
@@ -1885,32 +1873,38 @@ sys_conf() {
 #						## }}}
 						# nach EByte umrechnen# {{{
 					if [[ "$Size" -ge 1000000000000000000 ]] ; then
-						(( Size_B_Tmp = Size/1000000000000000000.0 ))
+						(( Size_Tmp = Size/1000000000000000000.0 ))
+						Size_B_Tmp=$Size_Tmp
 						check_calc_suffix EB PB
 						## }}}
 						# nach PByte umrechnen# {{{
 					elif [[ "$Size" -ge 1000000000000000 ]] ; then
-						(( Size_B_Tmp = Size/1000000000000000.0 ))
+						(( Size_Tmp = Size/1000000000000000.0 ))
+						Size_B_Tmp=$Size_Tmp
 						check_calc_suffix PB TB
 						## }}}
 						# nach TByte umrechnen# {{{
 					elif [[ "$Size" -ge 1000000000000 ]] ; then
-						(( Size_b_Tmp = Size/1000000000000.0 ))
+						(( Size_Tmp = Size/1000000000000.0 ))
+						Size_B_Tmp=$Size_Tmp
 						check_calc_suffix TB GB
 						## }}}
 						# nach GByte umrechnen# {{{
 					elif [[ "$Size" -ge 1000000000 ]] ; then
-						(( Size_B_Tmp= Size/1000000000.0 ))
+						(( Size_Tmp= Size/1000000000.0 ))
+						Size_B_Tmp=$Size_Tmp
 						check_calc_suffix GB MB
 						## }}}
 						# nach MByte umrechnen# {{{
 					elif [[ "$Size" -ge 1000000 ]] ; then
 						(( Size_B_Tmp = Size/1000000.0 ))
+						Size_Tmp=$Size_Tmp
 						check_calc_suffix MB KB
 						## }}}
 						# nach KByte umrechnen# {{{
 					elif [[ "$Size" -ge 1000 ]] ; then
-						(( Size_B_Tmp = Size/1000.0 ))
+						(( Size_Tmp = Size/1000.0 ))
+						Size_B_Tmp=$Size_Tmp
 						check_calc_suffix KB B
 						## }}}
 					else
@@ -1928,53 +1922,46 @@ sys_conf() {
 						kb|KB|Kb)	#  KiloByte nach Byte umrechnen
 							# 10hoch3 1KB=1.000Byte# {{{
 							(( Size_B_Tmp = Size * 1000 ))
-							SIZE_B="$Size_B_Tmp"
+							SIZE_B="$Size_B_Tmp:r"
 							## }}}
 							;;
 						mb|MB|Mb)	# nach Byte umrechnen
 							# 10hoch6 1MB=1.000.000Byte# {{{
-							(( Size_B_Tmp = Size * 1000000 ))
-							SIZE_B="$Size_B_Tmp"
+							(( SIZE_B = Size * 1000000 ))
 							## }}}
 							;;
 						gb|GB|Gb)	# nach Byte umrechnen
 							# 10hoch9 1GB=1.000.000.000Byte# {{{
-							(( Size_B_Tmp = Size * 1000000000 ))
-							SIZE_B="$Size_B_Tmp"
+							(( SIZE_B = Size * 1000000000 ))
 							## }}}
 							;;
 						tb|TB|Tb)	# nach Byte umrechnen
 							# 10hoch12 1MB=1.000.000.000.000Byte# {{{
-							(( Size_B_Tmp = Size * 1000000000000 ))
-							SIZE_B="$Size_B_Tmp"
+							(( SIZE_B = Size * 1000000000000 ))
 							## }}}
 							;;
 						pb|PB|Pb)	# nach Byte umrechnen
 							# 10hoch15 1MB=1.000.000.000.000.000Byte# {{{
-							(( Size_B_Tmp = Size * 1000000000000000 ))
-							SIZE_B="$Size_B_Tmp"
+							(( SIZE_B = Size * 1000000000000000 ))
 							## }}}
 							;;
 						eb|EB|Eb)	# nach Byte umrechnen
 							# 10hoch18 1MB=1.000.000.000.000.000.000Byte# {{{
-							(( Size_B_Tmp = Size * 1000000000000000000 ))
-							SIZE_B="$Size_B_Tmp"
+							(( SIZE_B = Size * 1000000000000000000 ))
 							## }}}
 							;;
 #						zb|ZB|Zb)	# nach Byte umrechnen
 #							# 10hoch21 1MB=1.000.000.000.000.000.000.000Byte# {{{
-#							(( Size_B_Tmp = Size * 1000000000000000000000 ))
-#							SIZE_B="$Size_B_Tmp"
+#							(( SIZE_B = Size * 1000000000000000000000 ))
 #							## }}}
 #							;;
 #						yb|YB|Yb)	# nach Byte umrechnen
 #							# 10hoch24 1MB=1.000.000.000.000.000.000.000.000Byte# {{{
-#							(( Size_B_Tmp = Size * 1000000000000000000000000 ))
-#							SIZE_B="$Size_B_Tmp"
+#							(( SIZE_B = Size * 1000000000000000000000000 ))
 #							## }}}
 #							;;
 						*)	# ist schon Byte
-							SIZE_B="$Size"
+							SIZE_B="$Size:r"
 							;;
 					esac
 					## }}}
@@ -1992,7 +1979,7 @@ sys_conf() {
 	# IS_SIZE - Groesse die nicht ueberschritten werden darf
 	#
 	convert_over_size() {
-		if [ $# = 2 ] ; then
+		if [[ ${#argv} == 2 ]] ; then
 			unset -- IS_SIZE DATA_SIZE
 			convert_drive_size -i "$1"
 			DATA_SIZE="${SIZE_B}${SIZE_B_ME}"
@@ -4931,21 +4918,16 @@ kernel_choice() {
 		fi
 	}
 	## }}}
-	# Funktion (mount_check), um Partitionen zu (u)mounten und Dateisystem checken{{{
+	# Funktion (mount_check), um Laufwerke zu (u)mounten{{{
 	#
-	# benoetigt die Funktionen check_part_fs, no_fs_type_msg
-	#
-	# usage: mount_check [ -a | -c | -fs | -m | -s | -u ] $PARTITION, 
-	#        (u)mount,filesystemtype
+	# usage: mount_check [ -a | -c | -m | -s | -u ] DEVICE
 	# -a - automatisch ohne Fragen umounten
 	# -c - checken, ob gemountet ist oder nicht.
-	# -fs - Dateisystem herrausbekommen
 	# -m - Dateisystem mounten
 	# -s - Swap Dateisystem mounten
 	# -u - Dateisystem umounten, mit Nachfrage
 	#
 	# Variablen:
-	# FS - enthaelt das Dateisystem
 	# MOUNTPOINT - Verzeichnis wo die Partition gemountet ist (nur bei umount)
 	# MOUNT - eingebunden oder nicht (yes/no)
 	# U_MOUNT - ausgebunden oder nicht (yes/no)
@@ -5122,32 +5104,6 @@ kernel_choice() {
 					else
 						U_MOUNT=yes
 					fi
-					## }}}
-					;;
-				-fs)
-					# Dateisystem herausfinden# {{{
-					unset -- FS
-					if [ -z "`print ${${(s: :)${(M)${(f)"$(mount)"}##(#s)${PART_DEV1}[[:space:]]*}}[5]}`" ] ; then
-						# mittels dem Paket util-linux das Filesystem herausfinden.
-						check_part_fs $PART_DEV
-						if [ "$gv_Fs" != "$gv_Unknown" ] ; then
-							FS="$gv_Fs"
-						else
-							# Laufwerk ins Arbeitsverzeichnis mounten.
-							mount $PART_DEV1 $gv_WorkDir
-							if [ $? = 0 ] ; then
-								FS="`print ${${(s: :)${(M)${(f)"$(mount)"}##(#s)${PART_DEV1}[[:space:]]*}}[5]}`"
-							fi
-						fi
-						# Variable ueberpruefen
-						if [ -z "$FS" ] ; then
-							no_fs_type_msg "$PART_DEV"
-						fi
-					else
-						FS="`print ${${(s: :)${(M)${(f)"$(mount)"}##(#s)${PART_DEV1}[[:space:]]*}}[5]}`"
-					fi
-					#
-					MOUNTPOINT=$(print ${${(s: :)${(M)${(f)"$(mount)"}##*${PART_DEV1}[[:space:]]*}}[3]})
 					## }}}
 					;;
 			esac
