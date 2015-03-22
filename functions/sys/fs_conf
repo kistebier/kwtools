@@ -359,7 +359,7 @@ fs_conf() {
 					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+						PROG_OPT="-F -b 4096 -R stride=$[CHUNKSIZE/4]"
 					else
 						unset -- PROG_OPT
 					fi
@@ -374,7 +374,7 @@ fs_conf() {
 					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-b 4096 -R stride=$[CHUNKSIZE/4]"
+						PROG_OPT="-F -b 4096 -R stride=$[CHUNKSIZE/4]"
 					else
 						unset -- PROG_OPT
 					fi
@@ -882,9 +882,9 @@ fs_conf() {
 			local DEV New_Size
 			New_Size="$1"
 			DEV="$2"
-			mount_check -fs "$DEV"
-			if [ -n "$FS" ] ; then
-				case "$FS" in
+			check_fs "$DEV"
+			if [ -n "$gv_Fs" ] ; then
+				case "$gv_Fs" in
 					crypto*)
 						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein Crypto-Dateisystem und muss extra bearbeitet werden. Starten Sie bitte das Script kwcryptsetup, um das Dateisystem anzupassen.')
@@ -913,7 +913,7 @@ fs_conf() {
 						fi
 						#}}}
 						;;
-					fat16|fat32)
+					fat16|fat32|vfat)
 						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
@@ -1052,7 +1052,7 @@ fs_conf() {
 						;;
 					*_raid_*)
 						# RAID muss extra bearbeitet werden# {{{
-						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein RAID und muss extra bearbeitet werden. Starten Sie bitte das Script kwraid, um das Dateisystem anzupassen.')
+						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein SW-RAID und muss extra bearbeitet werden. Starten Sie bitte das Script kwraid, um das Dateisystem anzupassen.')
 						msgbox "$gv_Info" "$MSG"
 						## }}}
 						;;
