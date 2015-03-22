@@ -91,9 +91,10 @@ hw_conf() {
 						# in Bytes umrechnen
 						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
 						if [ "$Tmp" -gt 0 ] ; then
-							###########
-							#TODO:
 							DISK_DEV_CAP_BYTE+=(${Tmp}B)
+							####################################
+							#TODO: lieber convert_drive_size verwenden?
+							####################################
 							# Bytes in bessere Lesbarkeit umrechnen
 							convert_si_size -i $Tmp
 							DISK_DEV_CAP+=($SIZE_B)
@@ -103,7 +104,7 @@ hw_conf() {
 						fi
 						FP_INFO+=("$Dev $Rest")
 						# Sector Groesse der Festplatte heraus bekommen.
-						# Meist 512Byte >= 3TByte, 4096Byte >= 3 TByte.
+						# Meist 512Byte <= 3TByte, 4096Byte >= 3 TByte.
 						HW_SECTOR_SIZE+=$(</sys/block/${Dev#/dev/}/queue/hw_sector_size)
 					fi
 				done < ${gv_WorkDir}/disk
@@ -700,11 +701,14 @@ lv_free_size() {
 			if [[ -b $1 ]] ; then
 				print ${${(ws: :)$(mdadm --query $1)}[4]}
 			else
-				no_block_device_msg $1
+				no_block_device_msg "$1"
+				return 1
 			fi
 		else
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	## }}}
 	# Funktion (raid_enlarge_dev), RAID vergoessern# {{{
@@ -792,7 +796,7 @@ lv_free_size() {
 								no_part_msg
 							fi
 						else
-							no_disk_msg
+							no_disks_msg
 						fi
 					else
 						no_raid_anz_msg
@@ -916,11 +920,14 @@ lv_free_size() {
 			if [[ -b $1 ]] ; then
 				print ${${(s: :)${(M)${(f)"$(mdadm -D $1)"}##*(Raid Level)*}}[4]}
 			else
-				no_block_device_msg $1
+				no_block_device_msg "$1"
+				return 1
 			fi
 		else
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	## }}}
 	# Funktion (raid_search_part_state), die Laufwerke des ARRAYs mit Status herausfinden.{{{
@@ -936,11 +943,14 @@ lv_free_size() {
 					PARTS_STATE+=(${State//*\/dev/\/dev} "${State%% *}")
 				done
 			else
-				no_block_device_msg $1
+				no_block_device_msg "$1"
+				return 1
 			fi
 		else
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	#}}}
 	# Funktion (raid_reduce_dev), RaidLaufwerk verkleinern # {{{
@@ -1171,7 +1181,10 @@ vg_free_size() {
 	###### Hardware System Nachrichten ###### {{{
 	# Funktion (no_block_device_msg)# {{{
 	#
-	# usage: no_block_device_msg
+	# usage: no_block_device_msg $DEVICE
+	#
+	# DEVICE - Device welches kein Block Geraet ist
+	#
 	no_block_device_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			MSG=$(gettext '$1 ist kein Block Geraet.')
@@ -1191,8 +1204,22 @@ vg_free_size() {
 	#}}}
 	# Funktion (no_disk_msg)# {{{
 	#
-	# usage: no_disk_msg
-	no_disk_msg() {
+	# usage: no_disk_msg $DEVICE
+	#
+	# DEVICE -Device welches keine Festplatte ist.
+	no_disks_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			MSG=$(gettext '$1 ist keine Festplatte.')
+			msgbox "$gv_Attention" "$MSG"
+		else
+			no_para_msg $0
+		fi
+	}
+	# }}}
+	# Funktion (no_disks_msg)# {{{
+	#
+	# usage: no_disks_msg
+	no_disks_msg() {
 		MSG=$(gettext 'Es sind keine Festplatten vorhanden.')
 		msgbox "$gv_Attention" "$MSG"
 	}
