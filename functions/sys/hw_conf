@@ -510,7 +510,7 @@ lv_free_size() {
 	#}}}
 	# Funktion (part_md_lose), Herrausfiltern von schon vergebenen RAID Partitionen.# {{{
 	#
-	# benoetigt vorher die Funktionen partdb -i 0xfd
+	# benoetigt vorher die Funktionen partdb -i raid
 	#
 	# usage: part_md_lose
 	#
@@ -535,120 +535,107 @@ lv_free_size() {
 	#
 	partdb() {
 		unset -- PART PART_E PART_M SWAP_DEV SWAP_DEV_E SWAP_DEV_M
-		local Fp_Tmp Part_Id Part_Ids Part_Desc
-		#
-		kernel_release
-		if [[ -x ${commands[hwinfo]} ]] && \
-			[[ ${gv_K_Release%%-*} > 2.6.0 ]] ; then
-			# ${gv_WorkDir}/partdb neu erstellen falls die Datei nicht vorhanden ist.
-			if [ ! -f ${gv_WorkDir}/partdb ] ; then
-				hwinfo --short --partition 2>/dev/null >${gv_WorkDir}/partdb
-			fi
-		else
-			no_prog_exec_msg hwinfo
-			return 1
+		local Fp_Tmp Disk Part_Ids Part_Desc Part_Label
+		# pruefen ob parted installiert ist
+		prog_check parted blkid
+		if [[ -n $PROGS ]] ; then
+			for i in ${=DISK_DEV} ; {
+				# ${gv_WorkDir}/${i}_partdb neu erstellen falls die
+				# Datei nicht vorhanden ist.
+				if [ ! -f ${gv_WorkDir}/${i##*/}_partdb ] ; then
+					parted -s $i print 2>/dev/null | grep '^ [[:digit:]]*' >${gv_WorkDir}/${i##*/}_partdb
+				fi
+			}
 		fi
 		#
 		case $1 in
 			/dev*)
 				# nur eine Festplatte nach Linux durchsuchen# {{{
-				#
-				Fp_Tmp="$1"
-				# ${gv_WorkDir}/partdb auslesen
-				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
+				Disk="$1"
+				Fp_Tmp="${Disk##*/}"
+				# ${gv_WorkDir}/${Fp_Tmp}_partdb auslesen
+				if [ "`wc -l < ${gv_WorkDir}/${Fp_Tmp}_partdb`" -gt 0 ] ; then
 					while read part Rest ; do
-						case "$part" in
-							$Fp_Tmp*)
-								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)(0x83|0x82)]}
-								Part_Desc=$(blkid -o value -s TYPE -p $part)
-								case "$Part_Id" in
-									0x82)
-										SWAP_DEV+=($part)
-										SWAP_DEV_E+=($part \"$Part_Desc\")
-										SWAP_DEV_M=($part \"$Part_Desc\" off)
-										;;
-									0x83)
-										PART+=($part)
-										PART_E+=($part \"$Part_Desc\")
-										PART_M+=($part \"$Part_Desc\" off)
-										;;
-									*)
-										;;
-								esac
+						case "$Rest" in
+							*fat16*|*fat32*|*ntfs*)
+								;;
+							*linux-swap|*swap*)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
+								SWAP_DEV+=(${Disk}/${part# })
+								SWAP_DEV_E+=(${Disk}/${part# } \"$Part_Desc\")
+								SWAP_DEV_M=(${Disk}/${part# } \"$Part_Desc\" off)
 								;;
 							*)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
+								PART+=(${Disk}/${part# })
+								PART_E+=(${Disk}/${part# } \"$Part_Desc\")
+								PART_M+=(${Disk}/${part# } \"$Part_Desc\" off)
 								;;
 						esac
-					done < ${gv_WorkDir}/partdb
+					done < ${gv_WorkDir}/${Fp_Tmp}_partdb
 				fi
 				## }}}
 				;;
 			-i)
 				# Nach Partitions Typ durchsuchen (alle Partitionen)# {{{
-				#
 				Part_Ids="$2"
-				# ${gv_WorkDir}/partdb auslesen
-				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
-					while read part Rest ; do
-						case "$part" in
-							/dev/*)
-								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)($Part_Ids)]}
-								Part_Desc=$(blkid -o value -s TYPE -p $part)
-								case "$Part_Id" in
-									$Part_Ids)
-										PART+=($part)
-										PART_E+=($part \"$Part_Desc\")
-										PART_M+=($part \"$Part_Desc\" off)
-										;;
-									*)
-										;;
-								esac
-								;;
-							*)
-								;;
-						esac
-					done < ${gv_WorkDir}/partdb
-				fi
+				# alle ${gv_WorkDir}/*_partdb auslesen
+				for t in ${gv_WorkDir}/*_partdb ; {
+					Tmp="${t##*/}"
+					Disk="/dev/${Tmp%_partdb}"
+					for i in ${=Part_Ids} ; {
+						while read part Rest ; do
+							case "$Rest" in
+								*$i*)
+									Part_Label=$(blkid -o value -s LABEL -p ${Disk}/${part# })
+									if [ -n "$Part_Label" ] ; then
+										PART+=(${Disk}${part# })
+										PART_E+=(${Disk}${part# } \"$Part_Label\")
+										PART_M+=(${Disk}${part# } \"$Part_Label\" off)
+									else
+										PART+=(${Disk}${part# })
+										PART_E+=(${Disk}${part# } \"$i\")
+										PART_M+=(${Disk}${part# } \"$i\" off)
+									fi
+									;;
+							esac
+						done < $t
+					}
+				}
 				## }}}
 				;;
 			*)
 				# alle Partitionen, ausser RAID, LVM und crypto_LUKS{{{
 				# ${gv_WorkDir}/partdb auslesen
-				if [ "`wc -l < ${gv_WorkDir}/partdb`" -gt 0 ] ; then
+				for t in ${gv_WorkDir}/*_partdb ; {
+					Tmp="${t##*/}"
+					Disk="/dev/${Tmp%_partdb}"
 					while read part Rest ; do
-						case "$part" in
-							/dev/*)
-								Part_Id=${(M)$(partx --show --output TYPE $part)[(fr)0x*]}
-								Part_Id=$(partx --show --output TYPE $part)
-								Part_Desc=$(blkid -o value -s TYPE -p $part)
-								case "$Part_Id" in
-									0x82)
-										SWAP_DEV+=($part)
-										SWAP_DEV_E+=($part \"$Part_Desc\")
-										SWAP_DEV_M=($part \"$Part_Desc\" off)
-										;;
-									0x8e|0xfd|0x5)
-										# ohne extended (0x5), LVM (0x8e) und RAID (0xfd)
-										# Partition
+						case "$Rest" in
+							*lvm|*raid)
+								# ohne LVM und RAID Partition.
+								;;
+							*linux-swap|*swap*)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
+								SWAP_DEV+=(${Disk}/${part# })
+								SWAP_DEV_E+=(${Disk}/${part# } \"$Part_Desc\")
+								SWAP_DEV_M=(${Disk}/${part# } \"$Part_Desc\" off)
+								;;
+							*)
+								# ohne crypto Partition.
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
+								case $Part_Desc in
+									crypto*)
 										;;
 									*)
-										Part_Desc=$(blkid -o value -s TYPE -p $part)
-										case $Part_Desc in
-											crypto*)
-												;;
-											*)
-												PART+=($part)
-												PART_E+=($part \"$Part_Desc\")
-												PART_M+=($part \"$Part_Desc\" off)
-												;;
-										esac
+										PART+=(${Disk}/${part# })
+										PART_E+=(${Disk}/${part# } \"$Part_Desc\")
+										PART_M+=(${Disk}/${part# } \"$Part_Desc\" off)
 										;;
 								esac
 								;;
-							*)
-								;;
 						esac
-					done < ${gv_WorkDir}/partdb
+					done < $t
 				fi
 				#}}}
 				;;
@@ -747,7 +734,7 @@ lv_free_size() {
 						disk
 						if [ ! -z "${DISK_DEV[1]}" ] ; then
 							# RAID Partitionen herrausfinden
-							partdb -i 0xfd
+							partdb -i raid
 							if [ ! -z "${PART[1]}" ] ; then
 								# freie RAID Partitionen zur Auswahl stellen.# {{{
 								part_md_lose
