@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 22.03.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 19.04.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -189,10 +189,11 @@ search_pflags() {
 #
 disk_cap() {
 	unset -- DISK_CAP DISK_CAP_B DISK_CAP_OB
-	local Index
+	local Index Tmp
 	if [[ -b "$1" ]] ; then
 		Index=$DISK_DEV[(i)$1]
-		DISK_CAP="${DISK_DEV_CAP[Index]}"
+		Tmp="${DISK_DEV_CAP[Index]}"
+		(( DISK_CAP = Tmp / 1048576 ))
 		DISK_CAP_B="${DISK_DEV_CAP_BYTE[Index]}"
 		DISK_CAP_OB="${${DISK_DEV_CAP_BYTE[Index]}%%[a-zA-Z]*}"
 		DISK_SECTOR_SIZE="${HW_SECTOR_SIZE[Index]}"
@@ -297,13 +298,10 @@ read_parted() {
 					PART[Anz1]="${Disk}${1}"
 					PART_E[Anz1]="${Disk}${1}"
 					PART_NR[Anz1]="$1"
-					START_NR[Anz1]="${2%%[a-zA-Z]*}"
-					END_NR[Anz1]="${3%%[a-zA-Z]*}"
+					START_NR[Anz1]="${${2%%[a-zA-Z]*}%%\.[0-9]*}"
+					END_NR[Anz1]="${${3%%[a-zA-Z]*}%%\.[0-9]*}"
 					PART_SIZE[Anz1]="${4%%[a-zA-Z]*}"
-					convert_mib_size -i "${PART_SIZE[Anz1]}"
-					if [ -n "$SIZE_MIB" ] ; then
-						PART_ANZ_SIZE_NR[Anz1]="${SIZE_MIB}${SIZE_MIB_ME}"
-					fi
+					PART_ANZ_SIZE_NR[Anz1]="${PART_SIZE[Anz1]}MiB"
 					# restliche Werte belegen, einlesen.
 					case "$FPDISKLABEL" in
 						gpt)
@@ -359,13 +357,10 @@ read_parted() {
 					PART[Anz1]="${Disk}-1"
 					PART_E[Anz1]="${Disk}-1"
 					PART_NR[Anz1]="$Anz1"
-					START_NR[Anz1]="${1%%[a-zA-Z]*}"
-					END_NR[Anz1]="${2%%[a-zA-Z]*}"
+					START_NR[Anz1]="${${1%%[a-zA-Z]*}%%\.[0-9]*}"
+					END_NR[Anz1]="${${2%%[a-zA-Z]*}%%\.[0-9]*}"
 					PART_SIZE[Anz1]="${3%%[a-zA-Z]*}"
-					convert_mib_size -i "${PART_SIZE[Anz1]}"
-					if [ -n "$SIZE_MIB" ] ; then
-						PART_ANZ_SIZE_NR[Anz1]="${SIZE_MIB}${SIZE_MIB_ME}"
-					fi
+					PART_ANZ_SIZE_NR[Anz1]="${PART_SIZE[Anz1]}MiB"
 					# restliche Werte belegen
 					case "$FPDISKLABEL" in
 						gpt)
@@ -425,19 +420,25 @@ read_parted() {
 				Anz=1
 				NAME[Anz]="--${FREE}--"
 				PART_FS[Anz]="$gv_None"
-				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${NAME[Anz]} $DISK_CAP\""
-				PART_ANZ_SIZE_NR[Anz]="$DISK_CAP"
+				(( PART_SIZE[Anz] = DISK_CAP -1 ))
+				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${NAME[Anz]} ${PART_SIZE[Anz]}MiB\""
+				PART_ANZ_SIZE_NR[Anz]="${PART_SIZE[Anz]}MiB"
 				START_NR[Anz]="$START_PART1"
-				END_NR[Anz]="$DISK_CAP_OB"
+				# DISK_CAP_OB nach MiB umrechnen
+				(( Tmp = DISK_CAP_OB / 1048576 - 1 ))
+				END_NR[Anz]="$Tmp"
 				;;
 			dos)
 				Anz=1
 				PART_TYPE[Anz]=primary
 				PART_FS[Anz]="--${FREE}--"
-				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${PART_TYPE[Anz]} $DISK_CAP\""
-				PART_ANZ_SIZE_NR[Anz]="$DISK_CAP"
+				(( PART_SIZE[Anz] = DISK_CAP -1 ))
+				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${PART_TYPE[Anz]} ${PART_SIZE[Anz]}MiB\""
+				PART_ANZ_SIZE_NR[Anz]="${PART_SIZE[Anz]}MiB"
 				START_NR[Anz]="$START_PART1"
-				END_NR[Anz]="$DISK_CAP_OB"
+				# DISK_CAP_OB nach MiB umrechnen
+				(( Tmp = DISK_CAP_OB / 1048576 - 1 ))
+				END_NR[Anz]="$Tmp"
 				;;
 		esac
 		## }}}
@@ -616,9 +617,9 @@ parted_edit() {
 								for i in ${=PFLAGS} ; {
 									Fl="${i%,}"
 									if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
-										Part_Flag+=($i \"\" on)
+										Part_Flag+=($Fl \"\" on)
 									else
-										Part_Flag+=($i \"\" off)
+										Part_Flag+=($Fl \"\" off)
 									fi
 								}
 								PART_FLAG_MENU=($Part_Flag)
