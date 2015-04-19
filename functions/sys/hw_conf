@@ -92,12 +92,7 @@ hw_conf() {
 						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
 						if [ "$Tmp" -gt 0 ] ; then
 							DISK_DEV_CAP_BYTE+=(${Tmp}B)
-							####################################
-							#TODO: lieber convert_drive_size verwenden?
-							####################################
-							# Bytes in bessere Lesbarkeit umrechnen
-							convert_si_size -i $Tmp
-							DISK_DEV_CAP+=($SIZE_B)
+							DISK_DEV_CAP+=($Tmp)
 						else
 							DISK_DEV_CAP_BYTE+=(0B)
 							DISK_DEV_CAP+=(0)
@@ -560,16 +555,16 @@ lv_free_size() {
 							*fat16*|*fat32*|*ntfs*)
 								;;
 							*linux-swap|*swap*)
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
-								SWAP_DEV+=(${Disk}/${part# })
-								SWAP_DEV_E+=(${Disk}/${part# } \"$Part_Desc\")
-								SWAP_DEV_M=(${Disk}/${part# } \"$Part_Desc\" off)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
+								SWAP_DEV+=(${Disk}${part# })
+								SWAP_DEV_E+=(${Disk}${part# } \"$Part_Desc\")
+								SWAP_DEV_M=(${Disk}${part# } \"$Part_Desc\" off)
 								;;
 							*)
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
-								PART+=(${Disk}/${part# })
-								PART_E+=(${Disk}/${part# } \"$Part_Desc\")
-								PART_M+=(${Disk}/${part# } \"$Part_Desc\" off)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
+								PART+=(${Disk}${part# })
+								PART_E+=(${Disk}${part# } \"$Part_Desc\")
+								PART_M+=(${Disk}${part# } \"$Part_Desc\" off)
 								;;
 						esac
 					done < ${gv_WorkDir}/${Fp_Tmp}_partdb
@@ -587,7 +582,7 @@ lv_free_size() {
 						while read part Rest ; do
 							case "$Rest" in
 								*$i*)
-									Part_Label=$(blkid -o value -s LABEL -p ${Disk}/${part# })
+									Part_Label=$(blkid -o value -s LABEL -p ${Disk}${part# })
 									if [ -n "$Part_Label" ] ; then
 										PART+=(${Disk}${part# })
 										PART_E+=(${Disk}${part# } \"$Part_Label\")
@@ -616,21 +611,21 @@ lv_free_size() {
 								# ohne LVM und RAID Partition.
 								;;
 							*linux-swap|*swap*)
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
-								SWAP_DEV+=(${Disk}/${part# })
-								SWAP_DEV_E+=(${Disk}/${part# } \"$Part_Desc\")
-								SWAP_DEV_M=(${Disk}/${part# } \"$Part_Desc\" off)
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
+								SWAP_DEV+=(${Disk}${part# })
+								SWAP_DEV_E+=(${Disk}${part# } \"$Part_Desc\")
+								SWAP_DEV_M=(${Disk}${part# } \"$Part_Desc\" off)
 								;;
 							*)
 								# ohne crypto Partition.
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}/${part# })
+								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
 								case $Part_Desc in
 									crypto*)
 										;;
 									*)
-										PART+=(${Disk}/${part# })
-										PART_E+=(${Disk}/${part# } \"$Part_Desc\")
-										PART_M+=(${Disk}/${part# } \"$Part_Desc\" off)
+										PART+=(${Disk}${part# })
+										PART_E+=(${Disk}${part# } \"$Part_Desc\")
+										PART_M+=(${Disk}${part# } \"$Part_Desc\" off)
 										;;
 								esac
 								;;

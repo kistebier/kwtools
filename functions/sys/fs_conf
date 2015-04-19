@@ -293,7 +293,10 @@ fs_conf() {
 			if [ -z "$NO_PROGS" ] ; then
 				Floppy="$1"
 				if [ -b "$Floppy" ] ; then
-					fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+					mount_check -a $Floppy
+					if [[ $U_MOUNT == yes ]] ; then
+						fdformat $Floppy 2>&1 | progressbox $FTITLE "$Floppy"
+					fi
 					while [ $? = 1 ] ; do
 						MSG=$(gettext 'Es ist keine Diskette im Laufwerk. Schieben sie bitte eine rein. Wollen Sie fortfahren (ja/nein)?')
 						yesno "$gv_Attention" "$MSG" ""
@@ -332,8 +335,12 @@ fs_conf() {
 				exfat)
 					# exfat Dateisystem erstellen.# {{{
 					PROG=mkfs.${FS}
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -341,8 +348,12 @@ fs_conf() {
 					# fat16 benoetigt -F 16.# {{{
 					PROG=mkfs.vfat
 					load_module vfat
-					for i in $F_PART ; {
-						$PROG -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -350,8 +361,12 @@ fs_conf() {
 					# fat32 benoetigt -F 32.# {{{
 					PROG=mkfs.vfat
 					load_module vfat
-					for i in $F_PART ; {
-						mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -365,8 +380,12 @@ fs_conf() {
 					fi
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -380,8 +399,12 @@ fs_conf() {
 					fi
 					PROG=mkfs.${FS}
 					load_module "jbd $FS"
-					for i in $F_PART ; {
-						$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -390,8 +413,12 @@ fs_conf() {
 					# ein hfs+ FS erstellt.
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -399,8 +426,12 @@ fs_conf() {
 					# hfs+ erstellen# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -410,8 +441,12 @@ fs_conf() {
 					#
 					PROG=mkfs.jfs
 					load_module $FS
-					for i in $F_PART ; {
-						echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -420,8 +455,12 @@ fs_conf() {
 					# -f - fast
 					PROG=mk${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -431,8 +470,12 @@ fs_conf() {
 					#
 					PROG=mkfs.reiserfs
 					load_module $FS
-					for i in $F_PART ; {
-						echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -442,15 +485,23 @@ fs_conf() {
 					#
 					PROG=mkfs.reiser4
 					load_module reiserfs
-					for i in $F_PART ; {
-						$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
 				swap)
 					# Swap Partition erstellen# {{{
-					for i in $F_PART ; {
-						mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -458,8 +509,12 @@ fs_conf() {
 					# ufs Dateisystem erstellen.# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -467,8 +522,12 @@ fs_conf() {
 					# -f fuer force, falls schon ein Dateisystem auf der Partition ist.# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -476,8 +535,12 @@ fs_conf() {
 					# alles andere benoetigt nichts weiter.# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
-					for i in $F_PART ; {
-						$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
 					}
 					## }}}
 					;;
@@ -488,7 +551,7 @@ fs_conf() {
 			unset -- F_FS
 			F_PART="$1"
 			F_FS="$2"
-			MSG=$(gettext 'Soll das Laufwerk ($F_PART) wirklich formatiert werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+			MSG=$(gettext 'Soll das Laufwerk (${=F_PART}) wirklich formatiert werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
 			yesno "$gv_Attention" "$MSG" ""
 			if [ "$gv_Auswahl" != yes ] ; then
 			   	#break
@@ -648,8 +711,8 @@ fs_conf() {
 	#
 	# + - vergroessern
 	# - - verkleinern
-	# SIZE - neue Groesse der Partition in B
-	# ENDSIZE - neue Groesse der Partition in B
+	# SIZE - neue Groesse der Partition in MiB
+	# ENDSIZE - neue Groesse der Partition in MiB
 	# PARTITION - Partition die vergroessert/verkleinert werden soll
 	#
 	part_resize() {
@@ -668,7 +731,7 @@ fs_conf() {
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
 						# Partition vergroessern
-						parted -s ${DEV%%[0-9]*} unit B resizepart \
+						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
 							${DEV##*[a-z]} $End_Size || prog_failure
 						# Dem Kernel die neue Partitionstabelle bekanntgeben
 						partprobe ${DEV%%[0-9]*}
@@ -684,7 +747,7 @@ fs_conf() {
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop $MAP_DEV
 						# Partition verkleinern
-						parted -s ${DEV%%[0-9]*} unit B resizepart \
+						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
 							${DEV##*[a-z]} $End_Size || prog_failure
 						# Dem Kernel die neue Partitionstabelle bekanntgeben
 						partprobe ${DEV%%[0-9]*}
@@ -706,7 +769,7 @@ fs_conf() {
 	#
 	# + - vergroessern
 	# - - verkleinern
-	# SIZE - neue Groesse des RAID Array in B
+	# SIZE - neue Groesse des RAID Array in MiB
 	# DEVICE - RAID Array
 	# OTHER_DEVICE - Laufwerk das in/aus dem RAID Array soll
 	#
@@ -740,7 +803,7 @@ fs_conf() {
 						(BREAK=2 ; prog_failure)
 					sleep 1
 					# Array vergroessern
-					mdadm $RAIDDEV -G --array-size=${New_Size#+} >/dev/null || \
+					mdadm $RAIDDEV -G --array-size=${New_Size#+}M >/dev/null || \
 						(BREAK=2 ; prog_failure)
 					# Fortschrittsbalken
 					raid_gauge
@@ -780,7 +843,7 @@ fs_conf() {
 					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
 					# Array verkleinern
 					# -G - grow
-					mdadm $DEV -G --array-size=${New_Size#-} >/dev/null || \
+					mdadm $DEV -G --array-size=${New_Size#-}M >/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
 					# Array verkleinern/anpassen
@@ -907,7 +970,7 @@ fs_conf() {
 								e2fsck -f -y $DEV 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 								# Dateisystem ext2/3/4 reduzieren
-								resize2fs -p $DEV ${New_Size#-} 2>&1 | \
+								resize2fs -p $DEV ${New_Size#-}M 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -919,18 +982,18 @@ fs_conf() {
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
 								# Dateisystem vergroessern
-								fatresize -s ${New_Size#+} -p $DEV 2>&1 | \
+								fatresize -s ${New_Size#+}Mi -p $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem reduzieren
-								fatresize -s ${New_Size#-} -p $DEV 2>&1 | \
+								fatresize -s ${New_Size#-}Mi -p $DEV 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
 						#}}}
 						;;
 					jfs)
-						# JFS Dateisystem vergroessern{{{
+						# JFS Dateisystem kann man nicht verkleinern nurvergroessern{{{
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
@@ -978,11 +1041,11 @@ fs_conf() {
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
 								# Dateisystem reiserfs vergroessern
-								resize_reiserfs -s ${New_Size#+} $DEV 2>&1 | \
+								resize_reiserfs -s ${New_Size#+}M $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem reiserfs verkleinern
-								echo y | resize_reiserfs -s ${New_Size#-} $DEV 2>&1 | \
+								echo y | resize_reiserfs -s ${New_Size#-}M $DEV 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -1011,10 +1074,13 @@ fs_conf() {
 					*ufs)
 						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
-							# New_Size nach Sectoren umrechnen. 1Sector = 512Byte
-							(( Resize_Size = ${New_Size#+} / 512 ))
+							#################################
+							# TODO: und bei Sectorsize 4096?
+							# New_Size (MiB) nach Sectoren umrechnen. 1Sector = 512Byte
+							#(( Resize_Size = ${New_Size#+} * 1048576 / 512 ))
 							# Dateisystem vergroessern.
-							growfs.ufs -s $Resize_Size $DEV 2>&1 | \
+							#growfs.ufs -s $Resize_Size $DEV 2>&1 | \
+							growfs.ufs -s ${New_Size}m $DEV 2>&1 | \
 								progressbox $gv_Enlarge $DEV || prog_failure
 						else
 							no_reduce_fs_msg "$FS"
