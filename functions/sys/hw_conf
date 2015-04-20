@@ -151,7 +151,7 @@ hw_conf() {
 				local L_Opt
 				L_Opt="$1"
 				O_LIMIT="$2"
-				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (1GiB = 1GigaByte = 1024 MegaByte).')
+				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (1GiB = 1GibiByte = 1024 MebiByte).')
 				number_input -D "$LIMIT_TITLE" "$LIMIT_MSG" "$SIZE"
 				#
 				if [ -n "$NUMBER" ] ; then
@@ -225,10 +225,10 @@ lv_free_size() {
 	if [ "$#" -eq 1 ] ; then
 		unset -- LV_SIZE LV_SIZE_ME
 		# vorhandene LV Size in Bytes heraus bekommen.
-		LV_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; lvdisplay --units b $1)"}##*LV*Size*}}[3]}
+		LV_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; lvdisplay --units m $1)"}##*LV*Size*}}[3]}
 		# in eine besser lesbare Form umrechnen
-		convert_drive_size -i "$LV_SIZE"
-		LV_SIZE_ME="${SIZE_B}${SIZE_B_ME}"
+		convert_mib_size -i "$LV_SIZE"
+		LV_SIZE_ME="${SIZE_MIB}${SIZE_MIB_ME}"
 	else
 		no_para_msg $0
 	fi
@@ -748,7 +748,12 @@ lv_free_size() {
 											/dev*)
 												HDDEV="$gv_Auswahl"
 												# gesamte Groesse des Arrays in Byte umrechnen.
-												(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+												(( Tmp = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+												# Groesse in MebiByte umrechnen
+												convert_mib_size -i "$Tmp"
+												if [[ -n $SIZE_MIB ]] ; then
+													ARRAY_SIZE="$SIZE_MIB"
+												fi
 												# Groesse eines Laufwerks vom Array
 												# berechnen.
 												(( Tmp = ARRAY_SIZE / RAID_ANZ ))
@@ -986,7 +991,12 @@ lv_free_size() {
 										/dev*)
 											HDDEV="$gv_Auswahl"
 											# gesamte Groesse des Arrays in Byte umrechnen.
-											(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+											(( Tmp = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
+											# Groesse in MebiByte umrechnen
+											convert_mib_size -i "$Tmp"
+											if [[ -n $SIZE_MIB ]] ; then
+												ARRAY_SIZE="$SIZE_MIB"
+											fi
 											# reale Raidanzahl die zur Verfuegung steht.
 											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
 											# Groesse eines Laufwerks vom Array
@@ -1150,10 +1160,10 @@ vg_free_size() {
 	unset -- VG_FREE_SIZE VG_FREE_SIZE_ME
 	if [ "$#" -eq 1 ] ; then
 		# Freie PE Size in Bytes heraus bekommen.
-		VG_FREE_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay --units b $1)"}##*Free*PE*}}[7]}
+		VG_FREE_SIZE=${${(s: :)${(M)${(f)"$(export LC_ALL=C ; vgdisplay --units m $1)"}##*Free*PE*}}[7]}
 		# in eine besser lesbare Form umrechnen
-		convert_drive_size -i "$VG_FREE_SIZE"
-		VG_FREE_SIZE_ME="${SIZE_B}${SIZE_B_ME}"
+		convert_mib_size -i "$VG_FREE_SIZE"
+		VG_FREE_SIZE_ME="${SIZE_MIB}${SIZE_MIB_ME}"
 	else
 		no_para_msg $0
 	fi

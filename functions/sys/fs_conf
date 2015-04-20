@@ -662,7 +662,7 @@ fs_conf() {
 		# usage: lv_resize [+|-]SIZE DEVICE
 		# + - vergroessern
 		# - - verkleinern
-		# SIZE - neue Groesse in Byte
+		# SIZE - neue Groesse in MebiByte
 		# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
 		#          werden soll
 		#
@@ -680,7 +680,7 @@ fs_conf() {
 					# Falls dieses Laufwerk verschluesselt ist, stoppen.
 					resize_cryptdisk_stop $MAP_DEV
 					# LV vergroessern
-					lvextend -L${New_Size#+}b $DEV 2>&1 | \
+					lvextend -L${New_Size#+}M $DEV 2>&1 | \
 						progressbox $gv_Enlarge $MAP_DEV || prog_failure
 					# Falls dieses Laufwerk verschluesselt war, 
 					# starten und Groesse anpassen.
@@ -693,7 +693,7 @@ fs_conf() {
 					# Falls dieses Laufwerk verschluesselt ist, stoppen.
 					resize_cryptdisk_stop $MAP_DEV
 					# LV reduzieren
-					echo y | lvreduce -L${New_Size#-}b $DEV 2>&1 | \
+					echo y | lvreduce -L${New_Size#-}M $DEV 2>&1 | \
 						progressbox $gv_Reduce $MAP_DEV || prog_failure
 					# Falls dieses Laufwerk verschluesselt war, 
 					# starten und Groesse anpassen.

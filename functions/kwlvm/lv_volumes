@@ -13,12 +13,12 @@ lv_volumes() {
 		lv_LV_Name=$(gettext 'LV_Name')
 		lv_Size=$(gettext 'Groesse')
 		#
-		# Funktion (number_size_to_b), Laufwerksangaben in Byte umrechnen# {{{
-		number_size_to_b() {
-			unset -- LV_SIZE_B
-			convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-			if [ -n "$SIZE_B" ] ; then
-				LV_SIZE_B="$SIZE_B:r"
+		# Funktion (number_size_to_mib), Laufwerksangaben in MebiByte umrechnen# {{{
+		number_size_to_mib() {
+			unset -- LV_SIZE_MIB
+			convert_mib_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+			if [ -n "$SIZE_MIB" ] ; then
+				LV_SIZE_MIB="$SIZE_MIB:r"
 			fi
 		}
 		## }}}
@@ -202,17 +202,17 @@ lv_volumes() {
 									# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
 									# werden von der Funktion vg_free_size belegt.
 									if [ "$VG_FREE_SIZE" != 0 ] ; then
-										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein um die das LV vergroessert werden soll (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein um die das LV vergroessert werden soll (1GiB = 1GibiByte = 1024 Mebibyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 										number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
 										#
 										while [ -n "$NUMBER" ] ; do
 											# Laufwerksangaben (NUMBER) in Byte umrechnen
-											number_size_to_b
-											if [[ "$LV_SIZE_B" -le "$VG_FREE_SIZE" ]] ; then
+											number_size_to_mib
+											if [[ "$LV_SIZE_MIB" -le "$VG_FREE_SIZE" ]] ; then
 												# vorhandene LV Size  + neue LV Size.
 												# Die Variable LV_SIZE wird von der
 												# Funktion lv_free_size belegt.
-												(( LV_NEW_SIZE = LV_SIZE + LV_SIZE_B ))
+												(( LV_NEW_SIZE = LV_SIZE + LV_SIZE_MIB ))
 												# Dateisystem checken und vergroessern.
 												lv_resize +${LV_NEW_SIZE} "$LV_DEV"
 												break
@@ -255,17 +255,17 @@ lv_volumes() {
 									# Die Variablen LV_SIZE, LV_SIZE_ME
 									# wird von der Funktion lv_free_size belegt.
 									#
-									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr LV verkleinert werden soll (100MiB = 100MegaByte = 102400 KiloByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
+									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr LV verkleinert werden soll (100MiB = 100MebiByte = 102400 KiloByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
 									number_input -D "$LV_REDUCE_TITLE" "$LV_REDUCE_SIZE_MSG"
 									#
 									while [ -n "$NUMBER" ] ; do
 										# Laufwerksangaben (NUMBER) in Byte umrechnen
-										number_size_to_b
-										if [ "$LV_SIZE_B" -lt "$LV_SIZE" ] ; then
+										number_size_to_mib
+										if [ "$LV_SIZE_MIB" -lt "$LV_SIZE" ] ; then
 											# vorhandene LV Size  - neue LV Size.
 											# Die Variable LV_SIZE wird von der
 											# Funktion lv_free_size belegt.
-											(( LV_NEW_SIZE = LV_SIZE - LV_SIZE_B ))
+											(( LV_NEW_SIZE = LV_SIZE - LV_SIZE_MIB ))
 											# Dateisystem checken und verkleinern.
 											lv_resize -${LV_NEW_SIZE} "$LV_DEV"
 											break
