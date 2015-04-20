@@ -1972,6 +1972,90 @@ sys_conf() {
 		fi
 	}
 	## }}}
+#Funktion (convert_mib_size), YobiByte,..., TebiByte, GibiByte, nach MebiByte umrechnen# {{{
+#
+# usage: convert_mib_size [ Masseinheit | -i ] SIZE
+#
+convert_mib_size() {
+	if [[ ${#argv} == 2 ]] ; then
+		unset -- SIZE_MIB
+		local Opt Size
+		typeset -F3 Size_Part_Tmp
+		Opt="$1"
+		Size="${2//,/.}"
+		case "$Opt" in
+			-i)
+#				# nach YobiByte umrechnen
+#				if [[ $Size -ge 1152921504606846976 ]] ; then
+#					(( Size_Part_Tmp = Size / 1152921504606846976.0 ))
+#					SIZE_MIB="$Size_Part_Tmp"
+#					SIZE_MIB_ME=YiB
+#				# nach ZebiByte umrechnen
+#				elif [[ $Size -ge 1125899906842624 ]] ; then
+#					(( Size_Part_Tmp = Size / 1125899906842624.0 ))
+#					SIZE_MIB="$Size_Part_Tmp"
+#					SIZE_MIB_ME=ZiB
+				# nach ExbiByte umrechnen
+				if [[ $Size -ge 1099511627776 ]] ; then
+					(( Size_Part_Tmp = Size / 1099511627776.0 ))
+					SIZE_MIB="$Size_Part_Tmp"
+					SIZE_MIB_ME=EiB
+				# nach PebiByte umrechnen
+				elif [[ $Size -ge 1073741824 ]] ; then
+					(( Size_Part_Tmp = Size / 1073741824.0 ))
+					SIZE_MIB="$Size_Part_Tmp"
+					SIZE_MIB_ME=PiB
+				# nach TebiByte umrechnen
+				elif [[ $Size -ge 1048576 ]] ; then
+					(( Size_Part_Tmp = Size / 1048576.0 ))
+					SIZE_MIB="$Size_Part_Tmp"
+					SIZE_MIB_ME=TiB
+				# nach GibiByte umrechnen
+				elif [[ $Size -ge 1024 ]] ; then
+					(( Size_Part_Tmp = Size / 1024.0 ))
+					SIZE_MIB="$Size_Part_Tmp"
+					SIZE_MIB_ME=GiB
+				else
+				# ist schon MebiByte
+					SIZE_MIB="$Size"
+					SIZE_MIB_ME=MiB
+				fi
+				;;
+			mib|MiB|Mib)	# ist schon MebiByte
+				SIZE_MIB="$Size"
+				;;
+			gib|GiB|Gib)	# nach MebiByte umrechnen
+				(( SIZE_MIB = Size * 1024 ))
+				;;
+			tib|TiB|Tib)	# nach MebiByte umrechnen
+				(( SIZE_MIB = Size * 1048576 ))
+				;;
+			pib|PiB|Pib)	# nach MebiByte umrechnen
+				(( SIZE_MIB = Size * 1073741824 ))
+				;;
+			eib|EiB|Eib)	# nach MebiByte umrechnen
+				(( SIZE_MIB = Size * 1099511627776 ))
+				;;
+#			zib|ZiB|Zib)	# nach MebiByte umrechnen
+#				(( SIZE_MIB = Size * 1125899906842624 ))
+#				;;
+#			yib|YiB|Yib)	# nach MebiByte umrechnen
+#				(( SIZE_MIB = Size * 1152921504606846976 ))
+#				;;
+			*)	# Nachricht das diese Masseinheit nicht
+				# unterstuetzt wird
+				MSG=$(gettext 'Diese Masseinheit ($Opt) wird nicht unterstuetzt.')
+				msgbox "$gv_Attention" "$MSG"
+				return 1
+				;;
+		esac
+	else
+		no_para_msg $0
+		return 1
+	fi
+	return 0
+}
+#}}}
 	# Funktion (convert_over_size), Groessen in eine lesbarere Form umrechnen{{{
 	#
 	# usage: convert_over_size BIG_SIZE IS_SIZE
