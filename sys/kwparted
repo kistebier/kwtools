@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.04.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 23.04.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -61,7 +61,7 @@ root_check
 # Nachdem das Script initialisiert wurde, kann man die anderen
 # benötigten Funktionen laden. Die Funktion sys_conf wird bereits
 # von der Funktion script_init ausgefuehrt.
-autoload -U parttab_vars value_choice_gpt value_choice_msdos
+autoload -U value_choice_gpt value_choice_msdos
 
 # Variablen festlegen# {{{
 FREE=$(gettext 'frei')
@@ -69,6 +69,7 @@ Disk_Choice_ALL=$(gettext 'alle')
 MODELL=$(gettext 'Modell')
 PART_TAB=$(gettext 'Partitionstabelle')
 DISK_SIZE_ALL=$(gettext 'Groesse')
+START_PART=1
 NO_PARTTAB=$(gettext 'Diese Festplatte hat keine Partitionstabelle. Sie koennen jetzt eine erstellen. Moechten Sie das (ja/nein)?')
 DEFECT_FP=$(gettext 'Man kann keine Partitionstabelle anlegen. Vielleicht ist Ihre Festplatte kaputt oder Ihre BIOS Einstellungen sind falsch.')
 #
@@ -310,7 +311,6 @@ read_parted() {
 							PART_FS[Anz]="$gv_None"
 							;;
 					esac
-					echo "${PART[Anz]}"
 					PART_ANZ_NR[Anz]="$Anz \"${PART[Anz]} ${PART_FS[Anz]} ${NAME[Anz]} ${PART_ANZ_SIZE_NR[Anz]} ${FLAG[Anz]}\""
 					(( Anz++ ))
 					;;
@@ -330,7 +330,6 @@ read_parted() {
 		## }}}
 	else
 		# leere Partitionstabelle# {{{
-		parttab_vars "$Disk"
 		case $FPDISKLABEL in
 			gpt)
 				Anz=1
@@ -339,7 +338,7 @@ read_parted() {
 				(( PART_SIZE[Anz] = DISK_CAP -1 ))
 				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${NAME[Anz]} ${PART_SIZE[Anz]}MiB\""
 				PART_ANZ_SIZE_NR[Anz]="${PART_SIZE[Anz]}MiB"
-				START_NR[Anz]="$START_PART1"
+				START_NR[Anz]="$START_PART"
 				# DISK_CAP_OB nach MiB umrechnen
 				(( Tmp = DISK_CAP_OB / 1048576 - 1 ))
 				END_NR[Anz]="$Tmp"
@@ -351,7 +350,7 @@ read_parted() {
 				(( PART_SIZE[Anz] = DISK_CAP -1 ))
 				PART_ANZ_NR[Anz]="$Anz \"${Disk}-1 ${PART_FS[Anz]} ${PART_TYPE[Anz]} ${PART_SIZE[Anz]}MiB\""
 				PART_ANZ_SIZE_NR[Anz]="${PART_SIZE[Anz]}MiB"
-				START_NR[Anz]="$START_PART1"
+				START_NR[Anz]="$START_PART"
 				# DISK_CAP_OB nach MiB umrechnen
 				(( Tmp = DISK_CAP_OB / 1048576 - 1 ))
 				END_NR[Anz]="$Tmp"
@@ -482,11 +481,12 @@ parted_edit() {
 					msgbox "$gv_Info" "$MSG"
 				}
 				## }}}
-				# Funktion (no_reduce_size_msg), Groesse kann man nicht verkleinern.{{{
+				# Funktion (no_copy_size_msg), Groesse darf nicht kleiner als die.{{{
+				# der Quell Partition sein.
 				#
-				# usage: no_reduce_size_msg
-				no_reduce_size_msg() {
-					MSG=$(gettext 'Die angegebene Groesse kann nicht verkleinert werden. Geben Sie bitte eine andere Groesse an.')
+				# usage: no_copy_size_msg
+				no_copy_size_msg() {
+					MSG=$(gettext 'Die angegebene Groesse darf nicht kleiner als die Groesse der Quell Partition sin ($PART_SRC_SIZE_ME). Geben Sie bitte eine andere Groesse an.')
 					msgbox "$gv_Attention" "$MSG"
 				}
 				#}}}
@@ -532,10 +532,16 @@ parted_edit() {
 								# erstellt.
 								for i in ${=PFLAGS} ; {
 									Fl="${i%,}"
-									if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
-										Part_Flag+=($Fl \"\" on)
-									else
-										Part_Flag+=($Fl \"\" off)
+									#########################################
+									# INFO:
+									# Dieses Flag wird nicht mehr unterstuetzt.
+									#########################################
+									if [ "$Fl" != swap ] ; then
+										if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
+											Part_Flag+=($Fl \"\" on)
+										else
+											Part_Flag+=($Fl \"\" off)
+										fi
 									fi
 								}
 								PART_FLAG_MENU=($Part_Flag)
@@ -756,7 +762,7 @@ parted_edit() {
 						# wird.
 						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
 						case $FsTmp in
-							ext[234]|fat16|fat32|ntfs|reiserfs|*swap*)
+							ext[234]|fat16|fat32|vfat|ntfs|reiserfs|*swap*)
 								# Diese Dateisysteme kann man kopieren, aendern,
 								# verkleinern, pruefen und loeschen.
 								###############################################
@@ -874,16 +880,6 @@ parted_edit() {
 					fi
 				}
 				## }}}
-				# Funktion (convert_start_end_size),# {{{
-				# Start und End Groesse belegen
-				#
-				# usage: convert_start_end_size
-				convert_start_end_size() {
-					unset -- Part_Start_Tmp Part_End_Tmp
-					Part_Start_Tmp="$L_PART_START"
-					Part_End_Tmp="$L_PART_END"
-				}
-				## }}}
 				# Funktion (check_make_fstype), auf Dateisystem pruefen# {{{
 				# und dementsprechend die Variable
 				# Make_Fs belegen.
@@ -965,9 +961,6 @@ parted_edit() {
 													# Ist Fs_Type = linux-swap wird die Variable "Flag"
 													# gelöscht.
 													if [ "$Fs_Type" = linux-swap ] ; then
-														######################################
-														# TODO: Flag - swap off
-														# Was ist mit "hidden" etc.?
 														unset -- Flag
 													fi
 													break
@@ -1025,12 +1018,9 @@ parted_edit() {
 											#
 											if [ "$SIZE" -a "$Ist_Part_Name" ] ; then
 												# Anfang und Partitionsgroesse berechnen
-												######################################
-												#TODO: aendern
 												calc_size_end "$SIZE" "$L_PART_START"
-												convert_start_end_size
 												######################################
-												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Name $Fs_Type $Part_Start_Tmp $Part_End_Tmp"
+												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Name $Fs_Type $L_PART_START $L_PART_END"
 												parted ${=PROG_OPT} || prog_failure
 												# Partitions nummer pruefen
 												check_part_nr $Part_Auswahl
@@ -1067,12 +1057,8 @@ parted_edit() {
 											#
 											if [ "$SIZE" -a "$Ist_Part_Type" ] ; then
 												# Anfang und Partitionsgroesse berechnen
-												######################################
-												# TODO: aendern in MiB
 												calc_size_end "$SIZE" "$L_PART_START"
-												convert_start_end_size
-												######################################
-												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Type $Fs_Type $Part_Start_Tmp $Part_End_Tmp"
+												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Type $Fs_Type $L_PART_START $L_PART_END"
 												parted ${=PROG_OPT} || prog_failure
 												# Partitions nummer pruefen
 												check_part_nr $Part_Auswahl
@@ -1086,9 +1072,6 @@ parted_edit() {
 												# Dabei muessen die Filesystem eig. tools
 												# ausgefuehrt werden.
 												if [ -n "$Make_Fs" -a -n "$PART_NR" ] ; then
-													###########################
-													#TODO: erst umounten
-													###########################
 													format "${FP}${PART_NR}" "$Make_Fs"
 												fi
 											else
@@ -1190,11 +1173,12 @@ parted_edit() {
 				# Funktion (insert_to_free_part), einfuegen in einen freien Platz auf der Festplatte.# {{{
 				#
 				insert_to_free_part() {
+					lv_Insert=$(gettext 'einfuegen')
 					# Funktion (insert_to_free_part_menu)# {{{
 					insert_to_free_part_menu() {
 						INSERT_TITLE=$(gettext 'Partition::einfuegen')
-						INSERT_MENU=($lv_Size \"$SIZE\" $lv_Insert \"\")
-						menubox "" "$gv_Menupoint" "$INSERT_TITLE" "$INSERT_MENU"
+						INSERT_MENU=($lv_Size \"$SIZE\" $lv_Insert \"\" $gv_Back \"\")
+						menubox "$1" "$gv_Menupoint" "$INSERT_TITLE" "$INSERT_MENU"
 					}
 					## }}}
 					#
@@ -1202,18 +1186,19 @@ parted_edit() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)
+								DEFAULT_VALUE=${gv_Auswahl#HELP }
 								script_help insert_to_free_part_help
-								insert_to_free_part_menu
+								insert_to_free_part_menu "$DEFAULT_VALUE"
 								;;
 							$lv_Size)
 								# Menu fuer die Groessenangaben der
 								# Ziel Partition. Dafuer wird die
 								# Groesse der Quell Partition benutzt.
 								part_size -c "$PART_SRC_SIZE_ME"
-								sleep 6
-								insert_to_free_part_menu
+								insert_to_free_part_menu $lv_Insert
 								;;
 							$lv_Insert)
+								# Quelle nach Ziel kopieren
 								if [ -n "$SIZE" ] ; then
 									# Einstellung des Partitionstypen
 									case "$FPDISKLABEL" in
@@ -1230,11 +1215,8 @@ parted_edit() {
 									#
 									# Anfang und Partitionsgroesse berechnen
 									calc_size_end "$SIZE" "$L_PART_START"
-									echo $B_ERROR"Hallo"$NORMAL
-									sleep 6
-									convert_start_end_size
 									# Partition anlegen
-									PROG_OPT="-a optimal -s $FP unit MiB mkpart $Parttyp $Part_Start_Tmp $Part_End_Tmp"
+									PROG_OPT="-a optimal -s $FP unit MiB mkpart $Parttyp $L_PART_START $L_PART_END"
 									#parted ${=PROG_OPT} || prog_failure
 									# Dem Kernel die neue Partitionstabelle bekannt
 									# geben.
@@ -1245,14 +1227,20 @@ parted_edit() {
 									check_part_nr ${PART[NR]}
 									PART_DST="${FP}${PART_NR}"
 									# Dateisystem kopieren und anpassen
-									echo "copy_fs $CP_FS "$PART_SRC" "$PART_DST" "$PART_SRC_SIZE""
-									#copy_fs $CP_FS "$PART_SRC" "$PART_DST "$PART_SRC_SIZE""
-									echo "resize_fs +${L_PART_SIZE} "$PART_DST""
-									#resize_fs +${L_PART_SIZE} "$PART_DST"
+									copy_fs $CP_FS "$PART_SRC" "$PART_DST "$PART_SRC_SIZE""
+									resize_fs +${L_PART_SIZE} "$PART_DST"
+									#
+									unset -- CP_FS PART_SRC PART_SRC_SIZE PART_SRC_SIZE_ME
+									break
 								else
-									##########################################
-									# TODO: msgbox "Sie muessen erst eine Groesse auswaehlen"
+									MSG=$(gettext 'Sie muessen eine Groesse fuer die Ziel Partition eingeben. Diese Partition wird dann erstellt und die Quell Partition hinein kopiert.')
+									msgbox "$gv_Info" "$MSG"
+									insert_to_free_part_menu $lv_Size
 								fi
+								#
+								;;
+							$gv_Back) # nichts kopieren.
+								unset -- CP_FS PART_SRC PART_SRC_SIZE PART_SRC_SIZE_ME
 								break
 								;;
 						esac
@@ -1281,25 +1269,28 @@ parted_edit() {
 							case "$Opt" in
 								-c)
 									# beim kopieren
-									# #####################
-									# TODO: weg da keine Partition erstellt wird?
-									# #####################
-									if [[ ${NUMBER%%[a-zA-Z]*} -ge ${MAX_SIZE%%[a-zA-Z]*} ]] ; then
-										SIZE=$NUMBER
+									# Zahl nach MebiByte umrechnen
+									convert_mib_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+									New_Size="$SIZE_MIB"
+									if [[ $New_Size -lt $PART_SRC_SIZE ]] ; then
+										# Nachricht das die Groesse der Ziel Partition nicht
+										# kleine als die der Quell Prartition sein kann.
+										no_copy_size_msg
+									elif [[ $New_Size -gt ${MAX_SIZE%%[a-zA-Z]*} ]] ; then
+										# Nachricht das die angegebene Groesse die verfuegbare
+										# Groesse ueberschreitet.
+										over_size_msg
 									else
-										# Nachricht das man die Groesse nicht
-										# verkleinern kann.
-										no_reduce_size_msg
+										SIZE=$NUMBER
+										L_PART_SIZE="$New_Size"
 									fi
 									;;
 								-n)
 									# normal
-									# beide Zahlen nach MebiByte umrechnen
+									# Zahl nach MebiByte umrechnen
 									convert_mib_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
 									New_Size="$SIZE_MIB"
-									convert_mib_size "${MAX_SIZE##*[0-9]}" "${MAX_SIZE%%[a-zA-Z]*}"
-									Max_Size="$SIZE_MIB"
-									if [[ $New_Size -le $Max_Size ]] ; then
+									if [[ $New_Size -le ${MAX_SIZE%%[a-zA-Z]*} ]] ; then
 										SIZE=$NUMBER
 										L_PART_SIZE="$New_Size"
 									else
@@ -1364,12 +1355,9 @@ parted_edit() {
 												PART_DST="${PART[NR]}"
 												# pruefen ob Quelle nicht gleich Ziel ist.
 												if [[ $PART_SRC != $PART_DST ]] ; then
-													# TEST mit ext4
 													# Dateisystem kopieren und anpassen
-													echo "copy_fs "$CP_FS" "$PART_SRC" "$PART_DST" "$PART_SRC_SIZE""
-													#copy_fs "$CP_FS" "$PART_SRC" "$PART_DST" "$PART_SRC_SIZE"
-													echo "resize_fs +${L_PART_SIZE} "$PART_DST""
-													#resize_fs +${L_PART_SIZE} "$PART_DST"
+													copy_fs "$CP_FS" "$PART_SRC" "$PART_DST" "$PART_SRC_SIZE"
+													resize_fs +${L_PART_SIZE} "$PART_DST"
 													## }}}
 												else
 													# Nachricht das Src und Dst
@@ -1421,52 +1409,51 @@ parted_edit() {
 								;;
 							$gv_Copy)
 								# Partitionen kopieren.# {{{
-								hier_ist_noch_nichts $gv_Copy
-#								# Dateisystem des Quell Laufwerks pruefen.# {{{
-#								####################################
-#								# TODO: einige FSs gehen nicht (exfat),
-#								# andere Pruefung s. aehnliche
-#								unset -- CP_FS PART_SRC_SIZE
-#								case "$Fs_Type" in
-#									hfs+)
-#										CP_FS=hfsplus
-#										;;
-#									$gv_None)
-#										# Nachricht das das Dateisystem nicht geht.
-#										no_fs_type_msg "$Fs_Type"
-#										unset -- Fs_Type
-#										;;
-#									*)
-#										CP_FS="$Fs_Type"
-#										;;
-#								esac
-#								## }}}
-#								# Funktion disk_menu{{{
-#								disk_menu() {
-#									DISK_MENU=($DISK_DEV_E $gv_Back \"\")
-#									menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
-#								}
-#								#}}}
-#								disk_menu
-#								while [ -n "$gv_Auswahl" ] ; do
-#									case "$gv_Auswahl" in
-#										HELP*)	script_help share/disk_help
-#											disk_menu
-#											;;
-#										$gv_Back)	break 3
-#											;;
-#										*)
-#											# Partitionsinhalt kopieren
-#											#autoload -U exec_copy_parted
-#											Dst_Disk="$gv_Auswahl"
-#											PART_SRC="$Part_Auswahl"
-#											PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
-#											PART_SRC_SIZE_ME="$SIZE"
-#											exec_copy_parted "$Dst_Disk"
-#											break 3
-#											;;
-#									esac
-#								done
+								# Dateisystem des Quell Laufwerks pruefen.# {{{
+								####################################
+								# TODO: einige FSs gehen noch nicht (exfat),
+								# andere Pruefung s. aehnliche
+								unset -- CP_FS PART_SRC_SIZE
+								case "$Fs_Type" in
+									hfs+)
+										CP_FS=hfsplus
+										;;
+									$gv_None)
+										# Nachricht das das Dateisystem nicht geht.
+										no_fs_type_msg "$Fs_Type"
+										unset -- Fs_Type
+										;;
+									*)
+										CP_FS="$Fs_Type"
+										;;
+								esac
+								## }}}
+								# Funktion disk_menu{{{
+								disk_menu() {
+									DISK_MENU=($DISK_DEV_E $gv_Back \"\")
+									menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
+								}
+								#}}}
+								disk_menu
+								while [ -n "$gv_Auswahl" ] ; do
+									case "$gv_Auswahl" in
+										HELP*)	script_help share/disk_help
+											disk_menu
+											;;
+										$gv_Back)	break 3
+											;;
+										*)
+											# Partitionsinhalt kopieren
+											#autoload -U exec_copy_parted
+											Dst_Disk="$gv_Auswahl"
+											PART_SRC="$Part_Auswahl"
+											PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
+											PART_SRC_SIZE_ME="$SIZE"
+											exec_copy_parted "$Dst_Disk"
+											break 3
+											;;
+									esac
+								done
 								break 2
 								## }}}
 								;;
