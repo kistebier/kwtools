@@ -85,9 +85,6 @@ hw_conf() {
 				local Dev Rest Tmp
 				while read Dev Rest ; do
 					if [ -n "${(M)${Dev}##/dev/*}" -a "${${Dev##*/}%%[0-9]*}" != ram ] ; then
-						DISK_DEV+=($Dev)
-						DISK_DEV_E+=($Dev \"$Rest\")
-						DISK_DEV_M+=($Dev \"$Rest\" off)
 						# in Bytes umrechnen
 						(( Tmp = $(</sys/block/${Dev#/dev/}/size) * 512 ))
 						if [ "$Tmp" -gt 0 ] ; then
@@ -97,6 +94,14 @@ hw_conf() {
 							DISK_DEV_CAP_BYTE+=(0B)
 							DISK_DEV_CAP+=(0)
 						fi
+						# Kapazitaet in eine besser Form umrechnen
+						convert_si_size -i "$Tmp"
+						Disk_Dev_Name=${Rest// /_}-${SIZE_B//.[0-9][0-9][0-9]/}
+						DISK_DEV_NAME+=($Disk_Dev_Name)
+						# Variablen fuer die dialogboxen belegen.
+						DISK_DEV+=($Dev)
+						DISK_DEV_E+=($Dev \"$Disk_Dev_Name\")
+						DISK_DEV_M+=($Dev \"$Disk_Dev_Name\" off)
 						FP_INFO+=("$Dev $Rest")
 						# Sector Groesse der Festplatte heraus bekommen.
 						# Meist 512Byte <= 3TByte, 4096Byte >= 3 TByte.

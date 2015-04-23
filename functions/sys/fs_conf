@@ -70,14 +70,14 @@ fs_conf() {
 						# auf Ausfuehrbarkeit von e2image pruefen.
 						prog_check e2image
 						if [ -n "$PROGS" ] ; then
-							e2image -ra -p "$Src" "$Dst" | \
+							e2image -ra -p "$Src" "$Dst" 2>1 | \
 								progressbox "$COPY_TITLE" "$COPY_MSG" || \
 								prog_failure
 						fi
 					fi
 					## }}}
 					;;
-				fat16|fat32)
+				fat16|fat32|vfat)
 					# FAT Dateisysteme kopieren# {{{
 					# Src und Dst Laufwerk umounten.
 					mount_check -a $Src
@@ -494,7 +494,7 @@ fs_conf() {
 					}
 					## }}}
 					;;
-				swap)
+				linux-swap|swap)
 					# Swap Partition erstellen# {{{
 					for i in ${=F_PART} ; {
 						# Geraet ausbinden
@@ -606,7 +606,7 @@ fs_conf() {
 				;;
 			-s)	Fs=swap
 				;;
-			*)	Fs=(ext2 ext3 ext4 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
+			*)	Fs=(exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
 				;;
 		esac
 		#
@@ -942,6 +942,12 @@ fs_conf() {
 	###################################################################
 	resize_fs() {
 		if [[ ${#argv} == 2 ]] ; then
+			# Wenn zum Beispiel das Vergroessern einer Partition
+			# schief geht, wird hier abgebrochen.
+			if [[ $RET == 1 ]] ; then
+				unset -- RET
+				return 1
+			fi
 			local DEV New_Size
 			New_Size="$1"
 			DEV="$2"
@@ -1075,7 +1081,7 @@ fs_conf() {
 						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							#################################
-							# TODO: und bei Sectorsize 4096?
+							# Info: und bei Sectorsize 4096?
 							# New_Size (MiB) nach Sectoren umrechnen. 1Sector = 512Byte
 							#(( Resize_Size = ${New_Size#+} * 1048576 / 512 ))
 							# Dateisystem vergroessern.
