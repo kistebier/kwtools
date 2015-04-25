@@ -40,9 +40,21 @@ kwgrub2_install() {
 						# Festplatten mit msdos Partitionstyp herausfinden
 						for i in ${=DISK_DEV} ; {
 							Pttype=$(blkid -o value -s PTTYPE $i)
-							if [[ $Pttype == dos ]] ; then
-								Grub_Disks_M+=($i \"\" off)
-							fi
+							case $Pttype in
+								dos) # msdos Partitionstabellentyp
+									Grub_Disks_M+=($i \"\" off)
+									;;
+								gpt) # gpt Partitionstabellentyp
+									# Diese Festplatte nach einer Partition mit dem
+									# Flag bios_grub suchen.
+									partdb $i bios_grub
+									if [[ -n ${PART[1]} ]] ; then
+										Grub_Disks_M+=(${${PART[1]}%[0-9]*} \"\" off)
+									fi
+									;;
+								*)	# andere Typen werden nicht unterstuetzt.
+									;;
+							esac
 						}
 						#
 						if [[ -n ${Grub_Disks_M[1]} ]] ; then
@@ -51,8 +63,10 @@ kwgrub2_install() {
 							#
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
-									HELP*)	script_help grub2_disk_help
-										checklist "" "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$Grub_Disks_M"
+									HELP*)
+										DEFAULT_VALUE=${gv_Auswahl#HELP }
+										script_help grub2_disk_help
+										checklist "$DEFAULT_VALUE" "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$Grub_Disks_M"
 										;;
 									*)	# uebernehmen
 										GRUB_DISKS="$gv_Auswahl"
@@ -90,7 +104,7 @@ kwgrub2_install() {
 								}
 							elif [[ $Pttype == gpt ]] ; then
 								# hexdump benutzen?
-								partdb -i "bios_grub fat32"
+								partdb -i fat32
 							fi
 						}
 						#
