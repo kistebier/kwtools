@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 23.04.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 25.04.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
 # Es fehlt die Unterstuetzung zum kopieren der Dateisysteme hfs* und jfs.
 # ++++++++++++++++++++++++++++++
 #
-# Version: 0.2.14
+# Version: 0.3.0
 
 # ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da auf einigen OS
@@ -558,6 +558,11 @@ parted_edit() {
 										unset -- FLAGs
 										break
 										;;
+									lvm|raid|bios_grub)
+										# bei diesen Flags wird kein Dateisystem verwendet
+										Fs_Type="$gv_None"
+										break
+										;;
 									*)
 										#
 										FLAGs="$gv_Auswahl on"
@@ -673,15 +678,22 @@ parted_edit() {
 						# pruefen wie welches Dateisystem von kwparted unterstuetzt# {{{
 						# wird.
 						######################################################
-						# TODO: nochmal pruefen, welches FS-Tool was kann.
+						# TODO: immer nochmal pruefen, welches FS-Tool was kann.
 						# und FS zusammenlegen.
 						######################################################
 						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
 						case $FsTmp in
+							btrfs)
+								# btrfs kann man (noch nicht kopieren), aendern, vergroessern,
+								# verkleinern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Change \"\"
+								$gv_Enlarge \"\" $gv_Reduce \"\" $gv_Check \"\"
+								$gv_Delete \"\" $gv_Back \"\")
+								;;
 							exfat)
-								# exfat kann man kopieren, aendern, pruefen
+								# exfat kann man (noch nicht kopieren), aendern, pruefen
 								# und loeschen.
-								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
+								ACTION_PART_MENU=($gv_Change \"\"
 								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
 								;;
 							ext[234])
@@ -753,7 +765,7 @@ parted_edit() {
 							*)
 								# alle anderen Dateisysteme werden
 								# noch nicht unterstuetzt.
-								ACTION_PART_MENU=($gv_Back \"\")
+								ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
 								;;
 						esac
 						#}}}
@@ -762,23 +774,29 @@ parted_edit() {
 						# wird.
 						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
 						case $FsTmp in
+							btrfs)
+								# Dieses Dateisysteme kann man (noch nicht kopieren), aendern,
+								# verkleinern, pruefen und loeschen.
+								ACTION_PART_MENU=($gv_Change \"\"
+								$gv_Reduce \"\" $gv_Check \"\" $gv_Delete \"\"
+								$gv_Back \"\")
+								;;
+							exfat)
+								# exfat kann man (noch nicht kopieren), aendern, pruefen
+								# und loeschen.
+								ACTION_PART_MENU=($gv_Change \"\"
+								$gv_Check \"\" $gv_Delete \"\" $gv_Back \"\")
+								;;
 							ext[234]|fat16|fat32|vfat|ntfs|reiserfs|*swap*)
 								# Diese Dateisysteme kann man kopieren, aendern,
 								# verkleinern, pruefen und loeschen.
-								###############################################
-								# jfs Kopieren? wird noch nicht unterstuetzt.
-								###############################################
 								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
 								$gv_Reduce \"\" $gv_Check \"\" $gv_Delete \"\"
 								$gv_Back \"\")
 								;;
-							exfat|hfs*|jfs|reiser4|*ufs|xfs)
+							hfs*|jfs|reiser4|*ufs|xfs)
 								# Diese Dateisysteme kann man kopieren, aendern,
 								# pruefen und loeschen.
-								###############################################
-								# hfs*|*ufs|... Kopieren?
-								# wird noch nicht unterstuetzt.
-								###############################################
 								ACTION_PART_MENU=($gv_Copy \"\" $gv_Change \"\"
 								$gv_Check \"\" $gv_Delete \"\"
 								$gv_Back \"\")
@@ -792,7 +810,7 @@ parted_edit() {
 							*)
 								# alle anderen Dateisysteme werden
 								# noch nicht unterstuetzt.
-								ACTION_PART_MENU=($gv_Back \"\")
+								ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
 								;;
 						esac
 						## }}}
@@ -898,21 +916,7 @@ parted_edit() {
 							# Bei Dateisystemtyp "nichts" werden die Flags
 							# geprueft ob der Dateisystemtyp garnicht
 							# gebraucht wird
-							case "$Flag" in
-								lvm*|raid*)
-									unset -- Fs_Type
-									;;
-								*)
-									# Nachricht das das Dateisystem $gv_None (nichts)
-									# nicht geht, ausser beim Partitionstyp extended.
-									if [ "$Ist_Part_Type" != extended ] ; then
-										no_fs_type_msg "$Fs_Type"
-										unset -- Fs_Type
-									else
-										unset -- Fs_Type
-									fi
-									;;
-							esac
+							unset -- Make_Fs
 							;;
 						*)
 							Make_Fs="$Fs_Type"
@@ -1010,17 +1014,11 @@ parted_edit() {
 												unset -- Ist_Part_Name
 											fi
 											#
-											# Ist das Dateisystem = nichts wird die
-											# Variable Fs_Type geloescht.
-											if [[ $Fs_Type == $gv_None ]] ; then
-												unset -- Fs_Type
-											fi
-											#
 											if [ "$SIZE" -a "$Ist_Part_Name" ] ; then
 												# Anfang und Partitionsgroesse berechnen
 												calc_size_end "$SIZE" "$L_PART_START"
 												######################################
-												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Name $Fs_Type $L_PART_START $L_PART_END"
+												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Name $Make_Fs $L_PART_START $L_PART_END"
 												parted ${=PROG_OPT} || prog_failure
 												# Partitions nummer pruefen
 												check_part_nr $Part_Auswahl
@@ -1049,16 +1047,10 @@ parted_edit() {
 												unset -- Ist_Part_Type
 											fi
 											#
-											# Ist das Dateisystem = nichts wird die
-											# Variable Fs_Type geloescht.
-											if [[ $Fs_Type == $gv_None ]] ; then
-												unset -- Fs_Type
-											fi
-											#
 											if [ "$SIZE" -a "$Ist_Part_Type" ] ; then
 												# Anfang und Partitionsgroesse berechnen
 												calc_size_end "$SIZE" "$L_PART_START"
-												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Type $Fs_Type $L_PART_START $L_PART_END"
+												PROG_OPT="-a optimal -s $FP unit MiB mkpart $Ist_Part_Type $Make_Fs $L_PART_START $L_PART_END"
 												parted ${=PROG_OPT} || prog_failure
 												# Partitions nummer pruefen
 												check_part_nr $Part_Auswahl
@@ -1082,7 +1074,7 @@ parted_edit() {
 											;;
 									esac
 									#
-									unset -- Fs_Type SIZE Flag Ist_Part_Type \
+									unset -- Make_Fs SIZE Flag Ist_Part_Type \
 										Size_Old SIZE_OLD Ist_Part_Type Ist_Part_Name
 									break
 									#}}}
@@ -1095,15 +1087,15 @@ parted_edit() {
 									check_part_nr $Part_Auswahl
 									# formatieren, falls das ausgewaehlte Dateisystem
 									# geaendert wurde.
-									if [[ $Fs_Type_Old != $Fs_Type ]] && \
-										[[ -n $Make_Fs ]] && [[ -n $PART_NR ]] ; then
+									if [[ $Fs_Type_Old != $Make_Fs ]] && \
+										[[ -n $PART_NR ]] ; then
 										format "${FP}${PART_NR}" "$Make_Fs"
 									fi
 									# Flags setzen
 									set_flag $PART_NR
 									partprobe "$FP"
 									sleep 3
-									unset -- Fs_Type Fs_Type_Old Flag
+									unset -- Make_Fs Fs_Type_Old Flag
 									read_parted "$FP" free
 									break
 									## }}}
@@ -1119,7 +1111,7 @@ parted_edit() {
 									if [ -n "$Make_Fs" -a -n "$PART_NR" ] ; then
 										format "${FP}${PART_NR}" "$Make_Fs"
 									fi
-									unset -- Fs_Type Fs_Type_Old Flag
+									unset -- Make_Fs Fs_Type_Old Flag
 									read_parted "$FP" free
 									break
 									## }}}
@@ -1411,17 +1403,12 @@ parted_edit() {
 								# Partitionen kopieren.# {{{
 								# Dateisystem des Quell Laufwerks pruefen.# {{{
 								####################################
-								# TODO: einige FSs gehen noch nicht (exfat),
+								# TODO: einige FSs gehen noch nicht (exfat,btrfs),
 								# andere Pruefung s. aehnliche
 								unset -- CP_FS PART_SRC_SIZE
 								case "$Fs_Type" in
 									hfs+)
 										CP_FS=hfsplus
-										;;
-									$gv_None)
-										# Nachricht das das Dateisystem nicht geht.
-										no_fs_type_msg "$Fs_Type"
-										unset -- Fs_Type
 										;;
 									*)
 										CP_FS="$Fs_Type"
@@ -1444,7 +1431,6 @@ parted_edit() {
 											;;
 										*)
 											# Partitionsinhalt kopieren
-											#autoload -U exec_copy_parted
 											Dst_Disk="$gv_Auswahl"
 											PART_SRC="$Part_Auswahl"
 											PART_SRC_SIZE="${PART_SIZE[PART_DEST_NR]}"
