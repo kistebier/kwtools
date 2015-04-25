@@ -526,11 +526,12 @@ lv_free_size() {
 	# Funktion (partdb), Partitionstabelle speichern{{{
 	# Hier werden alle Partitionen gesucht die vorhanden sind.
 	#
-	# usage: partdb [ /dev.. ][ -i 'Partitionstyp | Partitionstyp |...' ]
+	# usage: partdb [ /dev.. | /dev.. 'Partitionstyp | Partitionstyp |...']
+	#        partdb [ -i 'Partitionstyp | Partitionstyp |...' ]
 	# -i - alle Partitionen nach Partitionstyp suchen,
 	#      SW RAID = 0xfd, LVM = 0x8e (LVM1/2_member), NTFS = 0x7, ...
-	# /dev - eine Festplatte uebergeben, auf der nach linux und Linux swap
-	#        gesucht wird.
+	# /dev - eine Festplatte uebergeben, auf der nach linux, Linux swap
+	#        oder nach Partitionstyp gesucht wird.
 	# nichts - alle Partitionen ausser RAID/LVM/crypto*
 	#
 	partdb() {
@@ -550,34 +551,63 @@ lv_free_size() {
 		#
 		case $1 in
 			/dev*)
-				# nur eine Festplatte nach Linux durchsuchen# {{{
-				Disk="$1"
-				Fp_Tmp="${Disk##*/}"
-				# ${gv_WorkDir}/${Fp_Tmp}_partdb auslesen
-				if [ "`wc -l < ${gv_WorkDir}/${Fp_Tmp}_partdb`" -gt 0 ] ; then
-					while read part Rest ; do
-						case "$Rest" in
-							*fat16*|*fat32*|*ntfs*)
-								;;
-							*linux-swap|*swap*)
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
-								SWAP_DEV+=(${Disk}${part# })
-								SWAP_DEV_E+=(${Disk}${part# } \"$Part_Desc\")
-								SWAP_DEV_M=(${Disk}${part# } \"$Part_Desc\" off)
-								;;
-							*)
-								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
-								PART+=(${Disk}${part# })
-								PART_E+=(${Disk}${part# } \"$Part_Desc\")
-								PART_M+=(${Disk}${part# } \"$Part_Desc\" off)
-								;;
-						esac
-					done < ${gv_WorkDir}/${Fp_Tmp}_partdb
+				# nur eine Festplatte nach Partitionstyp durchsuchen# {{{
+				if [[ ${#argv} == 2 ]] ; then
+					Disk="$1"
+					Part_Ids="$2"
+					Fp_Tmp="${Disk##*/}"
+					# ${gv_WorkDir}/${Fp_Tmp}_partdb auslesen
+					if [ "`wc -l < ${gv_WorkDir}/${Fp_Tmp}_partdb`" -gt 0 ] ; then
+						for i in ${=Part_Ids} ; {
+							while read part Rest ; do
+								case "$Rest" in
+									*$i*)
+										Part_Label=$(blkid -o value -s LABEL -p ${Disk}${part# })
+										if [ -n "$Part_Label" ] ; then
+											PART+=(${Disk}${part# })
+											PART_E+=(${Disk}${part# } \"$Part_Label\")
+											PART_M+=(${Disk}${part# } \"$Part_Label\" off)
+										else
+											PART+=(${Disk}${part# })
+											PART_E+=(${Disk}${part# } \"$i\")
+											PART_M+=(${Disk}${part# } \"$i\" off)
+										fi
+										;;
+								esac
+							done < ${gv_WorkDir}/${Fp_Tmp}_partdb
+						}
+					fi
+					## }}}
+				else
+					# nur eine Festplatte nach Linux durchsuchen# {{{
+					Disk="$1"
+					Fp_Tmp="${Disk##*/}"
+					# ${gv_WorkDir}/${Fp_Tmp}_partdb auslesen
+					if [ "`wc -l < ${gv_WorkDir}/${Fp_Tmp}_partdb`" -gt 0 ] ; then
+						while read part Rest ; do
+							case "$Rest" in
+								*fat16*|*fat32*|*ntfs*)
+									;;
+								*linux-swap|*swap*)
+									Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
+									SWAP_DEV+=(${Disk}${part# })
+									SWAP_DEV_E+=(${Disk}${part# } \"$Part_Desc\")
+									SWAP_DEV_M=(${Disk}${part# } \"$Part_Desc\" off)
+									;;
+								*)
+									Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
+									PART+=(${Disk}${part# })
+									PART_E+=(${Disk}${part# } \"$Part_Desc\")
+									PART_M+=(${Disk}${part# } \"$Part_Desc\" off)
+									;;
+							esac
+						done < ${gv_WorkDir}/${Fp_Tmp}_partdb
+					fi
 				fi
 				## }}}
 				;;
 			-i)
-				# Nach Partitions Typ durchsuchen (alle Partitionen)# {{{
+				# Nach Partitionstyp durchsuchen (alle Partitionen)# {{{
 				Part_Ids="$2"
 				# alle ${gv_WorkDir}/*_partdb auslesen
 				for t in ${gv_WorkDir}/*_partdb ; {
