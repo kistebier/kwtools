@@ -2,9 +2,30 @@
 # sichern und die des MBR
 #
 kwparted_parttab() {
+	# pruefen, ob folgende Programme installiert sind.
+	prog_check sfdisk sgdisk
+	if [ -n "$NO_PROGS" ] ; then
+		return 1
+	fi
+	#
 	lv_Backup=$(gettext 'Sicherung')
 	lv_Pt=$(gettext 'Partitionstabelle')
 	lv_Fp=$(gettext 'Festplatte')
+	# Funktion (no_backup_msg), Erstellung des Backups fehlgeschlagen.# {{{
+	#
+	no_backup_msg() {
+		MSG=$(gettext 'Das Erstellen einer Sicherung von der Festplatte $FP ist fehlgeschlagen.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	## }}}
+	# Funktion (no_backup_back_msg), Zuruecksichern des Backups fehlgeschlagen.# {{{
+	#
+	no_backup_back_msg() {
+		MSG=$(gettext 'Das Zurueckspielen der Sicherung ($PT) auf die Festplatte von $FP ist fehlgeschlagen.')
+		msgbox "$gv_Attention" "$MSG"
+
+	}
+	## }}}
 	# Funktion parttab_menue{{{
 	PARTTAB_MENU=(\"$PART_TAB $gv_Create\" \"\"	\"$lv_Backup $gv_Create\" \"\"
 	\"$lv_Backup $gv_Back\" \"\" $gv_Back \"\")
@@ -98,10 +119,16 @@ kwparted_parttab() {
 							disklabel "$Backup_Fp"
 							case "$FPDISKLABEL" in
 								gpt)
-									sgdisk -b "$Backup_Gpt_File" "$Backup_Fp" &>/dev/null
+									if ! sgdisk -b "$Backup_Gpt_File" "$Backup_Fp" &>/dev/null ; then
+										no_backup_msg
+										return 1
+									fi
 									;;
 								msdos)
-									sfdisk "$Backup_Fp" > "$Backup_Mpt_File" &>/dev/null
+									if ! sfdisk "$Backup_Fp" > "$Backup_Mpt_File" &>/dev/null ; then
+										no_backup_msg
+										return 1
+									fi
 									;;
 							esac
 						else
@@ -127,7 +154,9 @@ kwparted_parttab() {
 						$Disk_Choice_ALL)
 							# alle Festplatten Partitionstabellen sichern.# {{{
 							for i in ${=DISK_DEV} ; {
-								backup_parttab "$i"
+								if ! backup_parttab "$i" ; then
+									return 1
+								fi
 							}
 							## }}}
 							backup_create_menu $Disk_Choice_ALL
@@ -135,7 +164,9 @@ kwparted_parttab() {
 						/dev*)
 							# Die Partitionstabelle einer Festplatte sichern.# {{{
 							Fp="$gv_Auswahl"
-							backup_parttab "$gv_Auswahl"
+							if ! backup_parttab "$gv_Auswahl" ; then
+								return 1
+							fi
 							## }}}
 							backup_create_menu "$Fp"
 							;;
@@ -213,10 +244,16 @@ kwparted_parttab() {
 								disklabel "$FP"
 								case "$FPDISKLABEL" in
 									gpt)
-										sgdisk -l "$PT" "$FP" &>/dev/null
+										if ! sgdisk -l "$PT" "$FP" &>/dev/null ; then
+											no_backup_back_msg
+											return 1
+										fi
 										;;
 									msdos)
-										sfdisk "$FP" < "$PT" &>/dev/null
+										if ! sfdisk "$FP" < "$PT" &>/dev/null ; then
+											no_backup_back_msg
+											return 1
+										fi
 										;;
 								esac
 							else
@@ -238,6 +275,7 @@ kwparted_parttab() {
 				;;
 		esac
 	done
+	return 0
 }
 #}}}
 ### Modeline {{{
