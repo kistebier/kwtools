@@ -332,6 +332,19 @@ fs_conf() {
 		mkfs_fs() {
 			FS="$1"
 			case $FS in
+				btrfs)
+					# btrfs Dateisystem erstellen# {{{
+					PROG=mkfs.${FS}
+					load_module $FS
+					for i in ${=F_PART} ; {
+						# Geraet ausbinden
+						mount_check -a $i
+						if [[ $U_MOUNT == yes ]] ; then
+							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
+						fi
+					}
+					## }}}
+					;;
 				exfat)
 					# exfat Dateisystem erstellen.# {{{
 					PROG=mkfs.${FS}
@@ -602,11 +615,13 @@ fs_conf() {
 		local Fs Anz
 		integer Anz
 		case "$1" in
-			-p)	Fs=(exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs linux-swap ntfs reiserfs reiser4 ufs xfs)
+			-p)	Fs=(btrfs exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs
+				linux-swap ntfs reiserfs reiser4 ufs xfs)
 				;;
 			-s)	Fs=swap
 				;;
-			*)	Fs=(exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs ntfs reiserfs reiser4 swap ufs xfs)
+			*)	Fs=(btrfs exfat ext2 ext3 ext4 fat16 fat32 hfs hfsplus jfs
+				ntfs reiserfs reiser4 swap ufs xfs)
 				;;
 		esac
 		#
@@ -954,6 +969,43 @@ fs_conf() {
 			check_fs "$DEV"
 			if [ -n "$gv_Fs" ] ; then
 				case "$gv_Fs" in
+					btrfs)
+						# BTRFS Dateisystem verkleinern/vergroessern{{{
+						if [ "${New_Size%%[0-9]*}" = + ] ; then
+							# Laufwerk mit FS btrfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Ist das DEV schon gemountet kann man das FS problemlos
+							# vergroessern.
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								btrfs filesystem resize max $MOUNTPOINT 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						else
+							# Laufwerk mit FS btrfs wenn noetig ins Arbeitsverzeichnis mounten.
+							mount_check -c $DEV
+							if [[ $MOUNT == no ]] ; then
+								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
+								MOUNTPOINT="$gv_WorkDir"
+							fi
+							# Ist das DEV schon gemountet kann man das FS problemlos
+							# vergroessern.
+							if [ ! -z "$MOUNTPOINT" ] ; then
+								btrfs filesystem resize ${New_Size#-}m $MOUNTPOINT 2>&1 | \
+									progressbox $gv_Enlarge $DEV || prog_failure
+							fi
+							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
+							# umountet.
+							mount_check -a "$gv_WorkDir"
+						fi
+						#}}}
+						;;
 					crypto*)
 						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein Crypto-Dateisystem und muss extra bearbeitet werden. Starten Sie bitte das Script kwcryptsetup, um das Dateisystem anzupassen.')
@@ -999,12 +1051,12 @@ fs_conf() {
 						#}}}
 						;;
 					jfs)
-						# JFS Dateisystem kann man nicht verkleinern nurvergroessern{{{
+						# JFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $DEV $gv_WorkDir || prog_failure
+								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
 							# Dateisystem jfs vergroessern
@@ -1099,7 +1151,7 @@ fs_conf() {
 							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
-								mount -t $FS $DEV $gv_WorkDir || prog_failure
+								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
 							# Ist das DEV schon gemountet kann man das FS problemlos
