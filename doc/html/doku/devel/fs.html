@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2015-03-23">
+        <meta name="date" content="2015-04-25">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -58,7 +58,6 @@
 		<tr>
 			<td></td>
 			<td><h4>Dateisystemfunktionen</h4><p>
-			<a href="fs.html#check_fs" target="_self">check_fs</a><br>
 			<a href="fs.html#copy_fs" target="_self">copy_fs</a><br>
 			<a href="fs.html#floppy_format" target="_self">floppy_format</a><br>
 			<a href="fs.html#format" target="_self">format</a><br>
@@ -68,42 +67,28 @@
 			<h4>Nachrichten und Fehlermeldungen</h4>
 			<p><a href="fs.html#no_copy_fs_msg" target="_self">no_copy_fs_msg</a><br>
 			<a href="fs.html#no_fs_support_msg" target="_self">no_fs_support_msg</a><br>
-			<a href="fs.html#no_fs_type_msg" target="_self">no_fs_type_msg</a><br>
-			<a href="fs.html#no_space_fp_msg" target="_self">no_space_fp_msg</a><br>
-			<a href="fs.html#use_kwcryptsetup_msg" target="_self">use_kwcryptsetup_msg</a>
+			<a href="fs.html#no_fs_type_msg" target="_self">no_fs_type_msg</a>
 			</p></td>
 			<td></td>
 		</tr>
-                <tr>
-                        <td vAlign=top colspan="3"><hr></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="check_fs">check_fs</a></b>
-			<p>Die Funktion check_fs &uuml;berpr&uuml;ft das &uuml;bergebene Laufwerk
-			darauf welches Dateisystem es besitzt. Dabei werden die util-linux >=2.16.2
-			benutzt.<br>
-			check_fs DEVICE<br>
-			DEVICE - Variable die das zu &uuml;berpr&uuml;fende Laufwerk enth&auml;lt.<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			gv_Fs - Variable die das Dateisystem enth&auml;lt.</p></td>
-                        <td></td>
-                </tr>
                 <tr>
                         <td vAlign=top colspan="3"><br></td>
                 </tr>
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="copy_fs">copy_fs</a></b>
-			<p>copy_fs kopiert Dateisysteme und passt sie der Gr&ouml;sse an.
-			Zur Zeit werden nur die Dateisysteme ext2/3/4, fat16, fat32,
-			ntfs, reiserfs, reiser4 und xfs unterst&uuml;tzt. Die Dateisysteme/Partitionstypen
-			auf dem Quell- und Ziel-Laufwerk m&uuml;ssen identisch sein. fat16 und fat32
-			Dateisysteme kann man
-			nicht vergr&ouml;ssern und xfs Dateisysteme nicht verkleinern.<br>
-			copy_fs SRC DST<br>
-			SRC - Variable die die Quell-Partition enth&auml;lt.<br>
-			DST - Variable die die Ziel-Partition enth&auml;lt.</p></td>
+			<p>copy_fs kopiert Dateisysteme von Partitionen. Zur Zeit werden nur die Dateisysteme
+			ext2/3/4, fat16, fat32, hfs, hfsplus, jfs, ntfs, reiserfs, reiser4, ufs und xfs
+			unterst&uuml;tzt. Das Dateisystem auf dem Quell Laufwerk muss kleiner oder gleich dem Ziel
+			Laufwerk sein.<br>
+			copy_fs FS SRC DST SRC_SIZE<br>
+			FS  - Variable die das Dateisystem der Quell Partition enth&auml;lt.<br>
+			SRC - Variable die die Quell Partition enth&auml;lt.<br>
+			DST - Variable die die Ziel Partition enth&auml;lt.<br>
+			SRC_SIZE - Variable die die Gr&ouml;sse, in Mebibyte, der Quell Partition enth&auml;lt.
+			Dies wird f&uuml;r die Funktion dd_gauge ben&ouml;tigt, da einige Dateisysteme
+			keine eigenen Werkzeuge f&uuml;r das kopieren besitzen und dann das Programm dd
+			benutzt wird.</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -126,10 +111,9 @@
                         <td vAlign=top><b><a name="format">format</a></b>
 			<p>format dient zum Formatieren von Blockorientierten Ger&auml;ten, wie Festplatten.
 			Zuerst wird nach den Programmen f&uuml;r die Dateisysteme gesucht. Wenn diese vorhanden sind,
-			werden sie zur Auswahl angeboten, um die Partitionen,
-			Logische Volumes oder RAID-Arrays dementsprechend zu formatieren.<br>
-			format DEVICES [ FS ]<br>
-			DEVICES - Variable die die zu formatierenden Blockger&auml;te enth&auml;lt.<br>
+			werden sie zur Auswahl angeboten, um die Partitionen, Logische Volumes oder RAID-Arrays dementsprechend zu formatieren.<br>
+			format DEVICE [ FS ]<br>
+			DEVICE - Variable die das zu formatierenden Blockger&auml;te enth&auml;lt.<br>
 			FS - Dateisystem, ist optional. Kann man mit &uuml;bergeben, wenn die Funktion
 			<a href="fs.html#formatprogs_check" target="_self">formatprogs_check</a> schon verher ausgef&uuml;hrt wurde.
 			Ansonsten ruft format diese Funktion auf.</p></td>
@@ -144,10 +128,12 @@
 			<p>&Uuml;berpr&uuml;ft, welche Formatierungswerkzeuge installiert sind. Nur die aufgez&auml;hlten
 			gehen zur Zeit. Dabei wird die Variable FM_Menue belegt.<br>
 			formatprogs_check [ -p | -s ]<br>
-			-p = &Uuml;berpr&uuml;fung auf ext2, ext3, ext4, fat32, hfs, hfsplus, jfs, linux-swap, ntfs, reiserfs, reiser4, ufs, xfs.
+			-p = &Uuml;berpr&uuml;fung auf btrfs, exfat, ext2, ext3, ext4, fat16, fat32, hfs, hfsplus, jfs,
+			linux-swap, ntfs, reiserfs, reiser4, ufsund xfs.<br> 
 			linux-swap wird nur von kwparted ben&ouml;tigt.<br>
 			-s = &Uuml;berpr&uuml;fung auf swap.<br>
-			nichts = &Uuml;berpr&uuml;fung auf ext2, ext3, ext4, fat32, hfs, hfsplus, jfs, ntfs, reiserfs, reiser4, ufs, xfs.<br>
+			nichts = &Uuml;berpr&uuml;fung auf btrfs, exfat, ext2, ext3, ext4, fat16, fat32, hfs,
+			hfsplus, jfs, ntfs, reiserfs, reiser4, ufs und xfs.<br>
 			<b><font color="darkYellow">Variable</font></b><br>
 			FM_Menue - Variable die die Namen der Dateisysteme enth&auml;lt deren Werkzeuge installiert 
 			sind. Diese sind aufbereitet f&uuml;r die Funktion <a href="sys.html#menubox" target="_blank">menubox</a>.</p></td>
@@ -160,8 +146,7 @@
                         <td></td>
                         <td vAlign=top><b><a name="mdadm_conf_scan">mdadm_conf_scan</a></b>
 			<p>Diese Funktion dient zum updaten der Konfigurationsdatei
-			des Programms mdadm (Software-RAID).<br>
-			mdadm_conf_scan</p></td>
+			des Programms mdadm (Software-RAID).</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -170,20 +155,13 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="resize_fs">resize_fs</a></b>
-			<p>Mit der Funktion resize_fs kann man die Dateisysteme von 
-			Partitionen, RAID Arrays, Logischen Volumes oder 
-			verschl&uuml;sselten Laufwerken &auml;ndern,
-			vorrausgesetzt das Dateisystem unterst&uuml;tzt das.<br>
-			resize_fs [ -l | -p | -r ] [+|-]SIZE OLD_SIZE DEVICE<br>
-			-l - LVM in der Gr&ouml;sse ver&auml;ndern.<br>
-			-p - Partitionen in der Gr&ouml;sse ver&auml;ndern.<br>
-			-r - RAID Arrays in der Gr&ouml;sse ver&auml;ndern.<br>
+			<p>Mit der Funktion resize_fs kann man die Dateisysteme von verschiedenen Laufwerken in
+			der Gr&oumml;sse anpassen, vorrausgesetzt das Dateisystem unterst&uuml;tzt das.<br>
+			resize_fs [+|-]SIZE DEVICE<br>
 			-+ - vergr&ouml;ssern.<br>
 			-- - verkleinern.<br>
-			SIZE - Gr&ouml;sse in KiloByte die dazu addiert oder entfernt werden soll.<br>
-			OLD_SIZE - alte Gr&ouml;sse des Laufwerks, zur Berechnung.<br>
-			DEVICE - Laufwerk, kann ein RAID, LV oder eine normale Partition sein.<br>
-			<b>Notiz:</b> normale Partitionen (-p) gehen nocht nicht.</p></td>
+			SIZE - Gr&ouml;sse in MebiByte die das Dateisystem besitzen soll.<br>
+			DEVICE - Laufwerk, kann ein RAID, LV, crypto_LUKS oder eine normale Partition sein.</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -221,31 +199,6 @@
 			<p>Info dar&uuml;ber, wenn kein Dateisystemtyp festgestellt werden kann.<br>
 			no_fs_type_msg DEVICE<br>
 			DEVICE - Laufwerk dessen Dateisystemtyp nicht erkannt wurde.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_space_fp_msg">no_space_fp_msg</a></b>
-			<p>Info dar&uuml;ber, dass kein Platz mehr auf dem Laufwerk ist. Lesen Sie dazu
-			die Hilfe zum Scrip kwrsync_backup.<br>
-			no_space_fp_msg [ -e DST_SIZE SRC_SIZE ]<br>
-			-e - erweiterte Fehlermeldung mit Anzeige der Laufwerksgr&ouml;ssen.<br>
-			DST_SIZE - Zielgr&ouml;sse des Laufwerks.<br>
-			SRC_SIZE - vorhandene Gr&ouml;sse des Laufwerks.<br>
-			nichts - Fehlermeldung das der Platz nicht mehr ausreicht.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="use_kwcryptsetup_msg">use_kwcryptsetup_msg</a></b>
-			<p>Info dar&uuml;ber das dieses Laufwerk verschl&uuml;sselt 
-			ist und mit dem Script <a target="_blank" href="../kwtools/sys/kwcryptsetup.html" name="kwcryptsetup">kwcryptsetup</a> bearbeitet werden muss.</p></td>
                         <td></td>
                 </tr>
                 <tr>

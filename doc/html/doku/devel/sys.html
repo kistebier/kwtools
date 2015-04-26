@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2015-03-23">
+        <meta name="date" content="2015-04-25">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -94,10 +94,12 @@
 					<a href="sys.html#check_mask" target="_self">check_mask</a><br>
 					<a href="sys.html#check_memory" target="_self">check_memory</a><br>
 					<a href="sys.html#check_number" target="_self">check_number</a><br>
+					<a href="sys.html#check_fs" target="_self">check_fs</a><br>
 					<a href="sys.html#check_size" target="_self">check_size</a><br>
 					<a href="sys.html#check_special_character" target="_self">check_special_character</a><br>
 					<a href="sys.html#compress_choice" target="_self">compress_choice</a><br>
 					<a href="sys.html#convert_drive_size" target="_self">convert_drive_size</a><br>
+					<a href="sys.html#convert_mib_size" target="_self">convert_mib_size</a><br>
 					<a href="sys.html#convert_over_size" target="_self">convert_over_size</a><br>
 					<a href="sys.html#convert_si_size" target="_self">convert_si_size</a><br>
 					<a href="sys.html#count_char_to_line" target="_self">count_char_to_line</a><br>
@@ -707,6 +709,21 @@
                         <td></td>
                 </tr>
                 <tr>
+                        <td vAlign=top colspan="3"><hr></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="check_fs">check_fs</a></b>
+			<p>Die Funktion check_fs &uuml;berpr&uuml;ft das &uuml;bergebene Laufwerk
+			darauf welches Dateisystem es besitzt. Dabei werden die util-linux >=2.16.2
+			benutzt.<br>
+			check_fs DEVICE<br>
+			DEVICE - Variable die das zu &uuml;berpr&uuml;fende Laufwerk enth&auml;lt.<br>
+			<b><font color="darkYellow">Variable</font></b><br>
+			gv_Fs - Variable die das Dateisystem enth&auml;lt.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
                         <td vAlign=top colspan="3"><br></td>
                 </tr>
                 <tr>
@@ -754,18 +771,37 @@
                         <td></td>
                         <td vAlign=top><b><a name="convert_drive_size">convert_drive_size</a></b>
 			<p>convert_drive_size rechnet alle &uuml;bergebenen Gr&ouml;ssen,
-			nach dem Bin&auml;r System (1MByte=1024KByte), in KiloByte um und umgekehrt.
-			Beim umrechnen in KiloByte muss
-			eine Masseinheit mit &uuml;bergeben werden. Dies kann von k|K|KB|Kb bis
-			z|Z|ZB|Zb-ZettaByte sein. Schaut in den Header der Funktion f&uuml;r weitere
-			Massangaben.<br>
+			nach dem Bin&auml;r System (1KibiByte=1024Byte), in Byte und umgekehrt um.
+			Beim umrechnen in Byte muss eine Masseinheit mit &uuml;bergeben werden.
+			Dies kann von kib|KiB|Kib bis zib|EiB|Eib-ExbiByte sein. Schaut in den Header
+			der Funktion f&uuml;r weitere Massangaben.<br>
 			convert_drive_size MASSEINHEIT SIZE<br>
 			convert_drive_size -i SIZE<br>
 			SIZE - Variable die den Wert besitzt der umgerechnet werden soll.<br>
 			-i - Gr&ouml;sse in eine etwas lesbarere Form umrechnen.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
-			SIZE_KB - beinhaltet die neue umgerechnete Gr&ouml;sse.<br>
-			SIZE_KB_ME - Masseinheit der umgerechneten Gr&ouml;sse.</p></td>
+			SIZE_B - beinhaltet die neue umgerechnete Gr&ouml;sse.<br>
+			SIZE_B_ME - Masseinheit der umgerechneten Gr&ouml;sse.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="convert_mib_size">convert_mib_size</a></b>
+			<p>convert_mib_size rechnet alle &uuml;bergebenen Gr&ouml;ssen,
+			nach dem Bin&auml;r System (1GibiByte=1024MebiByte), in MebiByte und umgekehrt um.
+			Beim umrechnen in MebiByte muss eine Masseinheit mit &uuml;bergeben werden.
+			Dies kann von mib|MiB|Mib bis eib|EiB|Eib-ExbiByte sein. Schaut in den Header
+			der Funktion f&uuml;r weitere Massangaben.<br>
+			convert_mib_size MASSEINHEIT SIZE<br>
+			convert_mib_size -i SIZE<br>
+			SIZE - Variable die den Wert besitzt der umgerechnet werden soll.<br>
+			-i - Gr&ouml;sse in eine etwas lesbarere Form umrechnen.<br>
+			<b><font color="darkYellow">Variablen</font></b><br>
+			SIZE_MIB - beinhaltet die neue umgerechnete Gr&ouml;sse.<br>
+			SIZE_MIB_ME - Masseinheit der umgerechneten Gr&ouml;sse.</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -791,9 +827,9 @@
                         <td></td>
                         <td vAlign=top><b><a name="convert_si_size">convert_si_size</a></b>
 			<p>convert_si_size rechnet alle &uuml;bergebenen Gr&ouml;ssen, nach dem
-			Dezimal System (1MByte=1000KByte), in KiloByte um und umgekehrt. Beim umrechnen in KiloByte muss
-			eine Masseinheit mit &uuml;bergeben werden. Dies kann von k|K|KB|Kb bis
-			z|Z|ZB|Zb-ZettaByte sein. Schaut in den Header der Funktion f&uuml;r weitere
+			Dezimal System (1MegaByte=1000Byte), in Byte und umgekehrt um. Beim umrechnen in Byte muss
+			eine Masseinheit mit &uuml;bergeben werden. Dies kann von kb|KB|Kb bis
+			eb|EB|Eb-ExaByte sein. Schaut in den Header der Funktion f&uuml;r weitere
 			Massangaben.<br>
 			convert_si_size MASSEINHEIT SIZE<br>
 			convert_si_size [ -i ] SIZE<br>
@@ -1333,8 +1369,7 @@
 			-u - mit Nachfrage Ger&auml;t aus dem Dateisystem ausbinden.<br>
 			DEVICE - Ger&auml;t welches behandelt werden soll.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
-			MOUNTPOINT - Variable die die Mountpunkte enth&auml;lt die nicht ausgebunden werden 
-			d&uuml;rfen, wie /, /lib, ....<br>
+			MOUNTPOINT - Variable die die Mountpunkte enth&auml;lt.<br>
 			MOUNT - Wenn beim Einbinden des Dateisystems ein Fehler passiert wird die variable MOUNT mit 
 			"no" belegt und es kommt eine Fehlernachricht dazu.<br>
 			Oder beim Mount check wird die Variable mit &quot;no&quot; oder &quot;yes&quot;,

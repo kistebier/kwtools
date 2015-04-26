@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2015-04-04">
+        <meta name="date" content="2015-04-26">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -55,23 +55,30 @@
 			<td><h4>Hardwarefunktionen</h4><p>
 			<a href="hw.html#cdrom" target="_self">cdrom</a><br>
 			<a href="hw.html#char_device_anzeige" target="_self">char_device_anzeige</a><br>
+			<a href="hw.html#check_crypt_map_dev" target="_self">check_crypt_map_dev</a><br>
 			<a href="hw.html#disk" target="_self">disk</a><br>
 			<a href="hw.html#floppy" target="_self">floppy</a><br>
 			<a href="hw.html#limit_size_conf" target="_self">limit_size_conf</a><br>
 			<a href="hw.html#lv" target="_self">lv</a><br>
 			<a href="hw.html#lv_free_size" target="_self">lv_free_size</a><br>
+			<a href="hw.html#lv_resize" target="_self">lv_resize</a><br>
 			<a href="hw.html#lvm_version" target="_self">lvm_version</a><br>
 			<a href="hw.html#netcard" target="_self">netcard</a><br>
 			<a href="hw.html#parse_uuid_label" target="_self">parse_uuid_label</a><br>
 			<a href="hw.html#part_choice" target="_self">part_choice</a><br>
-			<a href="hw.html#part_md_lose" target="_self">prt_md_lose</a><br>
+			<a href="hw.html#part_md_lose" target="_self">part_md_lose</a><br>
 			<a href="hw.html#partdb" target="_self">partdb</a><br>
+			<a href="hw.html#part_resize" target="_self">part_resize</a><br>
 			<a href="hw.html#raid" target="_self">raid</a><br>
 			<a href="hw.html#raid_anz" target="_self">raid_anz</a><br>
 			<a href="hw.html#raid_enlarge_dev" target="_self">raid_enlarge_dev</a><br>
 			<a href="hw.html#raid_filter" target="_self">raid_filter</a><br>
 			<a href="hw.html#raid_is_level" target="_self">raid_is_level</a><br>
 			<a href="hw.html#raid_reduce_dev" target="_self">raid_reduce_dev</a><br>
+			<a href="hw.html#raid_resize" target="_self">raid_resize</a><br>
+			<a href="hw.html#raid_search_part_state" target="_self">raid_search_part_state</a><br>
+			<a href="hw.html#resize_cryptdisk" target="_self">resize_cryptdisk</a><br>
+			<a href="hw.html#resize_cryptdisk_stop" target="_self">resize_cryptdisk_stop</a><br>
 			<a href="hw.html#search_cryptdev" target="_self">search_cryptdev</a><br>
 			<a href="hw.html#vg_display" target="_self">vg_display</a><br>
 			<a href="hw.html#vg_free_size" target="_self">vg_free_size</a></p>
@@ -101,8 +108,8 @@
 			man eine kernel Release >=2.6.0 und hwinfo.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			CD_DEV - CD/DVD Laufwerke<br>
-			CD_DEV_E - CD/DVD Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
-			CD_DEV_M - CD/DVD Laufwerksanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a></p></td>
+			CD_DEV_E - CD/DVD Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+			CD_DEV_M - CD/DVD Laufwerksanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -117,7 +124,25 @@
 			<b>Notiz: </b>Zur Zeit gehen nur diese Ger&auml;te, z.B. wird kein Mausger&auml;t angezeigt. 
 			Andere Ger&auml;te werden von den Scripts bisher nicht gebraucht.<br>
 			<b><font color="darkYellow">Variable</font></b><br>
-			CHAR_ARRAY - Charakter Device Anzeige fuer die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a></p></td>
+			CHAR_ARRAY - Charakter Device Anzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="check_crypt_map_dev">check_crypt_map_dev</a></b>
+			<p>Die Funktion check_crypt_map_dev pr&uuml;ft beim Script kwcryptsetup ein Laufwerk
+			auf UUID und LABEL und belegt darauf hin die Variable MAP_DEV mit dem richtigen Pfad zum
+    		Device. Wird von den Funktionen
+			<a target="_self" href="hw.html#lv_resize">lv_resize</a>,
+			<a target="_self" href="hw.html#part_resize">part_resize</a> und
+			<a target="_self" href="hw.html#raid_resize">raid_resize</a> benutzt.<br>
+			check_crypt_map_dev DEVICE<br>
+			DEVICE - Laufwerk welches auf UUID und Label &uuml;berpr&uuml;ft werden soll<br>
+			<b><font color="darkYellow">Variable</font></b><br>
+			MAP_DEV - Variable die die richtige Ger&auml;tedatei enth&auml;lt</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -126,16 +151,19 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><b><a name="disk">disk</a></b>
-			<p>Hier werden alle Festplatten, ATAPI, SCSI, wie SATA herausgesucht, wenn kernel
-			>=2.6.0 l&auml;uft und hwinfo installiert ist.
-			Es wird alles in den Variablen DISK_DEV, DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP
-			und FP_INFO gespeichert.<br>
+							<p>Hier werden alle Festplatten herausgesucht, wenn kernel >=2.6.0 l&auml;uft
+							und hwinfo installiert ist. Es wird alles in den Variablen DISK_DEV,
+							DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP, DISK_DEV_CAP_BYTE, DISK_DEV_NAME,
+							FP_INFO und HW_SECTOR_SIZE gespeichert.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			DISK_DEV - Festplatten<br>
-			DISK_DEV_E - Festplattenanzeige fuer die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
-			DISK_DEV_M - Festplattenanzeige fuer die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a><br>
-			DISK_DEV_CAP - Gr&ouml;sse der Festplatte<br>
-			FP_INFO - Festplatteninformation, Modell und Hersteller</p></td>
+			DISK_DEV_E - Festplattenanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+			DISK_DEV_M - Festplattenanzeige fuer die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a><br>
+			DISK_DEV_CAP - Gr&ouml;sse der Festplatte in Sektoren<br>
+			DISK_DEV_CAP_BYTE - Gr&ouml;sse der Festplatte in Byte<br>
+			DISK_DEV_NAME - Festplattenname in folgender Syntax: Modell-Gr&ouml;sse<br>
+			FP_INFO - Festplatteninformation, Festplatte und Modell<br>
+			HW_SECTOR_SIZE - Sektorgr&ouml;sse der Festplatte</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -150,9 +178,9 @@
 			FLOPPY_DEV_M gespeichert.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			FLOPPY_DEV - Laufwerke<br>
-			FLOPPY_DEV_E - Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
+			FLOPPY_DEV_E - Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
 			FLOPPY_DEV_M - Laufwerksanzeige f&uuml;r die Funktionen
-			<a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a></p></td>
+			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -185,8 +213,8 @@
 			sie in den Array's LV, LV_E und LV_M, um sie zur Auswahl anzubieten.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			LV - Logische Laufwerke<br>
-			LV_E - LV'sanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a><br>
-			LV_M - LV'sanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a></p></td>
+			LV_E - LV'sanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+			LV_M - LV'sanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -208,11 +236,28 @@
                 </tr>
                 <tr>
                         <td></td>
+                        <td vAlign=top><b><a name="lv_resize">lv_resize</a></b>
+			<p>Diese Funktion verg&ouml;ssert und verkleinert Logische Volumes und das dazugeh&ouml;rige 
+			Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
+			vom Script
+			<a target="_blank" href="../kwtools/sys/kwlvm.html#kwlvm">kwlvm</a> benutzt.<br>
+			lv_resize [+|-]SIZE LV<br>
+			+ - vergr&ouml;ssern<br>
+			- - verkleinern<br>
+			SIZE - Gr&ouml;sse die das Logische Volume besitzen soll in Mebibyte<br>
+			LV - Logisches Volume welches verkleinert oder vergr&ouml;ssert werden soll</p></td>
+					<td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
                         <td vAlign=top><b><a name="lvm_version">lvm_version</a></b>
 			<p>Pr&uuml;ft die Version von lvm (1|2) und laedt die 
 			dementsprechenden Kernel Module. Desweiteren scannt sie 
 			gleich nach vorhandenen Volume Groups und aktiviert diese.
-			Ben&ouml;tigt die Funktion <a target="_blank" href="sys.html" name="load_module">load_module</a>.<br>
+			Ben&ouml;tigt die Funktion <a target="_blank" href="sys.html#load_module">load_module</a>.<br>
 			lvm_version [ -q ]<br>
 			-q - keine Fehlermeldung und kein Abbruch.<br>
 			<b><font color="darkYellow">Variable</font></b><br>
@@ -228,12 +273,12 @@
                         <td vAlign=top><b><a name="netcard">netcard</a></b>
 			<p>Hier werden alle Netzwerkkarten die mit Ethernet, W-lan und
 			Tokenring zu tun haben gesucht 	und in der Variablen DEVICE_LIST
-			gespeichert. Diese Liste kann man mit der Funktion "<a target="_blank" href="sys.html" name="menubox">menubox</a>" zur
+			gespeichert. Diese Liste kann man mit der Funktion "<a target="_blank" href="sys.html#menubox">menubox</a>" zur
 			Auswahl anbieten. Dabei wird in /proc/net/dev nachgeschaut. Die
 			Variable besteht aus NetzkarteNr_Kartentyp_Mac-Adresse_Treiber.
 			Als Programm kommt unter anderem ethtool zum Einstaz.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
-			DEVICE_LIST - Netzkartenanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a></p></td>
+			DEVICE_LIST - Netzkartenanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
 			<td></td>
                 </tr>
                 <tr>
@@ -270,9 +315,9 @@
 			<p>Partitionsauswahl: Man muss vorher die Funktionen <a target="_self" href="hw.html#disk">disk</a> und <a target="_self" href="hw.html#partdb">partdb</a>
 			ausf&uuml;hren, dann kann man Partitionen ausw&auml;hlen.<br>
 			part_choice [ -m | -s ] $PART_DEVICES<br>
-			-m = mehrfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html" name="checklist">checklist</a>.<br>
-			-s = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html" name="radiolist">radiolist</a>.<br>
-			nichts = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br>
+			-m = mehrfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.htm#checklist">checklist</a>.<br>
+			-s = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+			nichts = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
 			nichts = normale Auswahl (/dev/hda1)<br>
 			<b><font color="darkYellow">Variable</font></b><br>
 			WERT - beinhaltet den/die ausgew&auml;hlten Wert(e).</p></td>
@@ -291,7 +336,7 @@
 			ausw&auml;hlen.<br>
 			part_md_lose<br>
 			<b><font color="darkYellow">Variable</font></b><br>
-			Part_Md_Lose_E - beinhaltet die Partitionen f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.</p></td>
+			Part_Md_Lose_E - beinhaltet die Partitionen f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
 			<td></td>
                 </tr>
                 <tr>
@@ -303,22 +348,44 @@
 			<p>Sucht nach Partitionen auf den Festplatten und speichert
 			sie in verschiedenen Arrays, damit man sie zur Auswahl anbieten kann. Dabei
 			wird das Programm parted benutzt.<br>
-			partdb [ "$DISK" | -i "TYPE TYPE ..." ]<br>
-			partdb "$DISK" = nur diese Festplatte nach Linux und Swap Partitionen
+			partdb [ DISK | DISK "TYP TYP ..." ]<br>
+			partdb [  -i "TYP TYP ..." ]<br>
+			partdb DISK = nur diese Festplatte nach Linux -und Swap Partitionen
 			durchsuchen.<br>
-			partdb -i "$TYPE" = nach Partitionstyp(en) suchen, auf allen
-			Festplatten. TYPE kann dabei ein Flag (lvm,raid) oder ein Dateisystem (fat32)
+			partdb DISK "TYP" = nur diese Festplatte nach bestimmten Partitionstyp(en)
+			durchsuchen.<br>
+			partdb -i "TYP" = nach Partitionstyp(en) suchen, auf allen
+			Festplatten. TYP kann dabei ein Flag (lvm,raid) oder ein Dateisystem (fat32)
 			sein.<br>
-			partdb = alle Linux Partitionen suchen, auf allen Festplatten.<br>
+			partdb = alle Partitionen suchen auf allen Festplatten suchen ausser RAID, LVM und
+			crypto_LUKS.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			PART - Partionen.<br>
-			PART_E - Partitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br>
-			PART_M - Partitionsanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.<br>
+			PART_E - Partitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+			PART_M - Partitionsanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
 			SWAP_DEV - Swappartitionen.<br>
-			SWAP_DEV_E - Swappartitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br> 
+			SWAP_DEV_E - Swappartitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br> 
 			SWAP_DEV_M - Swappartitionsanzeige f&uuml;r die Funktionen
-			<a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.</p></td>
+			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
                         <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="part_resize">part_resize</a></b>
+			<p>Diese Funktion verg&ouml;ssert und verkleinert Partitionen und das dazugeh&ouml;rige 
+			Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
+			vom Script
+			<a target="_blank" href="../kwtools/sys/kwparted.html#kwparted">kwparted</a> benutzt.<br>
+			part_resize [+|-]SIZE ENDSIZE PARTITION<br>
+			+ - vergr&ouml;ssern<br>
+			- - verkleinern<br>
+			SIZE - Gr&ouml;sse die die Partition besitzen soll in Mebibyte<br>
+			ENDSIZE - Gr&ouml;sse die die Partition am Ende besitzen soll in Mebibyte<br>
+			PARTITION - Partition die verkleinert oder vergr&ouml;ssert werden soll</p></td>
+					<td></td>
                 </tr>
                 <tr>
                         <td vAlign=top colspan="3"><br></td>
@@ -331,9 +398,9 @@
 			und MD_PART_M. Zum Einsatz kommt das Programm mdadm.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			MD_PART - RAID Arrays.<br>
-			MD_PART_E - RAID Arraysanzeige fuer die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br>
+			MD_PART_E - RAID Arraysanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
 			MD_PART_M - RAID Arraysanzeige fuer die Funktionen
-			<a target="_blank" href="sys.html" name="checklist">checklist</a>/<a target="_blank" href="sys.html" name="radiolist">radiolist</a>.</p></td>
+			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -341,7 +408,7 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td vAlign=top><b><a name="raid">raid_anz</a></b>
+                        <td vAlign=top><b><a name="raid_anz">raid_anz</a></b>
 			<p>Die Funktion ermittelt die Anzahl der sich im RAID Array 
 			befindenden Laufwerke.<br>
 			Beispiel:<br>
@@ -356,7 +423,7 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td vAlign=top><b><a name="raid">raid_enlarge_dev</a></b>
+                        <td vAlign=top><b><a name="raid_enlarge_dev">raid_enlarge_dev</a></b>
 			<p>Diese Funktion vergr&ouml;ssert ein RAID Array, wenn es 
 			eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
 			Laufwerk addiert und das dazugeh&ouml;rige Dateisystem,
@@ -385,7 +452,7 @@
 			LVM unterst&uuml;tzt.<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			R_DEVS - RAID Arrays.<br>
-			R_DEVS_E - RAID Arrays f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.</p></td>
+			R_DEVS_E - RAID Arrays f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -393,7 +460,7 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td vAlign=top><b><a name="raid">raid_is_level</a></b>
+                        <td vAlign=top><b><a name="raid_is_level">raid_is_level</a></b>
 			<p>Diese Funktion ermittelt das Level eines RAID Arrays.<br>
 			Beispiel:<br>
 			VAR=$(raid_is_level $ARRAY)<br>
@@ -407,7 +474,7 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td vAlign=top><b><a name="raid">raid_reduce_dev</a></b>
+                        <td vAlign=top><b><a name="raid_reduce_dev">raid_reduce_dev</a></b>
 			<p>Diese Funktion verkleinert ein RAID Array, wenn es 
 			eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
 			Laufwerk entfernt und das dazugeh&ouml;rige Dateisystem,
@@ -416,7 +483,7 @@
 			dazugeh&ouml;rigen RAID Partitionen. Falls das Array nicht 
 			mehr gen&uuml;gend Partitionen zum entfernen besitzt kommt
 			eine Meldung dar&uuml;ber. Diese Funktion wird
-			von den Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html" name="kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html" name="kwraid" target="_blank">kwraid</a> genutzt.<br>
+			von den Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html#kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html#kwraid" target="_blank">kwraid</a> genutzt.<br>
 			raid_reduce_dev ARRAY</p></td>
                         <td></td>
                 </tr>
@@ -425,15 +492,57 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td vAlign=top><b><a name="raid">raid_search_part_state</a></b>
+                        <td vAlign=top><b><a name="raid_resize">raid_resize</a></b>
+			<p>Die Funktion raid_resize ver&auml;ndert die Gr&ouml;se von einem RAID Array.
+			Diese Funktion wird von den Funktionen
+			<a target="_self" href="hw.html#raid_enlarge_dev">raid_enlarge_dev</a> und
+			<a target="_self" href="hw.html#raid_reduce_dev">raid_reduce_dev</a>
+			benutzt.<br>
+			raid_resize [+|-]SIZE ARRAY DEVICE<br>
+			+ - vergr&ouml;ssern<br>
+			- - verkleinern<br>
+			SIZE - neue Gr&ouml;sse des Array in Mebibyte<br>
+			ARRAY - RAID Array welches bearbeitet werden soll<br>
+			DEVICE - Partition die entfernt oder hinzugef&uuml;gt werden soll</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="raid_search_part_state">raid_search_part_state</a></b>
 			<p>Diese Funktion sucht nach dem Status der einzelnen, zum 
 			RAID Array, geh&ouml;rigen Laufwerke und speichert diese mit 
 			ihrem Status in einem Array.<br>
 			raid_search_part_state ARRAY<br>
 			<b><font color="darkYellow">Variable</font></b><br>
 			PARTS_STATE - beinhaltet die Laufwerke des Array mit Status
-			f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.
-			</p></td>
+			f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="resize_cryptdisk">resize_cryptdisk</a></b>
+			<p>Die Funktion resize_cryptdisk startet ein verschl&uml;sseltes Laufwerk und passt
+			dessen Gr&ouml;se an.<br>
+			resize_cryptdisk DEVICE<br>
+			DEVICE - Laufwerk welches gestartet und angepasst werden soll</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="resize_cryptdisk_stop">resize_cryptdisk_stop</a></b>
+			<p>Die Funktion resize_cryptdisk_stop stoppt ein verschl&uml;sseltes Laufwerk.
+			dessen Gr&ouml;se an.<br>
+			resize_cryptdisk_stop DEVICE<br>
+			DEVICE - Laufwerk welches gestoppt werden soll</p></td>
                         <td></td>
                 </tr>
                 <tr>
@@ -452,9 +561,9 @@
 			<b><font color="darkYellow">Variable</font></b><br>
 			MAP_DEV_E - Array mit den verschl&uuml;sselten Laufwerken.<br>
 			MAP_DEV - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
-			Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a>.<br>
+			Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
 			MAP_DEV_M - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
-			Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a> und <a target="_blank" href="sys.html" name="radiolist">radiolist</a>.</p></td>
+			Funktionen <a target="_blank" href="sys.html#checklist">checklist</a> und <a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
 			<td></td>
                 </tr>
                 <tr>
@@ -468,8 +577,8 @@
 			vg_display<br>
 			<b><font color="darkYellow">Variablen</font></b><br>
 			VG - Variable die die VGs beinhaltet.<br>
-			VG_E - Variable die die VGs f&uuml;r die Funktion <a target="_blank" href="sys.html" name="menubox">menubox</a> beinhaltet.<br>
-			VG_M - Variable die die VGs f&uuml;r die Funktionen <a target="_blank" href="sys.html" name="checklist">checklist</a> und <a target="_blank" href="sys.html" name="radiolist">radiolist</a> beinhaltet.</p></td>
+			VG_E - Variable die die VGs f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a> beinhaltet.<br>
+			VG_M - Variable die die VGs f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a> und <a target="_blank" href="sys.html#radiolist">radiolist</a> beinhaltet.</p></td>
                         <td></td>
                 </tr>
                 <tr>
