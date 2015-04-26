@@ -4,41 +4,6 @@
 #
 fs_conf() {
 	###### Dateisystem Funktionen ###### {{{
-	# Funktion (check_crypt_map_dev), prueft beim Script# {{{
-	# kwcryptsetup auf UUID und LABEL und belegt darauf
-	# hin die Variable MAP_DEV mit dem richtigen Pfad zum
-	# Device.
-	#
-	# Das Script kwcryptsetup benutzt UUID/LABEL
-	# und DEVICE.
-	#
-	check_crypt_map_dev() {
-		unset -- MAP_DEV
-		if [[ ${#argv} == 1 ]] ; then
-			local Dev Tmp
-			Dev="$1"
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				Uuid="`blkid -o value -s UUID -p $Dev`"
-				Label="`blkid -o value -s LABEL -p $Dev`"
-				if [ -n "$Uuid" -a -z "$Tmp" ] ; then
-					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*UUID=${Uuid}*}##(s#)\#}}[1]}
-				fi
-				if [ -n "$Label" -a -z "$Tmp" ] ; then
-					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*LABEL=${Label}*}##(s#)\#}}[1]}
-				fi
-				if [ -z "$Tmp" ] ; then
-					Tmp=${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${Dev}*}##(s#)\#}}[1]}
-				fi
-				MAP_DEV="/dev/mapper/${Tmp}"
-				#MAP_DEV=/dev/mapper/${${(s: :)${(R)${(M)${(f)"$(< /etc/crypttab)"}##*${DEV}*}##(s#)\#}}[1]}
-			else
-				MAP_DEV="$Dev"
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	## }}}
 	# Funktion (copy_fs), kopiert ein Dateisystem von einer Partition# {{{
 	# auf eine andere.
 	#
@@ -46,7 +11,7 @@ fs_conf() {
 	# FS  - Dateisystem des Quell Laufwerks
 	# SRC - Quell Laufwerks
 	# DST - Ziel Laufwerks
-	# SRC_SIZE - Groesse des Quell Dateisystem in Byte
+	# SRC_SIZE - Groesse des Quell Dateisystem in MebiByte
 	# SRC_SIZE wird fuer die Anzeige mittels "dd_gauge" benoetigt.
 	#
 	copy_fs() {
@@ -321,7 +286,7 @@ fs_conf() {
 	# kernel_release wird von der Funktion script_init geladen und wird von
 	# load_module benoetigt.
 	#
-	# usage: format "$Device-Array" [ FS ]
+	# usage: format DEVICE [ FS ]
 	# FS - optional das Filesystem mit uebergeben, wenn schon vorher bekannt
 	#      durch die Funktion formatprogs_check.
 	format() {
@@ -577,7 +542,6 @@ fs_conf() {
 				# Die Variable FM_Menue wird vorher von der Funktion formatprogs_check belegt.
 				#
 				if [ -n "${FM_Menue[1]}" ] ; then
-					kernel_release
 					FTITLE=$(gettext 'Formatierung')
 					FMSG=$(gettext 'Waehlen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
 					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
@@ -669,275 +633,6 @@ fs_conf() {
 			print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
 			>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
 			mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
-		fi
-	}
-	#}}}
-	# Funktion (lv_resize), LVs vergroessern/verkleinern{{{
-		#
-		# usage: lv_resize [+|-]SIZE DEVICE
-		# + - vergroessern
-		# - - verkleinern
-		# SIZE - neue Groesse in MebiByte
-		# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
-		#          werden soll
-		#
-		lv_resize() {
-		if [[ ${#argv} == 2 ]] ; then
-			local DEV New_Size
-			New_Size="$1"
-			DEV="$2"
-			# DEV auf UUID/LABEL pruefen
-			check_crypt_map_dev "$DEV"
-			# Dateisystem ausbinden
-			mount_check -a "$MAP_DEV"
-			if [ "$U_MOUNT" = yes ] ; then
-				if [ "${New_Size%%[0-9]*}" = + ] ; then
-					# Falls dieses Laufwerk verschluesselt ist, stoppen.
-					resize_cryptdisk_stop $MAP_DEV
-					# LV vergroessern
-					lvextend -L${New_Size#+}M $DEV 2>&1 | \
-						progressbox $gv_Enlarge $MAP_DEV || prog_failure
-					# Falls dieses Laufwerk verschluesselt war, 
-					# starten und Groesse anpassen.
-					resize_cryptdisk $MAP_DEV
-					# Dateisystem ext* vergroessern
-					resize_fs $New_Size $MAP_DEV
-				else
-					# Dateisystem ext* reduzieren
-					resize_fs $New_Size $MAP_DEV
-					# Falls dieses Laufwerk verschluesselt ist, stoppen.
-					resize_cryptdisk_stop $MAP_DEV
-					# LV reduzieren
-					echo y | lvreduce -L${New_Size#-}M $DEV 2>&1 | \
-						progressbox $gv_Reduce $MAP_DEV || prog_failure
-					# Falls dieses Laufwerk verschluesselt war, 
-					# starten und Groesse anpassen.
-					resize_cryptdisk $MAP_DEV
-				fi
-			fi
-		else
-			no_para_msg $0
-		fi
-		}
-		#}}}
-	# Funktion (part_resize), eine Partition vergroessern/verkleinern{{{
-	#
-	# usage: part_resize [+|-]SIZE ENDSIZE PARTITION
-	#
-	# + - vergroessern
-	# - - verkleinern
-	# SIZE - neue Groesse der Partition in MiB
-	# ENDSIZE - neue Groesse der Partition in MiB
-	# PARTITION - Partition die vergroessert/verkleinert werden soll
-	#
-	part_resize() {
-		if [[ ${#argv} == 3 ]] ; then
-			local End_Size New_Size DEV
-			New_Size="$1"
-			End_Size="$2"
-			DEV="$3"
-			# DEV auf UUID/LABEL pruefen
-			check_crypt_map_dev "$DEV"
-			if [ -n "$MAP_DEV" ] ; then
-				# Laufwerk umounten
-				mount_check -a "$MAP_DEV"
-				if [ "$U_MOUNT" = yes ] ; then
-					if [ "${New_Size%%[0-9]*}" = + ] ; then
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# Partition vergroessern
-						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
-							${DEV##*[a-z]} $End_Size || prog_failure
-						# Dem Kernel die neue Partitionstabelle bekanntgeben
-						partprobe ${DEV%%[0-9]*}
-						sleep 3
-						# Falls dieses Laufwerk verschluesselt war, starten und
-						# Groesse anpassen.
-						resize_cryptdisk "$MAP_DEV"
-						# Dateisystem vergroessern
-						resize_fs $New_Size $MAP_DEV
-					else
-						# Dateisystem verkleinern
-						resize_fs $New_Size $MAP_DEV
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop $MAP_DEV
-						# Partition verkleinern
-						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
-							${DEV##*[a-z]} $End_Size || prog_failure
-						# Dem Kernel die neue Partitionstabelle bekanntgeben
-						partprobe ${DEV%%[0-9]*}
-						sleep 3
-						# Falls dieses Laufwerk verschluesselt war, starten und
-						# Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
-					fi
-				fi
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	#}}}
-	# Funktion (raid_resize), RAID Laufwerke vergroessern/verkleinern{{{
-	#
-	# usage: raid_resize [+|-]SIZE DEVICE OTHER_DEVICE
-	#
-	# + - vergroessern
-	# - - verkleinern
-	# SIZE - neue Groesse des RAID Array in MiB
-	# DEVICE - RAID Array
-	# OTHER_DEVICE - Laufwerk das in/aus dem RAID Array soll
-	#
-	####################################
-	# TODO: Was ist mit BREAK=2?
-	raid_resize() {
-		if [[ ${#argv} == 3 ]] ; then
-			local New_Size DEV O_DEV
-			New_Size="$1"
-			DEV="$2"
-			O_DEV="$3"
-			# DEV auf UUID/LABEL pruefen
-			check_crypt_map_dev $DEV
-			# RAID Dateisystem vergroessern/verkleinern
-			# Funktion (raid_add), hinzufuegen eines Laufwerks# {{{
-			raid_add() {
-				if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-					# RAID ARRAY vergroessern
-					# Laufwerk addieren
-					# -a - addieren
-					mdadm $DEV -a $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# Laufwerksanzahl heraus finden
-					RAID_ANZ=$(raid_anz $DEV)
-					# um 1 hoeher zaehlen da das addierte device
-					# erstmal eine Sparedevice ist.
-					(( RAID_ANZ++ ))
-					# Array vergroessern
-					# -G - grow
-					# -n - Laufwerksanzahl
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
-						(BREAK=2 ; prog_failure)
-					sleep 1
-					# Array vergroessern
-					mdadm $RAIDDEV -G --array-size=${New_Size#+}M >/dev/null || \
-						(BREAK=2 ; prog_failure)
-					# Fortschrittsbalken
-					raid_gauge
-				else
-					# RAID ARRAY vergroessern
-					# Laufwerk addieren
-					# -a - addieren
-					mdadm $DEV -a $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# Laufwerksanzahl heraus finden
-					RAID_ANZ=$(raid_anz $DEV)
-					# um 1 hoeher zaehlen da das addierte device
-					# erstmal eine Sparedevice ist.
-					(( RAID_ANZ++ ))
-					# Array vergroessern
-					# -G - grow
-					# -n - Laufwerksanzahl
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
-						(BREAK=2 ; prog_failure)
-					sleep 1
-					# Fortschrittsbalken
-					raid_gauge
-				fi
-			}
-			## }}}
-			# Funktion (raid_minus), entfernen eines Laufwerks# {{{
-			raid_minus() {
-				if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-					# RAID ARRAY reduzieren
-					# Laufwerk entfernen
-					# -f - als faulty markieren
-					# -r - entfernen
-					mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# sleep wird benoetigt, da das faulty setzen
-					# an Zeit braucht.
-					sleep 1
-					# entfernen
-					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# Array verkleinern
-					# -G - grow
-					mdadm $DEV -G --array-size=${New_Size#-}M >/dev/null || \
-						(BREAK=2 ; prog_failure)
-					sleep 1
-					# Array verkleinern/anpassen
-					RAID_ANZ=$(raid_anz $DEV)
-					(( RAID_ANZ-- ))
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
-					# Fortschrittsbalken
-					raid_gauge
-				else
-					# RAID ARRAY reduzieren
-					mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# sleep wird benoetigt, da das faulty setzen
-					# an Zeit braucht.
-					sleep 1
-					# entfernen
-					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					# Array verkleinern/anpassen
-					RAID_ANZ=$(raid_anz $DEV)
-					(( RAID_ANZ-- ))
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
-						(BREAK=2 ; prog_failure)
-					# Fortschrittsbalken
-					raid_gauge
-				fi
-			}
-			## }}}
-		# Dateisystem ausbinden
-			mount_check -a "$MAP_DEV"
-			if [ "$U_MOUNT" = yes ] ; then
-				if [ "${New_Size%%[0-9]*}" = + ] ; then
-					# Ist das Raidlevel >1 muss die Dateisystemgroesse
-					# eingestellt werden, bei Level 1 (Spiegel) ist sie
-					# immer gleich gross.
-					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# RAID ARRAY vorbereiten/Laufwerk addieren.
-						raid_add
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
-						# Dateisystem vergroessern
-						resize_fs $New_Size $MAP_DEV
-					else
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# Raid-Array vorbereiten/Laufwerk addieren.
-						raid_add
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
-					fi
-				else
-					# Ist das Raidlevel >1 muss die Dateisystemgroesse
-					# eingestellt werden, bei Level 1 (Spiegel) ist sie
-					# immer gleich gross.
-					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-						# Dateisystem verkleinern
-						resize_fs $New_Size $MAP_DEV
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# Raid-Array vorbereiten/Laufwerk reduzieren.
-						raid_minus
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
-					else
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# Raid-Array vorbereiten/Laufwerk reduzieren.
-						raid_minus
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
-					fi
-				fi
-			fi
-		else
-			no_para_msg $0
 		fi
 	}
 	#}}}
@@ -1192,34 +887,6 @@ fs_conf() {
 		fi
 	}
 	## }}}
-	# Funktion (resize_cryptdisk)# {{{
-	resize_cryptdisk() {
-		if [[ ${#argv} == 1 ]] ; then
-			local Dev
-			Dev="$1"
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				# Cryptdisk starten/verkleinern/vergroessern
-				cryptdisk_start -r "${Dev##*/}"
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	## }}}
-	# Funktion (resize_cryptdisk_stop)# {{{
-	resize_cryptdisk_stop() {
-		if [[ ${#argv} == 1 ]] ; then
-			local Dev
-			Dev="$1"
-			if [ "$gv_ScriptName" = kwcryptsetup ] ; then
-				# Cryptdisk stoppen
-				cryptdisk_stop -c "${Dev##*/}"
-			fi
-		else
-			no_para_msg $0
-		fi
-	}
-	## }}}
 ## }}}
 	###### Dateisystem Nachrichten ###### {{{
 	# Funktion no_copy_fs_msg# {{{
@@ -1266,41 +933,6 @@ fs_conf() {
 		fi
 	}
 	## }}}
-	# Funktion no_space_fp_msg{{{
-	#
-	# usage: no_space_fp_msg [ -e DST_SIZE SRC_SIZE ]
-	# -e - erweiterte Fehlermeldung mit Anzeige der Laufwerksgroessen.
-	# DST_SIZE - Zielgroesse des Laufwerks.
-	# SRC_SIZE - vorhandene Groesse des Laufwerks.<br>
-	# nichts - Fehlermeldung das der Platz nicht mehr ausreicht.
-	#
-	no_space_fp_msg() {
-		if [ "$#" -eq 3 ] ; then
-			local Opt Tmp Tmp1
-			unset -- Opt Tmp Tmp1
-			Opt="$1"
-			Tmp="$2"
-			Tmp1="$3"
-			case "$Opt" in
-				-e)
-					# erweiterte Meldung
-					if [ -n "$Tmp" -a -n "$Tmp1" ] ; then
-						MSG=$(gettext 'Die Groesse ($Tmp) ueberschreitet den noch zu vergebenden Plattenplatz (${Tmp1}Kb).')
-						msgbox "$gv_Attention" "$MSG"
-					else
-						no_para_msg $0
-					fi
-					;;
-				*)
-					no_para_msg $0
-					;;
-			esac
-		else
-			MSG=$(gettext 'Es ist nicht mehr genug Platz vorhanden.')
-			msgbox "$gv_Attention" "$MSG"
-		fi
-	}
-	#}}}
 	## }}}
 }
 ## }}}
