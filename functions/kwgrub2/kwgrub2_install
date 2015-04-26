@@ -76,7 +76,7 @@ kwgrub2_install() {
 								esac
 							done
 						else
-							MSG=$(gettext 'Es sind keine Festplatten mit dem Partitionstabellentyp msdos vorhanden.')
+							MSG=$(gettext 'Es sind keine Festplatten mit dem Partitionstabellentyp msdos oder gpt vorhanden. Bei Festplatten mit dem Partitionstabellentyp gpt muss eine bios_grub Partition vorhanden sein.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 						#}}}
@@ -115,7 +115,8 @@ kwgrub2_install() {
 								unset -- GRUB_DISKS
 							fi
 						else
-							no_part_msg
+							MSG=$(gettext 'Es sind keine Partitionen fuer grub2 vorhanden in die er installiert werden koennte.')
+							msgbox "$gv_Info" "$MSG"
 						fi
 						#}}}
 						install_grub_menue $lv_Part
