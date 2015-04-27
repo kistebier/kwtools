@@ -3980,7 +3980,7 @@ file_choice() {
 	#
 	# benoetigt die Function os_check
 	#
-	# usage: if_conf_file "$OS" (auth|grub2|init|initrc|initrd|net|nisclient|ntp|proxy|raid)
+	# usage: if_conf_file "$OS" (dhcp|grub2|init|initrc|net|nisclient|ntp|proxy|raid)
 	#
 	if_conf_file() {
 		if [ "$#" -ge 2 ] ; then
@@ -4120,7 +4120,7 @@ file_choice() {
 							;;
 						dhcp)
 							# Leases Verzeichnis fuer dhcp.# {{{
-							DHCLIENT_LEASES_DIR=/var/lib/dhcp3
+							DHCLIENT_LEASES_DIR=/var/lib/dhcp
 							if [ ! -d "$DHCLIENT_LEASES_DIR" ] ; then
 								create_file -d "$DHCLIENT_LEASES_DIR"
 							fi
@@ -4171,31 +4171,6 @@ file_choice() {
 									rm -f /usr/sbin/rc${INIT_SCRIPT} &>/dev/null
 									${INITD_PATH}/${INIT_SCRIPT} stop &>/dev/null
 								fi
-							fi
-							#}}}
-							;;
-						initrd)
-							# Einstellung des Formats fuer file_filter bei initrd, memtest und Kernel{{{
-							#
-							File=${${${(M)$(file -v 2>&1)[(r)file*]}#*-}/./}
-							if [ "$File" -ge 417 ] ; then
-								IF_MEMTEST="Linux x86 kernel"
-								IF_INITRD[1]="Linux Compressed ROM File System data"
-								IF_INITRD[2]="gzip compressed data, from Unix"
-								IF_KERNEL[1]="Linux kernel x86 boot executable RO-rootFS"
-								IF_KERNEL[2]="${IF_INITRD[2]}"
-							elif [ "$File" -ge 412 ] ; then
-								IF_MEMTEST="Linux x86 kernel"
-								IF_INITRD[1]="gzip compressed data, from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="Linux kernel x86 boot"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-							else
-								IF_MEMTEST="x86 boot sector"
-								IF_INITRD[1]="Linux Compressed ROM File System data"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="x86 boot sector"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
 							fi
 							#}}}
 							;;
@@ -4277,24 +4252,6 @@ file_choice() {
 							GRUB_LIBDIR="/usr/lib/grub2"
 							## }}}
 							;;
-						initrd)
-							# Einstellung des Formats fuer file_filter bei initrd, memtest und Kernel# {{{
-							File=${${${(M)$(file -v 2>&1)[(r)file*]}#*-}/./}
-							if [ "$File" -ge 412 ] ; then
-								IF_INITRD[1]="gzip compressed data, from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="Kernel"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-								IF_MEMTEST="Linux x86 kernel"
-							else
-								IF_INITRD[1]="initrd_small"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="x86"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-								IF_MEMTEST=""
-							fi
-							## }}}
-							;;
 						init)
 							# SuSE's Yast benutzen, und dann abbrechen.
 							if_conf_prog "$OS" runlevel
@@ -4332,10 +4289,10 @@ file_choice() {
 					case $IF_OPT in
 						grub2)
 							# Grub2 Variablen belegen# {{{
-							GRUB_DEFAULT_CONFFILE="/etc/default/grub"
+							GRUB_DEFAULT_CONFFILE="/etc/grub2.cfg"
 							GRUB_DIR="/boot/grub2"
 							GRUB_CONFFILE="${GRUB_DIR}/grub.cfg"
-							GRUB_LIBDIR="/usr/lib/grub2"
+							GRUB_LIBDIR="/usr/lib/grub"
 							## }}}
 							;;
 						init)
@@ -4349,30 +4306,6 @@ file_choice() {
 						initrc)
 							# Init Sym Links erstellen/loeschen
 							initrc_config
-							;;
-						initrd)
-							# Einstellung des Formats fuer file_filter bei initrd, memtest und Kernel{{{
-							#
-							File=${${${(M)$(file -v 2>&1)[(r)file*]}#*-}/./}
-							if [ "$File" -ge 417 ] ; then
-								#IF_INITRD="gzip compressed data, from Unix"
-								# CentOS >=5.0
-								IF_INITRD[1]="gzip compressed data, from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="ELF 32-bit LSB shared object"
-								IF_KERNEL[2]="ELF 64-bit LSB shared object"
-								IF_MEMTEST="x86 boot sector"
-							else
-								#IF_INITRD="gzip compressed data, from Unix"
-								# LiveCD CentOS >=4.0
-								IF_INITRD[1]="gzip compressed data, was "initrd", from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="x86 boot sector"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-								# LiveCD CentOS >=4.3
-								IF_MEMTEST="${IF_KERNEL[1]}"
-							fi
-							#}}}
 							;;
 						ntp)
 							# Zeitserver Konfigurationsdatei.
@@ -4395,10 +4328,10 @@ file_choice() {
 					case $IF_OPT in
 						grub2)
 							# Grub2 Variablen belegen# {{{
-							GRUB_DEFAULT_CONFFILE="/etc/default/grub"
+							GRUB_DEFAULT_CONFFILE="/etc/grub2.cfg"
 							GRUB_DIR="/boot/grub2"
 							GRUB_CONFFILE="${GRUB_DIR}/grub.cfg"
-							GRUB_LIBDIR="/usr/lib/grub2"
+							GRUB_LIBDIR="/usr/lib/grub"
 							## }}}
 							;;
 						init)
@@ -4412,24 +4345,6 @@ file_choice() {
 						initrc)
 							# Init Sym Links erstellen/loeschen
 							initrc_config
-							;;
-						initrd)
-							# Einstellung des Formats fuer file_filter bei initrd, memtest und Kernel{{{
-							File=${${${(M)$(file -v 2>&1)[(r)file*]}#*-}/./}
-							if [ "$File" -ge 417 ] ; then
-								IF_INITRD[1]="gzip compressed data, from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="Linux kernel x86 boot executable RO-rootFS"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-								IF_MEMTEST="Linux x86 kernel"
-							else
-								IF_INITRD[1]="gzip compressed data, from Unix"
-								IF_INITRD[2]="${IF_INITRD[1]}"
-								IF_KERNEL[1]="Linux kernel x86"
-								IF_KERNEL[2]="${IF_KERNEL[1]}"
-								IF_MEMTEST="Linux x86 kernel"
-							fi
-							#}}}
 							;;
 						ntp)
 							# Zeitserver Konfigurationsdatei.
@@ -5253,7 +5168,7 @@ kernel_choice() {
 							CentOS)
 								# CentOS
 								VERSION=${$(< /etc/redhat-release)[3]}
-								if [[ $VERSION -lt 5.0 ]] ; then	
+								if [[ $VERSION -lt 7.0 ]] ; then	
 									MSG=$(gettext 'Sie benoetigen eine CentOS 5.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
 									msgbox "$gv_Info" "$MSG"
 								fi
@@ -5266,16 +5181,16 @@ kernel_choice() {
 				Debian)
 					# Wenn Debian gleich grml ist, erst Version von grml checken.
 					if [ -e /etc/debian_version -a -e /etc/grml_version ] ; then
-						VERSION=${${(M)$(< /etc/grml_version)[(fr)(#s)[0-9]*]}%%.*}
-						if [[ $VERSION -lt 1 ]] ; then
-							MSG=$(gettext 'Sie benoetigen ein grml 1.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+						VERSION=${${(ws: :)$(< /etc/grml_version)}[2]}
+						if [[ $VERSION -lt 2014.11 ]] ; then
+							MSG=$(gettext 'Sie benoetigen ein grml 2014.11 oder hoeher um mit diesem Modul arbeiten zu koennen.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 					# Debian normal checken
 					elif [ -e /etc/debian_version ] ; then
 						VERSION=${${(M)$(< /etc/debian_version)[(fr)(#s)[0-9]*]}%%.*}
 						if [ ! -z $VERSION ] ; then
-							if [[ $VERSION -lt 5 ]] ; then
+							if [[ $VERSION -lt 8 ]] ; then
 								MSG=$(gettext 'Sie benoetigen ein Debian 5.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
 								msgbox "$gv_Info" "$MSG"
 							fi
@@ -5294,7 +5209,7 @@ kernel_choice() {
 					if [ -e /etc/fedora-release ] ; then
 						# Fedora8
 						VERSION=${$(< /etc/fedora-release)[3]}
-						if [[ $VERSION -lt 12 ]] ; then	
+						if [[ $VERSION -lt 21 ]] ; then	
 							MSG=$(gettext 'Sie benoetigen eine Fedora 12 oder hoeher um mit diesem Modul arbeiten zu koennen.')
 							msgbox "$gv_Info" "$MSG"
 						fi
@@ -5305,7 +5220,7 @@ kernel_choice() {
 				SUSE)
 					if [ -e /etc/SuSE-release ] ; then
 						VERSION=${${(s: :)${(M)${(f)"$(< /etc/SuSE-release)"}##VERSION*}}[3]}
-						if [[ $VERSION -lt 11.0 ]] ; then	
+						if [[ $VERSION -lt 13.2 ]] ; then	
 							MSG=$(gettext 'Sie benoetigen eine SuSE 11.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
 							msgbox "$gv_Info" "$MSG"
 						fi
