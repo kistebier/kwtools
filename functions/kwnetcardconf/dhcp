@@ -8,6 +8,8 @@ dhcp()
 {
 	# Netzwerk Schnittstelle beenden
 	ifconfig_check $ETH
+	# Variablen einlesen
+	if_conf_file "$OS" dhcp
 	# Ob dhclient ausfuehrbar ist wird vom Script kwnetcardconf geprueft.
 	$DHCLIENT -lf ${DHCLIENT_LEASES_DIR}/dhclient${DHCLIENT_LEASES_TR}${ETH}.leases -pf /var/run/dhclient${DHCLIENT_LEASES_TR}${ETH}.pid $ETH
 	if [ $? != 0 ] ; then
