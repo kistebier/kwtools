@@ -61,9 +61,9 @@ manage_cryptdisk() {
 										#
 										while [ -n "$NUMBER" ] ; do
 											# Laufwerksangaben in Byte umrechnen
-											convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-											if [ -n "$SIZE_B" ] ; then
-												Size_Tmp="$SIZE_B"
+											convert_mib_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+											if [ -n "$SIZE_MIB" ] ; then
+												Size_Tmp="$SIZE_MIB"
 											fi
 											if [[ "$Size_Tmp" -le "$VG_FREE_SIZE" ]] ; then
 												# vorhandene Size_Tmp + alte Size.
@@ -111,9 +111,9 @@ manage_cryptdisk() {
 											number_input -D "$RESIZE_TITLE" "$LV_REDUCE_SIZE_MSG"
 											while [ -n "$NUMBER" ] ; do
 												# Laufwerksangabe in Byte umrechnen
-												convert_drive_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
-												if [ -n "$SIZE_B" ] ; then
-													Size_Tmp="$SIZE_B"
+												convert_mib_size "${NUMBER##*[0-9]}" "${NUMBER%%[a-zA-Z]*}"
+												if [ -n "$SIZE_MIB" ] ; then
+													Size_Tmp="$SIZE_MIB"
 												fi
 												# ist die Groesse um die verkleinert werden soll
 												# kleiner als die ganze Groesse der LV dann wird

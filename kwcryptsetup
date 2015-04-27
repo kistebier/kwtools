@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 27.04.2015
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschluesselten
 # Devices mittels cryptsetup.
@@ -446,41 +446,41 @@ cryptdisk_stop() {
 		no_para_msg $0
 		return 1
 	fi
-		if [ ! -b ${MAPPER}/${dst} -a "$Opt" != -c ] ; then
-			MSG=$(gettext '$dst: Das Laufwerk wurde schon gestoppt.')
-			msgbox "$gv_Info" "$MSG"
-			return 0
-		fi
+	if [ ! -b ${MAPPER}/${dst} -a "$Opt" != -c ] ; then
+		MSG=$(gettext '$dst: Das Laufwerk wurde schon gestoppt.')
+		msgbox "$gv_Info" "$MSG"
+		return 0
+	fi
 
-		OpenCount=$(dmsetup info -c --noheadings -o open $dst 2>/dev/null || true)
-		if [ -z "$OpenCount" ] ; then
-			MSG=$(gettext '$dst: Es gab einen Fehler (?).')
-			msgbox "$gv_Info" "$MSG"
-			return 1
-		elif [ "$OpenCount" != 0 ] ; then
-			# Laufwerk ist in Benutzung und muss erst ausgebunden (umounted)
-			# werden.
-			# Funktion mount_check dient zum ausbinden des Laufwerks.
-			mount_check -u ${MAPPER}/${dst}
-			if [ "$U_MOUNT" != yes ] ; then
-				return 1
-			fi
-		fi
-
-		SrcMajor=$(dmsetup deps "$dst" 2>/dev/null | sed -e 's/^.*(\([0-9]*\), [0-9]*)$/\1/g'|| true)
-		SrcMinor=$(dmsetup deps "$dst" 2>/dev/null | sed -e 's/^.*([0-9]*, \([0-9]*\))$/\1/g'|| true)
-
-		if [ -z "$SrcMajor" ] || [ -z "$SrcMinor" ] ; then
-			MSG=$(gettext '$dst: Die Major oder Minor Nummer des Laufwerks wurde nicht erkannt!.')
-			msgbox "$gv_Attention" "$MSG"
+	OpenCount=$(dmsetup info -c --noheadings -o open $dst 2>/dev/null || true)
+	if [ -z "$OpenCount" ] ; then
+		MSG=$(gettext '$dst: Es gab einen Fehler (?).')
+		msgbox "$gv_Info" "$MSG"
+		return 1
+	elif [ "$OpenCount" != 0 ] ; then
+		# Laufwerk ist in Benutzung und muss erst ausgebunden (umounted)
+		# werden.
+		# Funktion mount_check dient zum ausbinden des Laufwerks.
+		mount_check -u ${MAPPER}/${dst}
+		if [ "$U_MOUNT" != yes ] ; then
 			return 1
 		fi
-		# Cryptsetup Devices schliessen
-		if ! cryptdisk_close $dst ; then
-			MSG=$(gettext '$dst: Das verschluesselte Laufwerk konnte nicht ausgebunden werden.')
-			msgbox "$gv_Attention" "$MSG"
-			return 1
-		fi
+	fi
+
+	SrcMajor=$(dmsetup deps "$dst" 2>/dev/null | sed -e 's/^.*(\([0-9]*\), [0-9]*)$/\1/g'|| true)
+	SrcMinor=$(dmsetup deps "$dst" 2>/dev/null | sed -e 's/^.*([0-9]*, \([0-9]*\))$/\1/g'|| true)
+
+	if [ -z "$SrcMajor" ] || [ -z "$SrcMinor" ] ; then
+		MSG=$(gettext '$dst: Die Major oder Minor Nummer des Laufwerks wurde nicht erkannt!.')
+		msgbox "$gv_Attention" "$MSG"
+		return 1
+	fi
+	# Cryptsetup Devices schliessen
+	if ! cryptdisk_close $dst ; then
+		MSG=$(gettext '$dst: Das verschluesselte Laufwerk konnte nicht ausgebunden werden.')
+		msgbox "$gv_Attention" "$MSG"
+		return 1
+	fi
 
 	return 0
 }
@@ -998,7 +998,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Konfiguration
 			autoload -U kwcryptsetup_conf
 			kwcryptsetup_conf
-			main_menu
+			main_menu $gv_Configuration
 			;;
 		$lv_State)
 			# Status von verschluesselten Laufwerken anzeigen (/etc/crypttab)# {{{
@@ -1039,7 +1039,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cryptdev_msg
 			fi
 			## }}}
-			main_menu
+			main_menu $lv_State
 			;;
 		$lv_Luks)
 			# Lukserweiterung behandeln# {{{
@@ -1052,18 +1052,18 @@ while [ "$gv_Auswahl" ] ; do
 				no_luks_cryptdev_msg
 			fi
 			## }}}
-			main_menu
+			main_menu $lv_Luks
 			;;
 		$lv_Drives)
 			# verschluesselte Laufwerke managen.
 			autoload -U manage_cryptdisk
 			manage_cryptdisk
-			main_menu
+			main_menu $lv_Drives
 			;;
 		$lv_Key)
 			autoload -U manage_keys
 			manage_keys
-			main_menu
+			main_menu $lv_Key
 			;;
 		$lv_Start)
 			# Laufwerke starten# {{{
@@ -1096,7 +1096,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cryptdev_msg
 			fi
 			## }}}
-			main_menu
+			main_menu $lv_Start
 			;;
 		$lv_Stop)
 			# Laufwerke stoppen, die aktiv gekennzeichnet sind # {{{
@@ -1129,7 +1129,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cryptdev_msg
 			fi
 			## }}}
-			main_menu
+			main_menu $lv_Stop
 			;;
 		$gv_Exit)	break
 			;;
