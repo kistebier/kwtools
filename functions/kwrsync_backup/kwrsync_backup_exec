@@ -54,6 +54,10 @@ kwrsync_backup_exec() {
 				if [ -d "${BACKUP_PATH}/hourly.1/${DST}" ] ; then
 					LINK_DEST="--link-dest=${BACKUP_PATH}/hourly.1/${DST}"
 				fi
+			else
+				if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+					mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+				fi
 			fi
 		}
 		## }}}
@@ -191,8 +195,16 @@ kwrsync_backup_exec() {
 	# Funktion (backup_exec), einlesen der Konfigurationsdaten der# {{{
 	# einzelnen Server und darauf rsync, RLVM, ... ausfuehren.
 	backup_exec() {
-		unset -- BackupList $SERVER_UNSET
+		unset -- BackupList
 		for S in rsync ${=SERVER} ; {
+			# Pruefen ob Rechner im Netz ist.
+			if [[ $S != rsync ]] ; then
+				if ! ping -c1 $S &>/dev/null ; then
+					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($S) ist nicht erreichbar! Er wird ausgelassen.')
+					sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
+					continue
+				fi
+			fi
 			# rsync Argumente aus der globalen Konfiguration belegen
 			rsync_conf_args
 			# Rechner in Logdatei schreiben
@@ -216,7 +228,7 @@ kwrsync_backup_exec() {
 					unset -- SERVER_IN_FILE
 				fi
 				# Backup
-				LOG_START_MSG=$(gettext 'Starte rsync Backup von ${S} ${DLVM}${SRC%/} ...')
+				LOG_START_MSG=$(gettext 'Starte rsync Backup von $S ...')
 				LOG_ERR_MSG=$(gettext 'FATAL: rsync Backup ($S) mit Fehlern beendet!')
 				LOG_FINISH_MSG=$(gettext 'Beende rsync Backup von $S ...')
 				# Logging beginnen.
@@ -286,9 +298,6 @@ kwrsync_backup_exec() {
 									SRC="$2"
 									DST="$3"
 									RSYNC_ARGS="$4"
-									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
-										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
-									fi
 									check_link_dest
 									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
 										$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST 
@@ -300,9 +309,6 @@ kwrsync_backup_exec() {
 									SRC="$2"
 									DST="$3"
 									RSYNC_ARGS="$4"
-									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
-										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
-									fi
 									check_rsh
 									check_link_dest
 									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
@@ -334,7 +340,7 @@ kwrsync_backup_exec() {
 							if [ "$?" != 0 ] ; then
 								# Fehler Loggen
 								SCRIPT_ERR_MSG=$(gettext 'ERROR: backup_script $SCRIPT returned 1')
-								sys_logger -r syslog "$gv_ScriptNameT" "$SCRIPT_ERR_MSG"
+								sys_logger -r syslog "$gv_ScriptName" "$SCRIPT_ERR_MSG"
 							fi
 							# hourly Snapshot von Level-1 per Hardlink-Kopie 
 							# nach Level-0 kopieren
