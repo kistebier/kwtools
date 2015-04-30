@@ -50,7 +50,7 @@ manage_cryptdisk() {
 										break
 										;;
 									*)
-										# LVMs ; vorhandene LV Groesse heraus finden.
+										# LVMs ; vorhandene LV Groesse heraus finden.# {{{
 										lv_free_size "$CRYPT_DEV"
 										# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
 										# werden von der Funktion vg_free_size belegt.
@@ -84,7 +84,7 @@ manage_cryptdisk() {
 								esac
 								## }}}
 								;;
-							-s)
+							-r)
 								# verkleinern/reduce# {{{
 								case "$CRYPT_DEV" in
 									/dev/[sh]d[a-z][0-9]|/dev/[sh]d[a-z][0-9][0-9]|/dev/[sh]d[a-z]/[0-9]*)
@@ -571,7 +571,7 @@ Bei \"nein\" wird abgebrochen.')
 				# LUKS Partition verkleinern# {{{
 				search_cryptdev -l
 				if [ -n "${MAP_DEV[1]}" ] ; then
-					luks_resize -s "$MAP_DEV"
+					luks_resize -r "$MAP_DEV"
 				else
 					no_luks_cryptdev_msg
 				fi
