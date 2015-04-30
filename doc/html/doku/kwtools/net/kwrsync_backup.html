@@ -1,13 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD><TITLE>Projekt:netzworkk:Doku:kwtools</TITLE>
-        <meta name="generator" content="quanta">
+        <meta name="generator" content="vim">
         <meta name="keywords" lang="en" content="Netzworkk, Netzwerk, netzworkk, kwtools, rsync">
         <meta name="description" lang="en" content="">
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2012-03-10">
+        <meta name="date" content="2015-04-30">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -288,7 +288,7 @@
 			Verzeichnis f&uuml;r den Snapshot und dieses read-only f&uuml;r die Benutzer ins
 			Dateisystem einbinden. Das kann &uuml;ber NFS oder Samba geschehen. Hier wird der Weg
 			&uuml;ber NFS auf einem einzelnen Rechner beschrieben.</p>
-			<p>Setzen Sie die Variable BACKUP_PATH in /etc/kwrsync_backup.cf auf 
+			<p>Setzen Sie die Variable BACKUP_PATH in /etc/kwtools/kwrsync_backup.cf auf 
 			/.private/.snapshots.<br></p>
 			<p>BACKUP_PATH=&quot;/.private/.snapshots&quot;</p>
 			<p>Erstelle das Container Verzeichnis:<br>
@@ -339,16 +339,17 @@
 				- Auf dem Backup Rechner kopieren Sie die Datei 
 				/root/.ssh/id-dsa.pub nach /root/.ssh/authorized_keys.rsync. Dort tragen Sie
 				das &quot;rsync&quot; Kommando
-				command=&quot;sudo rsync --server --sender -vlogDtHAXprz  --delete-excluded 
-				--numeric-ids --relative . /&quot; vor dem Key ein
+				command=&quot;sudo rsync --server --sender -vlogDtprRe.iLsfx  --delete-excluded 
+				--numeric-ids . /&quot; vor dem Key ein
 				(command=&quot;sudo rsync ...&quot; ssh-dss AAA....).<br>
 				- Diese Datei kopieren Sie auf jeden Host der zu sichern ist, 
 				ins Home Verzeichnis des Backup Users (kwrsyncbackup) (~/.ssh/authorized_keys).</p>
 				<p><b>Notiz:</b> Achten Sie darauf das, auf allen Rechnern, in der Datei 
 				/etc/ssh/sshd_config beim Parameter AuthorizedKeysFile      %h/.ssh/authorized_keys 
-				steht. Desweiteren muss die Rechnereigene Konfiguration die zus&auml;tzlichen
-				 &quot;rsync&quot; Argumente &quot;-HAX&quot; besitzen. Standard sind die
-				Argumente &quot;-av --numeric-ids --delete --delete-excluded --relative&quot;.</p>
+				steht. Desweiteren m&uuml;ssen zus&auml;tzliche &quot;rsync&quot; Argumente auch in
+				der Datei ~/.ssh/authorized_keys stehen.
+				 Standard sind die Argumente &quot;-av --numeric-ids --delete --delete-excluded
+				 --relative&quot;.</p>
 				<p>Sichern Sie den Backup User, durch das Programm &quot;sudo&quot; wie im
 				Beispiel ab (Datei /etc/sudoers). F&uuml;r die zu sichernden Rechner
 				k&ouml;nnte das so aussehen:<br>
