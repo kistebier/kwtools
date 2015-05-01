@@ -54,10 +54,6 @@ kwrsync_backup_exec() {
 				if [ -d "${BACKUP_PATH}/hourly.1/${DST}" ] ; then
 					LINK_DEST="--link-dest=${BACKUP_PATH}/hourly.1/${DST}"
 				fi
-			else
-				if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
-					mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
-				fi
 			fi
 		}
 		## }}}
@@ -142,7 +138,7 @@ kwrsync_backup_exec() {
 			}
 			# hourly Snapshot von Level-0 per Hardlink-Kopie nach Level-1 kopieren
 			# siehe Option -l in man 1 cp.
-			if ! [[ $LINK_DEST == yes ]] ; then
+			if ! [[ $LINK_DST == yes ]] ; then
 				if [ -d ${BACKUP_PATH}/hourly.0 -a $DATE_OPT = hourly ] ; then
 					if [[ -n $gv_Terminal ]] ; then
 						PROG_OPT="-avl ${BACKUP_PATH}/hourly.0 ${BACKUP_PATH}/hourly.1"
@@ -155,7 +151,9 @@ kwrsync_backup_exec() {
 					fi
 				fi
 			elif [ $DATE_OPT = hourly ] ; then
-				mkdir -m 0755 -p ${BACKUP_PATH}/hourly.0
+				if [ ! -d "${BACKUP_PATH}/hourly.0" ] ; then
+					mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0" &>/dev/null
+				fi
 			fi
 		}
 		#}}}
@@ -298,6 +296,9 @@ kwrsync_backup_exec() {
 									SRC="$2"
 									DST="$3"
 									RSYNC_ARGS="$4"
+									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+									fi
 									check_link_dest
 									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
 										$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST 
@@ -309,6 +310,9 @@ kwrsync_backup_exec() {
 									SRC="$2"
 									DST="$3"
 									RSYNC_ARGS="$4"
+									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
+										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
+									fi
 									check_rsh
 									check_link_dest
 									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
@@ -328,8 +332,8 @@ kwrsync_backup_exec() {
 							# IFS
 							IFSOLD="$IFS"
 							IFS="$IFSBAK"
-							if [ ! -d "${BACKUP_PATH}/hourly.0/${DST%/*}" ] ; then
-								mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST%/*}" &>/dev/null
+							if [ ! -d "${BACKUP_PATH}/hourly.0/${DST%/}" ] ; then
+								mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST%/}" &>/dev/null
 							fi
 							# temporares Verzeichnis erstellen
 							# und hinein wechseln.
