@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2015-04-25">
+        <meta name="date" content="2015-05-20">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -125,9 +125,7 @@
 					<td valign="top" nowrap="true"><p>
 					<a href="sys.html#if_conf_file" target="_self">if_conf_file</a><br>
 					<a href="sys.html#if_conf_prog" target="_self">if_conf_prog</a><br>
-					<a href="sys.html#initrd_choice" target="_self">initrd_choice</a><br>
 					<a href="sys.html#is_value" target="_self">is_value</a><br>
-					<a href="sys.html#kernel_choice" target="_self">kernel_choice</a><br>
 					<a href="sys.html#kernel_release" target="_self">kernel_release</a><br>
 					<a href="sys.html#list_shell" target="_self">list_shell</a><br>
 					<a href="sys.html#load_module" target="_self">load_module</a><br>
@@ -1183,7 +1181,7 @@
 			<td vAlign=top><b><a name="if_conf_file">if_conf_file</a></b>
 			<p>Ben&ouml;tigt im Vorfeld die Funktion os_check<br>
 			if_conf_file &quot;$OS&quot; WAS<br>
-			WAS = kann grub2, init, initrc, initrd, net, nisclient, ntp, proxy oder raid sein.<br>
+			WAS = kann grub2, init, initrc, net, nisclient, ntp, proxy oder raid sein.<br>
 			Diese Funktion pr&uuml;ft und belegt einzelne Variablen (distributionsspezifisch)
 			(z. B. OS ist SuSE, NET_CONF_PATH=/etc/sysconfig/network | OS ist Debian 
 			NET_CONF_PATH=/etc/network). Es werden die Distributionen Debian, grml, OpenSuSE,
@@ -1201,7 +1199,8 @@
 			distributionsspezifische Konfigurationstool, bei SuSE yast(2) und bei Debian 
 			dpkg-reconfigure.<br>
 			if_conf_prog &quot;$OS&quot; PARAMETER<br>
-			PARAMETER - Name des Parameters der konfiguriert werden soll.<br>
+			PARAMETER - Name des Parameters der konfiguriert werden soll. Dies kann auth, libpam-ldap,
+			mail, net oder raid sein.<br>
 			Bsp.: Debian if_conf_prog &quot;$OS&quot; mail - startet die Konfiguration des Mail Transfer Agenten 
 			(MTA) postfix. Dabei wird dpkg-reconfigure benutzt.<br>
 			Bsp.: SuSE: if_conf_prog &quot;$OS&quot; mail - startet die Konfiguration des Mail Transfer Agenten 
@@ -1213,21 +1212,8 @@
                 <tr>
                         <td vAlign=top colspan="3"><br></td>
                 </tr>
-                <tr>
-                        <td></td>
-			<td vAlign=top><b><a name="initrd_choice">initrd_choice</a></b>
-			<p>Auswahl einer vorhandenen Ramdisk. Liegt die Ramdisk in einer extra gemounteten Partition
-			wird zus&auml;tzlich die Variabe gv_Boot belegt.<br> 
-			<b><font color="darkYellow">Variable</font></b><br>
-			gv_Initrd - Variable die den Namen der Ramdisk enth&auml;lt.<br>
-			gv_Boot - Variable die die Bootpartition enth&auml;lt.<p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-		<tr>
-			<td></td>
+				<tr>
+						<td></td>
                         <td vAlign=top><b><a name="is_value">is_value</a></b>
 			<p>Diese Funktion vergleicht Werte mit denen der Datei, in der Variablen $gv_IsValue_File,
 			und markiert sie als "on" oder "off". Die Werte k&ouml;nnen von
@@ -1236,19 +1222,6 @@
 			<b><font color="darkYellow">Variable</font></b><br>
 			VALUE_ARRAY - Variable die die ausgew&auml;ten Werte enth&auml;lt f&uuml;r die
 			Funktion <a href="sys.html#checklist" target="_self">checklist</a>.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-			<td vAlign=top><b><a name="kernel_choice">kernel_choice</a></b>
-			<p>Auswahl eines vorhandenen Kernels. Liegt der Kernel in einer extra gemounteten Partition
-			wird zus&auml;tzlich die Variabe gv_Boot belegt.<br> 
-			<b><font color="darkYellow">Variable</font></b><br>
-			gv_Vmlinuz - Variable die den Namen des Kernel enth&auml;lt.<br>
-			gv_Boot - Variable die die Bootpartition enth&auml;lt.<p></td>
                         <td></td>
                 </tr>
                 <tr>
