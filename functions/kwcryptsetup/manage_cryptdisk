@@ -182,8 +182,8 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			elif [ "$USETCRYPT" = yes ] ; then
-#				$KEYSCRIPT $keyscriptarg | \
-#					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
+				$KEYSCRIPT $keyscriptarg | \
+					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
 				$KEYSCRIPT $keyscriptarg | \
 					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
 					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
@@ -205,8 +205,8 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			elif [ "$USETCRYPT" = yes ] ; then
-#				print "$gv_Pass" | \
-#					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
+				print "$gv_Pass" | \
+					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
 				print "$gv_Pass" | \
 					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
 					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
@@ -222,7 +222,7 @@ manage_cryptdisk() {
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			elif [ "$USETCRYPT" = yes ] ; then
-#				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
+				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
 				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
 					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			else
@@ -252,10 +252,6 @@ Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschr
 			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
 			Sectors=$(blkid -o value -s PART_ENTRY_SIZE -p ${CRYPT_PATH}/${CRYPT_FILE})
 			# in Bytes umrechnen
-			# ###############################
-			#  TODO: 512?? oder Festplattensectorgroesse
-			#  erst einmal heraus finden.
-			# ###############################
 			(( Part_Size = Sectors * 512 ))
 		else
 			convert_drive_size "${SIZE##*[0-9]}" "${SIZE%%[a-zA-Z]*}"
@@ -483,7 +479,12 @@ Bei \"nein\" wird abgebrochen.')
 										read_file kwcryptsetuprc
 										kwcryptsetup_conf --part
 										if [ -n "$CRYPT_FILE" -a ! -z "$PARAMS" ] ; then
-											create_action -p
+											# erst einmal die Partition ${CRYPT_PATH}/${CRYPT_FILE}
+											# ausbinden falls sie eingebunden ist.
+											mount_check -a ${CRYPT_PATH}/${CRYPT_FILE}
+											if [[ $U_MOUNT == yes ]] ; then
+												create_action -p
+											fi
 										fi
 									fi
 								else
