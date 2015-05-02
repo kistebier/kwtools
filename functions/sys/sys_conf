@@ -3678,39 +3678,6 @@ file_choice() {
 					done < ${gv_WorkDir}/files$$
 					## }}}
 					;;
-				KERNEL*)
-					# Kernel/Initrd Unterstuetzung fuer verschiedene Formate.# {{{
-					# ###################################################
-					# TODO:
-					# muss geaendert werden
-					# ###################################################
-					unset -- Lv_Format
-					if [ "$1" = KERNEL ] ; then
-						Lv_Format[1]="$IF_KERNEL[1]"
-						Lv_Format[2]="$IF_KERNEL[2]"
-					elif [ "$1" = KERNEL_INITRD ] ; then
-						Lv_Format[1]="$IF_INITRD[1]"
-						Lv_Format[2]="$IF_INITRD[2]"
-					fi
-					#
-					if [ -n "$Lv_Format" ] ; then
-						Anz=1
-						for i in "$2" ; {
-							for file in *${i} ; { 
-								if [ -f "$file" ] ; then
-									FUND=${(M)${(f)"$(file -b "$file")"}##(#s)*(${Lv_Format[1]}|${Lv_Format[2]})*}
-									if [ "$FUND" ] ; then
-										ist_file
-										DF_ARRAY_NULL[Anz]="${(qq)file}"
-										DF_ARRAY_M[Anz]="${(qq)file} \"\""
-										(( Anz++ ))
-									fi
-								fi
-							}
-						}
-					fi
-					## }}}
-					;;
 				*)	
 					# alles andere# {{{
 					set_filetype "$1"
@@ -4106,10 +4073,6 @@ file_choice() {
 				Deb*)
 					# Debians Konfiguration{{{
 					case $IF_OPT in
-						auth)
-							# Konfigurationsdatei zur Authentifizierung
-							KWAUTH_FILE=/etc/default/kwauth
-							;;
 						grub2)
 							# Grub2 Variablen belegen# {{{
 							GRUB_DEFAULT_CONFFILE="/etc/default/grub"
@@ -4373,7 +4336,8 @@ file_choice() {
 	# ist und dann starten. Ist keines vorhanden wird der kwtools Code benutzt.
 	#
 	# usage: if_conf_prog "$OS" PARAMETER
-	# PARAMETER - Partitionen welcher konfiguriert werden soll.
+	# PARAMETER - Parametr welcher konfiguriert werden soll.
+	#             [auth|libpam-ldap|mail|net|raid]
 	#
 	if_conf_prog() {
 		local If_Opt Os
@@ -4602,30 +4566,6 @@ file_choice() {
 		fi
 	}
 	# }}}
-# Funktion (initrd_choice), Initrd auswaehlen{{{
-#
-# usage: initrd_choice
-#
-initrd_choice() {
-	if_conf_file "$OS" initrd
-	FORMAT="KERNEL_INITRD"
-	file_choice /boot only
-	#
-	if [ "$WERT" ] ; then
-		if [ ${(M)$(< /proc/mounts)##$VERZ} ] ; then
-			gv_Initrd="$WERT"
-		else
-			gv_Boot="$VERZ"
-			gv_Initrd="${gv_Boot}/${WERT}"
-		fi
-		unset -- MAKEACTIVE
-	else
-		# nur gv_Initrd loeschen. gv_Boot wurde ja vielleicht noch von der Funktion
-		# kernel_choice erzeugt
-		unset -- gv_Initrd
-	fi
-}
-#}}}
 # Funktion (is_value), Werte mit denen in gv_IsValue_File vergleichen.{{{
 #
 # usage: is_value "VALUE VALUE1 ..."
@@ -4651,26 +4591,6 @@ is_value() {
 		}
 	else
 		no_para_msg $0
-	fi
-}
-#}}}
-# Funktion (kernel_choice), Kernel auswaehlen{{{
-#
-# usage: kernel_choice
-#
-kernel_choice() {
-	if_conf_file "$OS" initrd
-	FORMAT="KERNEL"
-	file_choice /boot only
-	#
-	if [ "$WERT" ] ; then
-		if [ ${(M)$(< /proc/mounts)##$VERZ} ] ; then
-			gv_Vmlinuz="$WERT"
-		else
-			gv_Boot="$VERZ"
-			gv_Vmlinuz="${gv_Boot}/${WERT}"
-		fi
-		unset -- MAKEACTIVE
 	fi
 }
 #}}}
