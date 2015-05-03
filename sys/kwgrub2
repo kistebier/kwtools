@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 24.04.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.05.2015
 #
 # Script: kwgrub2, konfiguriert und installiert grub2
 # Version: 0.1.0
@@ -45,10 +45,10 @@ lv_Actual=$(gettext 'Aktualisierung')
 lv_Security=$(gettext 'Sicherheit')
 lv_Installation=$(gettext 'Installation')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($gv_Configuration \"\" $lv_Security \"\" $lv_Actual \"\"
 $lv_Installation \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -148,25 +148,25 @@ if [ ! -d "$GRUB_DIR" ] ; then
 fi
 ## }}}
 
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
    			# Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration
 			autoload -U kwgrub2_conf kwgrub2_config
 			kwgrub2_conf
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Security)
 			# Grub2 Sicherheit einstellen
 			autoload -U kwgrub2_security kwgrub2_config
 			kwgrub2_security
-			haupt_menue $lv_Security
+			main_menu $lv_Security
 			;;
 		$lv_Actual)
 			# Grub2 Konfigurationsdatei updaten# {{{
@@ -182,14 +182,14 @@ while [ "$gv_Auswahl" ] ; do
 				no_read_write_msg
 			fi
 			## }}}
-			haupt_menue $lv_Actual
+			main_menu $lv_Actual
 			;;
 		$lv_Installation)
 			# Grub installieren{{{
 			autoload -U kwgrub2_install
 			kwgrub2_install
 			#}}}
-			haupt_menue $lv_Installation
+			main_menu $lv_Installation
 			;;
 		$gv_Exit)
 			break
