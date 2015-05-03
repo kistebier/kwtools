@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 06.02.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 03.05.2015
 #
 # Script: kwmutt, konfiguriert den Mail-Client Mutt.
 #
-# Version: 0.1.1
+# Version: 0.1.2
 
 ###################################################################
 # TODO:
@@ -344,7 +344,7 @@ create_tmp_conf() {
 		fi
 	else
 		if [ -f "$argv" ] ; then
-			egrep -v "^[[:space:]]*(#|$)" $argv | sed -e 's#^set ##g' >$gv_LogFile
+			egrep -v "^[[:space:]]*(#|$)|source|reset" $argv | sed -e 's#^set ##g' >$gv_LogFile
 		fi
 	fi
 	#
@@ -371,11 +371,11 @@ yesno_select() {
 		}
 		#
 		YN_MENU=($M_Tmp)
-		radiolist "" "$YN_TITLE" "$YN_MSG" "$YN_MENU"
+		radiolist "$Old_Value" "$YN_TITLE" "$YN_MSG" "$YN_MENU"
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwmutt_quad_help
-					radiolist "" "$YN_TITLE" "$YN_MSG" "$YN_MENU"
+					radiolist "${gv_Auswahl#HELP }" "$YN_TITLE" "$YN_MSG" "$YN_MENU"
 					;;
 				*)
 					# Auswahl uebernehmen
@@ -450,11 +450,11 @@ mail_account_choice() {
 		MAIL_TITLE="$1"
 		MAIL_MSG="$2"
 		MAIL_MENU=($ACCOUNT_TMP)
-		menubox "" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
+		menubox "${ACCOUNT_TMP[1]}" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwmutt_serv_ips_help
-					menubox "" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
+					menubox "${gv_Auswahl#HELP }" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
 					;;
 				*)	# Auswahl uebernehmen
 					VALUE="$gv_Auswahl"
@@ -470,7 +470,7 @@ mail_account_choice() {
 	# Funktion (no_abook_conf_msg), Nachricht das kein Adressbuch konfiguriert ist,# {{{
 	# beziehungsweise es ist kein Adressbuch Programm vorhanden
 	no_abook_conf_msg() {
-MSG=$(gettext 'Entweder ist kein Adressbuch-Programm vorhanden, keine Adressdatenbank
+MSG=$(gettext 'Entweder ist kein Adressbuch-Programm, keine Adressdatenbank vorhanden
 oder Sie muessen erst den Menuepunkt alias_file in der Standard Konfiguration mit
 einem Wert belegen.')
 		msgbox "$gv_Info" "$MSG"
@@ -538,6 +538,7 @@ create_tmp_conf -g "$GLOBAL_MUTTCONF"
 read_file -f "$Muttrc_LogFile"
 create_tmp_conf "$MUTTCONF"
 read_file -f "$gv_LogFile"
+cp -av $gv_LogFile /home/kiste
 
 # Netz Funktionen einlesen
 net_conf
@@ -548,7 +549,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
@@ -566,7 +567,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$lv_Addressbook)
 			# Adressbuch bearbeiten# {{{
-			if [ -x "$ABOOK_CMD" -a -n "$query_command" ] ; then
+			if [[ -n "$ABOOK_CMD" ]] && [[ ${${query_command%% *}##*/} == abook ]] ; then
 				abook
 			elif [ -n "$alias_file" ] ; then
 				autoload -U kwmutt_abook
@@ -612,11 +613,11 @@ unsubscribe *
 			if [ -n "$ACCOUNT_TMP" ] ; then
 				MUTT_POST_ACCOUNT_MENU=($ACCOUNT_TMP)
 				MUTT_POST_ACCOUNT_MSG=$(gettext 'Waehlen Sie ein Post-Konto aus das Sie einsehen moechten.')
-				menubox "$Conf_File_Tmp" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
+				menubox "${ACCOUNT_TMP[1]}" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help help
-							menubox "$Conf_File_Tmp" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
+							menubox "${gv_Auswahl#HELP }" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
 							;;
 						*)	# Auswahl uebernehmen
 							Conf_File_Tmp="$gv_Auswahl"

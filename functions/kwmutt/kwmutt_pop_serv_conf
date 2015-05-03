@@ -15,7 +15,7 @@ kwmutt_pop_serv_conf() {
 		#pop_authenticators="$pop_authenticators"
 		pop_checkinterval="${pop_checkinterval:-900}"
 		mailboxes="${mailboxes:-+inbox}"
-		folder="${folder:-~/Mail}"
+		folder="${folder:-${HOME}/Mail}"
 		spoolfile="${spoolfile:-/var/mail/${USER}}"
 		postponed="${postponed:-~/postponed}"
 		record="${record:-~/sent}"
@@ -130,10 +130,11 @@ kwmutt_pop_serv_conf() {
 						# schon markierte mailboxen mit on markieren ansonsten mit off.
 						generate_is_file "$mailboxes"
 						# vorhandene mailboxen mit einem plus markieren zum vergleichen
-						Tmp=${$(print ${folder}/*(/N:t))//(#s)/+}
+						Tmp_Dir="$(print ${folder}/*(/N:t))"
+						Tmp="${${Tmp_Dir//(#s)/+}// / +}"
 						is_value "$Tmp"
 						# Auswahl der mailboxen.
-						if [ -n "$VALUE_ARRAY" ] ; then
+						if [ -n "${VALUE_ARRAY[1]}" ] ; then
 							MAILBOX_MENU=($DF_DIR_ARRAY)
 							checklist "${DEFAULT_VALUE[1]}" "$POP_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
 							while [ -n "$gv_Auswahl" ] ; do
@@ -200,7 +201,7 @@ kwmutt_pop_serv_conf() {
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help kwmutt_pop_serv_help
-											checklist "" "$POP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
+											checklist "${gv_Auswahl#HELP }" "$POP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
 											;;
 										*)
 											# Werte uebernehmen
@@ -397,7 +398,7 @@ kwmutt_pop_serv_conf() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/conf_del_help
-								checklist "" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	# Uebernahme (Konfigurationsdateien) loeschen
 								for i in ${=gv_Auswahl} ; {

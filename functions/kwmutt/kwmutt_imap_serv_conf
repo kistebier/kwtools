@@ -15,8 +15,8 @@ kwmutt_imap_serv_conf() {
 		#imap_authenticators="$imap_authenticators"
 		mailboxes="${mailboxes:-+INBOX}"
 		#spoolfile="$spoolfile"
-		postponed="${postponed:-~/postponed}"
-		record="${record:-~/sent}"
+		postponed="${postponed:-+INBOX.postponed}"
+		record="${record:-+INBOX.sent}"
 		mail_check="${mail_check:-900}"
 	}
 	## }}}
@@ -51,7 +51,7 @@ kwmutt_imap_serv_conf() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwmutt_imap_serv_help
-					imap_conf_serv_menu
+					imap_conf_serv_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Default_Mailbox)
 					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
@@ -133,7 +133,7 @@ kwmutt_imap_serv_conf() {
 					imap_auth_conf() {
 						IMAP_AUTH_MENU=($lv_Choice \"$imap_authenticators\"
 						\"$lv_Serv_Test\" \"\" $gv_Back \"\")
-						menubox "" "$IMAP_TITLE" "$gv_Menupoint" "$IMAP_AUTH_MENU"
+						menubox "$1" "$IMAP_TITLE" "$gv_Menupoint" "$IMAP_AUTH_MENU"
 					}
 					## }}}
 					autoload -U check_auth_server
@@ -141,7 +141,7 @@ kwmutt_imap_serv_conf() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwmutt_imap_serv_help
-								imap_auth_conf
+								imap_auth_conf "${gv_Auswahl#HELP }"
 								;;
 							$lv_Choice)
 								# Auswahl der Auth-Methoden# {{{
@@ -168,7 +168,7 @@ kwmutt_imap_serv_conf() {
 									esac
 								done
 								## }}}
-								imap_auth_conf
+								imap_auth_conf "$lv_Choice"
 								;;
 							$lv_Serv_Test)
 								# Auth Faehigkeiten des Servers testen# {{{
@@ -182,7 +182,7 @@ kwmutt_imap_serv_conf() {
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								# # }}}
-								imap_auth_conf
+								imap_auth_conf "$lv_Serv_Test"
 								;;
 							$gv_Back)	break
 								;;
@@ -279,7 +279,7 @@ kwmutt_imap_serv_conf() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwmutt_imap_serv_help
-				imap_serv_conf_menu
+				imap_serv_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Anzeige der IMAP Konfigurationsdatei{{{

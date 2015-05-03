@@ -254,7 +254,7 @@ $Un_Set
 				# Funktion (select_hook_option_menu), Auswahl der Optionen fuer Hooks# {{{
 				#
 				select_hook_option_menu() {
-					menubox "$HDR_OPTION" "$HOOK_TITLE" "$gv_Menupoint" "$SELECT_HOOK_OPT_MENU"
+					menubox "$1" "$HOOK_TITLE" "$gv_Menupoint" "$SELECT_HOOK_OPT_MENU"
 				}
 				## }}}
 				# Funktion (hook_conf_menu), Konfigurationsmenue# {{{
@@ -326,7 +326,7 @@ $Un_Set
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
-							hook_conf_menu
+							hook_conf_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Alias)
 							# Alias fuer den Zeichensatz eingeben.# {{{
@@ -387,7 +387,7 @@ $Un_Set
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help kwmutt_hdr_opt_help
-										select_hook_option_menu
+										select_hook_option_menu "${gv_Auswahl#HELP }"
 										;;
 									*)
 										# Auswahl uebernehmen
@@ -861,7 +861,7 @@ $Un_Set
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
-						hook_choice_menu
+						hook_choice_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Display)
 						# Anzeige der $M_HOOK Datei{{{
@@ -896,7 +896,7 @@ $Un_Set
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help kwmutt_hdr_${Hook_Name}_help
-											menubox "$HOOK_CHOICE" "$HOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
+											menubox "${gv_Auswahl#HELP }" "$HOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
 											;;
 										*)	# Auswahl uebernehmen
 											HOOK_CHOICE="$gv_Auswahl"
@@ -1116,7 +1116,7 @@ $Un_Set
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help share/conf_del_help
-											checklist "" "$HOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+											checklist "${gv_Auswahl#HELP }" "$HOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 											;;
 										*)	# Auswahl uebernehmen
 											unset -- Tmp Anz Line
@@ -1172,7 +1172,7 @@ $Un_Set
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwmutt_hdr_help
-				conf_hdr_menu
+				conf_hdr_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Charset)
 				# Konfiguration der charset-hooks.# {{{

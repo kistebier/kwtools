@@ -12,7 +12,7 @@ kwmutt_lmb_serv_conf() {
 		#DEFAULT_NAME="${DEFAULT_NAME}"
 		dotlock_program="${dotlock_program:-/usr/bin/mutt_dotlock}"
 		mailboxes="${mailboxes:-+inbox}"
-		folder="${folder:-~/Mail}"
+		folder="${folder:-${HOME}/Mail}"
 		mbox_type="${mbox_type:-mbox}"
 		spoolfile="${spoolfile:-/var/mail/${USER}}"
 		mail_check="${mail_check:-900}"
@@ -65,7 +65,7 @@ kwmutt_lmb_serv_conf() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwmutt_lmb_serv_help
-					lmb_conf_serv_menu
+					lmb_conf_serv_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Default_Mailbox)
 					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
@@ -149,10 +149,11 @@ kwmutt_lmb_serv_conf() {
 						# schon markierte mailboxen mit on markieren ansonsten mit off.
 						generate_is_file "$mailboxes"
 						# vorhandene mailboxen mit einem plus markieren zum vergleichen
-						Tmp=${$(print ${folder}/*(/N:t))//(#s)/+}
+						Tmp_Dir="$(print ${folder}/*(/N:t))"
+						Tmp="${${Tmp_Dir//(#s)/+}// / +}"
 						is_value "$Tmp"
 						# Auswahl der mailboxen.
-						if [ -n "$VALUE_ARRAY" ] ; then
+						if [ -n "${VALUE_ARRAY[1]}" ] ; then
 							MAILBOX_MENU=($VALUE_ARRAY)
 							checklist "${DEFAULT_VALUE[1]}" "$LMB_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
 							while [ -n "$gv_Auswahl" ] ; do
@@ -268,7 +269,7 @@ kwmutt_lmb_serv_conf() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwmutt_lmb_serv_help
-				lmb_serv_conf_menu
+				lmb_serv_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Anzeige der LMB Konfigurationsdatei{{{
@@ -337,7 +338,7 @@ kwmutt_lmb_serv_conf() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/conf_del_help
-								checklist "" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	# Uebernahme (Konfigurationsdateien) loeschen
 								for i in ${=gv_Auswahl} ; {

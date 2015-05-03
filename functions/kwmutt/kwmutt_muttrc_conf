@@ -80,7 +80,7 @@ kwmutt_muttrc_conf() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwmutt_muttrc_help
-				muttrc_conf_menu
+				muttrc_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			abort_nosubject)
 				# Soll abgebrochen werden wenn kein Betreff eingegeben wurde. {{{
@@ -327,7 +327,7 @@ kwmutt_muttrc_conf() {
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help kwmutt_muttrc_help
-									menubox "$locale" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
+									menubox "${gv_Auswahl#HELP }" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
 									;;
 								*)	# Auswahl uebernehmen
 									locale="$gv_Auswahl"
@@ -422,7 +422,7 @@ kwmutt_muttrc_conf() {
 				;;
 			query_command)
 				# Kommando fuer die Abfrage externer Adressbuecher.# {{{
-				MSG=$(gettext 'Geben Sie den Befehl zur Abfrage externer Adressbuecher ein Bsp.: abook --mutt-query '%s').')
+				MSG=$(gettext 'Geben Sie den Befehl zur Abfrage externer Adressbuecher ein Bsp.: abook --mutt-query '%s' oder pc_query -m '%s').')
 				inputbox "$MUTTRC_TITLE" "$MSG" "$query_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					query_command="$gv_Auswahl"
@@ -528,7 +528,7 @@ kwmutt_muttrc_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help kwmutt_muttrc_help
-							menubox "" "$MUTTRC_TITLE" "$gv_Menupoint" "$MUTT_SHELL_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MUTTRC_TITLE" "$gv_Menupoint" "$MUTT_SHELL_MENU"
 							;;
 						passwd)	# shell aus /etc/passwd nehmen
 							shell="no"
