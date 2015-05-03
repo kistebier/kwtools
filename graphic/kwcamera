@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 10.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.05.2015
 #
 # Script: kwcamera, zum einstellen, downloaden, löschen von Bildern in Digital Kameras.
-# Version: 0.0.7
+# Version: 0.1.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -63,10 +63,10 @@ No_Config=$(gettext 'Sie muessen erst ihre Kamera konfigurieren.')
 lv_Camera_Conf=$(gettext 'Kamera_Einstellung')
 lv_Download=$(gettext 'Download')
 #
-# funktion haupt_menue{{{
+# funktion main_menu{{{
 MAIN_MENU=($gv_Configuration \"\" $lv_Download \"\" $gv_Delete \"\"
 	$lv_Camera_Conf \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -129,20 +129,20 @@ kwcamera_gauge() {
 #
 #####################################################################
 #
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
-		HELP*)	#
-			# Hilfe zu Camera
+		HELP*)
+			# Hilfe zu kwcamera
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration der Kamera{{{
 			lv_Model=$(gettext 'Modell')
 			lv_Port=$(gettext 'Port')
-			# Funktion conf_menue{{{
-			conf_menue() {
+			# Funktion conf_menu{{{
+			conf_menu() {
 				MENUE=($gv_Directory \"$IMAGE_DIR\" $lv_Port \"$CAMERA_PORT\"
 			   	$lv_Model \"$CAMERA_MODELL\" $gv_Save \"\" $gv_Back \"\")
 				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MENUE"
@@ -150,13 +150,13 @@ while [ "$gv_Auswahl" ] ; do
 			#}}}
 			# Hardware Funktionen laden
 			hw_conf
-			conf_menue
+			conf_menu
 			while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
 					HELP*)
 						# Hilfe zu Camera Konfiguration
 						script_help conf_help
-						conf_menue
+						conf_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Directory)
 						# Verzeichnis auswaehlen, wo die Bilder gespeichert werden sollen.# {{{
@@ -170,28 +170,27 @@ while [ "$gv_Auswahl" ] ; do
 							fi
 						fi	
 						## }}}
-						conf_menue $gv_Directory
+						conf_menu $gv_Directory
 						;;
 					$lv_Port)
 						# Port auswaehlen{{{
 						char_device_anzeige
 						if [ "$CHAR_ARRAY" ] ; then
-							# Funktion char_conf_port_menue{{{
+							# Funktion char_conf_port_menu{{{
 							#
-							char_conf_port_menue() {
+							char_conf_port_menu() {
 								TITLE=(${gv_Configuration}::${lv_Port})
 								MSG=$(gettext 'Waehlen Sie ihren Kamera Anschluss aus.')
-								menubox "$CAMERA_PORT" "$TITLE" "$MSG" "$CHAR_ARRAY"
+								menubox "$1" "$TITLE" "$MSG" "$CHAR_ARRAY"
 							}
 							#}}}
-							char_conf_port_menue
+							char_conf_port_menu "$CAMERA_PORT"
 							while [ "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)
 										# Hilfe zu Camera Konfiguration
-										#
 										script_help conf_help
-										char_conf_port_menue
+										char_conf_port_menu "${gv_Auswahl#HELP }"
 										;;
 									*)	#
 										CAMERA_PORT="$gv_Auswahl"
@@ -201,7 +200,7 @@ while [ "$gv_Auswahl" ] ; do
 							done
 						fi	
 						#}}}
-						conf_menue $lv_Port
+						conf_menu $lv_Port
 						;;
 					$lv_Model)
 						# 1. verfügbare Kameramodelle in einem array speichern{{{
@@ -215,22 +214,22 @@ while [ "$gv_Auswahl" ] ; do
 						done
 						#
 						if [ "$MOD_ARRAY" ] ; then
-							# Funktion camera_conf_model_menue{{{
+							# Funktion camera_conf_model_menu{{{
 							#
-							camera_conf_model_menue() {
+							camera_conf_model_menu() {
 								TITLE=(${gv_Configuration}::${lv_Model})
 								MSG=$(gettext 'Waehlen Sie ihr Kamera Modell aus.')
-								menubox "$CAMERA_MODELL" "$TITLE" "$MSG" "$MOD_ARRAY"
+								menubox "$1" "$TITLE" "$MSG" "$MOD_ARRAY"
 							}
 							#}}}
 							#
-							camera_conf_model_menue
+							camera_conf_model_menu "$CAMERA_MODELL"
 							while [ "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)
 										# Hilfe zu Camera Konfiguration
 										script_help modell_conf_help
-										camera_conf_model_menue
+										camera_conf_model_menue "${gv_Auswahl#HELP }"
 										#
 							 			;;
 									*)	#
@@ -241,7 +240,7 @@ while [ "$gv_Auswahl" ] ; do
 							done
 						fi	
 						#}}}
-						conf_menue $lv_Model
+						conf_menu $lv_Model
 						;;
 					$gv_Save) 
 						# Konfiguration schreiben.
@@ -254,7 +253,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Download)
 			# Download von Bildern{{{
@@ -356,7 +355,7 @@ while [ "$gv_Auswahl" ] ; do
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help choice_help
-								down_choice_menu
+								down_choice_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Display)
 								# Thumbnails temporaer herrunterladen# {{{
@@ -390,7 +389,7 @@ while [ "$gv_Auswahl" ] ; do
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help choice_help
-											checklist "" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
+											checklist "${gv_Auswahl#HELP }" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
 											;;
 										*)
 											# Auswahl uebernehmen
@@ -442,7 +441,7 @@ while [ "$gv_Auswahl" ] ; do
 			fi
 			#}}}
 			rm -rf ${gv_WorkDir}/thumb &>/dev/null
-			haupt_menue $lv_Download
+			main_menu $lv_Download
 			;;
 		$gv_Delete)
 			# Bilder in der Kamera löschen{{{
@@ -453,7 +452,7 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Attention" "$No_Config"
 			fi
 			#}}}
-			haupt_menue $gv_Delete
+			main_menu $gv_Delete
 			;;
 		$lv_Camera_Conf)
 			# Kamara Einstellung{{{
@@ -470,7 +469,7 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Attention" "$No_Config"
 			fi
 			#}}}
-			haupt_menue $lv_Camera_Conf
+			main_menu $lv_Camera_Conf
 			;;
 		$gv_Exit) break
 			;;
