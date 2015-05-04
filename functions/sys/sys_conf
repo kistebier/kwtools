@@ -1534,13 +1534,9 @@ sys_conf() {
 				no_prog_exec_msg blkid
 				exit 0
 			fi
-
-			########################################
-			#TODO: fat1? ueberpruefen
-			########################################
+			#
 			if [[ -b $1 ]] ; then
-				unset -- gv_Fs gv_NoFs
-				local Fs_Dev Fs_Tmp
+				local Fs_Dev Fs_Tmp Version
 				Fs_Dev="$1"
 				# Filesystem heraus bekommen.
 				Fs_Tmp=$(blkid -o value -s TYPE -p $Fs_Dev)
@@ -1551,7 +1547,18 @@ sys_conf() {
 #							gv_NoFs="$Fs_Tmp"
 #							;;
 						*)
-							gv_Fs="$Fs_Tmp"
+							case "$Fs_Tmp" in
+								vfat)
+									Version=$(blkid -o value -s VERSION -p $Fs_Dev)
+									case "$Version" in
+										FAT16) gv_Fs=fat16	;;
+										FAT32) gv_Fs=fat32	;;
+									esac
+									;;
+								*)
+									gv_Fs="$Fs_Tmp"
+									;;
+							esac
 							;;
 					esac
 				else
