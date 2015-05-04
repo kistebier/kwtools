@@ -38,7 +38,7 @@ kwrsynctab_conf_choice() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)	script_help kwrsynctab_conf_help
-				kwrsynctab_menue
+				kwrsynctab_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Source_Dir)
 				# Quellverzeichnis auswaehlen{{{
@@ -180,7 +180,7 @@ manage_dir_menu
 while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help kwrsynctab_help
-			manage_dir_menu
+			manage_dir_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Display)
 			# Ansicht der Konfiguration# {{{
@@ -216,17 +216,17 @@ while [ -n "$gv_Auswahl" ] ; do
 			CHANGE_MSG=$(gettext 'Waehlen Sie eine Konfiguration zum aendern aus.')
 			kwrsync_change_menu() {
 				CHANGE_MENU=($Kwrsync_Change_List $gv_Back \"\")
-				menubox "$NR" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+				menubox "$1" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 			}
 			#}}}
 			# Konfiguration veraendern# {{{
 			read_tab_entry
 			if [ -n "$S_VERZ" ] ; then
-				kwrsync_change_menu
+				kwrsync_change_menu "$NR"
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/conf_change_help
-							kwrsync_change_menu
+							kwrsync_change_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Back)	break
 							;;
@@ -270,7 +270,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			DEL_TITLE=(${lv_Directories}::${gv_Delete})
 			kwrsync_delete_menu() {
 				DEL_MENU=($Kwrsync_Change_List_Multi)
-				checklist "" "$DEL_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+				checklist "$1" "$DEL_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 			}
 			#}}}
 			# Konfiguration loeschen# {{{
@@ -280,7 +280,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/conf_del_help
-							kwrsync_delete_menu
+							kwrsync_delete_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Back)	break
 							;;

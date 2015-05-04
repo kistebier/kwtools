@@ -67,7 +67,7 @@ kwrsync_backup_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)	script_help conf_help
-				kwrsync_backup_conf_menue
+				kwrsync_backup_conf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Backup_Dir)
 				# Backup Verzeichnis angeben{{{
@@ -190,13 +190,18 @@ kwrsync_backup_conf() {
 				if [ -n "$U_G_ARRAY" ] ; then
 					lv_No_User=$(gettext 'kein Benutzer')
 					U_MSG=$(gettext 'Waehlen Sie einen Benutzer aus, der sich anstelle von "root" auf den zu sichernden Rechnern einloggen darf.')
-					U_MENU=(\"$lv_No_User\" \"\" $U_G_ARRAY)
-					U_TITLE=(${gv_Configuration}::${gv_User})
-					menubox "$USER_RUN" "$U_TITLE" "$U_MSG" "$U_MENU"
+					# Funktion (remote_user_menu)# {{{
+					remote_user_menu() {
+						U_MENU=(\"$lv_No_User\" \"\" $U_G_ARRAY)
+						U_TITLE=(${gv_Configuration}::${gv_User})
+						menubox "$1" "$U_TITLE" "$U_MSG" "$U_MENU"
+					}
+					## }}}
+					remote_user_menu "$USER_RUN"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/user_help
-								menubox "$USER_RUN" "$U_TITLE" "$U_MSG" "$U_MENU"
+								remote_user_menu "${gv_Auswahl#HELP }" "$U_TITLE" "$U_MSG" "$U_MENU"
 								;;
 							$lv_No_User)
 								USER_RUN=""
@@ -217,12 +222,17 @@ kwrsync_backup_conf() {
 				if [ "${R_SHELL[1]}" ] ; then
 					R_TITLE=(${gv_Configuration}::${lv_Remote_Shell})
 					R_MSG=$(gettext 'Waehlen Sie Ihre Remote Shell aus.')
-					R_MENU=($gv_None \"\" $R_SHELL)
-					menubox "$RSYNC_RSH" "$R_TITLE" "$R_MSG" "$R_MENU"
+					# Funktion (remote_shell_menu)# {{{
+					remote_shell_menu() {
+						R_MENU=($gv_None \"\" $R_SHELL)
+						menubox "$1" "$R_TITLE" "$R_MSG" "$R_MENU"
+					}
+					## }}}
+					remote_shell_menu "$RSYNC_RSH"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/remote_shell_help
-								menubox "$RSYNC_RSH" "$R_TITLE" "$R_MSG" "$R_MENU"
+								remote_shell_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_None)	# nichts
 								unset -- RSYNC_RSH

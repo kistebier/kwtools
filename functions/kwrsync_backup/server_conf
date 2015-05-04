@@ -153,7 +153,7 @@ server_conf() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/conf_change_help
-						backup_change_menu
+						backup_change_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Back)	break
 						;;
@@ -324,7 +324,7 @@ server_conf() {
 				HELP*)
 		    	    # Hilfe
 					script_help server_input_help
-					server_input_menu
+					server_input_menu "${gv_Auswahl#HELP }"
 					;;
 				----*)
 					# kein Menuepunkt
@@ -434,7 +434,7 @@ server_conf() {
 							HELP*)
 					    	    # Hilfe
 								script_help server_script_help
-								script_input_menu
+								script_input_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Choice)
 								# Scriptauswahl (Format-executable [ausfuehrbar]
@@ -482,14 +482,14 @@ server_conf() {
 						RLVM_MENU=($LV_E)
 						RLVM_MSG=$(gettext 'Waehlen Sie ein LV aus.')
 						lvm_menu() {
-							menubox "" "$SERVER_CONF_TITLE" "$RLVM_MSG" "$RLVM_MENU"
+							menubox "$1" "$SERVER_CONF_TITLE" "$RLVM_MSG" "$RLVM_MENU"
 						}
 						#}}}
-						lvm_menu
+						lvm_menu "$RLVM"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help server_input_help
-									lvm_menu
+									lvm_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Anzeige der LVs
@@ -636,14 +636,14 @@ server_conf() {
 			#
 			backup_del_menu() {
 				DEL_MENU=($Backup_Change_List_M)
-				checklist "" "$SERVER_CONF_TITLE" "$DEL_MSG" "$DEL_MENU"
+				checklist "$1" "$SERVER_CONF_TITLE" "$DEL_MSG" "$DEL_MENU"
 			}
 			#}}}
 			backup_del_menu
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/conf_del_help
-						backup_del_menu
+						backup_del_menu "${gv_Auswahl#HELP }"
 						;;
 					*)
 						# Auswahl loeschen
@@ -698,7 +698,7 @@ server_conf() {
 			HELP*)
 	    	    # Hilfe
 				script_help server_conf_help
-				check_server_choice_menu
+				check_server_choice_menu "${gv_Auswahl#HELP }"
 				;;
 			*)
 				# Auswahl uebernehmen
@@ -728,7 +728,7 @@ server_conf() {
 						HELP*)
 				    	    # Hilfe
 							script_help server_conf_help
-							server_conf_menu
+							server_conf_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Display)
 							# Konfiguration ansehen# {{{

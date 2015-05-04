@@ -53,6 +53,12 @@ kwrsync_exec() {
 			#
 			# fuer alle Rechner ausfuehren
 			for h in ${REMOTE_HOST[Nr]} ; {
+				# Pruefen ob Rechner im Netz ist.
+				if ! ping -c1 $h &>/dev/null ; then
+					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($h) ist nicht erreichbar! Er wird ausgelassen.')
+					sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
+					continue
+				fi
 				check_remote_sh
 				# komplette rsync Optionen.
 				PROG_OPT=($DEFAULT_ARGS --bwlimit=${BW_LIMIT:-0} $RSYNC_OPT

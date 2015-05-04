@@ -7,6 +7,12 @@ kwrsync_home_exec() {
 		NOT_NET=$(gettext 'kein Netz?')
 		for h in ${=R_HOST} ; {
 			if ! [ "$h" = localhost -o "$h" = "`hostname`" ] ; then
+				# Pruefen ob Rechner im Netz ist.
+				if ! ping -c1 $h &>/dev/null ; then
+					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($h) ist nicht erreichbar! Er wird ausgelassen.')
+					sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
+					continue
+				fi
 				# remote shell Variable belegen
 				check_remote_sh
 				# komplette rsync Optionen.

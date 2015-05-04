@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 01.05.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 04.05.2015
 #
 # Script: kwrsync_backup, erstellt remote Backups mittels dem Programm rsync
-# Version: 1.0.5
+# Version: 1.0.6
 
 # Ausfuehren von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -86,12 +86,12 @@ lv_Daily=$(gettext 'taeglich')
 lv_Weekly=$(gettext 'woechentlich')
 lv_Mounthly=$(gettext 'monatlich')
 ## }}}
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
 MAIN_MENU=($gv_Configuration \"\" \"$lv_Host_Conf\" \"\"
 	$gv_Display \"\" $lv_Backup \"\" $gv_Exit \"\")
 #
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -103,27 +103,27 @@ haupt_menue() {
 fs_conf
 hw_conf
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
 			autoload -U kwrsync_backup_conf kwrsync_backup_config
 			kwrsync_backup_conf
 			## }}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Host_Conf)
 			# Server/Rechner Backup Konfiguration# {{{
 			autoload -U server_conf server_config
 			server_conf
 			## }}}
-			haupt_menue $lv_Host_Conf
+			main_menu $lv_Host_Conf
 			;;
 		$gv_Display)
 			# Ansicht der belegten Groesse der Snapshots# {{{
@@ -131,7 +131,8 @@ while [ "$gv_Auswahl" ] ; do
 				# Rechner heraus finden# {{{
 				unset -- HOSTS_M
 				for i in ${BACKUP_PATH}/hourly.0/*~*-log(/N) ; {
-					HOSTS_M+=( ${i##*/} \"\" off)
+					HOSTS+=( ${i##*/} )
+					HOSTS_M+=( ${i##*/} \"\" off )
 				}
 				## }}}
 				# Funktion (hosts_choice_menu), Rechner Auswahl# {{{
@@ -139,7 +140,7 @@ while [ "$gv_Auswahl" ] ; do
 				hosts_choice_menu() {
 					HOSTS_TITLE="$gv_Display"
 					HOSTS_MENU=($HOSTS_M)
-					checklist "" "$HOSTS_TITLE" "$gv_Menupoint" "$HOSTS_MENU"
+					checklist "$1" "$HOSTS_TITLE" "$gv_Menupoint" "$HOSTS_MENU"
 				}
 				## }}}
 				# Funktion (no_snapshot_msg){{{
@@ -174,13 +175,13 @@ while [ "$gv_Auswahl" ] ; do
 				# Das ermitteln des belegten Platzes der Snapshots kann
 				# etwas dauern.
 				if [[ -n ${HOSTS_M[1]} ]] ; then
-					hosts_choice_menu
+					hosts_choice_menu "${HOSTS[1]}"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)
 								# Hilfe
 								script_help help
-								hosts_choice_menu
+								hosts_choice_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Auswahl uebernehmen
@@ -201,7 +202,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_backup_path_msg
 			fi
 			## }}}
-			haupt_menue $gv_Display
+			main_menu $gv_Display
 			;;
 		$lv_Backup)
 			# evtl. Backup ausfuehren# {{{
@@ -241,7 +242,7 @@ while [ "$gv_Auswahl" ] ; do
 						HELP*)
 				    	    # Hilfe
 							script_help backup_time_help
-							backup_time_menu
+							backup_time_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Hourly)
 							check_space_fp
@@ -279,7 +280,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_backup_path_msg
 			fi
 			## }}}
-			haupt_menue $lv_Backup
+			main_menu $lv_Backup
 			;;
 		$gv_Exit)	break
 			;;
