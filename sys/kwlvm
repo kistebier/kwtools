@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 24.04.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.05.2015
 #
 # Script: kwlvm, Konfiguration und Anzeigen von LVMs
 #
@@ -52,10 +52,10 @@ lv_PV=$(gettext 'PV')
 lv_LV=$(gettext 'LV')
 lv_Rename=$(gettext 'umbenennen')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($lv_Physic_Vol \"\" $lv_Vol_Groups \"\"
 $lv_Logical_Vol \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -64,17 +64,17 @@ LVM_TYPE_TITLE=(${lv_Vol_Groups}::${lv_LVM_Typ})
 LVM_TYPE_MSG=$(gettext 'Waehlen Sie den LVM Typ aus, der benutzt werden soll.')
 LVM_TYPE_MENU=(1 \"\" 2 \"\")
 lvm_type_menue() {
-	menubox "$LVM_TYPE" "$LVM_TYPE_TITLE" "$LVM_TYPE_MSG" "$LVM_TYPE_MENU"
+	menubox "$1" "$LVM_TYPE_TITLE" "$LVM_TYPE_MSG" "$LVM_TYPE_MENU"
 }
 #}}}
 # Funktion, Welcher LVM-Type 1 oder 2, soll benutzt werden.{{{
 #
 lvm_type() {
-	lvm_type_menue
+	lvm_type_menue "$LVM_TYPE"
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help lvm_type_help
-				lvm_type_menue
+				lvm_type_menue "${gv_Auswahl#HELP }"
 				;;
 			*)	LVM_TYPE="$gv_Auswahl"
 				break
@@ -139,28 +139,28 @@ elif [ "$LVM" = 1 ] ; then
 fi
 #}}}
 disk
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Physic_Vol)
 			# Physikalische Volumes
 			pv_volumes
-			haupt_menue $lv_Physic_Vol
+			main_menu $lv_Physic_Vol
 			;;
 		$lv_Vol_Groups)
 			# Volume Groups
 			vg_groups
-			haupt_menue $lv_Vol_Groups
+			main_menu $lv_Vol_Groups
 			;;
 		$lv_Logical_Vol)
 			# Logische Volumes
 			lv_volumes
-			haupt_menue $lv_Logical_Vol
+			main_menu $lv_Logical_Vol
 			;;
 		$gv_Exit)	break
 			;;

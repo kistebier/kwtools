@@ -91,31 +91,35 @@ vg_groups() {
 	}
 	#}}}
 	vg_menue
-	#
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)	script_help vg_help
-				vg_menue
+				vg_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Anzeige der gefundenen Volume Groups, in dieser {{{
 				# Funktion wird auch PROG generiert.
 				vg_display
 				if [ -n "${VG[1]}" ] ; then
-					VG_DISPLAY_MENU=($VG_M)
 					VG_DISPLAY_TITLE=(${lv_Vol_Groups}::${gv_Display})
 					VG_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere VGs zur Anzeige aus.')
-					checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+					# Funktion (vg_display_menu)# {{{
+					vg_display_menu() {
+						VG_DISPLAY_MENU=($VG_M)
+						checklist "$1" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+					}
+					## }}}
+					vg_display_menu
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl"  in
 							HELP*)	script_help vg_help
-								checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_DISPLAY_MENU"
+								vg_display_menu "${gv_Auswahl#HELP }"
 								;;
 							[a-z,A-Z]*)
 								# Anzeige der ausgewaehlten VG
 								vgdisplay ${=gv_Auswahl} >${gv_WorkDir}/vgdisplay
 								view_file ${gv_WorkDir}/vgdisplay
-								checklist "" "$VG_DISPLAY_TITLE" "$VG_DISPLAY_MSG" "$VG_M"
+								vg_display_menu
 								;;
 							*)	break 2
 								;;
@@ -147,7 +151,7 @@ vg_groups() {
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help vg_bak_help
-								vg_backup_menue
+								vg_backup_menue "${gv_Auswahl#HELP }"
 								;;
 							$lv_Backup_Create)
 								# Sicherung erstellen{{{
@@ -157,7 +161,7 @@ vg_groups() {
 								while [ "$gv_Auswahl" ] ; do
 									case $gv_Auswahl in
 										HELP*) script_help vg_auswahl_help
-											checklist "" "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
+											checklist "${gv_Auswahl#HELP }" "$VG_BACKUP_TITLE" "$VG_BACKUP_MSG" "$VG_BACKUP_CREATE_MENU"  
 											;;
 										*)	# Auswahl sichern.
 											S_Vg="$gv_Auswahl"
@@ -259,7 +263,7 @@ vg_groups() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help vg_create_help
-								create_vg_menue
+								create_vg_menue "${gv_Auswahl#HELP }"
 								;;
 							$lv_PV)
 								# Auswahl von noch freien Physiklischen Volumes{{{
@@ -271,7 +275,7 @@ vg_groups() {
 								while [ "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help share/part_help
-											checklist "" "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
+											checklist "${gv_Auswahl#HELP }" "$VG_PV_TITLE" "$VG_PV_MSG" "$VG_PV_MENU"
 											;;
 										*)	PV_AUSWAHL="$gv_Auswahl"
 											break
@@ -355,7 +359,7 @@ vg_groups() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl"  in
 							HELP*)	script_help vg_convert_help
-								checklist "" "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
+								checklist "${gv_Auswahl#HELP }" "$VG_CONVERT_TITLE" "$VG_CONVERT_MSG" "$VG_CONVERT_MENU"
 								;;
 							[a-z,A-Z]*)
 								# ausgewaehlte VG's konvertieren
@@ -392,7 +396,7 @@ vg_groups() {
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help vg_split_help
-								vg_split_menue
+								vg_split_menue "${gv_Auswahl#HELP }"
 								;;
 							$lv_VG)
 								# Welche VG soll gesplittet werden{{{
@@ -403,7 +407,7 @@ vg_groups() {
 								while [ "$gv_Auswahl" ] ; do
 									case $gv_Auswahl in
 										HELP*) script_help vg_auswahl_help
-											menubox "$S_VG" "$VG_SPLIT_TITLE" "$VG_SPLIT_MSG" "$VG_SPLIT_MENU"
+											menubox "${gv_Auswahl#HELP }" "$VG_SPLIT_TITLE" "$VG_SPLIT_MSG" "$VG_SPLIT_MENU"
 											;;
 										*)	# uebernehmen
 											S_VG="$gv_Auswahl"
@@ -442,7 +446,7 @@ vg_groups() {
 										while [ "$gv_Auswahl" ] ; do
 											case $gv_Auswahl in
 												HELP*) script_help pv_auswahl_help
-													checklist "" "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
+													checklist "${gv_Auswahl#HELP }" "$VG_SPLIT_TITLE" "$PV_CHOICE_MSG" "$PV_CHOICE_MENU"
 													;;
 												*)	#
 													PV_AUSWAHL="$gv_Auswahl"
@@ -507,7 +511,7 @@ vg_groups() {
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help vg_merge_help
-									vg_merge_menue 
+									vg_merge_menue "${gv_Auswahl#HELP }" 
 									;;
 								$lv_VG)
 									# VG auswaehlen die zur neuen VG verbunden werden soll{{{
@@ -518,7 +522,7 @@ vg_groups() {
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
 											HELP*) script_help vg_auswahl_help
-												menubox "$S_VG" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_MENU"
+												menubox "${gv_Auswahl#HELP }" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_MENU"
 												;;
 											*)	# uebernehmen
 												S_VG="$gv_Auswahl"
@@ -538,7 +542,7 @@ vg_groups() {
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
 											HELP*) script_help vg_auswahl_help
-												menubox "$Z_VG" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_NEW_MENU"
+												menubox "${gv_Auswahl#HELP }" "$VG_MERGE_TITLE" "$VG_MERGE_MSG" "$VG_MERGE_NEW_MENU"
 												;;
 											*)	#
 												Z_VG="$gv_Auswahl"
@@ -592,14 +596,14 @@ vg_groups() {
 					VG_RENAME_TITLE=(${lv_Vol_Groups}::${lv_Rename})
 					VG_RENAME_MSG=$(gettext 'Waehlen Sie eine VG zum umbenennen aus.')
 					vg_change_menue() {
-						menubox "$O_VG" "$VG_RENAME_TITLE" "$VG_RENAME_MSG" "$VG_RENAME_MENU"
+						menubox "$1" "$VG_RENAME_TITLE" "$VG_RENAME_MSG" "$VG_RENAME_MENU"
 					}
 					#}}}
-					vg_change_menue
+					vg_change_menue "$O_VG"
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help vg_replace_help
-								vg_change_menue
+								vg_change_menue "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# neuen Namen fuer die VG eingeben
@@ -633,14 +637,14 @@ vg_groups() {
 					VG_DEL_TITLE=(${lv_Vol_Groups}::${gv_Delete})
 					VG_DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere VGs zum loeschen aus.')
 					vg_delete_menue() {
-						checklist "" "$VG_DEL_TITLE" "$VG_DEL_MSG" "$VG_DEL_MENU"  
+						checklist "$1" "$VG_DEL_TITLE" "$VG_DEL_MSG" "$VG_DEL_MENU"  
 					}
 					#}}}
 					vg_delete_menue
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help vg_del_help
-								vg_delete_menue
+								vg_delete_menue "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# loeschen leerer VGs

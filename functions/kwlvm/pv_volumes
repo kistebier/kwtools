@@ -34,7 +34,7 @@ pv_volumes() {
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)	script_help pv_help
-				pv_menue
+				pv_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				search_pv
@@ -45,19 +45,20 @@ pv_volumes() {
 					PV_DISPLAY_TITLE=(${lv_Physic_Vol}::${gv_Display})
 					PV_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere PVs zur Anzeige aus.')
 					pv_anzeige_menue() {
-						checklist "" "$PV_DISPLAY_TITLE" "$PV_DISPLAY_MSG" "$PV_DISPLAY_MENU"
+						checklist "$1" "$PV_DISPLAY_TITLE" "$PV_DISPLAY_MSG" "$PV_DISPLAY_MENU"
 					}
 					#}}}
 					pv_anzeige_menue
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help pv_help
-								pv_anzeige_menue
+								pv_anzeige_menue "${gv_Auswahl#HELP }"
 								;;
 							/dev*)	
+								PV_Dev="$gv_Auswahl"
 								pvdisplay ${=gv_Auswahl} 2>/dev/null >${gv_WorkDir}/pvdisplay
 								view_file ${gv_WorkDir}/pvdisplay
-								pv_anzeige_menue
+								pv_anzeige_menue "$PV_Dev"
 								;;
 							*)	break 
 								;;
@@ -85,14 +86,14 @@ pv_volumes() {
 					PV_CREATE_TITLE=(${lv_Physic_Vol}::${gv_Create})
 					PV_CREATE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus, auf denen PVs erstellt werden sollen.')
 					pv_create_menue() {
-						checklist "" "$PV_CREATE_TITLE" "$PV_CREATE_MSG" "$PV_PARTS_NO_PV_M"
+						checklist "$1" "$PV_CREATE_TITLE" "$PV_CREATE_MSG" "$PV_PARTS_NO_PV_M"
 					}
 					#}}}
 					pv_create_menue
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help share/part_help
-								pv_create_menue
+								pv_create_menue "${gv_Auswahl#HELP }"
 								;;
 							*)	#
 								Anz=${(w)#gv_Auswahl}
@@ -136,15 +137,14 @@ pv_volumes() {
 					PV_MV_TITLE=(${lv_Physic_Vol}::${lv_Move})
 					PV_MV_MSG=$(gettext 'Waehlen Sie die VG aus in der die PEs von PVs verschoben werden sollen.')
 					pv_move_menue() {
-						menubox "$AUSWAHL" "$PV_MV_TITLE" "$PV_MV_MSG" "$PV_MV_MENU"
+						menubox "$1" "$PV_MV_TITLE" "$PV_MV_MSG" "$PV_MV_MENU"
 					}
 					#}}}
-					pv_move_menue
-					#
+					pv_move_menue "$AUSWAHL"
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help vg_auswahl_help
-								pv_move_menue
+								pv_move_menue "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Jetzt werden die einzelnen PV's aufgelistet, soweit mehr als eine PV zu
@@ -197,7 +197,7 @@ pv_volumes() {
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
 											HELP*)	script_help pv_move_help
-												move_menu
+												move_menu "${gv_Auswahl#HELP }"
 												;;
 											$lv_From)
 												move_select_pv
@@ -262,15 +262,14 @@ pv_volumes() {
 					PV_REM_TITLE=(${lv_Physic_Vol}::${lv_Remove})
 					PV_REM_MSG=$(gettext 'Waehlen Sie die VG aus aus der die PVs entfernt werden sollen.')
 					pv_delete_menue() {
-						menubox "" "$PV_REM_TITLE" "$PV_REM_MSG" "$PV_REM_MENU"
+						menubox "$1" "$PV_REM_TITLE" "$PV_REM_MSG" "$PV_REM_MENU"
 					}
 					#}}}
 					pv_delete_menue
-					#
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help vg_auswahl_help
-								pv_delete_menue
+								pv_delete_menue "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Jetzt werden die einzelnen PV's aufgelistet, soweit mehr als eine PV zu
@@ -285,7 +284,7 @@ pv_volumes() {
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
 											HELP*)	script_help pv_reduce_help
-												checklist "" "$PV_REM_TITLE" "$SELECT_PV_REM_MSG" "$SELECT_PV_REM_MENU"
+												checklist "${gv_Auswahl#HELP }" "$PV_REM_TITLE" "$SELECT_PV_REM_MSG" "$SELECT_PV_REM_MENU"
 												;;
 											*)	#
 												# Testen ob man eventuell alle PV's einer VG ausgewählt hat.
@@ -362,7 +361,7 @@ pv_volumes() {
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help pv_import_help
-									checklist "" "$PV_ADD_TITLE" "$PV_ADD_MSG" "$PV_ADD_MENU"
+									checklist "${gv_Auswahl#HELP }" "$PV_ADD_TITLE" "$PV_ADD_MSG" "$PV_ADD_MENU"
 									;;
 								*)
 									# VG auswählen zu denen die ausgewählten PVs hinzugefügt werden sollen
@@ -375,7 +374,7 @@ pv_volumes() {
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
 											HELP*)	script_help vg_auswahl_help
-												menubox "" "$PV_ADD_TITLE" "$SELECT_VG_ADD_MSG" "$VG_MENU"
+												menubox "${gv_Auswahl#HELP }" "$PV_ADD_TITLE" "$SELECT_VG_ADD_MSG" "$VG_MENU"
 												;;
 											*)	#
 												Anz=${(w)#AUSWAHL}
@@ -421,7 +420,7 @@ pv_volumes() {
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help pv_del_help
-								checklist "" "$PV_DEL_TITLE" "$PV_DEL_MSG" "$PV_DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$PV_DEL_TITLE" "$PV_DEL_MSG" "$PV_DEL_MENU"
 								;;
 							*)	#
 								# loeschen aller ausgewählten PV's

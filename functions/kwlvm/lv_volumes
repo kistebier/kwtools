@@ -35,7 +35,7 @@ lv_volumes() {
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help lv_help
-					lv_menue
+					lv_menue "${gv_Auswahl#HELP }"
 					;;
 				$gv_Display)
 					# Anzeige der LVs{{{
@@ -47,14 +47,14 @@ lv_volumes() {
 						LV_DISPLAY_TITLE=(${lv_Logical_Vol}::${gv_Display})
 						LV_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere LVs zur Anzeige aus.')
 						lv_anzeige_menue() {
-							checklist "" "$LV_DISPLAY_TITLE" "$LV_DISPLAY_MSG" "$LV_DISPLAY_MENU"
+							checklist "$1" "$LV_DISPLAY_TITLE" "$LV_DISPLAY_MSG" "$LV_DISPLAY_MENU"
 						}
 						#}}}
 						lv_anzeige_menue
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help lv_help
-									lv_anzeige_menue
+									lv_anzeige_menue "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Anzeige der LVs
@@ -87,7 +87,7 @@ lv_volumes() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help lv_create_help
-								lv_create_menue
+								lv_create_menue "${gv_Auswahl#HELP }"
 								;;
 							$lv_Vol_Group)
 								# VG auswaehlen{{{
@@ -98,7 +98,7 @@ lv_volumes() {
 								while [ "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help vg_auswahl_help
-											radiolist "" "$LV_VG_TITLE" "$LV_VG_MSG" "$LV_VG_MENU"
+											radiolist "${gv_Auswahl#HELP }" "$LV_VG_TITLE" "$LV_VG_MSG" "$LV_VG_MENU"
 											;;
 										*)	VG_AUSWAHL="$gv_Auswahl"
 											break
@@ -184,12 +184,12 @@ lv_volumes() {
 						LV_ENLARGE_MENU=($LV_M)
 						LV_ENLARGE_TITLE=(${lv_Logical_Vol}::${lv_Enlarge})
 						LV_ENLARGE_MSG=$(gettext 'Waehlen Sie eine LV zum vergroessern aus.')
-						radiolist "" "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
+						radiolist "$LV_DEV" "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help lv_auswahl_help
-									radiolist "" "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
+									radiolist "${gv_Auswahl#HELP }" "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
 									;;
 								*)
 									LV_DEV="$gv_Auswahl"
@@ -242,12 +242,12 @@ lv_volumes() {
 						LV_REDUCE_MENU=($LV_M)
 						LV_REDUCE_TITLE=(${lv_Logical_Vol}::${lv_Reduce})
 						LV_REDUCE_MSG=$(gettext 'Waehlen Sie eine LV zum verkleinern aus.')
-						radiolist "" "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
+						radiolist "$LV_DEV" "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help lv_auswahl_help
-									radiolist "" "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
+									radiolist "${gv_Auswahl#HELP }" "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
 									;;
 								*)	LV_DEV="$gv_Auswahl"
 									# Variable LV_SIZE belegen.
@@ -290,15 +290,19 @@ lv_volumes() {
 					#
 					if [ "${LV[1]}" ] ; then
 						local O_Lv
-						LV_RENAME_MENU=($LV_E)
 						LV_RENAME_TITLE=(${lv_Logical_Vol}::${lv_Rename})
 						LV_RENAME_MSG=$(gettext 'Waehlen Sie eine LV zum umbenennen aus.')
-						menubox "$O_Lv" "$LV_RENAME_TITLE" "$LV_RENAME_MSG" "$LV_RENAME_MENU"  
+						# Funktion (lv_rename_menu)
+						lv_rename_menu() {
+							LV_RENAME_MENU=($LV_E)
+							menubox "$1" "$LV_RENAME_TITLE" "$LV_RENAME_MSG" "$LV_RENAME_MENU"  
+						}
 						#
+						lv_rename_menu "$O_Lv"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help lv_replace_help
-									menubox "$O_Lv" "$LV_RENAME_TITLE" "$LV_RENAME_MSG" "$LV_RENAME_MENU"  
+									lv_rename_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# neuen Namen fuer die LV eingeben
@@ -338,7 +342,7 @@ lv_volumes() {
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help lv_del_help
-									checklist "" "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
+									checklist "${gv_Auswahl#HELP }" "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
 									;;
 								*)
 									# loeschen der LVs
