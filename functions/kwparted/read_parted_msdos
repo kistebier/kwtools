@@ -7,30 +7,24 @@ read_parted_msdos() {
 	if [[ -n ${Fs_Type[Anz1]} ]] && [[ -n ${Flag[Anz1]} ]] ; then
 		# lvm und raid sind raw access Laufwerke,
 		# also FS unbekannt
-		case "${Flag[Anz1]}" in
-			lvm|raid)
-				FLAG[Anz1]="${Flag[Anz1]}"
-				PART_FS[Anz1]="$gv_None"
-				;;
-			*)
-				FLAG[Anz1]="${Flag[Anz1]}"
+#		case "${Flag[Anz1]}" in
+#			lvm|raid)
+#				FLAG[Anz1]="${Flag[Anz1]}"
+#				PART_FS[Anz1]="$gv_None"
+#				;;
+#			*)
 				PART_FS[Anz1]="${Fs_Type[Anz1]}"
-				;;
-		esac
+				FLAG[Anz1]="${Flag[Anz1]}"
+#				;;
+#		esac
 	elif [[ -n ${Fs_Type[Anz1]} ]] ; then
-		###############################
-		# TODO: Flags checken
 		case "${Fs_Type[Anz1]}" in
-			boot|lba|lvm|palo|raid|root)
+			boot|root|hidden|raid|lvm|lba|hp-service|palo|prep|msftres|bios_grub|atvrecv|diag|legacy_boot|msftdata|irst|esp)
 				FLAG[Anz1]="${Fs_Type[Anz1]}"
 				PART_FS[Anz1]="$gv_None"
 				;;
 			*)	PART_FS[Anz1]="${Fs_Type[Anz1]}"
-				if [ "${Flag[Anz1]}" ] ; then
-					FLAG[Anz1]="${Flag[Anz1]}"
-				else
-					FLAG[Anz1]=""
-				fi
+				FLAG[Anz1]=""
 				;;
 		esac
 	else

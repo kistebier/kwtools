@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 25.04.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.05.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -96,7 +96,6 @@ search_disk() {
 search_pflags() {
 	unset -- PFLAGS
 	PFLAGS=${${(M)${(f)"$(parted -s ${DISK_DEV[1]} help set)"}##*FLAG is one of:*}##*:}
-	CASE_PATTER="${PFLAGS//, /|}"
 }
 ## }}}
 # Funktion (disk_cap), zur Festplatte die richtige gesamt# {{{
@@ -228,21 +227,30 @@ read_parted() {
 							check_fs "${PART[Anz1]}"
 							Fs_Type[Anz1]="$gv_Fs"
 							case "${5%,*}" in
-								$CASE_PATTER)
+								boot|root|hidden|raid|lvm|lba|hp-service|palo|prep|msftres|bios_grub|atvrecv|diag|legacy_boot|msftdata|irst|esp)
 									NAME[Anz1]=""
 									Flag[Anz1]="$5 $6"
 									;;
 								*)
-									case "${6%,*}" in
-										$CASE_PATTER)
-											NAME[Anz1]=""
-											Flag[Anz1]="$6 $7"
+									if [ -n "${5%,*}" -a -n "${6%,*}" -a -n "${7%,*}" ] ; then
+										NAME[Anz1]="$6"
+										Flag[Anz1]="$7 $8"
+									elif [ -n "${5%,*}" -a -n "${6%,*}" ] ; then
+										case ${6%,*} in
+											boot|root|hidden|raid|lvm|lba|hp-service|palo|prep|msftres|bios_grub|atvrecv|diag|legacy_boot|msftdata|irst|esp)
+												if [[ ${5%,*} != ${Fs_Type[Anz1]} ]] ; then
+													NAME[Anz1]="$5"
+													Flag[Anz1]="$6 $7"
+												else
+													NAME[Anz1]="$6"
+													Flag[Anz1]=""
+												fi
 												;;
-										*)
-											NAME[Anz1]="$6"
-											Flag[Anz1]="$7 $8"
-											;;
-									esac
+										esac
+									else
+										NAME[Anz1]="$5"
+										Flag[Anz1]=""
+									fi
 									;;
 							esac
 							#
@@ -256,11 +264,13 @@ read_parted() {
 							Fs_Type[Anz1]="$gv_Fs"
 							# Flags einstellen
 							case "${6%,*}" in
-								$CASE_PATTER)
+								boot|root|hidden|raid|lvm|lba|hp-service|palo|prep|msftres|bios_grub|atvrecv|diag|legacy_boot|msftdata|irst|esp)
 									Flag[Anz1]="$6 $7"
 									;;
 								*)
-									Flag[Anz1]="$7 $8"
+									if [ -n "$7" ] ; then
+										Flag[Anz1]="$7 $8"
+									fi
 									;;
 							esac
 							#
@@ -401,7 +411,7 @@ disk_create_parttab() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*) script_help parttab_typ_help
-					menubox "$Label" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
+					menubox "${gv_Auswahl#HELP }" "$PART_TAB" "$gv_Menupoint" "$DISK_LABEL"
 					;;
 				$gv_Back)
 					break
@@ -442,7 +452,7 @@ parted_edit() {
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)	script_help parted_help
-				parted_menue
+				parted_menue "${gv_Auswahl#HELP }"
 				;;
 			$DISK_INFO)
 				# Laufwerks-Information ansehen{{{
@@ -533,7 +543,7 @@ parted_edit() {
 								for i in ${=PFLAGS} ; {
 									Fl="${i%,}"
 									#########################################
-									# INFO:
+									# INFO: swap
 									# Dieses Flag wird nicht mehr unterstuetzt.
 									#########################################
 									if [ "$Fl" != swap ] ; then
@@ -545,14 +555,14 @@ parted_edit() {
 									fi
 								}
 								PART_FLAG_MENU=($Part_Flag)
-								radiolist "" "$PART_FLAG_TITLE" "$PART_FLAG_MSG" "$PART_FLAG_MENU"
+								radiolist "$1" "$PART_FLAG_TITLE" "$PART_FLAG_MSG" "$PART_FLAG_MENU"
 							}
 							#}}}
-							part_flags_menue
+							part_flags_menue "$Flag"
 							while [ -n "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)	script_help flag_help
-										part_flags_menue
+										part_flags_menue "${gv_Auswahl#HELP }"
 										;;
 									$gv_None)
 										unset -- FLAGs
@@ -598,7 +608,7 @@ parted_edit() {
 					parttype_menue() {
 						PARTTYPE_TITLE="$lv_Part_Typ"
 						PARTTYPE_MSG=$(gettext 'Waehlen Sie einen Partitionstyp aus.')
-						menubox "$Ist_Part_Type" "$PARTTYPE_TITLE" "$PARTTYPE_MSG" "$PARTTYPE_MENU"
+						menubox "$1" "$PARTTYPE_TITLE" "$PARTTYPE_MSG" "$PARTTYPE_MENU"
 					}
 					## }}}
 					local Extented_Part Primary_Part Opt PARTTYPE_MENU
@@ -632,11 +642,11 @@ parted_edit() {
 							;;
 					esac
 					if [ -n "$PARTTYPE_MENU" ] ; then
-						parttype_menue
+						parttype_menue "$Ist_Part_Type"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help create_parted_help
-									parttype_menue
+									parttype_menue "${gv_Auswahl#HELP }"
 									;;
 								$gv_Back)	break
 									;;
@@ -818,7 +828,7 @@ parted_edit() {
 					# Checken ob das Dateisystem unterstuetzt wurde,
 					# ansonsten kommt eine Meldung.
 					if [ ! -z "${ACTION_PART_MENU[1]}" ] ; then
-						menubox "" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ACTION_PART_MENU"
+						menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ACTION_PART_MENU"
 					else
 						# Dateisystem wird nicht unterstuetzt.
 						if [ -n "$FsTmp" ] ; then
@@ -932,7 +942,7 @@ parted_edit() {
 						while [ -n "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help create_parted_help
-									$Menu
+									$Menu "${gv_Auswahl#HELP }"
 									;;
 								$lv_Size)
 									# Groesse der Partition eingeben # {{{
@@ -954,7 +964,7 @@ parted_edit() {
 										while [ "$gv_Auswahl" ] ; do
 											case $gv_Auswahl in
 												HELP*)	script_help create_parted_help
-													menubox "$Fs_Type" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
+													menubox "${gv_Auswahl#HELP }" "$FS_TYPE_TITLE" "$FS_TYPE_MSG" "$FS_TYPE_MENU"
 													;;
 												*)	Fs_Type="$gv_Auswahl"
 													# Wurde nichts geaendert wird die
@@ -1178,9 +1188,8 @@ parted_edit() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
 								script_help insert_to_free_part_help
-								insert_to_free_part_menu "$DEFAULT_VALUE"
+								insert_to_free_part_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Size)
 								# Menu fuer die Groessenangaben der
@@ -1397,7 +1406,7 @@ parted_edit() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help action_help
-								action_parted_menue
+								action_parted_menue "${gv_Auswahl#HELP }"
 								;;
 							$gv_Copy)
 								# Partitionen kopieren.# {{{
@@ -1418,14 +1427,14 @@ parted_edit() {
 								# Funktion disk_menu{{{
 								disk_menu() {
 									DISK_MENU=($DISK_DEV_E $gv_Back \"\")
-									menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
+									menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$DISK_MENU"
 								}
 								#}}}
 								disk_menu
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help share/disk_help
-											disk_menu
+											disk_menu "${gv_Auswahl#HELP }"
 											;;
 										$gv_Back)	break 3
 											;;
@@ -1547,8 +1556,8 @@ if [ -x "${commands[kwraid]}" ] ; then
 	Packages+=(raid \"\")
 fi
 #}}}
-# Funktion haupt_menue{{{
-haupt_menue() {
+# Funktion main_menu{{{
+main_menu() {
 	MAIN_MENU=($lv_Status \"\" $PART_TAB \"\"
 	$DISK_DEV_E "$Packages" $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -1556,12 +1565,12 @@ haupt_menue() {
 #}}}
 
 fs_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)	# Hilfe zu diesem Menue anzeigen.
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Status)
 			# Status von kwparted anzeigen.# {{{
@@ -1576,7 +1585,7 @@ while [ "$gv_Auswahl" ] ; do
 			# nach Festplatten suchen
 			search_disk
 			## }}}
-			haupt_menue $lv_Status
+			main_menu $lv_Status
 			;;
 		$PART_TAB)
 			# Partitionstabellen(typ) aller Festplatten bearbeiten# {{{
@@ -1585,28 +1594,28 @@ while [ "$gv_Auswahl" ] ; do
 			# nach Festplatten suchen
 			search_disk
 			## }}}
-			haupt_menue $PART_TAB
+			main_menu $PART_TAB
 			;;
 		/*)	
 			parted_edit
 			# nach Festplatten suchen
 			search_disk
 			#}}}
-			haupt_menue $FP
+			main_menu $FP
 			;;
 		lvm)
 			# LVMs creieren
 			kwlvm
 			# nach Festplatten suchen
 			search_disk
-			haupt_menue lvm
+			main_menu lvm
 			;;
 		raid)
 			# RAID Arrays creieren
 			kwraid
 			# nach Festplatten suchen
 			search_disk
-			haupt_menue raid
+			main_menu raid
 			;;
 		$gv_Exit)	break
 			;;
