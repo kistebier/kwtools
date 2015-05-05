@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.05.2015
 #
 # Script: kwnetconf, ist ein Frontend fuer verschiedene
 #	      Netzwerk Konfigurationsprogramme.
 #
-# Version: 0.1.2
+# Version: 0.1.3
 #
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -62,17 +62,17 @@ for i in kwnetcardconf pppoeconf isdnconfig wvdial ; {
 }
 ## }}}
 # Funktion Hauptmenue{{{
-haupt_menue() {
+main_menu() {
 	MAIN_MENU=(${TYPES[*]} $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
 
-haupt_menue
+main_menu
 while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		wvdial)
 			# wvdial ausfuehren
@@ -90,7 +90,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				fi
 			fi
 			check_status
-			haupt_menue wvdial
+			main_menu wvdial
 			;;
 		$gv_Exit)	break ;;
 		*)	
@@ -98,7 +98,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			N_PROG="$gv_Auswahl"
 			$gv_Auswahl
 			check_status
-			haupt_menue $N_PROG
+			main_menu $N_PROG
 			;;
 	esac
 done
