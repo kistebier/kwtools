@@ -86,7 +86,7 @@ raid_create_conf() {
 					script_help create_help raid_conf_create_help
 				fi
 				#
-				create_menu
+				create_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Raiddev)
 				# Auswahl eines freien RAID-Device{{{
@@ -114,7 +114,7 @@ raid_create_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help create_help
-								menubox "$RAIDDEV" "$RAIDDEV_TITLE" "$RAIDDEV_MSG" "$RAIDDEV_MENU"
+								menubox "${gv_Auswahl#HELP }" "$RAIDDEV_TITLE" "$RAIDDEV_MSG" "$RAIDDEV_MENU"
 								;;
 							*)	#
 								# RAIDDEV vormerken
@@ -144,7 +144,7 @@ raid_create_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help raidlevel_help
-							menubox "$RAIDLEVEL" "$RAIDLEVEL_TITLE" "$RAIDLEVEL_MSG" "$RAIDLEVEL_MENUE"
+							menubox "${gv_Auswahl#HELP }" "$RAIDLEVEL_TITLE" "$RAIDLEVEL_MSG" "$RAIDLEVEL_MENUE"
 							;;
 						*)	#
 							# Raidlevel vormerken.
@@ -266,7 +266,7 @@ raid_create_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help create_help
-							menubox "$PERSISTENTSUPERBLOCK" "$PERSISTENTSUPERBLOCK_TITLE" "$PERSISTENTSUPERBLOCK_MSG" "$PERSISTENTSUPERBLOCK_MENU"
+							menubox "${gv_Auswahl#HELP }" "$PERSISTENTSUPERBLOCK_TITLE" "$PERSISTENTSUPERBLOCK_MSG" "$PERSISTENTSUPERBLOCK_MENU"
 							;;
 						*)	#
 							PERSISTENTSUPERBLOCK="$gv_Auswahl"
@@ -286,7 +286,7 @@ raid_create_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help raid_conf_parity_help
-								menubox "$PARITYALGORITHM" "$PARITYALGORITHM_TITLE" "$PARITYALGORITHM_MSG" "$PARITYALGORITHM_MENU"
+								menubox "${gv_Auswahl#HELP }" "$PARITYALGORITHM_TITLE" "$PARITYALGORITHM_MSG" "$PARITYALGORITHM_MENU"
 								;;
 							*)
 								PARITYALGORITHM="$gv_Auswahl"
@@ -337,7 +337,7 @@ raid_create_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help create_help
-							menubox "$NRSPAREDISK" "$NRSPAREDISK_TITLE" "$NRSPAREDISK_MSG" "$NRSPAREDISK_MENU"
+							menubox "${gv_Auswahl#HELP }" "$NRSPAREDISK_TITLE" "$NRSPAREDISK_MSG" "$NRSPAREDISK_MENU"
 							;;
 						
 						*)
@@ -364,7 +364,7 @@ raid_create_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/user_help
-								menubox "$CR_OWNER" "$gv_Configuration" "$OWNER_MSG" "$U_G_ARRAY"
+								menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$OWNER_MSG" "$U_G_ARRAY"
 								;;
 							*)
 								# Gruppe uebernehmen
@@ -386,7 +386,7 @@ raid_create_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/user_help
-								menubox "$CR_GROUP" "$gv_Configuration" "$GROUP_MSG" "$U_G_ARRAY"
+								menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$GROUP_MSG" "$U_G_ARRAY"
 								;;
 							*)
 								# Gruppe uebernehmen
@@ -416,7 +416,7 @@ raid_create_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help raid_conf_auto_help
-							menubox "$CR_AUTO" "$AUTO_TITLE" "$gv_Menupoint" "$AUTO_MENU"
+							menubox "${gv_Auswahl#HELP }" "$AUTO_TITLE" "$gv_Menupoint" "$AUTO_MENU"
 							;;
 						part*)	
 							# Partionsanzahl eingeben, wenn man moechtet# {{{
@@ -455,7 +455,7 @@ raid_create_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help raid_conf_meta_help
-							menubox "$CR_META" "$META_TITLE" "$gv_Menupoint" "$META_MENU"
+							menubox "${gv_Auswahl#HELP }" "$META_TITLE" "$gv_Menupoint" "$META_MENU"
 							;;
 						*)	# Wert uebernehmen
 							CR_META="$gv_Auswahl"
@@ -484,10 +484,14 @@ raid_create_conf() {
 				read_create_options
 				# Alten Eintrag loeschen und neuen erstellen.
 				if [ -n "$CR_VALUE" ] ; then
-					print -l ${(R)${(f)"$(< $RAIDTAB)"}##CREATE*} >${gv_WorkDir}/raidtab.bak
-					print "CREATE $CR_VALUE" >>${gv_WorkDir}/raidtab.bak
-					mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
-					unset -- CR_VALUE CR_OPTIONS
+					if [ -f "$RAIDTAB" ] ; then
+						print -l ${(R)${(f)"$(< $RAIDTAB)"}##CREATE*} >${gv_WorkDir}/raidtab.bak
+						print "CREATE $CR_VALUE" >>${gv_WorkDir}/raidtab.bak
+						mv ${gv_WorkDir}/raidtab.bak $RAIDTAB
+						unset -- CR_VALUE CR_OPTIONS
+					else
+						print "CREATE $CR_VALUE" > $RAIDTAB
+					fi
 				fi
 				## }}}
 				break
@@ -502,11 +506,7 @@ raid_create_conf() {
 					# pruefen ob das Device existiert. Ist keine automatische
 					# Erstellung aktiviert wird es erstellt.
 					if [[ -z $CR_AUTO ]] ; then
-						if [ -c /dev/.devfsd ] ; then
-							Minor_Nr="${RAIDDEV##*/}"
-						else
-							Minor_Nr="${RAIDDEV##*/md}"
-						fi
+						Minor_Nr="${RAIDDEV##*/md}"
 						if [ ! -b "$RAIDDEV" ] ; then
 							mknod $RAIDDEV b 9 $Minor_Nr || prog_failure
 						fi

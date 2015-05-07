@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 31.03.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 07.05.2015
 #
 # Script: kwraid, Konfiguriert und kreiert Software RAID Systeme.
-# Version: 0.3.8
+# Version: 0.3.9
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -47,7 +47,7 @@ else
 fi
 ## }}}
 # Pruefen ob mdadm installiert ist# {{{
-prog_check mdadm mdadm-startall
+prog_check mdadm
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
@@ -68,8 +68,6 @@ autoload -U drive_conf raiddisk raid_create_conf \
 #
 ##################################################################
 #
-MSG=$(gettext 'Die Initialisierung der RAID Arrays kann etwas dauern. Pruefen Sie anschliessend, ob alle Arrays richtig initialisiert wurden (Status).')
-msgbox "$gv_Info" "$MSG"
 # generelle Funktionen ausfuehren
 hw_conf
 fs_conf
@@ -123,44 +121,43 @@ if_conf_file "$OS" raid
 # -a --auto-detect = md Devices anlegen falls nicht vorhanden.
 #
 # Alle Arrays in /etc/mdadm/mdadm.conf werden gestartet.
+RAIDTAB="${RAIDTAB:-/etc/mdadm/mdadm.conf}"
 if [ -f "$RAIDTAB" ] ; then
+	MSG=$(gettext 'Die Initialisierung der RAID Arrays kann etwas dauern. Pruefen Sie anschliessend, ob alle Arrays richtig initialisiert wurden (Status).')
+	msgbox "$gv_Info" "$MSG"
 	mdadm -A -s -amd &>/dev/null
-else
-	mdadm-startall &>/dev/null
 fi
 #}}}
-# Funktion (haupt_menue){{{
+# Funktion (main_menu){{{
 #
 MAIN_MENU=($gv_Configuration \"\" $lv_Drives \"\"
 $lv_Monitor \"\" $lv_Status \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
 			# Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration der mdadm.conf.# {{{
-			################################
-			# TODO: und fuers erstellen von 
+			# und fuers erstellen von 
 			# neuen RAID Devices.
-			################################
 			autoload -U net_conf raid_conf
 			net_conf
 			raid_conf
 			## }}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Drives)
 			# RAID Arrays verwalten, erstellen,....
 			drive_conf
-			haupt_menue $lv_Drives
+			main_menu $lv_Drives
 			;;
 		$lv_Monitor)
 			# RAID Monitor anschalten und konfigurieren{{{
@@ -171,12 +168,12 @@ while [ "$gv_Auswahl" ] ; do
 				no_raid_arrays_msg
 			fi
 			#}}}
-			haupt_menue $lv_Monitor
+			main_menu $lv_Monitor
 			;;
 		$lv_Status)
 			# Status anzeigen
 			raidstat
-			haupt_menue $lv_Status
+			main_menu $lv_Status
 			;;
 		$gv_Exit)	break
 			;;

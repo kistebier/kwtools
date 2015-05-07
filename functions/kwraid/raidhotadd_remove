@@ -14,16 +14,16 @@ raidhotadd_remove() {
 		RAID_CHANGE_DISK_MENU=($MD_ARRAY_STATE_E)
 		RAID_CHANGE_DISK_TITLE=$(gettext '${lv_Raid_Hot_Ar}::raiddev')
 		RAID_CHANGE_DISK_MSG=$(gettext 'Waehlen Sie ein RAID Array aus, in welchem Laufwerke gewechselt werden sollen.')
-		menubox "$RAIDDEV" "$RAID_CHANGE_DISK_TITLE" "$RAID_CHANGE_DISK_MSG" "$RAID_CHANGE_DISK_MENU"
+		menubox "$1" "$RAID_CHANGE_DISK_TITLE" "$RAID_CHANGE_DISK_MSG" "$RAID_CHANGE_DISK_MENU"
 	}
 	## }}}
 	# ARRAY auswaehlen
 	search_md_state
-	hotadd_remove_menu
+	hotadd_remove_menu "$RAIDDEV"
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help hotadd_remove_help
-				hotadd_remove_menu
+				hotadd_remove_menu "${gv_Auswahl#HELP }"
 				;;
 			*)	#
 				RAIDDEV="$gv_Auswahl"
@@ -58,7 +58,7 @@ raidhotadd_remove() {
 						case "$gv_Auswahl" in
 							HELP*)
 								script_help hotadd_remove_menue_help
-								raidhotadd_remove_menu
+								raidhotadd_remove_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Part_Remove)
 								# Partitionen/Festplatten aus dem Array entfernen.{{{
@@ -66,15 +66,15 @@ raidhotadd_remove() {
 								# Funktion (remove_part_menu)# {{{
 								remove_part_menu() {
 									RAID_PART_REM_MENU=($PARTS_STATE)
-									menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_REM_MSG" "$RAID_PART_REM_MENU"
+									menubox "$1" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_REM_MSG" "$RAID_PART_REM_MENU"
 								}
 								## }}}
 								raid_search_part_state $RAIDDEV
-								remove_part_menu
+								remove_part_menu "$HDDEV"
 								while [ "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help hotadd_remove_help
-											remove_part_menu
+											remove_part_menu "${gv_Auswahl#HELP }"
 											;;
 										/dev*)
 											# Partition auswaehlen
@@ -132,7 +132,7 @@ raidhotadd_remove() {
 												case "$gv_Auswahl" in
 													HELP*)
 														script_help share/part_help
-														menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+														menubox "${gv_Auswahl#HELP }" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
 														;;
 													/dev*)
 														HDDEV="$gv_Auswahl"
