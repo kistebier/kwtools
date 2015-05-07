@@ -43,9 +43,8 @@ hw_conf() {
 	}
 	#}}}
 	# Funktion (char_device_anzeige), zur Anzeige der vefuegbaren Zeichengeraeten{{{
-	# dabei wird das devfsd beruecksichtigt.
 	#
-	# Zur Zeit nur Drucker, serielle und USB Schnittstellen.
+	# Zur Zeit nur Drucker und serielle Schnittstellen.
 	#
 	# usage: char_device_anzeige 
 	#
@@ -53,7 +52,7 @@ hw_conf() {
 		local Anz
 		integer Anz
 		Anz=1
-		for i in /dev/lp* /dev/printers/* /dev/tts/* /dev/ttyS* /dev/usb/* ; { 
+		for i in /dev/lp* /dev/ttyS* ; { 
 			if [ ! -L "$i" ] ; then
 				if [ -c "$i" ] ; then
 					CHAR_ARRAY[Anz]="$i \"\""
@@ -176,6 +175,22 @@ hw_conf() {
 			fi
 		else
 			no_prog_exec_msg hwinfo
+		fi
+	}
+	#}}}
+	# Funktion (mdadm_conf_scan), erstellt eine aktuelle $RAIDTAB{{{
+	# Bei inactiven Arrays kommt ein Rückgabewert von 1.
+	#
+	mdadm_conf_scan() {
+		mdadm -Dbsc partitions >${gv_WorkDir}/raid_array 2>/dev/null
+		if [ "`wc -l < ${gv_WorkDir}/raid_array`" -gt 0 ] ; then
+			if [ -f "$RAIDTAB" ] ; then
+				print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
+				>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
+				mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
+			else
+				>> ${gv_WorkDir}/mdadm.conf < ${gv_WorkDir}/raid_array
+			fi
 		fi
 	}
 	#}}}
@@ -875,8 +890,9 @@ lv_free_size() {
 	# usage: raid_enlarge_dev RAIDDEV
 	#
 	raid_enlarge_dev() {
-		unset -- RAID_ANZ
 		if [[ ${#argv} == 1 ]] ; then
+			unset -- RAID_ANZ ARRAY_SIZE
+			typeset -F 2 ARRAY_SIZE
 			RAIDDEV="$1"
 			# Erst das RAID Level herausfinden. vergroessern 
 			# funktioniert nur bei
@@ -924,13 +940,8 @@ lv_free_size() {
 												;;
 											/dev*)
 												HDDEV="$gv_Auswahl"
-												# gesamte Groesse des Arrays in Byte umrechnen.
-												(( Tmp = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
-												# Groesse in MebiByte umrechnen
-												convert_mib_size -i "$Tmp"
-												if [[ -n $SIZE_MIB ]] ; then
-													ARRAY_SIZE="$SIZE_MIB"
-												fi
+												# gesamte Groesse des Arrays in MebiByte umrechnen.
+												(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 / 1048576.0 ))
 												# Groesse eines Laufwerks vom Array
 												# berechnen.
 												(( Tmp = ARRAY_SIZE / RAID_ANZ ))
@@ -1100,6 +1111,8 @@ lv_free_size() {
 	#
 	raid_reduce_dev() {
 		if [[ ${#argv} == 1 ]] ; then
+			unset -- RAID_ANZ ARRAY_SIZE
+			typeset -F 2 ARRAY_SIZE
 			RAIDDEV="$1"
 			# Erst das RAID Level herausfinden.
 			# funktioniert nur bei
@@ -1144,13 +1157,8 @@ lv_free_size() {
 											;;
 										/dev*)
 											HDDEV="$gv_Auswahl"
-											# gesamte Groesse des Arrays in Byte umrechnen.
-											(( Tmp = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 ))
-											# Groesse in MebiByte umrechnen
-											convert_mib_size -i "$Tmp"
-											if [[ -n $SIZE_MIB ]] ; then
-												ARRAY_SIZE="$SIZE_MIB"
-											fi
+											# gesamte Groesse des Arrays in MebiByte umrechnen.
+											(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 / 1048576.0 ))
 											# reale Raidanzahl die zur Verfuegung steht.
 											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
 											# Groesse eines Laufwerks vom Array
@@ -1229,6 +1237,7 @@ lv_free_size() {
 					# um 1 hoeher zaehlen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array vergroessern
 					# -G - grow
 					# -n - Laufwerksanzahl
@@ -1250,6 +1259,7 @@ lv_free_size() {
 					# um 1 hoeher zaehlen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array vergroessern
 					# -G - grow
 					# -n - Laufwerksanzahl
@@ -1279,6 +1289,7 @@ lv_free_size() {
 					mdadm $DEV -G --array-size=${New_Size#-}M >/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array verkleinern/anpassen
 					RAID_ANZ=$(raid_anz $DEV)
 					(( RAID_ANZ-- ))
@@ -1293,6 +1304,7 @@ lv_free_size() {
 					sleep 1
 					# entfernen
 					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array verkleinern/anpassen
 					RAID_ANZ=$(raid_anz $DEV)
 					(( RAID_ANZ-- ))

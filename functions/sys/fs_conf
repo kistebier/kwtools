@@ -624,18 +624,6 @@ fs_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (mdadm_conf_scan), erstellt eine aktuelle $RAIDTAB{{{
-	# Bei inactiven Arrays kommt ein Rückgabewert von 1.
-	#
-	mdadm_conf_scan() {
-		mdadm -Dbsc partitions >${gv_WorkDir}/raid_array 2>/dev/null
-		if [ "`wc -l < ${gv_WorkDir}/raid_array`" -gt 0 ] ; then
-			print -l ${(R)${(f)"$(< $RAIDTAB)"}##(#s)ARRAY*} > ${gv_WorkDir}/mdadm.conf.bak
-			>> ${gv_WorkDir}/mdadm.conf.bak < ${gv_WorkDir}/raid_array
-			mv ${gv_WorkDir}/mdadm.conf.bak $RAIDTAB
-		fi
-	}
-	#}}}
 	# Funktion (resize_fs), um Dateisysteme zu verkleinern/vergroessern# {{{
 	#
 	# usage: resize_fs [+|-]SIZE DEVICE
@@ -878,7 +866,7 @@ fs_conf() {
 					*)
 						# Dieses FS wird noch nicht unterstuetzt
 						mount_check -a "$DEV"
-						no_fs_support_msg "$FS"
+						no_fs_support_msg "$gv_Fs"
 						;;
 				esac
 			fi
