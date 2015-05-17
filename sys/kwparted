@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.05.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 07.05.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
@@ -174,7 +174,7 @@ read_parted() {
 		case "$FPDISKLABEL" in
 			gpt|dos)
 				# Partitionstabelle in einer temporaeren Datei speichern
-				$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit MiB print $P_Opt 2>/dev/null >${gv_WorkDir}/partdb$$)
+				$(export LC_ALL=C ; parted -s $Disk unit MiB print $P_Opt 2>/dev/null >${gv_WorkDir}/partdb$$)
 				;;
 			*)
 				# bsd|dvh|loop|mac|pc98|sun
@@ -896,7 +896,7 @@ parted_edit() {
 								# erstellt worden sein kann.
 								#
 								# parted Tabelle 
-								$(export LC_ALL=C ; export LC_NUMERIC=en ; parted -s $Disk unit MiB print free 2>/dev/null >${gv_WorkDir}/partdb.diff)
+								$(export LC_ALL=C ; parted -s $Disk unit MiB print free 2>/dev/null >${gv_WorkDir}/partdb.diff)
 								PART_NR=${${(ws: :)${(M)${(f)"$(diff -u ${gv_WorkDir}/partdb$$ ${gv_WorkDir}/partdb.diff)"}##(#s)+[[:space:]][0-9]*}}[2]}
 								;;
 							*)
