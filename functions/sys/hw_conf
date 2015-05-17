@@ -643,7 +643,7 @@ lv_free_size() {
 				# ${gv_WorkDir}/${i}_partdb neu erstellen falls die
 				# Datei nicht vorhanden ist.
 				if [ ! -f ${gv_WorkDir}/${i##*/}_partdb ] ; then
-					parted -s $i print 2>/dev/null | grep '^ [[:digit:]]*' >${gv_WorkDir}/${i##*/}_partdb
+					$(export LC_ALL=C ; parted -s $i print 2>/dev/null | grep '^ [[:digit:]]*' >${gv_WorkDir}/${i##*/}_partdb)
 				fi
 			}
 		fi
@@ -891,8 +891,8 @@ lv_free_size() {
 	#
 	raid_enlarge_dev() {
 		if [[ ${#argv} == 1 ]] ; then
-			unset -- RAID_ANZ ARRAY_SIZE
-			typeset -F 2 ARRAY_SIZE
+			unset -- RAID_ANZ RAID_USED_DEV_SIZE MINUS_RAID_ANZ NEW_ARRAY_SIZE
+			local Used_Dev_Size
 			RAIDDEV="$1"
 			# Erst das RAID Level herausfinden. vergroessern 
 			# funktioniert nur bei
@@ -911,13 +911,21 @@ lv_free_size() {
 						# einstellen
 						case "$RAIDLEVEL" in
 							raid1)	MINUS_RAID_ANZ=1
+									RAID_ANZ=1
 								;;
 							raid[45])	MINUS_RAID_ANZ=1
+									(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
+									# Raidanzahl um 1 erhöhen, da ja ein RAID
+									# Laufwerk hinzu kommt.
+									(( RAID_ANZ++ ))
 								;;
 							raid6)	MINUS_RAID_ANZ=2
+									(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
+									# Raidanzahl um 1 erhöhen, da ja ein RAID
+									# Laufwerk hinzu kommt.
+									(( RAID_ANZ++ ))
 								;;
 						esac
-						(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
 						# Festplatten herrausfinden
 						disk
 						if [ ! -z "${DISK_DEV[1]}" ] ; then
@@ -936,21 +944,15 @@ lv_free_size() {
 										case "$gv_Auswahl" in
 											HELP*)
 												script_help share/part_help
-												menubox "" "$RAID_ENLARGE_ADD_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
+												menubox "${gv_Auswahl#HELP }" "$RAID_ENLARGE_ADD_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
 												;;
 											/dev*)
 												HDDEV="$gv_Auswahl"
-												# gesamte Groesse des Arrays in MebiByte umrechnen.
-												(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 / 1048576.0 ))
-												# Groesse eines Laufwerks vom Array
-												# berechnen.
-												(( Tmp = ARRAY_SIZE / RAID_ANZ ))
-												# Raidanzahl um 1 erhöhen, da ja ein RAID
-												# Laufwerk hinzu kommt.
-												(( RAID_ANZ++ ))
+												# Groesse eines Laufwerks des Arrays in KibiByte herausfinden.
+												RAID_USED_DEV_SIZE=$(raid_used_dev_size $RAIDDEV)
 												# neue gesamt Groesse des werdenden
 												# Arrays berechnen.
-												(( NEW_ARRAY_SIZE = Tmp * RAID_ANZ ))
+												(( NEW_ARRAY_SIZE = RAID_USED_DEV_SIZE * RAID_ANZ ))
 												# Dateisystem des Arrays vergroessern
 												raid_resize +${NEW_ARRAY_SIZE} $RAIDDEV $HDDEV
 												# alle RAID Arrays neu heraussuchen
@@ -1111,8 +1113,7 @@ lv_free_size() {
 	#
 	raid_reduce_dev() {
 		if [[ ${#argv} == 1 ]] ; then
-			unset -- RAID_ANZ ARRAY_SIZE
-			typeset -F 2 ARRAY_SIZE
+			unset -- RAID_ANZ RAID_USED_DEV_SIZE MIN_RAID_PART MINUS_RAID_ANZ NEW_ARRAY_SIZE
 			RAIDDEV="$1"
 			# Erst das RAID Level herausfinden.
 			# funktioniert nur bei
@@ -1153,23 +1154,20 @@ lv_free_size() {
 									case "$gv_Auswahl" in
 										HELP*)
 											script_help share/part_help
-											menubox "" "$RAID_PART_REDUCE_TITLE" "$RAID_PART_REDUCE_MSG" "$RAID_PART_REDUCE_MENU"
+											menubox "${gv_Auswahl#HELP }" "$RAID_PART_REDUCE_TITLE" "$RAID_PART_REDUCE_MSG" "$RAID_PART_REDUCE_MENU"
 											;;
 										/dev*)
 											HDDEV="$gv_Auswahl"
-											# gesamte Groesse des Arrays in MebiByte umrechnen.
-											(( ARRAY_SIZE = $(</sys/devices/virtual/block/${RAIDDEV##*/}/size) * 512 / 1048576.0 ))
+											# Groesse eines Laufwerks des Arrays in KibiByte herausfinden.
+											RAID_USED_DEV_SIZE=$(raid_used_dev_size $RAIDDEV)
 											# reale Raidanzahl die zur Verfuegung steht.
 											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
-											# Groesse eines Laufwerks vom Array
-											# berechnen.
-											(( Tmp = ARRAY_SIZE / RAID_ANZ ))
 											# Raidanzahl um 1 reduzieren, da ja ein RAID
 											# Laufwerk entfernt wird.
 											(( RAID_ANZ-- ))
 											# neue gesamt Groesse des werdenden
 											# Arrays berechnen.
-											(( NEW_ARRAY_SIZE = Tmp * RAID_ANZ ))
+											(( NEW_ARRAY_SIZE = RAID_USED_DEV_SIZE * RAID_ANZ ))
 											# Dateisystem des Arrays verkleinern
 											raid_resize -${NEW_ARRAY_SIZE} $RAIDDEV $HDDEV
 											# alle RAID Arrays neu heraussuchen
@@ -1210,18 +1208,16 @@ lv_free_size() {
 	#
 	# + - vergroessern
 	# - - verkleinern
-	# SIZE - neue Groesse des RAID Array in MiB
+	# SIZE - neue Groesse des RAID Array KiB
 	# DEVICE - RAID Array
 	# OTHER_DEVICE - Laufwerk das in/aus dem RAID Array soll
-	#
-	####################################
-	# TODO: Was ist mit BREAK=2?
 	raid_resize() {
 		if [[ ${#argv} == 3 ]] ; then
-			local New_Size DEV O_DEV
+			local New_Size DEV O_DEV New_Size_MiB
 			New_Size="$1"
 			DEV="$2"
 			O_DEV="$3"
+			typeset -F3 New_Size_MiB 
 			# DEV auf UUID/LABEL pruefen
 			check_crypt_map_dev $DEV
 			# RAID Dateisystem vergroessern/verkleinern
@@ -1237,37 +1233,41 @@ lv_free_size() {
 					# um 1 hoeher zaehlen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
-					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array vergroessern
 					# -G - grow
 					# -n - Laufwerksanzahl
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
+					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
+					# reshaped (gestaltet) wird.
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
+					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
-					# Array vergroessern
-					mdadm $RAIDDEV -G --array-size=${New_Size#+}M >/dev/null || \
+					# Array vergroessern (max)
+					mdadm $DEV -G --array-size=max 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					# Fortschrittsbalken
-					raid_gauge
+					raid_gauge "$DEV"
 				else
 					# RAID ARRAY vergroessern
 					# Laufwerk addieren
 					# -a - addieren
-					mdadm $DEV -a $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -a $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Laufwerksanzahl heraus finden
 					RAID_ANZ=$(raid_anz $DEV)
 					# um 1 hoeher zaehlen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
-					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array vergroessern
 					# -G - grow
 					# -n - Laufwerksanzahl
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
+					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
+					# reshaped (gestaltet) wird.
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
+					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
 					# Fortschrittsbalken
-					raid_gauge
+					raid_gauge "$DEV"
 				fi
 			}
 			## }}}
@@ -1278,40 +1278,48 @@ lv_free_size() {
 					# Laufwerk entfernen
 					# -f - als faulty markieren
 					# -r - entfernen
-					mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -f $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# sleep wird benoetigt, da das faulty setzen
 					# an Zeit braucht.
 					sleep 1
 					# entfernen
-					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -r $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Array verkleinern
 					# -G - grow
-					mdadm $DEV -G --array-size=${New_Size#-}M >/dev/null || \
+					mdadm $DEV -G --array-size=${New_Size#-} 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
-					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					# Array verkleinern/anpassen
+					# -G - grow
+					# -n - Laufwerksanzahl
+					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
+					# reshaped (gestaltet) wird.
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					RAID_ANZ=$(raid_anz $DEV)
 					(( RAID_ANZ-- ))
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Fortschrittsbalken
-					raid_gauge
+					raid_gauge "$DEV"
 				else
 					# RAID ARRAY reduzieren
-					mdadm $DEV -f $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -f $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# sleep wird benoetigt, da das faulty setzen
 					# an Zeit braucht.
 					sleep 1
 					# entfernen
-					mdadm $DEV -r $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
-					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
+					mdadm $DEV -r $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Array verkleinern/anpassen
+					# -G - grow
+					# -n - Laufwerksanzahl
+					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
+					# reshaped (gestaltet) wird.
+					rm -rfv /root/${${DEV//\//_}#_}.bak &>/dev/null
 					RAID_ANZ=$(raid_anz $DEV)
 					(( RAID_ANZ-- ))
-					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak >/dev/null || \
+					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					# Fortschrittsbalken
-					raid_gauge
+					raid_gauge "$DEV"
 				fi
 			}
 			## }}}
@@ -1331,7 +1339,9 @@ lv_free_size() {
 						# und Groesse anpassen.
 						resize_cryptdisk $MAP_DEV
 						# Dateisystem vergroessern
-						resize_fs $New_Size $MAP_DEV
+						# Kibibyte in Mebibyte umrechnen
+						(( New_Size_MiB = ${New_Size#+} / 1024.0 )) 
+						resize_fs +${New_Size_MiB} $MAP_DEV
 					else
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
@@ -1346,8 +1356,10 @@ lv_free_size() {
 					# eingestellt werden, bei Level 1 (Spiegel) ist sie
 					# immer gleich gross.
 					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
+						# Kibibyte in Mebibyte umrechnen
+						(( New_Size_MiB = ${New_Size#-} / 1024.0 )) 
 						# Dateisystem verkleinern
-						resize_fs $New_Size $MAP_DEV
+						resize_fs -${New_Size_MiB} $MAP_DEV
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
 						# Raid-Array vorbereiten/Laufwerk reduzieren.
@@ -1394,6 +1406,25 @@ lv_free_size() {
 		return 0
 	}
 	#}}}
+	# Funktion (raid_used_dev_size),Groesse eines Laufwerks von einem ARRAY herausfinden# {{{
+	#
+	# usage: raid_used_dev_size RAIDDEV
+	#
+	raid_used_dev_size() {
+		if [[ ${#argv} == 1 ]] ; then
+			if [[ -b $1 ]] ; then
+				print ${${(ws: :)${(M)${(f)"$(mdadm -D $1)"}##*Used Dev Size*}}[5]}
+			else
+				no_block_device_msg "$1"
+				return 1
+			fi
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
 	# Funktion (resize_cryptdisk)# {{{
 	resize_cryptdisk() {
 		if [[ ${#argv} == 1 ]] ; then
