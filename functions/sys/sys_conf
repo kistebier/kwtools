@@ -5391,26 +5391,34 @@ is_value() {
 	# usage: raid_gauge
 	#
 	raid_gauge() {
-		RAID_CONF_TITLE=$gv_Create
-		FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`"
-		GAUGE_MSG=$(gettext '$RAIDDEV wird erstellt und/oder syncronisiert - ')
-		RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
-		Tmp="-1"
-		PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`"
-		PERCENT="${PERCENT1%%.*}"
-		if [ -n "$PERCENT" ] ; then
-			while [ -n "$PERCENT" -a "$PERCENT" -le 100 ] ; do
-				if [ "$Tmp" != "$PERCENT" ] ; then
-					Tmp="$PERCENT"
-					print "$PERCENT" | gauge "$RAID_CONF_TITLE" "$RAID_GAUGE_MSG" ; PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`" ; PERCENT="${PERCENT1%%.*}" ; FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`" ; RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
-				else
-					PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`"
-					PERCENT="${PERCENT1%%.*}"
-					FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`"
-					RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
-				fi
-			done
+		if [[ ${#argv} == 1 ]] ; then
+			local Dev
+			Dev="$1"
+			RAID_CONF_TITLE=$gv_Create
+			FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`"
+			GAUGE_MSG=$(gettext '$DEV wird erstellt und/oder syncronisiert - ')
+			RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
+			Tmp="-1"
+			PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`"
+			PERCENT="${PERCENT1%%.*}"
+			if [ -n "$PERCENT" ] ; then
+				while [ -n "$PERCENT" -a "$PERCENT" -le 100 ] ; do
+					if [ "$Tmp" != "$PERCENT" ] ; then
+						Tmp="$PERCENT"
+						print "$PERCENT" | gauge "$RAID_CONF_TITLE" "$RAID_GAUGE_MSG" ; PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`" ; PERCENT="${PERCENT1%%.*}" ; FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`" ; RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
+					else
+						PERCENT1="`print ${${(s: :)${${(s:%:)${(M)${(f)"$(< /proc/mdstat)"}##*(recovery|resync|reshape)*}}[1]}}[4]}`"
+						PERCENT="${PERCENT1%%.*}"
+						FINISH="`print ${${(ws:=:)${(M)$(< /proc/mdstat)##finish*}}[2]}`"
+						RAID_GAUGE_MSG="${GAUGE_MSG}${FINISH}"
+					fi
+				done
+			fi
+		else
+			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	## }}}
 	# Funktion (read_file), Datei(en) einlesen{{{
