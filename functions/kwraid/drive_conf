@@ -39,8 +39,8 @@ drive_conf() {
 	#}}}
 	# Funktion (drive_menu){{{
 	#
-	DRIVE_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Reduce \"\"
-	$gv_Enlarge \"\" $lv_Repair \"\" $lv_Raid_Hot_Ar \"\"
+	DRIVE_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Enlarge \"\"
+	$gv_Reduce \"\" $lv_Repair \"\" $lv_Raid_Hot_Ar \"\"
 	$gv_Delete \"\" $gv_Back \"\")
 	drive_menu() {
 		menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$DRIVE_MENU"
@@ -397,33 +397,6 @@ Array        Laufwerksanzahl')
 				## }}}
 				drive_menu $gv_Change
 				;;
-			$gv_Reduce)
-				# Partition/Laufwerk verkleinern/substrahieren# {{{
-				if [ -n "${MD_DEV_E[1]}" ] ; then
-					RAID_REDUCE_DISK_TITLE=$(gettext 'Raid-Arrays::${gv_Reduce}')
-					RAID_REDUCE_DISK_MENU=($MD_DEV_E)
-					RAID_REDUCE_DISK_MSG=$(gettext 'Waehlen Sie ein RAID Array aus, welches verkleinert werden soll.')
-					# ARRAY auswaehlen
-					menubox "$RAIDDEV" "$RAID_REDUCE_DISK_TITLE" "$RAID_REDUCE_DISK_MSG" "$RAID_REDUCE_DISK_MENU"
-					while [ -n "$gv_Auswahl" ] ; do
-						case "$gv_Auswahl" in
-							HELP*)	script_help drive_help
-								menubox "${gv_Auswahl#HELP }" "$RAID_REDUCE_DISK_TITLE" "$RAID_REDUCE_DISK_MSG" "$RAID_REDUCE_DISK_MENU"
-								;;
-							*)
-								# Array uebernehmen
-								RAIDDEV="$gv_Auswahl"
-								raid_reduce_dev $RAIDDEV
-								break
-								;;
-						esac
-					done
-				else
-					no_raid_arrays_msg
-				fi
-				## }}}
-				drive_menu $gv_Reduce
-				;;
 			$gv_Enlarge)
 				# Partition/Laufwerk addieren/vergroessern# {{{
 				if [ -n "${MD_DEV_E[1]}" ] ; then
@@ -450,6 +423,33 @@ Array        Laufwerksanzahl')
 				fi
 				## }}}
 				drive_menu $gv_Enlarge
+				;;
+			$gv_Reduce)
+				# Partition/Laufwerk verkleinern/substrahieren# {{{
+				if [ -n "${MD_DEV_E[1]}" ] ; then
+					RAID_REDUCE_DISK_TITLE=$(gettext 'Raid-Arrays::${gv_Reduce}')
+					RAID_REDUCE_DISK_MENU=($MD_DEV_E)
+					RAID_REDUCE_DISK_MSG=$(gettext 'Waehlen Sie ein RAID Array aus, welches verkleinert werden soll.')
+					# ARRAY auswaehlen
+					menubox "$RAIDDEV" "$RAID_REDUCE_DISK_TITLE" "$RAID_REDUCE_DISK_MSG" "$RAID_REDUCE_DISK_MENU"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help drive_help
+								menubox "${gv_Auswahl#HELP }" "$RAID_REDUCE_DISK_TITLE" "$RAID_REDUCE_DISK_MSG" "$RAID_REDUCE_DISK_MENU"
+								;;
+							*)
+								# Array uebernehmen
+								RAIDDEV="$gv_Auswahl"
+								raid_reduce_dev $RAIDDEV
+								break
+								;;
+						esac
+					done
+				else
+					no_raid_arrays_msg
+				fi
+				## }}}
+				drive_menu $gv_Reduce
 				;;
 			$lv_Repair)
 				# Arrays versuchen zu reparieren# {{{
@@ -524,7 +524,7 @@ Array        Laufwerksanzahl')
 					RAID_DEL_DISK_MSG=$(gettext 'Waehlen Sie ein oder mehrere RAID Arrays zum loeschen aus. Dabei werden auch die Superblocks der Partitionen geloescht.')
 					# ARRAYs auswaehlen
 					checklist "" "$RAID_DEL_DISK_TITLE" "$RAID_DEL_DISK_MSG" "$RAID_DEL_DISK_MENU"
-					while [ -n "$gv_Auswahl" ] ; do
+					while [ -n "${gv_Auswahl[1]}" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help drive_help
 								checklist "${gv_Auswahl#HELP }" "$RAID_DEL_DISK_TITLE" "$RAID_DEL_DISK_MSG" "$RAID_DEL_DISK_MENU"
@@ -536,10 +536,10 @@ Array        Laufwerksanzahl')
 									# Partitionen des Array heraus finden
 									Part=${(o)${(M)$(mdadm -D $md)##*/dev/[sh]d*}}
 									# Array stoppen
-									mdadm --stop $md || prog_failure
+									mdadm --stop $md 1>/dev/null || prog_failure
 									for P in ${=Part} ; {
 										# Superblock loeschen
-										mdadm --zero-superblock $P >/dev/null || prog_failure
+										mdadm --zero-superblock $P 1>/dev/null || prog_failure
 									}
 								}
 								# Konfiguration neu schreiben
@@ -555,7 +555,7 @@ Array        Laufwerksanzahl')
 					no_raid_arrays_msg
 				fi
 				## }}}
-				drive_menu
+				drive_menu $gv_Delete
 				;;
 			$gv_Back)	break
 				;;
