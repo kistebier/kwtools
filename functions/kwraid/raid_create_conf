@@ -534,7 +534,7 @@ raid_create_conf() {
 									unset -- Parity_Alg
 								fi
 								# erstellen
-								eval mdadm -C $RAIDDEV -c $CHUNKSIZE -l $RAIDLEVEL "$Parity_Alg" $CR_OPTIONS -f -n $NRRAIDDISK -x $NRSPAREDISK $RAIDDISKS $SPAREDISKS >/dev/null || prog_failure
+								mdadm -C $RAIDDEV -c $CHUNKSIZE -l $RAIDLEVEL ${=Parity_Alg} ${=CR_OPTIONS} -f -n $NRRAIDDISK -x $NRSPAREDISK ${=RAIDDISKS} ${=SPAREDISKS} 1>/dev/null || prog_failure
 								# Konfigurationsdatei neu schreiben
 								mdadm_conf_scan
 								# Formatieren yes/no
@@ -562,7 +562,7 @@ raid_create_conf() {
 								unset -- Parity_Alg
 							fi
 							# erstellen
-							eval mdadm -C $RAIDDEV -c $CHUNKSIZE -l $RAIDLEVEL "$Parity_Alg" $CR_OPTIONS -f -n $NRRAIDDISK $RAIDDISKS >/dev/null || prog_failure
+							mdadm -C $RAIDDEV -c $CHUNKSIZE -l $RAIDLEVEL ${=Parity_Alg} ${=CR_OPTIONS} -f -n $NRRAIDDISK ${=RAIDDISKS} 1>/dev/null || prog_failure
 							# Konfigurationsdatei neu schreiben
 							mdadm_conf_scan
 							# Formatieren yes/no

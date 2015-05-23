@@ -2,7 +2,11 @@
 #
 # usage: no_raid_arrays_msg
 no_raid_arrays_msg() {
-	MSG=$(gettext 'Es sind keine RAID Arrays vorhanden.')
+	if [[ $argv == change ]] ; then
+		MSG=$(gettext 'Es sind keine RAID Arrays mit einer bestimmten Anzahl von Laufwerken vorhanden.')
+	else
+		MSG=$(gettext 'Es sind keine RAID Arrays vorhanden.')
+	fi
 	msgbox "$gv_Attention" "$MSG"
 }
 # }}}

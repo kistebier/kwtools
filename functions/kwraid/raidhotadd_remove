@@ -88,12 +88,12 @@ raidhotadd_remove() {
 												Part_State_Nr=${PARTS_STATE[(i)$HDDEV]}
 												(( Part_State_Nr-- ))
 												if [[ ${PARTS_STATE[$Part_State_Nr]} != faulty ]] ; then
-													mdadm $RAIDDEV -f $HDDEV >/dev/null || prog_failure
+													mdadm $RAIDDEV -f $HDDEV 1>/dev/null || prog_failure
 													# sleep wird benoetigt, da das faulty setzen
 													# an Zeit braucht.
 													sleep 1
 												fi
-												mdadm $RAIDDEV -r $HDDEV >/dev/null || prog_failure
+												mdadm $RAIDDEV -r $HDDEV 1>/dev/null || prog_failure
 												raid_search_part_state $RAIDDEV
 												# Info das die Festplatte/Partition nun getauscht
 												# oder repariert werden kann.
@@ -136,7 +136,7 @@ raidhotadd_remove() {
 														;;
 													/dev*)
 														HDDEV="$gv_Auswahl"
-														mdadm $RAIDDEV -a $HDDEV >/dev/null || prog_failure
+														mdadm $RAIDDEV -a $HDDEV 1>/dev/null || prog_failure
 														# Fortschrittsbalken
 														raid_gauge "$RAIDDEV"
 														break

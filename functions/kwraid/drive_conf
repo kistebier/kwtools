@@ -63,11 +63,10 @@ Array        Laufwerksanzahl')
 				;;
 			$gv_Change)
 				################################
-				# TODO: Parity kennzeichnen
-				# chunksize und layout 1/4/5/6
-				# fehlt noch
+				# TODO:
+				# chunksize fehlt noch?
 				################################
-				# Arrays raid1,4,5,6 konvertieren# {{{
+				# Arrays raid1,5,6 konvertieren# {{{
 				if [ -n "${MD_DEV_E[1]}" ] ; then
 					unset -- RAID_ANZ RAID_USED_DEV_SIZE
 					typeset -F3 New_Size_MiB 
@@ -135,7 +134,7 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 1
@@ -187,7 +186,7 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 2
@@ -208,6 +207,7 @@ Array        Laufwerksanzahl')
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
 													RAID_ANZ=$(raid_anz $DEV)
+													RAID_LAYOUT=$(raid_is_layout $DEV)
 													# 1. Schritt Groesse anpassen
 													# Groeese eines Laufwerks vom Array herausfinden
 													RAID_USED_DEV_SIZE=$(raid_used_dev_size $DEV)
@@ -223,7 +223,7 @@ Array        Laufwerksanzahl')
 													# 2. Schritt 5 nach 6
 													# RAID_Anz wieder auf vorherige Anzahl hochrechnen
 													(( RAID_ANZ = RAID_ANZ + 2 ))
-													mdadm -G $DEV -l 6 -p left-symmetric -n $RAID_ANZ \
+													mdadm -G $DEV -l 6 -p ${RAID_LAYOUT}-6 -n $RAID_ANZ \
 														--backup-file=/root/${${DEV//\//_}#_}.bak \
 														1>/dev/null || prog_failure
 													# Fortschrittsbalken
@@ -235,7 +235,7 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 3
@@ -256,10 +256,11 @@ Array        Laufwerksanzahl')
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
 													RAID_ANZ=$(raid_anz $DEV)
+													RAID_LAYOUT=$(raid_is_layout $DEV)
 													# Groeese eines Laufwerks vom Array herausfinden
 													RAID_USED_DEV_SIZE=$(raid_used_dev_size $DEV)
 													# 1. Schritt 6 nach 5
-													mdadm -G $DEV -l 5 -p left-symmetric -n $RAID_ANZ \
+													mdadm -G $DEV -l 5 -p ${RAID_LAYOUT%-6} -n $RAID_ANZ \
 														--backup-file=/root/${${DEV//\//_}#_}.bak \
 														1>/dev/null || prog_failure
 													# Fortschrittsbalken
@@ -281,7 +282,7 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 4
@@ -330,13 +331,13 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 5
 									;;
 								6)
-									# Raidlevel 5 nach 1, test# {{{
+									# Raidlevel 5 nach 1# {{{
 									# RAID5 Arrays herausfinden
 									search_exact_md 5
 									if [ -n "${MD_RAIDLEVEL_DEV[1]}" ] ; then
@@ -379,7 +380,7 @@ Array        Laufwerksanzahl')
 											esac
 										done
 									else
-										no_raid_arrays_msg
+										no_raid_arrays_msg change
 									fi
 									## }}}
 									raid_change_menu 6
@@ -479,14 +480,14 @@ Array        Laufwerksanzahl')
 								# Array uebernehmen
 								RAIDDEV="$gv_Auswahl"
 								# Array stoppen
-								mdadm --stop $RAIDDEV >/dev/null || prog_failure
+								mdadm --stop $RAIDDEV 1>/dev/null || prog_failure
 								# Die Variable RET wird von der Funktion prog_failure
 								# erzeugt.
 								if [[ $RET = 0 ]] ; then
 									# Array resync
 									# -A - assemble
 									# -U - update (Superblock etc.)
-									mdadm -A -U resync $RAIDDEV >/dev/null || prog_failure
+									mdadm -A -U resync $RAIDDEV 1>/dev/null || prog_failure
 									# Fortschrittsbalken
 									raid_gauge "$RAIDDEV"
 									# neu einlesen
@@ -534,7 +535,7 @@ Array        Laufwerksanzahl')
 								RAID_ARRAYS="$gv_Auswahl"
 								for md in ${=RAID_ARRAYS} ; {
 									# Partitionen des Array heraus finden
-									Part=${(o)${(M)$(mdadm -D $md)##*/dev/[sh]d*}}
+									Part=${(o)${(M)$(mdadm -D $md 2>&1)##*/dev/[sh]d*}}
 									# Array stoppen
 									mdadm --stop $md 1>/dev/null || prog_failure
 									for P in ${=Part} ; {
