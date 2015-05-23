@@ -898,9 +898,6 @@ lv_free_size() {
 			# funktioniert nur bei
 			# RAID Level 1,4,5,6
 			RAIDLEVEL=$(raid_is_level $RAIDDEV)
-			#####################################
-			# TODO: Menu fur Level erstellen?
-			#####################################
 			case "$RAIDLEVEL" in
 				raid[1456])
 					# Raid Arrays 1/4/5/6 vergroessern# {{{
@@ -1088,6 +1085,25 @@ lv_free_size() {
 		fi
 	}
 	#}}}
+	# Funktion (raid_is_layout), herausfinden des Layout eines ARRAYs# {{{
+	#
+	# usage: raid_is_layout RAIDDEV
+	#
+	raid_is_layout() {
+		if [[ ${#argv} == 1 ]] ; then
+			if [[ -b $1 ]] ; then
+				print ${${(s: :)${(M)${(f)"$(mdadm -D $1)"}##*Layout*}}[3]}
+			else
+				no_block_device_msg "$1"
+				return 1
+			fi
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
 	# Funktion (raid_is_level), herausfinden des Levels eines ARRAYs# {{{
 	#
 	# usage: raid_is_level RAIDDEV
@@ -1119,7 +1135,6 @@ lv_free_size() {
 			# funktioniert nur bei
 			# RAID Level 1,4,5,6
 			RAIDLEVEL=$(raid_is_level $RAIDDEV)
-			#
 			case "$RAIDLEVEL" in
 				raid[1456])
 					# Raid Arrays 1/4/5/6 verkleinern# {{{
@@ -1227,7 +1242,7 @@ lv_free_size() {
 					# RAID ARRAY vergroessern
 					# Laufwerk addieren
 					# -a - addieren
-					mdadm $DEV -a $O_DEV >/dev/null || (BREAK=2 ; prog_failure)
+					mdadm $DEV -a $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Laufwerksanzahl heraus finden
 					RAID_ANZ=$(raid_anz $DEV)
 					# um 1 hoeher zaehlen da das addierte device
