@@ -5,22 +5,36 @@ MSG=$(gettext 'Hier koennen Sie das Level der Raid Arrays aendern.
 RAID1 -\> RAID5: Veraendert das Level des Arrays von 1 auf 5. Dabei
 \twird erst ein Level5 Array mit einem Level4 Layout (parity-last)
 \terstellt und danach ein Level5 Array mit dem Layout
-\t\"left-symmetric\" erstellt.
-\tDas Layout \"parity-last\" besagt das die Parity-Daten ans Ende
-\tdes Arrays erstellt werden sollen.
+\t\"left-symmetric\". Das Layout \"parity-last\" besagt das die
+\tParity-Daten ans Ende des Arrays erstellt werden sollen.
+\Anschliessend wird das Array auf Level5 und dann das Dateisystem
+\tvergroessert.
+
+RAID1 -\> RAID6: Veraendert das Level des Arrays von 1 auf 6. Dabei
+\twird erst ein Level5 Array mit einem Level4 Layout (parity-last)
+\terstellt und danach ein Level6 Array mit dem Layout
+\t\"left-symmetric\". Dann wird ein Level6 Array mit dem gleichen
+\tLayout erstellt. Anschliessend wird das Array auf Level6 und dann
+\tdas Dateisystem vergroessert.
 
 
-RAID1 -\> RAID5:
+RAID5 -\> RAID6: Veraendert das Level des Arrays von 5 auf 6.
+\tZuerst wird das Dateisystem und dann die Groesse des Arrays auf
+\tLevel6 verkleinert. Dann wird ein Level6 Array mit dem gleichen
+\tLayout wie im Level5 plus dem Suffix (-6) erstellt.
 
-RAID1 -\> RAID6:
+RAID6 -\> RAID5: Veraendert das Level des Arrays von 6 auf 5. Zuerst
+\twird ein Level5 Array mit dem gleichen Layout wie im Level6 ohne
+\tdem Suffix (-6) erstellt. Danach  wird das Array auf Level5 und
+\tdann das Dateisystem vergroessert.
 
-RAID5 -\> RAID6:
+RAID6 -\> RAID1: Zuerst wird das Dateisystem und dann das Array auf
+\tLevel1 verkleinert. Dann wird ein Level5 Array mit einem Level4
+\tLayout (parity-last) erstellt und danach ein Level1 Array.
 
-RAID6 -\> RAID5:
-
-RAID6 -\> RAID1:
-
-RAID5 -\> RAID1:
+RAID5 -\> RAID1: Zuerst wird das Dateisystem und dann das Array auf
+\tLevel1 verkleinert. Dann wird ein Level5 Array mit einem Level4
+\tLayout (parity-last) erstellt und danach ein Level1 Array.
 ')
 #}}}
 ### Modeline {{{
