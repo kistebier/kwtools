@@ -300,8 +300,17 @@ raid_create_conf() {
 				PARITYALGORITHM_MSG=$(gettext 'Waehlen Sie den Parity Algorithmus aus.')
 				#
 				case "$RAIDLEVEL" in
-					[56])
-						# RAID5/6
+					5)
+						# RAID5
+						PARITYALGORITHM_MENU=(left-symmetric \"RAID5/6\"
+						right-symmetric \"RAID5/6\" left-asymmetric \"RAID5/6\"
+						right-asymmetric \"RAID5/6\" parity-first \"RAID4\"
+						parity-last \"RAID4\" ddf-zero-restart \"RAID5/6\"
+						ddf-N-restart \"RAID5/6\" ddf-N-continue \"RAID5/6\")
+						parity_conf
+						;;
+					6)
+						# RAID6
 						PARITYALGORITHM_MENU=(left-symmetric \"RAID5/6\"
 						right-symmetric \"RAID5/6\" left-asymmetric \"RAID5/6\"
 						right-asymmetric \"RAID5/6\" left-symmetric-6 \"RAID6\"
