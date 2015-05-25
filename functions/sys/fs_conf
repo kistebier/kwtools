@@ -352,9 +352,15 @@ fs_conf() {
 					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-F -b 4096 -E stride=$[CHUNKSIZE/4]"
+						# Stride Size Berechnung
+						raid_stride_calc $RAIDLEVEL $RAID_ANZ $CHUNKSIZE
+						if [ -n "$STRIDE_SIZE" ] ; then
+							PROG_OPT="-F -b 4096 -E stride=${STRIDE_SIZE},stripe_width=${STRIPE_WIDTH}"
+						else
+							PROG_OPT="-F -b 4096"
+						fi
 					else
-						unset -- PROG_OPT
+						PROG_OPT="-F -b 4096"
 					fi
 					PROG=mkfs.${FS}
 					load_module $FS
@@ -371,9 +377,15 @@ fs_conf() {
 					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
-						PROG_OPT="-F -b 4096 -E stride=$[CHUNKSIZE/4]"
+						# Stride Size Berechnung
+						raid_stride_calc $RAIDLEVEL $RAID_ANZ $CHUNKSIZE
+						if [ -n "$STRIDE_SIZE" ] ; then
+							PROG_OPT="-F -b 4096 -E stride=${STRIDE_SIZE},stripe_width=${STRIPE_WIDTH}"
+						else
+							PROG_OPT="-F -b 4096"
+						fi
 					else
-						unset -- PROG_OPT
+						PROG_OPT="-F -b 4096"
 					fi
 					PROG=mkfs.${FS}
 					load_module "jbd $FS"
@@ -624,6 +636,48 @@ fs_conf() {
 		fi
 	}
 	#}}}
+	# Funktion (raid_stride_calc), berechnet die Stride Groessen fuer das Dateisystem# {{{
+	#
+	# usage: Raidlevel Raidanz Chunksize
+	#
+	raid_stride_calc() {
+		if [[ ${#argv} == 3 ]] ; then
+			unset -- STRIDE_SIZE STRIPE_WIDTH
+			local Raid_Level Raid_Anz Chunksize
+			integer STRIDE_SIZE STRIPE_WIDTH
+			Raid_Level="$1"
+			Raid_Anz="$2"
+			Chunksize="$3"
+			case $Raid_Level in
+				linear|0)
+					# effektive Plattennutzung=alle
+					;;
+				1)
+					# effektive Plattennutzung=1
+					Raid_Anz=1
+					;;
+				[234])
+					# effektive Plattennutzung=alle
+					;;
+				5)
+					# effektive Plattennutzung=Raid_Anz-1
+					(( Raid_Anz-- ))
+					;;
+				6)
+					# effektive Plattennutzung=Raid_Anz-2
+					(( Raid_Anz = Raid_Anz - 2 ))
+					;;
+				10)
+					# effektive Plattennutzung=Raid1_Array_Anz
+					;;
+			esac
+			(( STRIDE_SIZE = Chunksize / 4 ))
+			(( STRIPE_WIDTH = STRIDE_SIZE * Raid_Anz ))
+		else
+			no_para_msg $0
+		fi
+	}
+	## }}}
 	# Funktion (resize_fs), um Dateisysteme zu verkleinern/vergroessern# {{{
 	#
 	# usage: resize_fs [+|-]SIZE DEVICE

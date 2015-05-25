@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2015-05-12">
+        <meta name="date" content="2015-05-25">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -62,6 +62,7 @@
 			<a href="fs.html#floppy_format" target="_self">floppy_format</a><br>
 			<a href="fs.html#format" target="_self">format</a><br>
 			<a href="fs.html#formatprogs_check" target="_self">formatprogs_check</a><br>
+			<a href="fs.html#raid_stride_calc" target="_self">raid_stride_calc</a><br>
 			<a href="fs.html#resize_fs" target="_self">resize_fs</a></p>
 			<h4>Nachrichten und Fehlermeldungen</h4>
 			<p><a href="fs.html#no_copy_fs_msg" target="_self">no_copy_fs_msg</a><br>
@@ -110,7 +111,8 @@
                         <td vAlign=top><b><a name="format">format</a></b>
 			<p>format dient zum Formatieren von Blockorientierten Ger&auml;ten, wie Festplatten.
 			Zuerst wird nach den Programmen f&uuml;r die Dateisysteme gesucht. Wenn diese vorhanden sind,
-			werden sie zur Auswahl angeboten, um die Partitionen, Logische Volumes oder RAID-Arrays dementsprechend zu formatieren.<br>
+			werden sie zur Auswahl angeboten, um die Partitionen, Logische Volumes oder RAID-Arrays
+			dementsprechend zu formatieren.<br>
 			format DEVICE [ FS ]<br>
 			DEVICE - Variable die das zu formatierenden Blockger&auml;te enth&auml;lt.<br>
 			FS - Dateisystem, ist optional. Kann man mit &uuml;bergeben, wenn die Funktion
@@ -136,6 +138,28 @@
 			<b><font color="darkYellow">Variable</font></b><br>
 			FM_Menue - Variable die die Namen der Dateisysteme enth&auml;lt deren Werkzeuge installiert 
 			sind. Diese sind aufbereitet f&uuml;r die Funktion <a href="sys.html#menubox" target="_blank">menubox</a>.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="raid_stride_calc">raid_stride_calc</a></b>
+			<p>raid_stride_calc dient zum berechnen der Dateisystem-Parameter f&uuml;r die Dateisysteme
+			ext2, ext3 und ext4.<br>
+			raid_stride_calc RAIDLEVEL RAIDDEVICEANZ CHUNKSIZE<br>
+			RAIDLEVEL - Variable die das Level des RAID Arrays enth&auml;lt.<br>
+			RAIDDEVICEANZ - Variable die die Anzahl der zum RAID Array geh&ouml;rigen Laufwerke/Partitionen
+			enth&auml;t<br>
+			CHUNKSIZE - Variable die die Gr&ouml;sse der Chunk Size enth&auml;lt<br>
+			<b><font color="darkYellow">Variablen</font></b><br>
+			STRIDE_SIZE - Die Chunk Size umgerechnet in Dateisystembl&ouml;cke. Bei 512 KiB Chunk Size
+			mit 4 KiB Bl&ouml;cken ergibt sich 512 KiB / 4 KiB = 128.<br>
+			STRIPE_WIDTH - Die Gr&ouml;sse eines Datenstreifens, also die Menge an Bl&ouml;cken, die
+			geschrieben wird, wenn ein voller Chunk auf jedes Laufwerk geschrieben wird. Diese berechnet
+			sich aus (STRIDE_SIZE * Anzahl der effektiv nutzbaren Partitionen). Bei einem RAID 5
+			&uuml;ber 4 Partitionen ergibt sich beispielsweise 128 * 3 = 384.</p></td>
                         <td></td>
                 </tr>
                 <tr>
