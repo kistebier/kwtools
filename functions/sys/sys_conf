@@ -5556,22 +5556,19 @@ is_value() {
 	#          bleiben nicht erhalten
 	# U_OPT=hk Hochkommata werden zwischen den Werten geloescht.
 	# U_OPT=k Bis auf das letzte Wort bekommt jedes Wort 1 Komma und 1 Leerzeichen angehaengt.
-#	# U_OPT=no Werte in Datei schreiben und Leerzeile loeschen und
-#	#          Apostrophe+Leerzeichen in neue Zeilen umwandeln.
+	# U_OPT=ok Bis auf das letzte Wort bekommt jedes Wort 1 Komma angehaengt, keine Leerzeichen.
 	# U_OPT=regexp_file Alles wird so eingelesen wie gespeichert und etwas anders
 	#          in eine Datei geschrieben. Heisst mit Apostrophe ausser
 	#          Apostroph+Leerzeichen+Apostroph wird ersetzt durch nur ein EOL-Zeichen.
-	# U_OPT=ok Bis auf das letzte Wort bekommt jedes Wort 1 Komma angehaengt, keine Leerzeichen.
-#	# U_OPT=regexp Alles wird so eingelesen wie gespeichert. Heisst mit Apostrophe etc..
+	# nichts - Alles wird in die Variable gv_Auswahl mit jedem Wert in eine Zeile geschhrieben plus
+	#          in der Datei $gv_LogFile$$ gespeichert. Desweiteren gibt es die Variable gv_Auswahl_Display
+	#          die die Werte ohne Steuerzeichen (neue Zeile) enthaelt.
 	#
 	return_check() {
 		case $? in
 			0)	if [ "$U_OPT" = - ] ; then
 					Tmp=${$(< ${DialogReDirect##*>})//\"/}
 					gv_Auswahl=${Tmp// /}
-#				elif [ "$U_OPT" = no ] ; then
-#					gv_Auswahl="`< ${DialogReDirect##*>} | tr -t '\" ' '\n' | grep -v '^ *$' | tee ${gv_LogFile}$$`"
-#					#gv_Auswahl="${Tmp//\" /\"\\\n}"
 				elif [ "$U_OPT" = hk ] ; then
 					gv_Auswahl=${$(< ${DialogReDirect##*>})//\'/}
 				elif [ "$U_OPT" = k ] ; then
@@ -5588,12 +5585,9 @@ is_value() {
 						(( ANZ-- ))
 						gv_Auswahl="`echo "$gv_Auswahl" | sed -e "s/\>./,/${ANZ} ; s/  / /"`"
 					done
-#				elif [ "$U_OPT" = regexp ] ; then
-#					gv_Auswahl=$(< ${DialogReDirect##*>})
 				elif [ "$U_OPT" = regexp_file ] ; then
 					gv_Auswahl="`print $(< ${DialogReDirect##*>}) | sed -e 's#\" \"#\n#g' | tee ${gv_LogFile}$$`"
 				else
-					#gv_Auswahl=${$(< ${DialogReDirect##*>})//\"/}
 					gv_Auswahl="$(< ${DialogReDirect##*>} | tee ${gv_LogFile}$$)"
 					gv_Auswahl_Display="${gv_Auswahl//[[:cntrl:]]/ }"
 				fi
