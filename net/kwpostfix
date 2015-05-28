@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 28.05.2015
 #
 # Script: kwpostfix, Konfiguriert Mailserver (MTA) postfix
-# Version: 0.1.17
+# Version: 0.1.18
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -421,27 +421,30 @@ fi
 #}}}
 # Funktion (mail_mechanism), welche Authentifizierungs-Mechanismen sind bei Mails erlaubt{{{
 mail_mechanism() {
-	unset -- WERT
-	local OldVar
-	OldVar="$1"
-	generate_is_file ${OldVar//,/}
-	is_value "noactive noanonymous nodictionary noplaintext mutual_auth"
-	#
-	U_OPT=k
-	checklist "${DEFAULT_VALUE[1]}" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
-	while [ "$gv_Auswahl" ] ; do
-		case "$gv_Auswahl" in
-			HELP*)	script_help security_options_help
-				U_OPT=k
-				DEFAULT_VALUE=${gv_Auswahl#HELP }
-				checklist "${DEFAULT_VALUE[1]}" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
-				;;
-			*)	# übernehmen
-				WERT="$gv_Auswahl"
-				break
-				;;
-		esac
-	done
+	if [[ ${#argv} == 1 ]] ; then
+		unset -- WERT
+		local OldVar
+		OldVar="$1"
+		generate_is_file ${OldVar//,/}
+		is_value "noactive noanonymous nodictionary noplaintext mutual_auth"
+		#
+		U_OPT=k
+		checklist "${DEFAULT_VALUE[1]}" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
+		while [ "$gv_Auswahl" ] ; do
+			case "$gv_Auswahl" in
+				HELP*)	script_help security_options_help
+					U_OPT=k
+					checklist "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$VALUE_ARRAY" "$OldVar"
+					;;
+				*)	# übernehmen
+					WERT="$gv_Auswahl"
+					break
+					;;
+			esac
+		done
+	else
+		no_para_msg $0
+	fi
 }
 #}}}
 # Funktion (user_auswahl), User auswählen{{{

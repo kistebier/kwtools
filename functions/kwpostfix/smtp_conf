@@ -884,7 +884,7 @@ smtp_conf() {
 			smtp_sasl_security_options)
 				# zulaessige SMTP-AUTH Identifierzierungsmethoden{{{
 				# Standard = noplaintext, noanonymous
-				mail_mechanism
+				mail_mechanism "$smtp_sasl_security_options"
 				if [ "$WERT" ] ; then
 					smtp_sasl_security_options="$WERT"
 					postconf -e smtp_sasl_security_options="$WERT"
@@ -899,7 +899,7 @@ smtp_conf() {
 				# zulaessige SMTP-AUTH Identifierzierungsmethoden,{{{
 				# bei TLS.
 				# Standard = $smtp_sasl_security_options
-				mail_mechanism
+				mail_mechanism "$smtp_sasl_tls_security_options"
 				if [ "$WERT" ] ; then
 					smtp_sasl_tls_security_options="$WERT"
 					postconf -e smtp_sasl_tls_security_options="$WERT"
@@ -912,7 +912,7 @@ smtp_conf() {
 				;;
 			smtp_sasl_tls_verified_security_options)
 				# Standard = $smtp_sasl_tls_security_options# {{{
-				mail_mechanism
+				mail_mechanism "$smtp_sasl_tls_verified_security_options"
 				if [ "$WERT" ] ; then
 					smtp_sasl_tls_verified_security_options="$WERT"
 					postconf -e smtp_sasl_tls_verified_security_options="$WERT"

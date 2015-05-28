@@ -1604,13 +1604,12 @@ while [ "$gv_Auswahl" ] ; do
 			TR_MSG=$(gettext 'Waehlen Sie ein Trennzeichen aus mit der die Mailerweiterung abgetrennt wird.')
 			# Werte mit on oder off belegen ($VERP_MENU).
 			verp_delimiter "$recipient_delimiter"
-			#
 			radiolist "" "$MAINCF_TITLE" "$TR_MSG" "$VERP_MENU" "$recipient_delimiter"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help recipient_delimiter
 						U_OPT=-
-						radiolist "" "$MAINCF_TITLE" "$TR_MSG" "$VERP_MENU"
+						radiolist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$TR_MSG" "$VERP_MENU"
 						;;
 					*)	#
 						recipient_delimiter="$gv_Auswahl"
@@ -1820,7 +1819,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=-
-						checklist "" "$MAINCF_TITLE" "$VERP_MSG" "$VERP_MENU" "$verp_delimiter_filter"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$VERP_MSG" "$VERP_MENU" "$verp_delimiter_filter"
 						;;
 					*)	#
 						verp_delimiter_filter="$gv_Auswahl"

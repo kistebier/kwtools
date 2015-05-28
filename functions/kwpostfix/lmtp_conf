@@ -827,7 +827,7 @@ lmtp_conf() {
 				;;
 			lmtp_sasl_security_options)
 				# Authentifizierungs Methoden{{{
-				mail_mechanism
+				mail_mechanism "$lmtp_sasl_security_options"
 				if [[ -n $WERT ]] ; then
 					lmtp_sasl_security_options="$WERT"
 					postconf -e lmtp_sasl_security_options="$WERT"
@@ -839,7 +839,7 @@ lmtp_conf() {
 				# zulaessige LMTP-AUTH Identifierzierungsmethoden,{{{
 				# bei TLS.
 				# Standard = $lmtp_sasl_security_options
-				mail_mechanism
+				mail_mechanism "$lmtp_sasl_tls_security_options"
 				if [ "$WERT" ] ; then
 					lmtp_sasl_tls_security_options="$WERT"
 					postconf -e lmtp_sasl_tls_security_options="$WERT"
@@ -852,7 +852,7 @@ lmtp_conf() {
 				;;
 			lmtp_sasl_tls_verified_security_options)
 				# Standard = $lmtp_sasl_tls_security_options# {{{
-				mail_mechanism
+				mail_mechanism "$lmtp_sasl_tls_verified_security_options"
 				if [ "$WERT" ] ; then
 					lmtp_sasl_tls_verified_security_options="$WERT"
 					postconf -e lmtp_sasl_tls_verified_security_options="$WERT"
