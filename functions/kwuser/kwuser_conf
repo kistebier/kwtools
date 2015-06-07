@@ -42,7 +42,7 @@ kwuser_conf() {
 			HELP*)
 				# Hilfe Messagebox
 				script_help kwuser_conf_help
-				kwuser_conf_menu
+				kwuser_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Group)
 				# Gruppe bestimmen{{{
@@ -85,8 +85,7 @@ kwuser_conf() {
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/group_help
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
+									checklist "${gv_Auswahl#HELP }" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
 									;;
 								*)
 									# Gruppen uebernehmen
@@ -114,25 +113,18 @@ kwuser_conf() {
 				;;
 			$lv_Encrypt)
 				# Verschluesselung auswaehlen# {{{
-				unset -- Methode
-				local Methode
-				for i in DES SHA256 SHA512 MD5 ; {
-					if [[ $i = $ENCRYPT_METHOD ]] ; then
-						Methode+=($i \"\" on)
-					else
-						Methode+=($i \"\" off)
-					fi
-				}
+				generate_is_file "$ENCRYPT_METHOD"
+				is_value "DES SHA256 SHA512 MD5"
 				# Menu
 				ENCRYPT_MSG=$(gettext 'Waehlen Sie eine Methode zur Verschluesselung Ihres Passwortes aus. Standard ist DES.')
 				ENCRYPT_TITLE="${gv_Configuration}::${lv_Encrypt}"
-				ENCRYPT_MENU=($Methode)
-				radiolist "" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+				ENCRYPT_MENU=($VALUE_ARRAY)
+				radiolist "${DEFAULT_VALUE[1]}" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
 				#
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help kwuser_conf_help
-							radiolist "" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+							radiolist "${gv_Auswahl#HELP }" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
 							;;
 						*)
 							# Auswahl uebernehmen

@@ -1,8 +1,8 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 20.04.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 05.06.2015
 #
-# Script: kwquota, Frontend fuer quota und xfs_quota
+# Script: kwquota, Frontend fuer quota (ext234], reiserfs, jfs) und xfs_quota
 #
 # Version: 0.1.0
 
@@ -265,7 +265,7 @@ quota_check_fs() {
 	fi
 }
 ## }}}
-	# Funktion (quota_status)# {{{
+	# Funktion (quota_status), fuer das Dateisystem xfs# {{{
 	#
 	# usage: quota_status QU_OPT QUOTA_PART
 	# QU_OPT - -u | -g | -p fuer User Group and Project
@@ -361,7 +361,7 @@ while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
         $gv_Display)
             # Anzeige von quotas # {{{
@@ -373,7 +373,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help help
-							checklist "" "$gv_Display" "$gv_Menupoint" "$DISPLAY_MENU"
+							checklist "${gv_Auswahl#HELP }" "$gv_Display" "$gv_Menupoint" "$DISPLAY_MENU"
 							;;
 						*)
 							# uebernehmen
@@ -529,7 +529,7 @@ while [ "$gv_Auswahl" ] ; do
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help xfs_drive_help
-													xfs_drive_menu
+													xfs_drive_menu "${gv_Auswahl#HELP }"
 													;;
 												$lv_On)
 													# Quota auf dem Laufwerk einschalten# {{{
@@ -624,7 +624,7 @@ Notiz: Sie muessen das Laufwerk danach neu einbinden oder den Rechner neu starte
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help drive_help
-													menubox "" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$DRIVE_ON_OFF_MENU"
+													menubox "${gv_Auswahl#HELP }" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$DRIVE_ON_OFF_MENU"
 													;;
 												$lv_On)
 													# Quota einschalten

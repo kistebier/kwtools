@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 26.05.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.06.2015
 #
 # Script: kwuser, legt an, aendert und loescht User
 # Version: 1.0.5
@@ -520,7 +520,7 @@ user_konf() {
 		case "$gv_Auswahl" in
 			HELP*)
 				script_help conf_help
-				user_konf_menue	
+				user_konf_menue "${gv_Auswahl#HELP }"	
 				;;
 			$gv_User)
 				# vorhandene Usernamen aendern{{{
@@ -635,8 +635,7 @@ user_konf() {
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/group_help
-										DEFAULT_VALUE=${gv_Auswahl#HELP }
-										checklist "${DEFAULT_VALUE[1]}" "$GROUPS_TITLE" "$GROUPS_MSG" "$VALUE_ARRAY" "$NGROUPS"
+										checklist "${gv_Auswahl#HELP }" "$GROUPS_TITLE" "$GROUPS_MSG" "$VALUE_ARRAY" "$NGROUPS"
 										;;
 									*)
 										# Gruppen uebernehmen
@@ -1004,7 +1003,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/user_help
-							menubox "$NUSER" "$CHANGE_TITLE" "$CHANGE_MSG" "$U_G_ARRAY"
+							menubox "${gv_Auswahl#HELP }" "$CHANGE_TITLE" "$CHANGE_MSG" "$U_G_ARRAY"
 							;;
 						*)	#
 							# Variablen von vorhandenen User belegen.
@@ -1028,7 +1027,7 @@ while [ "$gv_Auswahl" ] ; do
 			DEL_CHOICE_MENU=(\"$lv_Per_Prefix\" \"\" \"$lv_Per_Name\" \"\" $gv_Back \"\")
 			#
 			del_choice_menu() {
-				menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_CHOICE_MENU"
+				menubox "$1" "$DEL_TITLE" "$gv_Menupoint" "$DEL_CHOICE_MENU"
 			}
 			## }}}
 			del_choice_menu
@@ -1036,13 +1035,12 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)
 						script_help user_del_choice_help
-						del_choice_menu
+						del_choice_menu "${gv_Auswahl#HELP }"
 						;;
 					"$lv_Per_Prefix")
-						# per Prefix Benutzer loeschen
-						# Benutzer Prefix eingeben{{{
-						# vorhandene Usernamen aendern
+						# per Prefix Benutzer loeschen{{{
 						#
+						# Benutzer Prefix eingeben
 			            DEL_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen fuer die zu loeschenden Benutzer ein.')
 						inputbox "$DEL_TITLE" "$DEL_PREFIX_MSG"
 						if [ -n "$gv_Auswahl" ] ; then
@@ -1067,7 +1065,7 @@ while [ "$gv_Auswahl" ] ; do
 						break
 						;;
 					"$lv_Per_Name")
-						# Einauswahl loeschen# {{{
+						# Benutzer per Name loeschen# {{{
 						user_group_check -p
 						if [ "$?" = 0 ] ; then
 							DEL_MENU=($U_G_ARRAY_M)
@@ -1077,7 +1075,7 @@ while [ "$gv_Auswahl" ] ; do
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help user_del_help
-										checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+										checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 										;;
 									*)
 										# User loeschen

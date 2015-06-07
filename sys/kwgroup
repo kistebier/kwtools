@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 02.07.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.06.2014
 #
 # Script: kwgroup, anlegen, aendern und loeschen von Gruppen.
-# Version: 0.2.7
+# Version: 0.2.8
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -58,10 +58,10 @@ no_group_choice_msg() {
 	msgbox "$gv_Attention" "$MSG"
 }
 #}}}
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($gv_Display \"\" $gv_Create \"\"
 $gv_Change \"\" $gv_Delete \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -107,7 +107,7 @@ group_konf() {
 		case "$gv_Auswahl" in
 			HELP*)
 				script_help conf_help
-				group_konf_menue	
+				group_konf_menue "${gv_Auswahl#HELP }"	
 				;;
 			$gv_Group)
 				# Gruppe anlegen oder aendern.{{{
@@ -209,13 +209,13 @@ no_del_user_msg() {
 ##################################################################
 #
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Display)
 			# Ansicht der /etc/group Datei.# {{{
@@ -228,7 +228,7 @@ while [ "$gv_Auswahl" ] ; do
 				view_file $gv_LogFile
 			fi
 			## }}}
-			haupt_menue $gv_Display
+			main_menu $gv_Display
 			;;
 		$gv_Create)
 			# Gruppen Namen eingeben{{{
@@ -243,7 +243,7 @@ while [ "$gv_Auswahl" ] ; do
 				fi
 			fi
 			#}}}
-			haupt_menue $gv_Create
+			main_menu $gv_Create
 			;;
 		$gv_Change)
 			# Gruppen aendern{{{
@@ -258,7 +258,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/group_help
-							menubox "$NGROUP" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
+							menubox "${gv_Auswahl#HELP }" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 							;;
 						*)
 							# Variablen von vorhandenen User belegen.
@@ -270,7 +270,7 @@ while [ "$gv_Auswahl" ] ; do
 				done
 			fi
 			#}}}
-			haupt_menue $gv_Change
+			main_menu $gv_Change
 			;;
 		$gv_Delete)
 			# Gruppen loeschen{{{
@@ -278,13 +278,13 @@ while [ "$gv_Auswahl" ] ; do
 			if [ "$?" = 0 ] ; then
 				DEL_MENU=($U_G_ARRAY_M)
 				DEL_TITLE=(${gv_Group}::${gv_Delete})
-				DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Gruppen zum loeschen aus.')
+				DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Gruppen zum loeschen aus.')
 				checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 				#
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help group_del_help
-							checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+							checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 							;;
 						*)
 							# Gruppen loeschen.
@@ -299,7 +299,7 @@ while [ "$gv_Auswahl" ] ; do
 				done
 			fi
 			#}}}
-			haupt_menue $gv_Delete
+			main_menu $gv_Delete
 			;;
 		$gv_Exit)	break
 			;;
