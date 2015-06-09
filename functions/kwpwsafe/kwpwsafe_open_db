@@ -40,7 +40,7 @@ kwpwsafe_open_db() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwpwsafe_open_db_help
-				open_db_menu
+				open_db_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Entries)
 				# Eintrage ansehen, Passwort und/oder Benutzer# {{{
@@ -64,7 +64,7 @@ kwpwsafe_open_db() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_list_help
-								data_menu
+								data_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Menue fuer die Eintraege# {{{
@@ -76,7 +76,7 @@ kwpwsafe_open_db() {
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help kwpwsafe_entries_help
-											entries_menu
+											entries_menu "${gv_Auswahl#HELP }"
 											;;
 										$gv_Display)
 											# Werte anzeigen# {{{
@@ -151,7 +151,7 @@ ${lv_Notes}:
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_list_help
-								menubox "" "$OPEN_DB_TITLE" "$DATA_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$OPEN_DB_TITLE" "$DATA_MSG" "$CHANGE_MENU"
 								;;
 							*)	# Auswahl einlesen
 								CHANGE=yes
@@ -183,7 +183,7 @@ ${lv_Notes}:
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_list_help
-								checklist "" "$OPEN_DB_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$OPEN_DB_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)
 								# Auswahl loeschen

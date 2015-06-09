@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 10.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwvmstat, zeigt verschiedene Statistiken
 #         des virtuellen Speichers (man 1 vmstat).
 #
-# Version: 0.3.1
+# Version: 0.3.2
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -68,7 +68,7 @@ else
 	s \"$lv_Other_Stat\" $gv_Exit \"\")
 fi
 # Funktion Hauptmenue{{{
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$TITLE_MENU"
 }
 #}}}
@@ -93,19 +93,19 @@ if [[ "${gv_K_Release%%-*}" < 2.6.0 ]] ; then
 fi
 #
 hw_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration
 			autoload -U kwvmstat_conf kwvmstat_config
 			kwvmstat_conf
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		a)
 			# Anzeige vom in/aktivem Arbeitsspeicher.# {{{
@@ -118,7 +118,7 @@ while [ "$gv_Auswahl" ] ; do
 				vmstat -${gv_Auswahl}n -S ${MEM_UNIT:-K} 1 | progressbox "$MEMORY" "$IN_ACTIVE"
 			fi
 			## }}}
-			haupt_menue $gv_Auswahl
+			main_menu $gv_Auswahl
 			;;
 		d|D|f|s)
 			# d - Disk Statistik# {{{
@@ -130,7 +130,7 @@ while [ "$gv_Auswahl" ] ; do
 				view_file "$gv_LogFile"
 			fi
 			## }}}
-			haupt_menue $gv_Auswahl
+			main_menu $gv_Auswahl
 			;;
 		m)
 			# m - slabinfo (Kernel Festplatten Zuteilstatistik)# {{{
@@ -139,7 +139,7 @@ while [ "$gv_Auswahl" ] ; do
 				view_file "$gv_LogFile"
 			fi
 			## }}}
-			haupt_menue $gv_Auswahl
+			main_menu $gv_Auswahl
 			;;
 		p)	# Partition Statistik
 			# benoetigt root Rechte# {{{
@@ -160,7 +160,7 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}
-			haupt_menue $Opt
+			main_menu $Opt
 			;;
 		$gv_Exit)	break
 			;;

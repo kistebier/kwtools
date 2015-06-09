@@ -140,7 +140,7 @@ ca_certs_conf() {
 				HELP*)
 		    	    # Hilfe Messagebox
 					script_help ca_certs_conf_help
-					default_cacerts_menu
+					default_cacerts_menu "${gv_Auswahl#HELP }"
 					;;
 				"$lv_SubjectAlternateName")
 					# Subject Alternative Name# {{{
@@ -157,7 +157,7 @@ ca_certs_conf() {
 								\"$lv_Qestion_User\" \"\" \"$lv_CopyMail\" \"\")
 								;;
 						esac
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_SUBJETALTNAME_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_SUBJETALTNAME_MENU"
 					}
 					# }}}
 					#
@@ -167,7 +167,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_subjectalternatename_menu
+								default_subjectalternatename_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -214,7 +214,7 @@ ca_certs_conf() {
 								\"$lv_User_Usr_Email_ObjectSign\" \"\")
 								;;
 						esac
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCERTTYP_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCERTTYP_MENU"
 					}
 					# }}}
 					#
@@ -224,7 +224,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_nscerttyp_menu
+								default_nscerttyp_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -262,7 +262,7 @@ ca_certs_conf() {
 								\"$lv_Encrypt_DigitalSign\" \"\")
 								;;
 						esac
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_KEYUSAGE_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_KEYUSAGE_MENU"
 					}
 					# }}}
 					#
@@ -272,7 +272,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_keyusage_menu
+								default_keyusage_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -299,7 +299,7 @@ ca_certs_conf() {
 					DEFAULT_EKEYUSAGE_MENU=($gv_Input \"\"
 					\"$lv_Qestion_User\" \"\")
 					default_ekeyusage_menu() {
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_EKEYUSAGE_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_EKEYUSAGE_MENU"
 					}
 					# }}}
 					#
@@ -309,7 +309,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_ekeyusage_menu
+								default_ekeyusage_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -336,17 +336,17 @@ ca_certs_conf() {
 					DEFAULT_CRITICAL_MENU=($lv_Critical \"\"
 					$lv_UnCritical \"\")
 					default_critical_menu() {
-						menubox "$CRITICAL" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_CRITICAL_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_CRITICAL_MENU"
 					}
 					# }}}
 					#
-					default_critical_menu
+					default_critical_menu "$CRITICAL"
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_critical_menu
+								default_critical_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Auswahl uebernehmen
@@ -364,7 +364,7 @@ ca_certs_conf() {
 					DEFAULT_NSREVOKEURL_MENU=($gv_Input \"\"
 					\"$lv_Qestion_User\" \"\")
 					default_nsrevokeurl_menu() {
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSREVOKEURL_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSREVOKEURL_MENU"
 					}
 					# }}}
 					#
@@ -374,7 +374,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_nsrevokeurl_menu
+								default_nsrevokeurl_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -412,7 +412,7 @@ ca_certs_conf() {
 					DEFAULT_NSCAREVOKEURL_MENU=($gv_Input \"\"
 					\"$lv_Qestion_User\" \"\")
 					default_nscarevokeurl_menu() {
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCAREVOKEURL_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSCAREVOKEURL_MENU"
 					}
 					# }}}
 					#
@@ -422,7 +422,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_nsrevokeurl_menu
+								default_nsrevokeurl_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -459,7 +459,7 @@ ca_certs_conf() {
 					DEFAULT_NSRENEWALURL_MENU=($gv_Input \"\"
 					\"$lv_Qestion_User\" \"\")
 					default_nsrenewalurl_menu() {
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSRENEWALURL_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSRENEWALURL_MENU"
 					}
 					# }}}
 					#
@@ -469,7 +469,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_nsrenewalurl_menu
+								default_nsrenewalurl_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen
@@ -520,7 +520,7 @@ ca_certs_conf() {
 					DEFAULT_NSSSLSERVERNAME_MENU=($gv_Input \"\"
 					\"$lv_Qestion_User\" \"\")
 					default_nssslservername_menu() {
-						menubox "" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSSSLSERVERNAME_MENU"
+						menubox "$1" "$DEFAULT_CONF_TITLE" "$gv_Menupoint" "$DEFAULT_NSSSLSERVERNAME_MENU"
 					}
 					# }}}
 					default_nssslservername_menu
@@ -529,7 +529,7 @@ ca_certs_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help default_conf_help
-								default_nssslservername_menu
+								default_nssslservername_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Input)
 								# Auswahl uebernehmen

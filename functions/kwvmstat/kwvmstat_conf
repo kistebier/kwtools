@@ -10,7 +10,8 @@ lv_Memunit=$(gettext 'Speichereinheit')
 
 # Funktion conf_menu# {{{
 conf_menu() {
-	K_MENU=($lv_Count \"$COUNTER\" $lv_Delay \"$DELAY\" $lv_Memunit \"$MEM_UNIT\" $gv_Save \"\" $gv_Back \"\")
+	K_MENU=($lv_Count \"$COUNTER\" $lv_Delay \"$DELAY\" $lv_Memunit \"$MEM_UNIT\"
+	$gv_Save \"\" $gv_Back \"\")
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$K_MENU"
 }
 ## }}}
@@ -20,7 +21,7 @@ while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl"  in
 		HELP*)
 			script_help conf_help
-			conf_menu
+			conf_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Count)
 			# Konfiguration, wie oft soll die Anzeige# {{{
@@ -60,7 +61,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)
 						script_help help
-						menubox "$MEM_UNIT" "$S_TITLE" "$gv_Menupoint" "$S_MENU"
+						menubox "${gv_Auswahl#HELP }" "$S_TITLE" "$gv_Menupoint" "$S_MENU"
 						;;
 					*)	# Anzeige
 						MEM_UNIT="$gv_Auswahl"

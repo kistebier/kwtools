@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 10.05.2014
+# Autor: Kai Wilke  <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwmuttprintcf, konfiguriert muttprint, drucken mit
 # dem mailclienten mutt.
 #
-# Version: 0.0.4
+# Version: 0.0.5
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -136,7 +136,7 @@ main_menu
 while [ -n "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Printer)
 			# Druckername oder Druckdatei einstellen# {{{
@@ -149,14 +149,14 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$PRINTER_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$PRINTER_MENU"
 						;;
 					$lv_Print_Choice)	
 						# Drucker auswaehlen/eingeben# {{{
 						unset -- Found_Printer
 						Found_Printer=${${(ws: :)${(M)"$(LC_MESSAGES=us ; lpq -E)"[(f)ready]}}[1]}
 						if [ -n "$Found_Printer" ] ; then
-							for i in $Found_Printer ; {
+							for i in ${=Found_Printer} ; {
 								Printer_Menu+=($i \"\")
 							}
 							#
@@ -165,7 +165,7 @@ while [ -n "$gv_Auswahl" ] ; do
 							while [ -n "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help help
-										menubox "$PRINTER" "$gv_Mainmenu" "$gv_Menupoint" "$FOUND_PRINTER_MENU"
+										menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FOUND_PRINTER_MENU"
 										;;
 									*)
 										# Auswahl uebernehmen
@@ -320,7 +320,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "$lv_Font" "$gv_Mainmenu" "$gv_Menupoint" "$FONT_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FONT_MENU"
 						;;
 					*)	# uebernehmen
 						FONT="$gv_Auswahl"
@@ -340,7 +340,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "$FRONTSTYLE" "$gv_Mainmenu" "$gv_Menupoint" "$FRONT_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FRONT_MENU"
 						;;
 					*)	# uebernehmen
 						FRONTSTYLE="$gv_Auswahl"
@@ -382,7 +382,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "$PAPER" "$gv_Mainmenu" "$gv_Menupoint" "$PF_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$PF_MENU"
 						;;
 					*)
 						# Wert uebernehmen
@@ -461,7 +461,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "$FONTSIZE" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
 						;;
 					*)
 						# Wert uebernehmen
@@ -540,7 +540,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help help
-						menubox "$DATE" "$gv_Mainmenu" "$gv_Menupoint" "$DATE_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$DATE_MENU"
 						;;
 					*)
 						# Wert uebernehmen

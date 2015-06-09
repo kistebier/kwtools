@@ -26,7 +26,7 @@ manage_reqs() {
 				#
 				req_sign_menu() {
 					REQ_SIGN_MENU=($REQS_ALL_E)
-					menubox "" "$REQ_SIGN_TITLE" "$gv_Menupoint" "$REQ_SIGN_MENU"
+					menubox "$1" "$REQ_SIGN_TITLE" "$gv_Menupoint" "$REQ_SIGN_MENU"
 				}
 				## }}}
 				# alle Anforderungen herraussuchen.
@@ -38,7 +38,7 @@ manage_reqs() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help req_help
-								req_sign_menu
+								req_sign_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Auswahl uebernehmen fuer die  Signierung und
@@ -76,7 +76,7 @@ manage_reqs() {
 										HELP*)
 								    	    # Hilfe Messagebox
 											script_help req_sign_help
-											sign_menu
+											sign_menu "${gv_Auswahl#HELP }"
 											;;
 										"$lv_Ssl_CA_Password")
 											# CA Password Eingabe
@@ -168,7 +168,7 @@ manage_reqs() {
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help req_help
-					req_menu
+					req_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_Display)
 					# Anforderungen anschauen# {{{
@@ -177,7 +177,7 @@ manage_reqs() {
 					#
 					req_display_menu() {
 						REQ_DISPLAY_MENU=($REQS_ALL_M)
-						checklist "" "$REQ_DISPLAY_TITLE" "$gv_Menupoint" "$REQ_DISPLAY_MENU"
+						checklist "$1" "$REQ_DISPLAY_TITLE" "$gv_Menupoint" "$REQ_DISPLAY_MENU"
 					}
 					## }}}
 					# alle Anforderungen herraussuchen.
@@ -189,7 +189,7 @@ manage_reqs() {
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help req_help
-									req_display_menu
+									req_display_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Auswahl anzeigen
@@ -275,7 +275,7 @@ manage_reqs() {
 					REQ_DEL_TITLE="${lv_Request}::${gv_Delete}"
 					del_req_choice_menu() {
 						REQ_DEL_MENU=($REQS_ALL_M)
-						checklist "" "$REQ_DEL_TITLE" "$gv_Menupoint" "$REQ_DEL_MENU"
+						checklist "$1" "$REQ_DEL_TITLE" "$gv_Menupoint" "$REQ_DEL_MENU"
 					}
 					## }}}
 					get_req_key_files
@@ -286,7 +286,7 @@ manage_reqs() {
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help req_del_help
-									del_req_choice_menu
+									del_req_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Auswahl uebernehmen

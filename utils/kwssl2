@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwssl2, erstellt eine PKI (Public Key Infrastructur),
 # CAs, Zertifikate, signiert diese ....
 #
-# Version: 0.0.3
+# Version: 0.0.4
 #
 
 # Ausführen von Befehlen auf bestimmte Signale.
@@ -192,17 +192,17 @@ ca_open() {
 	CA_OPEN_TITLE="${lv_CA}::${lv_Open}"
 	ca_open_menu() {
 		CA_OPEN_MENU=($CA_DIRS)
-		menubox "$CA_OPEN_NAME" "$CA_OPEN_TITLE" "$gv_Menupoint" "$CA_OPEN_MENU"
+		menubox "$1" "$CA_OPEN_TITLE" "$gv_Menupoint" "$CA_OPEN_MENU"
 	}
 	## }}}
-	search_ca
+	search_ca "$CA_OPEN_NAME"
 	if [[ -n ${CA_DIRS[1]} ]] ; then
 		ca_open_menu
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help help
-					ca_open_menu
+					ca_open_menu "${gv_Auswahl#HELP }"
 					;;
 				*)
 					# Auswahl uebernehmen
@@ -697,15 +697,15 @@ keylength_input() {
 	KEYLENGTH_TITLE="$lv_Ssl_Key_length"
 	# Funktion (keylength_menu)# {{{
 	keylength_menu() {
-		menubox "$KEYLENGTH" "$KEYLENGTH_TITLE" "$gv_Menupoint" "$KEY_LENGTH_MENU"
+		menubox "$1" "$KEYLENGTH_TITLE" "$gv_Menupoint" "$KEY_LENGTH_MENU"
 	}
 	## }}}
-	keylength_menu
+	keylength_menu "$KEYLENGTH"
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*) # Hilfe
 				script_help "$HELPFILE"
-				keylength_menu
+				keylength_menu "${gv_Auswahl#HELP }"
 				;;
 			*) # Auswahl uebernehmen
 				KEYLENGTH="$gv_Auswahl"
@@ -1165,7 +1165,7 @@ read_openssl_conf() {
 #
 revoke_days_input() {
 	CONF_REVOKE_MSG=$(gettext 'Geben Sie die Tage der Gueltigkeit von Widerrufslisten ein.')
-	number_input "$lv_Revokes" "$CONF_REVOKE_MSG" "$DEFAULT_REVOKE_DAYS"
+	number_input -i "$lv_Revokes" "$CONF_REVOKE_MSG" "$DEFAULT_REVOKE_DAYS"
 	if [ -n "$NUMBER" ] ; then
 		DEFAULT_REVOKE_DAYS="$NUMBER"
 	else
@@ -1245,7 +1245,7 @@ sign_ca_request() {
 #
 validity_input() {
 	VALIDITY_MSG=$(gettext 'Geben Sie die Gueltigkeit des Zertifikats in Tagen ein.')
-	number_input "$lv_Ssl_Validity" "$VALIDITY_MSG" "$VALIDITY"
+	number_input -i "$lv_Ssl_Validity" "$VALIDITY_MSG" "$VALIDITY"
 	if [ -n "$NUMBER" ] ; then
 		VALIDITY="$NUMBER"
 	else
@@ -1305,7 +1305,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Open)
 			# CA/SubCA oeffnen
@@ -1439,7 +1439,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)
 						script_help dh_help
-						dh_menu
+						dh_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Filename)
 						# Dateiname eingeben# {{{
@@ -1496,14 +1496,14 @@ while [ "$gv_Auswahl" ] ; do
 				CA_DEL_TITLE="${lv_CA_Delete}"
 				del_ca_choice_menu() {
 					CA_DEL_MENU=($CA_DIRS_M)
-					checklist "" "$CA_DEL_TITLE" "$gv_Menupoint" "$CA_DEL_MENU"
+					checklist "$1" "$CA_DEL_TITLE" "$gv_Menupoint" "$CA_DEL_MENU"
 				}
 				## }}}
 				del_ca_choice_menu
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help ca_del_help
-							del_ca_choice_menu
+							del_ca_choice_menu "${gv_Auswahl#HELP }"
 							;;
 						*)
 							# Auswahl uebernehmen und

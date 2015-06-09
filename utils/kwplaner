@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de>, 10.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de>, 09.06.2015
 #
 # Script: kwplaner, für Termine, Kalender etc.
-# Version: 0.0.7
+# Version: 0.1.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -47,7 +47,7 @@ if [ ! -d "$FEIERTAG_DIR_HOME" ] ; then
 	create_file -d "$FEIERTAG_DIR_HOME"
 fi
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
 lv_Kwholiday=$(gettext 'kwholiday')
 lv_Kwtex_Cal=$(gettext 'kwtex-cal')
@@ -55,7 +55,7 @@ lv_Kwtermin=$(gettext 'kwtermin')
 MAIN_MENUE=($gv_Configuration \"\" $lv_Kwholiday \"\" $lv_Kwtex_Cal \"\"
 	$lv_Kwtermin \"\" "$gv_Exit" \"\")
 #
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENUE"
 }
 #}}}
@@ -66,13 +66,13 @@ haupt_menue() {
 ################################################################
 #
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
 			# Hilfe zu Planer
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Programm planer konfigurieren{{{
@@ -97,7 +97,7 @@ while [ "$gv_Auswahl" ] ; do
 					HELP*)
 						# Hilfe zur Konfiguration
 						script_help conf_help
-						konf_menue
+						konf_menue "${gv_Auswahl#HELP }"
 						;;
 					$gv_Display)
 						# Auswahl der Kalenderansicht{{{
@@ -125,14 +125,14 @@ while [ "$gv_Auswahl" ] ; do
 										;;
 								esac
 							fi
-							menubox "$CAL_VIEW_CHAR" "$V_TITLE" "$V_MSG" "$V_MENUE"
+							menubox "$1" "$V_TITLE" "$V_MSG" "$V_MENUE"
 						}
 						#}}}
-						cal_view_menue
+						cal_view_menue "$CAL_VIEW_CHAR"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help cal_view_help
-									cal_view_menue
+									cal_view_menue "${gv_Auswahl#HELP }"
 									;;
 								$gv_Back)	break
 									;;
@@ -184,16 +184,15 @@ while [ "$gv_Auswahl" ] ; do
 							CONF_CAL_TITLE=$(gettext 'Konfiguration::Kalender')
 							CONF_CAL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Kalenderdateien aus.')
 							conf_cal_menue() {
-								checklist "${DEFAULT_VALUE[1]}" "$CONF_CAL_TITLE" "$CONF_CAL_MSG" "$CONF_CAL_MENU"
+								checklist "$1" "$CONF_CAL_TITLE" "$CONF_CAL_MSG" "$CONF_CAL_MENU"
 							}
 							#}}}
-							conf_cal_menue
+							conf_cal_menue "${DEFAULT_VALUE[1]}"
 							while [ "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)
 										script_help conf_cal_help
-										DEFAULT_VALUE=${gv_Auswahl#HELP }
-										conf_cal_menue
+										conf_cal_menue "${gv_Auswahl#HELP }"
 										;;
 									*)	#
 										CAL="$gv_Auswahl"
@@ -253,13 +252,13 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$gv_Exit) break
 			;;
 		*)	# Programme ausführen lassen.
 			$gv_Auswahl
-			haupt_menue $gv_Auswahl
+			main_menu $gv_Auswahl
 			;;
 	esac
 done	

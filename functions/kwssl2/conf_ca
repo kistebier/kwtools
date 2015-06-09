@@ -381,7 +381,7 @@ conf_ca() {
 				HELP*)
 					# Hilfe Messagebox
 					script_help "$HELPFILE"
-					conf_ca_menu $Opt
+					conf_ca_menu $Opt "${gv_Auswahl#HELP }"
 					;;
 				"$lv_Ssl_CA_Password")
 					# RootCA Password Eingabe
@@ -564,15 +564,15 @@ conf_ca() {
 					MD4 \"\" MD5 \"\" RIPEMD-160 \"\")
 					# Funktion (digest_menu)# {{{
 					digest_menu() {
-						menubox "$DIGEST" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$DIGEST_MENU"
+						menubox "$1" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$DIGEST_MENU"
 					}
 					## }}}
-					digest_menu
+					digest_menu "$DIGEST"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*) # Hilfe
 								script_help "$HELPFILE"
-								digest_menu
+								digest_menu "${gv_Auswahl#HELP }"
 								;;
 							*) # Auswahl uebernehmen
 								DIGEST="$gv_Auswahl"
@@ -588,15 +588,15 @@ conf_ca() {
 					ALG_MENU=(RSA \"\" DSA \"\")
 					# Funktion (alg_menu)# {{{
 					alg_menu() {
-						menubox "$ALG" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$ALG_MENU"
+						menubox "$1" "$REQ_CREATE_TITLE" "$gv_Menupoint" "$ALG_MENU"
 					}
 					## }}}
-					alg_menu
+					alg_menu "$ALG"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*) # Hilfe
 								script_help "$HELPFILE"
-								alg_menu
+								alg_menu "${gv_Auswahl#HELP }"
 								;;
 							*) # Auswahl uebernehmen
 								ALG="$gv_Auswahl"

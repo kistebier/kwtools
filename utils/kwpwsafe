@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwpwsafe, Frontend zur Verwaltung der Passwoerter mit dem Programm
 #         pwsafe.
 #
-# Version: 0.1.1
+# Version: 0.1.2
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -213,7 +213,7 @@ read_pwsafe_entry() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwpwsafe_create_db_help
-					create_db_menu
+					create_db_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Db_Name)
 					# Datenbank Name eingeben# {{{
@@ -337,7 +337,7 @@ select_db() {
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help kwpwsafe_list_db_help
-					radiolist "" "$gv_Mainmenu" "$DB_MSG" "$DB_MENU"
+					radiolist "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$DB_MSG" "$DB_MENU"
 					;;
 				*)	# Auswahl uebernehmen
 					DB_FILE="$gv_Auswahl"
@@ -378,7 +378,7 @@ first_check() {
 MAIN_MENU=(\"$lv_Data_Db\" \"\" \"$lv_Open_Db\" \"\"
 	\"$lv_Manage_Db\" \"\" $gv_Configuration \"\" $gv_Exit \"\")
 main_menu() {
-	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
 
@@ -395,34 +395,34 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Data_Db)
 			# Daten abfragen, ... und bearbeiten# {{{
 			autoload -U kwpwsafe_open_db
 			kwpwsafe_open_db
 			## }}}
-			main_menu
+			main_menu $lv_Data_Db
 			;;
 		$lv_Open_Db)
 			# Datenbank oeffnen# {{{
 			select_db
 			## }}}
-			main_menu
+			main_menu $lv_Open_Db
 			;;
 		$lv_Manage_Db)
 			# Datenbank verwalten.# {{{
 			autoload -U kwpwsafe_manage_db
 			kwpwsafe_manage_db
 			## }}}
-			main_menu
+			main_menu $lv_Manage_Db
 			;;
 		$gv_Configuration)
     	    # Default Configuration# {{{
 			autoload -U kwpwsafe_conf kwpwsafe_config
 			kwpwsafe_conf
 			## }}}
-			main_menu
+			main_menu $gv_Configuration
 			;;
 		$gv_Exit)	break
 			;;

@@ -8,6 +8,12 @@ gpgcrypt_conf() {
 	lv_Default_Keyid=$(gettext 'Standard_Schluessel_ID')
 	lv_Keyserv=$(gettext 'Schluessel_Server')
 	#
+	# Falls die Datei $PGP_OPTIONS nicht vorhanden ist Skeleton Datei kopieren.
+	if [ ! -f $PGP_OPTIONS ] ; then
+		cp $PGP_OPTION_SKEL $PGP_OPTIONS
+		# Konfiguration einlesen
+		parse_opt
+	fi
 	# Funktion konf_menue{{{
 	konf_menue() {
 		MENU=($lv_Default_Keyid_Long \"$TRUSTED_KEY\" --------------------------- \"\"
@@ -23,7 +29,7 @@ gpgcrypt_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help conf_help
-				konf_menue
+				konf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Keyserv)
 				# Schluessel Server angeben.{{{
@@ -52,7 +58,7 @@ gpgcrypt_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help keyserv_help
-							keyserv_menue
+							keyserv_menue "${gv_Auswahl#HELP }"
 							;;
 						$lv_Protocol)
 							# Protokoll auswaehlen{{{
@@ -62,7 +68,7 @@ gpgcrypt_conf() {
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help keyserv_help
-										menubox "$PROTOCOL" "$KEY_TITLE" "$PROT_MSG" "$Prot"
+										menubox "${gv_Auswahl#HELP }" "$KEY_TITLE" "$PROT_MSG" "$Prot"
 										;;
 									*)	PROTOCOL="$gv_Auswahl"
 										break

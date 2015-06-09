@@ -95,17 +95,17 @@ export_files() {
 			case "$Export_Opt" in
 				-ca|-crl)
 					EXPORT_MENU=(PEM \"\" on DER \"\" off TXT \"\" off)
-					radiolist "" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					radiolist "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
 					;;
 				-keys)
 					EXPORT_MENU=(PEM \"\" on DER \"\" off PKCS#12 \"\" off
 					TAR \"\" off ZIP \"\" off)
-					radiolist "" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					radiolist "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
 					;;
 				-certs)
 					EXPORT_MENU=(PEM \"\" on DER \"\" off PKCS#12 \"\" off
 					TAR \"\" off TXT \"\" off ZIP \"\" off)
-					radiolist "" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
+					radiolist "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$EXPORT_MENU"
 					;;
 				-chain)
 					gv_Auswahl=PEM
@@ -179,7 +179,7 @@ export_files() {
 				HELP*)
 		    	    # Hilfe Messagebox
 					script_help "$EXPORT_HELPFILE"
-					export_menu
+					export_menu "${gv_Auswahl#HELP }"
 					;;
 				DER)
 					# Zertifikat nach DER exportieren

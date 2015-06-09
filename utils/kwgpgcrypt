@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwgpgcrypt, ent/verschluesselt Dateien oder ganze Verzeichnisse.
-# Version: 0.0.9
+# Version: 0.1.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -39,10 +39,11 @@ prog_check gpg
 if [ -z "$PROGS" ] ; then
 	exit 0
 else
-	PROG=gpg
+	PROG=${commands[gpg]}
 fi
 
 PGP_HOME="${gv_HomePath}/.gnupg"
+PGP_OPTION_SKEL="/usr/share/gnupg/option.skel"
 Lv_Verfall=$(gettext 'verfallen am')
 Lv_Verfall_End=$(gettext 'verfaellt am')
 Lv_Verfall_No_End=$(gettext 'verfaellt nicht')
@@ -60,8 +61,8 @@ lv_Decrypt=$(gettext 'entschluesseln')
 
 MAIN_MENU=($gv_Configuration \"\" $lv_Key_Manage \"\" $lv_Sign \"\"
 	$lv_Encrypt \"\" $lv_Sign_Encrypt \"\" $lv_Decrypt \"\" $gv_Exit \"\")
-# Funktion haupt_menue{{{
-haupt_menue() {
+# Funktion main_menu{{{
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -70,19 +71,19 @@ haupt_menue() {
 pub_create() {
 	if [ -f ${gv_HomePath}/.gnupg/pubring.gpg ] ; then
 		# Pruefen, ob der user schon einen Schluessel besitzt.
-		if $PROG --homedir $PGP_HOME --quiet --list-keys $USER 1>/dev/null ; then
+		if $PROG --homedir $PGP_HOME --quiet --list-keys $USER &>/dev/null ; then
 			# Wenn ja wird dies mitgeteilt und gefragt, ob ein 
 			# neuer key erstellt werden soll.
 			MSG=$(gettext 'Es ist schon ein privater Schluessel vorhanden. Soll ein neuer erzeugt werden (ja/nein)? Bedenken Sie das Sie erst alle alten verschluesselten Dateien/Verzeichnisse mit dem alten Scluessel entschluesseln sollten bevor Sie einen neuen erstellen.')
 			yesno "$gv_Attention" "$MSG" "no"
 			if [ "$gv_Auswahl" != no ] ; then
-				$PROG --homedir $PGP_HOME --gen-key
+				eval $PROG --homedir $PGP_HOME --gen-key
 			fi
 		else
-			$PROG --homedir $PGP_HOME --gen-key
+			eval $PROG --homedir $PGP_HOME --gen-key
 		fi
 	else
-		$PROG --homedir $PGP_HOME --gen-key
+		eval $PROG --homedir $PGP_HOME --gen-key
 	fi
 	RET=0
 }
@@ -99,7 +100,7 @@ pub_new_create() {
 	## }}}
 	# Funktion generate_key# {{{
 	generate_key() {
-		$PROG --homedir $PGP_HOME --gen-key
+		eval $PROG --homedir $PGP_HOME --gen-key
 	}
 	## }}}
 	if [ -d "$PGP_HOME" ] ; then
@@ -227,49 +228,49 @@ fi
 #
 parse_opt
 #
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
 			# Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration, wie  keyserver ....
 			autoload -U gpgcrypt_conf gpgcrypt_config
 			gpgcrypt_conf
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Key_Manage)
 			# Schluessel Management
 			autoload -U key_manage
 			key_manage
-			haupt_menue $lv_Key_Manage
+			main_menu $lv_Key_Manage
 			;;
 		$lv_Sign)
 			# Auswahl an Dateien oder ganze Verzeichnisse signieren.
 			ACTION=sign
 			dir_file_choice gpgcrypt
-			haupt_menue $lv_Sign
+			main_menu $lv_Sign
 			;;
 		$lv_Encrypt)
 			# Auswahl an Dateien oder ganze Verzeichnisse verschluesseln
 			ACTION=crypt
 			dir_file_choice gpgcrypt
-			haupt_menue $lv_Encrypt
+			main_menu $lv_Encrypt
 			;;
 		$lv_Sign_Encrypt)
 			# Auswahl an Dateien oder ganze Verzeichnisse signieren und verschluesseln
 			ACTION=both
 			dir_file_choice gpgcrypt
-			haupt_menue $lv_Sign_Encrypt
+			main_menu $lv_Sign_Encrypt
 			;;
 		$lv_Decrypt)
 			# Auswahl an Dateien oder ganze Verzeichnisse entschluesseln
 			ACTION=decrypt
 			dir_file_choice gpgcrypt
-			haupt_menue $lv_Decrypt
+			main_menu $lv_Decrypt
 			;;
 		$gv_Exit)	break
 			;;

@@ -24,7 +24,7 @@ manage_keys() {
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help key_help
-					key_menu
+					key_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Export)
 					# Schluessel exportieren# {{{
@@ -34,7 +34,7 @@ manage_keys() {
 					# Funktion (key_choice_menu)# {{{
 					key_choice_menu() {
 						KEY_EXPORT_MENU=($KEYS_ALL_M)
-						radiolist "" "$EXPORT_TITLE" "$gv_Menupoint" "$KEY_EXPORT_MENU"
+						radiolist "$1" "$EXPORT_TITLE" "$gv_Menupoint" "$KEY_EXPORT_MENU"
 					}
 					## }}}
 					get_req_key_files
@@ -45,7 +45,7 @@ manage_keys() {
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help export_key_help
-									key_choice_menu
+									key_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Auswahl uebernehmen
@@ -67,7 +67,7 @@ manage_keys() {
 					KEY_DEL_TITLE="${lv_Key}::${gv_Delete}"
 					del_key_choice_menu() {
 						KEY_DEL_MENU=($KEYS_ALL_M)
-						checklist "" "$KEY_DEL_TITLE" "$gv_Menupoint" "$KEY_DEL_MENU"
+						checklist "$1" "$KEY_DEL_TITLE" "$gv_Menupoint" "$KEY_DEL_MENU"
 					}
 					## }}}
 					get_req_key_files
@@ -78,7 +78,7 @@ manage_keys() {
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help key_del_help
-									del_key_choice_menu
+									del_key_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
 									# Auswahl uebernehmen

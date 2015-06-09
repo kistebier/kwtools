@@ -16,15 +16,15 @@ planer_conf_state() {
 	MSG=$(gettext 'Waehlen Sie bitte Ihren $lv_State_Bl aus.')
 	planer_conf_state_menue() {
 		MENU=($BL_ARRAY)
-		menubox "$BLAND" "$TITLE" "$MSG" "$MENU"
+		menubox "$1" "$TITLE" "$MSG" "$MENU"
 	}
 	#}}}
-	planer_conf_state_menue
+	planer_conf_state_menue "$BLAND"
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)
 				script_help conf_help
-				planer_conf_state_menue
+				planer_conf_state_menue "${gv_Auswahl#HELP }"
 				;;
 			*)	#
 				# Wird ein Staat/Bundesland ausgesucht, wird die Variable $BLAND damit belegt 

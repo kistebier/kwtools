@@ -33,14 +33,14 @@ key_manage() {
 		case "$gv_Auswahl" in
 			HELP*)
 			 	script_help manage_help
-				key_manage_menue
+				key_manage_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Schluessel.{{{
 				#
-				if [ "`gpg --homedir $PGP_HOME --list-keys 2>/dev/null`" ] ; then
+				if $PROG --homedir $PGP_HOME --list-keys &>/dev/null ; then
 					PROG_OPT="--homedir $PGP_HOME --list-keys >${gv_WorkDir}/keys"
-					eval $PROG "${=PROG_OPT}"
+					eval $PROG ${=PROG_OPT}
 					view_file ${gv_WorkDir}/keys
 				else
 					no_gpg_key_msg
@@ -51,7 +51,7 @@ key_manage() {
 			$lv_Update)
 				# Refresh der Schluessel durch Schluessel Server.{{{
 				#
-				if [ -n "$KEY_SERV_ALL" ] ; then
+				if [ -n "${KEY_SERV_ALL[1]}" ] ; then
 					PROG_OPT="--homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --refresh-keys"
 					eval $PROG "${=PROG_OPT}"
 				else
@@ -77,14 +77,14 @@ key_manage() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help import_help
-							menubox "" "$IMPORT_TITLE" "$gv_Menupoint" "$IMPORT_MENU"
+							menubox "${gv_Auswahl#HELP }" "$IMPORT_TITLE" "$gv_Menupoint" "$IMPORT_MENU"
 							;;
 						$lv_Serv)
-							if [ -n "$KEY_SERV_ALL" ] ; then
+							if [ -n "${KEY_SERV_ALL[1]}" ] ; then
 								MSG=$(gettext 'Geben Sie bitte ein oder mehrere Schluessel IDs, durch ein Leerzeichen getrennt, ein (XXXXXX YYYYYY).')
 								inputbox "$IMPORT_TITLE" "$MSG"
 								if [ "$gv_Auswahl" ] ; then
-									PROG_OPT="--homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --recv-keys "$gv_Auswahl""
+									PROG_OPT="--homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --recv-keys "${=gv_Auswahl_Display}""
 									eval $PROG "${=PROG_OPT}"
 								else
 									no_input_msg
@@ -117,7 +117,7 @@ key_manage() {
 				#
 				# Auswahl des Schluessels
 				#
-				if [ "$I_Menue" ] ; then
+				if [ "${I_Menue[1]}" ] ; then
 					EXPORT_MENU=($I_Menue)
 					EXPORT_TITLE=(${lv_Key_Manage}::${lv_Export})
 					menubox "" "$EXPORT_TITLE" "$ALL_PUBLIC_MSG" "$EXPORT_MENU"
@@ -126,7 +126,7 @@ key_manage() {
 						case "$gv_Auswahl" in
 							HELP*)
 								script_help key_help
-								menubox "" "$EXPORT_TITLE" "$ALL_PUBLIC_MSG" "$EXPORT_MENU"
+								menubox "${gv_Auswahl#HELP }" "$EXPORT_TITLE" "$ALL_PUBLIC_MSG" "$EXPORT_MENU"
 								;;
 							*)	#
 								# Dateinamen eingeben fuer den export des Schluessels
@@ -158,7 +158,7 @@ key_manage() {
 				#
 				# Auswahl des Schluessels
 				#
-				if [ "$I_Menue" ] ; then
+				if [ "${I_Menue[1]}" ] ; then
 					SIGN_MENU=($I_Menue)
 					SIGN_TITLE=($lv_key__Manage}::${lv_Sign})
 					menubox "" "$SIGN_TITLE" "$ALL_PUBLIC_MSG" "$SIGN_MENU"
@@ -167,7 +167,7 @@ key_manage() {
 						case "$gv_Auswahl" in
 							HELP*)
 								script_help key_help
-								menubox "" "$SIGN_TITLE" "$ALL_PUBLIC_MSG" "$SIGN_MENU"
+								menubox "${gv_Auswahl#HELP }" "$SIGN_TITLE" "$ALL_PUBLIC_MSG" "$SIGN_MENU"
 								;;
 							*)	#
 								# Schluessel signieren
@@ -191,7 +191,7 @@ key_manage() {
 			$lv_Revoke)
 				# Einen Schluessel fuer ungueltig erklaeren.{{{
 				private_list -u
-				if [ "$I_Menue" ] ; then
+				if [ "${I_Menue[1]}" ] ; then
 					REVOKE_MENU=($I_Menue)
 					REVOKE_TITLE=(${lv_Key_Manage}::${lv_Revoke})
 					menubox "" "$REVOKE_TITLE" "$USER_PUBLIC_MSG" "$REVOKE_MENU"
@@ -200,7 +200,7 @@ key_manage() {
 						case "$gv_Auswahl" in
 							HELP*)
 								script_help key_help
-								menubox "" "$REVOKE_TITLE" "$USER_PUBLIC_MSG" "$REVOKE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$REVOKE_TITLE" "$USER_PUBLIC_MSG" "$REVOKE_MENU"
 								;;
 							*)	#
 								# Ungueltigkeits Zertifikat erstellen.
@@ -230,9 +230,9 @@ key_manage() {
 				;;
 			$lv_Upload)
 				# Upload der oeffentlichen Schluessel.{{{
-				if [ -n "$KEY_SERV_ALL" ] ; then
+				if [ -n "${KEY_SERV_ALL[1]}" ] ; then
 					private_list
-					if [ "$I_Menue_Multi" ] ; then
+					if [ "${I_Menue_Multi[1]}" ] ; then
 						UPLOAD_MENU=($I_Menue_Multi)
 						UPLOAD_TITLE=(${lv_Key_Manage}::${lv_Upload})
 						radiolist "" "$UPLOAD_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$UPLOAD_MENU"
@@ -241,7 +241,7 @@ key_manage() {
 							case "$gv_Auswahl" in
 								HELP*)
 									script_help key_help
-									radiolist "" "$UPLOAD_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$UPLOAD_MENU"
+									radiolist "${gv_Auswahl#HELP }" "$UPLOAD_TITLE" "$ALL_PUBLIC_MULTI_MSG" "$UPLOAD_MENU"
 									;;
 								*)	#
 									# Dateinamen eingeben fuer den export des Schluessels
@@ -286,7 +286,7 @@ key_manage() {
 								# Pruefen, ob der oeffentliche Schluessel auch einen sicheren besitzt.
 								# Wenn ja, werden beide geloescht.
 								for i in $gv_Auswahl ; {
-									if $PROG --quiet --homedir $PGP_HOME --list-secret-keys $i >/dev/null ; then
+									if $PROG --quiet --homedir $PGP_HOME --list-secret-keys $i &>/dev/null ; then
 										PROG_OPT="--yes --homedir $PGP_HOME --delete-secret-key --command-fd 3 $i 3<<< yes"
 										eval $PROG "${=PROG_OPT}"
 										PROG_OPT="--yes --homedir $PGP_HOME --delete-key --command-fd 3 $i 3<<< yes"

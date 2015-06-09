@@ -29,7 +29,7 @@ kwpwsafe_manage_db() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help kwpwsafe_db_help
-				manage_db_menu
+				manage_db_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Create_Db)
 				# Datenbank erstellen# {{{
@@ -47,7 +47,7 @@ kwpwsafe_manage_db() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_db_help
-								menubox "$Db_Choice" "$MANAGE_TITLE" "$EX_MSG" "$EX_MENU"
+								menubox "${gv_Auswahl#HELP }" "$MANAGE_TITLE" "$EX_MSG" "$EX_MENU"
 								;;
 							*)	# Auswahl uebernehmen und exportieren
 								Db_Choice="$gv_Auswahl"
@@ -80,7 +80,7 @@ kwpwsafe_manage_db() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_db_help
-								menubox "$Db_Choice" "$MANAGE_TITLE" "$IM_MSG" "$IM_MENU"
+								menubox "${gv_Auswahl#HELP }" "$MANAGE_TITLE" "$IM_MSG" "$IM_MENU"
 								;;
 							*)	# Auswahl uebernehmen und exportieren
 								Db_Choice="$gv_Auswahl"
@@ -239,7 +239,7 @@ expect eof"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_db_help
-								menubox "$DB_CHANGE" "$MANAGE_TITLE" "$DB_MSG" "$PW_MENU"
+								menubox "${gv_Auswahl#HELP }" "$MANAGE_TITLE" "$DB_MSG" "$PW_MENU"
 								;;
 							*)
 								# Passwort aendern# {{{
@@ -370,7 +370,7 @@ expect eof"
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpwsafe_db_help
 								U_OPT="no"
-								checklist "" "$MANAGE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$MANAGE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	# Auswahl uebernehmen und loeschen (auch das Backup)
 								while read i ; do
