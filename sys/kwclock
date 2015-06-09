@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 08.06.2015
 #
 # Script: kwclock, zeigt die aktuelle Zeit und das Datum des Rechners an und kann
 #         diese einstellen.
 #
-# Version: 0.1.22
+# Version: 0.1.24
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -57,8 +57,8 @@ lv_Time_Serv=$(gettext 'Zeitserver')
 lv_Clock=$(gettext 'Uhrzeit')
 lv_Date=$(gettext 'Datum')
 
-# Funktion haupt_menue{{{
-haupt_menue() {
+# Funktion main_menu{{{
+main_menu() {
 	if [[ -x $NTPDATE ]] ; then
 		MAIN_MENU=($lv_Time_Serv \"\" $lv_Clock \"$UHR\"
 			$lv_Date \"$DATE\" $gv_Exit \"\")
@@ -83,12 +83,12 @@ act_date() {
 ##################################################################
 #
 act_date
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)	
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Time_Serv)
 			# Uhrzeit nach einer Atomuhr, mittels dem Protokoll ntp stellen{{{
@@ -99,7 +99,7 @@ while [ "$gv_Auswahl" ] ; do
 			timeserver_conf
 			act_date
 			#}}}
-			haupt_menue $lv_Time_Serv
+			main_menu $lv_Time_Serv
 			;;
 		$lv_Clock)
 			# Uhrzeit einstellen{{{
@@ -116,7 +116,7 @@ while [ "$gv_Auswahl" ] ; do
 				act_date
 			fi
 			#}}}
-			haupt_menue $lv_Clock
+			main_menu $lv_Clock
 			;;
 		$lv_Date)
 			# Datum einstellen{{{
@@ -135,7 +135,7 @@ while [ "$gv_Auswahl" ] ; do
 				act_date
 			fi
 			#}}}
-			haupt_menue $lv_Date
+			main_menu $lv_Date
 			;;
 		$gv_Exit)	break
 			;;

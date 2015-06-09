@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke  <kiste@netzworkk.de> 08.06.2015
 #
 # Script: kwcrypt, ist ein Wrapper fuer kwcryptsetup, kwecryptfs und kwlosetup.
 #
-# Version: 0.0.9
+# Version: 0.1.0
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -64,7 +64,7 @@ fi
 #
 main_menu() {
 	MAIN_MENU=($CRYPTO_SW $gv_Exit \"\")
-	menubox "$C_PROG" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
 ##################################################################
@@ -78,7 +78,7 @@ while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Exit)	break
 			;;
@@ -86,7 +86,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Crypto Programm ausfuehren
 			C_PROG="$gv_Auswahl"
 			$gv_Auswahl
-			main_menu
+			main_menu "$C_PROG"
 			;;
 	esac
 done	

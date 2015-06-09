@@ -4,6 +4,11 @@
 #
 fusetab_conf() {
 	FUSETAB_CONF_TITLE="${gv_Configuration}::fusetab"
+	lv_Drive=$(gettext 'Laufwerk')
+	lv_Mountpoint=$(gettext 'Mountpunkt')
+	lv_Mount_Opt=$(gettext 'Mountoptionen')
+	lv_Dump=$(gettext 'Dump')
+	lv_Check=$(gettext 'Check')
 	# Funktion fusetab_conf_menu# {{{
 	#
 	fusetab_conf_menu() {
@@ -29,11 +34,6 @@ fusetab_conf() {
 		}
 		## }}}
 		# Funktion fusetab_input_menue{{{
-		lv_Drive=$(gettext 'Laufwerk')
-		lv_Mountpoint=$(gettext 'Mountpunkt')
-		lv_Mount_Opt=$(gettext 'Mountoptionen')
-		lv_Dump=$(gettext 'Dump')
-		lv_Check=$(gettext 'Check')
 		#
 		fusetab_input_menue() {
 			FUSETAB_INPUT_MENU=($lv_Drive \"$FS_DRIVE\" $lv_Mountpoint \"$MOUNT_POINT\"
@@ -46,7 +46,7 @@ fusetab_conf() {
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help fusetab_conf_help
-					fusetab_input_menue
+					fusetab_input_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Drive)
 					# Device{{{
@@ -203,7 +203,7 @@ fusetab_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help mount_option_help
-								mount_option_menue
+								mount_option_menue "${gv_Auswahl#HELP }"
 								;;
 							$lv_Auto)
 								# Soll das FS beim starten eingebunden werden (yes/no)?{{{
@@ -342,7 +342,7 @@ fusetab_conf() {
 										while [ "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help share/group_id_help
-													menubox "$G_ID" "$FUSETAB_CONF_TITLE" "$FUSETAB_GID_MSG" "$U_G_ID_ARRAY"
+													menubox "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$FUSETAB_GID_MSG" "$U_G_ID_ARRAY"
 													;;
 												*)
 													G_ID="gid=${gv_Auswahl}"
@@ -451,7 +451,7 @@ fusetab_conf() {
 										while [ "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help share/user_id_help
-													menubox "$U_ID" "$FUSETAB_CONF_TITLE" "$FUSETAB_GID_MSG" "$U_U_ID_ARRAY"
+													menubox "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$FUSETAB_GID_MSG" "$U_U_ID_ARRAY"
 													;;
 												*)
 													U_ID="uid=${gv_Auswahl}"
@@ -538,7 +538,7 @@ fusetab_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help fusetab_check_help
-								menubox "${CHECK:-2}" "$FUSETAB_CONF_TITLE" "$FUSETAB_INPUT_CHECK_MSG" "$FUSETAB_INPUT_CHECK_MENU" "$CHECK"
+								menubox "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$FUSETAB_INPUT_CHECK_MSG" "$FUSETAB_INPUT_CHECK_MENU" "$CHECK"
 								;;
 							*)	CHECK="$gv_Auswahl"
 								break
@@ -583,7 +583,7 @@ fusetab_conf() {
 	while [ -n "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*) script_help fusetab_help
-				fusetab_conf_menu
+				fusetab_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Fuse Dateieintraege aus der /etc/fstab ansehen# {{{
@@ -631,7 +631,7 @@ fusetab_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help fusetab_change_help
-								menubox "$NR" "$FUSETAB_CONF_TITLE" "$FUSETAB_CHANGE_MSG" "$FUSETAB_CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$FUSETAB_CHANGE_MSG" "$FUSETAB_CHANGE_MENU"
 								;;
 							$gv_Back)	break
 								;;
@@ -679,11 +679,11 @@ fusetab_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*) script_help fusetab_delete_help
-								checklist "" "$FUSETAB_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	# Nach Zeilennummer loeschen
 								Anz=0
-								for i in $gv_Auswahl ; {
+								for i in ${=gv_Auswahl} ; {
 									(( Anz++ ))
 									Line[Anz]="`print ${${(s,:,)$(grep -n ${FSTAB_VALUES[i]} $FSTAB)}[1]}`"
 								}

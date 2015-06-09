@@ -16,7 +16,7 @@ integer Anz
 CONF_RL_TITLE=(${gv_Configuration}::${lv_Runlevel}::${Init_Script})
 runlev_menue() {
 	CONF_RL_MENU=(${RunLevel[*]} $gv_Save \"\" $gv_Back \"\")
-	menubox "" "$CONF_RL_TITLE" "$gv_Menupoint" "$CONF_RL_MENU"
+	menubox "$1" "$CONF_RL_TITLE" "$gv_Menupoint" "$CONF_RL_MENU"
 }
 #}}}
 #
@@ -24,7 +24,7 @@ menubox "" "$CONF_TITLE" "$CONF_MSG" "$Script"
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*) script_help daemon_help
-			menubox "" "$CONF_TITLE" "$CONF_MSG" "$Script"
+			menubox "${gv_Auswahl#HELP }" "$CONF_TITLE" "$CONF_MSG" "$Script"
 			;;
 		[a-z,A-Z,0-9]*)
 			# Wurde schon ein INIT Script ausgewählt, wird es 
@@ -51,7 +51,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case ${gv_Auswahl%% *} in
 						HELP*)	script_help runlevconf_help
-							runlev_menue
+							runlev_menue "${gv_Auswahl#HELP }"
 							;;
 						[S0-6])
 							# Runlevel bearbeiten# {{{
@@ -80,7 +80,7 @@ while [ "$gv_Auswahl" ] ; do
 								case $gv_Auswahl in
 									HELP*)
 										script_help runlevconf_help
-										rc_conf
+										rc_conf "${gv_Auswahl#HELP }"
 										;;
 									$lv_Nr)
 										# Runlevel Nummer eingeben# {{{

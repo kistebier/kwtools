@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwlogrotate, zur Verwaltung der Logdateien
-# Version: 0.3.1
+# Version: 0.3.2
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -69,7 +69,7 @@ Size=$(gettext 'Groesse')
 # Funktion Hauptmenue{{{
 #
 MAIN_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox  "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -184,7 +184,7 @@ log_aendern() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help conf_help
-				log_aendern_menue
+				log_aendern_menue "${gv_Auswahl#HELP }"
 				;;
 			"$Add_Entry")
 				# Einen Eintrag fuer Logdateien hinzufuegen# {{{
@@ -341,15 +341,15 @@ $gv_Back \"\""
 					# Funktionen (rotatetime_menu)# {{{
 					#
 					rotatetime_menu() {
-						menubox "${ROTATE[MP_ANZ]}" "$ROTATE_TIME_TITLE" "$ROTATE_TIME_MSG" "$ROTATE_TIME_MENU"
+						menubox "$1" "$ROTATE_TIME_TITLE" "$ROTATE_TIME_MSG" "$ROTATE_TIME_MENU"
 					}
 					## }}}
-					rotatetime_menu
+					rotatetime_menu "${ROTATE[MP_ANZ]}"
 					if [ "$gv_Auswahl" ] ; then
 						while [ $gv_Auswahl ] ; do
 							case $gv_Auswahl in
 								HELP*)	script_help rotate_help
-									rotatetime_menu
+									rotatetime_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	#
 									# Rotate vormerken
@@ -409,7 +409,7 @@ $gv_Back \"\""
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help size_help
-									menubox "${SIZE[MP_ANZ]}" "$SIZE_TITLE" "$SIZE_MSG" "$SIZE_MENU"
+									menubox "${gv_Auswahl#HELP }" "$SIZE_TITLE" "$SIZE_MSG" "$SIZE_MENU"
 									;;
 								*)	#
 									# Grösse annehmen
@@ -541,13 +541,13 @@ fi
 local Anz L_Anz
 integer Anz L_Anz
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Create)
 			# Log-Konf.-datei anlegen
@@ -583,7 +583,7 @@ $gv_Back \"\""
 				fi
 			fi
 			#}}}
-			haupt_menue $gv_Create
+			main_menu $gv_Create
 			;;
 		$gv_Change)
 			# Log-Konf.-datei ändern{{{
@@ -592,7 +592,7 @@ $gv_Back \"\""
 				log_aendern
 			fi
 			#}}}
-			haupt_menue $gv_Change
+			main_menu $gv_Change
 			;;
 		$gv_Delete)
 			# Log-Konf.-Dateien loeschen{{{
@@ -606,7 +606,7 @@ $gv_Back \"\""
 				}
 			fi
 			#}}}
-			haupt_menue $gv_Delete
+			main_menu $gv_Delete
 			;;
 		$gv_Exit)	break
 			;;

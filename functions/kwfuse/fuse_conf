@@ -4,6 +4,7 @@
 #
 fuse_conf() {
 	# Falls $FUSE_CONF existiert wird sie eingelesen# {{{
+	integer MOUNT_MAX
 	if [ -f "$FUSE_CONF" ] ; then
 		MOUNT_MAX=${(L)${${(s:=:)${(M)${(f)"$(< ${FUSE_CONF})"}##mount_max*}}[2]}}
 		if [ -n "`print ${(M)${(f)"$(< ${FUSE_CONF})"}##user_allow_other}`" ] ; then
@@ -31,14 +32,14 @@ fuse_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help fuse_conf_help
-				fuse_conf_menue
+				fuse_conf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Mount_Max)
 				# Maximale Nummer von FUSE mounts die von non-root# {{{
 				# Users erlaubt werden. Standard ist 1000.
 				MOUNT_MAX_MSG=$(gettext 'Geben Sie hier die maximale Anzahl der Laufwerke an die von normalen Benutzern ins Dateisystem eingebunden werden duerfen.')
-				number_input "$gv_Configuration" "$MOUNT_MAX_MSG" "$MOUNT_MAX"
-				if [ "$NUMBER" ] ; then
+				number_input -i "$gv_Configuration" "$MOUNT_MAX_MSG" "$MOUNT_MAX"
+				if [ -n "$NUMBER" ] ; then
 					MOUNT_MAX="$NUMBER"
 				else
 					MOUNT_MAX="1000"

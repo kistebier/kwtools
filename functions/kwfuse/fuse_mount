@@ -34,10 +34,10 @@ fuse_mount() {
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*) script_help fuse_mount_help
-									checklist "" "$FUSE_UMOUNT_TITLE" "$FUSE_UMOUNT_MSG" "$FUSE_UMOUNT_MENU"
+									checklist "${gv_Auswahl#HELP }" "$FUSE_UMOUNT_TITLE" "$FUSE_UMOUNT_MSG" "$FUSE_UMOUNT_MENU"
 									;;
 								*)	# Dateisystem umounten
-									for n in $gv_Auswahl ; {
+									for n in ${=gv_Auswahl} ; {
 										mount_check -a ${(s| |)${FSTAB_VALUES[n]}[2]}
 									}
 									break
@@ -59,10 +59,10 @@ fuse_mount() {
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*) script_help fuse_mount_help
-									checklist "" "$FUSE_MOUNT_TITLE" "$FUSE_MOUNT_MSG" "$FUSE_MOUNT_MENU"
+									checklist "${gv_Auswahl#HELP }" "$FUSE_MOUNT_TITLE" "$FUSE_MOUNT_MSG" "$FUSE_MOUNT_MENU"
 									;;
 								*)	# Dateisystem mounten
-									for n in $gv_Auswahl ; {
+									for n in ${=gv_Auswahl} ; {
 										mount_check -m ${(s| |)${FSTAB_VALUES[n]}[2]}
 									}
 									break

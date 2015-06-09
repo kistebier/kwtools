@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 08.06.2015
 #
 # Script: kwrunlevconf, konfiguriert ihre Runlevel
-# Version: 0.2.15
+# Version: 0.2.16
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -63,7 +63,7 @@ lv_Runlevelkonfiguration=$(gettext 'Runlevelkonfiguration')
 #
 main_menu() {
 	MAIN_MENU=($lv_InitScript \"\" $lv_Default \"$INITTAB\" $gv_Exit \"\")
-	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
 #############################
@@ -79,7 +79,7 @@ while [ "$gv_Auswahl" ] ; do
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			main_menu
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_InitScript)
 			# Runlevel Konfigurations{{{
@@ -140,7 +140,7 @@ while [ "$gv_Auswahl" ] ; do
 			if_conf_file "$OS" init
 			rl_script_status
 			#}}}
-			main_menu
+			main_menu "$lv_InitScript"
 			;;
 		$lv_Default)
 			# Standard Boot-Runlevel ändern.{{{
@@ -149,20 +149,25 @@ while [ "$gv_Auswahl" ] ; do
 			DEFAULT_RL_TITLE=$(gettext 'Standard Boot Runlevel')
 			DEFAULT_RL_MSG=$(gettext 'Waehlen Sie ihr Standard Boot Runlevel aus.')
 			DEFAULT_RL_MENU=(1 \"\" 2 \"\" 3 \"\" 4 \"\" 5 \"\")
-			menubox "$INITTAB" "$DEFAULT_RL_TITLE" "$DEFAULT_RL_MSG" "$DEFAULT_RL_MENU"
+			# Funktion (default_boot_menu)# {{{
+			default_boot_menu() {
+				menubox "$1" "$DEFAULT_RL_TITLE" "$DEFAULT_RL_MSG" "$DEFAULT_RL_MENU"
+			}
+			## }}}
 			#
+			default_boot_menu "$INITTAB"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)
 						# Hilfe für Einstellung des Standard Start Runlevels
 						script_help default_inithelp
-						menubox "$INITTAB" "$DEFAULT_RL_TITLE" "$DEFAULT_RL_MSG" "$DEFAULT_RL_MENU"
+						default_boot_menu "${gv_Auswahl#HELP }"
 						;;
 					*)
 						# Auswahl der Runlevel von 1-5
 						INITTAB=$gv_Auswahl
 						# Standard Start-Runlevel Einstellung schreiben.
-						if [ $INITTAB -a $INITTAB -ne $INITTAB_BAK ] ; then
+						if [ -n "$INITTAB" -a "$INITTAB" -ne "$INITTAB_BAK" ] ; then
 							sed "s/id:${INITTAB_BAK}:initdefault:/id:${INITTAB}:initdefault:/" /etc/inittab >${gv_WorkDir}/inittab$$
 							mv ${gv_WorkDir}/inittab$$ /etc/inittab
 						fi
@@ -171,7 +176,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			main_menu
+			main_menu "$lv_Default"
 			;;
 		$gv_Exit) break
 			;;

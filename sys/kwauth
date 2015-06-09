@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 07.06.2016
 #
 # Script: kwauth, stellt PAM und andere Authentifizierungs-
 # Methoden fuer ihr System ein.
 #
-# Version: 0.0.3
+# Version: 0.0.4
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -58,8 +58,8 @@ check_auth() {
 	fi
 }
 ## }}}
-# Funktion haupt_menue{{{
-haupt_menue() {
+# Funktion main_menu{{{
+main_menu() {
 	MAIN_MENU=($AUTH_IS)
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
@@ -90,14 +90,14 @@ fi
 
 net_conf
 check_auth
-haupt_menue
+main_menu
 print "$gv_Auswahl"
 while [ "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)
 			# Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		PAM)
 			# PAM Modul Konfiguration# {{{
@@ -107,7 +107,7 @@ while [ "$gv_Auswahl" ] ; do
 				kwauth_nis_config -r
 			fi
 			## }}}
-			haupt_menue PAM
+			main_menu PAM
 			;;
 		LDAP)
 			# Konfiguration fuer LDAP# {{{
@@ -118,13 +118,13 @@ while [ "$gv_Auswahl" ] ; do
 				kwauth_nis_config -r
 			fi
 			#}}}
-			haupt_menue LDAP
+			main_menu LDAP
 			;;
 		NIS)
 			# NIS Konfigurieren# {{{
 			kwauth_nis_conf
 			## }}}
-			haupt_menue NIS
+			main_menu NIS
 			;;
 	esac
 done	
