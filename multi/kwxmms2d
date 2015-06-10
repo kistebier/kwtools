@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 23.06.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwxmms2d, ein Script um den xmms2d Daemon
 # zu managen.
 #
-# Version: 0.0.4
+# Version: 0.0.5
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -54,12 +54,12 @@ if [ ! -f "$CONFFILE" ] ; then
 fi
 
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
-haupt_menue() {
+main_menu() {
 	MAIN_MENU=($gv_Configuration \"\" \"$lv_Server_Start\" \"\"
 	\"$lv_Server_Stop\" \"\" $gv_Exit \"\")
-	menubox "" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
 
@@ -69,20 +69,20 @@ haupt_menue() {
 #
 ##################################################################
 
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
 			autoload -U kwxmms2d_conf kwxmms2d_config
 			kwxmms2d_conf
 			## }}}
-			haupt_menue
+			main_menu "$gv_Configuration"
 			;;
 		$lv_Server_Start)
 			# lokalen Server starten# {{{
@@ -95,7 +95,7 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}
-			haupt_menue
+			main_menu "$lv_Server_Start"
 			;;
 		$lv_Server_Stop)
 			# lokale(n) Server stoppen# {{{
@@ -109,7 +109,7 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}
-			haupt_menue
+			main_menu "$lv_Server_Stop"
 			;;
 		$gv_Exit)	break
 			;;

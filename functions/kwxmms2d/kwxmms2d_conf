@@ -7,7 +7,7 @@ kwxmms2d_conf() {
 	kwxmms2d_conf_menu() {
 		CONF_MENU=($lv_Xmms_Server \"$XMMS_SERVER_PATH\"
 		$gv_Save \"\" $gv_Back \"\")
-		menubox "" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
 	## }}}
 	# Funktionen (restart_server_msg), Nachricht das man den Server neu starten soll# {{{
@@ -26,7 +26,7 @@ kwxmms2d_conf() {
 			HELP*)
 	    	    # Hilfe Messagebox
 				script_help conf_help
-				kwxmms2d_conf_menu
+				kwxmms2d_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xmms_Server)
 				# Protokoll+Rechner+Portnumer Eingabe# {{{
@@ -45,7 +45,7 @@ kwxmms2d_conf() {
 					esac
 				fi
 				## }}}
-				kwxmms2d_conf_menu
+				kwxmms2d_conf_menu $lv_Xmms_Server
 				;;
 			$gv_Save)
 				# speichern

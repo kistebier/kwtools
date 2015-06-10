@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
 # zu managen.
 #
-# Version: 0.0.5
+# Version: 0.0.6
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -59,9 +59,9 @@ read_conf() {
 	fi
 }
 ## }}}
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
-haupt_menue() {
+main_menu() {
 	MAIN_MENU=($gv_Configuration \"\" $lv_Player \"\" $lv_Playlists \"\"
 	\"$lv_Server_Plugins\" \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -392,13 +392,13 @@ no_current_songs_msg() {
 # Wenn es eine Konf.-Datei gibt einlesen.
 read_conf
 os_check
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
@@ -408,7 +408,7 @@ while [ "$gv_Auswahl" ] ; do
 			kwxmms2_conf
 			set +x
 			## }}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Player)
 			# Player bedienen# {{{
@@ -468,7 +468,7 @@ while [ "$gv_Auswahl" ] ; do
 						HELP*)
 				    	    # Hilfe Messagebox
 							script_help player_help
-							player_menu
+							player_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Act)
 							# Zeit und Song aktualisieren
@@ -481,14 +481,14 @@ while [ "$gv_Auswahl" ] ; do
 								# Funktion (songs_menu), Songauswahl# {{{
 								songs_menu() {
 									SONGS_MENU=($SONG_LIST_E)
-									menubox "$DEFAULT_ITEM" "$PLAYER_TITLE" "$gv_Menupoint" "$SONGS_MENU"
+									menubox "$1" "$PLAYER_TITLE" "$gv_Menupoint" "$SONGS_MENU"
 								}
 								## }}}
-								songs_menu
+								songs_menu "$DEFAULT_ITEM"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help player_help
-											songs_menu
+											songs_menu "${gv_Auswahl#HELP }"
 											;;
 										*)
 											# alte Songauswahl erstmal sichern
@@ -547,7 +547,7 @@ while [ "$gv_Auswahl" ] ; do
 										HELP*)
 								    	    # Hilfe Messagebox
 											script_help player_help
-											player_equal_menu
+											player_equal_menu "${gv_Auswahl#HELP }"
 											;;
 										$Equal_Preamp_Var*)
 											# Preamp einstellen
@@ -665,14 +665,14 @@ while [ "$gv_Auswahl" ] ; do
 				done
 			fi
 			## }}}
-			haupt_menue $lv_Player
+			main_menu $lv_Player
 			;;
 		$lv_Playlists)
 			# Playlisten bearbeiten# {{{
 			autoload -U kwxmms2_manage_pls
 			kwxmms2_manage_pls
 			## }}}
-			haupt_menue $lv_Playlists
+			main_menu $lv_Playlists
 			;;
 		$lv_Server_Plugins)
 			# vorhandene Plugins anzeigen# {{{
@@ -688,7 +688,7 @@ while [ "$gv_Auswahl" ] ; do
 				fi
 			fi
 			## }}}
-			haupt_menue $lv_Server_Plugins
+			main_menu $lv_Server_Plugins
 			;;
 		$gv_Exit)	break
 			;;

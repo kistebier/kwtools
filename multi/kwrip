@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwrip, rippt ganze Audio und Video CD's
 #
-# Version: 0.0.10
+# Version: 0.1.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -57,14 +57,14 @@ if [ -z "$AUDIO_OPTIONS" ] ; then
 fi
 ENC_MSG=$(gettext 'und encodiere die Datei nach')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
 lv_Audio=$(gettext 'Audio')
 lv_Video=$(gettext 'Video-CD')
 lv_Rip=$(gettext 'rippen')
 #
 MAIN_MENU=($gv_Configuration \"\" $lv_Audio \"\" $lv_Video \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -77,18 +77,18 @@ haupt_menue() {
 hw_conf
 net_conf
 cdrom
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			autoload -U kwrip_conf kwrip_config
 			kwrip_conf
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Audio)
 			# Audio CD rippen.{{{
@@ -101,14 +101,14 @@ while [ "$gv_Auswahl" ] ; do
 			# Funktion audio_rip_menu# {{{
 			AUDIO_RIP_MENU=($lv_Choice \"\" $lv_Complete \"\" $gv_Back \"\")
 			audio_rip_menu() {
-				menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$AUDIO_RIP_MENU"
+				menubox "$1" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$AUDIO_RIP_MENU"
 			}
 			## }}}
 			# Funktion audio_select_menu# {{{
 			AUDIO_SELECT_MSG=$(gettext 'Waehlen Sie bitte die Lieder aus die Sie rippen moechten.')
 			audio_select_menu() {
 				AUDIO_TRACK_MENU=($AUDIO_TRACK_M)
-				checklist "" "$AUDIO_RIP_TITLE" "$AUDIO_SELECT_MSG" "$AUDIO_TRACK_MENU"
+				checklist $1"" "$AUDIO_RIP_TITLE" "$AUDIO_SELECT_MSG" "$AUDIO_TRACK_MENU"
 			}
 			## }}}
 			# Funktion change_name_track, Umbenennung der Tracks# {{{
@@ -184,7 +184,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help artist_album_help
-							artist_album_menu
+							artist_album_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Artist)
 							# Artist eingeben# {{{
@@ -244,12 +244,12 @@ while [ "$gv_Auswahl" ] ; do
 					#
 					BREAK=1
 					ARTIST_MENU=($lv_Input \"\" $ARTIST)
-					menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
+					menubox $1"" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help multi_cdid_help
 								BREAK=1
-								menubox "" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
+								menubox "${gv_Auswahl#HELP }" "$AUDIO_RIP_TITLE" "$gv_Menupoint" "$ARTIST_MENU"
 								;;
 							$lv_Input)
 								# Artist/Album eingeben
@@ -462,7 +462,7 @@ while [ "$gv_Auswahl" ] ; do
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help audio_rip_help
-									audio_rip_menu
+									audio_rip_menu "${gv_Auswahl#HELP }"
 									;;
 								$lv_Choice)
 									# Liedauswahl rippen# {{{
@@ -473,12 +473,12 @@ while [ "$gv_Auswahl" ] ; do
 									fi
 									# CDDB Informationen einlesen
 									read_cddb
-									if [ -n "$AUDIO_TRACK_M" ] ; then
+									if [ -n "${AUDIO_TRACK_M[1]}" ] ; then
 										audio_select_menu
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help audio_select_help
-													audio_select_menu
+													audio_select_menu "${gv_Auswahl#HELP }"
 													;;
 												*)
 													# Liedauswahl uebernehmen
@@ -494,7 +494,7 @@ while [ "$gv_Auswahl" ] ; do
 										done
 									fi
 									## }}}
-									audio_rip_menu
+									audio_rip_menu $lv_Choice
 									;;
 								$lv_Complete)
 									# ganze CD rippen# {{{
@@ -514,7 +514,7 @@ while [ "$gv_Auswahl" ] ; do
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
-									audio_rip_menu
+									audio_rip_menu $lv_Complete
 									;;
 								$gv_Back)	break	
 									;;
@@ -531,7 +531,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_dev_cd
 			fi
 			#}}}
-			haupt_menue $lv_Audio
+			main_menu $lv_Audio
 			;;
 		$lv_Video)	
 			# Videos rippen, mittels vcdxrip{{{
@@ -608,7 +608,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_dev_cd
 			fi
 			#}}}
-			haupt_menue $lv_Video
+			main_menu $lv_Video
 			;;
 		$gv_Exit)	break
 			;;

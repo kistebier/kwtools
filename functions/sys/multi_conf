@@ -54,7 +54,7 @@ multi_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help share/audio_help
-								menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+								menubox "${gv_Auswahl#HELP }" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
 								;;
 							o*)	#
 								cd_dvd_burn --oggcd
@@ -75,7 +75,7 @@ multi_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help share/audio_help
-								menubox "" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
+								menubox "${gv_Auswahl#HELP }" "$BURN_TITLE" "$BURN_MSG" "$BURN_MENU"
 								;;
 							o*)	#
 								cd_dvd_burn --oggdvd
@@ -120,7 +120,7 @@ multi_conf() {
 			while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
 					HELP*) script_help share/cdrom_help
-						menubox "$DEVICE" "$DEV_TITLE" "$DEV_MSG" "$DEV_MENU"
+						menubox "${gv_Auswahl#HELP }" "$DEV_TITLE" "$DEV_MSG" "$DEV_MENU"
 						;;
 					*)	# Auf Leserechte testen
 						user_device_check $gv_Auswahl A
@@ -160,7 +160,7 @@ multi_conf() {
 			case "$gv_Auswahl" in
 				HELP*)	# Hilfe fuer die Konfiguration des Brenner Treibers
 					script_help share/cd_driver_help
-					menubox "$CD_DRIVER" "$DRIVER_TITLE" "$gv_Configuration" "$DRIVER_MENU"
+					menubox "${gv_Auswahl#HELP }" "$DRIVER_TITLE" "$gv_Configuration" "$DRIVER_MENU"
 					;;
 				*)	#
 					CD_DRIVER="$gv_Auswahl"
@@ -331,7 +331,7 @@ multi_conf() {
 				HELP*)
 		    	    # Hilfe Messagebox
 					script_help share/burn_opt_help
-					burn_opt_menu
+					burn_opt_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Copynr)
 					# Anzahl der Kopien# {{{
@@ -421,7 +421,7 @@ multi_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help share/burn_opt_help
-			        			menubox "$WRITEMODE" "$PROJECT_TITLE" "$WRITE_MODE_MSG" "$WRITE_MODE_MENU"
+			        			menubox "${gv_Auswahl#HELP }" "$PROJECT_TITLE" "$WRITE_MODE_MSG" "$WRITE_MODE_MENU"
 								;;
 		                    *)
 								# Auswahl uebernehmen
@@ -461,7 +461,7 @@ multi_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help share/burn_opt_help
-			        			menubox "$SYSID" "$PROJECT_TITLE" "$SYSID_MSG" "$SYSID_MENU"
+			        			menubox "${gv_Auswahl#HELP }" "$PROJECT_TITLE" "$SYSID_MSG" "$SYSID_MENU"
 								;;
 		                    *)
 								# Auswahl uebernehmen
@@ -491,7 +491,7 @@ multi_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help share/burn_opt_help
-			        			menubox "$SYMLINKS" "$PROJECT_TITLE" "$SYMLINKS_MSG" "$SYMLINKS_MENU"
+			        			menubox "${gv_Auswahl#HELP }" "$PROJECT_TITLE" "$SYMLINKS_MSG" "$SYMLINKS_MENU"
 								;;
 		                    *)
 								# Auswahl uebernehmen
@@ -516,7 +516,7 @@ multi_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help share/burn_opt_help
-			        			menubox "$DATAMODE" "$PROJECT_TITLE" "$DATATRACK_MODE_MSG" "$DATATRACK_MODE_MENU"
+			        			menubox "${gv_Auswahl#HELP }" "$PROJECT_TITLE" "$DATATRACK_MODE_MSG" "$DATATRACK_MODE_MENU"
 								;;
 		                    *)
 								# Auswahl uebernehmen
@@ -547,7 +547,7 @@ multi_conf() {
 							HELP*)
 					    	    # Hilfe Messagebox
 								script_help share/burn_opt_help
-			        			menubox "$MULTISESSION" "$PROJECT_TITLE" "$MULTISESSION_MSG" "$MULTISESSION_MENU"
+			        			menubox "${gv_Auswahl#HELP }" "$PROJECT_TITLE" "$MULTISESSION_MSG" "$MULTISESSION_MENU"
 								;;
 		                    *)
 								# Auswahl uebernehmen
@@ -1119,13 +1119,13 @@ ZERO 00:02:00 // post-gap"
 				#
 				if [ "$gv_Format" = iso ] ; then
 					file_filter "$FORMAT" "$SUFFIX"
-					if [ "$DF_ARRAY" ] ; then
+					if [ "${DF_ARRAY[1]}" ] ; then
 						checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
@@ -1144,7 +1144,7 @@ ZERO 00:02:00 // post-gap"
 				#
 				elif [ "$gv_Format" = Video-CD ] ; then
 					file_filter "$FORMAT" "$SUFFIX"
-					if [ "$DF_ARRAY" ] ; then
+					if [ "${DF_ARRAY[1]}" ] ; then
 						# Film Images haben meist die Groesse einer CD, so das hier nur 1
 						# Datei zur Zeit zur Verfuegung gestellt wird.
 						#
@@ -1154,7 +1154,7 @@ ZERO 00:02:00 // post-gap"
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									radiolist "" "$BURN_PROGRESS_TITLE" "$VCD_MSG" "$DF_ARRAY"
+									radiolist "${gv_Auswahl#HELP }" "$BURN_PROGRESS_TITLE" "$VCD_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									BR_DATEI="$gv_Auswahl"
@@ -1288,13 +1288,13 @@ ZERO 00:02:00 // post-gap"
 				elif [ "$gv_Format" = ogg -o "$gv_Format" = mp3 -o "$gv_Format" = photo ] ; then
 					# nur im lokalen Verzeichnis suchen.
 					file_filter "$FORMAT" "$SUFFIX"
-					if [ "$DF_ARRAY" ] ; then
+					if [ "${DF_ARRAY[1]}" ] ; then
 						checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
@@ -1313,13 +1313,13 @@ ZERO 00:02:00 // post-gap"
 				#
 				elif [ "$gv_Format" = wav ] ; then
 					file_filter "$FORMAT" "$SUFFIX"
-					if [ "$DF_ARRAY" ] ; then
+					if [ "${DF_ARRAY[1]}" ] ; then
 						checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
-								HELP*)	#
+								HELP*)
 									script_help share/data_help
-									checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									case "$PROG" in
@@ -1436,13 +1436,13 @@ FILE \"`pwd`/${i}\" 0"
 						fi
 					}
 					#
-					if [ "$DF_ARRAY" ] ; then
+					if [ "${DF_ARRAY[1]}" ] ; then
 						checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	#
 									script_help share/data_help
-									checklist "" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$BURN_PROGRESS_TITLE" "$FILE_CHOICE_MSG" "$DF_ARRAY"
 									;;
 								*)	#
 									data_burn
@@ -2313,7 +2313,7 @@ SIMULATE=\"$SIMULATE\"
 			case "$gv_Auswahl" in
 				HELP*)	# Hilfe fuer die Konfiguration der CD-R/CD-RW Groesse
 					script_help share/cd_size_help
-					menubox "$CD_SIZE" "$CD_SIZE_TITLE" "$CD_SIZE_MSG" "$CD_SIZE_MENU"
+					menubox "${gv_Auswahl#HELP }" "$CD_SIZE_TITLE" "$CD_SIZE_MSG" "$CD_SIZE_MENU"
 					;;
 				*)	#
 					CD_SIZE="$gv_Auswahl"
@@ -2375,13 +2375,13 @@ SIMULATE=\"$SIMULATE\"
 	dvd_size() {
 		DVD_SIZE_TITLE=$(gettext 'Konfiguration::DVD-+R/RW/RAM::Groesse')
 		DVD_SIZE_MSG=$(gettext 'Waehlen Sie bitte die Groesse Ihres DVD Rohlings aus.')
-		DVD_SIZE_MENU="4,7 GByte 9,4 GByte 15,9 GByte"
+		DVD_SIZE_MENU="4,7 GByte 8,5 GByte 9,4 GByte 13,2 GByte 17 GByte"
 		menubox "$DVD_SIZE" "$DVD_SIZE_TITLE" "$DVD_SIZE_MSG" "$DVD_SIZE_MENU"
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	# Hilfe fuer die Konfiguration der DVD-+R/DVD-+RW Groesse
 					script_help share/dvd_size_help
-					menubox "$DVD_SIZE" "$DVD_SIZE_TITLE" "$DVD_SIZE_MSG" "$DVD_SIZE_MENU"
+					menubox "${gv_Auswahl#HELP }" "$DVD_SIZE_TITLE" "$DVD_SIZE_MSG" "$DVD_SIZE_MENU"
 					;;
 				*)	#
 					DVD_SIZE=$gv_Auswahl
@@ -2405,7 +2405,7 @@ split_size() {
 		case "$gv_Auswahl" in
 			HELP*)	# Hilfe fuer die Konfiguration der Datei Groesse
 				script_help share/split_size_help
-				menubox "$SPLIT_SIZE" "$SPLIT_SIZE_TITLE" "$gv_Menupoint" "$C_Menue"
+				menubox "${gv_Auswahl#HELP }" "$SPLIT_SIZE_TITLE" "$gv_Menupoint" "$C_Menue"
 				;;
 			*)	#
 				SPLIT_SIZE="$gv_Auswahl"

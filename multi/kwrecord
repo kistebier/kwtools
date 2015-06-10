@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwrecord, ein Script um verschiedene Sachen
 # auf CD-R(W) und DVD-+R(W)/RAM zu brennen.
 #
-# Version: 0.1.28
+# Version: 0.1.30
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -45,7 +45,7 @@ typeset -x DIR=""
 # erste Variablen fuer das Hauptmenue einlesen.
 multi_conf
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
 MAIN_MENU=($gv_Configuration \"\" $gv_Audio_Cd \"\"
 $gv_Audio_Dvd \"\" $gv_Cdcopy \"\" $gv_Dvdcopy \"\"
@@ -53,7 +53,7 @@ $gv_Data_Cd \"\" $gv_Data_Dvd \"\" $gv_Iso_Cd \"\"
 $gv_Iso_Dvd \"\" $gv_Photo_Cd \"\" $gv_Photo_Dvd \"\"
 $gv_Video_Cd \"\" $gv_Video_Dvd \"\" $gv_Del_Cd \"\"
 $gv_Format_Dvd \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -65,13 +65,13 @@ haupt_menue() {
 #
 hw_conf
 cdrom
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# CD/CD-R(W)/DVD/DVD-+R(W) konfigurieren# {{{
@@ -79,7 +79,7 @@ while [ "$gv_Auswahl" ] ; do
 			autoload -U kwrecord_conf
 			kwrecord_conf
 			## }}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			#
 			;;
 		$gv_Audio_Cd)
@@ -90,7 +90,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Audio_Cd
+			main_menu $gv_Audio_Cd
 			;;
 		$gv_Audio_Dvd)
 			# Audio DVDs brennen# {{{
@@ -100,7 +100,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Audio_Dvd
+			main_menu $gv_Audio_Dvd
 			;;
 		$gv_Cdcopy)
 			# CD kopieren# {{{
@@ -110,7 +110,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Cdcopy
+			main_menu $gv_Cdcopy
 			;;
 		$gv_Dvdcopy)
 			# DVD kopieren# {{{
@@ -120,7 +120,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Dvdcopy
+			main_menu $gv_Dvdcopy
 			;;
 		$gv_Data_Cd)
 			# Daten CD brennen# {{{
@@ -130,7 +130,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Data_Cd
+			main_menu $gv_Data_Cd
 			;;
 		$gv_Data_Dvd)
 			# Daten DVD brennen# {{{
@@ -140,7 +140,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Data_Dvd$gv_Data_Dvd
+			main_menu $gv_Data_Dvd$gv_Data_Dvd
 			;;
 		$gv_Iso_Cd)
 			# CD, Iso Images brennen# {{{
@@ -150,7 +150,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Iso_Cd
+			main_menu $gv_Iso_Cd
 			;;
 		$gv_Iso_Dvd)
 			# DVD, Iso Images brennen# {{{
@@ -160,7 +160,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Iso_Dvd
+			main_menu $gv_Iso_Dvd
 			;;
 		$gv_Photo_Cd)
 			# Photo CD brennen# {{{
@@ -170,7 +170,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Photo_Cd
+			main_menu $gv_Photo_Cd
 			;;
 		$gv_Photo_Dvd)
 			# Photo DVD brennen# {{{
@@ -180,7 +180,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			## }}}
-			haupt_menue $gv_Photo_Dvd
+			main_menu $gv_Photo_Dvd
 			;;
 		$gv_Video_Cd)
 			# Video-CD brennen{{{
@@ -191,7 +191,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			#}}}
-			haupt_menue $gv_Video_Cd
+			main_menu $gv_Video_Cd
 			;;
 		$gv_Video_Dvd)
 			# Video-DVD brennen{{{
@@ -202,7 +202,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			#}}}
-			haupt_menue $gv_Video_Dvd
+			main_menu $gv_Video_Dvd
 			;;
 		$gv_Del_Cd)
 			# CD-RW loeschen{{{
@@ -222,7 +222,7 @@ while [ "$gv_Auswahl" ] ; do
 					while [ $gv_Auswahl ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help blank_help
-								menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
+								menubox "${gv_Auswahl#HELP }" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 								;;
 							$lv_Minimal)
 								# CDRW minimal loeschen
@@ -270,7 +270,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			#}}}
-			haupt_menue $gv_Del_Cd
+			main_menu $gv_Del_Cd
 			;;
 		$gv_Format_Dvd)
 			# DVD formatieren{{{
@@ -320,7 +320,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_cddvd_prog_msg
 			fi
 			#}}}
-			haupt_menue $gv_Format_Dvd
+			main_menu $gv_Format_Dvd
 			;;
 		$gv_Exit)	break
 			;;

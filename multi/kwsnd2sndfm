@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwsnd2sndfm, konvertiert soundformate
-# Version: 0.0.11
+# Version: 0.0.12
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -94,11 +94,11 @@ lv_Decode=$(gettext 'Dekodierung')
 lv_Encode=$(gettext 'Enkodierung')
 lv_Burn=$(gettext 'brennen')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 #
 MAIN_MENU=($gv_Configuration \"\" $lv_Decode \"\"
 $lv_Encode \"\" $lv_Burn \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -111,13 +111,13 @@ haupt_menue() {
 #
 hw_conf
 cdrom
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration{{{
@@ -148,7 +148,7 @@ while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
 					HELP*)	# Hilfe zur Konfiguration
 						script_help conf_help
-						snd_conf_menue
+						snd_conf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Mountdir)
 						# Mount Verzeichnis auswaehlen
@@ -224,7 +224,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done	
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Decode)
 			# Decodierung von audio Dateien{{{
@@ -235,7 +235,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help code_choice_help
-						menubox "" "$DEC_TITLE" "$gv_Menupoint" "$DEC_AUSWAHL"
+						menubox "${gv_Auswahl#HELP }" "$DEC_TITLE" "$gv_Menupoint" "$DEC_AUSWAHL"
 						;;
 					mp3-w*)
 						# mp3 --> wav{{{
@@ -324,7 +324,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $lv_Decode
+			main_menu $lv_Decode
 			;;
 		$lv_Encode)
 			# Encodierung von audio Dateien{{{
@@ -338,7 +338,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help code_choice_help
-						menubox "" "$ENC_TITLE" "$gv_Menupoint" "$ENC_AUSWAHL"
+						menubox "${gv_Auswahl#HELP }" "$ENC_TITLE" "$gv_Menupoint" "$ENC_AUSWAHL"
 						;;
 					raw-m*)	
 						# raw --> mp3{{{
@@ -412,7 +412,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $lv_Encode
+			main_menu $lv_Encode
 			;;
 		$lv_Burn)
 			# Sound Dateien brennen# {{{
@@ -429,7 +429,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help burn_help
-						snd_burn_menu
+						snd_burn_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Cd)	# Audio-CD brennen
 						audio_burn CD
@@ -444,7 +444,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			## }}}
-			haupt_menue $lv_Burn
+			main_menu $lv_Burn
 			;;
 		$gv_Exit)	break
 			;;

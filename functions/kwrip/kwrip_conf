@@ -46,7 +46,7 @@ konf_menue
 while [ "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help conf_help
-			konf_menue
+			konf_menue "${gv_Auswahl#HELP }"
 			;;
 		$lv_Audio_Opt)
 			# Audio Optionen eingeben{{{
@@ -124,7 +124,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/cdrom_help
-							menubox "$READ_DEVICE" "$READ_TITLE" "$READ_MSG" "$READ_CD_MENU"
+							menubox "${gv_Auswahl#HELP }" "$READ_TITLE" "$READ_MSG" "$READ_CD_MENU"
 							;;
 						*)	user_device_check $gv_Auswahl A
 							READ_DEVICE="$gv_Auswahl"
@@ -175,7 +175,7 @@ while [ "$gv_Auswahl" ] ; do
 			# usage: encoder_prog_menu
 			ENC_TITLE=(${gv_Configuration}::${lv_Encoder_Prog})
 			encoder_prog_menu() {
-				menubox "$FM_PROG" "$ENC_TITLE" "$gv_Menupoint" "$ENC_MENU"
+				menubox "$1" "$ENC_TITLE" "$gv_Menupoint" "$ENC_MENU"
 			}
 			## }}}
 			# Funktion (no_cddvdprog_opt) Nachricht das es noch keine Konfiguration fuer# {{{
@@ -190,11 +190,11 @@ while [ "$gv_Auswahl" ] ; do
 				msgbox "$gv_Info" "$MSG"
 			}
 			## }}}
-			encoder_prog_menu
+			encoder_prog_menu "$FM_PROG"
 			while [ -n "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help encoder_help
-						encoder_prog_menu
+						encoder_prog_menu "${gv_Auswahl#HELP }"
 						;;
 					*)
 						# Auswahl wird uebernommen

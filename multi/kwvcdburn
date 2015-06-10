@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 06.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
 # Script: kwvcdburn, kreiert und brennt (S)VCD Filme
-# Version: 0.1.0
+# Version: 0.1.1
 #
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -63,12 +63,12 @@ fi
 
 CREATE_NAME_MSG=$(gettext 'Vergeben Sie einen Namen fuer die Video-CD ohne .cue Endung, ansonsten heisst sie videocd.cue.')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 lv_Video_Cd=$(gettext 'Video-CD')
 lv_Burn=$(gettext 'brennen')
 MAIN_MENU=($gv_Configuration \"\" $lv_Video_Cd \"\" $lv_Burn \"\" $gv_Back \"\")
 #
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -81,20 +81,20 @@ haupt_menue() {
 #
 hw_conf
 cdrom
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration der ~/.kwtools/kwvcdburnrc# {{{
 			autoload -U kwvcdburn_conf kwvcdburn_config
 			kwvcdburn_conf
 			## }}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Video_Cd)
 			# VCD Image erstellen{{{
@@ -150,14 +150,14 @@ while [ "$gv_Auswahl" ] ; do
 				rm -rf $gv_LogFile$$ &>/dev/null
 			fi
 			#}}}
-			haupt_menue $lv_Video_Cd
+			main_menu $lv_Video_Cd
 			;;
 		$lv_Burn)
 			# Film brennen# {{{
 			multi_conf
 			cd_dvd_burn --vcd
 			## }}}
-			haupt_menue $lv_Burn
+			main_menu $lv_Burn
 			;;
 		$gv_Exit)	break
 			;;

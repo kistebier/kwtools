@@ -30,7 +30,7 @@ kwxmms2_manage_pls() {
 				HELP*)
 		    	    # Hilfe Messagebox
 					script_help pls_help
-					pls_menu
+					pls_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_Display)
 					# Anzeige des Inhalts von den Playlisten# {{{
@@ -42,16 +42,16 @@ kwxmms2_manage_pls() {
 						#
 						pls_display_menu() {
 							PLS_LIST_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$gv_Menupoint" "$PLS_LIST_MENU"
+							menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$PLS_LIST_MENU"
 						}
 						#}}}
-						pls_display_menu
+						pls_display_menu"$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_display_menu
+									pls_display_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# Ansicht des Inhalts der Playliste
 									nyxmms2 list -p $gv_Auswahl >${gv_WorkDir}/playlist
@@ -86,16 +86,16 @@ kwxmms2_manage_pls() {
 						PLS_FILL_MSG=$(gettext 'Waehlen Sie eine Playliste aus die mit Daten gefuellt werden soll.')
 						pls_choice_menu() {
 							PLS_LIST_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_FILL_MSG" "$PLS_LIST_MENU"
+							menubox "$1" "$PLS_TITLE" "$PLS_FILL_MSG" "$PLS_LIST_MENU"
 						}
 						## }}}
-						pls_choice_menu
+						pls_choice_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_choice_menu
+									pls_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# ausgewaehlte Playlisten fuellen
 									lv_Curl=http
@@ -131,7 +131,7 @@ kwxmms2_manage_pls() {
 										else
 											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\")
 										fi
-										menubox "" "$PLS_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MENU"
+										menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MENU"
 									}
 									## }}}
 									# Funktion (http_pls), Internet Adresse eingeben.# {{{
@@ -169,7 +169,7 @@ kwxmms2_manage_pls() {
 										while [ "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help pls_help
-													fill_methode_menu
+													fill_methode_menu "${gv_Auswahl#HELP }"
 													;;
 												$lv_Directories)
 													# Volle Verzeichnis Pfadangabe fuer remote Server# {{{
@@ -225,7 +225,7 @@ kwxmms2_manage_pls() {
 										while [ "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_help pls_help
-													fill_methode_menu
+													fill_methode_menu "${gv_Auswahl#HELP }"
 													;;
 												$lv_Directories)
 													# ganze Verzeichnisse auswaehlen# {{{
@@ -243,7 +243,7 @@ kwxmms2_manage_pls() {
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			checklist "" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+																			checklist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 																			;;
 																		*)	
 																			# Auswahl uebernehmen
@@ -282,7 +282,7 @@ kwxmms2_manage_pls() {
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+																			checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 																			;;
 																		*)
 																			# Auswahl uebernehmen
@@ -337,7 +337,7 @@ kwxmms2_manage_pls() {
 																while [ "$gv_Auswahl" ] ; do
 																	case "$gv_Auswahl" in
 																		HELP*) script_help share/data_help
-																			menubox "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+																			menubox "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 																			;;
 																		*)
 																			# Auswahl uebernehmen
@@ -383,7 +383,7 @@ kwxmms2_manage_pls() {
 						pls_del_song_menu() {
 							PLS_DEL_SONG_MSG=$(gettext 'Waehlen Sie eine Playliste aus, aus deren ausgewaehlte Lieder geloescht werden sollen.')
 							PLS_DEL_SONG_MENU=($PLS_LIST_M)
-							radiolist "" "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
+							radiolist "$1" "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
 						}
 						## }}}
 						pls_del_song_menu
@@ -392,7 +392,7 @@ kwxmms2_manage_pls() {
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_del_song_menu
+									pls_del_song_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# ausgewaehlte Songs der Playliste loeschen
 									# ausgewaehlte Playliste sichern
@@ -403,14 +403,14 @@ kwxmms2_manage_pls() {
 										# Funktion (pls_del_songs_menu), Songauswahl loeschen# {{{
 										pls_del_songs_menu() {
 											SONGS_MENU=($SONG_LIST_E_M)
-											checklist "" "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
+											checklist "$1" "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
 										}
 										## }}}
 										pls_del_songs_menu
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
 												HELP*)	script_init player_help
-													pls_del_songs_menu
+													pls_del_songs_menu "${gv_Auswahl#HELP }"
 													;;
 												*)
 													# Auswahl uebernehmen und Songs loeschen
@@ -445,16 +445,16 @@ kwxmms2_manage_pls() {
 						pls_clear_menu() {
 							PLS_CLEAR_MSG=$(gettext 'Waehlen Sie eine oder mehrere Playlisten aus die geleert werden sollen.')
 							PLS_CLEAR_MENU=($PLS_LIST_M)
-							checklist "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
+							checklist "$1" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
 						}
 						## }}}
-						pls_clear_menu
+						pls_clear_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_clear_menu
+									pls_clear_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# ausgewaehlte Playlisten leerem
 									while read i ; d
@@ -481,16 +481,16 @@ kwxmms2_manage_pls() {
 						PLS_RENAME_MSG=$(gettext 'Waehlen Sie eine Playliste aus die umbenannt werden soll.')
 						pls_rename_menu() {
 							PLS_RENAME_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_RENAME_MSG" "$PLS_RENAME_MENU"
+							menubox "$1" "$PLS_TITLE" "$PLS_RENAME_MSG" "$PLS_RENAME_MENU"
 						}
 						#}}}
-						pls_rename_menu
+						pls_rename_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_rename_menu
+									pls_rename_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# Playliste umbenennen
 									OLD_PLS="$gv_Auswahl"
@@ -519,16 +519,16 @@ kwxmms2_manage_pls() {
 						PLS_SORT_MSG=$(gettext 'Waehlen Sie eine Playliste aus die sortiert werden soll.')
 						pls_sort_menu() {
 							PLS_SORT_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_SORT_MSG" "$PLS_SORT_MENU"
+							menubox "$1" "$PLS_TITLE" "$PLS_SORT_MSG" "$PLS_SORT_MENU"
 						}
 						#}}}
-						pls_sort_menu
+						pls_sort_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_sort_menu
+									pls_sort_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# Playliste sortieren
 									nyxmms2 playlist sort "$gv_Auswahl"
@@ -552,16 +552,16 @@ kwxmms2_manage_pls() {
 						PLS_SHUFFLE_MSG=$(gettext 'Waehlen Sie eine Playliste aus die gemischt werden soll.')
 						pls_shuffle_menu() {
 							PLS_SHUFFLE_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_SHUFFLE_MSG" "$PLS_SHUFFLE_MENU"
+							menubox "$1" "$PLS_TITLE" "$PLS_SHUFFLE_MSG" "$PLS_SHUFFLE_MENU"
 						}
 						#}}}
-						pls_shuffle_menu
+						pls_shuffle_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_shuffle_menu
+									pls_shuffle_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# Playliste mischen
 									nyxmms2 playlist shuffle "$gv_Auswahl"
@@ -585,16 +585,16 @@ kwxmms2_manage_pls() {
 						PLS_SWITCH_MSG=$(gettext 'Waehlen Sie eine Playliste aus zu der gewechselt werden soll.')
 						pls_switch_menu() {
 							PLS_SWITCH_MENU=($PLS_LIST_E)
-							menubox "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_SWITCH_MSG" "$PLS_SWITCH_MENU"
+							menubox "$1" "$PLS_TITLE" "$PLS_SWITCH_MSG" "$PLS_SWITCH_MENU"
 						}
 						#}}}
-						pls_switch_menu
+						pls_switch_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_switch_menu
+									pls_switch_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# Playliste wechseln
 									nyxmms2 playlist switch "$gv_Auswahl"
@@ -620,16 +620,16 @@ kwxmms2_manage_pls() {
 						pls_del_menu() {
 							PLS_DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Playlisten aus die geloescht werden sollen.')
 							PLS_DEL_MENU=($PLS_LIST_M)
-							checklist "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
+							checklist "$1" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
 						}
 						## }}}
-						pls_del_menu
+						pls_del_menu "$DEFAULT_ITEM"
 						while [ "$gv_Auswahl" ] ; do
 							case $gv_Auswahl in
 								HELP*)
 						    	    # Hilfe Messagebox
 									script_help pls_help
-									pls_del_menu
+									pls_del_menu "${gv_Auswahl#HELP }"
 									;;
 								*)	# ausgewaehlte Playlisten loeschen
 									while read i ; do

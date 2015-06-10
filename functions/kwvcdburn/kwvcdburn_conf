@@ -21,7 +21,7 @@ kwvcdburn_conf() {
 			HELP*)
 	    	    # Hilfe Messagebox
 				script_help conf_help
-				vcdburn_conf_menue
+				vcdburn_conf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Mountdir)
 				# Mount Verzeichnis eingeben
@@ -60,15 +60,15 @@ kwvcdburn_conf() {
 				# Funktion vcd_type_menu# {{{
 				#
 				vcd_type_menu() {
-					menubox "$VCD_TYPE" "$TYP_TITLE" "$TYP_MSG" "$VCD_Menue"
+					menubox "$1" "$TYP_TITLE" "$TYP_MSG" "$VCD_Menue"
 				}
 				## }}}
-				vcd_type_menu
+				vcd_type_menu "$VCD_TYPE"
 				while [ "$gv_Auswahl" ] ; do
 					case $gv_Auswahl in
 						HELP*)
 							script_help vcdtype_help
-							vcd_type_menu
+							vcd_type_menu "${gv_Auswahl#HELP }"
 							;;
 						*)	#	
 							VCD_TYPE="$gv_Auswahl"

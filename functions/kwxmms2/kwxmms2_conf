@@ -12,7 +12,7 @@ kwxmms2_conf() {
 	kwxmms2_conf_menu() {
 		CONF_MENU=($lv_Xmms_Server \"$XMMS_SERVER_ADR\" --------------- \"\"
    		$lv_Xmms_Client \"$XMMS_PATH\" $gv_Save \"\" $gv_Back \"\")
-		menubox "" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
 	## }}}
 	kwxmms2_conf_menu
@@ -21,10 +21,10 @@ kwxmms2_conf() {
 			HELP*)
 	    	    # Hilfe Messagebox
 				script_help conf_help
-				kwxmms2_conf_menu
+				kwxmms2_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xmms_Server|---*)
-				kwxmms2_conf_menu
+				kwxmms2_conf_menu $lv_Xmms_Server
 				;;
 			$lv_Xmms_Client)
 				# Protokoll+Rechner+Portnumer Eingabe# {{{
@@ -56,7 +56,7 @@ kwxmms2_conf() {
 				XMMS_PATH="${Value//\ /}"
 				export XMMS_PATH
 				## }}}
-				kwxmms2_conf_menu
+				kwxmms2_conf_menu $lv_Xmms_Client
 				;;
 			$gv_Save)
 				# speichern
