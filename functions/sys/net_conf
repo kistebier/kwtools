@@ -24,7 +24,7 @@
 # gv_Mail_Adr - Mail Adressen
 # gv_Nameserver - Nameserver Adresse
 # gv_Netmask - Netzmaske Adresse
-# gv_Hostname - eVoll qualifizierter) (FQDN) Rechnername/IP
+# gv_Hostname - Voll qualifizierter) (FQDN) Rechnername/IP
 # gv_Http_Proxy - HTTP Proxy
 # gv_Ftp_Proxy - FTP Proxy
 #
@@ -52,11 +52,11 @@ net_conf() {
 				# wenn es keine Mitteilung ($2) gibt wird abgebrochen.
 				if [ -z "$2" ] ; then
 					no_para_msg $0
-				else
+				elsea
 					Lv_Hostname_Msg="$2"
 					inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$3"
-					if [ "$gv_Auswahl" ] ; then
-						gv_Hostname="$gv_Auswahl"
+					if [[ -n $gv_Auswahl ]] ; then
+						gv_Hostname="$gv_Auswahl_Display"
 					else
 						no_input_msg
 						unset -- gv_Hostname
@@ -69,7 +69,14 @@ net_conf() {
 				Lv_Hostname_Msg=$(gettext 'Geben Sie bitte den voll qualifizierten Rechnernamen (FQDN) ein (Bsp.: host.domain.de).')
 				inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$2"
 				if [[ -n $gv_Auswahl ]] ; then
-					gv_Hostname="$gv_Auswahl"
+					case "$gv_Auswahl"  in
+						[a-z,A-Z,0-9]*.[a-z,A-Z,0-9]*.[a-z,A-Z,0-9]*)
+							gv_Hostname="$gv_Auswahl"
+							;;
+						*)	# nichts
+							no_input_msg
+							;;
+					esac
 				else
 					no_input_msg
 					unset -- gv_Hostname
@@ -80,7 +87,7 @@ net_conf() {
 				# einzelnen Rechnernamen eingeben# {{{
 				Lv_Hostname_Msg=$(gettext 'Geben Sie bitte den Rechnernamen ein (Bsp.: host1, host1.domain.de).')
 				inputbox "$gv_Configuration" "$Lv_Hostname_Msg" "$1"
-				if [ -n "$gv_Auswahl" ] ; then
+				if [[ -n $gv_Auswahl ]] ; then
 					gv_Hostname="$gv_Auswahl"
 				else
 					no_input_msg

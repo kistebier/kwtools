@@ -1601,9 +1601,9 @@ sys_conf() {
 	# usage: compress_choice Programmname Programmname
 	#
 	compress_choice() {
-		if [ "$#" -ge 1 ] ; then
+		if [[ ${#argv} -ge 1 ]] ; then
 			unset -- K_Menue
-			local No_Compress
+			local No_Compress K_Menue
 			No_Compress=$(gettext 'keine_Kompression')
 			K_Menue="$No_Compress \"\""
 			for i in $@ ; {
@@ -1613,17 +1613,17 @@ sys_conf() {
 			}
 			#
 			# Funktion compress_choice_menue{{{
+			TITLE=$(gettext 'Kompression')
+			MSG=$(gettext 'Waehlen Sie ein Kompressionsprogramm aus.')
 			compress_choice_menue() {
-				TITLE=$(gettext 'Kompression')
-				MSG=$(gettext 'Waehlen Sie ein Kompressionsprogramm aus.')
-				menubox "$COMPRESS" "$TITLE" "$MSG" "$K_Menue"
+				menubox "$1" "$TITLE" "$MSG" "$K_Menue"
 			}
 			#}}}
-			compress_choice_menue
+			compress_choice_menue "$COMPRESS"
 			while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
 					HELP*)	script_help compress_help
-						compress_choice_menue
+						compress_choice_menue "${gv_Auswahl#HELP }"
 						;;
 					b* | g* |co*)
 						# Kompressionsart auswaehlen (gzip/bzip2/compress)
@@ -2571,11 +2571,11 @@ convert_mib_size() {
 			    	    # Hilfe Messagebox
 						#
 						script_help share/cron_help
-						cron_main_menu
+						cron_main_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Program|-*)
 						# Programmauswahl kann man nicht aendern
-						cron_main_menu
+						cron_main_menu "$gv_Auswahl"
 						;;
 					$lv_Extra_Char)
 						# Sonderzeichen# {{{
@@ -2586,7 +2586,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)
 									script_help share/cron_help
-									menubox "$EXTRA_CHAR" "$TITLE" "$gv_Menupoint" "$EXTRA_MENU"
+									menubox "${gv_Auswahl#HELP }" "$TITLE" "$gv_Menupoint" "$EXTRA_MENU"
 									;;
 								*)
 									# Auswahl übernehmen
@@ -2612,8 +2612,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$CRON_TITLE" "$CRON_MIN_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									MIN="$gv_Auswahl"
@@ -2640,8 +2639,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$CRON_TITLE" "$CRON_STD_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									STD="$gv_Auswahl"
@@ -2668,8 +2666,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$CRON_TITLE" "$CRON_DOM_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									DOM="$gv_Auswahl"
@@ -2696,8 +2693,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$CRON_TITLE" "$CRON_MON_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									MON="$gv_Auswahl"
@@ -2724,8 +2720,7 @@ convert_mib_size() {
 							case "$gv_Auswahl" in
 								HELP*)	script_help share/cron_help
 									U_OPT=ok
-									DEFAULT_VALUE=${gv_Auswahl#HELP }
-									checklist "${DEFAULT_VALUE[1]}" "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
+									checklist "${gv_Auswahl#HELP }" "$CRON_TITLE" "$CRON_DOW_MSG" "$VALUE_ARRAY"
 									;;
 								*)
 									DOW="$gv_Auswahl"
@@ -3069,7 +3064,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/data_help
-						menubox "" "$DIR_CHOICE_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MSG"
+						menubox "${gv_Auswahl#HELP }" "$DIR_CHOICE_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MSG"
 						;;
 					$lv_Directories)
 						# ganze Verzeichnisse auswaehlen
@@ -3223,7 +3218,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help chmod_help
-					mode_menue
+					mode_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Mode)
 					# Datei Rechte auswaehlen{{{
@@ -3246,7 +3241,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/user_help
-								menubox "$U" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
+								menubox "${gv_Auswahl#HELP }" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
 								;;
 							*)	# alles ok
 								U="$gv_Auswahl"
@@ -3267,7 +3262,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					while [ "$gv_Auswahl" ] ; do 
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/group_help
-								menubox "$G" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
+								menubox "${gv_Auswahl#HELP }" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
 								;;
 							*)	#
 								# alles ok
@@ -3333,7 +3328,7 @@ file_choice() {
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
 									*)	# alles andere wird uebernommen und im neuen Array WERT
 										# gespeichert
@@ -3354,7 +3349,7 @@ file_choice() {
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										radiolist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
 									$gv_Create)
 										# Dateinamen vergeben
@@ -3385,7 +3380,7 @@ file_choice() {
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP*)	script_help share/file_help
-										radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
+										radiolist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
 									*)	# alles andere wird uebernommen und im neuen Array WERT
 										# gespeichert
@@ -3844,16 +3839,16 @@ file_choice() {
 		#
 		lv_Charlength=$(gettext 'Zeichenlaenge')
 		gen_key_menu() {
-			GEN_KEY_MENU=($gv_Input \"$INPUT\" $lv_Charlength \"${CHAR:-8}\"
+			GEN_KEY_MENU=($gv_Input \"$INPUT\" $lv_Charlength \"$CHAR\"
 			$gv_Create \"\" $gv_Back \"\")
-			menubox "" "$lv_Charlength" "$gv_Menupoint" "$GEN_KEY_MENU"
+			menubox "$1" "$lv_Charlength" "$gv_Menupoint" "$GEN_KEY_MENU"
 		}
 		#}}}
 		gen_key_menu
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help gen_key_help
-					gen_key_menu
+					gen_key_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_Input)
 					# Wort zur Erstellung eines Passworts eingeben{{{
@@ -3864,7 +3859,7 @@ file_choice() {
 						INPUT=""
 					fi
 					#}}}
-					gen_key_menu
+					gen_key_menu "$gv_Input"
 					;;
 				$lv_Charlength)
 					# Zeichenlaenge zur Erstellung eines Passworts eingeben{{{
@@ -3876,12 +3871,12 @@ file_choice() {
 						CHAR="8"
 					fi
 					#}}}
-					gen_key_menu
+					gen_key_menu "$lv_Charlength"
 					;;
 				$gv_Create)
 					# Schluessel erstellen{{{
 					unset -- P_PASS
-					if [ -n "$CHAR" -a "$INPUT" ] ; then
+					if [ -n "$CHAR" -a -n "$INPUT" ] ; then
 						P_PASS="${$(openssl passwd $INPUT)[0,CHAR]}"
 						unset -- INPUT
 						break
@@ -3931,7 +3926,7 @@ file_choice() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/id_help
-						menubox "$DEFAULT_KEY" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
+						menubox "${gv_Auswahl#HELP }" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
 						;;
 					*)	#
 						# Schluessel ID uebernehmen
@@ -4668,14 +4663,14 @@ is_value() {
 			# Funktion (list_shell_menu)# {{{
 			#
 			list_shell_menu() {
-				menubox "$Opt" "$LOCAL_SHELL_TITLE" "$LOCAL_SHELL_MSG" "$LOCAL_SHELL_MENU"
+				menubox "$1" "$LOCAL_SHELL_TITLE" "$LOCAL_SHELL_MSG" "$LOCAL_SHELL_MENU"
 			}
 			## }}}
-			list_shell_menu
+			list_shell_menu "$Opt"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/shell_help
-						list_shell_menu
+						list_shell_menu "${gv_Auswahl#HELP }"
 						;;
 					*)	# uebernehmen
 						gv_Shell="$gv_Auswahl"
@@ -5691,7 +5686,7 @@ search_fdisks() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/disk_only_help
-						menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
+						menubox "${gv_Auswahl#HELP }" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
 						;;
 					/dev*)
 						Disk="$gv_Auswahl"
