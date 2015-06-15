@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.06.2015
 #
 # Script: kwproxy, zum einstellen der Proxy Variablen
-# Version: 0.2.9
+# Version: 0.3.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -47,8 +47,8 @@ net_conf
 # Variablen
 lv_Http_Proxy=$(gettext 'http_proxy')
 lv_Ftp_Proxy=$(gettext 'ftp_proxy')
-# Funktion haupt_menue{{{
-haupt_menue() {
+# Funktion main_menu{{{
+main_menu() {
 	MAIN_MENU=($lv_Http_Proxy \"$gv_Http_Proxy\"
    	$lv_Ftp_Proxy \"$gv_Ftp_Proxy\" $gv_Save \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -60,23 +60,23 @@ haupt_menue() {
 #
 #######################################################################
 #
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Http_Proxy)
 			# http Proxy einstellen
 			conf_proxy -h
-			haupt_menue $lv_Http_Proxy
+			main_menu $lv_Http_Proxy
 			;;
 		$lv_Ftp_Proxy)
 			# ftp Proxy einstellen
 			conf_proxy -f
-			haupt_menue $lv_Ftp_Proxy
+			main_menu $lv_Ftp_Proxy
 			;;
 		$gv_Save)
 			# Konfigiration speichern.{{{

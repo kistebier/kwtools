@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.10.2012
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.06.2015
 #
 # Script: kwnetstat, zeigt einige nuetzliche Informationen
 #		  ueber das Netzwerk an.
 #
-# Version: 0.2.14
+# Version: 1.0.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -69,12 +69,12 @@ TITLE_MENU=(a $lv_All off C \"$lv_RIvC\" off e \"$lv_ExtraInfo\" off
 	o \"$lv_Timers\" off p \"$lv_Pid\" off r $lv_RouteTable off s $lv_Statistics off
    	t \"$lv_Tcp\" off u \"$lv_Udp\" off w \"$lv_Raw\" off x \"$lv_UnixDomainSockets\" off)
 # Funktion Hauptmenue{{{
-haupt_menue() {
+main_menu() {
 	# Variable U_OPT: Dadurch werden die leerzeichen zwischen den 
 	# Optionen entfernt und dem Programm als eine Einheit uebergeben (-rvf).
 	# Muss nach Gebrauch wieder geloescht werden.
 	U_OPT="-"
-	checklist "" "$gv_Mainmenu" "$gv_Menupoint" "$TITLE_MENU"
+	checklist "$1" "$gv_Mainmenu" "$gv_Menupoint" "$TITLE_MENU"
 }
 #}}}
 ##################################################################
@@ -83,13 +83,13 @@ haupt_menue() {
 #
 ##################################################################
 #
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		*)	#
 			case $gv_Auswahl in
@@ -105,7 +105,7 @@ while [ "$gv_Auswahl" ] ; do
 					fi
 					;;
 			esac
-			haupt_menue
+			main_menu
 			;;
 	esac
 done

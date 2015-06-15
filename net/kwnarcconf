@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.06.2015
 #
 # Script: kwnarcconf, Firewall Frontend fuer kwnarc
 # 		mittels iptables.
@@ -64,10 +64,10 @@ lv_Status=$(gettext 'Status')
 lv_Conntrack=$(gettext 'Verbindungen')
 lv_Chains=$(gettext 'Regelketten')
 
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($gv_Configuration \"\" $lv_Restart \"\" $lv_Status \"\"
 $lv_Conntrack \"\" $lv_Chains \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -80,13 +80,13 @@ haupt_menue() {
 hw_conf
 net_conf
 kernel_release
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfigration{{{
@@ -106,7 +106,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help conf_help
-						conf_menue
+						conf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Main_Conf)
 						main_conf
@@ -130,7 +130,7 @@ while [ "$gv_Auswahl" ] ; do
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help forward_conf_help
-									forward_menu
+									forward_menu "${gv_Auswahl#HELP }"
 									;;
 								$gv_Display)
 									# Ansicht der FORWARD Regeln.# {{{
@@ -182,7 +182,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Restart)
 			# Restart/Reload.....# {{{
@@ -190,7 +190,7 @@ while [ "$gv_Auswahl" ] ; do
 				/etc/init.d/kwnarc restart
 			fi
 			## }}}
-			haupt_menue $lv_Restart
+			main_menu $lv_Restart
 			;;
 		$lv_Status)
 			# allgemeine Statusanzeige # {{{
@@ -200,7 +200,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_pager_msg
 			fi
 			## }}}
-			haupt_menue $lv_Status
+			main_menu $lv_Status
 			;;
 		$lv_Conntrack)
 			# Anzeige der bestehenden Connections# {{{
@@ -210,7 +210,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_pager_msg
 			fi
 			## }}}
-			haupt_menue $lv_Conntrack
+			main_menu $lv_Conntrack
 			;;
 		$lv_Chains)
 			# Anzeige der bestehenden Regelketten# {{{
@@ -220,7 +220,7 @@ while [ "$gv_Auswahl" ] ; do
 				no_pager_msg
 			fi
 			## }}}
-			haupt_menue $lv_Chains
+			main_menu $lv_Chains
 			;;
 		$gv_Exit)	break
 			;;

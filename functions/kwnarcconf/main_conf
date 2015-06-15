@@ -159,7 +159,7 @@ main_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help main_conf_help
-				main_conf_menue
+				main_conf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_IPTABLES)
 				# ip(6)tables Programm{{{
@@ -237,7 +237,7 @@ main_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help allow_icmp_messages_help
-								checklist "" "$MAIN_CONF_TITLE" "$ICMP_MSG" "$WERT"
+								checklist "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$ICMP_MSG" "$WERT"
 								;;
 							*)	ALLOW_ICMP_MESSAGE="${gv_Auswahl//\\ \\\(*\) / }"
 								break
@@ -608,7 +608,7 @@ main_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/netcard_help
-							menubox "$DMZ_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$DMZ_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$MSG" "$DMZ_MENU"
 							;;
 						$gv_None)	unset -- DMZ_INTERFACE
 							break
@@ -785,7 +785,7 @@ main_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help ingress_filter_help
-							menubox "$INGRESS_FILTER" "$MAIN_CONF_TITLE" "$INGRESS_MSG" "$INGRESS_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$INGRESS_MSG" "$INGRESS_MENU"
 							;;
 						$gv_Back)	break
 							;;
@@ -826,7 +826,7 @@ main_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/netcard_help
-							menubox "$LAN_INTERFACE" "$MAIN_CONF_TITLE" "$MSG" "$LAN_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$MSG" "$LAN_MENU"
 							;;
 						$gv_None)	unset -- LAN_INTERFACE
 							break
@@ -908,7 +908,7 @@ main_conf() {
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help loopback_mode_help
-							menubox "$LOOPBACK_MODE" "$MAIN_CONF_TITLE" "$LOOPBACK_MSG" "$LOOPBACK_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$LOOPBACK_MSG" "$LOOPBACK_MENU"
 							;;
 						$gv_Back)	break
 							;;
@@ -944,8 +944,7 @@ main_conf() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help main_conf_help
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
-								checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
+								checklist "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$NAT_MENU"
 								;;
 							*)	# Wert uebernehmen
 								NAT_MODULES="$gv_Auswahl"
@@ -1011,8 +1010,7 @@ main_conf() {
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help main_conf_help
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
-								checklist "${DEFAULT_VALUE[1]}" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
+								checklist "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$PRELOAD_MOD_MENU"
 								;;
 							*)	# Wert uebernehmen
 								PRELOAD_IP_MODULES="$gv_Auswahl"

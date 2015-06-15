@@ -40,7 +40,7 @@ forward_conf() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help forward_conf_input_help
-						forward_eingabe_menue
+						forward_eingabe_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Interface)
 						# Interface vergeben{{{
@@ -65,7 +65,7 @@ forward_conf() {
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
 								HELP*)	script_help protocol_help
-									menubox "$PROTOCOL" "$FORWARD_TITLE" "$MSG" "$PROTO_MENU"
+									menubox "${gv_Auswahl#HELP }" "$FORWARD_TITLE" "$MSG" "$PROTO_MENU"
 									;;
 								*)	PROTOCOL="$gv_Auswahl"
 									break
@@ -192,16 +192,16 @@ forward_conf() {
 				#
 				forward_change_list_menue() {
 					FW_CHANGE_MENU=(${Forward_List//\"/\'} $gv_Back \"\")
-					menubox "$F_CHOICE" "$FORWARD_TITLE" "$gv_Menupoint" "$FW_CHANGE_MENU"
+					menubox "$1" "$FORWARD_TITLE" "$gv_Menupoint" "$FW_CHANGE_MENU"
 				}
 				#}}}
-				forward_change_list
+				forward_change_list "$F_CHOICE"
 				if [ -n "$Forward_List" ] ; then
 					forward_change_list_menue
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help forward_conf_change_help
-								forward_change_list_menue
+								forward_change_list_menue "${gv_Auswahl#HELP }"
 								;;
 							$gv_Back)	break
 								;;
@@ -261,7 +261,7 @@ forward_conf() {
 				DEL_TITLE=$(gettext 'Konfiguration::Weiterleitung::loeschen')
 				DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Forward Regeln zum loeschen aus.')
 				forward_delete_list_menue() {
-					checklist "" "$DEL_TITLE" "$DEL_MSG" "$Forward_List"
+					checklist "$1" "$DEL_TITLE" "$DEL_MSG" "$Forward_List"
 				}
 				#}}}
 				forward_delete_list
@@ -270,7 +270,7 @@ forward_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help forward_conf_delete_help
-								forward_delete_list_menue
+								forward_delete_list_menue "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Zeilen herausfinden{{{

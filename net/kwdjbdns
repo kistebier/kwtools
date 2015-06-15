@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.05.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.06.2015
 #
 # Script: kwdjbdns, konfiguriert, loescht Dan Bernsteins DNS server
-# Version: 0.3.7
+# Version: 0.4.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -78,11 +78,11 @@ check_dns_user() {
 	}
 }
 ## }}}
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($gv_Configuration \"\" $lv_Dnscache \"\" $lv_Tinydns \"\"
 	$lv_Axfrdns \"\" $lv_Pickdns \"\" $lv_Rbldns \"\" $gv_Exit \"\")
 #
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -114,14 +114,14 @@ DOMAIN_MSG=$(gettext 'Geben Sie bitte die domain an, die jetzt verwaltet werden 
 TEXT=$(gettext 'Text')
 #
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 	        #
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
 			# Konfiguration fuer dnscache, tinydns, axfrdns, rbldns, pickdns oder{{{
@@ -142,7 +142,7 @@ while [ "$gv_Auswahl" ] ; do
 				case $gv_Auswahl in
 					HELP*)
 						script_help conf_help
-						konf_menue
+						konf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Dnscache)
 						# Verschiedene DNS Caches einrichten koennen.{{{
@@ -299,7 +299,7 @@ while [ "$gv_Auswahl" ] ; do
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
 									HELP)	script_help serv_del_help
-										checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
+										checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 										;;
 									*)
 										# loeschen
@@ -326,7 +326,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Dnscache)
 			# Von Welchen Rechneradressen darf auf den dnscache zugegriffen werden.{{{
@@ -371,31 +371,31 @@ while [ "$gv_Auswahl" ] ; do
 				no_dns_msg $DNS
 			fi
 			#}}}
-			haupt_menue $lv_Dnscache
+			main_menu $lv_Dnscache
 			;;
 		$lv_Tinydns)
 			# tinydns verwalten
 			DNS="$gv_Auswahl"
 			tinydns_management
-			haupt_menue $lv_Tinydns
+			main_menu $lv_Tinydns
 			;;
 		$lv_Axfrdns)
 			# axfrdns Server Verwaltung
 			DNS="$gv_Auswahl"
 			axfrdns_management
-			haupt_menue $lv_Axfrdns
+			main_menu $lv_Axfrdns
 			;;
 		$lv_Pickdns)
 			# pickdns verwalten
 			DNS="$gv_Auswahl"
 			pickdns_management
-			haupt_menue $lv_Pickdns
+			main_menu $lv_Pickdns
 			;;
 		$lv_Rbldns)
 			# rbldns server Verwaltung
 			DNS="$gv_Auswahl"
 			rbldns_management
-			haupt_menue $lv_Rbldns
+			main_menu $lv_Rbldns
 			;;
 		$gv_Exit)	break
 			;;
