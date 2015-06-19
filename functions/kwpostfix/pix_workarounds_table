@@ -8,7 +8,7 @@ pix_workarounds_table() {
 	# Funktion pix_workarounds_menue{{{
 	pix_workarounds_menue() {
 		PIX_WORKAROUNDS_MENU=($lv_Target_Adr \"$ADR\" $gv_Save \"\" $gv_Back \"\")
-		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$PIX_WORKAROUNDS_MENU"
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$PIX_WORKAROUNDS_MENU"
 	}
 	#}}}
 	# Funktion pix_workarounds_aendern{{{
@@ -18,7 +18,7 @@ pix_workarounds_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help "$TAB_HELP"
-				pix_workarounds_menue
+				pix_workarounds_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Target_Adr)
 				# Zieladresse eingeben{{{
@@ -31,7 +31,7 @@ pix_workarounds_table() {
 					no_input_msg
 				fi
 				#}}}
-				pix_workarounds_menue
+				pix_workarounds_menue "$lv_Target_Adr"
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -64,7 +64,7 @@ pix_workarounds_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -92,7 +92,7 @@ pix_workarounds_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
 								# Auswahl aendern
@@ -119,7 +119,7 @@ pix_workarounds_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# Löschen
 								while read ADRESS REST ; do

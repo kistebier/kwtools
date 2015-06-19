@@ -6,7 +6,7 @@ virtual_alias_mb_domains_table() {
 	# Funktion virtual_alias_mb_domain_menue{{{
 	virtual_alias_mb_domain_menue() {
 		VIRTUAL_ALIAS_MB_DOMAIN_MENU=($lv_Domain \"$DOMAIN\" $gv_Save \"\" $gv_Back \"\")
-		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_ALIAS_MB_DOMAIN_MENU"
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_ALIAS_MB_DOMAIN_MENU"
 	}
 	#}}}
 	# Funktion virtual_alias_mb_domain_aendern{{{
@@ -16,7 +16,7 @@ virtual_alias_mb_domains_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
 			HELP*)	script_help "$TAB_HELP"
-				virtual_alias_mb_domain_menue
+				virtual_alias_mb_domain_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Domain)
 				# Domains eingeben{{{
@@ -29,7 +29,7 @@ virtual_alias_mb_domains_table() {
 					no_input_msg
 				fi
 				#}}}
-				virtual_alias_mb_domain_menue
+				virtual_alias_mb_domain_menue $lv_Domain
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -61,7 +61,7 @@ virtual_alias_mb_domains_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -117,7 +117,7 @@ virtual_alias_mb_domains_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# löschen
 								while read ADRESS REST ; do

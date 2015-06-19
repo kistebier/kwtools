@@ -8,7 +8,7 @@ mynetworks_table() {
 	# Funktion mynetworks_menue{{{
 	mynetworks_menue() {
 		MYNETWORK_MENU=($lv_Host_Net \"$ADR\" $gv_Save \"\" $gv_Back \"\")
-		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$MYNETWORK_MENU"
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$MYNETWORK_MENU"
 	}
 	#}}}
 	# Funktion mynetworks_aendern{{{
@@ -18,7 +18,7 @@ mynetworks_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
 			HELP*)	script_help "$TAB_HELP"
-				mynetworks_menue
+				mynetworks_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Host_Net)
 				# IP-Adresse/Netz eingeben{{{
@@ -35,7 +35,7 @@ mynetworks_table() {
 					no_input_msg
 				fi
 				#}}}
-				mynetworks_menue
+				mynetworks_menue "$lv_Host_Net"
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -68,7 +68,7 @@ mynetworks_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -96,7 +96,7 @@ mynetworks_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHOICE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHOICE_MENU"
 								;;
 							*)
 								# Auswahl verändern
@@ -124,7 +124,7 @@ mynetworks_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$CHOICE_MULTI_MENU"
 								;;	
 							*)	# löschen
 								while read ADRESS REST ; do

@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 28.05.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 19.06.2015
 #
 # Script: kwpostfix, Konfiguriert Mailserver (MTA) postfix
 # Version: 0.1.18
@@ -159,8 +159,7 @@ cert_match() {
 			case "$gv_Auswahl" in
 				HELP*)
 					script_help tls_cert_match_help
-					DEFAULT_VALUE=${gv_Auswahl#HELP }
-					checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
+					checklist "${gv_Auswahl#HELP }" "$SMTP_TITLE" "$SMTP_TLS_FP_CERT_MATCH_MSG" "$VALUE_ARRAY" "$OldVar"
 					;;
 				*)	# uebernehmen
 					WERT="$gv_Auswahl"
@@ -210,7 +209,7 @@ if (( $? == 0 )) ; then
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help share/user_id_help
-				menubox "" "$gv_Configuration" "$USER_ID_MSG" "$USER_ID_MENU"
+				menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$USER_ID_MSG" "$USER_ID_MENU"
 				;;
 			*)	# uebernehmen
 				WERT="$gv_Auswahl"
@@ -235,7 +234,7 @@ if (( $? == 0 )) ; then
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help share/group_id_help
-				menubox "" "$gv_Configuration" "$GROUP_ID_MSG" "$GROUP_ID_MENU"
+				menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$GROUP_ID_MSG" "$GROUP_ID_MENU"
 				;;
 			*)	# uebernehmen
 				WERT="$gv_Auswahl"
@@ -387,7 +386,7 @@ tls_file_choice() {
 							HELP*)	
 								# Hilfe
 								script_help tls_file_choice_help
-								menubox "" "$gv_Configuration" "$gv_Menupoint" "$TLS_FILE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$TLS_FILE_MENU"
 								;;
 							*)	WERT="${VERZ}/${gv_Auswahl}"
 								break
@@ -461,7 +460,7 @@ user_auswahl() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/user_help
-						menubox "" "$gv_Configuration" "$USER_CHOICE_MSG" "$USER_CHOICE_MENU"
+						menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$USER_CHOICE_MSG" "$USER_CHOICE_MENU"
 						;;
 					*)	# übernehmen
 						WERT="$gv_Auswahl"
@@ -566,8 +565,7 @@ tls_protocols() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help tls_protocols_help
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
+						checklist "${gv_Auswahl#HELP }" "$gv_Configuration" "$TLS_PROTOCOL_MSG" "$TLS_PROTOCOL_MENU" "$OldVar"
 						;;
 					*)	WERT="$gv_Auswahl"
 						break
@@ -851,11 +849,11 @@ default_or_input (){
 	fi
 }
 ## }}}
-# Funktion haupt_menue{{{
+# Funktion main_menu{{{
 MAIN_MENU=($lv_Quick_Conf \"\" $gv_Configuration \"\"
 	\"$lv_Ext_Conf\" \"\" $lv_Tabs \"\" $lv_Master_Cf \"\"
 	$lv_Clear \"\" $gv_Exit \"\")
-haupt_menue() {
+main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
@@ -870,19 +868,19 @@ haupt_menue() {
 umask 022
 
 net_conf
-haupt_menue
+main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
 		HELP*)
     	    # Hilfe Messagebox
 			script_help help
-			haupt_menue
+			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Quick_Conf)
 			# schnelle Konfiguration
 			os_check
 			if_conf_prog "$OS" mail
-			haupt_menue $lv_Quick_Conf
+			main_menu $lv_Quick_Conf
 			;;
 		$gv_Configuration)
 			# Konfiguration von main.cf,...{{{
@@ -912,7 +910,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help conf_help
-						conf_menu
+						conf_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Main)
 						# Hauptkonfiguration
@@ -982,7 +980,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $gv_Configuration
+			main_menu $gv_Configuration
 			;;
 		$lv_Ext_Conf)
 			# fast komplette Konfiguration# {{{
@@ -1014,7 +1012,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help ext_conf_help
-						ext_conf_menu
+						ext_conf_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Address_Verify)
 						# Address Einstellungen
@@ -1086,7 +1084,7 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			## }}}
-			haupt_menue $lv_Ext_Conf
+			main_menu $lv_Ext_Conf
 			;;
 		$lv_Tabs)
 			# Tabellen bearbeiten{{{
@@ -1372,7 +1370,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help tab_help
-						tab_menue
+						tab_menue "${gv_Auswahl#HELP }"
 						;;
 					alias_maps)
 						# Tabelle für die Zuweisung von lokalen Mails an andere Empfänger{{{
@@ -1750,13 +1748,13 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			#}}}
-			haupt_menue $lv_Tabs
+			main_menu $lv_Tabs
 			;;
 		$lv_Master_Cf)
 			# Konfiguration der master.cf
 			autoload -U master_conf
 			master_conf
-			haupt_menue $lv_Master_Cf
+			main_menu $lv_Master_Cf
 			;;
 		$lv_Clear)
 			# loeschen uebrig gebliebener temporaerer Dateien
@@ -1764,7 +1762,7 @@ while [ "$gv_Auswahl" ] ; do
 			# fuehrt einen Check und eine eventuelle Reperatur der Queue-Struktur
 			# durch, wird beim zurueckspielen von Backups benoetigt.
 			postsuper -s
-			haupt_menue $lv_Clear
+			main_menu $lv_Clear
 			;;
 		$gv_Exit)	break
 			;;

@@ -56,14 +56,14 @@ error_codes() {
 	# Funktion (error_codes_menu)# {{{
 	#
 	error_codes_menu() {
-		menubox "$WERT" "$ERROR_TITLE" "$ERROR_NR_MSG" "$ERROR_NR_MENU"
+		menubox "$1" "$ERROR_TITLE" "$ERROR_NR_MSG" "$ERROR_NR_MENU"
 	}
 	## }}}
-	error_codes_menu
+	error_codes_menu "$WERT"
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help error_codes_help
-				error_codes_menu
+				error_codes_menu "${gv_Auswahl#HELP }"
 				;;
 			*)	# Wert übernehmen
 				WERT="$gv_Auswahl"	
@@ -77,7 +77,7 @@ error_codes() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help error_conf_help
-				error_codes_conf_menue
+				error_codes_conf_menue "${gv_Auswahl#HELP }"
 				;;
 			access_map_defer_code)
 				# Standard = 450# {{{

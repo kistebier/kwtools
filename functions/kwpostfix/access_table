@@ -355,7 +355,7 @@ access_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -386,7 +386,7 @@ access_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								menubox "$C_CHOICE" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
 								# Auswahl verändern
@@ -479,13 +479,13 @@ access_table() {
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
 					checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
-					while [ "$gv_Auswahl" ] ; do
+					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# Löschen
-								 while read ADRESS ; do
+								while read ADRESS ; do
 									grep -Fv "$ADRESS" $FILE >$FILE$$
 									mv $FILE$$ $FILE
 								done <${gv_LogFile}$$

@@ -42,7 +42,7 @@ local_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help local_help
-				conf_local_menu
+				conf_local_menu "${gv_Auswahl#HELP }"
 				;;
 			local_command_shell)
 				# Lokale Shell auswaehlen{{{
@@ -170,8 +170,7 @@ local_conf() {
 						case "$gv_Auswahl" in
 							HELP*)	script_help local_header_rewrite_clients_help
 								U_OPT=k
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
-								checklist "${DEFAULT_VALUE[1]}" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
+								checklist "${gv_Auswahl#HELP }" "$LOCAL_TITLE" "$LOCAL_HEADER_REWRITE_CLIENTS_MSG" "$VALUE_ARRAY" "$local_header_rewrite_clients"
 								;;
 							*)	# uebernehmen oder auf check_address_map
 								# pruefen

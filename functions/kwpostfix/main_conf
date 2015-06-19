@@ -356,7 +356,7 @@ conf_main_menu
 while [ "$gv_Auswahl" ] ; do
 	case "$gv_Auswahl" in
 		HELP*)	script_help main_help
-			conf_main_menu
+		conf_main_menu "${gv_Auswahl#HELP }"
 			;;
 		2bounce_notice_recipient)
 			# Zieladresse fuer Double Bounces{{{
@@ -404,8 +404,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
 						;;
 					*)	# uebernehmen
 						allow_mail_to_commands="$gv_Auswahl"
@@ -430,8 +429,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
 						;;
 					*)	# uebernehmen
 						allow_mail_to_files="$gv_Auswahl"
@@ -511,7 +509,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/user_help
-							menubox "$always_bcc" "$MAINCF_TITLE" "$ALWAYS_BCC_MSG" "$ALWAYS_BCC_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$ALWAYS_BCC_MSG" "$ALWAYS_BCC_MENU"
 							;;
 						$gv_None)
 							# kein Benutzer
@@ -998,8 +996,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
 						;;
 					*)	# uebernehmen
 						if [ "`echo "$gv_Auswahl" | grep 'defer'`" ] ; then
@@ -1204,8 +1201,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
 						;;
 					*)	# uebernehmen
 						masquerade_classes="$gv_Auswahl"
@@ -1366,7 +1362,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
-						menubox "$mynetworks_style" "$MAINCF_TITLE" "$MYNET_MSG" "$MYNET_MENU"
+						menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$MYNET_MSG" "$MYNET_MENU"
 						;;
 					*)
 						# uebernehmen
@@ -1388,7 +1384,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
-						menubox "$myorigin" "$MAINCF_TITLE" "$H_MSG" "$H_MENU"
+						menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$H_MSG" "$H_MENU"
 						;;
 					*)	#
 						# uebernehmen
@@ -1422,8 +1418,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
 						;;
 					*)	# uebernehmen
 						notify_classes="$gv_Auswahl"
@@ -1462,8 +1457,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
 						;;
 					*)	# uebernehmen
 						parent_domain_matches_subdomains="$gv_Auswahl"
@@ -1521,8 +1515,7 @@ while [ "$gv_Auswahl" ] ; do
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
 						;;
 					*)	# uebernehmen
 						prepend_delivered_header="$gv_Auswahl"
@@ -1563,8 +1556,7 @@ while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help main_help
 						U_OPT=k
-						DEFAULT_VALUE=${gv_Auswahl#HELP }
-						checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
+						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
 						;;
 					*)	# uebernehmen
 						propagate_unmatched_extensions="$gv_Auswahl"
@@ -1694,7 +1686,7 @@ while [ "$gv_Auswahl" ] ; do
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/group_help
-							menubox "$setgid_group" "$MAINCF_TITLE" "$SETGID_GROUP_MSG" "$SETGID_GROUP_MENU"
+							menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$SETGID_GROUP_MSG" "$SETGID_GROUP_MENU"
 							;;
 						*)	# uebernehmen
 							setgid_group="$gv_Auswahl"

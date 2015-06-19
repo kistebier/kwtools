@@ -45,7 +45,7 @@ tls_conf() {
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help tls_openssl_curves_help
-						openssl_curves_menu $Curves_Value
+						openssl_curves_menu "${gv_Auswahl#HELP }"
 						;;
 					*)	WERT="$gv_Auswahl"
 						break
@@ -91,7 +91,7 @@ tls_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tls_help
-				conf_tls_menue
+				conf_tls_menue "${gv_Auswahl#HELP }"
 				;;
 			tls_append_default_CA)
 				# Standard = no# {{{
@@ -128,8 +128,7 @@ tls_conf() {
 					case "$gv_Auswahl" in
 						HELP*)	script_help tls_help
 							U_OPT=k
-							DEFAULT_VALUE=${gv_Auswahl#HELP }
-							checklist "${DEFAULT_VALUE[1]}" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
+							checklist "${gv_Auswahl#HELP }" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
 							;;
 						*)	# uebernehmen
 							tls_disable_workarounds="$gv_Auswahl"
@@ -296,7 +295,7 @@ tls_conf() {
 				RANDOM_DEV_MSG=$(gettext 'Waehlen Sie ein Device aus.')
 				# Funktion (tls_random_source_menu)# {{{
 				tls_random_source_menu() {
-					menubox "$tls_random_source" "$TLS_TITLE" "$RANDOM_DEV_MSG" "$RANDOM_DEV_MENU"
+					menubox "$1" "$TLS_TITLE" "$RANDOM_DEV_MSG" "$RANDOM_DEV_MENU"
 				}
 				## }}}
 				tls_random_source_menu $tls_random_source
@@ -304,7 +303,7 @@ tls_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tls_help
-								tls_random_source_menu $tls_random_source
+								tls_random_source_menu "${gv_Auswahl#HELP }"
 								;;
 							*)	# Wert uebernehmen
 								tls_random_source="$gv_Auswahl"

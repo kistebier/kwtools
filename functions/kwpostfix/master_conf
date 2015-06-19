@@ -54,7 +54,7 @@ master_conf() {
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help master_wert_help
-					menubox "$1" "$MASTER_CONF_TITLE" "$gv_Menupoint" "$MASTER_WERT" "$1"
+					menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$gv_Menupoint" "$MASTER_WERT" "$1"
 					;;
 				*)	# Wert uebernehmen
 					WERT="$gv_Auswahl"
@@ -109,7 +109,7 @@ master_conf() {
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help master_aendern_help
-					master_aendern_menue
+					master_aendern_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Service)
 					# Servicename einstellen{{{
@@ -136,7 +136,7 @@ master_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help transport_type_help
-								menubox "$TYPE" "$MASTER_CONF_TITLE" "$T_TYPE_MSG" "$T_MENU"
+								menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$T_TYPE_MSG" "$T_MENU"
 								;;
 							*)	# Den Wert von private ueberpruefen
 								TYPE="$gv_Auswahl"
@@ -293,7 +293,7 @@ master_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help command_help
-								command_menu $COMMAND
+								command_menu "${gv_Auswahl#HELP }"
 								;;
 							*)	# MAXPROC Wert ueberpruefen
 								COMMAND="$gv_Auswahl"
@@ -479,7 +479,7 @@ master_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help master_help
-				master_menue
+				master_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der master.cf# {{{
@@ -521,7 +521,7 @@ master_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help master_service_help
-								menubox "$OldVar" "$MASTER_CONF_TITLE" "$SERVICE_MSG" "$SERVICE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$SERVICE_MSG" "$SERVICE_MENU"
 								;;
 							*)
 								# Auswahl aendern.
@@ -599,7 +599,7 @@ master_conf() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								radiolist "" "$MASTER_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								radiolist "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	#
 								# Auswahl loeschen

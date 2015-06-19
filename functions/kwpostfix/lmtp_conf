@@ -130,7 +130,7 @@ lmtp_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help lmtp_help
-				conf_lmtp_menu
+				conf_lmtp_menu "${gv_Auswahl#HELP }"
 				;;
 			lmtp_address_preference)
 				# ipv4, ipv6 oder any, Standard ist = any.# {{{
@@ -146,7 +146,7 @@ lmtp_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*) script_help lmtp_help
-							conf_address_pref $lmtp_address_preference
+							conf_address_pref "${gv_Auswahl#HELP }"
 							;;
 						*)	# Auswahl uebernehmen
 							lmtp_address_preference="$gv_Auswahl"
@@ -445,8 +445,7 @@ lmtp_conf() {
 						case "$gv_Auswahl" in
 							HELP*)	script_help dns_resolver_options_help
 								U_OPT=k
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
-								checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$LMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+								checklist "${gv_Auswahl#HELP }" "$LMTP_TITLE" "$LMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 								;;
 							*)	# uebernehmen
 								lmtp_dns_resolver_options="$gv_Auswahl"
@@ -783,8 +782,7 @@ lmtp_conf() {
 					case "$gv_Auswahl" in
 						HELP*)	script_help lmtp_help
 							U_OPT=k
-							DEFAULT_VALUE=${gv_Auswahl#HELP }
-							checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$LMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+							checklist "${gv_Auswahl#HELP }" "$LMTP_TITLE" "$LMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 							;;
 						*)
 							lmtp_sasl_mechanism_filter="$gv_Auswahl"

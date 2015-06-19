@@ -127,7 +127,7 @@ smtp_conf() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help smtp_help
-				conf_smtp_menu
+				conf_smtp_menu "${gv_Auswahl#HELP }"
 				;;
 			smtp_address_preference)
 				# ipv4, ipv6 oder any, Standard ist = any.# {{{
@@ -142,7 +142,7 @@ smtp_conf() {
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*) script_help smtp_help
-							conf_address_pref $smtp_address_preference
+							conf_address_pref "${gv_Auswahl#HELP }"
 							;;
 						*)	# Auswahl uebernehmen
 							smtp_address_preference="$gv_Auswahl"
@@ -437,8 +437,7 @@ smtp_conf() {
 						case "$gv_Auswahl" in
 							HELP*)	script_help dns_resolver_options_help
 								U_OPT=k
-								DEFAULT_VALUE=${gv_Auswahl#HELP }
-								checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+								checklist "${gv_Auswahl#HELP }" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 								;;
 							*)	# uebernehmen
 								smtp_dns_resolver_options="$gv_Auswahl"
@@ -543,7 +542,7 @@ smtp_conf() {
 						HELP*)
 								# Hilfe
 								script_help smtp_host_lookup_help
-								smtp_host_lookup_menu "$smtp_host_lookup"
+								smtp_host_lookup_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
 								# Auswahl uebernehmen.
@@ -839,8 +838,7 @@ smtp_conf() {
 					case "$gv_Auswahl" in
 						HELP*)	script_help smtp_help
 							U_OPT=k
-							DEFAULT_VALUE=${gv_Auswahl#HELP }
-							checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+							checklist "${gv_Auswahl#HELP }" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 							;;
 						*)
 							smtp_sasl_mechanism_filter="$gv_Auswahl"

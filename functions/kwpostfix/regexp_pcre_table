@@ -64,7 +64,7 @@ regexp_pcre_table() {
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl"  in
 				HELP*)	script_help "$TAB_HELP"
-					regexp_pcre_menue
+					regexp_pcre_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_String)
 					# Zeichenkette eingeben{{{
@@ -345,7 +345,7 @@ regexp_pcre_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -372,11 +372,11 @@ regexp_pcre_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
-					menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					menubox "" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
 								# Auswahl verändern
@@ -484,7 +484,7 @@ regexp_pcre_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# Löschen
 								 while read ADRESS ; do

@@ -27,14 +27,14 @@ tab_support_choice() {
 		TAB_VALUE_MENU=($gv_None \"\" $gv_Input \"\" $lv_NameAdapt \"\"
 		$gv_Back \"\")
 		tab_support_menu() {
-			menubox "" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$TAB_VALUE_MENU"
+			menubox "$1" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$TAB_VALUE_MENU"
 		}
 		#}}}
 		tab_support_menu
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
 				HELP*)	script_help tab_support_help
-					tab_support_menu
+					tab_support_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_None)
 					# nichts, Parameter Werte loeschen
@@ -71,28 +71,28 @@ tab_support_choice() {
 					format_menue() {
 						case "$Choice" in
 							*checks|*_reply_filter|smtpd_command_filter)
-								menubox "" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_R"
+								menubox "$1" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_R"
 								TABS_WAHL="$TABS_R"
 								;;
 							*access)
-								menubox "" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_C"
+								menubox "$1" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_C"
 								TABS_WAHL="$TABS_C"
 								;;
 							smtpd_sender_login_maps|*_pix_workaround_maps|*_recipient_maps)
 								# smtpd_sender_login_maps, local_recipient_maps,
 								# relay_recipient_maps
-								menubox "" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_A"
+								menubox "$1" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_A"
 								TABS_WAHL="$TABS_A"
 								;;
 							address_verify_map|postscreen_cache_map|*_sasl_auth_cache_name|*_tls_session_cache_database)
 								# address_verify_map, postscreen_cache_map,
 								# {lmtp,smtp}_sasl_auth_cache_name,
 								# {lmtp,smtp,smtpd}_tls_session_cache_database
-								menubox "" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_D"
+								menubox "$1" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_D"
 								TABS_WAHL="$TABS_D"
 								;;
 							*)
-								menubox "" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_M"
+								menubox "$1" "$TAB_VALUE_TITLE" "$TABFORMAT_MSG" "$TABS_M"
 								TABS_WAHL="$TABS_M"
 								;;
 						esac
@@ -111,7 +111,7 @@ tab_support_choice() {
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabformat_help
-								format_menue
+								format_menue "${gv_Auswahl#HELP }"
 								if [ -z "$gv_Auswahl" ] ; then
 									MAPS="$OldVar"
 									break
@@ -128,7 +128,7 @@ tab_support_choice() {
 								while [ "$gv_Auswahl" ] ; do
 									case $gv_Auswahl in
 										HELP*)	script_help share/var_help
-											menubox "" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$Var"
+											menubox "${gv_Auswahl#HELP }" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$Var"
 											;;
 										*)	# Wert übernehmen
 											MAPS="environ:${gv_Auswahl}"
@@ -191,7 +191,7 @@ tab_support_choice() {
 								while [ "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help proxy_tabformat_help
-											menubox "$Proxy_Map" "$TAB_VALUE_PROXY_TITLE" "$gv_Menupoint" "$TAB_Proxy_S"
+											menubox "${gv_Auswahl#HELP }" "$TAB_VALUE_PROXY_TITLE" "$gv_Menupoint" "$TAB_Proxy_S"
 											;;
 										*)
 											Proxy_Map="$gv_Auswahl"
@@ -238,7 +238,7 @@ tab_support_choice() {
 											while [ "$gv_Auswahl" ] ; do
 												case $gv_Auswahl in
 												HELP*)	script_help tabformat_help
-													menubox "" "$TAB_VALUE_PROXY_TITLE" "$gv_Menupoint" "$Unix_Name"
+													menubox "${gv_Auswahl#HELP }" "$TAB_VALUE_PROXY_TITLE" "$gv_Menupoint" "$Unix_Name"
 													;;
 												*)	# Wert übernehmen
 													MAPS="${Tabwahl}:${Proxy_Map}:${gv_Auswahl}"
@@ -349,7 +349,7 @@ tab_support_choice() {
 								while [ "$gv_Auswahl" ] ; do
 									case $gv_Auswahl in
 										HELP*)	script_help tabformat_help
-											menubox "" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$Nis_Name"
+											menubox "${gv_Auswahl#HELP }" "$TAB_VALUE_TITLE" "$gv_Menupoint" "$Nis_Name"
 											;;
 										*)	# Wert übernehmen
 											MAPS="unix:${gv_Auswahl}"

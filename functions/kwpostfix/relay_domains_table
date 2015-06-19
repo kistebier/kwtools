@@ -7,7 +7,7 @@ relay_domains_table() {
 	# Funktion relay_domain_menue{{{
 	relay_domain_menue() {
 		RELAY_DOMAIN_MENU=($lv_Host_Domain \"$ADR\" $gv_Save \"\" $gv_Back \"\")
-		menubox "" "$TABLE_TITLE" "$gv_Menupoint" "$RELAY_DOMAIN_MENU"
+		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$RELAY_DOMAIN_MENU"
 	}
 	#}}}
 	# Funktion relay_domain_aendern{{{
@@ -17,7 +17,7 @@ relay_domains_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help "$TAB_HELP"
-				relay_domain_menue
+				relay_domain_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Host_Domain)
 				# Hosts/Domains eingeben{{{
@@ -30,7 +30,7 @@ relay_domains_table() {
 					no_input_msg
 				fi
 				#}}}
-				relay_domain_menue
+				relay_domain_menue "$lv_Host_Domain"
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -62,7 +62,7 @@ relay_domains_table() {
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help tab_help
-				tabellen_menue
+				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
 				# Ansicht der Einträge
@@ -86,11 +86,11 @@ relay_domains_table() {
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
-					menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+					menubox "" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help tabs_help
-								menubox "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
+								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)	#
 								# Auswahl aendern
@@ -116,7 +116,7 @@ relay_domains_table() {
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help kwpostfix_del_help
-								checklist "" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
+								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
 							*)	# löschen
 								while read ADRESS REST ; do
