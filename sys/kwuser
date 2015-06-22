@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 05.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.06.2015
 #
 # Script: kwuser, legt an, aendert und loescht User
 # Version: 1.0.5
@@ -17,7 +17,7 @@ esac
 gv_ScriptName=${0##*/}
 
 #
-# Verzeichniss in denen nach Funktionen gesucht wird
+# Verzeichnis in denen nach Funktionen gesucht wird
 #
 if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
 	PREFIX=/usr/local
@@ -281,7 +281,7 @@ add_change_user() {
 			check_quota "$P_HOME"
 			# Leerzeichen werden mit einem Komma getauscht.
 			NGROUPS_KORRECT="${NGROUPS// /,}"
-			PROG_OPT_ALL="$PROG_OPT -g $NGROUP -G${NGROUPS_KORRECT:-users}"
+			PROG_OPT_ALL="${=PROG_OPT} -g $NGROUP -G${NGROUPS_KORRECT:-users}"
 			for n in {1..$P_COUNT} ; {
 				# Gibt es die NUSER_ID wird sie um eins hoeher gezaehlt.
 				while [ ${(s: :)${(s,:,)${"$(< /etc/passwd)"[(fr)*:${NUSER_ID}:*]}}[3]} ] ; do
@@ -335,7 +335,7 @@ add_change_user() {
 			# Massen Benutzer anlegen# {{{
 			# quota pruefen
 			check_quota "$P_HOME"
-			PROG_OPT_ALL="$PROG_OPT -g $NGROUP -G${NGROUPS_KORRECT:-users} -c \"$COMMENT\" -s "$U_SHELL""
+			PROG_OPT_ALL="${=PROG_OPT} -g $NGROUP -G${NGROUPS_KORRECT:-users} -c \"$COMMENT\" -s "$U_SHELL""
 			for n in {1..$P_COUNT} ; {
 				# Gibt es die NUSER_ID wird sie um eins hoeher gezaehlt.
 				while [ ${(s: :)${(s,:,)${"$(< /etc/passwd)"[(fr)*:${NUSER_ID}:*]}}[3]} ] ; do
@@ -364,7 +364,7 @@ add_change_user() {
 			# einen Benutzer hinzufuegen# {{{
 			# quota pruefen
 			check_quota "${HOME_V%/*}"
-			useradd $PROG_OPT -u "$NUSER_ID" -g "$NGROUP" -G${NGROUPS_KORRECT:-users} -m -d $HOME_V -c \"$COMMENT\" -s "$U_SHELL" $NUSER || prog_failure
+			useradd ${=PROG_OPT} -u "$NUSER_ID" -g "$NGROUP" -G${NGROUPS_KORRECT:-users} -m -d $HOME_V -c \"$COMMENT\" -s "$U_SHELL" $NUSER || prog_failure
 			# Home Verzeichnis erstellen
 			if [ "$CP_SKEL" = yes -a "$U_SHELL" != /bin/false ] ; then
 				cp -au /etc/skel/.* "$HOME_V" &>/dev/null
@@ -910,6 +910,8 @@ user_existed_msg() {
 #
 ##################################################################
 #
+## Funktion net_conf wird gebraucht um die NIS Datenbank zu erneuern,
+#falls sie NIS benutzt wird.
 net_conf
 os_check
 haupt_menue
@@ -922,7 +924,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
-			autoload kwuser_conf kwuser_config hw_conf
+			autoload -U kwuser_conf kwuser_config hw_conf
 			if [ -f /etc/login.defs ] ; then
 				KWUSER_UMASK="`print ${${(ws: :)${=${(M)${(f)"$(< /etc/login.defs)"}##(#s)UMASK[[:space:]]*}}}[2]}`"
 				ENCRYPT_METHOD="`print ${${(ws: :)${=${(M)${(f)"$(< /etc/login.defs)"}##(#s)ENCRYPT_METHOD[[:space:]]*}}}[2]}`"
