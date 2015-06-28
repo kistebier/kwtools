@@ -55,6 +55,12 @@ kwgrub2_conf() {
 	lv_Grub_Init_Tune=$(gettext 'Klang')
 	lv_Grub_Preload_Modules=$(gettext 'Kernel Module')
 	lv_Grub_Badram=$(gettext 'Speicheradressen')
+	#
+	DEFAULT_MSG=$(gettext 'Waehlen Sie einen Eintrag aus, den grub2 standardmaessig starten soll.')
+	GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
+	GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Xen Kernel ein (s. kernel Dokumentation).')
+	HIDDEN_TIMEOUT_MSG=$(gettext 'Waehlen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrueckt um das Bootmenue anzuzeigen an.')
+	TIMEOUT_MSG=$(gettext 'Waehlen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
 	## }}}
 	# Funktion (conf_menu){{{
 	conf_menu() {
@@ -101,17 +107,15 @@ kwgrub2_conf() {
 	#
 	check_anz_menuentry() {
 		unset -- TMP_MENU
-		local Anz Anz1
-		integer Anz Anz1
+		local Anz
+		integer Anz
 		#
 		Anz=0
-		Anz1=1
 		print -l ${${${(M)${(f)"$(< $GRUB_CONFFILE)"}##(#s)menuentry*}%%--*}%% \{} | \
 			while read t k ; do
 				if [ -n "$k" ] ; then
 					TMP_MENU+=($Anz "$k")
 					(( Anz++ ))
-					(( Anz1++ ))
 				else
 					TMP_MENU+=(0 \"\")
 				fi
@@ -131,7 +135,6 @@ kwgrub2_conf() {
 				check_anz_menuentry
 				#
 				DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Default})
-				DEFAULT_MSG=$(gettext 'Waehlen Sie einen Standard Eintrag aus, den grub2 standardmaessig starten soll.')
 				# Funktion (default_menu)# {{{
 				default_menu() {
 					DEFAULT_MENU=(saved \"\" $TMP_MENU)
@@ -173,8 +176,7 @@ kwgrub2_conf() {
 			$lv_Grub_Timeout)
 				# Timeout festlegen{{{
 				TIMEOUT_TITLE=(${gv_Configuration}::${lv_Grub_Timeout})
-				TIMEOUT_MSG=$(gettext 'Waehlen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
-				# Funktion(timeout_menu)# {{{
+				# Funktion (timeout_menu)# {{{
 				timeout_menu() {
 					TIMEOUT_MENU=(-1 \"\" 0 \"\" 5 \"\" 10 \"\" 15 \"\" 20 \"\" 30 \"\")
 					menubox "$1" "$TIMEOUT_TITLE" "$TIMEOUT_MSG" "$TIMEOUT_MENU"
@@ -203,11 +205,10 @@ kwgrub2_conf() {
 			"$lv_Grub_Hidden_Timeout")
 				# versteckten Timeout festlegen{{{
 				TIMEOUT_TITLE=(${gv_Configuration}::${lv_Grub_Hidden_Timeout})
-				TIMEOUT_MSG=$(gettext 'Waehlen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrueckt um das Bootmenue anzuzeigen an.')
 				# Funktion (hidden_timeout_menu)# {{{
 				hidden_timeout_menu() {
 					TIMEOUT_MENU=(0 \"\" 5 \"\" 10 \"\" 15 \"\" 20 \"\" 30 \"\")
-					menubox "$1" "$TIMEOUT_TITLE" "$TIMEOUT_MSG" "$TIMEOUT_MENU"
+					menubox "$1" "$TIMEOUT_TITLE" "$HIDDEN_TIMEOUT_MSG" "$TIMEOUT_MENU"
 				}
 				## }}}
 				hidden_timeout_menu "$GRUB_HIDDEN_TIMEOUT"
@@ -249,7 +250,6 @@ kwgrub2_conf() {
 				check_anz_menuentry
 				#
 				DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Default_Button})
-				DEFAULT_MSG=$(gettext 'Waehlen Sie einen Standard Eintrag aus, den grub2 standardmaessig starten soll.')
 				# Funktion (default_button_menu)# {{{
 				default_button_menu() {
 					DEFAULT_MENU=($gv_None \"\" saved \"\" $TMP_MENU)
@@ -278,11 +278,10 @@ kwgrub2_conf() {
 			"$lv_Grub_Timeout_Button")
 				# Timeout Button festlegen{{{
 				TIMEOUT_BUTTON_TITLE=(${gv_Configuration}::${lv_Grub_Timeout_Button})
-				TIMEOUT_BUTTON_MSG=$(gettext 'Waehlen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
 				# Funktion (timeout_button_menu)# {{{
 				timeout_button_menu() {
 					TIMEOUT_BUTTON_MENU=($gv_None \"\" 0 \"\" 5 \"\" 10 \"\" 15 \"\" 20 \"\" 30 \"\")
-					menubox "$1" "$TIMEOUT_BUTTON_TITLE" "$TIMEOUT_BUTTON_MSG" "$TIMEOUT_BUTTON_MENU"
+					menubox "$1" "$TIMEOUT_BUTTON_TITLE" "$TIMEOUT_MSG" "$TIMEOUT_BUTTON_MENU"
 				}
 				## }}}
 				timeout_button_menu "$GRUB_TIMEOUT_BUTTON"
@@ -307,11 +306,10 @@ kwgrub2_conf() {
 			"$lv_Grub_Hidden_Timeout_Button")
 				# versteckten Timeout Button festlegen{{{
 				TIMEOUT_TITLE=(${gv_Configuration}::${lv_Grub_Hidden_Timeout_Button})
-				TIMEOUT_MSG=$(gettext 'Waehlen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
 				# Funktion (hidden_timeout_button_menu)# {{{
 				hidden_timeout_button_menu() {
 					TIMEOUT_MENU=($gv_None \"\" 0 \"\" 5 \"\" 10 \"\" 15 \"\" 20 \"\" 30 \"\")
-					menubox "$1" "$TIMEOUT_TITLE" "$TIMEOUT_MSG" "$TIMEOUT_MENU"
+					menubox "$1" "$TIMEOUT_TITLE" "$HIDDEN_TIMEOUT_MSG" "$TIMEOUT_MENU"
 				}
 				## }}}
 				hidden_timeout_button_menu "$GRUB_HIDDEN_TIMEOUT_BUTTON"
@@ -553,7 +551,6 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Xen")
 				# XEN Linux Argumente eingeben# {{{
 				GRUB_CMDLINE_XEN_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Xen})
-				GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Xen Kernel ein (s. kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_XEN_TITLE" "$GRUB_CMDLINE_XEN_MSG" "$GRUB_CMDLINE_XEN"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_XEN="$gv_Auswahl"
@@ -566,7 +563,6 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Xen_Default")
 				# Linux Argumente eingeben# {{{
 				GRUB_CMDLINE_XEN_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Xen_Default})
-				GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_XEN_DEFAULT_TITLE" "$GRUB_CMDLINE_XEN_DEFAULT_MSG" "$GRUB_CMDLINE_XEN_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_XEN_DEFAULT="$gv_Auswahl"
@@ -579,8 +575,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Xen_Replace")
 				# XEN Linux Argumente eingeben# {{{
 				GRUB_CMDLINE_XEN_REPLACE_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Xen_Replace})
-				GRUB_CMDLINE_XEN_REPLACE_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Xen Kernel ein (s. kernel Dokumentation).')
-				inputbox "$GRUB_CMDLINE_XEN_REPLACE_TITLE" "$GRUB_CMDLINE_XEN_REPLACE_MSG" "$GRUB_CMDLINE_XEN_REPLACE"
+				inputbox "$GRUB_CMDLINE_XEN_REPLACE_TITLE" "$GRUB_CMDLINE_XEN_MSG" "$GRUB_CMDLINE_XEN_REPLACE"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_XEN_REPLACE="$gv_Auswahl"
 				else
@@ -592,8 +587,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Xen_Replace_Default")
 				# Linux Argumente eingeben# {{{
 				GRUB_CMDLINE_XEN_REPLACE_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Xen_Replace_Default})
-				GRUB_CMDLINE_XEN_REPLACE_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
-				inputbox "$GRUB_CMDLINE_XEN_REPLACE_DEFAULT_TITLE" "$GRUB_CMDLINE_XEN_REPLACE_DEFAULT_MSG" "$GRUB_CMDLINE_XEN_REPLACE_DEFAULT"
+				inputbox "$GRUB_CMDLINE_XEN_REPLACE_DEFAULT_TITLE" "$GRUB_CMDLINE_XEN_DEFAULT_MSG" "$GRUB_CMDLINE_XEN_REPLACE_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_XEN_REPLACE_DEFAULT="$gv_Auswahl"
 				else
