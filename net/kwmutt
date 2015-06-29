@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 03.05.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 29.06.2015
 #
 # Script: kwmutt, konfiguriert den Mail-Client Mutt.
 #
@@ -100,10 +100,13 @@ M_SMIME="${MUTT}/smime"
 M_SSL="${MUTT}/ssl"
 M_UNIGNORE="${MUTT}/unignore_headers"
 M_URI="${MUTT}/urlview"
+CHECKINTERVAL_MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die ausgewaehlten Mailboxen nach neuen Mails geprueft werden sollen.')
+DISPLAY_MB_MSG=$(gettext 'Waehlen Sie ein Postfach aus um seine Einstellungen anzusehen.')
 #
 Muttrc_LogFile="${gv_WorkDir}/Muttrc"
 #
 lv_Addressbook=$(gettext 'Adressbuch')
+lv_Alias=$(gettext 'Alias')
 lv_Charset=$(gettext 'Zeichensatz')
 lv_Ext_Configuration=$(gettext 'erweiterte Konfiguration')
 lv_Friendly_List=$(gettext 'Bekanntenliste')
@@ -657,8 +660,8 @@ unsubscribe *
 		$lv_Print)
 			# Muttprint konfigurieren# {{{
 			# #########################################################
-			# Ist der Drucker muttprint kann man ihn hier konfigurieren
-			# Andere drucker gehen (noch) nicht
+			# INFO: Ist der Drucker muttprint kann man ihn hier konfigurieren
+			# Andere drucker gehen (noch) nicht.
 			# #########################################################
 			if [ -f "$M_PRINT" ] ; then
 				create_tmp_conf "$M_PRINT"
@@ -666,7 +669,7 @@ unsubscribe *
 				if [[ $print_command == muttprint ]] ; then
 					kwmuttprintcf
 				else
-					MSG=$(gettext 'Diese Druckkommando kann noch nicht konfiguriert werden.')
+					MSG=$(gettext 'Dieses Druckkommando ($M_PRINT) kann noch nicht konfiguriert werden.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 			fi
