@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 02.05.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 29.06.2015
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschluesselten
 # Devices mittels cryptsetup.
@@ -119,6 +119,8 @@ lv_Keyscript=$(gettext 'Schluessel Script')
 KEYFILE_PASSWD_MSG=$(gettext 'Geben Sie das Passwort fuer die Schluesseldatei ein.')
 SINGLE_BLOCK_DEVICE_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus.')
 MULTI_BLOCK_DEVICE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus.')
+PASSWD_START_MSG=$(gettext 'Geben Sie einen vorhandenen Schluessel fuer das Laufwerk "$dst" ein.')
+PRECHECK_FAILED_MSG=$(gettext 'Die Vorueberpruefung von $src ist fehlgeschlagen: $pre_out.')
 export KEYFILE_PASSWD_MSG
 
 # Funktion main_menu# {{{
@@ -728,7 +730,6 @@ cryptdisk_luks() {
 			fi
 		elif [ -z "$key" ] ; then
 			# passwordbox
-			PASSWD_START_MSG=$(gettext 'Geben Sie einen vorhandenen Schluessel fuer das Laufwerk "$dst" ein.')
 			password "$gv_Passwd_TITLE" "$PASSWD_START_MSG"
 			if print $PASSPHRASE | \
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} open --type luks "$src" "$dst" ; then
@@ -768,8 +769,7 @@ cryptdisk_noluks() {
 
 	if ! pre_out="$($PRECHECK "$src" 2>/dev/null)" && \
 		! /lib/cryptsetup/checks/blkid "$src" swap >/dev/null ; then
-		MSG=$(gettext 'Die Vorueberpruefung von $src ist fehlgeschlagen: $pre_out.')
-		msgbox "$gv_Attention" "$MSG"
+		msgbox "$gv_Attention" "$PRECHECK_FAILED_MSG"
 		return 1
 	fi
 
@@ -833,8 +833,7 @@ cryptdisk_tcrypt() {
 
 	if ! pre_out="$($PRECHECK "$src" 2>/dev/null)" && \
 		! /lib/cryptsetup/checks/blkid "$src" swap >/dev/null ; then
-		MSG=$(gettext 'Die Vorueberpruefung von $src ist fehlgeschlagen: $pre_out.')
-		msgbox "$gv_Attention" "$MSG"
+		msgbox "$gv_Attention" "$PRECHECK_FAILED_MSG"
 		return 1
 	fi
 
@@ -852,7 +851,6 @@ cryptdisk_tcrypt() {
 			fi
 		elif [ -z "$key" ] ; then
 			# passwordbox
-			PASSWD_START_MSG=$(gettext 'Geben Sie einen vorhandenen Schluessel fuer das Laufwerk "$dst" ein.')
 			password "$gv_Passwd_TITLE" "$PASSWD_START_MSG"
 			if print $PASSPHRASE | \
 				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} open --type tcrypt "$src" "$dst" ; then
