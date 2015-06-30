@@ -9,7 +9,6 @@ kwparted_parttab() {
 	fi
 	#
 	lv_Backup=$(gettext 'Sicherung')
-	lv_Pt=$(gettext 'Partitionstabelle')
 	lv_Fp=$(gettext 'Festplatte')
 	# Funktion (no_backup_msg), Erstellung des Backups fehlgeschlagen.# {{{
 	#
@@ -184,7 +183,7 @@ kwparted_parttab() {
 				unset -- PT FP
 				# Funktion backup_back_menu# {{{
 				backup_back_menu() {
-					BACK_MENU=($lv_Mbr \"$MBR\" $lv_Fp \"$FP\"
+					BACK_MENU=($PART_TAB \"$PT\" $lv_Fp \"$FP\"
 						$gv_Save \"\" $gv_Back \"\")
 					menubox "$1" "$PART_TAB" "$gv_Menupoint" "$BACK_MENU"
 				}
@@ -196,7 +195,7 @@ kwparted_parttab() {
 							script_help parttab_help
 							backup_back_menu "${gv_Auswahl#HELP }"
 							;;
-						$lv_Pt)
+						$PART_TAB)
 							# Sicherungsdatei auswaehlen# {{{
 							SUFFIX=".mpt .gpt"
 							FORMAT=""
@@ -205,7 +204,7 @@ kwparted_parttab() {
 								PT="$WERT"
 							fi
 							## }}}
-							backup_back_menu $lv_Pt
+							backup_back_menu $PART_TAB
 							;; 
 						$lv_Fp)
 							# Festplatte auswaehlen# {{{
