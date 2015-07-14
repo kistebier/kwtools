@@ -57,7 +57,6 @@ ldap_db() {
 	#}}}
 	# Funktion Benutzer auswählen{{{
 	db_user() {
-		DB_USER_MSG=$(gettext 'Geben Sie den Benutzer ein, der sich in die Datenbank einloggen darf.')
 		inputbox "$LDAP_CONF_TITLE" "$DB_USER_MSG" "$DB_User"
 		if [ "$gv_Auswahl" ] ; then
 			DB_User="$gv_Auswahl"
@@ -69,8 +68,6 @@ ldap_db() {
 	# Funktion Datenbank Passwort{{{
 	db_passwd() {
 		# PASSPHRASE1 wird von passwd erzeugt.
-		DB_PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer die Datenbank ein.')
-		DB_PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort fuer die Datenbank ein.')
 		password "$LDAP_CONF_TITLE" "$DB_PASSWD_MSG" 5
 		if [ "$PASSPHRASE" ] ; then
 			PASS1="$PASSPHRASE"
@@ -93,8 +90,7 @@ ldap_db() {
 	#}}}
 	# Datenbankrechner{{{
 	db_host() {
-		DB_HOST_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch Leerzeichen, ein auf dem die Datenbank laeuft.')
-		inputbox "$LDAP_CONF_TITLE" "$DB_HOST_MSG" "$DB_Host"
+		inputbox "$LDAP_CONF_TITLE" "$DB_HOSTS_MSG" "$DB_Host"
 		if [ "$gv_Auswahl" ] ; then
 			unset -- DB_Host
 			local Anz

@@ -132,10 +132,9 @@ smtp_conf() {
 			smtp_address_preference)
 				# ipv4, ipv6 oder any, Standard ist = any.# {{{
 				ADDRESS_PREF_MENU=(any \"\" ipv4 \"\" ipv6 \"\")
-				ADDRESS_PREF_MSG=$(gettext 'Waehlen Sie das Internet Protokoll aus.')
 				# Funktion (conf_address_pref)# {{{
 				conf_address_pref() {
-					menubox "$1" "$SMTP_TITLE" "$ADDRESS_PREF_MSG" "$ADDRESS_PREF_MENU"
+					menubox "$1" "$SMTP_TITLE" "$INTERNET_ROTOCOL_MSG" "$ADDRESS_PREF_MENU"
 				}
 				## }}}
 				conf_address_pref $smtp_address_preference
@@ -304,8 +303,7 @@ smtp_conf() {
 				;;
 			smtp_defer_if_no_mx_address_found)
 				# Zurueckstellung von mails wenn ein MX record nicht aufgeloest werden kann# {{{
-				SMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurueckgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgeloest werden kann (ja/nein)?')
-				ja_nein_tausch "$SMTP_TITLE" "$SMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
+				ja_nein_tausch "$SMTP_TITLE" "$DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
 				smtp_defer_if_no_mx_address_found="$WERT"
 				postconf -e smtp_defer_if_no_mx_address_found="$WERT"
 				## }}}
@@ -429,9 +427,8 @@ smtp_conf() {
 				generate_is_file ${smtp_dns_resolver_options//,/}
 				is_value "res_defnames res_dnsrch"
 				#
-				SMTP_DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
 				U_OPT=k
-				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 				if [[ -n $gv_Auswahl ]] ; then
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -454,8 +451,7 @@ smtp_conf() {
 				;;
 			smtp_enforce_tls)
 				# SSL/TLS fuer den Versand erzwingen{{{
-				SMTP_ENFORCE_TLS_MSG=$(gettext 'SSL/TLS fuer den Versand erzwingen (ja/nein)?')
-				ja_nein_tausch "$SMTP_TITLE" "$SMTP_ENFORCE_TLS_MSG"
+				ja_nein_tausch "$SMTP_TITLE" "$ENFORCE_TLS_MSG"
 				smtp_enforce_tls="$WERT"
 				postconf -e smtp_enforce_tls="$WERT"
 				#}}}
@@ -712,8 +708,7 @@ smtp_conf() {
 				;;
 			smtp_randomize_addresses)
 				# Reihenfolge der envelope Adressen mixen?{{{
-				SMTP_RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen (ja/nein)?')
-				ja_nein_tausch "$SMTP_TITLE" "$SMTP_RANDOMIZE_ADDRESSES_MSG"
+				ja_nein_tausch "$SMTP_TITLE" "$RANDOMIZE_ADDRESSES_MSG"
 				smtp_randomize_addresses="$WERT"
 				postconf -e smtp_randomize_addresses="$WERT"
 				#}}}
@@ -831,9 +826,8 @@ smtp_conf() {
 				generate_is_file "${smtp_sasl_mechanism_filter//,/}"
 				is_value "anonymous plain login cram-md5 digest-md5 ntlm"
 				#
-				SMTP_SASL_MECHANISM_MSG=$(gettext 'Waehlen Sie bitte die Mechanismen die erlaubt werden sollen')
 				U_OPT=k
-				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$SMTP_TITLE" "$SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help smtp_help
@@ -946,8 +940,7 @@ smtp_conf() {
 				;;
 			smtp_send_xforward_command)
 				# XFORWARD Komando senden{{{
-				SMTP_SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden (ja/nein)?')
-				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SEND_XFORWARD_CMD_MSG"
+				ja_nein_tausch "$SMTP_TITLE" "$SEND_XFORWARD_CMD_MSG"
 				smtp_send_xforward_command="$WERT"
 				postconf -e smtp_send_xforward_command="$WERT"
 				#}}}

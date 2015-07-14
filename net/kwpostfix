@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 19.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.07.2015
 #
 # Script: kwpostfix, Konfiguriert Mailserver (MTA) postfix
-# Version: 0.1.18
+# Version: 0.1.19
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -114,6 +114,7 @@ lv_Pix_Workarounds=$(gettext 'PIX Workarounds')
 
 # Variablen die von einigen Konfigurationsdateien benutzt werden
 DEFAULT_DESTINATION_RATE_DELAY_MSG=$(gettext 'Geben Sie die Zeit ein nach der jeder Mailzustellung wieder an das gleiche Ziel eine Mail versandt werden darf (Standard ist 0s).')
+FIRST_ADR_MSG=$(gettext 'Geben Sie bitte eine Mailadresse, User oder eine Domain ein (Bsp. user | @domain.de | user@domain.de).')
 SMTP_CONNECT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout fuer den Aufbau der Verbindung ein (Bsp.: 30s).')
 SMTP_DATA_DONE_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Uebertragung einer Mail ein (Standard 600s).')
 SMTP_DATA_INIT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Absenden des SMTP-Kommandos DATA ein (Standard 120s).')
@@ -127,6 +128,20 @@ SMTPD_ENFORCE_TLS_MSG=$(gettext 'Soll SSL/TLS bei eingehenden Verbindungen erzwu
 SMTPD_USE_TLS_MSG=$(gettext 'Soll dieser Server fuer eingehende Mails SSL/TLS Verschluesselung benutzen (ja/nein)?')
 SMTPD_TLS_ALWAYS_SESSION_ISSUE_IDS_MSG=$(gettext 'Soll der Postfix SMTP Server eine TLS Session ID ausstellen, falls das TLS Session Caching deaktiviert ist (ja/nein)?')
 SMTPD_TLS_ASK_CCERT_MSG=$(gettext 'Soll beim Server explizit nach einem Client Zertifikat nachgefragt werden (ja/nein)?')
+TABLE_MAILADDRESS_INPUT_MSG=$(gettext 'Geben Sie eine Mailadresse ein (Bsp. user@domain.de).')
+TABLE_MAILADDRESS_OR_DOMAIN_INPUT_MSG=$(gettext 'Geben Sie eine Mailadresse oder Domain ein (Bsp. @domain.de | user@domain.de).')
+REGEXP_MINIMUM_MENUPOINTS_MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette, Aktion und Transport mit Werten belegen.')
+DB_USER_MSG=$(gettext 'Geben Sie den Benutzer ein, der sich in die Datenbank einloggen darf.')
+DB_PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer die Datenbank ein.')
+DB_PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort fuer die Datenbank ein.')
+DB_HOSTS_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch ein Leerzeichen, ein auf dem die Datenbank laeuft.')
+INTERNET_ROTOCOL_MSG=$(gettext 'Waehlen Sie das Internet Protokoll aus.')
+DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurueckgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgeloest werden kann (ja/nein)?')
+DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
+ENFORCE_TLS_MSG=$(gettext 'SSL/TLS fuer den Versand erzwingen (ja/nein)?')
+RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen (ja/nein)?')
+SASL_MECHANISM_MSG=$(gettext 'Waehlen Sie bitte die Mechanismen die erlaubt werden sollen.')
+SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden (ja/nein)?')
 
 MAIL_CONFIG="`postconf -h config_directory &>/dev/null`"
 if [ -z "$MAIL_CONFIG" ] ; then

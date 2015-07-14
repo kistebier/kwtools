@@ -65,7 +65,6 @@ sql_db() {
 	#}}}
 	# Funktion Benutzer auswählen{{{
 	db_user() {
-		DB_USER_MSG=$(gettext 'Geben Sie den Benutzer ein, der sich in die Datenbank einloggen darf.')
 		inputbox "$SQL_CONF_TITLE" "$DB_USER_MSG" "$DB_User"
 		if [ "$gv_Auswahl" ] ; then
 			DB_User="$gv_Auswahl"
@@ -77,8 +76,6 @@ sql_db() {
 	# Funktion Datenbank Passwort{{{
 	db_passwd() {
 		# PASSPHRASE1 wird von passwd erzeugt.
-		PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer die Datenbank ein.')
-		PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort fuer die Datenbank ein.')
 		password "$SQL_CONF_TITLE" "$PASSWD_MSG" 5
 		if [ -n "$PASSPHRASE" ] ; then
 			PASS1="$PASSPHRASE"
@@ -125,7 +122,7 @@ sql_db() {
 	# Datenbankrechner{{{
 	db_host() {
 		DB_HOST_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch Leerzeichen, ein auf dem die Datenbank laeuft.')
-		inputbox "$SQL_CONF_TITLE" "$DB_HOST_MSG" "$DB_Host"
+		inputbox "$SQL_CONF_TITLE" "$DB_HOSTS_MSG" "$DB_Host"
 		if [ "$gv_Auswahl" ] ; then
 			unset -- DB_Host
 			local Anz

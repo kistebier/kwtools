@@ -136,10 +136,9 @@ lmtp_conf() {
 				# ipv4, ipv6 oder any, Standard ist = any.# {{{
 				# Standard = any
 				ADDRESS_PREF_MENU=(any \"\" ipv4 \"\" ipv6 \"\")
-				ADDRESS_PREF_MSG=$(gettext 'Waehlen Sie das Internet Protokoll aus.')
 				# Funktion (conf_address_pref)# {{{
 				conf_address_pref() {
-					menubox "$1" "$LMTP_TITLE" "$ADDRESS_PREF_MSG" "$ADDRESS_PREF_MENU"
+					menubox "$1" "$LMTP_TITLE" "$INTERNET_ROTOCOL_MSG" "$ADDRESS_PREF_MENU"
 				}
 				## }}}
 				conf_address_pref $lmtp_address_preference
@@ -312,8 +311,7 @@ lmtp_conf() {
 			lmtp_defer_if_no_mx_address_found)
 				# Zurueckstellung von mails wenn ein MX record nicht aufgeloest werden kann# {{{
 				# Standard = no
-				LMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurueckgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgeloest werden kann (ja/nein)?')
-				ja_nein_tausch "$LMTP_TITLE" "$LMTP_DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
+				ja_nein_tausch "$LMTP_TITLE" "$DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
 				lmtp_defer_if_no_mx_address_found="$WERT"
 				postconf -e lmtp_defer_if_no_mx_address_found="$WERT"
 				## }}}
@@ -437,9 +435,8 @@ lmtp_conf() {
 				generate_is_file ${lmtp_dns_resolver_options//,/}
 				is_value "res_defnames res_dnsrch"
 				#
-				LMTP_DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Waehlen Sie ein oder mehrere Optionen fuer den DNS Resolver aus.')
 				U_OPT=k
-				checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$LMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 				if [[ -n $gv_Auswahl ]] ; then
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -462,8 +459,7 @@ lmtp_conf() {
 				;;
 			lmtp_enforce_tls)
 				# SSL/TLS fuer den Versand erzwingen{{{
-				LMTP_ENFORCE_TLS_MSG=$(gettext 'SSL/TLS fuer den Versand erzwingen (ja/nein)?')
-				ja_nein_tausch "$LMTP_TITLE" "$LMTP_ENFORCE_TLS_MSG"
+				ja_nein_tausch "$LMTP_TITLE" "$ENFORCE_TLS_MSG"
 				lmtp_enforce_tls="$WERT"
 				postconf -e lmtp_enforce_tls="$WERT"
 				#}}}
@@ -659,8 +655,7 @@ lmtp_conf() {
 				;;
 			lmtp_randomize_addresses)
 				# Reihenfolge der envelope Adressen mixen?{{{
-				LMTP_RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen (ja/nein)?')
-				ja_nein_tausch "$LMTP_TITLE" "$LMTP_RANDOMIZE_ADDRESSES_MSG"
+				ja_nein_tausch "$LMTP_TITLE" "$RANDOMIZE_ADDRESSES_MSG"
 				lmtp_randomize_addresses="$WERT"
 				postconf -e lmtp_randomize_addresses="$WERT"
 				#}}}
@@ -775,9 +770,8 @@ lmtp_conf() {
 				generate_is_file "${lmtp_sasl_mechanism_filter//,/}"
 				is_value "anonymous plain login cram-md5 digest-md5 ntlm"
 				#
-				LMTP_SASL_MECHANISM_MSG=$(gettext 'Waehlen Sie bitte die Mechanismen die erlaubt werden sollen')
 				U_OPT=k
-				checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$LMTP_SASL_MECHANISM_MSG" "$VALUE_ARRAY"
+				checklist "${DEFAULT_VALUE[1]}" "$LMTP_TITLE" "$SASL_MECHANISM_MSG" "$VALUE_ARRAY"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help lmtp_help
@@ -886,8 +880,7 @@ lmtp_conf() {
 				;;
 			lmtp_send_xforward_command)
 				# XFORWARD Komando senden{{{
-				LMTP_SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden (ja/nein)?')
-				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SEND_XFORWARD_CMD_MSG"
+				ja_nein_tausch "$LMTP_TITLE" "$SEND_XFORWARD_CMD_MSG"
 				lmtp_send_xforward_command="$WERT"
 				postconf -e lmtp_send_xforward_command="$WERT"
 				#}}}
