@@ -187,13 +187,13 @@ vg_groups() {
 									# Im ausgewaehltem Verzeichnis nach FORMAT Dateien suchen und bereitstellen.
 									FORMAT="DATA"
 									file_choice "$BAK_DIR" multi
-									if [ "$WERT" ] ; then
+									if [ -n "${WERT[1]}" ] ; then
 										#
 										# Bei LVM1 muss man den PhysicalVolumePath angeben.
 										#
-										for i in $WERT ; {
+										while read i ; do
 											vgcfgrestore -v -f $i -n ${i%.conf*} ${(M)PV##$i} 2>&1 | progressbox $lv_Backup_Back $i || prog_failure
-										}
+										done < $gv_LogFile$$
 									fi
 								else
 									# Im ausgewaehltem Verzeichnis nach FORMAT Dateien suchen und bereitstellen.
@@ -213,14 +213,18 @@ vg_groups() {
 								if [ "$LVM" = 1 ] ; then
 									FORMAT="DATA"
 									file_choice "$BAK_DIR" multi
-									if [ "$WERT" ] ; then
-										rm -f "$WERT" &>/dev/null
+									if [ -n "${WERT[1]}" ] ; then
+										while read i ; do
+											rm -f "$i" &>/dev/null
+										done < $gv_LogFile$$
 									fi
 								else
 									FORMAT="ASCII"
 									file_choice "${BAK_DIR//\"/}" multi
-									if [ "$WERT" ] ; then
-										rm -f "$WERT" &>/dev/null
+									if [ -n "${WERT[1]}" ] ; then
+										while read i ; do
+											rm -f "$WERT" &>/dev/null
+										done < $gv_LogFile$$
 									fi
 								fi
 								#}}}

@@ -176,9 +176,9 @@ manage_keys() {
 				# Schluesseldatei loeschen# {{{
 				file_choice "${KEY_FILE%/*}" multi
 				if [ -n "${WERT[1]}" ] ; then
-					for i in ${=WERT} ; {
-						rm "${VERZ}/${i}" &&>/dev/null
-					}
+					while read i ; do
+						rm "${VERZ}/${i}" &>/dev/null
+					done < $gv_LogFile$$
 				fi
 				## }}}
 				manage_key_menu $gv_Delete
