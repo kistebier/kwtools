@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.07.2015
 #
 # Script: kwvcdburn, kreiert und brennt (S)VCD Filme
 # Version: 0.1.1
@@ -107,47 +107,46 @@ while [ "$gv_Auswahl" ] ; do
 			# Dateien auswaehlen
 			file_choice "$FILM_DIR" multi
 			#
-			if [ "${WERT[1]}" ] ; then
-				VIDEO_TITLE=($lv_Video_Cd)
-				#
-				# Programm vcdimager ausfuehren.
-				#
-				typeset -L V_Anz
-				V_Anz=`wc -l <${gv_LogFile}$$`
-				#
-				# Soll eine VCD Struktur fuer alle Dateien erstellt werden,
-				# wenn es mehr als eine Datei gibt (ja/nein)?
-				if [ "$V_Anz" -gt 1 ] ; then
-					CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (Ja/nein)?')
-					yesno "$VIDEO_TITLE" "$CREATE_MULTI_QUESTION_MSG"
-					if [ "$?" = 0 ] ; then
-						# Dateinamen vergeben
-						inputbox "$VIDEO_TITLE" "$CREATE_NAME_MSG"
-						if [ -n "$gv_Auswahl" ] ; then
-							FILE_NAME="$gv_Auswahl"
-							CREATE_MULTI_MSG=$(gettext 'Erzeuge Video-CD ${FILE_NAME}.cue aus de(r/n) Dateie(n) ${FILE_NAME}.')
-							# zusammenfuegen
-							$PROG -t $VCD_TYPE -c ${FILE_NAME%.*}.cue -b ${FILE_NAME%.*}.bin $WERT | \
-							progressbox "$VIDEO_TITLE" "$CREATE_MSG" || prog_failure
-						else
-							no_input_msg
-						fi
-					else
-						# alle Dateien einzeln umwandeln.
-						Anz=1
-						CREATE_MSG=$(gettext 'Erzeuge Video-CD: ${file% }.')
-						while read file ; do
-							$PROG -t $VCD_TYPE -c ${file%.*}.cue -b ${file%.*}.bin --volume-count=$V_Anz --volume-number=$Anz ${file% } | \
-								progressbox "$VIDEO_TITLE" "$CREATE_MSG" || prog_failure
-							(( Anz++ ))
-						done <$gv_LogFile$$
-					fi
+			VIDEO_TITLE=($lv_Video_Cd)
+			#
+			# Programm vcdimager ausfuehren.
+			#
+			typeset -L V_Anz
+			V_Anz=`wc -l <${gv_LogFile}$$`
+			mv ${gv_LogFile}$$ ${gv_WorkDir}/files
+			CREATE_MSG=$(gettext 'Erzeuge Video-CD: $file.')
+			#
+			# Soll eine VCD Struktur fuer alle Dateien erstellt werden,
+			# wenn es mehr als eine Datei gibt (ja/nein)?
+			if [ "$V_Anz" -gt 1 ] ; then
+				CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (Ja/nein)?')
+				yesno "$VIDEO_TITLE" "$CREATE_MULTI_QUESTION_MSG" ""
+				if [ "$gv_Auswahl" = yes ] ; then
+					# Dateinamen vergeben
+					inputbox "$VIDEO_TITLE" "$CREATE_NAME_MSG"
+					FILE_NAME="${gv_Auswahl:-videocd}"
+					CREATE_MULTI_MSG=$(gettext 'Erzeuge Video-CD ${FILE_NAME}.cue aus den Dateien.')
+					# zusammenfuegen
+					while read file ; do
+						FILES+=( $file )
+					done <${gv_WorkDir}/files
+					#
+					$PROG -t $VCD_TYPE -c ${FILE_NAME%.*}.cue -b ${FILE_NAME%.*}.bin $FILES | \
+					progressbox "$VIDEO_TITLE" "$CREATE_MULTI_MSG" || prog_failure
 				else
-					# einzelne Datei umwandeln
-					$PROG -t $VCD_TYPE -c ${WERT%.*}.cue -b ${WERT%.*}.bin ${WERT% } | \
-					progressbox "$VIDEO_TITLE" "$CREATE_MSG" || prog_failure
+					# alle Dateien einzeln umwandeln.
+					Anz=1
+					while read file ; do
+						$PROG -t $VCD_TYPE -c ${file%.*}.cue -b ${file%.*}.bin --volume-count=$V_Anz --volume-number=$Anz $file | \
+						progressbox "$VIDEO_TITLE" "$CREATE_MSG" || prog_failure
+						(( Anz++ ))
+					done <${gv_WorkDir}/files
 				fi
-				rm -rf $gv_LogFile$$ &>/dev/null
+			elif [ "$V_Anz" -eq 1 ] ; then
+				# einzelne Datei umwandeln
+				file=$(< ${gv_WorkDir}/files)
+				$PROG -t $VCD_TYPE -c ${file%.*}.cue -b ${file%.*}.bin $file | \
+				progressbox "$VIDEO_TITLE" "$CREATE_MSG" || prog_failure
 			fi
 			#}}}
 			main_menu $lv_Video_Cd
