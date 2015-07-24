@@ -323,15 +323,18 @@ lv_free_size() {
 					resize_fs $New_Size $MAP_DEV
 				else
 					# Dateisystem ext* reduzieren
-					resize_fs $New_Size $MAP_DEV
-					# Falls dieses Laufwerk verschluesselt ist, stoppen.
-					resize_cryptdisk_stop $MAP_DEV
-					# LV reduzieren
-					echo y | lvreduce -L${New_Size#-}M $DEV 2>&1 | \
-						progressbox $gv_Reduce $MAP_DEV || prog_failure
-					# Falls dieses Laufwerk verschluesselt war, 
-					# starten und Groesse anpassen.
-					resize_cryptdisk $MAP_DEV
+					# Wenn das Verkleinern eines FS nicht funktioniert
+					# abbrechen.
+					if resize_fs $New_Size $MAP_DEV ; then
+						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						resize_cryptdisk_stop $MAP_DEV
+						# LV reduzieren
+						echo y | lvreduce -L${New_Size#-}M $DEV 2>&1 | \
+							progressbox $gv_Reduce $MAP_DEV || prog_failure
+						# Falls dieses Laufwerk verschluesselt war, 
+						# starten und Groesse anpassen.
+						resize_cryptdisk $MAP_DEV
+					fi
 				fi
 			fi
 		else
