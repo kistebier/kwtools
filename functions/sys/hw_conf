@@ -1374,14 +1374,17 @@ lv_free_size() {
 						# Kibibyte in Mebibyte umrechnen
 						(( New_Size_MiB = ${New_Size#-} / 1024.0 )) 
 						# Dateisystem verkleinern
-						resize_fs -${New_Size_MiB} $MAP_DEV
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
-						resize_cryptdisk_stop "$MAP_DEV"
-						# Raid-Array vorbereiten/Laufwerk reduzieren.
-						raid_minus
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
-						resize_cryptdisk $MAP_DEV
+						# Wenn das Verkleinern eines FS nicht funktioniert
+						# abbrechen.
+						if resize_fs -${New_Size_MiB} $MAP_DEV ; then
+							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							resize_cryptdisk_stop "$MAP_DEV"
+							# Raid-Array vorbereiten/Laufwerk reduzieren.
+							raid_minus
+							# Falls dieses Laufwerk verschluesselt war, starten 
+							# und Groesse anpassen.
+							resize_cryptdisk $MAP_DEV
+						fi
 					else
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"

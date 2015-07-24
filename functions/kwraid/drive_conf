@@ -37,6 +37,36 @@ drive_conf() {
 		}
 	}
 	#}}}
+	# Funktion (raid_fs_check), checkt welches Dateisytsme das RAID Array# {{{
+	# hat und bricht eventuell ab.
+	#
+	# usage: raid_fs_check DEVICE
+	#
+	raid_fs_check() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Dev
+			Dev="$1"
+			check_fs $Dev
+			case "$gv_Fs" in
+				crypto*)
+					MSG=(gettext 'Dieses Laufwerk ($Dev) besitzt ein Crypto-Dateisystem und kann deshalb nicht bearbeitet werden.')
+					msgbox "$gv_Info" "$MSG"
+					break 2
+					;;
+				LVM*)
+					MSG=(gettext 'Dieses Laufwerk ($Dev) besitzt ein LVM und kann deshalb nicht bearbeitet werden.')
+					msgbox "$gv_Info" "$MSG"
+					break 2
+					;;
+				*)
+					;;
+			esac
+		else
+			no_part_msg $0
+			break 2
+		fi
+	}
+	## }}}
 	# Funktion (drive_menu){{{
 	#
 	DRIVE_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Enlarge \"\"
@@ -63,7 +93,7 @@ Array        Laufwerksanzahl')
 				;;
 			$gv_Change)
 				################################
-				# TODO:
+				# INFO:
 				# chunksize fehlt noch?
 				################################
 				# Arrays raid1,5,6 konvertieren# {{{
@@ -102,6 +132,8 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													# 1. Schritt 1 nach 5 mit 4 layout auf der
 													# letzten disk (parity-last)
@@ -154,6 +186,8 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													# 1. Schritt 1 nach 5 mit 4 layout auf der
 													# letzten disk (parity-last)
@@ -206,6 +240,8 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													RAID_LAYOUT=$(raid_is_layout $DEV)
 													# 1. Schritt Groesse anpassen
@@ -217,20 +253,23 @@ Array        Laufwerksanzahl')
 													(( Resize_Size = RAID_USED_DEV_SIZE * RAID_ANZ ))
 													# Dateisystem anpassen
 													(( New_Size_MiB == Resize_Size / 1024.0 ))
-													resize_fs -${New_Size_MiB} $DEV
-													# Array Groesse anpassen
-													mdadm $DEV -G --array-size=${Resize_Size} 1>/dev/null || prog_failure
-													# 2. Schritt 5 nach 6
-													# RAID_Anz wieder auf vorherige Anzahl hochrechnen
-													(( RAID_ANZ = RAID_ANZ + 2 ))
-													mdadm -G $DEV -l 6 -p ${RAID_LAYOUT}-6 -n $RAID_ANZ \
-														--backup-file=/root/${${DEV//\//_}#_}.bak \
-														1>/dev/null || prog_failure
-													# Fortschrittsbalken
-													raid_gauge "$DEV"
-													# alle RAID Arrays neu heraussuchen
-													raid
-													break
+													# Wenn das Verkleinern eines FS nicht funktioniert
+													# abbrechen.
+													if resize_fs -${New_Size_MiB} $DEV ; then
+														# Array Groesse anpassen
+														mdadm $DEV -G --array-size=${Resize_Size} 1>/dev/null || prog_failure
+														# 2. Schritt 5 nach 6
+														# RAID_Anz wieder auf vorherige Anzahl hochrechnen
+														(( RAID_ANZ = RAID_ANZ + 2 ))
+														mdadm -G $DEV -l 6 -p ${RAID_LAYOUT}-6 -n $RAID_ANZ \
+															--backup-file=/root/${${DEV//\//_}#_}.bak \
+															1>/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge "$DEV"
+														# alle RAID Arrays neu heraussuchen
+														raid
+														break
+													fi
 													;;
 											esac
 										done
@@ -255,6 +294,8 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													RAID_LAYOUT=$(raid_is_layout $DEV)
 													# Groeese eines Laufwerks vom Array herausfinden
@@ -302,31 +343,36 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													# Groeese eines Laufwerks vom Array herausfinden
 													RAID_USED_DEV_SIZE=$(raid_used_dev_size $DEV)
 													# 1. Array Groesse anpassen
 													# Dateisystem anpassen
 													(( New_Size_MiB == RAID_USED_DEV_SIZE / 1024.0 ))
-													resize_fs -${New_Size_MiB} $DEV
-													# Raid6 hat die Groesse aller Laufwerke - 2 (Parity),
-													# Raid1 hat die Groesse eines Laufwerks.
-													mdadm $DEV -G --array-size=${RAID_USED_DEV_SIZE} 1>/dev/null || prog_failure
-													# 2. Schritt 6 nach 5 mit 4 Layout
-													mdadm -G $DEV -l 5 -p parity-last -n $RAID_ANZ \
-														--backup-file=/root/${${DEV//\//_}#_}.bak \
-														1>/dev/null || prog_failure
-													# Fortschrittsbalken
-													raid_gauge "$DEV"
-													# 3. Schritt 5 mit 4 layout nach 1 ohne Layout
-													mdadm -G $DEV -l 1 -n $RAID_ANZ \
-														--backup-file=/root/${${DEV//\//_}#_}.bak \
-														1>/dev/null || prog_failure
-													# Fortschrittsbalken
-													raid_gauge "$DEV"
-													# alle RAID Arrays neu heraussuchen
-													raid
-													break
+													# Wenn das Verkleinern eines FS nicht funktioniert
+													# abbrechen.
+													if resize_fs -${New_Size_MiB} $DEV ; then
+														# Raid6 hat die Groesse aller Laufwerke - 2 (Parity),
+														# Raid1 hat die Groesse eines Laufwerks.
+														mdadm $DEV -G --array-size=${RAID_USED_DEV_SIZE} 1>/dev/null || prog_failure
+														# 2. Schritt 6 nach 5 mit 4 Layout
+														mdadm -G $DEV -l 5 -p parity-last -n $RAID_ANZ \
+															--backup-file=/root/${${DEV//\//_}#_}.bak \
+															1>/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge "$DEV"
+														# 3. Schritt 5 mit 4 layout nach 1 ohne Layout
+														mdadm -G $DEV -l 1 -n $RAID_ANZ \
+															--backup-file=/root/${${DEV//\//_}#_}.bak \
+															1>/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge "$DEV"
+														# alle RAID Arrays neu heraussuchen
+														raid
+														break
+													fi
 													;;
 											esac
 										done
@@ -351,31 +397,36 @@ Array        Laufwerksanzahl')
 												*)
 													# Auswahl uebernehmen
 													DEV=$gv_Auswahl
+													# Dateisystemcheck
+													raid_fs_check $DEV
 													RAID_ANZ=$(raid_anz $DEV)
 													# Groeese eines Laufwerks vom Array herausfinden
 													RAID_USED_DEV_SIZE=$(raid_used_dev_size $DEV)
 													# 1. Array Groesse anpassen
 													# Dateisystem anpassen
 													(( New_Size_MiB == RAID_USED_DEV_SIZE / 1024.0 ))
-													resize_fs -${New_Size_MiB} $DEV
-													# Raid5 hat die Groesse aller Laufwerke - 1 (Parity),
-													# Raid1 hat die Groesse eines Laufwerks.
-													mdadm $DEV -G --array-size=${RAID_USED_DEV_SIZE} 1>/dev/null || prog_failure
-													# 2. Schritt 6 nach 5 mit 4 Layout
-													mdadm -G $DEV -l 5 -p parity-last -n $RAID_ANZ \
-														--backup-file=/root/${${DEV//\//_}#_}.bak \
-														1>/dev/null || prog_failure
-													# Fortschrittsbalken
-													raid_gauge "$DEV"
-													# 3. Schritt 5 mit 4 layout nach 1 ohne Layout
-													mdadm -G $DEV -l 1 -n $RAID_ANZ >/dev/null \
-														--backup-file=/root/${${DEV//\//_}#_}.bak \
-														1>/dev/null || prog_failure
-													# Fortschrittsbalken
-													raid_gauge "$DEV"
-													# alle RAID Arrays neu heraussuchen
-													raid
-													break
+													# Wenn das Verkleinern eines FS nicht funktioniert
+													# abbrechen.
+													if resize_fs -${New_Size_MiB} $DEV ; then
+														# Raid5 hat die Groesse aller Laufwerke - 1 (Parity),
+														# Raid1 hat die Groesse eines Laufwerks.
+														mdadm $DEV -G --array-size=${RAID_USED_DEV_SIZE} 1>/dev/null || prog_failure
+														# 2. Schritt 6 nach 5 mit 4 Layout
+														mdadm -G $DEV -l 5 -p parity-last -n $RAID_ANZ \
+															--backup-file=/root/${${DEV//\//_}#_}.bak \
+															1>/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge "$DEV"
+														# 3. Schritt 5 mit 4 layout nach 1 ohne Layout
+														mdadm -G $DEV -l 1 -n $RAID_ANZ >/dev/null \
+															--backup-file=/root/${${DEV//\//_}#_}.bak \
+															1>/dev/null || prog_failure
+														# Fortschrittsbalken
+														raid_gauge "$DEV"
+														# alle RAID Arrays neu heraussuchen
+														raid
+														break
+													fi
 													;;
 											esac
 										done

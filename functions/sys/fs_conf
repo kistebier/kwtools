@@ -687,11 +687,6 @@ fs_conf() {
 	# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
 	#          werden soll
 	#
-	###################################################################
-	# TODO: auf installierte Programme pruefen.
-	# Funktion prog_exec ....
-	# bei verkleinern geht nicht return 1 benutzen
-	###################################################################
 	resize_fs() {
 		if [[ ${#argv} == 2 ]] ; then
 			# Wenn zum Beispiel das Vergroessern einer Partition
@@ -708,6 +703,11 @@ fs_conf() {
 				case "$gv_Fs" in
 					btrfs)
 						# BTRFS Dateisystem verkleinern/vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check btrfs
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							# Laufwerk mit FS btrfs wenn noetig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
@@ -747,10 +747,16 @@ fs_conf() {
 						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein Crypto-Dateisystem und muss extra bearbeitet werden. Starten Sie bitte das Script kwcryptsetup, um das Dateisystem anzupassen.')
 						msgbox "$gv_Info" "$MSG"
+						return 1
 						## }}}
 						;;
 					ext[234])
 						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check e2fsck resize2fs
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
@@ -773,6 +779,11 @@ fs_conf() {
 						;;
 					fat16|fat32|vfat)
 						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check fatresize
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
@@ -805,11 +816,17 @@ fs_conf() {
 							mount_check -a "$gv_WorkDir"
 						else
 							no_reduce_fs_msg "$FS"
+							return 1
 						fi
 						#}}}
 						;;
 					ntfs)
 						# NTFS Dateisystem vergroessern/verkleinern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check ntfsresize
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
@@ -832,6 +849,11 @@ fs_conf() {
 						;;
 					reiserfs)
 						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check resize_reiserfs
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
@@ -848,6 +870,11 @@ fs_conf() {
 						;;
 					*swap*)
 						# Swap verkleinern/vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check mkswap
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
@@ -868,6 +895,11 @@ fs_conf() {
 						;;
 					*ufs)
 						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check growfs.ufs
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							#################################
 							# Info: und bei Sectorsize 4096?
@@ -879,11 +911,17 @@ fs_conf() {
 								progressbox $gv_Enlarge $DEV || prog_failure
 						else
 							no_reduce_fs_msg "$FS"
+							return 1
 						fi
 						#}}}
 						;;
 					xfs*)
 						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						# Auf ausfuehrbares Programm pruefen
+						prog_check xfs_growfs
+						if [ -n "$NO_PROGS" ] ; then
+							return 1
+						fi
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
 							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
@@ -902,6 +940,7 @@ fs_conf() {
 							mount_check -a "$gv_WorkDir"
 						else
 							no_reduce_fs_msg "$FS"
+							return 1
 						fi
 						#}}}
 						;;
@@ -909,24 +948,29 @@ fs_conf() {
 						# LVM muss extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein LVM und muss extra bearbeitet werden. Starten Sie bitte das Script kwlvm, um das Dateisystem anzupassen.')
 						msgbox "$gv_Info" "$MSG"
+						return 1
 						## }}}
 						;;
 					*_raid_*)
 						# RAID muss extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein SW-RAID und muss extra bearbeitet werden. Starten Sie bitte das Script kwraid, um das Dateisystem anzupassen.')
 						msgbox "$gv_Info" "$MSG"
+						return 1
 						## }}}
 						;;
 					*)
 						# Dieses FS wird noch nicht unterstuetzt
 						mount_check -a "$DEV"
 						no_fs_support_msg "$gv_Fs"
+						return 1
 						;;
 				esac
 			fi
 		else
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	## }}}
 ## }}}
