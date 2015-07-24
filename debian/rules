@@ -52,17 +52,10 @@ sbin_path=/usr/sbin
 bin_path=/usr/bin
 lintian_path=/usr/share/lintian/overrides
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	# Add here commands to configure the package.
-
-	touch configure-stamp
-
-
-build: build-stamp
-
-build-stamp: configure-stamp 
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
+build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
@@ -76,14 +69,14 @@ clean:
 	#debconf-updatepo --podir=debian/po/kwtools-net-narc
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
+	rm -f build-stamp
 
 	# Add here commands to clean up after the build process.
 	cd debian/po ; zsh update-and-compile clean
 
 	dh_clean
 
-install: build
+install:
 	dh_testdir
 	dh_testroot
 	dh_prep
@@ -91,7 +84,6 @@ install: build
 
 	# Add here commands to install the package into debian/kwtools-*.
 	
-
 	# kwtools-bin
 	cp -a kwadmin $(CURDIR)/debian/$(package-bin)$(exec_path)
 #	cp -a help/kwadmin/kw_conf_help help/kwadmin/utils_help \
@@ -444,5 +436,5 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
+binary: binary-arch binary-indep
 .PHONY: build clean binary-indep binary-arch binary install
