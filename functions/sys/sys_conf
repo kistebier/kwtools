@@ -4723,51 +4723,57 @@ is_value() {
 	# nichts - Device locken
 	#
 	lock() {
-		case $1 in
-			-r)	# lock loeschen
-				for i in $2 ; {
-					rm -f /var/tmp/${i##*/}.lock &>/dev/null
-				}
-				;;
-			-s)	# Script lock anlegen
-				# Wird das Script schon benutzt kommt eine Nachricht das das Script
-				# gerade benutzt wird und 2 Ebenen hoeher gesprungen, ohne Terminal
-				# wird das Script beendet.
-				for i in $2 ; {
-					if [ -e /var/tmp/${i##*/}.lock ] ; then
-						# Nachricht nur wenn ein Terminal offen ist anzeigen.
-						if [[ -n $gv_Terminal ]] ; then
-							MSG=$(gettext '$i wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
-							msgbox "$gv_Attention" "$MSG"
+		if [[ ${#argv} -ge 1 ]] ; then
+			local Opt
+			Opt="$1"
+			case $Opt in
+				-r)	# lock loeschen
+					for f in $2 ; {
+						rm -f /var/tmp/${f##*/}.lock &>/dev/null
+					}
+					;;
+				-s)	# Script lock anlegen
+					# Wird das Script schon benutzt kommt eine Nachricht das das Script
+					# gerade benutzt wird und 2 Ebenen hoeher gesprungen, ohne Terminal
+					# wird das Script beendet.
+					for f in $2 ; {
+						if [ -e /var/tmp/${f##*/}.lock ] ; then
+							# Nachricht nur wenn ein Terminal offen ist anzeigen.
+							if [[ -n $gv_Terminal ]] ; then
+								MSG=$(gettext '$f wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
+								msgbox "$gv_Attention" "$MSG"
+								break 2
+							else
+								print "$MSG"
+								exit 0
+							fi
+						else
+							create_file "/var/tmp/${f##*/}.lock"
+						fi
+					}
+					;;
+				*)	# Device lock anlegen
+					# Wird das Device schon benutzt kommt eine Nachricht das das Device
+					# gerade benutzt wird und 2 Ebenen hoeher gesprungen.
+					for f in $1 ; {
+						if [ -e /var/tmp/${f##*/}.lock ] ; then
+							MSG=$(gettext 'Das Device ($f) wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
+							# Nachricht nur wenn ein Terminal offen ist anzeigen.
+							if [[ -n $gv_Terminal ]] ; then
+								msgbox "$gv_Attention" "$MSG"
+							else
+								print "$MSG"
+							fi
 							break 2
 						else
-							print "$MSG"
-							exit 0
+							create_file "/var/tmp/${f##*/}.lock"
 						fi
-					else
-						create_file "/var/tmp/${i##*/}.lock"
-					fi
-				}
-				;;
-			*)	# Device lock anlegen
-				# Wird das Device schon benutzt kommt eine Nachricht das das Device
-				# gerade benutzt wird und 2 Ebenen hoeher gesprungen.
-				for i in $1 ; {
-					if [ -e /var/tmp/${i##*/}.lock ] ; then
-						MSG=$(gettext 'Das Device (${i}) wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
-						# Nachricht nur wenn ein Terminal offen ist anzeigen.
-						if [[ -n $gv_Terminal ]] ; then
-							msgbox "$gv_Attention" "$MSG"
-						else
-							print "$MSG"
-						fi
-						break 2
-					else
-						create_file "/var/tmp/${i##*/}.lock"
-					fi
-				}
-				;;
-		esac
+					}
+					;;
+			esac
+		else
+			no_para_msg $0
+		fi
 	}
 	#}}}
 	# Funktion (lo_setup), um nach freien loop Devices zu suchen,# {{{
@@ -5585,26 +5591,40 @@ is_value() {
 					gv_Auswahl="$(< ${DialogReDirect##*>} | tee ${gv_LogFile}$$)"
 					gv_Auswahl_Display="${gv_Auswahl//[[:cntrl:]]/ }"
 				fi
+				if [ "$BREAK" ] ; then
+					unset -- BREAK
+				fi
 				;;
 			1 | 255 )
+				local Cnt
 				if [ -n "$V_WERT" ] ; then
 					gv_Auswahl="$V_WERT"
+					if [ "$BREAK" ] ; then
+						unset -- BREAK
+					fi
 				else
 					gv_Auswahl=""
 					if [ "$BREAK" ] ; then
-						break $BREAK
+						Cnt="$BREAK"
 						unset -- BREAK
+						break $Cnt
 					fi
 				fi
 				;;
 			2)	# Hilfe
 				gv_Auswahl=$(< ${DialogReDirect##*>})
+				if [ "$BREAK" ] ; then
+					unset -- BREAK
+				fi
 				;;
 			3)	
 				# dialog Extra
 				# alle Tags muessen mit einem : enden.
 				Tmp=$(< ${DialogReDirect##*>})
 				gv_Auswahl="${Tmp##RENAMED }"
+				if [ "$BREAK" ] ; then
+					unset -- BREAK
+				fi
 				;;
 			4)	
 				######################################
@@ -5808,6 +5828,7 @@ search_fdisks() {
 	# Funktion (user_device_check), um Rechte des Devices/Datei, fuer User zu pruefen{{{
 	#
 	# usage: user_device_check "$DEVICE" RECHTE
+	# DEVICE - Device das ueberpruef werden soll.
 	# Rechte: r = Leserechte der Eigentuemer pruefen
 	#         w = Schreibrechte der Eigentuemer pruefen
 	#         x = Ausfuehrrechte der Eigentuemer pruefen
@@ -5827,6 +5848,8 @@ search_fdisks() {
 			# Rechte checken
 			# Funktion user_check{{{
 			#
+			# usage: user_check
+			#
 			user_check() {
 				# U = gehört dem aktuellen User
 				# N = Null_Glob
@@ -5845,12 +5868,13 @@ search_fdisks() {
 					}
 					if [ -z "`ls -dl "$SYS_DEV"($u_perm) 2>/dev/null`" ] ; then
 						msgbox "$gv_Attention" "$MSG"
-						break
+						return 1
 					fi
 				else
 					msgbox "$gv_Attention" "$MSG"
-					break
+					return 1
 				fi
+				return 0
 			}	
 			#}}}
 			#
@@ -5863,11 +5887,13 @@ search_fdisks() {
 							# Hat die eigene Gruppe keine angegebenen Rechte, wird geprueft
 							# ob der eingeloggte User diese hat
 							#
-							user_check
+							if ! user_check ; then
+								return 1
+							fi
 						else
 							if [ "$Group" != "`print ${(M)$(id -nG)[(r)$Group]}`" ] ; then
 								msgbox "$gv_Attention" "$MSG"
-								break
+								return 1
 							fi
 						fi
 					fi
@@ -5876,21 +5902,25 @@ search_fdisks() {
 					if [ "$UID" != 0 ] ; then
 						if [ ${$(ls -dl "$SYS_DEV"($PERM) 2>/dev/null)[3]} != "$USER" ] ; then
 							msgbox "$gv_Attention" "$MSG"
-							break
+							return 1
 						fi
 					fi
 					;;
 				[RWX]*)
 					if [ "$UID" != 0 ] ; then
 						if [ -z "`ls -dl "$SYS_DEV"($PERM) 2>/dev/null`" ] ; then
-							user_check
+							if ! user_check ; then
+								return 1
+							fi
 						fi
 					fi
 			esac
 		else
 			# falsche Parameter Anzahl oder falsches Device konfiguriert.
 			no_para_msg $0
+			return 1
 		fi
+		return 0
 	}
 	#}}}
 	# Funktion (user_group_check), um herauszufinden welche User, Gruppen und{{{
