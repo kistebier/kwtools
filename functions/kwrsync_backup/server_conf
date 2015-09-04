@@ -371,7 +371,10 @@ server_conf() {
 					if [ -n "$VERZ" ] ; then
 						dselect_check -c "$VERZ"
 						if [ -n "$VERZ" ] ; then
-							user_device_check "$VERZ" AIE
+							# Verzeichnis auf Rechte pruefen.
+							if ! user_device_check "$VERZ" AIE ; then
+								break
+							fi
 							DST="${VERZ#${BACKUP_PATH}/hourly.0/}/"
 							# Auf Dulplikate pruefen
 							if [ -n "$SCRIPT" -a "$Backup_Change" = no ] ; then

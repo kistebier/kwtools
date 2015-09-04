@@ -46,8 +46,12 @@ kwrsynctab_conf_choice() {
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						user_device_check "$VERZ" AE
-						S_VERZ="$VERZ"
+						# Verzeichnis auf Rechte pruefen.
+						if user_device_check "$VERZ" AE ; then
+							S_VERZ="$VERZ"
+						else
+							unset -- S_VERZ
+						fi
 					fi
 				fi
 				#}}}

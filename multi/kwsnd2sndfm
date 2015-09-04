@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 05.07.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
 #
 # Script: kwsnd2sndfm, konvertiert soundformate
-# Version: 0.0.12
+# Version: 0.0.13
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -161,8 +161,12 @@ while [ "$gv_Auswahl" ] ; do
 						if [ "$VERZ" ] ; then
 							dselect_check "$VERZ"
 							if [ "$VERZ" ] ; then
-								user_device_check "$VERZ" AIE
-								SND_DIR="$VERZ"
+								# Verzeichnis auf Rechte pruefen
+								if user_device_check "$VERZ" AIE ; then
+									SND_DIR="$VERZ"
+								else
+									unset -- SND_DIR
+								fi
 							else
 								unset -- SND_DIR
 							fi

@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
 #
 # Script: kwrip, rippt ganze Audio und Video CD's
 #
-# Version: 0.1.0
+# Version: 0.1.2
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -59,7 +59,7 @@ ENC_MSG=$(gettext 'und encodiere die Datei nach')
 
 # Funktion main_menu{{{
 #
-lv_Audio=$(gettext 'Audio')
+lv_Audio=$(gettext 'Audio-CD')
 lv_Video=$(gettext 'Video-CD')
 lv_Rip=$(gettext 'rippen')
 #
@@ -125,7 +125,7 @@ while [ "$gv_Auswahl" ] ; do
 						T_File="`print track${Nr}.cdda.*`"
 						T_Nr="${${T_File%%.*}#track}"
 						T_Suffix="${T_File##*.}"
-						# Die Titel in der $CD_INFO_FILE fangen bei 0
+						# Die Titel in der Variablen $CD_INFO_FILE fangen bei 0
 						# an zu zaehlen und nicht bei 1.
 						Int="${T_Nr#0}"
 						(( Int-- ))
@@ -425,17 +425,17 @@ while [ "$gv_Auswahl" ] ; do
 				if [ -n "$FM_PROG" -a "$FM_PROG" = lame ] ; then
 					ENC_SUFFIX=mp3
 					#ENC_SUFFIX_MSG="$ENC_MSG $ENC_SUFFIX"
-					if [ -n "$ENC_OPT" ] ; then
+					if [ -n "$LAME_ENC_OPT" ] ; then
 						ENCODE_OPT="$LAME_ENC_OPT -"
 						ENCODE_PROG="$FM_PROG"
 					else
-						ENCODE_OPT="--r3mix -b112 -"
+						ENCODE_OPT="-r3mix -b112 -"
 						ENCODE_PROG="$FM_PROG"
 					fi
 				elif [ -n "$FM_PROG" -a "$FM_PROG" = oggenc ] ; then
 					ENC_SUFFIX=ogg
 					#ENC_SUFFIX_MSG="$ENC_MSG $ENC_SUFFIX"
-					if [ -n "$ENC_OPT" ] ; then
+					if [ -n "$OGG_ENC_OPT" ] ; then
 						ENCODE_OPT="$OGG_ENC_OPT - -o"
 						ENCODE_PROG="$FM_PROG"
 					else
@@ -453,7 +453,9 @@ while [ "$gv_Auswahl" ] ; do
 				prog_check cdparanoia
 				if [ -n "$PROGS" ] ; then
 					# CD Device auf Leserechte pruefen
-					user_device_check $READ_DEVICE A
+					if ! user_device_check $READ_DEVICE A ; then
+						break
+					fi
 					# Geraet fuer andere user sperren
 					DEVICES="$READ_DEVICE"
 					lock $DEVICES
@@ -540,14 +542,14 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			exec_vcdxrip () {
 				PROG=vcdxrip
-				user_device_check $READ_DEVICE A
 				# Device locken und Programm ausfuehren
 				DEVICES="$READ_DEVICE"
 				lock $DEVICES
 				# ausfuehren
 				VCD_MSG=$(gettext 'Rippe: Video-CD $VCD_NAME')
 				$PROG -p -o ${VCD_NAME}.xml --cdrom-device=${READ_DEVICE} | \
-				progressbox "$V_TITLE" "$VCD_MSG" || prog_failure
+					progressbox "$V_TITLE" "$VCD_MSG" || \
+					(print ; lock -r $DEVICE ; prog_failure)
 				lock -r $DEVICES
 				#
 				# Video umbenennen und die *xml Datei loeschen.
@@ -564,6 +566,10 @@ while [ "$gv_Auswahl" ] ; do
 			}
 			## }}}
 			if [ "$READ_DEVICE" ] ; then
+				# Laufwerk auf Leserechte pruefen.
+				if ! user_device_check $READ_DEVICE A ; then
+					break
+				fi
 				prog_check vcd-info
 				if [ -n "$PROGS" ] ; then
 					if vcd-info -P -C $READ_DEVICE &>/dev/null ; then

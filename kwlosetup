@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
 #
 # Script: kwlosetup, verschluesselt Partitionen oder ganze Laufwerke
-# Version: 0.1.14
+# Version: 0.1.15
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -379,8 +379,12 @@ while [ "$gv_Auswahl" ] ; do
 						if [ "$VERZ" ] ; then
 							dselect_check -c "$VERZ"
 							if [ "$VERZ" ] ; then
-								user_device_check "$VERZ" RX
-								KEY_FILE_PATH="$VERZ"
+								# Verzeichnis auf Rechte pruefen
+								if user_device_check "$VERZ" RX ; then
+									KEY_FILE_PATH="$VERZ"
+								else
+									unset -- KEY_FILE_PATH
+								fi
 							else
 								unset -- KEY_FILE_PATH
 							fi

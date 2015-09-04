@@ -24,7 +24,7 @@ kwrip_conf() {
 	lv_Video_Dir=$(gettext 'Videoverz.')
 # Funktion konf_menue{{{
 konf_menue() {
-	CONF_MENU=($lv_Audio_Opt \"$AUDIO_OPTIONS\"
+	CONF_MENU=($lv_Audio_Opt \"${(qq)AUDIO_OPTIONS}\"
 	$lv_Audio_Mountdir \"$AUDIO_MOUNT_PATH\"
 	$lv_Audio_Dir \"$AUDIO_DIR\"
 	$lv_Cddb_Use \"$CDDB\"
@@ -34,8 +34,8 @@ konf_menue() {
 	$lv_Proxy \"$PROXY\"
 	$lv_Encoder_Use \"$ENCODE\"
 	$lv_Encoder_Prog \"$FM_PROG\"
-	$lv_Lame_Enc_Opt \"$LAME_ENC_OPT\"
-	$lv_Ogg_Enc_Opt \"$OGG_ENC_OPT\"
+	$lv_Lame_Enc_Opt \"${(qq)LAME_ENC_OPT}\"
+	$lv_Ogg_Enc_Opt \"${(qq)OGG_ENC_OPT}\"
 	$lv_Video_Mountdir \"$VIDEO_MOUNT_PATH\"
 	$lv_Video_Dir \"$VIDEO_DIR\"
 	$gv_Save \"\" $gv_Back \"\")
@@ -78,9 +78,15 @@ while [ "$gv_Auswahl" ] ; do
 			dselect "$AUDIO_DIR"
 			if [ "$VERZ" ] ; then
 				dselect_check -c "$VERZ"
-				if [ "$VERZ" ] ; then
-					user_device_check "$VERZ" AIE
-					AUDIO_DIR="$VERZ"
+				if [-n  "$VERZ" ] ; then
+					# Verzeichnis auf Rechte pruefen.
+					if user_device_check "$VERZ" AIE ; then
+						AUDIO_DIR="$VERZ"
+					else
+						AUDIO_DIR=""
+					fi
+				else
+					AUDIO_DIR=""
 				fi
 			else
 				AUDIO_DIR=""
@@ -126,8 +132,12 @@ while [ "$gv_Auswahl" ] ; do
 						HELP*)	script_help share/cdrom_help
 							menubox "${gv_Auswahl#HELP }" "$READ_TITLE" "$READ_MSG" "$READ_CD_MENU"
 							;;
-						*)	user_device_check $gv_Auswahl A
-							READ_DEVICE="$gv_Auswahl"
+						*)	# Laufwerk auf Leserechte pruefen
+							if user_device_check $gv_Auswahl A ; then
+								READ_DEVICE="$gv_Auswahl"
+							else
+								unset -- READ_DEVICE
+							fi
 							break
 							;;
 					esac
@@ -262,8 +272,14 @@ while [ "$gv_Auswahl" ] ; do
 			if [ "$VERZ" ] ; then
 				dselect_check -c "$VERZ"
 				if [ "$VERZ" ] ; then
-					user_device_check "$VERZ" AIE
-					VIDEO_DIR="$VERZ"
+					# Verzeichnis auf Rechte pruefen.
+					if user_device_check "$VERZ" AIE ; then
+						VIDEO_DIR="$VERZ"
+					else
+						VIDEO_DIR=""
+					fi
+				else
+					VIDEO_DIR=""
 				fi
 			else
 				VIDEO_DIR=""

@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2015
 #
 # Script: kwrecord, ein Script um verschiedene Sachen
 # auf CD-R(W) und DVD-+R(W)/RAM zu brennen.
 #
-# Version: 0.1.30
+# Version: 1.0.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -75,12 +75,10 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Configuration)
 			# CD/CD-R(W)/DVD/DVD-+R(W) konfigurieren# {{{
-			read_file cd_dvdrc
 			autoload -U kwrecord_conf
 			kwrecord_conf
 			## }}}
 			main_menu $gv_Configuration
-			#
 			;;
 		$gv_Audio_Cd)
 			# Audio CDs brennen# {{{
@@ -249,12 +247,12 @@ while [ "$gv_Auswahl" ] ; do
 					done
 				}
 				## }}}
-				device_convert -i "$WRITE_DEVICE"
 				cd_dvd_conf -W
-				check_cd_state "$WRITE_DEVICE"
-				if [ "$CD_RW" = yes -a "$CD_CAP" != 00:00:00 ] ; then
-					if [ "$CD_R_EMPTY" = yes ] ; then
-						MSG=$(gettext 'Diese CDRW ist schon leer. Fortfahren (ja/nein)?')
+				device_convert -i "$WRITE_DEVICE"
+				check_cd_state "$CDROM"
+				if [[ $CD_RW == yes ]] ; then
+					if [[ $CD_R_EMPTY == yes ]] ; then
+						MSG=$(gettext 'Diese CD+-RW ist schon leer. Fortfahren (ja/nein)?')
 						yesno "$gv_Info" "$MSG" "no"
 						if [ "$gv_Auswahl" = yes ] ; then
 							del_cd
@@ -295,9 +293,9 @@ while [ "$gv_Auswahl" ] ; do
 				eject -t $CDROM &>/dev/null && sleep 1
 				# Staus der DVD pruefen
 				check_dvd_state "$CDROM"
-				case "$DVD_RW" in
+				case "$DVD_MEDIUM" in
 					DVD?RW | DVDRAM)
-						if [ "${DVD_LEGACY#*=}" = "${DVD_CAP#*=}" -o "$DVD_R" = blank  ] ; then
+						if [[ $DVD_STATUS == blank  ]] ; then
 							MSG=$(gettext 'Diese DVD-+RW/RAM ist schon leer. Fortfahren (ja/nein)?')
 							yesno "$gv_Info" "$MSG" "no"
 							if [ "$gv_Auswahl" = yes ] ; then

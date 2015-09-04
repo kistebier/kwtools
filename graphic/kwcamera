@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 03.05.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
 #
 # Script: kwcamera, zum einstellen, downloaden, löschen von Bildern in Digital Kameras.
-# Version: 0.1.0
+# Version: 0.1.1
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -165,8 +165,14 @@ while [ "$gv_Auswahl" ] ; do
 							# Verzeichnis checken, oder nachfragen, ob es angelegt werden soll
 							dselect_check -c "$VERZ"
 							if [ "$VERZ" ] ; then
-								user_device_check "$VERZ" AIE
-								IMAGE_DIR="$VERZ"
+								# Verzeichnis auf Rechte pruefen
+								if user_device_check "$VERZ" AIE ; then
+									IMAGE_DIR="$VERZ"
+								else
+									IMAGE_DIR=""
+								fi
+							else
+								IMAGE_DIR=""
 							fi
 						fi	
 						## }}}

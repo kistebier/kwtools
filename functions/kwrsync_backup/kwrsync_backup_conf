@@ -75,8 +75,12 @@ kwrsync_backup_conf() {
 				if [ "$VERZ" ] ; then
 					dselect_check -c "$VERZ"
 					if [ "$VERZ" ] ; then
-						user_device_check "$VERZ" AIE
-						BACKUP_PATH="$VERZ"
+						# Verzeichnis auf Rechte pruefen.
+						if user_device_check "$VERZ" AIE ; then
+							BACKUP_PATH="$VERZ"
+						else
+							unset -- BACKUP_PATH
+						fi
 					fi
 				fi
 				BACKUP_PATH="${BACKUP_PATH:-/var/cache/${gv_ScriptName}}"

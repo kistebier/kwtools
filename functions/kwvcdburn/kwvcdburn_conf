@@ -35,8 +35,12 @@ kwvcdburn_conf() {
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ "$VERZ" ] ; then
-						user_device_check "$VERZ" AIE
-						FILM_DIR="$VERZ"
+						# Verzeichnis auf Rechte pruefen.
+						if user_device_check "$VERZ" AIE ; then
+							FILM_DIR="$VERZ"
+						else
+							FILM_DIR=""
+						fi
 					else
 						FILM_DIR=""
 					fi

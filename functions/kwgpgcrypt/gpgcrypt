@@ -122,7 +122,10 @@ gpgcrypt_action() {
 	if [ "$VERZ" ] ; then
 		dselect_check "$VERZ"
 		if [ -n "$VERZ" ] ; then
-			user_device_check "$VERZ" AIE
+			# Verzeichnisse auf Rechte pruefen.
+			if !  user_device_check "$VERZ" AIE ; then
+				return 1
+			fi
 			cd "$VERZ"
 			PROG=gpg
 			case $ACTION in
@@ -145,6 +148,7 @@ gpgcrypt_action() {
 	else
 		no_input_msg
 	fi
+	return 0
 }
 #}}}
 ### Modeline {{{

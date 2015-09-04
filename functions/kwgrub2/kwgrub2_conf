@@ -665,7 +665,10 @@ kwgrub2_conf() {
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						user_device_check "$VERZ" AE
+						# Verzeichnis auf Rechte pruefen
+						if ! user_device_check "$VERZ" AE ; then
+							break
+						fi
 						cd "$VERZ"
 						# Dateien mit folgendem Suffix ausnehmen
 						A_SUFFIX=".jpeg .JPEG .jpg .JPG .png .PNG .tga .TGA"
@@ -716,7 +719,10 @@ kwgrub2_conf() {
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						user_device_check "$VERZ" AE
+						# Verzeichnis auf Rechte pruefen
+						if ! user_device_check "$VERZ" AE ; then
+							break
+						fi
 						cd "$VERZ"
 						# Dateien mit folgendem Suffix ausnehmen
 						A_SUFFIX=".jpeg .JPEG .jpg .JPG .png .PNG .tga .TGA"
