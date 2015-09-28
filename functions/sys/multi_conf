@@ -31,22 +31,6 @@ multi_conf() {
 	CD_DEL_MSG=$(gettext 'Loesche CD+-RW.')
 	ISO_TITLE=$(gettext 'ISO Abbild')
 
-	# Funktion (burn_var) variable Variablen# {{{
-	#
-	burn_var() {
-		CDRDAO_TOC="${TMP_DIR:-/var/tmp}/cdrdao.toc"
-		CREATE_ISO_MSG=$(gettext 'erstelle iso9660 Dateisystem (${TMP_DIR%/}/${VOLID// /_}.iso).')
-		BURN_CD_PROGRESS_MSG=$(gettext 'brenne CD.')
-		BURN_CD_PROGRESS1_MSG=$(gettext 'brenne kopierte CD: ${TMP_DIR}/${VOLID// /_}.img.')
-		COPY_CD_PROGRESS_MSG=$(gettext 'kopiere CD.')
-		COPY_CD_PROGRESS1_MSG=$(gettext 'kopiere CD: --> ${TMP_DIR}/${VOLID// /_}.img.')
-		BURN_DVD_PROGRESS_MSG=$(gettext 'brenne DVD.')
-		BURN_DVD_PROGRESS1_MSG=$(gettext 'brenne kopierte DVD: ${TMP_DIR}/${VOLID// /_}.img.')
-		COPY_DVD_PROGRESS_MSG=$(gettext 'kopiere DVD.')
-		COPY_DVD_PROGRESS1_MSG=$(gettext 'kopiere DVD: --> ${TMP_DIR}/${VOLID// /_}.img.')
-		FILE_CHOICE_MSG=$(gettext 'Waehlen Sie eine oder mehrere Dateien aus.')
-	}
-	## }}}
 	# Funktion (audio_burn), um Audio Datei zu brennen{{{
 	#
 	# Es werden nur Audio Dateien zum Brennen zur Verfuegung gestellt.
@@ -698,6 +682,22 @@ multi_conf() {
 		return 0
 	}
 	## }}}
+	# Funktion (burn_var) variable Variablen# {{{
+	#
+	burn_var() {
+		CDRDAO_TOC="${TMP_DIR:-/var/tmp}/cdrdao.toc"
+		CREATE_ISO_MSG=$(gettext 'erstelle iso9660 Dateisystem (${TMP_DIR%/}/${VOLID// /_}.iso).')
+		BURN_CD_PROGRESS_MSG=$(gettext 'brenne CD.')
+		BURN_CD_PROGRESS1_MSG=$(gettext 'brenne kopierte CD: ${TMP_DIR}/${VOLID// /_}.img.')
+		COPY_CD_PROGRESS_MSG=$(gettext 'kopiere CD.')
+		COPY_CD_PROGRESS1_MSG=$(gettext 'kopiere CD: --> ${TMP_DIR}/${VOLID// /_}.img.')
+		BURN_DVD_PROGRESS_MSG=$(gettext 'brenne DVD.')
+		BURN_DVD_PROGRESS1_MSG=$(gettext 'brenne kopierte DVD: ${TMP_DIR}/${VOLID// /_}.img.')
+		COPY_DVD_PROGRESS_MSG=$(gettext 'kopiere DVD.')
+		COPY_DVD_PROGRESS1_MSG=$(gettext 'kopiere DVD: --> ${TMP_DIR}/${VOLID// /_}.img.')
+		FILE_CHOICE_MSG=$(gettext 'Waehlen Sie eine oder mehrere Dateien aus.')
+	}
+	## }}}
 	# Funktion (cd_dvd_burn), um CD/DVD's zu brennen# {{{
 	#
 	# usage:
@@ -717,7 +717,7 @@ multi_conf() {
 	        TMP_DIR="/var/tmp"
 	    fi
 		# Auf benoetigte Programme pruefen
-		prog_check cdrdao dvd+rw-mediainfo genisoimage growisofs
+		prog_check cdrdao dvd+rw-mediainfo genisoimage growisofs wodim
 		if [ -n "$NO_PROGS" ] ; then
 			return 1
 		fi
@@ -937,7 +937,7 @@ multi_conf() {
 	## }}}
 	# Funktion (cd_dvd_conf), Brenneinstellung{{{
 	#
-	# usage: cd_dvd_conf [ -a | -R | -W ]
+	# usage: cd_dvd_conf -a | -R | -W
 	# -a - alles konfigurieren.
 	# -R - nur Leselaufwerk konigurieren.
 	# -W - nur was zum brennen benoetigt wird konfigurieren.
@@ -957,22 +957,22 @@ multi_conf() {
 					# Lesedevice
 					if [ -z "$READ_DEVICE" ] ; then
 						cd_dvd_device
-						check_read_device "$DEVICE"
+						check_read_device $DEVICE
 					fi
 					# Brenndevice
 					if [ -z "$WRITE_DEVICE" ] ; then
 						cd_dvd_device
-						check_write_device "$DEVICE"
+						check_write_device $DEVICE
 					fi
 					# Leselaufwerkstreiber
 					if [ -z "$CD_SOURCE_DRIVER" ] ; then
 						device_driver
-						check_source_driver "$DRIVER"
+						check_source_driver $DRIVER
 					fi		
 					# Brenner Laufwerkstreiber
 					if [ -z "$CD_WRITE_DRIVER" ] ; then
 						device_driver
-						check_write_driver "$DRIVER"
+						check_write_driver $DRIVER
 					fi		
 					#}}}
 					;;
@@ -981,7 +981,7 @@ multi_conf() {
 					#
 					if [ -z "$READ_DEVICE" ] ; then
 						cd_dvd_device
-						check_read_device "$DEVICE"
+						check_read_device $DEVICE
 					fi
 					#}}}
 					;;
@@ -992,12 +992,12 @@ multi_conf() {
 					# Schreib-Geraet
 					if [ -z "$WRITE_DEVICE" ] ; then
 						cd_dvd_device
-						check_write_device "$DEVICE"
+						check_write_device $DEVICE
 					fi
 					# CD-Treiber
 					if [ -z "$CD_WRITE_DRIVER" ] ; then
 						device_driver
-						check_write_driver "$DRIVER"
+						check_write_driver $DRIVER
 					fi		
 					#}}}
 					;;
@@ -1246,7 +1246,7 @@ EJECT=\"$EJECT\"
 	#
 	# usage: check_exec_dd DEVICE SIZE
 	# DEVICE - Laufwerk von welchem kopiert werden soll
-	# SIZE - Grosse die kopiert werden soll in Bytes/2048
+	# SIZE - Groesse in Blocks die kopiert werden soll in 1 Block = 2048 Bytes.
 	#
 	check_exec_dd() {
 	if [[ ${#argv} == 2 ]] ; then
@@ -1417,6 +1417,10 @@ EJECT=\"$EJECT\"
 	}
 	## }}}
 	# Funktion (check_read_device){{{
+	#
+	# usage: check_read_device DEVICE
+	# DEVICE - CD/DVD Laufwerk
+	#
 	check_read_device() {
 		if [[ ${#argv} == 1 ]] ; then
 			READ_DEVICE="$1"
@@ -1430,14 +1434,14 @@ EJECT=\"$EJECT\"
 	# Funktion (check_simulate), auf Simulieren pruefen{{{
 	#
 	# usage: check_simulate PROG
-	# PROG - cdrdao/growisofs
+	# PROG - cdrdao/growisofs/wodim
 	#
 	check_simulate() {
 		if [[ ${#argv} == 1 ]] ; then
 			local Prog
 			Prog="$1"
 			case $Prog in
-				cdrdao)
+				cdrdao|wodim)
 					if [ "$SIMULATE" = yes ] ; then
 						WRITE="simulate"
 						COPY="copy --simulate"
@@ -1513,7 +1517,7 @@ EJECT=\"$EJECT\"
 	#}}}
 	# Funktion (check_symlink), pruefen wie mit einem Symlink umgegangen werden soll# {{{
 	#
-	# usage: check_symlink SYMLINK
+	# usage: check_symlink SYMLINKS
 	# SYMLINK - Symlink der bearbeitet werden soll
 	#
 	check_symlink() {
@@ -1543,38 +1547,6 @@ EJECT=\"$EJECT\"
 		fi
 	}
 	## }}}
-	# Funktion (check_write_device){{{
-	check_write_device() {
-		if [[ ${#argv} == 1 ]] ; then
-			WRITE_DEVICE="$1"
-		else
-			no_para_msg $0
-			return 1
-		fi
-		return 0
-	}
-	#}}}
-	# Funktion (check_write_driver){{{
-	#
-	check_write_driver() {
-		if [[ ${#argv} == 1 ]] ; then
-			CD_WRITE_DRIVER="$1"
-		else
-			case "$CD_PROG" in
-				cdrdao)
-					# Standard cdrdao CD/DVD Treiber
-					CD_WRITE_DRIVER=generic-mmc
-					no_input_msg
-					;;
-				wodim)
-					# Standard wodim CD/DVD Treiber
-					CD_WRITE_DRIVER=mmc_cd_dvd
-					no_input_msg
-					;;
-			esac
-		fi
-	}
-	#}}}
 	# Funktion (check_write_cd), CD Rohling pruefen.# {{{
 	#
 	# usage: check_write_dvd DEVICE SIZE
@@ -1658,6 +1630,42 @@ EJECT=\"$EJECT\"
 		return 0
 	}
 	## }}}
+	# Funktion (check_write_device){{{
+	#
+	# usage: check_write_device DEVICE
+	# DEVICE - CD/DVD Laufwerk
+	#
+	check_write_device() {
+		if [[ ${#argv} == 1 ]] ; then
+			WRITE_DEVICE="$1"
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	#}}}
+	# Funktion (check_write_driver){{{
+	#
+	check_write_driver() {
+		if [[ ${#argv} == 1 ]] ; then
+			CD_WRITE_DRIVER="$1"
+		else
+			case "$CD_PROG" in
+				cdrdao)
+					# Standard cdrdao CD/DVD Treiber
+					CD_WRITE_DRIVER=generic-mmc
+					no_input_msg
+					;;
+				wodim)
+					# Standard wodim CD/DVD Treiber
+					CD_WRITE_DRIVER=mmc_cd_dvd
+					no_input_msg
+					;;
+			esac
+		fi
+	}
+	#}}}
 	# Funktion (check_write_dvd), DVD/BD Rohling pruefen.# {{{
 	#
 	# usage: check_write_dvd DEVICE SIZE
@@ -1693,7 +1701,7 @@ EJECT=\"$EJECT\"
 					# Groessen pruefen Dev_Size und DVD/BD Rohling
 				if [[ $Data_Size -ge $DVD_IS_CAP ]] ; then
 					# Datengroesse überschreitet die Mediumgroesse
-					over_dvd_size_msg "$Data_Size" "$DVD_LEGACY_SIZE"
+					over_dvd_size_msg "$Data_Size" "$DVD_IS_CAP"
 					cp -a ${gv_WorkDir}/filelist "$IST_FILE" &>/dev/null
 					unset -- $Unset
 					return 1
@@ -1959,7 +1967,7 @@ EJECT=\"$EJECT\"
 						if [ "$R_DVD" = "$W_DVD" ] ; then
 							# dvd checken ob was drauf ist
 							check_dvd_state "$R_DVD"
-							if [ "$DVD_LEGACY_SIZE" -ge "$DVD_IS_CAP" -a "$DVD_IS_CAP" -gt 0 ] ; then
+							if [ "$DVD_IS_CAP" -gt 0 ] ; then
 								# vorhandenen und benoetigten DVD Platz berechnen.
 								if ! check_size_to_dir "$DVD_IS_CAP" "$TMP_DIR" ; then
 									return 1
@@ -2034,7 +2042,7 @@ EJECT=\"$EJECT\"
 							# Brennen mit mehreren Laufwerken.# {{{
 							# dvd checken ob was drauf ist.
 							check_dvd_state "$R_DVD"
-							if [ "$DVD_LEGACY_SIZE" -ge "$DVD_IS_CAP" -a "$DVD_IS_CAP" -gt 0 ] ; then
+							if [ "$DVD_IS_CAP" -gt 0 ] ; then
 								# Variablenwerte sichern
 								Dvd_Size="$BLOCK_SIZE"
 								# Nachdem erstellen des Image ist alles
@@ -2142,10 +2150,6 @@ EJECT=\"$EJECT\"
 	# Funktion (create_image), iso9660 image erstellen{{{
 	#
 	# Erzeugen des ISO9660 Dateisystem Image.
-	#
-	# usage: create_image CD_PROG DEVICE
-	# CD_PROG - CD Brennprogramm
-	# DEVICE - Brenner Laufwerk
 	#
 	# usage: create_image
 	#
@@ -3118,15 +3122,25 @@ split_size() {
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
-	# Funktion (no_data_medium_msg), Rohling ist leer# {{{
-	no_data_medium_msg() {
-		MSG=$(gettext 'Sie muessen ein Medium mit Daten einlegen.')
+	# Funktion (no_burn_device_msg), kein Brenn-Laufwerk ausgewahlt# {{{
+	no_burn_device_msg() {
+		MSG=$(gettext 'Sie muessen ein Brennlaufwerk auswaehlen. Es wird abgebrochen.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
-	# Funktion (no_burn_device_msg), kein Brenn-Laufwerk ausgewahlt# {{{
-	no_burn_device_msg() {
-		MSG=$(gettext 'Sie muessen ein Brenn-Laufwerk auswaehlen. Es wird abgebrochen.')
+	# function (no_cddvd_prog_msg), kein Brennprogramm konfiguriert{{{
+	# Wird vom Script kwrecord benoetigt.
+	#
+	# usage: no_cddvd_prog_msg
+	#
+	no_cddvd_prog_msg() {
+		MSG=$(gettext 'Sie muessen erst ein Brennprogramm (CD/DVD/BD) mit kwrecord konfigurieren. Es werden zur Zeit nur cdrdao und growisofs unterstuetzt.')
+		msgbox "$gv_Attention" "$MSG"
+	}
+	#}}}
+	# Funktion (no_data_medium_msg), Rohling ist leer# {{{
+	no_data_medium_msg() {
+		MSG=$(gettext 'Sie muessen ein Medium mit Daten einlegen.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -3134,8 +3148,8 @@ split_size() {
 	# Groesse uebersteigt.
 	#
 	# usage: over_cd_size_msg CHOICE_SIZE MEDIUM_SIZE
-	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in KByte.
-	# MEDIUM_SIZE - Groesse des Medium in KByte
+	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in Byte.
+	# MEDIUM_SIZE - Groesse des Medium in Byte
 	#
 	over_cd_size_msg() {
 		if [[ ${#argv} == 2 ]] ; then
@@ -3155,8 +3169,8 @@ split_size() {
 	# Groesse uebersteigt.
 	#
 	# usage: over_dvd_size_msg CHOICE_SIZE MEDIUM_SIZE
-	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in KByte.
-	# MEDIUM_SIZE - Groesse des Medium in KByte
+	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in Byte.
+	# MEDIUM_SIZE - Groesse des Medium in Byte
 	#
 	over_dvd_size_msg() {
 		if [[ ${#argv} == 2 ]] ; then
@@ -3177,30 +3191,20 @@ split_size() {
 	#
 	# usage: over_tmp_size_msg CHOICE_SIZE TMP_SIZE
 	# CHOICE_SIZE - Ausgewaehlte Groesse der Dateien/Verzeichnissen in Byte.
-	# TMP_SIZE - Groesse des temporaeren Verzeichnisses in Byte.
+	# TMP_SIZE - Groesse des temporaeren Verzeichnis in Byte.
 	#
 	over_tmp_size_msg() {
 		if [[ ${#argv} == 2 ]] ; then
 			unset -- Size Size1
 			local Size Size1
-			(( Size = $1 / 1024 ))
-			(( Size1 = $2 / 1024 ))
+			Size=$1
+			Size1=$2
 			convert_over_size $Size $Size1
 		    MSG=$(gettext 'Die Groesse der Auswahl ($DATA_SIZE) ueberschreitet die Groesse ($IS_SIZE) des temporaeren Verzeichnisses.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
 		fi
-	}
-	#}}}
-	# function (no_cddvd_prog_msg), kein Brennprogramm konfiguriert{{{
-	# Wird vom Script kwrecord benoetigt.
-	#
-	# usage: no_cddvd_prog_msg
-	#
-	no_cddvd_prog_msg() {
-		MSG=$(gettext 'Sie muessen erst ein Brennprogramm (CD/DVD) mit kwrecord konfigurieren. Es werden zur Zeit nur cdrdao und growisofs unterstuetzt.')
-		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
 ## }}}
