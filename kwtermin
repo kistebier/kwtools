@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 28.02.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 30.09.2015
 #
 # Script: kwtermin, zum anzeigen, verändern und löschen von Terminen.
-# Version: 0.1.4
+# Version: 0.1.5
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -80,22 +80,23 @@ create_file $TerminFile
 #
 # usage: cal_view_check
 cal_view_check() {
+	unset -- CAL_VIEW_NR
 	if [ "$1" = -c ] ; then
-		if [ -z "$CAL_VIEW" ] ; then
-			CAL_VIEW="7"
+		if [ -z "$CAL_VIEW_NR" -a -z "$CAL_VIEW" ] ; then
+			CAL_VIEW_NR="7"
 		else
 			case "$CAL_VIEW" in
 				"0 days")
-					CAL_VIEW="0"
+					CAL_VIEW_NR="0"
 					;;
 				"1 weeks")
-					CAL_VIEW="6"
+					CAL_VIEW_NR="6"
 					;;
 				"1 months")
-					CAL_VIEW="30"
+					CAL_VIEW_NR="30"
 					;;
 				"1 years")
-					CAL_VIEW="364"
+					CAL_VIEW_NR="364"
 					;;
 			esac
 		fi
@@ -191,7 +192,7 @@ while [ "$gv_Auswahl" ] ; do
 						# IFS=Return
 						IFS=$'\r'
 						#
-						read -A TerminListe <<< "`grep -v "^#" $TerminFile | tr "\n" "$IFS"`"
+						read -A TerminListe <<< "`grep --binary-files text -v "^#" $TerminFile | tr "\n" "$IFS"`"
 						# IFS=Tab
 						IFS=$'\t'
 						Anz=1
@@ -435,11 +436,11 @@ while [ "$gv_Auswahl" ] ; do
 							# fixed Kalenderdaten anzeigen.
 							DATEI="$gv_Auswahl"
 							cal_view_check -c
-							calendar -t today -A $CAL_VIEW -f $DATEI >$gv_LogFile
+							calendar -t today -A $CAL_VIEW_NR -f $DATEI >$gv_LogFile
 							if [ `wc -l <"$gv_LogFile"` -gt 0 ] ; then
 								view_file "$gv_LogFile"
 							else
-								MSG=$(gettext 'Es sind keine Kalenderdaten fuer die naechsten $CAL_VIEW Tage vorhanden.')
+								MSG=$(gettext 'Es sind keine Kalenderdaten fuer die naechsten $CAL_VIEW_NR Tage vorhanden.')
 								msgbox "$gv_Attention" "$MSG"
 							fi
 							menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
