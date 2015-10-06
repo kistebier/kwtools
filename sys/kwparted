@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 30.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.10.2015
 #
 # Script: kwparted, ein frontend fuer parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
 # Es fehlt die Unterstuetzung zum kopieren der Dateisysteme hfs* und jfs.
 # ++++++++++++++++++++++++++++++
 #
-# Version: 0.3.0
+# Version: 0.3.1
 
 # ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da auf einigen OS
@@ -95,7 +95,7 @@ search_disk() {
 #
 search_pflags() {
 	unset -- PFLAGS
-	PFLAGS=${${(M)${(f)"$(parted -s ${DISK_DEV[1]} help set)"}##*FLAG is one of:*}##*:}
+	PFLAGS=${${(M)${(f)"$(export LC_ALL=C ; parted -s ${DISK_DEV[1]} help set)"}##*FLAG is one of:*}##*:}
 }
 ## }}}
 # Funktion (disk_cap), zur Festplatte die richtige gesamt# {{{
