@@ -29,34 +29,23 @@ pv_vgi_auswahl() {
 	#
 	# Prüfen, welche PV's schon zu VG's gehören und aussortieren.
 	#
-	# Links zu Device umwandeln.
-	pvscan --short 2>/dev/null >${gv_WorkDir}/pvscan
-	while read a ; do
-		case $a in
-			/dev*)
-				Dev=$(readlink -f $a)
-				if [ -f ${gv_WorkDir}/pvscan1 ] ; then
-					>> ${gv_WorkDir}/pvscan1 <<< "$Dev"
-				else
-					> ${gv_WorkDir}/pvscan1 <<< "$Dev"
-				fi
-				;;
-		esac
-	done < ${gv_WorkDir}/pvscan
-	#
+	pvscan 2>/dev/null >${gv_WorkDir}/pvscan
 	for i in ${=Pv_Parts} ; {
-		if [ -z "`print ${${(s: :)${(M)${(f)"$(pvdisplay $i 2>/dev/null)"}##*(VG Name)*}}[3]}`" ] ; then
-			# Pruefen ob es eine PV Laufwerk ist.
-			
-			if [ "${(M)$(< ${gv_WorkDir}/pvscan1)##*$i*}" ] ; then
-				PV_PARTS_M+=($i \"Linux LVM\" off)
-			else
-				PV_PARTS_NO_PV_M+=($i \"Linux LVM\" off)
-			fi
+		# Pruefen ob es eine PV Laufwerk ist.
+		if [ "${(M)${(f)"$(< ${gv_WorkDir}/pvscan)"}##*$i*}" ] ; then
+			print ${(M)${(f)"$(< ${gv_WorkDir}/pvscan)"}##*$i*} | \
+			while read pv dev vg rest ; do
+				if [[ $vg != VG ]] ; then
+					Lvm_Type="${${${${vg#* }%% \[*}%%*\]}## *}"
+					PV_PARTS_M+=($i \"$Lvm_Type\" off)
+				fi
+			done
+		else
+			PV_PARTS_NO_PV_M+=($i \"Linux LVM\" off)
 		fi
 	}
 	#
-	rm -f ${gv_WorkDir}/pvscan1 &>/dev/null
+	rm -f ${gv_WorkDir}/pvscan &>/dev/null
 }
 #}}}
 ### Modeline {{{

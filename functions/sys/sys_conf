@@ -732,6 +732,10 @@ sys_conf() {
 							;;
 						*)
 							case "${gv_Auswahl##*[0-9]}" in
+								k|K|m|M|g|G|t|T)
+									# PE Size bei LVM
+									check_number -z "${gv_Auswahl%[kKmMgGtT]*}" "${gv_Auswahl##*[0-9]}"
+									;;
 								kb|KB|Kb|gb|GB|Gb|mb|MB|Mb|tb|TB|Tb|pb|PB|Pb|eb|EB|Eb)
 #								kb|KB|Kb|gb|GB|Gb|mb|MB|Mb|tb|TB|Tb|pb|PB|Pb|eb|EB|Eb|zb|ZB|Zb|yb|YB|Yb)
 									check_number -z "${gv_Auswahl%[kKmMgGtTpPeEzZyY]*}" "${gv_Auswahl##*[0-9]}"

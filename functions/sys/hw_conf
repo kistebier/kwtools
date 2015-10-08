@@ -249,20 +249,36 @@ hw_conf() {
 		## }}}
 	# Funktion (lv), um Logische Volumes (LV) herauszubekommen{{{
 	#
-	# usage: lv
+	# usage: lv [ -a ]
 	lv() {
 		if [ ! -z "$LVM" ] ; then
 			unset -- LV LV_E LV_M
-			local Anz
+			local Anz Opt
 			integer Anz
+			Opt="$1"
 			if [ "$LVM" = 2 ] ; then
 				Anz=1
-				for i in ${(o)$(lvscan | awk '/dev/{print $2}')} ; {
-					LV_M[Anz]="$i \"Logical Volume\" off"
-					LV_E[Anz]="$i \"Logical Volume\""
-					LV[Anz]="$i"
-					(( Anz++ ))
-				}
+				lvscan | sort | awk '{print $2,$3}' | \
+				while read a b ; do
+					case "$a" in
+						Original|Snapshot)
+							case $Opt in
+								-a)
+									LV_M[Anz]="$b \"$a\" off"
+									LV_E[Anz]="$b \"$a\""
+									LV[Anz]="$b"
+									(( Anz++ ))
+									;;
+							esac
+							;;
+						\'/dev/*)
+							LV_M[Anz]="${a%% *} \"\" off"
+							LV_E[Anz]="${a%% *} \"\""
+							LV[Anz]="${a%% *}"
+							(( Anz++ ))
+							;;
+					esac
+				done
 			else
 				Anz=1
 				for i in ${(o)$(lvscan | awk '/dev/{print $4}')} ; {
@@ -1489,24 +1505,54 @@ lv_free_size() {
 		local Param Active OpenCount
 		Param="$1"
 		TABFILE="/etc/crypttab"
-		case "$Param" in
-			-a)	# nur aktive Cryptdisks
-				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
-				Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
-					if [[ $Active == ACTIVE ]] ; then
-						OpenCount=$(dmsetup info -c --noheadings -o open $Crypt_Dev 2>/dev/null)
-						# >=1 heist vorhandene Laufwerke sind gemountet.
-						if (( $OpenCount >= 1 )) ; then
-							# Devices mit LABEL oder UUID Bezeichnung
-							# in richtige Devices umwandeln.
-							parse_uuid_label $Crypt_Dev
-							if [ -n "$REALDEV" ] ; then
-								MAP_DEV_E+=($REALDEV)
-								MAP_DEV+=(${REALDEV##*/} \"\")
-								MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+		if [ -f "$TABFILE" ] ; then
+			case "$Param" in
+				-a)	# nur aktive Cryptdisks
+					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
+					Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
+						if [[ $Active == ACTIVE ]] ; then
+							OpenCount=$(dmsetup info -c --noheadings -o open $Crypt_Dev 2>/dev/null)
+							# >=1 heist vorhandene Laufwerke sind gemountet.
+							if (( $OpenCount >= 1 )) ; then
+								# Devices mit LABEL oder UUID Bezeichnung
+								# in richtige Devices umwandeln.
+								parse_uuid_label $Crypt_Dev
+								if [ -n "$REALDEV" ] ; then
+									MAP_DEV_E+=($REALDEV)
+									MAP_DEV+=(${REALDEV##*/} \"\")
+									MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+								fi
+							# =0 heist vorhandenes Laufwerk nicht gemountet.
+							elif (( OpenCount == 0 )) ; then
+								parse_uuid_label $Crypt_Dev
+								if [ -n "$REALDEV" ] ; then
+									MAP_DEV_E+=($REALDEV)
+									MAP_DEV+=(${REALDEV##*/} \"\")
+									MAP_DEV_M+=(${REALDEV##*/} \"\" off)
+								fi
 							fi
-						# =0 heist vorhandenes Laufwerk nicht gemountet.
-						elif (( OpenCount == 0 )) ; then
+						fi
+					done
+					;;
+				-l)	# nur luks Cryptdisks
+					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read dst src Rest ; do
+						parse_uuid_label $src
+						if [ -n "$REALDEV" ] ; then
+							if cryptsetup isLuks $REALDEV 2>/dev/null ; then
+								MAP_DEV_E+=($REALDEV)
+								MAP_DEV+=($REALDEV \"\")
+								MAP_DEV_M+=($REALDEV \"\" off)
+								MAP_DST_DEV_E+=($dst)
+								MAP_DST_DEV+=($dst \"\")
+								MAP_DST_DEV_M+=($dst \"\" off)
+							fi
+						fi
+					done
+					;;
+				-s)	# alle gestoppten Cryptdisks in /etc/crypttab.
+					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
+					Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
+						if [[ $Active != ACTIVE ]] ; then
 							parse_uuid_label $Crypt_Dev
 							if [ -n "$REALDEV" ] ; then
 								MAP_DEV_E+=($REALDEV)
@@ -1514,48 +1560,20 @@ lv_free_size() {
 								MAP_DEV_M+=(${REALDEV##*/} \"\" off)
 							fi
 						fi
-					fi
-				done
-				;;
-			-l)	# nur luks Cryptdisks
-				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read dst src Rest ; do
-					parse_uuid_label $src
-					if [ -n "$REALDEV" ] ; then
-						if cryptsetup isLuks $REALDEV 2>/dev/null ; then
-							MAP_DEV_E+=($REALDEV)
-							MAP_DEV+=($REALDEV \"\")
-							MAP_DEV_M+=($REALDEV \"\" off)
-							MAP_DST_DEV_E+=($dst)
-							MAP_DST_DEV+=($dst \"\")
-							MAP_DST_DEV_M+=($dst \"\" off)
-						fi
-					fi
-				done
-				;;
-			-s)	# alle gestoppten Cryptdisks in /etc/crypttab.
-				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
-				Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
-					if [[ $Active != ACTIVE ]] ; then
+					done
+					;;
+				*)	# alle Cryptdisks in /etc/crypttab.
+					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
 						parse_uuid_label $Crypt_Dev
 						if [ -n "$REALDEV" ] ; then
 							MAP_DEV_E+=($REALDEV)
 							MAP_DEV+=(${REALDEV##*/} \"\")
 							MAP_DEV_M+=(${REALDEV##*/} \"\" off)
 						fi
-					fi
-				done
-				;;
-			*)	# alle Cryptdisks in /etc/crypttab.
-				egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
-					parse_uuid_label $Crypt_Dev
-					if [ -n "$REALDEV" ] ; then
-						MAP_DEV_E+=($REALDEV)
-						MAP_DEV+=(${REALDEV##*/} \"\")
-						MAP_DEV_M+=(${REALDEV##*/} \"\" off)
-					fi
-				done
-				;;
-		esac
+					done
+					;;
+			esac
+		fi
 	}
 	## }}}
 	# Funktion (vg_display), zum suchen der Volume Groups (VG){{{
@@ -1567,12 +1585,13 @@ lv_free_size() {
 		unset -- VG VG_E VG_M
 		if [ "$LVM" = 2 ] ; then
 			Anz=1
-			for i in ${(o)$(vgscan | awk '/Found volume group/{print $4}')} ; {
-				VG_M[Anz]="\"$i\" \"Volume Group\" off"
-	            VG_E[Anz]="\"$i\" \"Volume Group\""
-	            VG[Anz]="$i"
+		 	vgscan | sort | awk '/Found volume group/{print $4,$8}' | \
+			while read vg lvm_type ; do
+				VG_M[Anz]="\"$vg\" \"$lvm_type\" off"
+	            VG_E[Anz]="\"$vg\" \"$lvm_type\""
+	            VG[Anz]="$vg"
 	            (( Anz++ ))
-			}
+			done
 		else
 			Anz=1
 			for i in ${(o)$(vgscan | awk '/active volume group/{print $7}')} ; {
