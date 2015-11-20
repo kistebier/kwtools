@@ -14,9 +14,6 @@ main_conf_save() {
 # Start Iptables at boot up?
 START_IPTABLES=\"$START_IPTABLES\"
 
-# Path to the executable
-IPTABLES=\"$IPTABLES\"	# Leave this line alone unless you know what you're doing.
-
 # Load Netfilter modules - only necessary if you compiled netfilter as modules
 LOAD_MODULES=\"$LOAD_MODULES\"
 
@@ -24,6 +21,8 @@ LOAD_MODULES=\"$LOAD_MODULES\"
 EXTERNAL_INTERFACE=\"$EXTERNAL_INTERFACE\"		# Example: "eth0"
 DYNAMIC_EXTERNAL_IP=\"$DYNAMIC_EXTERNAL_IP\"		# If this is set to "no", you'll need to enter an IP address below
 EXTERNAL_INTERFACE_IP=\"$EXTERNAL_INTERFACE_IP\"        # If DYNAMIC_EXTERNAL_IP is "yes", NARC will attempt to auto-obtain this
+EXTERNAL_INTERFACE_IPV6=\"$EXTERNAL_INTERFACE_IPV6\"
+TEMP_ADDR=\"$TEMP_ADDR\"	# Set this to "yes" to enable ipv6 privacy addressing
 
 # The options immediately below control server services that you're offering to the outside world - it does not limit
 # the services available to your localhost.
@@ -138,9 +137,10 @@ NAT_MODULES=\"$NAT_MODULES\"
 
 # Illegal TCP flag combinations
 ILLEGAL_TCP_FLAGS=\"$ILLEGAL_TCP_FLAGS\"
-FINSCAN=\"$FINSCAN\"
 XMASSCAN=\"$XMASSCAN\"
 NULLSCAN=\"$NULLSCAN\"
+### only IPv4 ###
+FINSCAN=\"$FINSCAN\"
 
 # SYN packet length (range in bytes)
 PACKET_LENGTH=\"$PACKET_LENGTH\"
@@ -162,6 +162,8 @@ DROP_UNCLEAN_PACKETS=\"$DROP_UNCLEAN_PACKETS\"
 # Allowable ICMP messages - see http://www.iana.org/assignments/icmp-parameters
 # Note: will accept numeric or name value - 'iptables -p icmp -h' to list
 ALLOW_ICMP_MESSAGE=\"$ALLOW_ICMP_MESSAGE\"
+# Note: will accept numeric or name value - 'iptables -p ipv6-icmp -h' to list
+ALLOW_ICMPV6_MESSAGE=\"$ALLOW_ICMPV6_MESSAGE\"
 
 # Anti-spoofing options
 # see http://www.sans.org/dosstep/cisco_spoof.htm and http://www.isi.edu/in-notes/rfc1918.txt
@@ -187,13 +189,15 @@ LOOPBACK_MODE=\"$LOOPBACK_MODE\"	# values are paranoid, normal, or loose.
 # but not from behind it, this should probably make sense to you.  Otherwise, leave this blank.
 # Use space separated dotted quad IP addresses if you need more than one.
 BIND_IP=\"$BIND_IP\"
+BIND_IPV6=\"$BIND_IPV6\"
 
 # Kernel options - do not change unless you're sure what you're doing
-SYNCOOKIES=\"$SYNCOOKIES\"
-ANTI_SMURF=\"$ANTI_SMURF\"
 ACCEPT_SOURCE_ROUTE=\"$ACCEPT_SOURCE_ROUTE\"
+### only IPv4 ###
 # Ingress filtering: 1 for simple, 2 to comply with RFC1812 section 5.3.8 - see http://andrew2.andrew.cmu.edu/rfc/rfc1812.html
 INGRESS_FILTER=\"$INGRESS_FILTER\"
+ANTI_SMURF=\"$ANTI_SMURF\"
+SYNCOOKIES=\"$SYNCOOKIES\"
 LOG_MARTIANS=\"$LOG_MARTIANS\"
 # TCP congestion notification - depreciated
 ENABLE_TCP_ECN=\"$ENABLE_TCP_ECN\""

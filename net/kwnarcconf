@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 19.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
 #
 # Script: kwnarcconf, Firewall Frontend fuer kwnarc
 # 		mittels iptables.
@@ -12,7 +12,7 @@
 #
 #       http://www.knowplace.org/netfilter/narc.html
 #
-# Version: 0.1.14
+# Version: 0.2.0
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -28,10 +28,10 @@ gv_ScriptName=${0##*/}
 # und Konfigurationsverz. festlegen.
 if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
 	PREFIX=/usr/local
-	CONF_PATH=${PREFIX}/etc/kwtools
+	CONF_PATH=${PREFIX}/etc/kwtools/kwnarc
 else
 	PREFIX=/usr
-	CONF_PATH=/etc/kwtools
+	CONF_PATH=/etc/kwtools/kwnarc
 fi
 Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
 export TEXTDOMAINDIR="${PREFIX}/share/locale"
@@ -59,6 +59,7 @@ EXAMPLES_DIR="${PREFIX}/share/doc/kwtools-net-narc/examples"
 MAIN_NARC_CONF=${CONF_PATH}/kwnarc.conf
 CUSTOM_NARC_CONF=${CONF_PATH}/kwnarc-custom.conf
 FORWARD_NARC_CONF=${CONF_PATH}/kwnarc-forward.conf
+FORWARD6_NARC_CONF=${CONF_PATH}/kwnarc6-forward.conf
 lv_Restart=$(gettext 'Neustart')
 lv_Status=$(gettext 'Status')
 lv_Conntrack=$(gettext 'Verbindungen')
@@ -94,10 +95,11 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Main_Conf=$(gettext 'Hauptkonfiguration')
 			lv_Log_Conf=$(gettext 'Logkonfiguration')
 			lv_Port_Conf=$(gettext 'Portweiterleitung')
+			lv_Port_V6_Conf=$(gettext 'IPv6_Portweiterleitung')
 			lv_Custom_Conf=$(gettext 'Zusatzkonfiguration')
 			#
 			CONF_MENU=($lv_Main_Conf \"\" $lv_Log_Conf \"\"
-			$lv_Port_Conf \"\" $lv_Custom_Conf \"\" $gv_Back \"\")
+			$lv_Port_Conf \"\" $lv_Port_V6_Conf \"\" $lv_Custom_Conf \"\" $gv_Back \"\")
 			conf_menue() {
 				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 			}
@@ -135,6 +137,56 @@ while [ "$gv_Auswahl" ] ; do
 								$gv_Display)
 									# Ansicht der FORWARD Regeln.# {{{
 									print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##\#*} >${gv_WorkDir}/forwardcf
+									if [ -s "${gv_WorkDir}/forwardcf" ] ; then
+										view_file "${gv_WorkDir}/forwardcf"
+									else
+										no_entry_msg
+									fi
+									## }}}
+									forward_menu $gv_Display
+									;;
+								$gv_Create)
+									forward_conf -i
+									forward_menu $gv_Create
+									;;
+								$gv_Change)
+									forward_conf -c
+									forward_menu $gv_Change
+									;;
+								$gv_Delete)
+									forward_conf -d
+									forward_menu $gv_Delete
+									;;
+								$gv_Back)	break
+									;;
+							esac
+						done
+						#}}}
+						conf_menue $lv_Port_Conf
+						;;
+					$lv_Port_V6_Conf)
+						# IPv6 Portforwarding bearbeiten{{{
+						autoload -U forward_conf
+						if [ ! -f "$FORWARD_NARC_CONF" -a ${EXAMPLES_DIR}/kwnarc6-forward.conf ] ; then
+							cp ${EXAMPLES_DIR}/kwnarc6-forward.conf ${FORWARD6_NARC_CONF} &>/dev/null
+						fi
+						# Funktion forward_menu# {{{
+						FORWARD_TITLE=$(gettext '${gv_Configuration}::Weiterleitung')
+						FORWARD_MENU=($gv_Display \"\" $gv_Create \"\" $gv_Change \"\"
+						$gv_Delete \"\" $gv_Back \"\")
+						forward_menu() {
+							menubox "$1" "$FORWARD_TITLE" "$gv_Menupoint" "$FORWARD_MENU"
+						}
+						## }}}
+						forward_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help forward_conf_help
+									forward_menu "${gv_Auswahl#HELP }"
+									;;
+								$gv_Display)
+									# Ansicht der FORWARD Regeln.# {{{
+									print -l ${(R)${(f)"$(< $FORWARD6_NARC_CONF)"}##\#*} >${gv_WorkDir}/forwardcf
 									if [ -s "${gv_WorkDir}/forwardcf" ] ; then
 										view_file "${gv_WorkDir}/forwardcf"
 									else

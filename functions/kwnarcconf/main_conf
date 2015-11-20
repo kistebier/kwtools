@@ -55,11 +55,11 @@ main_conf() {
 	#}}}
 	# Funktion main_conf_menue{{{
 	#
-	lv_IPTABLES=$(gettext 'IPTABLES')
 	lv_START_IPTABLES=$(gettext 'START_IPTABLES')
 	lv_LOAD_MODULES=$(gettext 'LOAD_MODULES')
 	lv_ACCEPT_SOURCE_ROUTE=$(gettext 'ACCEPT_SOURCE_ROUTE')
 	lv_ALLOW_ICMP_MESSAGE=$(gettext 'ALLOW_ICMP_MESSAGE')
+	lv_ALLOW_ICMPV6_MESSAGE=$(gettext 'ALLOW_ICMPV6_MESSAGE')
 	lv_ALLOW_TCP_DMZ=$(gettext 'ALLOW_TCP_DMZ')
 	lv_ALLOW_TCP_DMZ_RANGE=$(gettext 'ALLOW_TCP_DMZ_RANGE')
 	lv_ALLOW_UDP_DMZ=$(gettext 'ALLOW_UDP_DMZ')
@@ -77,6 +77,7 @@ main_conf() {
 	lv_ANSWER_TRACEROUTE=$(gettext 'ANSWER_TRACEROUTE')
 	lv_ANTI_SMURF=$(gettext 'ANTI_SMURF')
 	lv_BIND_IP=$(gettext 'BIND_IP')
+	lv_BIND_IPV6=$(gettext 'BIND_IPV6')
 	lv_BROADCAST_NETWORKS=$(gettext 'BROADCAST_NETWORKS')
 	lv_CHECK_SYN_PACKET_LENGTH=$(gettext 'CHECK_SYN_PACKET_LENGTH')
 	lv_CUSTOM_SCRIPT=$(gettext 'CUSTOM_SCRIPT')
@@ -90,6 +91,7 @@ main_conf() {
 	lv_EXECUTE_CUSTOM_SCRIPT=$(gettext 'EXECUTE_CUSTOM_SCRIPT')
 	lv_EXTERNAL_INTERFACE=$(gettext 'EXTERNAL_INTERFACE')
 	lv_EXTERNAL_INTERFACE_IP=$(gettext 'EXTERNAL_INTERFACE_IP')
+	lv_EXTERNAL_INTERFACE_IPV6=$(gettext 'EXTERNAL_INTERFACE_IPV6')
 	lv_FINSCAN=$(gettext 'FINSCAN')
 	lv_FORWARD_LAN_TO_DMZ=$(gettext 'FORWARD_LAN_TO_DMZ')
 	lv_ILLEGAL_TCP_FLAGS=$(gettext 'ILLEGAL_TCP_FLAGS')
@@ -120,9 +122,10 @@ main_conf() {
 	lv_XMASSCAN=$(gettext 'XMASSCAN')
 	MAIN_CONF_TITLE=($lv_Main_Conf)
 	main_conf_menue() {
-		MAIN_CONF_MENU=(IPTABLES \"$IPTABLES\" START_IPTABLES \"$START_IPTABLES\"
+		MAIN_CONF_MENU=(START_IPTABLES \"$START_IPTABLES\"
 		LOAD_MODULES \"$LOAD_MODULES\" ACCEPT_SOURCE_ROUTE \"$ACCEPT_SOURCE_ROUTE\"
-		ALLOW_ICMP_MESSAGE \"$ALLOW_ICMP_MESSAGE\" ALLOW_TCP_DMZ \"$ALLOW_TCP_DMZ\"
+		ALLOW_ICMP_MESSAGE \"$ALLOW_ICMP_MESSAGE\" ALLOW_ICMPV6_MESSAGE \"$ALLOW_ICMPV6_MESSAGE\"
+		ALLOW_TCP_DMZ \"$ALLOW_TCP_DMZ\"
 		ALLOW_TCP_DMZ_RANGE \"$ALLOW_TCP_DMZ_RANGE\" ALLOW_UDP_DMZ \"$ALLOW_UDP_DMZ\"
 		ALLOW_UDP_DMZ_RANGE \"$ALLOW_UDP_DMZ_RANGE\" ALLOW_TCP_EXT \"$ALLOW_TCP_EXT\"
 		ALLOW_TCP_EXT_RANGE \"$ALLOW_TCP_EXT_RANGE\" ALLOW_UDP_EXT \"$ALLOW_UDP_EXT\"
@@ -130,7 +133,7 @@ main_conf() {
 		ALLOW_TCP_LAN_RANGE \"$ALLOW_TCP_LAN_RANGE\" ALLOW_UDP_LAN \"$ALLOW_UDP_LAN\"
 		ALLOW_UDP_LAN_RANGE \"$ALLOW_UDP_LAN_RANGE\" ALWAYS_FORWARD \"$ALWAYS_FORWARD\"
 		ANSWER_PING \"$ANSWER_PING\" ANSWER_TRACEROUTE \"$ANSWER_TRACEROUTE\"
-		ANTI_SMURF \"$ANTI_SMURF\" BIND_IP \"$BIND_IP\"
+		ANTI_SMURF \"$ANTI_SMURF\" BIND_IP \"$BIND_IP\" BIND_IPV6 \"$BIND_IPV6\"
 		BROADCAST_NETWORKS \"$BROADCAST_NETWORKS\"
 		CHECK_SYN_PACKET_LENGTH \"$CHECK_SYN_PACKET_LENGTH\" CUSTOM_SCRIPT \"$CUSTOM_SCRIPT\"
 		DMZ_INTERFACE \"$DMZ_INTERFACE\" DROP_BROADCASTS \"$DROP_BROADCASTS\"
@@ -139,7 +142,9 @@ main_conf() {
 		ENABLE_LIMIT_RATE \"$ENABLE_LIMIT_RATE\" ENABLE_TCP_ECN \"$ENABLE_TCP_ECN\"
 		EXECUTE_CUSTOM_SCRIPT \"$EXECUTE_CUSTOM_SCRIPT\"
 		EXTERNAL_INTERFACE \"$EXTERNAL_INTERFACE\"
-		EXTERNAL_INTERFACE_IP \"$EXTERNAL_INTERFACE_IP\" FINSCAN \"$FINSCAN\"
+		EXTERNAL_INTERFACE_IP \"$EXTERNAL_INTERFACE_IP\"
+		EXTERNAL_INTERFACE_IPV6 \"$EXTERNAL_INTERFACE_IPV6\"
+		FINSCAN \"$FINSCAN\"
 		FORWARD_LAN_TO_DMZ \"$FORWARD_LAN_TO_DMZ\" ILLEGAL_TCP_FLAGS \"$ILLEGAL_TCP_FLAGS\"
 		INGRESS_FILTER \"$INGRESS_FILTER\" IPLIMIT_MAX_ACCEPT \"$IPLIMIT_MAX_ACCEPT\"
 		IPLIMIT_NETMASK \"$IPLIMIT_NETMASK\" LAN_INTERFACE \"$LAN_INTERFACE\"
@@ -160,16 +165,6 @@ main_conf() {
 		case "$gv_Auswahl" in
 			HELP*)	script_help main_conf_help
 				main_conf_menue "${gv_Auswahl#HELP }"
-				;;
-			$lv_IPTABLES)
-				# ip(6)tables Programm{{{
-				FORMAT=""
-				file_choice /sbin only $IPTABLES
-				if [ -n "$WERT" ] ; then
-					IPTABLES="${VERZ}/${WERT##${VERZ}/}"
-				fi
-				#}}}
-				main_conf_menue $lv_IPTABLES
 				;;
 			$lv_START_IPTABLES)
 				# iptables starten (yes/no){{{
@@ -220,11 +215,10 @@ main_conf() {
 							continue
 						fi
 						if [ "$VALID_ICMP" = yes ] ; then
-							(( Anz++ ))
 							if [ "`print ${(M)${ALLOW_ICMP_MESSAGE}##*"${a% *}"*}`" ] ; then
-								WERT[Anz]="\"$a\" \"\" on"
+								WERT+=(\"$a\" \"\" on)
 							else
-								WERT[Anz]="\"$a\" \"\" off"
+								WERT+=(\"$a\" \"\" off)
 							fi
 						fi
 						;;
@@ -250,6 +244,48 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_ALLOW_ICMP_MESSAGE
+				;;
+			$lv_ALLOW_ICMPV6_MESSAGE)
+				# Auswahl von ICMPV6 Nachrtichten die erlaubt werden sollen{{{
+				VALID_ICMPV6=no
+				typeset -a WERT
+				Anz=0
+				$IPTABLES -p ipv6-icmp -h | while read a ; do
+					case $a in [a-zA-Z]*)
+						if [ "$a" = "Valid ICMPV6 Types:" ] ; then
+							VALID_ICMPV6=yes
+							continue
+						fi
+						if [ "$VALID_ICMPV6" = yes ] ; then
+							if [ "`print ${(M)${ALLOW_ICMPV6_MESSAGE}##*"${a% *}"*}`" ] ; then
+								WERT+=(\"$a\" \"\" on)
+							else
+								WERT+=(\"$a\" \"\" off)
+							fi
+						fi
+						;;
+					esac
+				done
+				#
+				if [ "$WERT" ] ; then
+					ICMPV6_MSG=$(gettext 'Waehlen Sie hier die ICMPV6 Nachrichten aus, die erlaubt werden sollen.')
+					checklist "" "$MAIN_CONF_TITLE" "$ICMPV6_MSG" "$WERT"
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help allow_icmpv6_messages_help
+								checklist "${gv_Auswahl#HELP }" "$MAIN_CONF_TITLE" "$ICMPV6_MSG" "$WERT"
+								;;
+							*)	ALLOW_ICMPV6_MESSAGE="${gv_Auswahl//\\ \\\(*\) / }"
+								break
+								;;
+						esac
+					done
+				else
+					MSG=$(gettext 'Es sind keine ICMPV6 Nachrichten vorhanden (?).')
+					msgbox "$gv_Attention" "$MSG"
+				fi
+				#}}}
+				main_conf_menue $lv_ALLOW_ICMPV6_MESSAGE
 				;;
 			$lv_ALLOW_TCP_DMZ)
 				# 15 TCP Ports pro Zeile die zur DMZ erlaubt,{{{
@@ -524,7 +560,7 @@ main_conf() {
 				main_conf_menue $lv_ANSWER_TRACEROUTE
 				;;
 			$lv_ANTI_SMURF)
-				# ANTI_SMURF einschalten (Kernel_option yes/no)?{{{
+				# ANTI_SMURF einschalten (IPv4 Kernel_option yes/no)?{{{
 				MSG=$(gettext 'Soll die Kerneloption "ANTI_SMURF" eingeschaltet werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "$ANTI_SMURF"
 				if [ "$gv_Auswahl" = yes ] ; then
@@ -550,10 +586,10 @@ main_conf() {
 			$lv_BIND_IP)
 				# Bind IP auswaehlen{{{
 				typeset -a BIND_IP
-				MSG=$(gettext 'Geben Sie hier ein oder mehrere IP Adressen der lokalen Rechner ein, von denen DNS Server kontaktet werden duerfen (Bsp. 192.168.0.5).')
+				MSG=$(gettext 'Geben Sie hier ein oder mehrere IP Adressen der lokalen Rechner ein, von denen DNS Server kontaktiert werden duerfen (Bsp. 192.168.0.5).')
 				inputbox "$MAIN_CONF_TITLE" "$MSG" "$BIND_IP"
 				if [ "$gv_Auswahl" ] ; then
-					ip_analyse $gv_Auswahl
+					ip_analyse "$gv_Auswahl"
 					if [ "$gv_Ip_Adr" ] ; then
 						BIND_IP="$gv_Ip_Adr"
 					else
@@ -564,6 +600,24 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_BIND_IP
+				;;
+			$lv_BIND_IP)
+				# Bind IPV6 auswaehlen{{{
+				typeset -a BIND_IPV6
+				MSG=$(gettext 'Geben Sie hier ein oder mehrere IPv6 Adressen der lokalen Rechner ein, von denen DNS Server kontaktiert werden duerfen (Bsp. 2a02:8108:1680:39a3:82fa:5bff:fe02:304a).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$BIND_IPV6"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse "$gv_Auswahl"
+					if [ "$gv_Ip_Adr" ] ; then
+						BIND_IPV6="$gv_Ip_Adr"
+					else
+						BIND_IPV6=""
+					fi
+				else
+					BIND_IPV6=""
+				fi
+				#}}}
+				main_conf_menue $lv_BIND_IPV6
 				;;
 			$lv_BROADCAST_NETWORKS)
 				# Aus welchen Netzen sollen Broadcast Anfragen{{{
@@ -685,7 +739,7 @@ main_conf() {
 				;;
 			$lv_ENABLE_TCP_ECN)
 				# TCP Congestion Notifikation einschalten{{{
-				# (Kernel_option yes/no)?
+				# (IPv4 Kernel_option yes/no)?
 				MSG=$(gettext 'Soll die Kerneloption ECN (TCP Congestion Notification) eingeschaltet werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "${ENABLE_TCP_ECN:-no}"
 				if [ "$gv_Auswahl" = yes ] ; then
@@ -737,9 +791,26 @@ main_conf() {
 				#}}}
 				main_conf_menue $lv_EXTERNAL_INTERFACE_IP
 				;;
+			$lv_EXTERNAL_INTERFACE_IPV6)
+				# External Interfaces IP auswaehlen{{{
+				MSG=$(gettext 'Geben Sie hier bitte die IPv6 Adressen fuer das externe Interface ein (Bsp. 2a02:8108:1680:39a3:82fa:5bff:fe02:304a).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$EXTERNAL_INTERFACE_IPV6"
+				if [ "$gv_Auswahl" ] ; then
+					ip_analyse $gv_Auswahl
+					if [ "$gv_Ip_Adr" ] ; then
+						EXTERNAL_INTERFACE_IPV6="$gv_Ip_Adr"
+					else
+						EXTERNAL_INTERFACE_IPV6=""
+					fi
+				else
+					EXTERNAL_INTERFACE_IPV6=""
+				fi
+				#}}}
+				main_conf_menue $lv_EXTERNAL_INTERFACE_IPV6
+				;;
 			$lv_FINSCAN)
-				# Anfragen mit TCP Flag FIN verwerfen?{{{
-				MSG=$(gettext 'Sollen Anfragen mit dem TCP Flag FIN verworfen werden bzw. als illegal gekennzeichnet weren (ja/nein)?')
+				# IPv4 Anfragen mit TCP Flag FIN verwerfen?{{{
+				MSG=$(gettext 'Sollen Anfragen mit dem TCP Flag FIN verworfen werden bzw. als illegal gekennzeichnet werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "$FINSCAN"
 				if [ "$gv_Auswahl" = yes ] ; then
 					FINSCAN=FIN
@@ -777,6 +848,7 @@ main_conf() {
 				# Ingress filtering: 1 for simple, 2 to comply with{{{
 				# RFC1812 section 5.3.8 - see 
 				# http://andrew2.andrew.cmu.edu/rfc/rfc1812.html
+				# IPv4 Kernel_option
 				lv_Simple=$(gettext 'einfach')
 				lv_Rfc1812=$(gettext 'RFC1812')
 				INGRESS_MSG=$(gettext 'Waehlen Sie die Ingress Filterung aus.')
@@ -873,7 +945,7 @@ main_conf() {
 				;;
 			$lv_LOG_MARTIANS)
 				# Log_martians einschalten{{{
-				# (Kernel_option yes/no)?
+				# (IPv4 Kernel_option yes/no)?
 				MSG=$(gettext 'Soll die Kerneloption "LOG_MARTIANS" (loggt unmoegliche Quell IP Adressen) eingeschaltet werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "$LOG_MARTIANS"
 				if [ "$gv_Auswahl" = yes ] ; then
@@ -1029,9 +1101,9 @@ main_conf() {
 				if [ "$gv_Auswahl" ] ; then
 					unset -- PRIVATE_NETWORKS
 					Anz=0
-					for i in $gv_Auswahl ; {
+					for i in ${=gv_Auswahl} ; {
 						case $i in
-							[0-9.]*/[0-9]*)
+							[0-9.:]*/[0-9]*)
 								(( Anz++ ))
 								PRIVATE_NETWORKS[Anz]="$i"
 								;;
@@ -1076,9 +1148,9 @@ main_conf() {
 				if [ "$gv_Auswahl" ] ; then
 					unset -- RESERVED_NETWORKS
 					Anz=0
-					for i in $gv_Auswahl ; {
+					for i in ${=gv_Auswahl} ; {
 						case $i in
-							[0-9.]*/[0-9]*)
+							[0-9.:]*/[0-9]*)
 								(( Anz++ ))
 								RESERVED_NETWORKS[Anz]="$i"
 								;;
@@ -1093,7 +1165,7 @@ main_conf() {
 				main_conf_menue $lv_RESERVED_NETWORKS
 				;;
 			$lv_SYNCOOKIES)
-				# Schutz vor Syncookies einschalten (Kernel_option yes/no)?{{{
+				# Schutz vor Syncookies einschalten (IPv4 Kernel_option yes/no)?{{{
 				MSG=$(gettext 'Soll die Kerneloption syn-cookies (syn-flooding attacks) eingeschaltet werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "$SYNCOOKIES"
 				if [ "$gv_Auswahl" = yes ] ; then
@@ -1139,6 +1211,18 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_TCP_PROBE2
+				;;
+			$lv_TEMP_ADDR)
+				# Sollen die IPv6 Adressen geschuetzt sein (yes/no)?{{{
+				MSG=$(gettext 'Sollen ie IPv6 Adressen geschuetzt werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$TEMP_ADDR"
+				if [ "$gv_Auswahl" = yes ] ; then
+					TEMP_ADDR=yes
+				else
+					TEMP_ADDR=no
+				fi
+				#}}}
+				main_conf_menue $lv_TEMP_ADDR
 				;;
 			$lv_UDP_PROBE)
 				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{

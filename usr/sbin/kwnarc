@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 03.07.2014
+# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -8,7 +8,7 @@
 # NARC - Netfilter Automatic Rule Configurator v0.7
 # Copyright (c) 2001, Shane Chen (shane@knowplace.org).
 #
-# Version: 0.0.9
+# Version: 0.1.0
 #
 setopt extendedglob
 
@@ -18,10 +18,12 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 autoload -U colors && colors
 
 # checken der Konfigurationsdatei.
-if [ -f /etc/kwtools/kwnarc.conf ] ; then
-	CONFIG="/etc/kwtools/kwnarc.conf"
+if [ -f /etc/kwtools/kwnarc/kwnarc.conf ] ; then
+	CONF_DIR=/etc/kwtools/kwnarc
+	CONFIG="${CONF_DIR}/kwnarc.conf"
 elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
-	CONFIG="/usr/local/etc/kwtools/kwnarc.conf"
+	CONF_DIR=/usr/local/etc/kwtools/kwnarc
+	CONFIG="${CONF_DIR}/kwnarc.conf"
 else
 	CONFIG=""
 fi
@@ -50,8 +52,8 @@ fi
 # temp file remove function# {{{
 removetemp()
 {
-	if test -f $TMPDIR/kwnarc.tmp ; then
-		rm $TMPDIR/kwnarc.tmp
+	if test -f ${TMPDIR}/kwnarc.tmp ; then
+		rm ${TMPDIR}/kwnarc.tmp
 	fi
 }
 ## }}}
@@ -91,8 +93,14 @@ else
 fi
 
 # Check for the iptables binary
+IPTABLES="${commands[iptables]}"
+IP6TABLES="${commands[ip6tables]}"
 if [[ ! -x $IPTABLES ]] ; then
 	echo $RED"Conf error:$NORMAL ${B_WHITE}${IPTABLES}${NORMAL} executable missing."
+	confexit
+fi
+if [[ ! -x $IP6TABLES ]] ; then
+	echo $RED"Conf error:$NORMAL ${B_WHITE}${IP6TABLES}${NORMAL} executable missing."
 	confexit
 fi
 
@@ -104,12 +112,16 @@ case "$1" in
 	start)
 		echo
 		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
-		echo "Starting iptables and creating all chains"
+		echo "Starting ip(6)tables and creating all chains"
 		;;
 	status)
 		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
-		echo "Displaying active rules"
+		echo "Displaying IPv4 active rules"
 		$IPTABLES -L --line -nv || abortexit
+		echo ""
+		echo "Displaying IPv6 active rules"
+		$IP6TABLES -L --line -nv || abortexit
+		echo ""
 		exit 0
 		;;
 	conntrack)
@@ -125,7 +137,8 @@ case "$1" in
 	stop)
 		echo
 		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
-		echo "Stopping iptables and deleting all chains"
+		echo "Stopping ip(6)tables and deleting all chains"
+		# Ipv4
 		$IPTABLES -F || abortexit
 		$IPTABLES -X || abortexit
 		$IPTABLES -F -t nat || abortexit
@@ -135,19 +148,45 @@ case "$1" in
 		$IPTABLES -P INPUT ACCEPT || abortexit
 		$IPTABLES -P FORWARD ACCEPT || abortexit
 		$IPTABLES -P OUTPUT ACCEPT || abortexit
+		# Ipv6
+		$IP6TABLES -F || abortexit
+		$IP6TABLES -X || abortexit
+		$IP6TABLES -F -t nat || abortexit
+		$IP6TABLES -X -t nat || abortexit
+		$IP6TABLES -F -t mangle || abortexit
+		$IP6TABLES -X -t mangle || abortexit
+		$IP6TABLES -P INPUT ACCEPT || abortexit
+		$IP6TABLES -P FORWARD ACCEPT || abortexit
+		$IP6TABLES -P OUTPUT ACCEPT || abortexit
 		if [ "$ALWAYS_FORWARD" = 'yes' ] ; then
 			if [ "$DYNAMIC_EXTERNAL_IP" = 'no' ] ; then
+				# IPv4
 				$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
-				-j SNAT --to $EXTERNAL_INTERFACE_IP  || abortexit
+					-j SNAT --to $EXTERNAL_INTERFACE_IP  || abortexit
 			else
+				# only IPv4
 				$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
-				-j MASQUERADE || abortexit
+					-j MASQUERADE || abortexit
 			fi
+			# IPv6
+			$IP6TABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
+				-j SNAT --to $EXTERNAL_INTERFACE_IPV6  || abortexit
 		else
-			echo -n "Disabling IP forwarding: "
+			echo -n "Disabling IPv4 IP forwarding: "
 			echo "0" >/proc/sys/net/ipv4/ip_forward && echo $RCOK || echo $RCFAIL
+			echo -n "Disabling IPv6 IP forwarding: "
+			echo "0" >/proc/sys/net/ipv6/conf/all/forwarding && \
+			echo "0" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 		fi
+		 if [[ $TEMP_ADDR == yes ]] ;
+			echo -n "Disabling IPv6 privacy addressing: "
+			echo "0" > /proc/sys/net/ipv6/conf/all/use_tempaddr && \
+			echo "0" > /proc/sys/net/ipv6/conf/default/use_tempaddr && echo $RCOK || echo $RCFAIL
+		fi
+		# IPv4
 		$IPTABLES -L --line -nv | grep Chain || abortexit
+		# IPv6
+		$IP6TABLES -L --line -nv | grep Chain || abortexit
 		echo $NORMAL"All rules unloaded (yum: cracker box)"
 		exit 0
 		;;
@@ -155,9 +194,19 @@ case "$1" in
 		echo $B_WHITE"kwnarc$NORMAL (kwtools Netfilter Automatic Rule Configurator)"
 		echo "Displaying current chains:"
 		if [[ -r /proc/net/ip_tables_names ]] ; then
+			# IPv4
 			while read table ; do
+				echo "Displaying current IPv4 chain ${table}:"
 				$IPTABLES -t $table -L -n | grep Chain | \
 				cut --fields=2 --delimiter='\'
+				echo ""
+			done < /proc/net/ip_tables_names
+			# IPv6
+			while read table ; do
+				echo "Displaying current IPv6 chain ${table}:"
+				$IP6TABLES -t $table -L -n | grep Chain | \
+				cut --fields=2 --delimiter='\'
+				echo ""
 			done < /proc/net/ip_tables_names
 		fi
 		exit 0
@@ -188,17 +237,31 @@ if [ "$EXTERNAL_INTERFACE" = '' ] ; then
 fi
 
 # Check/auto-obtain external IP address
+# IPv4
 if [ "$DYNAMIC_EXTERNAL_IP" = 'no' ] ; then
 	if [ "$EXTERNAL_INTERFACE_IP" = '' ] ; then
 		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}EXTERNAL_INTERFACE_IP${NORMAL}"
 		confexit
 	fi
 else
-	EXTERNAL_INTERFACE_IP="`print ${${${(s,:,)${(M)${(f)"$(export LC_ALL=C ; /sbin/ifconfig $EXTERNAL_INTERFACE)"}##*inet addr*}}[2]}%% *}`"
+	# INFO: Ab kernel Release >=4 zeigt
+	# ifconfig die Ethernet Adresse als inet IP an
+	# davor war inet addr:IP
+	Kernel_Major_Nr=${$(uname -r)%%.*}
+	if [[ $Kernel_Major_Nr -ge 4 ]] ; then
+		EXTERNAL_INTERFACE_IP="`print ${${(s, ,)${(M)${(f)"$(export LC_ALL=C ; /sbin/ifconfig $EXTERNAL_INTERFACE)"}##*inet *}}[2]}`"
+	else
+		EXTERNAL_INTERFACE_IP="`print ${${${(s,:,)${(M)${(f)"$(export LC_ALL=C ; /sbin/ifconfig $EXTERNAL_INTERFACE)"}##*inet addr*}}[2]}%% *}`"
+	fi
 	if [ "$EXTERNAL_INTERFACE_IP" = '' ] ; then
 		echo $RED"KWNARC error:$NORMAL Unable to auto-obtain IP for ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL}"
 		abortexit
 	fi
+fi
+# IPv6
+if [ "$EXTERNAL_INTERFACE_IPV6" = '' ] ; then
+	echo $RED"Conf error:$NORMAL Missing ${B_WHITE}EXTERNAL_INTERFACE_IPV6${NORMAL}"
+	confexit
 fi
 
 # Make sure there's an interface to masq to
@@ -281,6 +344,10 @@ if [ "$PORT_FORWARD" = 'yes' ] ; then
 		echo $RED"Conf error:$NORMAL ${B_WHITE}${FORWARD_CONF}${NORMAL} not found"
 		confexit
 	fi
+	if ! test -f $FORWARD6_CONF ; then
+		echo $RED"Conf error:$NORMAL ${B_WHITE}${FORWARD6_CONF}${NORMAL} not found"
+		confexit
+	fi
 	if [[ "$DMZ_INTERFACE" == '' && "$LAN_INTERFACE" == '' ]] ; then
 		echo $RED"Conf error:$NORMAL Missing ${B_WHITE}DMZ_INTERFACE$NORMAL or ${B_WHITE}LAN_INTERFACE$NORMAL"
 		confexit
@@ -343,30 +410,38 @@ fi
 
 # First setup some of the kernel features - Note: Setting these options only affect this host.  It has no
 # on the rest of the network.
-echo $B_WHITE"Initializing firewall (iptables)$NORMAL"
+echo $B_WHITE"Initializing firewall (ip(6)tables)$NORMAL"
 
 # Disable forwarding - should be already disabled, but just in case.
 if [ "$ALWAYS_FORWARD" != 'yes' ] ; then
 	echo -n "Turning off IP forwarding (will automatically re-enable if you turned on masquerading): "
-	echo "0" >/proc/sys/net/ipv4/ip_forward && echo $RCOK || echo $RCFAIL
+	echo "0" >/proc/sys/net/ipv4/ip_forward && \
+	echo "0" >/proc/sys/net/ipv6/conf/all/forwarding && \
+	echo "0" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 fi
 
 # Enable syn-cookies (syn-flooding attacks)
+# only IPv4
 if [ "$SYNCOOKIES" != 'no' ] ; then
 	echo -n "Enabling SYN-flood protection (syncookies): "
 	echo "1" >/proc/sys/net/ipv4/tcp_syncookies && echo $RCOK || echo $RCFAIL
 fi
 
 # Disable ICMP echo-request to broadcast addresses (smurf amplifier)
+# only IPv4
 if [ "$ANTI_SMURF" != 'no' ] ; then
 	echo -n "Disable ICMP echo-request to broadcast addresses (anti-smurf): "
 	echo "1" >/proc/sys/net/ipv4/icmp_echo_ignore_broadcasts && echo $RCOK || echo $RCFAIL
+	echo -n "Ignore bogus ICMP errors: "
+	echo "1" >/proc/sys/net/ipv4/icmp_ignore_bogus_error_responses && \
+	echo "0" >/proc/sys/net/ipv4/icmp_echo_ignore_all && echo $RCOK || echo $RCFAIL
 fi
 
 # Disable support for source-routed packets
+# IPv4 and IPv6
 if [ "$ACCEPT_SOURCE_ROUTE" != 'yes' ] ; then
 	echo -n "Disabling source-routed packet support: "
-	for interface in /proc/sys/net/ipv4/conf/* ; {
+	for interface in /proc/sys/net/ipv{4,6}/conf/{all,default} ; {
 		echo "0" >$interface/accept_source_route && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " \
 		|| echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
@@ -374,6 +449,7 @@ if [ "$ACCEPT_SOURCE_ROUTE" != 'yes' ] ; then
 fi
 
 # Enable ingress filtering (source-address verification)
+# only IPv4
 if [ "$INGRESS_FILTER" != '' ] ; then
 	echo -n "Enabling ingress filtering (level $INGRESS_FILTER) via rp_filter on interface: "
 	for interface in /proc/sys/net/ipv4/conf/* ; {
@@ -385,6 +461,7 @@ fi
 
 # Log Martians (logs impossible source IP addresses)
 # See /usr/src/linux/Documentation/networking/ip-sysctl.txt
+# only IPv4
 if [ "$LOG_MARTIANS" = 'yes' ] ; then
 	echo -n "Log Martians on interface: "
 	for interface in /proc/sys/net/ipv4/conf/* ; {
@@ -395,12 +472,14 @@ if [ "$LOG_MARTIANS" = 'yes' ] ; then
 fi
 
 # Enable dynamic IP workaround
+# only IPv4
 if [ "$DYNAMIC_EXTERNAL_IP" = 'yes' ] ; then
 	echo -n "Enabling dynamic IP workaround: "
 	echo "1" > /proc/sys/net/ipv4/ip_dynaddr && echo $RCOK || echo $RCFAIL
 fi
 
 # Disable TCP explicit congestion notification (tcp_ecn)
+# only IPv4
 echo -n "TCP Explicit Congestion Notification: $B_WHITE"
 if [ "$ENABLE_TCP_ECN" = 'no' ] ; then
 	echo "0" >/proc/sys/net/ipv4/tcp_ecn && echo DISABLED$NORMAL || echo FAILED
@@ -408,11 +487,19 @@ else
 	echo "1" >/proc/sys/net/ipv4/tcp_ecn && echo ENABLED$NORMAL || echo FAILED
 fi
 
+# Enable dynamic IP workaround
+# only IPv6
+if [ "$TEMP_ADDR" = 'yes' ] ; then
+	echo -n "Enabling IPv6 privacy addressing: "
+	echo "2" > /proc/sys/net/ipv6/conf/all/use_tempaddr && \
+	echo "2" > /proc/sys/net/ipv6/conf/default/use_tempaddr && echo $RCOK || echo $RCFAIL
+fi
+
 # Preload some iptables modules
 if [ "$LOAD_MODULES" = 'yes' ] ; then
 	echo -n "Loading module: "
 	for module in ${=PRELOAD_IP_MODULES} ; {
-	    if ! grep $module /var/tmp/kwnarc.tmp > /dev/null 2>&1 ; then
+	    if ! grep $module ${TMPDIR}/kwnarc.tmp > /dev/null 2>&1 ; then
 			/sbin/modprobe $module && echo -n "[ ${B_WHITE}${module}${NORMAL} - $RCOK ] " || echo -n \
 			"[ ${B_WHITE}${module}${NORMAL} - $RCFAIL ] "
 		fi
@@ -422,41 +509,66 @@ fi
 
 # Delete old chains
 echo "Flushing/deleting chains "
+# IPv4
 $IPTABLES -F || abortexit
 $IPTABLES -X || abortexit
 $IPTABLES -F -t nat || abortexit
 $IPTABLES -X -t nat || abortexit
 $IPTABLES -F -t mangle || abortexit
 $IPTABLES -X -t mangle || abortexit
+# IPv6
+$IP6TABLES -F || abortexit
+$IP6TABLES -X || abortexit
+$IP6TABLES -F -t nat || abortexit
+$IP6TABLES -X -t nat || abortexit
+$IP6TABLES -F -t mangle || abortexit
+$IP6TABLES -X -t mangle || abortexit
 
 # Set default policies
 echo "Setting default policies: $B_WHITE"
+# IPv4
 $IPTABLES -P INPUT DROP || abortexit
 $IPTABLES -P OUTPUT ACCEPT || abortexit
 $IPTABLES -P FORWARD DROP || abortexit
 $IPTABLES -L |grep Chain || abortexit
+# IPv6
+$IP6TABLES -P INPUT DROP || abortexit
+$IP6TABLES -P OUTPUT ACCEPT || abortexit
+$IP6TABLES -P FORWARD DROP || abortexit
+$IP6TABLES -L |grep Chain || abortexit
 
-# Custom chains used by kwnarc
+# Custom chains used by kwnarc, IPv4 and IPv6
 NEW_CHAINS="SPOOF_CHK SANITY_CHK STATE_CHK TCP_CHK UDP_CHK ICMP_CHK CUST_LOG"
 
 # Create new chains
 echo -n $NORMAL"Creating chains: "
 for newchain in ${=NEW_CHAINS} ; {
 	if [ "$LOG_DROPS" != 'no' ] ; then
+		# IPv4
 		$IPTABLES -N $newchain || abortexit
+		# IPv6
+		$IP6TABLES -N $newchain || abortexit
 		echo -n "${B_WHITE}${newchain}${NORMAL} "
 	else
 		if [ "$newchain" != "CUST_LOG" ] ; then
+			# IPv4
 			$IPTABLES -N $newchain || abortexit
+			# IPv6
+			$IP6TABLES -N $newchain || abortexit
 			echo -n "${B_WHITE}${newchain}${NORMAL} "
 		fi
 	fi
 }
+# only IPv6 RH_CHK
+for newchain in RH_CHK ; {
+	$IP6TABLES -N $newchain || abortexit
+	echo -n "${B_WHITE}${newchain}${NORMAL} "
+}
 echo
 
-#
-# Assign optional options.
-#
+##
+## Assign optional options.
+##
 
 # Define DEFAULT_TARGET
 if [ "$LOG_DROPS" = 'yes' ] ; then
@@ -502,14 +614,20 @@ else
 	ICMP_TARGET='DROP'
 fi
 
-# Drop broadcasts to the external interface
+##
+## Drop broadcasts to the external interface
+##
 
+# only IPv4
+##########################################
+# INFO: IPv6 hat kein Broadcast
+##########################################
 if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 	if [ "$BROADCAST_NETWORKS" != '' ] ; then
 	echo -n "Dropping Broadcasts on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} to: "
 		for network in ${=BROADCAST_NETWORKS} ; {
 			$IPTABLES -t mangle -A PREROUTING -m state --state NEW -d $network \
-			-i $EXTERNAL_INTERFACE -j DROP || abortexit
+				-i $EXTERNAL_INTERFACE -j DROP || abortexit
 			echo -n "${B_WHITE}${network}${NORMAL} "
 		}
 		echo
@@ -518,9 +636,9 @@ if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 				echo -n "Dropping Broadcasts on ${B_WHITE}${LAN_INTERFACE}${NORMAL} to: "
 				for network in ${=BROADCAST_NETWORKS} ; {
 					$IPTABLES -t mangle -A PREROUTING -m state --state NEW \
-					-d $network -i $LAN_INTERFACE -j DROP || abortexit
-				echo -n "${B_WHITE}${network}${NORMAL} "
-			}
+						-d $network -i $LAN_INTERFACE -j DROP || abortexit
+					echo -n "${B_WHITE}${network}${NORMAL} "
+				}
 				echo
 			fi
 		fi
@@ -529,7 +647,7 @@ if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 				echo -n "Dropping Broadcasts on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} to: "
 				for network in ${=BROADCAST_NETWORKS} ; {
 					$IPTABLES -t mangle -A PREROUTING -m state --state NEW \
-					-d $network -i $DMZ_INTERFACE -j DROP || abortexit
+						-d $network -i $DMZ_INTERFACE -j DROP || abortexit
 					echo -n "${B_WHITE}${network}${NORMAL} "
 				}
 				echo
@@ -538,10 +656,20 @@ if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 	fi
 fi
 
-#
-# Chain SPOOF_CHK - Anti-spoofing checking for reserved and private IP addresses
-#
+##
+## Chain RH_CHK - drop packets with RH0 headers
+##
 
+# only IPv6
+$IP6TABLES -A RH_CHK -m rt --rt-type 0 -j DROP || abortexit
+
+##
+## Chain SPOOF_CHK - Anti-spoofing checking for reserved and private IP addresses
+##
+
+########################################
+# TODO: IPv6 fehlt
+########################################
 if [ "$RESERVED_NETWORKS" != '' ] ; then
 	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for reserved network(s): "
 	for network in ${=RESERVED_NETWORKS} ; {
@@ -579,32 +707,43 @@ if [ "$EXTERNAL_INTERFACE_IP" != '' ] ; then
 	$IPTABLES -A SPOOF_CHK -s $EXTERNAL_INTERFACE_IP -i $EXTERNAL_INTERFACE -j $SPOOF_TARGET || abortexit
 fi
 
-#
-# Chain SANITY_CHK
-#
+##
+## Chain SANITY_CHK
+##
 
 # Check for illegal flags - usually evidence of a probe or worse
 
 if [ "$ILLEGAL_TCP_FLAGS" != '' ] ; then
 	echo -n "Enabling checking for illegal TCP flag types: "
 	for flags in ${=ILLEGAL_TCP_FLAGS} ; {
+		# IPv4
 		$IPTABLES -A SANITY_CHK -p tcp --tcp-flags ALL $flags -j $ILLEGAL_TARGET || abortexit
+		# IPv6
+		$IP6TABLES -A SANITY_CHK -p tcp --tcp-flags ALL $flags -j $ILLEGAL_TARGET || abortexit
 		echo -n "${B_WHITE}${flags}${NORMAL} "
 	}
 	echo
+	# IPv4
 	$IPTABLES -A SANITY_CHK -p tcp --tcp-flags ALL FIN -j $ILLEGAL_TARGET || abortexit
 	$IPTABLES -A SANITY_CHK -p tcp --tcp-flags ALL NONE -j $ILLEGAL_TARGET || abortexit
+	# IPv6
+	$IP6TABLES -A SANITY_CHK -p tcp --tcp-flags ALL FIN -j $ILLEGAL_TARGET || abortexit
+	$IP6TABLES -A SANITY_CHK -p tcp --tcp-flags ALL NONE -j $ILLEGAL_TARGET || abortexit
 fi
 
 # Drop unclean packets
 
 if [ "$DROP_UNCLEAN_PACKETS" = 'yes' ] ; then
+	# IPv4
 	$IPTABLES -A SANITY_CHK -m unclean -j $DEFAULT_TARGET || abortexit
+	# IPv6
+	$IP6TABLES -A SANITY_CHK -m unclean -j $DEFAULT_TARGET || abortexit
 fi
 
-#
-# Chain STATE_CHK - Stateful checking to drop any new packets or packets not belonging to an existing connection
-#
+##
+## Chain STATE_CHK - Stateful checking to drop any new packets or packets not
+## belonging to an existing connection
+##
 
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_INVALID" == 'yes' ]] ; then
 	LOG_INVALID_TARGET='CUST_LOG'
@@ -612,20 +751,31 @@ else
 	LOG_INVALID_TARGET='DROP'
 fi
 
+# IPv4
 $IPTABLES -A STATE_CHK -m state --state ESTABLISHED,RELATED -j ACCEPT || abortexit
 $IPTABLES -A STATE_CHK -m state --state INVALID -j $LOG_INVALID_TARGET || abortexit
 $IPTABLES -A STATE_CHK -m state --state NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
+# IPv6
+$IP6TABLES -A STATE_CHK -m state --state ESTABLISHED,RELATED -j ACCEPT || abortexit
+$IP6TABLES -A STATE_CHK -m state --state INVALID -j $LOG_INVALID_TARGET || abortexit
+$IP6TABLES -A STATE_CHK -m state --state NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
 
 
 if [ "$LAN_INTERFACE" != '' ] ; then
 	if [ "$PROTECT_FROM_LAN" = 'no' ] ; then
+		# IPv4
 		$IPTABLES -A STATE_CHK -m state --state NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A STATE_CHK -m state --state NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
 	fi
 fi
 # Should this even be an option?
 if [ "$DMZ_INTERFACE" != '' ] ; then
 	if [ "$PROTECT_FROM_DMZ" = 'no' ] ; then
+		# IPv4
 		$IPTABLES -A STATE_CHK -m state --state NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A STATE_CHK -m state --state NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
 	fi
 fi
 
@@ -637,26 +787,46 @@ fi
 if [ "$AUTH_REJECT" = 'yes' ] ; then
 	echo "Reject packets to TCP auth port instead of drop"
 	if [[ "$PROTECT_FROM_LAN" = 'no' && "$PROTECT_FROM_DMZ" = 'no' ]] ; then
-			$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 \
+		# IPv4
+		$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 \
+			-j REJECT --reject-with tcp-reset || abortexit
+		# IPv6
+		$IP6TABLES -I TCP_CHK -p tcp --syn --dport 113 \
 			-j REJECT --reject-with tcp-reset || abortexit
 	else
 		if [[ "$PROTECT_FROM_LAN" = 'yes' && "$PROTECT_FROM_DMZ" != 'yes' ]] ; then
-				$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 -i $LAN_INTERFACE \
+			# IPv4
+			$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 -i $LAN_INTERFACE \
+				-j REJECT --reject-with tcp-reset || abortexit
+			# IPv6
+			$IP6TABLES -I TCP_CHK -p tcp --syn --dport 113 -i $LAN_INTERFACE \
 				-j REJECT --reject-with tcp-reset || abortexit
 		fi
 		if [[ "$PROTECT_FROM_LAN" != 'yes' && "$PROTECT_FROM_DMZ" = 'yes' ]] ; then
-				$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 -i $DMZ_INTERFACE \
+			# IPv4
+			$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 -i $DMZ_INTERFACE \
+				-j REJECT --reject-with tcp-reset || abortexit
+			# IPv6
+			$IP6TABLES -I TCP_CHK -p tcp --syn --dport 113 -i $DMZ_INTERFACE \
 				-j REJECT --reject-with tcp-reset || abortexit
 		fi
+		# IPv4
 		$IPTABLES -I TCP_CHK -p tcp --syn --dport 113 -i $EXTERNAL_INTERFACE \
-		-j REJECT --reject-with tcp-reset || abortexit
+			-j REJECT --reject-with tcp-reset || abortexit
+		# IPv6
+		$IP6TABLES -I TCP_CHK -p tcp --syn --dport 113 -i $EXTERNAL_INTERFACE \
+			-j REJECT --reject-with tcp-reset || abortexit
 	fi
 fi
 
 # Allowed TCP ports - external access
 if [ "$ALLOW_TCP_EXT" != '' ] ; then
 	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} TCP ports: "
+	# IPv4
 	$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+		--dport $ALLOW_TCP_EXT --syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+	# IPv6
+	$IP6TABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
 		--dport $ALLOW_TCP_EXT --syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 	echo -n "${B_WHITE}${ALLOW_TCP_EXT}${NORMAL} "
 	echo
@@ -664,8 +834,12 @@ fi
 if [ "$ALLOW_TCP_EXT_RANGE" != '' ] ; then
 	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} TCP ports: "
 	for ports in ${=ALLOW_TCP_EXT_RANGE} ; {
-		$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
-			--syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+		# IPv4
+		$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+			${=IPLIMIT_OPT} --dport $ports --syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+			${=IPLIMIT_OPT} --dport $ports --syn -i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ports}${NORMAL} "
 	}
 	echo
@@ -675,16 +849,26 @@ fi
 if [ "$PROTECT_FROM_LAN" != 'no' ] ; then
 	if [[ "$ALLOW_TCP_LAN" != '' && "$LAN_INTERFACE" != '' ]] ; then
 		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} TCP ports: "
-		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT}  \
-			--dport $ALLOW_TCP_LAN --syn -i $LAN_INTERFACE -j ACCEPT || abortexit
+		# IPv4
+		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} \
+			${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ALLOW_TCP_LAN --syn \
+			-i $LAN_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} \
+			${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ALLOW_TCP_LAN --syn \
+			-i $LAN_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ALLOW_TCP_LAN}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_TCP_LAN_RANGE" != '' ] ; then
 		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} TCP ports: "
 		for ports in ${=ALLOW_TCP_LAN_RANGE} ; {
-			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
-				--syn -i $LAN_INTERFACE -j ACCEPT || abortexit
+			# IPv4
+			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+				${=IPLIMIT_OPT} --dport $ports --syn -i $LAN_INTERFACE -j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+				${=IPLIMIT_OPT} --dport $ports --syn -i $LAN_INTERFACE -j ACCEPT || abortexit
 			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
@@ -695,44 +879,92 @@ fi
 if [ "$PROTECT_FROM_DMZ" != 'no' ] ; then
 	if [ "$ALLOW_TCP_DMZ" != '' ] ; then
 		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} TCP ports: "
-		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} \
-			--dport $ALLOW_TCP_DMZ --syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
+		# IPv4
+		$IPTABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} \
+			${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ALLOW_TCP_DMZ --syn \
+			-i $DMZ_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A TCP_CHK -m multiport -m state --state NEW -p tcp ${=LENGTH_OPT} \
+			${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ALLOW_TCP_DMZ --syn \
+			-i $DMZ_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ALLOW_TCP_DMZ}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_TCP_DMZ_RANGE" != '' ] ; then
 		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} TCP ports: "
 		for ports in ${=ALLOW_TCP_DMZ_RANGE} ; {
-			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} ${=IPLIMIT_OPT} --dport $ports \
-				--syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
+			# IPv4
+			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+				${=IPLIMIT_OPT} --dport $ports --syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A TCP_CHK -m state --state NEW -p tcp ${=LENGTH_OPT} ${=LIMIT_OPT} \
+				${=IPLIMIT_OPT} --dport $ports --syn -i $DMZ_INTERFACE -j ACCEPT || abortexit
 			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
 		echo
 	fi
 fi
 
-# BIND workaround - TCP
+# BIND workaround IPv4 - TCP
 if [[ "$PROTECT_FROM_LAN" != 'no' || "$PROTECT_FROM_DMZ" != 'no' ]] ; then
 	# there must be a better way to do this
 	if [ "$BIND_IP" != '' ] ; then
 		for ip in ${=BIND_IP} ; {
 			$IPTABLES -A TCP_CHK -m state --state NEW -p tcp --dport 53 -s $ip -i lo \
-			-j ACCEPT || abortexit
+				-j ACCEPT || abortexit
+		}
+	fi
+fi
+# BIND workaround IPv6 - TCP
+if [[ "$PROTECT_FROM_LAN" != 'no' || "$PROTECT_FROM_DMZ" != 'no' ]] ; then
+	# there must be a better way to do this
+	if [ "$BIND_IPV6" != '' ] ; then
+		for ip in ${=BIND_IPV6} ; {
+			$IP6TABLES -A TCP_CHK -m state --state NEW -p tcp --dport 53 -s $ip -i lo \
+				-j ACCEPT || abortexit
 		}
 	fi
 fi
 
+# IPv4
 $IPTABLES -A TCP_CHK -j $DEFAULT_TARGET || abortexit
+# IPv6
+$IP6TABLES -A TCP_CHK -j $DEFAULT_TARGET || abortexit
 
 
 ##
 ## Chain UDP_CHK
 ##
 
+# IPv4
+# allow dhcp client to work
+$IPTABLES -A UDP_CHK -p udp --sport 67 --dport 68 -j ACCEPT || abortexit
+
+# allow MULTICAST mDNS for service discovery (be sure the MULTICAST line above
+# is uncommented)
+$IPTABLES -A UDP_CHK -p udp -d 224.0.0.251 --dport 5353 -j ACCEPT || abortexit
+
+# allow MULTICAST UPnP for service discovery (be sure the MULTICAST line above
+# is uncommented)
+$IPTABLES -A UDP_CHK -p udp -d 239.255.255.250 --dport 1900 -j ACCEPT || abortexit
+
+# IPv6
+$IP6TABLES -A UDP_CHK -p udp -s fe80::/10 --sport 547 -d fe80::/10 --dport 546 -j ACCEPT || abortexit
+
+# allow MULTICAST mDNS for service discovery
+$IP6TABLES -A UDP_CHK -p udp -d ff02::fb --dport 5353 -j ACCEPT || abortexit
+
+# allow MULTICAST UPnP for service discovery
+$IP6TABLES -A UDP_CHK -p udp -d ff02::f --dport 1900 -j ACCEPT || abortexit
+
 # Allowed UDP ports
 if [ "$ALLOW_UDP_EXT" != '' ] ; then
 	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} UDP ports: "
+	# IPv4
 	$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_EXT \
+		-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+	# IPv6
+	$IP6TABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_EXT \
 		-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 	echo -n "${B_WHITE}${ALLOW_UDP_EXT}${NORMAL} "
 	echo
@@ -740,7 +972,11 @@ fi
 if [ "$ALLOW_UDP_EXT_RANGE" != '' ] ; then
 	echo -n "Allow external connections on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} UDP ports: "
 	for ports in ${=ALLOW_UDP_EXT_RANGE} ; {
+		# IPv4
 		$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
+			-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 			-i $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ports}${NORMAL} "
 	}
@@ -751,15 +987,23 @@ fi
 if [ "$PROTECT_FROM_LAN" != 'no' ] ; then
 	if [ "$ALLOW_UDP_LAN" != '' ] ; then
 		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} UDP ports: "
-		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_LAN \
-			-i $LAN_INTERFACE -j ACCEPT || abortexit
+		# IPv4
+		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp \
+			--dport $ALLOW_UDP_LAN -i $LAN_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp \
+			--dport $ALLOW_UDP_LAN -i $LAN_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ALLOW_UDP_LAN}${NORMAL} "
 		echo
 	fi
 	if [ "$ALLOW_UDP_LAN_RANGE" != '' ] ; then
 		echo -n "Allow LAN connections on ${B_WHITE}${LAN_INTERFACE}${NORMAL} UDP ports: "
 		for ports in ${=ALLOW_UDP_LAN_RANGE} ; {
+			# IPv4
 			$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
+				-i $LAN_INTERFACE -j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 				-i $LAN_INTERFACE -j ACCEPT || abortexit
 			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
@@ -771,15 +1015,23 @@ fi
 if [ "$PROTECT_FROM_DMZ" != 'no' ] ; then
 	if [ "$ALLOW_UDP_DMZ" != '' ] ; then
 		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} UDP ports: "
-		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ALLOW_UDP_DMZ \
-			-i $DMZ_INTERFACE -j ACCEPT || abortexit
+		# IPv4
+		$IPTABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp \
+			--dport $ALLOW_UDP_DMZ -i $DMZ_INTERFACE -j ACCEPT || abortexit
+		# IPv6
+		$IP6TABLES -A UDP_CHK -m multiport -m state --state NEW ${=LIMIT_OPT} -p udp \
+			--dport $ALLOW_UDP_DMZ -i $DMZ_INTERFACE -j ACCEPT || abortexit
 		echo -n "${B_WHITE}${ALLOW_UDP_DMZ}${NORMAL} "
 	echo
 	fi
 	if [ "$ALLOW_UDP_DMZ_RANGE" != '' ] ; then
 		echo -n "Allow DMZ connections on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} UDP ports: "
 		for ports in ${=ALLOW_UDP_DMZ_RANGE} ; {
+			# IPv4
 			$IPTABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
+				-i $DMZ_INTERFACE -j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A UDP_CHK -m state --state NEW ${=LIMIT_OPT} -p udp --dport $ports \
 				-i $DMZ_INTERFACE -j ACCEPT || abortexit
 			echo -n "${B_WHITE}${ports}${NORMAL} "
 		}
@@ -787,7 +1039,7 @@ if [ "$PROTECT_FROM_DMZ" != 'no' ] ; then
 	fi
 fi
 
-# BIND workaround - UDP
+# BIND workaround IPv4 - UDP
 if [[ "$PROTECT_FROM_LAN" != 'no' || "$PROTECT_FROM_DMZ" != 'no' ]] ; then
 	# there must be a better way to do this
 	if [ "$BIND_IP" != '' ] ; then
@@ -797,24 +1049,57 @@ if [[ "$PROTECT_FROM_LAN" != 'no' || "$PROTECT_FROM_DMZ" != 'no' ]] ; then
 		}
 	fi
 fi
+# BIND workaround IPv6 - UDP
+if [[ "$PROTECT_FROM_LAN" != 'no' || "$PROTECT_FROM_DMZ" != 'no' ]] ; then
+	# there must be a better way to do this
+	if [ "$BIND_IPV6" != '' ] ; then
+		for ip in ${=BIND_IPV6} ; {
+			$IP6TABLES -A UDP_CHK -m state --state NEW -p udp --dport 53 -s $ip -i lo \
+			-j ACCEPT || abortexit
+		}
+	fi
+fi
 
 # Traceroute workaround for UNIX hosts - is there a better way to do this?
 if [ "$ANSWER_TRACEROUTE" = 'yes' ] ; then
 	echo "Firewall will answer traceroutes (not recommended)"
+	# IPv4
 	$IPTABLES -A UDP_CHK -m state --state NEW -m limit --limit $PING_RATE --limit-burst $BURST_MAX \
+		-p udp  --dport 33434:38000 -j ACCEPT || abortexit
+	# IPv5
+	$IP6TABLES -A UDP_CHK -m state --state NEW -m limit --limit $PING_RATE --limit-burst $BURST_MAX \
 		-p udp  --dport 33434:38000 -j ACCEPT || abortexit
 fi
 
+# IPv4
 $IPTABLES -A UDP_CHK -j $DEFAULT_TARGET || abortexit
+# IPv6
+$IP6TABLES -A UDP_CHK -j $DEFAULT_TARGET || abortexit
 
-#
-# ICMP_CHK section
-#
+##
+## ICMP_CHK section
+##
+
+# for stateless autoconfiguration (restrict NDP messages to hop limit of 255)
+# only IPv6
+echo -n "Enabling NDP ICMPV6 message types: "
+NDP_ICMPV6_MESSAGE="neighbor-solicitation neighbor-advertisement router-solicitation router-advertisement"
+for mtype in ${=NDP_ICMPV6_MESSAGE} ; {
+	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type $mtype -m hl --hl-eq 255 -j ACCEPT
+}
+
+# for multicast ping replies from link-local addresses (these don't have an
+# associated connection and would otherwise be marked INVALID)
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reply -s fe80::/10 -j ACCEPT
 
 # To answer or not to answer
 if [ "$ANSWER_PING" = 'yes' ] ; then
 	echo "Firewall will answer pings"
+	# IPv4
 	$IPTABLES -A ICMP_CHK -p icmp --icmp-type echo-request -m limit --limit $PING_RATE \
+		--limit-burst $BURST_MAX -j ACCEPT || abortexit
+	# IPv6
+	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-request -m limit --limit $PING_RATE \
 		--limit-burst $BURST_MAX -j ACCEPT || abortexit
 fi
 
@@ -828,15 +1113,34 @@ if [ "$ALLOW_ICMP_MESSAGE" != '' ] ; then
 	}
 	echo
 fi
-$IPTABLES -A ICMP_CHK -j $ICMP_TARGET || abortexit
+# Allow other ICMPV6 messages
+if [ "$ALLOW_ICMPV6_MESSAGE" != '' ] ; then
+	echo -n "Enabling ICMPV6 message types: "
+	for mtype in ${=ALLOW_ICMPV6_MESSAGE} ; {
+		$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type $mtype -m limit --limit $PING_RATE \
+			--limit-burst $BURST_MAX -j ACCEPT || abortexit
+		echo -n "${B_WHITE}${mtype}${NORMAL} "
+	}
+	echo
+fi
 
-#
-# Chain CUST_LOG - customized logging rules
-# Comment: Doesn't seem the most efficient way to log traffic.  Currently packets are matched three
-# times before being dropped.  Once to jumped to this chain, again to be logged with customized options,
-# and finally explicitly matched and dropped to avoid duplicate log entries if LOG_ALL_ELSE is enabled.
+# IPv4
+$IPTABLES -A ICMP_CHK -j $ICMP_TARGET || abortexit
+# IPv6
+$IP6TABLES -A ICMP_CHK -j $ICMP_TARGET || abortexit
+
+##
+## Chain CUST_LOG - customized logging rules
+## Comment: Doesn't seem the most efficient way to log traffic.  Currently packets are matched three
+## times before being dropped.  Once to jumped to this chain, again to be logged with customized options,
+## and finally explicitly matched and dropped to avoid duplicate log entries if LOG_ALL_ELSE is enabled.
+##
 
 # Log Spoofed traffic
+# IPv4
+#############################
+# TODO: IPv6 fehlt
+#############################
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
 	if [ "$RESERVED_NETWORKS" != '' ] ; then
 		for network in ${=RESERVED_NETWORKS} ; {
@@ -868,6 +1172,7 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
 			fi
 		}
 	fi
+	# IPv4
 	if [ "$EXTERNAL_INTERFACE_IP" != '' ] ; then
 		$IPTABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IP -i $EXTERNAL_INTERFACE -j LOG \
 		--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
@@ -877,49 +1182,103 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
 			-j DROP || abortexit
 		fi
 	fi
+	# IPv6
+	if [ "$EXTERNAL_INTERFACE_IPV6" != '' ] ; then
+		$IP6TABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IPV6 -i $EXTERNAL_INTERFACE -j LOG \
+		--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
+		--log-tcp-options || abortexit
+		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			$IP6TABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IPV6 -i $EXTERNAL_INTERFACE \
+			-j DROP || abortexit
+		fi
+	fi
 fi
 
 # Log TCP packets with illegal TCP flags - usually evidence of a probe or worse
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_ILLEGAL" == 'yes' ]] ; then
 	if [ "$ILLEGAL_TCP_FLAGS" != '' ] ; then
 		for flags in ${=ILLEGAL_TCP_FLAGS} ; {
+			# IPv4
 			$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $flags -j LOG --log-level $WARN_LOG_LEVEL \
 			--log-prefix "ILLEGAL " --log-ip-options --log-tcp-options || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $flags -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-prefix "ILLEGAL " --log-ip-options --log-tcp-options || abortexit
 			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+				# IPv4
 				$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $flags -j DROP || abortexit
+				# IPv6
+				$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $flags -j DROP || abortexit
 			fi
 		}
-		# ACK scans
-		$IPTABLES -A CUST_LOG -m state --state NEW -p tcp --tcp-flags ALL ACK -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-prefix "ACKSCAN " --log-ip-options --log-tcp-options || abortexit
+		## ACK scans
+		# IPv4
+		$IPTABLES -A CUST_LOG -m state --state NEW -p tcp --tcp-flags ALL ACK -j LOG \
+			--log-level $WARN_LOG_LEVEL --log-prefix "ACKSCAN " --log-ip-options \
+			--log-tcp-options || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m state --state NEW -p tcp --tcp-flags ALL ACK -j LOG \
+			--log-level $WARN_LOG_LEVEL --log-prefix "ACKSCAN " --log-ip-options \
+			--log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -m state --state NEW -p tcp --tcp-flags ALL ACK -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m state --state NEW -p tcp --tcp-flags ALL ACK -j DROP || abortexit
 		fi
-		# FIN scans
+		## FIN scans
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $FINSCAN -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-prefix "FINSCAN " --log-ip-options --log-tcp-options || abortexit
+			--log-prefix "FINSCAN " --log-ip-options --log-tcp-options || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $FINSCAN -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-prefix "FINSCAN " --log-ip-options --log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $FINSCAN -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $FINSCAN -j DROP || abortexit
 		fi
-		# XMAS scans
+		## XMAS scans
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $XMASSCAN -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-prefix "XMASSCAN " --log-ip-options --log-tcp-options || abortexit
+			--log-prefix "XMASSCAN " --log-ip-options --log-tcp-options || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $XMASSCAN -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-prefix "XMASSCAN " --log-ip-options --log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $XMASSCAN -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $XMASSCAN -j DROP || abortexit
 		fi
-		# Null scans
+		## Null scans
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $NULLSCAN -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-prefix "NULLSCAN " --log-ip-options --log-tcp-options || abortexit
+			--log-prefix "NULLSCAN " --log-ip-options --log-tcp-options || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $NULLSCAN -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-prefix "NULLSCAN " --log-ip-options --log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -p tcp --tcp-flags ALL $NULLSCAN -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -p tcp --tcp-flags ALL $NULLSCAN -j DROP || abortexit
 		fi
 	fi
-	# Unclean
+	## Unclean
 	if [ "$DROP_UNCLEAN_PACKETS" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -m unclean -j LOG --log-level $WARN_LOG_LEVEL --log-prefix "UNCLEAN " \
-		--log-ip-options --log-tcp-options || abortexit
+			--log-ip-options --log-tcp-options || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m unclean -j LOG --log-level $WARN_LOG_LEVEL --log-prefix "UNCLEAN " \
+			--log-ip-options --log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -m unclean -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m unclean -j DROP || abortexit
 		fi
 	fi
 fi
@@ -928,17 +1287,33 @@ fi
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_PROBES" == 'yes' ]] ; then
 	if [ "$TCP_PROBE" != '' ] ; then
 		echo -n "Enabling probable probe logging [TCP]: "
+		# IPv4
 		$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-tcp-options --log-ip-options --log-prefix "PROBE " || abortexit
+			--log-tcp-options --log-ip-options --log-prefix "PROBE " || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-tcp-options --log-ip-options --log-prefix "PROBE " || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE -j DROP || abortexit
 		fi
 		echo -n "${B_WHITE}${TCP_PROBE}${NORMAL}"
 		if [ "$TCP_PROBE2" != '' ] ; then
-			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j LOG --log-level $WARN_LOG_LEVEL \
-			--log-tcp-options --log-ip-options --log-prefix "PROBE " || abortexit
+			# IPv4
+			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j LOG \
+				--log-level $WARN_LOG_LEVEL --log-tcp-options --log-ip-options \
+				--log-prefix "PROBE " || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j LOG \
+				--log-level $WARN_LOG_LEVEL --log-tcp-options --log-ip-options \
+				--log-prefix "PROBE " || abortexit
 			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+				# IPv4
 				$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j DROP || abortexit
+				# IPv6
+				$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $TCP_PROBE2 -j DROP || abortexit
 			fi
 			echo -n "${B_WHITE},${TCP_PROBE2}${NORMAL}"
 		fi
@@ -946,17 +1321,31 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_PROBES" == 'yes' ]] ; then
 	fi
 	if [ "$UDP_PROBE" != '' ] ; then
 		echo -n "Enabling probable probe logging [UDP]: "
+		# IPv4
 		$IPTABLES -A CUST_LOG -m multiport -p udp --dport $UDP_PROBE -j LOG --log-level $WARN_LOG_LEVEL \
-		--log-ip-options --log-prefix "PROBE " || abortexit
+			--log-ip-options --log-prefix "PROBE " || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m multiport -p udp --dport $UDP_PROBE -j LOG --log-level $WARN_LOG_LEVEL \
+			--log-ip-options --log-prefix "PROBE " || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A CUST_LOG -m multiport -p udp --dport $UDP_PROBE -j DROP || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m multiport -p udp --dport $UDP_PROBE -j DROP || abortexit
 		fi
 		echo -n "${B_WHITE}${UDP_PROBE}${NORMAL}"
 		if [ "$UDP_PROBE2" != '' ] ; then
-			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j LOG --log-level $WARN_LOG_LEVEL \
-			--log-ip-options --log-prefix "PROBE " || abortexit
+			# IPv4
+			$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j LOG \
+				--log-level $WARN_LOG_LEVEL --log-ip-options --log-prefix "PROBE " || abortexit
+			# IPv6
+			$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j LOG \
+				--log-level $WARN_LOG_LEVEL --log-ip-options --log-prefix "PROBE " || abortexit
 			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+				# IPv4
 				$IPTABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j DROP || abortexit
+				# IPv6
+				$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport $UDP_PROBE2 -j DROP || abortexit
 			fi
 			echo -n "${B_WHITE},${UDP_PROBE2}${NORMAL}"
 		fi
@@ -966,61 +1355,115 @@ fi
 
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_INVALID" == 'yes' ]] ; then
 	echo "Enabling INVALID state logging"
+	# IPv4
 	$IPTABLES -A CUST_LOG -m state --state INVALID -j LOG --log-level $WARN_LOG_LEVEL \
-	--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
+		--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -m state --state INVALID -j LOG --log-level $WARN_LOG_LEVEL \
+		--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -m state --state INVALID -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m state --state INVALID -j DROP || abortexit
 	fi
+	# IPv4
 	$IPTABLES -A CUST_LOG -m state --state NEW -p tcp ! --syn -j LOG --log-level $WARN_LOG_LEVEL \
-	--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
+		--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -m state --state NEW -p tcp ! --syn -j LOG --log-level $WARN_LOG_LEVEL \
+		--log-prefix "INVALID " --log-ip-options --log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -m state --state NEW -p tcp ! --syn -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m state --state NEW -p tcp ! --syn -j DROP || abortexit
 	fi
 fi
 
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_ICMP" == 'yes' ]] ; then
 	echo "Enabling ICMP protocol logging"
+	# IPv4
 	$IPTABLES -A CUST_LOG -p icmp -j LOG --log-level $NORM_LOG_LEVEL --log-prefix "ICMP: " \
-	--log-ip-options || abortexit
+		--log-ip-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -p icmpv6 -j LOG --log-level $NORM_LOG_LEVEL --log-prefix "ICMPV6: " \
+		--log-ip-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -p icmp -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p icmpv6 -j DROP || abortexit
 	fi
 fi
 
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_SMB" == 'no' ]] ; then
 	echo "Disabling SMB/CIFS logging"
+	# IPv4
 	$IPTABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j DROP || abortexit
 	$IPTABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j DROP || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j DROP || abortexit
+	$IP6TABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j DROP || abortexit
 fi
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_SMB" == 'yes' ]] ; then
 	echo "Enabling SMB/CIFS logging"
+	# IPv4
 	$IPTABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j LOG --log-level \
-	$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
+		$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
 	$IPTABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j LOG --log-level \
-	$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
+		$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j LOG --log-level \
+		$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
+	$IP6TABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j LOG --log-level \
+		$NORM_LOG_LEVEL --log-prefix "SMB: " --log-ip-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j DROP || abortexit
 		$IPTABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -m multiport -p tcp --dport netbios-ssn,microsoft-ds -j DROP || abortexit
+		$IP6TABLES -A CUST_LOG -m multiport -p udp --dport netbios-ns,netbios-dgm -j DROP || abortexit
 	fi
 fi
 
-if [[ "$CHECK_SYN_PACKET_LENGTH" == 'yes' && "$LOG_DROPS" == 'yes' && "$LOG_PACKET_LENGTH" == 'yes' ]] ; then
+if [[ "$CHECK_SYN_PACKET_LENGTH" == 'yes' ]] && \
+	[[ "$LOG_DROPS" == 'yes' ]] && [[ "$LOG_PACKET_LENGTH" == 'yes' ]] ; then
 	echo "Enabling illegal SYN packet length logging"
+	# IPv4
 	$IPTABLES -A CUST_LOG -p tcp -m length ! --length $PACKET_LENGTH -j LOG --log-level $WARN_LOG_LEVEL \
-	--log-prefix "PACKET_LENGTH_BAD: " --log-ip-options --log-tcp-options || abortexit
+		--log-prefix "PACKET_LENGTH_BAD: " --log-ip-options --log-tcp-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -p tcp -m length ! --length $PACKET_LENGTH -j LOG --log-level $WARN_LOG_LEVEL \
+		--log-prefix "PACKET_LENGTH_BAD: " --log-ip-options --log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp -m length ! --length $PACKET_LENGTH -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp -m length ! --length $PACKET_LENGTH -j DROP || abortexit
 	fi
 fi
 
 if [[ "$ENABLE_IPLIMIT" == 'yes' && "$LOG_DROPS" == 'yes' && "$LOG_IPLIMIT_EXCEED" == 'yes' ]] ; then
 	echo "Enabling IP connection limit exceeded logging"
-	$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT --$CONNMODULE-mask $IPLIMIT_NETMASK \
-	-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
-	--log-tcp-options || abortexit
+	# IPv4
+	$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
+		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
+		--log-tcp-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
+		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
+		--log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
-		--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
+			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
 	fi
 fi
 
@@ -1030,27 +1473,44 @@ if [[ "$ENABLE_LIMIT_RATE" == 'yes' && "$LOG_DROPS" == 'yes' && "$LOG_LIMIT_EXCE
 #	$IPTABLES -A CUST_LOG -p tcp -m limit ! --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
 #	-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "LIMIT_EXCEED: " --log-ip-options \
 #	--log-tcp-options || abortexit
+	# IPv4
 	$IPTABLES -A CUST_LOG -p tcp -m limit --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
-	-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "LIMIT_EXCEED: " --log-ip-options \
-	--log-tcp-options || abortexit
+		-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "LIMIT_EXCEED: " --log-ip-options \
+		--log-tcp-options || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -p tcp -m limit --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
+		-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "LIMIT_EXCEED: " --log-ip-options \
+		--log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 #		$IPTABLES -A CUST_LOG -p tcp -m limit ! --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
 #		-j DROP || abortexit
+		# IPv4
 		$IPTABLES -A CUST_LOG -p tcp -m limit --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
-		-j DROP || abortexit
+			-j DROP || abortexit
+		# IPv6
+		$IP6TABLES -A CUST_LOG -p tcp -m limit --limit $LIMIT_RATE --limit-burst $LIMIT_BURST \
+			-j DROP || abortexit
 	fi
 fi
 
 # Just in case we missed anything
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_ALL_ELSE" == 'yes' ]] ; then
 	echo "Enabling logging for all other dropped packets"
+	# IPv4
 	$IPTABLES -A CUST_LOG -j LOG --log-level $NORM_LOG_LEVEL --log-ip-options --log-tcp-options \
-	--log-prefix "ALL_ELSE " || abortexit
+		--log-prefix "ALL_ELSE " || abortexit
 	$IPTABLES -A CUST_LOG -j DROP || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -j LOG --log-level $NORM_LOG_LEVEL --log-ip-options --log-tcp-options \
+		--log-prefix "ALL_ELSE " || abortexit
+	$IP6TABLES -A CUST_LOG -j DROP || abortexit
 fi
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_ALL_ELSE" == 'no' ]] ; then
 	echo "Default (non-explicit) drops not logged"
+	# IPv4
 	$IPTABLES -A CUST_LOG -j DROP || abortexit
+	# IPv6
+	$IP6TABLES -A CUST_LOG -j DROP || abortexit
 fi
 
 if [ "$LOG_DROPS" != 'yes' ] ; then
@@ -1061,6 +1521,7 @@ fi
 ## Chain checking order
 ##
 
+# IPv4 INPUT
 $IPTABLES -A INPUT -j SPOOF_CHK || abortexit
 $IPTABLES -A INPUT -p tcp -j SANITY_CHK || abortexit
 $IPTABLES -A INPUT -j STATE_CHK || abortexit
@@ -1068,39 +1529,71 @@ $IPTABLES -A INPUT -p tcp -j TCP_CHK || abortexit
 $IPTABLES -A INPUT -p udp -j UDP_CHK || abortexit
 $IPTABLES -A INPUT -p icmp -j ICMP_CHK || abortexit
 
+# IPv6 INPUT
+$IP6TABLES -A INPUT -j RH_CHK || abortexit
+$IP6TABLES -A INPUT -j SPOOF_CHK || abortexit
+$IP6TABLES -A INPUT -p tcp -j SANITY_CHK || abortexit
+$IP6TABLES -A INPUT -j STATE_CHK || abortexit
+$IP6TABLES -A INPUT -p tcp -j TCP_CHK || abortexit
+$IP6TABLES -A INPUT -p udp -j UDP_CHK || abortexit
+$IP6TABLES -A INPUT -p icmpv6 -j ICMP_CHK || abortexit
+
+# IPv6 OUTPUT
+$IP6TABLES -A OUTPUT -j RH_CHK || abortexit
+$IP6TABLES -A OUTPUT -p icmpv6 -j ICMP_CHK || abortexit
+
 # Accept loopback traffic
+# #######################
+# TODO: normal pruefen (::1/64)
+# #######################
 if [ "$LOOPBACK_ACCEPT" = 'yes' ] ; then
 	case "$LOOPBACK_MODE" in
 		"paranoid" )
+			# IPv4
 			$IPTABLES -I INPUT 4 -m state --state NEW -s 127.0.0.1 -d 127.0.0.1 -i lo \
-			-j ACCEPT || abortexit
-		;;
+				-j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -I INPUT 4 -m state --state NEW -s ::1/128 -d ::1/128 -i lo \
+				-j ACCEPT || abortexit
+			;;
 		"normal" )
+			# IPv4
 		    $IPTABLES -I INPUT 4 -m state --state NEW -s 127.0.0.1/24 -d 127.0.0.1/24 -i lo \
-		    -j ACCEPT || abortexit
-		;;
+		    	-j ACCEPT || abortexit
+			# IPv6
+		    $IP6TABLES -I INPUT 4 -m state --state NEW -s ::1/64 -d ::1/64 -i lo \
+		    	-j ACCEPT || abortexit
+			;;
 		"loose" )
+			# IPv4
 			$IPTABLES -I INPUT 4 -m state --state NEW -i lo -j ACCEPT || abortexit
-		;;
+			# IPv6
+			$IP6TABLES -I INPUT 4 -m state --state NEW -i lo -j ACCEPT || abortexit
+			;;
 		* )
 			echo $RED"Conf error:$NORMAL Check ${B_WHITE}LOOPBACK_MODE$NORMAL"
 			confexit
-		;;
+			;;
 	esac
 fi
 
-#
-# Masquerade networks
-#
+##
+## Masquerade networks
+##
 
+###################################
+# TODO: IPv6 und NAT?
+###################################
 # NAT section
 if [ "$MASQUERADE" = 'yes' ] ; then
 	echo -n "Enabling IP forwarding: "
-	echo "1" >/proc/sys/net/ipv4/ip_forward && echo $RCOK || echo $RCFAIL
+	echo "1" >/proc/sys/net/ipv4/ip_forward && \
+	echo "1" >/proc/sys/net/ipv6/conf/all/forwarding && \
+	echo "1" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 	if [ "$LOAD_MODULES" = 'yes' ] ; then
 		echo -n "Enabling network masquerading: "
 		for module in ${=NAT_MODULES} ; {
-			if ! grep $module /var/tmp/kwnarc.tmp > /dev/null 2>&1 ; then
+			if ! grep $module ${TMPDIR}/kwnarc.tmp > /dev/null 2>&1 ; then
 				/sbin/modprobe $module && echo -n "[ ${B_WHITE}${module}${NORMAL} - $RCOK ] " || echo -n \
 				"[ ${B_WHITE}${module}${NORMAL} - $RCFAIL ] "
 			fi
@@ -1109,10 +1602,16 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 	else
 		echo "Enabling network masquerading"
 	fi
+	# IPv4
 	$IPTABLES -t nat -F POSTROUTING || abortexit
+	# IPv6
+	$IP6TABLES -t nat -F POSTROUTING || abortexit
+	$IP6TABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
+		-j SNAT --to $EXTERNAL_INTERFACE_IPV6 || abortexit
+	# only IPv4
 	if [ "$DYNAMIC_EXTERNAL_IP" = 'no' ] ; then
 		$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
-		-j SNAT --to $EXTERNAL_INTERFACE_IP || abortexit
+			-j SNAT --to $EXTERNAL_INTERFACE_IP || abortexit
 	else
 		$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE -j MASQUERADE || abortexit
 	fi
@@ -1120,54 +1619,94 @@ fi
 
 # Add forwarding rules
 if [ "$MASQUERADE" = 'yes' ] ; then
+	# IPv4
 	$IPTABLES -A FORWARD -j SPOOF_CHK || abortexit
 	$IPTABLES -A FORWARD -p tcp -j SANITY_CHK || abortexit
 	$IPTABLES -A FORWARD -j STATE_CHK || abortexit
+	# IPv6
+	$IP6TABLES -A FORWARD -j RH_CHK || abortexit
+	$IP6TABLES -A FORWARD -j SPOOF_CHK || abortexit
+	$IP6TABLES -A FORWARD -p tcp -j SANITY_CHK || abortexit
+	$IP6TABLES -A FORWARD -j STATE_CHK || abortexit
 	if [ "$LAN_INTERFACE" != '' ] ; then
 		if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE -o $EXTERNAL_INTERFACE \
-			-j ACCEPT || abortexit
+				-j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE -o $EXTERNAL_INTERFACE \
+				-j ACCEPT || abortexit
 		fi
 	fi
 	if [ "$DMZ_INTERFACE" != '' ] ; then
 		if [ "$PROTECT_FROM_DMZ" = 'yes' ] ; then
+			# IPv4
 			$IPTABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $EXTERNAL_INTERFACE \
-			-j ACCEPT || abortexit
+				-j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $EXTERNAL_INTERFACE \
+				-j ACCEPT || abortexit
 		fi
 	fi
 	if [ "$FORWARD_LAN_TO_DMZ" = 'yes' ] ; then
 		if [[ "$LAN_INTERFACE" != '' && "$DMZ_INTERFACE" != '' ]] ; then
+			# IPv4
 			$IPTABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE -o $DMZ_INTERFACE \
-			-j ACCEPT || abortexit
+				-j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE -o $DMZ_INTERFACE \
+				-j ACCEPT || abortexit
 		fi
 	fi
 	if [ "$FORWARD_DMZ_TO_LAN" = 'yes' ] ; then
 		if [[ "$LAN_INTERFACE" != '' && "$DMZ_INTERFACE" != '' ]] ; then
+			# IPv4
 			$IPTABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $LAN_INTERFACE \
-			-j ACCEPT || abortexit
+				-j ACCEPT || abortexit
+			# IPv6
+			$IP6TABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $LAN_INTERFACE \
+				-j ACCEPT || abortexit
 		fi
 	fi
 else
 	if [ "$ALWAYS_FORWARD" = 'yes' ] ; then
+		# IPv4
 		$IPTABLES -A FORWARD -j SPOOF_CHK || abortexit
 		$IPTABLES -A FORWARD -p tcp -i $EXTERNAL_INTERFACE -j SANITY_CHK || abortexit
 		$IPTABLES -A FORWARD -j STATE_CHK || abortexit
+		# IPv6
+		$IP6TABLES -A FORWARD -j RH_CHK || abortexit
+		$IP6TABLES -A FORWARD -j SPOOF_CHK || abortexit
+		$IP6TABLES -A FORWARD -p tcp -i $EXTERNAL_INTERFACE -j SANITY_CHK || abortexit
+		$IP6TABLES -A FORWARD -j STATE_CHK || abortexit
 		if [ "$LAN_INTERFACE" != '' ] ; then
 			if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
+				# IPv4
 				$IPTABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE \
-				-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+					-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+				# IPv6
+				$IP6TABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE \
+					-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 		    fi
 		fi
 		if [ "$DMZ_INTERFACE" != '' ] ; then
 			if [ "$PROTECT_FROM_DMZ" = 'yes' ] ; then
+				# IPv4
 				$IPTABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE \
-				-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+					-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
+				# IPv6
+				$IP6TABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE \
+					-o $EXTERNAL_INTERFACE -j ACCEPT || abortexit
 			fi
 		fi
 		if [ "$FORWARD_LAN_TO_DMZ" = 'yes' ] ; then
 			if [[ "$LAN_INTERFACE" != '' && "$DMZ_INTERFACE" != '' ]] ; then
+				# IPv4
 				$IPTABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE \
-				-o $DMZ_INTERFACE -j ACCEPT || abortexit
+					-o $DMZ_INTERFACE -j ACCEPT || abortexit
+				# IPv6
+				$IP6TABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE \
+					-o $DMZ_INTERFACE -j ACCEPT || abortexit
 			fi
 		fi
 	fi
@@ -1177,10 +1716,7 @@ fi
 ## Port Forwarding
 ##
 
-###########################################
-# Hier gehts weiter
-###########################################
-
+# IPv4
 if [ "$PORT_FORWARD" = 'yes' ] ; then
 	for var in `grep -v "^ *#" $FORWARD_CONF | grep -v '^$'` ; {
 		INTERFACE=`echo $var | cut -d \" -f2`
@@ -1196,15 +1732,53 @@ if [ "$PORT_FORWARD" = 'yes' ] ; then
 		if [ "$ORIG_IP" = 'AUTOGET_EXTERNAL_IP' ] ; then
 			ORIG_IP="$EXTERNAL_INTERFACE_IP"
 		fi
-		if [[ "$PROTOCOL" != '' && "$ORIG_IP" != '' && "$ORIG_PORT" != '' && "$NEW_IP" != '' && "$NEW_PORT" != '' ]] ; then
-			$IPTABLES -t nat -A PREROUTING -i $EXTERNAL_INTERFACE -p $PROTOCOL -d $ORIG_IP --dport $ORIG_PORT \
-			-j DNAT --to $NEW_IP:$NEW_PORT || abortexit
+		if [[ "$PROTOCOL" != '' && "$ORIG_IP" != '' && "$ORIG_PORT" != '' ]] && \
+			[[ "$NEW_IP" != '' && "$NEW_PORT" != '' ]] ; then
+			$IPTABLES -t nat -A PREROUTING -i $EXTERNAL_INTERFACE -p $PROTOCOL -d $ORIG_IP \
+				--dport $ORIG_PORT -j DNAT --to $NEW_IP:$NEW_PORT || abortexit
 			if [ "$PROTOCOL" = 'tcp' ] ; then
-				$IPTABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state --state NEW --syn \
-				-d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
+				$IPTABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state \
+					--state NEW --syn -d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
 			else
-				$IPTABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state --state NEW \
-				-d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
+				$IPTABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state \
+					--state NEW -d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
+			fi
+			echo "Forwarding ${B_WHITE}${PROTOCOL} ${ORIG_IP}:${ORIG_PORT}${NORMAL} to ${INTERFACE}:${B_WHITE}${NEW_IP}:${NEW_PORT}${NORMAL}"
+			FWDSUCCESS='true'
+		fi
+	}
+	if [ "$FWDSUCCESS" != 'true' ] ; then
+		echo $RED"Conf error:$NORMAL No ports to forward.  Check ${B_WHITE}${FORWARD_CONF}${NORMAL} for errors."
+		abortexit
+	fi
+fi
+
+# IPv6
+if [ "$PORT_FORWARD" = 'yes' ] ; then
+	for var in `grep -v "^ *#" $FORWARD6_CONF | grep -v '^$'` ; {
+		INTERFACE=`echo $var | cut -d \" -f2`
+		PROTOCOL=`echo $var | cut -d \" -f4`
+		ORIG_IP=`echo $var | cut -d \" -f6`
+		ORIG_PORT=`echo $var | cut -d \" -f8`
+		NEW_IP=`echo $var | cut -d \" -f10`
+		NEW_PORT=`echo $var | cut -d \" -f12`
+		# default to the DMZ interface if INTERFACE is empty
+		if [ "$INTERFACE" = '' ] ; then
+			INTERFACE="$DMZ_INTERFACE"
+		fi
+		if [ "$ORIG_IP" = 'AUTOGET_EXTERNAL_IPV6' ] ; then
+			ORIG_IP="$EXTERNAL_INTERFACE_IPV6"
+		fi
+		if [[ "$PROTOCOL" != '' && "$ORIG_IP" != '' && "$ORIG_PORT" != '' ]] && \
+			[[ "$NEW_IP" != '' && "$NEW_PORT" != '' ]] ; then
+			$IP6TABLES -t nat -A PREROUTING -i $EXTERNAL_INTERFACE -p $PROTOCOL -d $ORIG_IP \
+				--dport $ORIG_PORT -j DNAT --to $NEW_IP:$NEW_PORT || abortexit
+			if [ "$PROTOCOL" = 'tcp' ] ; then
+				$IP6TABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state \
+					--state NEW --syn -d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
+			else
+				$IP6TABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state \
+					--state NEW -d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
 			fi
 			echo "Forwarding ${B_WHITE}${PROTOCOL} ${ORIG_IP}:${ORIG_PORT}${NORMAL} to ${INTERFACE}:${B_WHITE}${NEW_IP}:${NEW_PORT}${NORMAL}"
 			FWDSUCCESS='true'

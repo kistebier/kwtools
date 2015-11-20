@@ -1,14 +1,15 @@
 # Funktion forward_conf{{{
 #
-# usage: forward_conf [ -i | -c | -d ]
+# usage: forward_conf [ -i | -c | -d ] [ FORWARD_NARC_CONF | FORWARD6_NARC_CONF ]
 # -i Forwarding Regeln anlegen.
 # -c Forwarding Regeln aendern.
 # -d - Forwarding Regeln loeschen.
 #
 forward_conf() {
-	if [ "$#" -eq 1 ] ; then
+	if [ "$#" -eq 2 ] ; then
 		local Opt
 		Opt="$1"
+		CONF_FILE="$2"
 		# Funktion no_forward_rules_msg# {{{
 		#
 		no_forward_rules_msg() {
@@ -138,12 +139,12 @@ forward_conf() {
 						if [ -n "$PROTOCOL" -a -n "$ORIG_IP" -a -n "$ORIG_PORT" -a -n "$NEW_IP" -a -n "$NEW_PORT" ] ; then
 							if [ -n "$FORWARD_LIST_OLD" ] ; then
 								# alten Eintrag loeschen
-								print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##(s#)${FORWARD_LIST_OLD}*} > ${FORWARD_NARC_CONF}$$
-								mv "${FORWARD_NARC_CONF}$$" "$FORWARD_NARC_CONF"
+								print -l ${(R)${(f)"$(< $CONF_FILE)"}##(s#)${FORWARD_LIST_OLD}*} > ${CONF_FILE}$$
+								mv "${CONF_FILE}$$" "$CONF_FILE"
 							else
 								# erstmal etwas vergleichbares loeschen
-								print -l ${(R)${(f)"$(< $FORWARD_NARC_CONF)"}##(s#)(INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\")} > ${FORWARD_NARC_CONF}$$ 
-								mv "${FORWARD_NARC_CONF}$$" "$FORWARD_NARC_CONF"
+								print -l ${(R)${(f)"$(< $CONF_FILE)"}##(s#)(INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\")} > ${CONF_FILE}$$ 
+								mv "${CONF_FILE}$$" "$CONF_FILE"
 							fi
 							# Regel einfuegen
 							>> "$FORWARD_NARC_CONF" <<< "INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\""
