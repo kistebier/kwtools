@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 21.11.2015
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -493,6 +493,18 @@ if [ "$TEMP_ADDR" = 'yes' ] ; then
 	echo -n "Enabling IPv6 privacy addressing: "
 	echo "2" > /proc/sys/net/ipv6/conf/all/use_tempaddr && \
 	echo "2" > /proc/sys/net/ipv6/conf/default/use_tempaddr && echo $RCOK || echo $RCFAIL
+	if [[ -n $TEMP_PREFERED_LFT ]] ; then
+		echo -n "Configuration IPv6 address prefered time: "
+		echo "$TEMP_PREFERED_LFT" > /proc/sys/net/ipv6/conf/all/temp_prefered_lft && \
+		echo "$TEMP_PREFERED_LFT" > /proc/sys/net/ipv6/conf/default/temp_prefered_lft && \
+		echo $RCOK || echo $RCFAIL
+	fi
+	if [[ -n $TEMP_VALID_LFT ]] ; then
+		echo -n "Configuration IPv6 address valid time: "
+		echo "$TEMP_VALID_LFT" > /proc/sys/net/ipv6/conf/all/temp_vaid_lft && \
+		echo "$TEMP_VALID_LFT" > /proc/sys/net/ipv6/conf/default/temp_vaid_lft && \
+		echo $RCOK || echo $RCFAIL
+	fi
 fi
 
 # Preload some iptables modules

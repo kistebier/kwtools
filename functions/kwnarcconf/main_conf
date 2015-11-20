@@ -118,6 +118,9 @@ main_conf() {
 	lv_TCP_PROBE=$(gettext 'TCP_PROBE')
 	lv_TCP_PROBE2=$(gettext 'TCP_PROBE2')
 	lv_TEMP_ADDR=$(gettext 'TEMP_ADDR')
+	lv_TEMP_PREFERED_LFT=$(gettext 'TEMP_PREFERED_LFT')
+	lv_TEMP_VALID_LFT=$(gettext 'TEMP_VALID_LFT')
+	lv_TEMP_ADDR=$(gettext 'TEMP_ADDR')
 	lv_UDP_PROBE=$(gettext 'UDP_PROBE')
 	lv_UDP_PROBE2=$(gettext 'UDP_PROBE2')
 	lv_XMASSCAN=$(gettext 'XMASSCAN')
@@ -157,6 +160,7 @@ main_conf() {
 		PROTECT_FROM_DMZ \"$PROTECT_FROM_DMZ\" PROTECT_FROM_LAN \"$PROTECT_FROM_LAN\"
 		RESERVED_NETWORKS \"$RESERVED_NETWORKS\" SYNCOOKIES \"$SYNCOOKIES\"
 		TCP_PROBE \"$TCP_PROBE\" TCP_PROBE2 \"$TCP_PROBE2\" TEMP_ADDR \"$TEMP_ADDR\"
+		TEMP_PREFERED_LFT \"$TEMP_PREFERED_LFT\" TEMP_VALID_LFT \"$TEMP_VALID_LFT\"
 		UDP_PROBE \"$UDP_PROBE\"
 		UDP_PROBE2 \"$UDP_PROBE2\" XMASSCAN \"$XMASSCAN\" "$gv_Save" \"\" "$gv_Back" \"\")
 		menubox "$1" "$MAIN_CONF_TITLE" "$gv_Menupoint" "$MAIN_CONF_MENU"
@@ -1216,7 +1220,7 @@ main_conf() {
 				;;
 			$lv_TEMP_ADDR)
 				# Sollen die IPv6 Adressen geschuetzt sein (yes/no)?{{{
-				MSG=$(gettext 'Sollen ie IPv6 Adressen geschuetzt werden (ja/nein)?')
+				MSG=$(gettext 'Sollen die IPv6 Adressen geschuetzt werden (ja/nein)?')
 				yesno "$MAIN_CONF_TITLE" "$MSG" "$TEMP_ADDR"
 				if [ "$gv_Auswahl" = yes ] ; then
 					TEMP_ADDR=yes
@@ -1225,6 +1229,30 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_TEMP_ADDR
+				;;
+			$lv_TEMP_PREFERED_LFT)
+				# {{{
+				MSG=$(gettext 'Geben Sie die Anzahl an Sekunden an, wie lange die temporaere IPv6 Adresse anderen vorgezogen wird.')
+				number_input "$MAIN_CONF_TITLE" "$MSG" "$TEMP_PREFERED_LFT"
+				if [ -n "$NUMBER" ] ; then
+					TEMP_PREFERED_LFT="$NUMBER"
+				else
+					TEMP_PREFERED_LFT="86400"
+				fi
+				#}}}
+				main_conf_menue $lv_TEMP_PREFERED_LFT
+				;;
+			$lv_TEMP_VALID_LFT)
+				# {{{
+				MSG=$(gettext 'Geben Sie die Anzahl an Sekunden an, wie lange die temporaere IPv6 Adresse vorhanden sein soll.')
+				number_input "$MAIN_CONF_TITLE" "$MSG" "$TEMP_VALID_LFT"
+				if [ -n "$NUMBER" ] ; then
+					TEMP_VALID_LFT="$NUMBER"
+				else
+					TEMP_VALID_LFT="604800"
+				fi
+				#}}}
+				main_conf_menue $lv_TEMP_VALID_LFT
 				;;
 			$lv_UDP_PROBE)
 				# 15 TCP Ports pro Zeile die geprobt werden sollen.{{{
