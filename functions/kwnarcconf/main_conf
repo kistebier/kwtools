@@ -58,6 +58,7 @@ main_conf() {
 	lv_START_IPTABLES=$(gettext 'START_IPTABLES')
 	lv_LOAD_MODULES=$(gettext 'LOAD_MODULES')
 	lv_ACCEPT_SOURCE_ROUTE=$(gettext 'ACCEPT_SOURCE_ROUTE')
+	lv_ACCEPT_REDIRECTS=$(gettext 'ACCEPT_REDIRECTS')
 	lv_ALLOW_ICMP_MESSAGE=$(gettext 'ALLOW_ICMP_MESSAGE')
 	lv_ALLOW_ICMPV6_MESSAGE=$(gettext 'ALLOW_ICMPV6_MESSAGE')
 	lv_ALLOW_TCP_DMZ=$(gettext 'ALLOW_TCP_DMZ')
@@ -130,7 +131,8 @@ main_conf() {
 	main_conf_menue() {
 		MAIN_CONF_MENU=(START_IPTABLES \"$START_IPTABLES\"
 		LOAD_MODULES \"$LOAD_MODULES\" ACCEPT_SOURCE_ROUTE \"$ACCEPT_SOURCE_ROUTE\"
-		ALLOW_ICMP_MESSAGE \"$ALLOW_ICMP_MESSAGE\" ALLOW_ICMPV6_MESSAGE \"$ALLOW_ICMPV6_MESSAGE\"
+		ACCEPT_REDIRECTS \"$ACCEPT_REDIRECTS\" ALLOW_ICMP_MESSAGE \"$ALLOW_ICMP_MESSAGE\"
+		ALLOW_ICMPV6_MESSAGE \"$ALLOW_ICMPV6_MESSAGE\"
 		ALLOW_TCP_DMZ \"$ALLOW_TCP_DMZ\"
 		ALLOW_TCP_DMZ_RANGE \"$ALLOW_TCP_DMZ_RANGE\" ALLOW_UDP_DMZ \"$ALLOW_UDP_DMZ\"
 		ALLOW_UDP_DMZ_RANGE \"$ALLOW_UDP_DMZ_RANGE\" ALLOW_TCP_EXT \"$ALLOW_TCP_EXT\"
@@ -211,6 +213,19 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_ACCEPT_SOURCE_ROUTE
+				;;
+			$lv_ACCEPT_REDIRECTS)
+				# accept_redirects einschalten{{{
+				# (Kernel_option yes/no)?
+				MSG=$(gettext 'Soll die Kerneloption ACCEPT_REDIRECTS eingeschaltet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$ACCEPT_REDIRECTS"
+				if [ "$gv_Auswahl" = yes ] ; then
+					ACCEPT_REDIRECTS=yes
+				else
+					ACCEPT_REDIRECTS=no
+				fi
+				#}}}
+				main_conf_menue $lv_ACCEPT_REDIRECTS
 				;;
 			$lv_ALLOW_ICMP_MESSAGE)
 				# Auswahl von ICMP Nachrtichten die erlaubt werden sollen{{{

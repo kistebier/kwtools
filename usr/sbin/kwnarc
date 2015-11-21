@@ -19,9 +19,11 @@ autoload -U colors && colors
 
 # checken der Konfigurationsdatei.
 if [ -f /etc/kwtools/kwnarc/kwnarc.conf ] ; then
+	MAIN_CONF=/etc/kwtools/main.cf
 	CONF_DIR=/etc/kwtools/kwnarc
 	CONFIG="${CONF_DIR}/kwnarc.conf"
 elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
+	MAIN_CONF=/usr/local/etc/kwtools/main.cf
 	CONF_DIR=/usr/local/etc/kwtools/kwnarc
 	CONFIG="${CONF_DIR}/kwnarc.conf"
 else
@@ -36,8 +38,8 @@ CONF_ERR="Please check the $CONFIG for errors!"
 ABORT="KWNARC start aborted!"
 
 # Check terminal
-if [ "$TERM" != "raw" -a -f "${CONFIG%/*}/main.cf" ] ; then
-	. ${CONFIG%/*}/main.cf
+if [ "$TERM" != "raw" -a -f "$MAIN_CONF" ] ; then
+	. $MAIN_CONF
 	RCOK="${B_GREEN}${OK}${NORMAL}"
 	RCFAIL="${B_RED}${FAIL}${NORMAL}"
 	RCCONF_ERR="Please check the ${B_WHITE}${CONFIG}${NORMAL} for errors!"
@@ -443,6 +445,17 @@ if [ "$ACCEPT_SOURCE_ROUTE" != 'yes' ] ; then
 	echo -n "Disabling source-routed packet support: "
 	for interface in /proc/sys/net/ipv{4,6}/conf/{all,default} ; {
 		echo "0" >$interface/accept_source_route && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " \
+		|| echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
+	}
+	echo
+fi
+
+# Disable ICMP redirects.
+# IPv4 and IPv6
+if [ "$ACCEPT_REDIRECTS" != 'yes' ] ; then
+	echo -n "Disabling ICMP redirects: "
+	for interface in /proc/sys/net/ipv{4,6}/conf/{all,default} ; {
+		echo "0" >$interface/accept_redirects && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " \
 		|| echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
 	echo
