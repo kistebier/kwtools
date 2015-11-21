@@ -679,9 +679,7 @@ $IP6TABLES -A RH_CHK -m rt --rt-type 0 -j DROP || abortexit
 ## Chain SPOOF_CHK - Anti-spoofing checking for reserved and private IP addresses
 ##
 
-########################################
-# TODO: IPv6 fehlt
-########################################
+# IPv4
 if [ "$RESERVED_NETWORKS" != '' ] ; then
 	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for reserved network(s): "
 	for network in ${=RESERVED_NETWORKS} ; {
@@ -717,6 +715,30 @@ fi
 
 if [ "$EXTERNAL_INTERFACE_IP" != '' ] ; then
 	$IPTABLES -A SPOOF_CHK -s $EXTERNAL_INTERFACE_IP -i $EXTERNAL_INTERFACE -j $SPOOF_TARGET || abortexit
+fi
+
+# IPv6
+if [ "$RESERVED_NETWORKS_IPV6" != '' ] ; then
+	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for reserved network(s): "
+	for network in ${=RESERVED_NETWORKS_IPV6} ; {
+		$IP6TABLES -A SPOOF_CHK -s $network -i $EXTERNAL_INTERFACE -j $SPOOF_TARGET || abortexit
+		echo -n "${B_WHITE}${network}${NORMAL} "
+	}
+	echo
+fi
+
+if [ "$PRIVATE_NETWORKS_IPV6" != '' ] ; then
+	echo -n "Enabling spoof checking on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} for private network(s): "
+	for network in ${=PRIVATE_NETWORKS_IPV6} ; {
+		$IP6TABLES -A SPOOF_CHK -s $network -i $EXTERNAL_INTERFACE \
+			-j $SPOOF_TARGET || abortexit
+		echo -n "${B_WHITE}${network}${NORMAL} "
+	}
+	echo
+fi
+
+if [ "$EXTERNAL_INTERFACE_IPV6" != '' ] ; then
+	$IP6TABLES -A SPOOF_CHK -s $EXTERNAL_INTERFACE_IPV6 -i $EXTERNAL_INTERFACE -j $SPOOF_TARGET || abortexit
 fi
 
 ##
@@ -764,30 +786,30 @@ else
 fi
 
 # IPv4
-$IPTABLES -A STATE_CHK -m state --state ESTABLISHED,RELATED -j ACCEPT || abortexit
-$IPTABLES -A STATE_CHK -m state --state INVALID -j $LOG_INVALID_TARGET || abortexit
-$IPTABLES -A STATE_CHK -m state --state NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
+$IPTABLES -A STATE_CHK -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT || abortexit
+$IPTABLES -A STATE_CHK -m conntrack --ctstate INVALID -j $LOG_INVALID_TARGET || abortexit
+$IPTABLES -A STATE_CHK -m conntrack --ctstate NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
 # IPv6
-$IP6TABLES -A STATE_CHK -m state --state ESTABLISHED,RELATED -j ACCEPT || abortexit
-$IP6TABLES -A STATE_CHK -m state --state INVALID -j $LOG_INVALID_TARGET || abortexit
-$IP6TABLES -A STATE_CHK -m state --state NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
+$IP6TABLES -A STATE_CHK -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT || abortexit
+$IP6TABLES -A STATE_CHK -m conntrack --ctstate INVALID -j $LOG_INVALID_TARGET || abortexit
+$IP6TABLES -A STATE_CHK -m conntrack --ctstate NEW -p tcp ! --syn -j $LOG_INVALID_TARGET || abortexit
 
 
 if [ "$LAN_INTERFACE" != '' ] ; then
 	if [ "$PROTECT_FROM_LAN" = 'no' ] ; then
 		# IPv4
-		$IPTABLES -A STATE_CHK -m state --state NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
+		$IPTABLES -A STATE_CHK -m conntrack --ctstate NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
 		# IPv6
-		$IP6TABLES -A STATE_CHK -m state --state NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
+		$IP6TABLES -A STATE_CHK -m conntrack --ctstate NEW -i $LAN_INTERFACE -j ACCEPT || abortexit
 	fi
 fi
 # Should this even be an option?
 if [ "$DMZ_INTERFACE" != '' ] ; then
 	if [ "$PROTECT_FROM_DMZ" = 'no' ] ; then
 		# IPv4
-		$IPTABLES -A STATE_CHK -m state --state NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
+		$IPTABLES -A STATE_CHK -m conntrack --ctstate NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
 		# IPv6
-		$IP6TABLES -A STATE_CHK -m state --state NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
+		$IP6TABLES -A STATE_CHK -m conntrack --ctstate NEW -i $DMZ_INTERFACE -j ACCEPT || abortexit
 	fi
 fi
 
@@ -1092,7 +1114,8 @@ $IP6TABLES -A UDP_CHK -j $DEFAULT_TARGET || abortexit
 ## ICMP_CHK section
 ##
 
-# for stateless autoconfiguration (restrict NDP messages to hop limit of 255)
+# ok icmp codes for INPUT (rfc4890, 4.4.1 and 4.4.2)
+# ok icmp codes for OUTPUT (rfc4890, 4.4.1 and 4.4.2)
 # only IPv6
 echo -n "Enabling NDP ICMPV6 message types: "
 NDP_ICMPV6_MESSAGE="neighbor-solicitation neighbor-advertisement router-solicitation router-advertisement"
@@ -1103,6 +1126,38 @@ for mtype in ${=NDP_ICMPV6_MESSAGE} ; {
 # for multicast ping replies from link-local addresses (these don't have an
 # associated connection and would otherwise be marked INVALID)
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reply -s fe80::/10 -j ACCEPT
+# IND solicitation
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 141 -m hl --hl-eq 255 -j ACCEPT
+# IND advertisement
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 142 -m hl --hl-eq 255 -j ACCEPT
+# MLD query
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 130 -s fe80::/10 -j ACCEPT
+# MLD report
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 131 -s fe80::/10 -j ACCEPT
+# MLD done
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 132 -s fe80::/10 -j ACCEPT
+# MLD report v2
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 143 -s fe80::/10 -j ACCEPT
+# SEND certificate path solicitation
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 148 -m hl --hl-eq 255 -j ACCEPT
+# SEND certificate path advertisement
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 149 -m hl --hl-eq 255 -j ACCEPT
+# MR advertisement
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 151 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+# MR solicitation
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 152 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+# MR termination
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 153 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+
+# ok icmp codes for FORWARD (rfc4890, 4.3.2)
+# Home Agent Address Discovery Reques
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 144 -j ACCEPT
+# Home Agent Address Discovery Reply
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 145 -j ACCEPT
+# Mobile Prefix Solicitation
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 146 -j ACCEPT
+# Mobile Prefix Advertisement
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 147 -j ACCEPT
 
 # To answer or not to answer
 if [ "$ANSWER_PING" = 'yes' ] ; then
@@ -1150,9 +1205,6 @@ $IP6TABLES -A ICMP_CHK -j $ICMP_TARGET || abortexit
 
 # Log Spoofed traffic
 # IPv4
-#############################
-# TODO: IPv6 fehlt
-#############################
 if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
 	if [ "$RESERVED_NETWORKS" != '' ] ; then
 		for network in ${=RESERVED_NETWORKS} ; {
@@ -1187,21 +1239,44 @@ if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
 	# IPv4
 	if [ "$EXTERNAL_INTERFACE_IP" != '' ] ; then
 		$IPTABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IP -i $EXTERNAL_INTERFACE -j LOG \
-		--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
-		--log-tcp-options || abortexit
+			--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
+			--log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 			$IPTABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IP -i $EXTERNAL_INTERFACE \
-			-j DROP || abortexit
+				-j DROP || abortexit
 		fi
+	fi
+fi
+# IPv6
+if [[ "$LOG_DROPS" == 'yes' && "$LOG_SPOOF" == 'yes' ]] ; then
+	if [ "$RESERVED_NETWORKS_IPV6" != '' ] ; then
+		for network in ${=RESERVED_NETWORKS_IPV6} ; {
+			$IP6TABLES -A CUST_LOG -s $network -i $EXTERNAL_INTERFACE -j LOG --log-level $WARN_LOG_LEVEL \
+				--log-prefix "SPOOF " --log-ip-options --log-tcp-options || abortexit
+			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+				$IP6TABLES -A CUST_LOG -s $network -i $EXTERNAL_INTERFACE -j DROP || abortexit
+			fi
+		}
+	fi
+	if [ "$PRIVATE_NETWORKS_IPV6" != '' ] ; then
+		for network in ${=PRIVATE_NETWORKS_IPV6} ; {
+			$IP6TABLES -A CUST_LOG -s $network -i $EXTERNAL_INTERFACE \
+				-j LOG --log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " \
+				--log-ip-options --log-tcp-options || abortexit
+			if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
+				$IP6TABLES -A CUST_LOG -s $network \
+					-i $EXTERNAL_INTERFACE -j DROP || abortexit
+			fi
+		}
 	fi
 	# IPv6
 	if [ "$EXTERNAL_INTERFACE_IPV6" != '' ] ; then
 		$IP6TABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IPV6 -i $EXTERNAL_INTERFACE -j LOG \
-		--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
-		--log-tcp-options || abortexit
+			--log-level $WARN_LOG_LEVEL --log-prefix "SPOOF " --log-ip-options \
+			--log-tcp-options || abortexit
 		if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 			$IP6TABLES -A CUST_LOG -s $EXTERNAL_INTERFACE_IPV6 -i $EXTERNAL_INTERFACE \
-			-j DROP || abortexit
+				-j DROP || abortexit
 		fi
 	fi
 fi
@@ -1460,21 +1535,21 @@ fi
 if [[ "$ENABLE_IPLIMIT" == 'yes' && "$LOG_DROPS" == 'yes' && "$LOG_IPLIMIT_EXCEED" == 'yes' ]] ; then
 	echo "Enabling IP connection limit exceeded logging"
 	# IPv4
-	$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+	$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
 		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
 		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
 		--log-tcp-options || abortexit
 	# IPv6
-	$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+	$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
 		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
 		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
 		--log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 		# IPv4
-		$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+		$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
 			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
 		# IPv6
-		$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT \
+		$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
 			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
 	fi
 fi
@@ -1593,9 +1668,6 @@ fi
 ## Masquerade networks
 ##
 
-###################################
-# TODO: IPv6 und NAT?
-###################################
 # NAT section
 if [ "$MASQUERADE" = 'yes' ] ; then
 	echo -n "Enabling IP forwarding: "
