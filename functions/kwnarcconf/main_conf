@@ -230,6 +230,7 @@ main_conf() {
 			$lv_ALLOW_ICMP_MESSAGE)
 				# Auswahl von ICMP Nachrtichten die erlaubt werden sollen{{{
 				VALID_ICMP=no
+				unset -- WERT
 				typeset -a WERT
 				Anz=0
 				$IPTABLES -p icmp -h | while read a ; do
@@ -272,11 +273,12 @@ main_conf() {
 			$lv_ALLOW_ICMPV6_MESSAGE)
 				# Auswahl von ICMPV6 Nachrtichten die erlaubt werden sollen{{{
 				VALID_ICMPV6=no
+				unset -- WERT
 				typeset -a WERT
 				Anz=0
-				$IPTABLES -p ipv6-icmp -h | while read a ; do
+				$IP6TABLES -p ipv6-icmp -h | while read a ; do
 					case $a in [a-zA-Z]*)
-						if [ "$a" = "Valid ICMPV6 Types:" ] ; then
+						if [ "$a" = "Valid ICMPv6 Types:" ] ; then
 							VALID_ICMPV6=yes
 							continue
 						fi
