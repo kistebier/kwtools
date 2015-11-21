@@ -1,11 +1,11 @@
 .\"     Title: KWNARC.CONF
 .\"    Author: Kai Wilke <kiste@netzworkk.de>
-.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
-.\"      Date: 12/17/2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 11/21/2015
 .\"    Manual: 
-.\"    Source: Version 0.0.8
+.\"    Source: Version 0.1.0
 .\"
-.TH "KWNARC\&.CONF" "5" "12/17/2013" "Version 0.0.8" "File Formats Manual"
+.TH "KWNARC\&.CONF" "5" "11/21/2015" "Version 0.1.0" "File Formats Manual"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -28,10 +28,6 @@ The valid configuration options are:
 Start Iptables at boot up \fI(yes/no)\fP?
 Default is \fI"no"\fP.
 .TP
-.B IPTABLES
-Location of the \fBiptables\fR program. Most is this
-\%\fB/sbin/iptables\fR. Default is \%\fB/sbin/iptables\fR.
-.TP
 .B LOAD_MODULES
 Load Netfilter modules \fI(yes/no)\fP \- only
 necessary if you compiled \fBnetfilter\fR as modules. Default is
@@ -50,6 +46,9 @@ to \fI"no"\fP, you will need to enter an IP address below. Default is
 .B EXTERNAL_INTERFACE_IP
 If \fBDYNAMIC_EXTERNAL_IP\fR is
 \fI"yes"\fP, \fBkwnarc\fR will attempt to auto\-obtain this.
+.TP
+.B EXTERNAL_INTERFACE_IPV6
+IPv6 address for the external interface.
 .TP
 .B NOTE
 The options immediately below control server services
@@ -220,7 +219,10 @@ Drop broadcasts \fI(yes/no)\fP? Default is
 .TP
 .B BROADCAST_NETWORKS
 Example: \fI"0.0.0.0/8 255.255.255.255
-224.0.0.0/4"\fP
+224.0.0.0/4"\fP.
+.TP
+.B BROADCAST_NETWORKS_IPV6
+Example: \fI"0ff01::1 ff02::1"\fP.
 .SS LOGGING OPTIONS
 .TP
 .B LOG_DROPS
@@ -256,7 +258,7 @@ Logs packets defined by the \fBanti-spoof\fR options
 in the advanced section below \fI(yes/no)\fP. Default is \fI"no"\fP.
 .TP
 .B LOG_ICMP
-Logs packets not accepted by \fBALLOW_ICMP_MESSAGE\fR
+Logs packets not accepted by \fBALLOW_ICMP_MESSAGE\fR and \fBALLOW_ICMPV6_MESSAGE\fR
 (below)\fI(yes/no)\fP. Default is \fI"no"\fP.
 .TP
 .B LOG_SMB
@@ -378,9 +380,15 @@ Default is \fI"no"\fP.
 Allowable ICMP messages \- see
 \%http://www.iana.org/assignments/icmp\-parameters. Will accept
 numeric or name value \- \%\fI"\fBiptables\fR\ \fI\-p\ icmp\ \-h"\fP
-to list. Default is \fI"echo\-reply network\-unreachable
-host\-unreachable port\-unreachable fragmentation\-needed
-time\-exceeded"\fP.
+to list. Default is \fI"destination\-unreachable
+source\-quench time\-exceeded parameter\-problem echo\-reply"\fP.
+.TP
+.B ALLOW_ICMPV6_MESSAGE
+Allowable ICMPv6 messages \- see
+\%http://www.iana.org/assignments/icmpv6\-parameters. Will accept
+numeric or name value \- \%\fI"\fBiptables\fR\ \fI\-p\ ipv6\-icmp\ \-h"\fP
+to list. Default is \fI"destination\-unreachable
+packet\-to\-big time\-exceeded parameter\-problem echo\-reply"\fP.
 .SS ANTI\-SPOOFING OPTIONS
 .TP
 .B NOTE
@@ -409,6 +417,10 @@ See \%http://www.sans.org/dosstep/cisco_spoof.htm and
 .IP
 192.168.0.0/16 \- Class C (private use)
 .TP
+2001:db8::/32 \- Documentation
+.TP
+fe80:: to febf:: \- Link local Addresses
+
 .B RESERVED_NETWORKS
 Default is \fI"127.0.0.0/8 240.0.0.0/5
 248.0.0.0/5"\fP.
@@ -416,6 +428,12 @@ Default is \fI"127.0.0.0/8 240.0.0.0/5
 .B PRIVATE_NETWORKS
 Default is \fI"10.0.0.0/8 172.16.0.0/12
 192.168.0.0/16"\fP.
+.TP
+.B RESERVED_NETWORKS_IPV6
+Default is \fI"2001:db8::/32"\fP.
+.TP
+.B PRIVATE_NETWORKS_IPV6
+Default is \fI"fe80::/10"\fP.
 .TP
 .B LOOPBACK_ACCEPT
 Accept traffic to loopback \fI(yes/no)\fP?
@@ -430,6 +448,12 @@ if you are having DNS problems on the firewall itself,
 but not from behind it, this should probably make sense to you.
 Otherwise, leave this blank. Use space separated dotted quad IP
 addresses if you need more than one.
+.TP
+.B BIND_IPV6
+if you are having DNS problems on the firewall itself,
+but not from behind it, this should probably make sense to you.
+Otherwise, leave this blank. Use space separated dotted quad IPv6
+addresses if you need more than one.
 .SS KERNEL OPTIONS
 .TP
 .B NOTE
@@ -442,6 +466,12 @@ Default is \fI"no"\fP.
 Default is \fI"yes"\fP.
 .TP
 .B ACCEPT_SOURCE_ROUTE
+Default is \fI"no"\fP.
+.TP
+.B ACCEPT_REDIRECTS
+Disable or enable ICMP redirects. ICMP redirects are rarely used but can be used in
+# MITM (man\-in\-the\-middle) attacks. Disabling ICMP may disrupt legitimate
+# traffic to those sites.
 Default is \fI"no"\fP.
 .TP
 .B INGRESS_FILTER
@@ -459,28 +489,33 @@ Default is \fI"no"\fP.
 
 .SH FILES
 .TP
-.I /etc/kwtools/kwnarc.conf
+.I /etc/kwtools/kwnarc/kwnarc.conf
 Main configuration file for
 \fBkwnarc\fR. See \fBkwnarc.conf\fR(5) for further details.
 .TP
-.I /etc/kwtools/kwnarc-custom.conf
+.I /etc/kwtools/kwnarc/kwnarc-custom.conf
 Configuration file for custom
 rules. See in \%\fI/usr/share/doc/kwtools-net-narc/examles\fP for a
 example.
 .TP
-.I /etc/kwtools/kwnarc-forward.conf
-Configuration file for port
+.I /etc/kwtools/kwnarc/kwnarc-forward.conf
+Configuration file for IPv4 port
+forwarding. See in \%\fI/usr/share/doc/kwtools-net-narc/examles\fP for
+a example.
+.TP
+.I /etc/kwtools/kwnarc/kwnarc6-forward.conf
+Configuration file for IPv6 port
 forwarding. See in \%\fI/usr/share/doc/kwtools-net-narc/examles\fP for
 a example.
 
 .SH SEE ALSO
-\fBiptables\fR(8), \fBkwnarc\fR(8)
+\fBiptables\fR(8), \fBip6tables\fR(8), \fBkwnarc\fR(8), \fBkwnarcconf\fR(8)
 
 .SH AUTHOR
 Kai Wilke \&<kiste@netzworkk.de>
 
 .SH COPYRIGHT
-Copyright (C) 2002-2013 Kai Wilke
+Copyright (C) 2006-2015 Kai Wilke
 
 
 

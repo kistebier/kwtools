@@ -1,11 +1,11 @@
 .\"     Title: KWNARC.CONF
 .\"    Author: Kai Wilke <kiste@netzworkk.de>
-.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
-.\"      Date: 12/17/2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 11/21/2015
 .\"    Manual: 
-.\"    Source: Version 0.0.8
+.\"    Source: Version 0.1.0
 .\"
-.TH "KWNARC\&.CONF" "5" "12/17/2013" "Version 0.0.8" "Benutzer Anleitung"
+.TH "KWNARC\&.CONF" "5" "11/21/2015" "Version 0.1.0" "Benutzer Anleitung"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -15,7 +15,7 @@ kwnarc.conf \- Haupt\-Konfigurationsdatei f\(:ur kwnarc.
 .SH "BESCHREIBUNG"
 .PP
 Die Datei
-\fI/etc/kwtools/kwnarc\&.conf\fR
+\fI/etc/kwtools/kwnarc/kwnarc\&.conf\fR
 beinhaltet alle Haupt Werte f\(:ur das Script
 \fBkwnarc\fR\&. Jede Zeile besitzt eine Variable in der Form
 \fBVariable\fR=\fIWert\fR\&. Bei Leerzeichen zwischen den Werten m\(:ussen diese in Apostrophe gesetzt werden\&. Beginnt eine Zeile mit
@@ -29,14 +29,6 @@ Soll
 \fBiptables\fR
 beim booten gestartet werden (\fByes/no\fR)? Standard ist
 \(lq\fBno\fR\(rq\&.
-.RE
-.PP
-\fBIPTABLES\fR
-.RS 4
-Standort vom Programm
-\fBiptables\fR\&. Meist ist dies
-\fI/sbin/iptables\fR\&. Standard ist
-\fI/sbin/iptables\fR\&.
 .RE
 .PP
 \fBLOAD_MODULES\fR
@@ -76,6 +68,11 @@ Falls die Option
 \fBDYNAMIC_EXTERNAL_IP\fR
 \(lq\fByes\fR\(rq
 ist, wird KWNARC versuchen diese automatisch herauszufinden\&.
+.RE
+.PP
+\fBEXTERNAL_INTERFACE_IPV6\fR
+.RS 4
+IPv6 Adresse f\(:ur die externe Schnittstelle.
 .RE
 .PP
 \fBNOTIZ:\fR
@@ -143,11 +140,11 @@ nicht auf
 .PP
 \fBMASQUERADE\fR
 .RS 4
-Soll das maskieren (\fINAT\fR) der externen IP Adresse eingeschaltet werden (\fByes/no\fR)? Dies wird nur ben\(:otigt wenn die Rechner aus dem
+Soll das maskieren (\fINAT\fR) der externen IPv4 Adresse eingeschaltet werden (\fByes/no\fR)? Dies wird nur ben\(:otigt wenn die Rechner aus dem
 \fILAN\fR
 oder der
 \fIDMZ\fR
-mit dem Internet kommunizieren d\(:urfen und Sie keine feste externe IP Adresse besitzen\&. Siehe
+mit dem Internet kommunizieren d\(:urfen und Sie keine feste externe IPv4 Adresse besitzen\&. Siehe
 .sp
 .RS 4
 .nf
@@ -167,7 +164,7 @@ Geben Sie hier die Schnittstelle zum Local Area Network (\fILAN\fR) ein\&. Beisp
 .PP
 \fBALWAYS_FORWARD\fR
 .RS 4
-Sollen Pakete immer weitergeleitet werden (\fByes/no\fR)? Wird von Masquerading ben\(:otigt\&. Lassen Sie dies auf
+Sollen Pakete immer weitergeleitet werden (\fByes/no\fR)? Wird bei IPv4 von Masquerading ben\(:otigt\&. Lassen Sie dies auf
 \(lq\fBno\fR\(rq, wenn Sie nicht wissen was Sie tun\&. Standard ist
 \(lq\fBno\fR\(rq\&.
 .RE
@@ -219,7 +216,7 @@ Beispiel
 .PP
 \fBPORT_FORWARD\fR
 .RS 4
-Dies wird keinen Effekt haben ausser
+Dies wird keinen Effekt haben bei IPv4 ausser
 \fBMASQUERADE\fR
 ist eingeschaltet\&.
 \(lq\fByes\fR\(rq
@@ -345,6 +342,12 @@ Sollen Broadcast Anfragen verworfen werden (\fByes/no\fR)? Standard ist
 Beispiel:
 \(lq\fB0\&.0\&.0\&.0/8 255\&.255\&.255\&.255 224\&.0\&.0\&.0/4\fR\(rq\&.
 .RE
+.PP
+\fBBROADCAST_NETWORKS_IPV6\fR
+.RS 4
+Beispiel:
+\(lq\fB0ff01::1 ff02::1\fR\(rq\&.
+.RE
 .SS "LOGGING SECTION"
 .PP
 \fBLOG_DROPS\fR
@@ -408,7 +411,7 @@ Logt Pakete der Einstellungen in der
 \fBLOG_ICMP\fR
 .RS 4
 Logt Pakete die nicht von
-\fBALLOW_ICMP_MESSAGE\fR
+\fBALLOW_ICMP_MESSAGE\fR oder \fBALLOW_ICMPV6_MESSAGE\fR
 akzeptiert werden (\fByes/no\fR)\&. Standard ist
 \(lq\fBno\fR\(rq\&.
 .RE
@@ -657,7 +660,25 @@ Nachrichten, die erlaubt werden sollen \- siehe
 Es werden Nummern und Namen akzeptiert\&. Zum nach schauen welche ihr Kernel/iptables unterst\(:utzt k\(:onnen Sie
 \(lq\fBiptables\fR \fB\-p icmp\-h\fR\(rq
 ausf\(:uhren\&. Standard sind
-\(lq\fBecho\-reply network\-unreachable host\-unreachable port\-unreachable fragmentation\-needed time\-exceeded\fR\(rq\&.
+\(lq\fBdestination\-unreachable source\-quench time\-exceeded parameter\-problem echo\-reply\fR\(rq\&.
+.RE
+.PP
+\fBALLOW_ICMPV6_MESSAGE\fR
+.RS 4
+Eintrag f\(:ur die
+\fIICMPv6\fR
+Nachrichten, die erlaubt werden sollen \- siehe
+.sp
+.RS 4
+.nf
+\%http://www\&.iana\&.org/assignments/icmpv6\-parameters
+.fi
+.RE
+.sp
+Es werden Nummern und Namen akzeptiert\&. Zum nach schauen welche ihr Kernel/ip6tables unterst\(:utzt k\(:onnen Sie
+\(lq\fBip6tables\fR \fB\-p ipv6\-icmp\-h\fR\(rq
+ausf\(:uhren\&. Standard sind
+\(lq\fBdestination\-unreachable packet\-too\-big time\-exceeded parameter\-problem echo\-reply\fR\(rq\&.
 .RE
 .SS "ANTI\-SPOOFING SECTION"
 .PP
@@ -703,6 +724,12 @@ T}
 T{
 192\&.168\&.0\&.0/16 \- Klasse C Netz (Privatnutzung)
 T}
+T{
+2001:db8::/32 \- Dokumentation
+T}
+T{
+fe80:: bis febf:: \- Link local Adressen
+T}
 .TE
 .\" line length decrease back to previous value
 .ll -(\n(LLu * 62u / 100u)
@@ -719,6 +746,18 @@ Standard ist
 .RS 4
 Standard ist
 \(lq\fB10\&.0\&.0\&.0/8 172\&.16\&.0\&.0/12 192\&.168\&.0\&.0/16\fR\(rq\&.
+.RE
+.PP
+\fBRESERVED_NETWORKS_IPV6\fR
+.RS 4
+Standard ist
+\(lq\fB2001:db8::/32\fR\(rq\&.
+.RE
+.PP
+\fBPRIVATE_NETWORKS_IPV6\fR
+.RS 4
+Standard ist
+\(lq\fBfe80::/10\fR\(rq\&.
 .RE
 .PP
 \fBLOOPBACK_ACCEPT\fR
@@ -741,6 +780,11 @@ oder
 .RS 4
 Problem Behebung bei DNS\&. Wenn Sie DNS Probleme auf dem Firewall Rechner selbst haben, aber nicht von anderen Rechnern aus, dann k\(:onnen Sie hier eine Liste von IP Adressen, mit einem Leerzeichen getrennt, vergeben (Bsp\&.:
 \fI192\&.168\&.0\&.1 192\&.168\&.0\&.2\fR)\&.
+.RE
+.PP
+\fBBIND_IPV6\fR
+.RS 4
+Problem Behebung bei DNS\&. Wenn Sie DNS Probleme auf dem Firewall Rechner selbst haben, aber nicht von anderen Rechnern aus, dann k\(:onnen Sie hier eine Liste von IPv6 Adressen, mit einem Leerzeichen getrennt, vergeben.
 .RE
 .SS "KERNEL SECTION"
 .PP
@@ -776,6 +820,14 @@ Pakete (Kernel Option) eingeschaltet werden (\fByes/no\fR)? Standard ist
 \(lq\fBno\fR\(rq\&.
 .RE
 .PP
+\fBACCEPT_REDIRECTS\fR
+.RS 4
+Soll die Unterst\(:utzung f\(:ur
+\(lq\fBICMP\fR\(rq
+redirects (Kernel Option) eingeschaltet werden (\fByes/no\fR)? Standard ist
+\(lq\fBno\fR\(rq\&.
+.RE
+.PP
 \fBINGRESS_FILTER\fR
 .RS 4
 Ingress filtering:
@@ -807,9 +859,9 @@ eingeschaltet werden (\fByes/no\fR)? Standard ist
 TCP Congestion Notification \- Soll TCP Congestion Notification (ECN) eingeschaltet werden (\fByes/no\fR)? Standard ist
 \(lq\fBno\fR\(rq, da es nicht von jedem Rechner unterst\(:utzt wird\&.
 .RE
-.SH "DATEI"
+.SH "DATEIEN"
 .PP
-\fI/etc/kwtools/kwnarc\&.conf\fR
+\fI/etc/kwtools/kwnarc/kwnarc\&.conf\fR
 .RS 4
 Dies ist die Haupt Konfigurations Datei f\(:ur
 \fBkwnarc\fR\&. F\(:ur weitere Details siehe
@@ -817,9 +869,28 @@ Dies ist die Haupt Konfigurations Datei f\(:ur
 und
 \fBkwnarcconf\fR(8)\&.
 .RE
+.PP
+\fI/etc/kwtools/kwnarc/kwnarc\-custom\&.conf\fR
+.RS 4
+Konfigurationsdatei f\(:ur eigene Regeln. F\(:ur ein Beispiel siehe
+in \fI/usr/share/doc/kwtools-net-narc/examles\fP.
+.RE
+.PP
+\fI/etc/kwtools/kwnarc/kwnarc\-forward\&.conf\fR
+.RS 4
+Konfigurationsdatei f\(:ur IPv4 Port Weiterleitungen. F\(:ur ein Beispiel siehe
+in \fI/usr/share/doc/kwtools-net-narc/examles\fP.
+.RE
+.PP
+\fI/etc/kwtools/kwnarc/kwnarc6\-forward\&.conf\fR
+.RS 4
+Konfigurationsdatei f\(:ur IPv6 Port Weiterleitungen. F\(:ur ein Beispiel siehe
+in \fI/usr/share/doc/kwtools-net-narc/examles\fP.
+.RE
 .SH "SIEHE AUCH"
 .PP
 \fBiptables\fR(8),
+\fBip6tables\fR(8),
 \fBkwnarc\fR(8),
 \fBkwnarcconf\fR(8)
 .SH "AUTOR"
@@ -829,5 +900,5 @@ und
 .IP "" 4
 Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
 .SH "COPYRIGHT"
-Copyright \(co 2002-2013 Kai Wilke
+Copyright \(co 2006-2015 Kai Wilke
 .br
