@@ -465,7 +465,7 @@ fi
 # only IPv4
 if [ "$INGRESS_FILTER" != '' ] ; then
 	echo -n "Enabling ingress filtering (level $INGRESS_FILTER) via rp_filter on interface: "
-	for interface in /proc/sys/net/ipv4/conf/* ; {
+	for interface in /proc/sys/net/ipv4/conf/{all,default} ; {
 		echo $INGRESS_FILTER >$interface/rp_filter && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " || echo -n \
 		"[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
@@ -477,7 +477,7 @@ fi
 # only IPv4
 if [ "$LOG_MARTIANS" = 'yes' ] ; then
 	echo -n "Log Martians on interface: "
-	for interface in /proc/sys/net/ipv4/conf/* ; {
+	for interface in /proc/sys/net/ipv4/conf/{all,default} ; {
 		echo "1" >$interface/log_martians && echo -n "[ ${B_WHITE}${interface}${NORMAL} - $RCOK ] " || echo -n \
 		"[ ${B_WHITE}${interface}${NORMAL} - $RCFAIL ] "
 	}
@@ -643,10 +643,7 @@ fi
 ## Drop broadcasts to the external interface
 ##
 
-# only IPv4
-##########################################
-# INFO: IPv6 hat kein Broadcast
-##########################################
+# IPv4
 if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 	if [ "$BROADCAST_NETWORKS" != '' ] ; then
 	echo -n "Dropping Broadcasts on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} to: "
@@ -672,6 +669,41 @@ if [ "$DROP_BROADCASTS" = 'yes' ] ; then
 				echo -n "Dropping Broadcasts on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} to: "
 				for network in ${=BROADCAST_NETWORKS} ; {
 					$IPTABLES -t mangle -A PREROUTING -m state --state NEW \
+						-d $network -i $DMZ_INTERFACE -j DROP || abortexit
+					echo -n "${B_WHITE}${network}${NORMAL} "
+				}
+				echo
+			fi
+		fi
+	fi
+fi
+
+# IPv6
+if [ "$DROP_BROADCASTS" = 'yes' ] ; then
+	if [ "$BROADCAST_NETWORKS_IPV6" != '' ] ; then
+	echo -n "Dropping IPv6 Broadcasts on ${B_WHITE}${EXTERNAL_INTERFACE}${NORMAL} to: "
+		for network in ${=BROADCAST_NETWORKS_IPV6} ; {
+			$IP6TABLES -t mangle -A PREROUTING -m state --state NEW -d $network \
+				-i $EXTERNAL_INTERFACE -j DROP || abortexit
+			echo -n "${B_WHITE}${network}${NORMAL} "
+		}
+		echo
+		if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
+			if [ "$LAN_INTERFACE" != '' ] ; then
+				echo -n "Dropping IPv6 Broadcasts on ${B_WHITE}${LAN_INTERFACE}${NORMAL} to: "
+				for network in ${=BROADCAST_NETWORKS_IPV6} ; {
+					$IP6TABLES -t mangle -A PREROUTING -m state --state NEW \
+						-d $network -i $LAN_INTERFACE -j DROP || abortexit
+					echo -n "${B_WHITE}${network}${NORMAL} "
+				}
+				echo
+			fi
+		fi
+		if [ "$PROTECT_FROM_DMZ" = 'yes' ] ; then
+			if [ "$DMZ_INTERFACE" != '' ] ; then
+				echo -n "Dropping IPv6 Broadcasts on ${B_WHITE}${DMZ_INTERFACE}${NORMAL} to: "
+				for network in ${=BROADCAST_NETWORKS_IPV6} ; {
+					$IP6TABLES -t mangle -A PREROUTING -m state --state NEW \
 						-d $network -i $DMZ_INTERFACE -j DROP || abortexit
 					echo -n "${B_WHITE}${network}${NORMAL} "
 				}
@@ -1130,37 +1162,38 @@ $IP6TABLES -A UDP_CHK -j $DEFAULT_TARGET || abortexit
 # ok icmp codes for INPUT (rfc4890, 4.4.1 and 4.4.2)
 # ok icmp codes for OUTPUT (rfc4890, 4.4.1 and 4.4.2)
 # only IPv6
-echo -n "Enabling NDP ICMPV6 message types: "
+echo -n "Enabling NDP ICMPv6 message types: "
 NDP_ICMPV6_MESSAGE="neighbor-solicitation neighbor-advertisement router-solicitation router-advertisement"
 for mtype in ${=NDP_ICMPV6_MESSAGE} ; {
-	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type $mtype -m hl --hl-eq 255 -j ACCEPT
+	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type $mtype -m hl --hl-eq 255 -j ACCEPT || abortexit
+	echo -n "${B_WHITE}${mtype}${NORMAL} "
 }
 
 # for multicast ping replies from link-local addresses (these don't have an
 # associated connection and would otherwise be marked INVALID)
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reply -s fe80::/10 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reply -s fe80::/10 -j ACCEPT || abortexit
 # IND solicitation
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 141 -m hl --hl-eq 255 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 141 -m hl --hl-eq 255 -j ACCEPT || abortexit
 # IND advertisement
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 142 -m hl --hl-eq 255 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 142 -m hl --hl-eq 255 -j ACCEPT || abortexit
 # MLD query
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 130 -s fe80::/10 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 130 -s fe80::/10 -j ACCEPT || abortexit
 # MLD report
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 131 -s fe80::/10 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 131 -s fe80::/10 -j ACCEPT || abortexit
 # MLD done
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 132 -s fe80::/10 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 132 -s fe80::/10 -j ACCEPT || abortexit
 # MLD report v2
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 143 -s fe80::/10 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 143 -s fe80::/10 -j ACCEPT || abortexit
 # SEND certificate path solicitation
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 148 -m hl --hl-eq 255 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 148 -m hl --hl-eq 255 -j ACCEPT || abortexit
 # SEND certificate path advertisement
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 149 -m hl --hl-eq 255 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 149 -m hl --hl-eq 255 -j ACCEPT || abortexit
 # MR advertisement
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 151 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 151 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT || abortexit
 # MR solicitation
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 152 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 152 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT || abortexit
 # MR termination
-$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 153 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT
+$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 153 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT || abortexit
 
 # ok icmp codes for FORWARD (rfc4890, 4.3.2)
 # Home Agent Address Discovery Reques
@@ -1195,7 +1228,7 @@ if [ "$ALLOW_ICMP_MESSAGE" != '' ] ; then
 fi
 # Allow other ICMPV6 messages
 if [ "$ALLOW_ICMPV6_MESSAGE" != '' ] ; then
-	echo -n "Enabling ICMPV6 message types: "
+	echo -n "Enabling ICMPv6 message types: "
 	for mtype in ${=ALLOW_ICMPV6_MESSAGE} ; {
 		$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type $mtype -m limit --limit $PING_RATE \
 			--limit-burst $BURST_MAX -j ACCEPT || abortexit
@@ -1913,7 +1946,7 @@ fi
 
 # End
 removetemp
-echo $B_WHITE"Finished firewall (iptables) initialization$NORMAL"
+echo $B_WHITE"Finished firewall (ip(6)tables) initialization$NORMAL"
 ### Modeline {{{
 ### vim:ft=zsh:foldmethod=marker
 ### vim:set ts=4:                                                                               

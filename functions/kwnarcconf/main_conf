@@ -80,6 +80,7 @@ main_conf() {
 	lv_BIND_IP=$(gettext 'BIND_IP')
 	lv_BIND_IPV6=$(gettext 'BIND_IPV6')
 	lv_BROADCAST_NETWORKS=$(gettext 'BROADCAST_NETWORKS')
+	lv_BROADCAST_NETWORKS_IPV6=$(gettext 'BROADCAST_NETWORKS_IPV6')
 	lv_CHECK_SYN_PACKET_LENGTH=$(gettext 'CHECK_SYN_PACKET_LENGTH')
 	lv_CUSTOM_SCRIPT=$(gettext 'CUSTOM_SCRIPT')
 	lv_DMZ_INTERFACE=$(gettext 'DMZ_INTERFACE')
@@ -142,7 +143,7 @@ main_conf() {
 		ALLOW_UDP_LAN_RANGE \"$ALLOW_UDP_LAN_RANGE\" ALWAYS_FORWARD \"$ALWAYS_FORWARD\"
 		ANSWER_PING \"$ANSWER_PING\" ANSWER_TRACEROUTE \"$ANSWER_TRACEROUTE\"
 		ANTI_SMURF \"$ANTI_SMURF\" BIND_IP \"$BIND_IP\" BIND_IPV6 \"$BIND_IPV6\"
-		BROADCAST_NETWORKS \"$BROADCAST_NETWORKS\"
+		BROADCAST_NETWORKS \"$BROADCAST_NETWORKS\" BROADCAST_NETWORKS_IPV6 \"$BROADCAST_NETWORKS_IPV6\"
 		CHECK_SYN_PACKET_LENGTH \"$CHECK_SYN_PACKET_LENGTH\" CUSTOM_SCRIPT \"$CUSTOM_SCRIPT\"
 		DMZ_INTERFACE \"$DMZ_INTERFACE\" DROP_BROADCASTS \"$DROP_BROADCASTS\"
 		DROP_UNCLEAN_PACKETS \"$DROP_UNCLEAN_PACKETS\"
@@ -657,6 +658,19 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_BROADCAST_NETWORKS
+				;;
+			$lv_BROADCAST_NETWORKS_IPV6)
+				# Aus welchen Netzen sollen IPv6 Broadcast Anfragen{{{
+				# weggeschmissen werden?
+				MSG=$(gettext 'Geben Sie hier IPv6 Adressen ein von denen Broadcast Anfragen verworfen werden sollen (Bsp. ff01::1 ff02::1).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$BROADCAST_NETWORKS_IPV6"
+				if [ "$gv_Auswahl" ] ; then
+					BROADCAST_NETWORKS_IPV6="$gv_Auswahl"
+				else
+					BROADCAST_NETWORKS_IPV6=""
+				fi
+				#}}}
+				main_conf_menue $lv_BROADCAST_NETWORKS_IPV6
 				;;
 			$lv_CHECK_SYN_PACKET_LENGTH)
 				# Soll die SYN Paketlaenge gecheckt werden (yes/no)?{{{
