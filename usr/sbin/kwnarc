@@ -163,14 +163,14 @@ case "$1" in
 				# IPv4
 				$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
 					-j SNAT --to $EXTERNAL_INTERFACE_IP  || abortexit
+				# IPv6
+				$IP6TABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
+					-j SNAT --to $EXTERNAL_INTERFACE_IPV6  || abortexit
 			else
 				# only IPv4
 				$IPTABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
 					-j MASQUERADE || abortexit
 			fi
-			# IPv6
-			$IP6TABLES -t nat -A POSTROUTING -o $EXTERNAL_INTERFACE \
-				-j SNAT --to $EXTERNAL_INTERFACE_IPV6  || abortexit
 		else
 			echo -n "Disabling IPv4 IP forwarding: "
 			echo "0" >/proc/sys/net/ipv4/ip_forward && echo $RCOK || echo $RCFAIL
@@ -178,7 +178,7 @@ case "$1" in
 			echo "0" >/proc/sys/net/ipv6/conf/all/forwarding && \
 			echo "0" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 		fi
-		 if [[ $TEMP_ADDR == yes ]] ;
+		if [[ $TEMP_ADDR == yes ]] ; then
 			echo -n "Disabling IPv6 privacy addressing: "
 			echo "0" > /proc/sys/net/ipv6/conf/all/use_tempaddr && \
 			echo "0" > /proc/sys/net/ipv6/conf/default/use_tempaddr && echo $RCOK || echo $RCFAIL
@@ -1682,6 +1682,9 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 	fi
 else
 	if [ "$ALWAYS_FORWARD" = 'yes' ] ; then
+		echo -n "Enabling IP forwarding: "
+		echo "1" >/proc/sys/net/ipv6/conf/all/forwarding && \
+		echo "1" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 		# IPv4
 		$IPTABLES -A FORWARD -j SPOOF_CHK || abortexit
 		$IPTABLES -A FORWARD -p tcp -i $EXTERNAL_INTERFACE -j SANITY_CHK || abortexit
