@@ -111,9 +111,11 @@ main_conf() {
 	lv_PORT_FORWARD=$(gettext 'PORT_FORWARD')
 	lv_PRELOAD_IP_MODULES=$(gettext 'PRELOAD_IP_MODULES')
 	lv_PRIVATE_NETWORKS=$(gettext 'PRIVATE_NETWORKS')
+	lv_PRIVATE_NETWORKS_IPV6=$(gettext 'PRIVATE_NETWORKS_IPV6')
 	lv_PROTECT_FROM_DMZ=$(gettext 'PROTECT_FROM_DMZ')
 	lv_PROTECT_FROM_LAN=$(gettext 'PROTECT_FROM_LAN')
 	lv_RESERVED_NETWORKS=$(gettext 'RESERVED_NETWORKS')
+	lv_RESERVED_NETWORKS_IPV6=$(gettext 'RESERVED_NETWORKS_IPV6')
 	lv_SYNCOOKIES=$(gettext 'SYNCOOKIES')
 	lv_TCP_PROBE=$(gettext 'TCP_PROBE')
 	lv_TCP_PROBE2=$(gettext 'TCP_PROBE2')
@@ -157,8 +159,9 @@ main_conf() {
 		MASQUERADE \"$MASQUERADE\" NAT_MODULES \"$NAT_MODULES\" NULLSCAN \"$NULLSCAN\"
 		PACKET_LENGTH \"$PACKET_LENGTH\" PORT_FORWARD \"$PORT_FORWARD\"
 		PRELOAD_IP_MODULES \"$PRELOAD_IP_MODULES\" PRIVATE_NETWORKS \"$PRIVATE_NETWORKS\"
-		PROTECT_FROM_DMZ \"$PROTECT_FROM_DMZ\" PROTECT_FROM_LAN \"$PROTECT_FROM_LAN\"
-		RESERVED_NETWORKS \"$RESERVED_NETWORKS\" SYNCOOKIES \"$SYNCOOKIES\"
+		PRIVATE_NETWORKS_IPV6 \"$PRIVATE_NETWORKS_IPV6\" PROTECT_FROM_DMZ \"$PROTECT_FROM_DMZ\"
+		PROTECT_FROM_LAN \"$PROTECT_FROM_LAN\" RESERVED_NETWORKS \"$RESERVED_NETWORKS\"
+		RESERVED_NETWORKS_IPV6 \"$RESERVED_NETWORKS_IPV6\" SYNCOOKIES \"$SYNCOOKIES\"
 		TCP_PROBE \"$TCP_PROBE\" TCP_PROBE2 \"$TCP_PROBE2\" TEMP_ADDR \"$TEMP_ADDR\"
 		TEMP_PREFERED_LFT \"$TEMP_PREFERED_LFT\" TEMP_VALID_LFT \"$TEMP_VALID_LFT\"
 		UDP_PROBE \"$UDP_PROBE\"
@@ -1109,9 +1112,8 @@ main_conf() {
 					Anz=0
 					for i in ${=gv_Auswahl} ; {
 						case $i in
-							[0-9.:]*/[0-9]*)
-								(( Anz++ ))
-								PRIVATE_NETWORKS[Anz]="$i"
+							[0-9.]*/[0-9]*)
+								PRIVATE_NETWORKS+="$i"
 								;;
 							*)	shift
 								;;
@@ -1122,6 +1124,28 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_PRIVATE_NETWORKS
+				;;
+			$lv_PRIVATE_NETWORKS_IPV6)
+				# Antispoofing options{{{
+				MSG=$(gettext 'Antispoofing Option - Geben Sie hier Ihre privaten IPv6 Netzwerke ein die geschuetzt werden sollen (Bsp. "2001:db8::/32).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$PRIVATE_NETWORKS_IPV6"
+				if [ "$gv_Auswahl" ] ; then
+					unset -- PRIVATE_NETWORKS_IPV6
+					Anz=0
+					for i in ${=gv_Auswahl} ; {
+						case $i in
+							[0-9a-f:]*/[0-9]*)
+								PRIVATE_NETWORKS_IPV6+="$i"
+								;;
+							*)	shift
+								;;
+						esac
+					}
+				else
+					PRIVATE_NETWORKS_IPV6=""
+				fi
+				#}}}
+				main_conf_menue $lv_PRIVATE_NETWORKS_IPV6
 				;;
 			$lv_PROTECT_FROM_DMZ)
 				# Vor der DMZ schuetzen (yes/no)?{{{
@@ -1156,9 +1180,8 @@ main_conf() {
 					Anz=0
 					for i in ${=gv_Auswahl} ; {
 						case $i in
-							[0-9.:]*/[0-9]*)
-								(( Anz++ ))
-								RESERVED_NETWORKS[Anz]="$i"
+							[0-9.]*/[0-9]*)
+								RESERVED_NETWORKS+="$i"
 								;;
 							*)	shift
 								;;
@@ -1169,6 +1192,28 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_RESERVED_NETWORKS
+				;;
+			$lv_RESERVED_NETWORKS_IPV6)
+				# Antispoofing options{{{
+				MSG=$(gettext 'Antispoofing Option - Geben Sie hier Ihre reservierten Netzwerke ein die geschuetzt werden sollen (Bsp. fe80:: bis febf::).')
+				inputbox "$MAIN_CONF_TITLE" "$MSG" "$RESERVED_NETWORKS_IPV6"
+				if [ "$gv_Auswahl" ] ; then
+					unset -- RESERVED_NETWORKS_IPV6
+					Anz=0
+					for i in ${=gv_Auswahl} ; {
+						case $i in
+							[0-9a-f:]*/[0-9]*)
+								RESERVED_NETWORKS_IPV6+="$i"
+								;;
+							*)	shift
+								;;
+						esac
+					}
+				else
+					RESERVED_NETWORKS_IPV6=""
+				fi
+				#}}}
+				main_conf_menue $lv_RESERVED_NETWORKS_IPV6
 				;;
 			$lv_SYNCOOKIES)
 				# Schutz vor Syncookies einschalten (IPv4 Kernel_option yes/no)?{{{
