@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 21.11.2015
 #
 # Script: kwnarcconf, Firewall Frontend fuer kwnarc
 # 		mittels iptables.
@@ -78,6 +78,15 @@ main_menu() {
 #
 ##################################################################
 #
+
+prog_check iptables ip6tables
+if [[ -n $NO_PROGS ]] ; then
+	exit 1
+else
+	IPTABLES="${commands[iptables]}"
+	IP6TABLES="${commands[ip6tables]}"
+fi
+
 hw_conf
 net_conf
 kernel_release
