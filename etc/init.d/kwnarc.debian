@@ -1,6 +1,6 @@
 #! /bin/sh -e
 #
-# Copyright (c) 2002-2013 Netzworkk, Germany.
+# Copyright (c) 2002-2015 Netzworkk, Germany.
 #
 # Author: Kai Wilke <kiste@netzworkk.de>
 #
@@ -31,10 +31,10 @@ KWNARC="`which kwnarc`"
 . /lib/lsb/init-functions
 
 confcheck() {
-if [ -f /etc/kwtools/kwnarc.conf ] ; then
+if [ -f /etc/kwtools/kwnarc/kwnarc.conf ] ; then
 	CONFIG="/etc/kwtools/kwnarc.conf"
 elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
-	CONFIG="/usr/local/etc/kwtools/kwnarc.conf"
+	CONFIG="/usr/local/etc/kwtools/kwnarc/kwnarc.conf"
 else
 	CONFIG=""
 fi
@@ -49,11 +49,6 @@ fi
 check_variables() {
 if [ ! "$START_IPTABLES" = "yes" ] ; then
 	log_warning_msg "Not starting iptables script kwnarc, disabled via $CONFIG"
-	exit 0
-fi
-# Check for the iptables binary
-if [ ! -x "$IPTABLES" ] ; then
-	log_failure_msg "$IPTABLES executable missing."
 	exit 0
 fi
 }

@@ -742,14 +742,14 @@ if [ "$PRIVATE_NETWORKS" != '' ] ; then
 		if [[ $IPVAL2 == 10 && $NETVAL2 == 10 ]] ; then
 			DONOTHING=1
 		else
-		IPVAL="${EXTERNAL_INTERFACE_IP%.*.*}"
+			IPVAL="${EXTERNAL_INTERFACE_IP%.*.*}"
 			NETVAL="${network%.*.*}"
-				if [ $IPVAL != $NETVAL ] ; then
-						$IPTABLES -A SPOOF_CHK -s $network -i $EXTERNAL_INTERFACE \
-						-j $SPOOF_TARGET || abortexit
-				else
-					DONOTHING=1
-				fi
+			if [ $IPVAL != $NETVAL ] ; then
+				$IPTABLES -A SPOOF_CHK -s $network -i $EXTERNAL_INTERFACE \
+					-j $SPOOF_TARGET || abortexit
+			else
+				DONOTHING=1
+			fi
 		fi
 		if [ "$DONOTHING" != 1 ] ; then
 			echo -n "${B_WHITE}${network}${NORMAL} "
