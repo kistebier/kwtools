@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 21.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 23.11.2015
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -94,6 +94,7 @@ else
 	abortexit
 fi
 
+KERNVER=$(uname -r)
 # Check for the iptables binary
 IPTABLES="${commands[iptables]}"
 IP6TABLES="${commands[ip6tables]}"
@@ -249,7 +250,7 @@ else
 	# INFO: Ab kernel Release >=4 zeigt
 	# ifconfig die Ethernet Adresse als inet IP an
 	# davor war inet addr:IP
-	Kernel_Major_Nr=${$(uname -r)%%.*}
+	Kernel_Major_Nr=${KERNVER%%.*}
 	if [[ $Kernel_Major_Nr -ge 4 ]] ; then
 		EXTERNAL_INTERFACE_IP="`print ${${(s, ,)${(M)${(f)"$(export LC_ALL=C ; /sbin/ifconfig $EXTERNAL_INTERFACE)"}##*inet *}}[2]}`"
 	else
@@ -381,16 +382,16 @@ if [ "$ENABLE_LIMIT_RATE" != 'no' ] ; then
 fi
 
 # iplimit module detection
-if [ "$ENABLE_IPLIMIT" != 'no' ] ; then
-	if [[ -f "/lib/modules/$KERNVER/kernel/net/netfilter/xt_iprange.ko" || -f "/lib/xtables/libxt_iprange.so" \
+if [[ $ENABLE_IPLIMIT != 'no' ]] ; then
+	if [[ -f "/lib/modules/${KERNVER}/kernel/net/netfilter/xt_iprange.ko" || -f "/lib/xtables/libxt_iprange.so" \
 	|| -f "/usr/lib/xtables/libxt_iprange.so" || -f "/usr/local/lib/xtables/libxt_iprange.so" ]] ; then \
-		CONNMODULE="iprange"
+		CONNMODULE="xt_iprange"
 	fi
-	if [[ -f "/lib/modules/$KERNVER/kernel/net/netfilter/xt_connlimit.ko" || -f "/lib/xtables/libxt_connlimit.so" \
+	if [[ -f "/lib/modules/${KERNVER}/kernel/net/netfilter/xt_connlimit.ko" || -f "/lib/xtables/libxt_connlimit.so" \
 	|| -f "/usr/lib/xtables/libxt_connlimit.so" || -f "/usr/local/lib/xtables/libxt_connlimit.so" ]] ; then \
-		CONNMODULE="connlimit"
+		CONNMODULE="xt_connlimit"
 	fi
-	if [ "$CONNMODULE" == '' ] ; then
+	if [[ $CONNMODULE == '' ]] ; then
 		echo $RED"Conf error:$NORMAL ${B_WHITE}ENABLE_IPLIMIT$NORMAL requires CONFIG_NETFILTER_XT_MATCH_IPRANGE or CONFIG_NETFILTER_XT_MATCH_CONNLIMIT"
 		echo "Missing xt_iprange.ko or libxt_iprange.so, xt_connlimit.ko or libxt_connlimit.so"
 		confexit
@@ -614,7 +615,7 @@ fi
 
 # IP-address based rate limiting for TCP
 if [ "$ENABLE_IPLIMIT" = 'yes' ] ; then
-	IPLIMIT_OPT="-m $CONNMODULE ! --$CONNMODULE-above $IPLIMIT_MAX_ACCEPT --$CONNMODULE-mask $IPLIMIT_NETMASK"
+	IPLIMIT_OPT="-m ${CONNMODULE##*_} ! --${CONNMODULE##*_}-above $IPLIMIT_MAX_ACCEPT --${CONNMODULE##*_}-mask $IPLIMIT_NETMASK"
 	#IPLIMIT_OPT="-m $CONNMODULE --connlimit-above 6"
 fi
 
@@ -1579,22 +1580,22 @@ fi
 if [[ "$ENABLE_IPLIMIT" == 'yes' && "$LOG_DROPS" == 'yes' && "$LOG_IPLIMIT_EXCEED" == 'yes' ]] ; then
 	echo "Enabling IP connection limit exceeded logging"
 	# IPv4
-	$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
-		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
+	$IPTABLES -A CUST_LOG -p tcp -m ${CONNMODULE##*_} --${CONNMODULE##*_}-above $IPLIMIT_MAX_ACCEPT \
+		--${CONNMODULE##*_}-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
 		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
 		--log-tcp-options || abortexit
 	# IPv6
-	$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
-		--$CONNMODULE-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
+	$IP6TABLES -A CUST_LOG -p tcp -m ${CONNMODULE##*_} --${CONNMODULE##*_}-above $IPLIMIT_MAX_ACCEPT \
+		--${CONNMODULE##*_}-mask $IPLIMIT_NETMASK -j LOG --log-level $WARN_LOG_LEVEL \
 		--log-prefix "IPLIMIT_EXCEED: " --log-ip-options \
 		--log-tcp-options || abortexit
 	if [ "$LOG_ALL_ELSE" = 'yes' ] ; then
 		# IPv4
-		$IPTABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
-			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
+		$IPTABLES -A CUST_LOG -p tcp -m ${CONNMODULE##*_} --${CONNMODULE##*_}-above $IPLIMIT_MAX_ACCEPT \
+			--${CONNMODULE##*_}-mask $IPLIMIT_NETMASK -j DROP || abortexit
 		# IPv6
-		$IP6TABLES -A CUST_LOG -p tcp -m $CONNMODULE --${CONNMODULE}-above $IPLIMIT_MAX_ACCEPT \
-			--$CONNMODULE-mask $IPLIMIT_NETMASK -j DROP || abortexit
+		$IP6TABLES -A CUST_LOG -p tcp -m ${CONNMODULE##*_} --${CONNMODULE##*_}-above $IPLIMIT_MAX_ACCEPT \
+			--${CONNMODULE##*_}-mask $IPLIMIT_NETMASK -j DROP || abortexit
 	fi
 fi
 
