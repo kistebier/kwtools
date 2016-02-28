@@ -294,8 +294,16 @@ kwrsync_backup_exec() {
 									;;
 								rsync://*)
 									SRC="$2"
+									SRC_HOST="${${SRC##*://}%%/*}"
 									DST="$3"
 									RSYNC_ARGS="$4"
+									if [[ $S == rsync ]] ; then
+										if ! ping -c1 $SRC_HOST &>/dev/null ; then
+											LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($SRC_HOST) ist nicht erreichbar! Er wird ausgelassen.')
+											sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
+											continue 2
+										fi
+									fi
 									if [ ! -d "${BACKUP_PATH}/hourly.0/${DST}" ] ; then
 										mkdir -m 0755 -p "${BACKUP_PATH}/hourly.0/${DST}" &>/dev/null
 									fi
