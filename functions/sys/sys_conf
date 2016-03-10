@@ -4867,6 +4867,7 @@ is_value() {
 	# 
 	mount_check() {
 		if [ "$#" -eq 2 ] ; then
+			setopt extendedglob
 			# Funktion no_umount_os_msg# {{{
 			no_umount_os_msg() {
 				MSG=$(gettext '$MOUNTPOINT wird nicht aus dem Verzeichnisbaum ausgebunden, da es vom Betriebssystem benoetigt wird.')
@@ -4917,7 +4918,7 @@ is_value() {
 					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
 					if [ "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
-							/|/bin|/dev|/etc|/lib|/proc|/run|/sbin|/sys|/tmp|udev)
+							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
 								no_umount_os_msg
 								U_MOUNT=no
 								;;
@@ -4990,7 +4991,7 @@ is_value() {
 					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
 					if [ -n "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
-							/|/bin|/dev|/etc|/lib|/proc|/run|/sbin|/sys|tmp|/udev)
+							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
 								no_umount_os_msg
 								U_MOUNT=no
 								;;
