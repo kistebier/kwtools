@@ -27,6 +27,8 @@ ALLOW_TCP_DMZ_RANGE: Geben Sie hier eine Liste von TCP Ports
 \tdie von der DMZ entgegengenommen werden duerfen (Bsp.: 6000:6010
 \t3128). Es liegt keine Anzahlbegrenzung vor.
 
+NOTIZ: Wird von nur von PROTECT_FROM_DMZ=yes benoetigt.
+
 ALLOW_UDP_DMZ: Geben Sie hier eine kommagetrennte Liste von UDP
 \tPorts ein, die von der DMZ entgegengenommen werden duerfen
 \t(Bsp.: domain,ntp). Maximalanzahl liegt bei 15.
@@ -35,6 +37,8 @@ ALLOW_UDP_DMZ_RANGE: Geben Sie hier eine Liste von UDP Ports
 \tund/oder Portbereichen, getrennt durch ein Leerzeichen, ein,
 \tdie von der DMZ entgegengenommen werden duerfen (Bsp.: 6000:6010
 \t3128). Es liegt keine Anzahlbegrenzung vor.
+
+NOTIZ: Wird von nur von PROTECT_FROM_DMZ=yes benoetigt.
 
 ALLOW_TCP_EXT: Geben Sie hier eine kommagetrennte Liste von TCP
 \tPorts ein, die vom externen Interface entgegengenommen
@@ -65,6 +69,8 @@ ALLOW_TCP_LAN_RANGE: Geben Sie hier eine Liste von TCP Ports
 \tdie vom LAN entgegengenommen werden duerfen (Bsp.: 6000:6010
 \t3128). Es liegt keine Anzahlbegrenzung vor.
 
+NOTIZ: Wird von nur von PROTECT_FROM_LAN=yes benoetigt.
+
 ALLOW_UDP_LAN: Geben Sie hier eine kommagetrennte Liste von UDP
 \tPorts ein, die vom LAN entgegengenommen werden duerfen
 \t(Bsp.: domain,ntp). Maximalanzahl liegt bei 15.
@@ -74,9 +80,15 @@ ALLOW_UDP_LAN_RANGE: Geben Sie hier eine Liste von UDP Ports
 \tdie vom LAN entgegengenommen werden duerfen (Bsp.: 6000:6010
 \t3128). Es liegt keine Anzahlbegrenzung vor.
 
+NOTIZ: Wird von nur von PROTECT_FROM_LAN=yes benoetigt.
+
 ALWAYS_FORWARD: Sollen Pakete immer weitergeleitet werden (ja/nein)?
 \tWird von Masquerading benoetigt. Lassen Sie dies auf "no",
 \twenn Sie nicht wissen was Sie tun.
+
+NOTIZ: Dazu muessen Sie die Varieblen PROTECT_FROM_(DMZ/LAN) auf
+\tyes setzen und die Ports eingeben die weitergeleitet werden
+\tsollen.
 
 ANSWER_PING: Soll die Firewall auf ping Anfragen, von Windows
 \tRechnern, antworten (ja/nein)?
@@ -166,6 +178,9 @@ FINSCAN: Geben Sie hier das TCP Flag fuer einen FINScan ein
 FORWARD_LAN_TO_DMZ: Sollen Pakete vom LAN in die DMZ weitergeleitet
 \twerden (ja/nein)?
 
+FORWARD_DMZ_TO_LAN: Sollen Pakete von der DMZ ins LAN weitergeleitet
+\twerden (ja/nein)?
+
 ILLEGAL_TCP_FLAGS: Geben Sie hier TCP Flagskombinatikonen ein, die
 \tnicht erwuenscht sind, getrennt durch ein Leerzeichen
 \t(Bsp.: SYN,FIN PSH,FIN SYN,ACK,FIN,FIN PSH,FIN SYN,ACK,FIN).
@@ -200,8 +215,8 @@ LOOPBACK_MODE: Waehlen Sie den Loopback Modus aus (siehe Hilfe bei
 
 MASQERADE: Soll das maskieren (NAT) der externen IP Adresse einge-
 \tschaltet werden (ja/nein)? Dies wird nur benoetigt wenn die
-\tRechner aus dem LAN oder der DMZ mit dem Internet kommuni-
-\tzieren duerfen und Sie keine feste externe IP Adresse
+\tRechner aus dem LAN oder der DMZ (SNAT) mit dem Internet kommuni-
+\tzieren duerfen oder Sie keine feste externe IP Adresse
 \tbesitzen.
 \tSiehe http://www.netfilter.org/documentation/HOWTO/de/NAT-HOWTO.html
 
@@ -234,10 +249,10 @@ NOTIZ: Siehe auch http://www.sans.org/dosstep/cisco_spoof.htm und
 \thttp://www.isi.edu/in-notes/rfc1918.txt
 
 PROTECT_FROM_DMZ: Soll die Firewall vor der DMZ geschuetzt werden
-\t(ja/nein)?
+\t(ja/nein)? Wird von ALWAYS_FORWARD=yes benoetigt.
 
 PROTECT_FROM_LAN: Soll die Firewall vor dem internen Netz (LAN)
-\tgeschuetzt werden (ja/nein)?
+\tgeschuetzt werden (ja/nein)? Wird von ALWAYS_FORWARD=yes benoetigt.
 
 RESERVED_NETWORKS: Geben Sie hier eine Liste von Netzwerken ein,
 \tbei denen Anti-Spoof Schutz von vornherein eingeschaltet
