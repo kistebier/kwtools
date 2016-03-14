@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 23.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.03.2016
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -8,7 +8,7 @@
 # NARC - Netfilter Automatic Rule Configurator v0.7
 # Copyright (c) 2001, Shane Chen (shane@knowplace.org).
 #
-# Version: 0.1.0
+# Version: 0.1.1
 #
 setopt extendedglob
 
@@ -1800,6 +1800,7 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 else
 	if [ "$ALWAYS_FORWARD" = 'yes' ] ; then
 		echo -n "Enabling IP forwarding: "
+		echo "1" >/proc/sys/net/ipv4/ip_forward && \
 		echo "1" >/proc/sys/net/ipv6/conf/all/forwarding && \
 		echo "1" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 		# IPv4
@@ -1839,6 +1840,16 @@ else
 				# IPv6
 				$IP6TABLES -A FORWARD -m state --state NEW -i $LAN_INTERFACE \
 					-o $DMZ_INTERFACE -j ACCEPT || abortexit
+			fi
+		fi
+		if [ "$FORWARD_DMZ_TO_LAN" = 'yes' ] ; then
+			if [[ "$LAN_INTERFACE" != '' && "$DMZ_INTERFACE" != '' ]] ; then
+				# IPv4
+				$IPTABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $LAN_INTERFACE \
+					-j ACCEPT || abortexit
+				# IPv6
+				$IP6TABLES -A FORWARD -m state --state NEW -i $DMZ_INTERFACE -o $LAN_INTERFACE \
+					-j ACCEPT || abortexit
 			fi
 		fi
 	fi
@@ -1904,7 +1915,7 @@ if [ "$PORT_FORWARD" = 'yes' ] ; then
 		if [[ "$PROTOCOL" != '' && "$ORIG_IP" != '' && "$ORIG_PORT" != '' ]] && \
 			[[ "$NEW_IP" != '' && "$NEW_PORT" != '' ]] ; then
 			$IP6TABLES -t nat -A PREROUTING -i $EXTERNAL_INTERFACE -p $PROTOCOL -d $ORIG_IP \
-				--dport $ORIG_PORT -j DNAT --to $NEW_IP:$NEW_PORT || abortexit
+				--dport $ORIG_PORT -j DNAT --to $NEW_IP || abortexit
 			if [ "$PROTOCOL" = 'tcp' ] ; then
 				$IP6TABLES -A FORWARD -i $EXTERNAL_INTERFACE -o $INTERFACE -p $PROTOCOL -m state \
 					--state NEW --syn -d $NEW_IP --dport $NEW_PORT -j ACCEPT || abortexit
