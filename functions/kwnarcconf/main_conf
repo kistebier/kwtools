@@ -95,6 +95,7 @@ main_conf() {
 	lv_EXTERNAL_INTERFACE_IP=$(gettext 'EXTERNAL_INTERFACE_IP')
 	lv_EXTERNAL_INTERFACE_IPV6=$(gettext 'EXTERNAL_INTERFACE_IPV6')
 	lv_FINSCAN=$(gettext 'FINSCAN')
+	lv_FORWARD_DMZ_TO_LAN=$(gettext 'FORWARD_DMZ_TO_LAN')
 	lv_FORWARD_LAN_TO_DMZ=$(gettext 'FORWARD_LAN_TO_DMZ')
 	lv_ILLEGAL_TCP_FLAGS=$(gettext 'ILLEGAL_TCP_FLAGS')
 	lv_INGRESS_FILTER=$(gettext 'INGRESS_FILTER')
@@ -153,7 +154,7 @@ main_conf() {
 		EXTERNAL_INTERFACE \"$EXTERNAL_INTERFACE\"
 		EXTERNAL_INTERFACE_IP \"$EXTERNAL_INTERFACE_IP\"
 		EXTERNAL_INTERFACE_IPV6 \"$EXTERNAL_INTERFACE_IPV6\"
-		FINSCAN \"$FINSCAN\"
+		FINSCAN \"$FINSCAN\" FORWARD_DMZ_TO_LAN \"$FORWARD_DMZ_TO_LAN\"
 		FORWARD_LAN_TO_DMZ \"$FORWARD_LAN_TO_DMZ\" ILLEGAL_TCP_FLAGS \"$ILLEGAL_TCP_FLAGS\"
 		INGRESS_FILTER \"$INGRESS_FILTER\" IPLIMIT_MAX_ACCEPT \"$IPLIMIT_MAX_ACCEPT\"
 		IPLIMIT_NETMASK \"$IPLIMIT_NETMASK\" LAN_INTERFACE \"$LAN_INTERFACE\"
@@ -859,6 +860,18 @@ main_conf() {
 				fi
 				#}}}
 				main_conf_menue $lv_FINSCAN
+				;;
+			$lv_FORWARD_DMZ_TO_LAN)
+				# Sollen Pakete von der DMZ ins LAN weitergeleitet werden (yes/no)?{{{
+				MSG=$(gettext 'Sollen Pakete von der DMZ ins LAN weitergeleitet werden (ja/nein)?')
+				yesno "$MAIN_CONF_TITLE" "$MSG" "$FORWARD_DMZ_TO_LAN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					FORWARD_DMZ_TO_LAN=yes
+				else
+					FORWARD_DMZ_TO_LAN=no
+				fi
+				#}}}
+				main_conf_menue $lv_FORWARD_DMZ_TO_LAN
 				;;
 			$lv_FORWARD_LAN_TO_DMZ)
 				# Sollen Pakete vom LAN zur DMZ weitergeleitet werden (yes/no)?{{{
