@@ -4915,7 +4915,8 @@ is_value() {
 					# ohne fragen Partitionen umounten.# {{{
 					unset -- U_MOUNT
 					MOUNTPOINT="`print ${${(s: :)${(M)${(f)"$(mount)"}##*${PART_DEV1}[[:space:]]*}}[3]}`"
-					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
+					Sw_Dev=$(readlink -f $PART_DEV1)
+					SW_DEV="`print ${$(swapon -s)[(fr)${Sw_Dev}]}`"
 					if [ "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
 							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
@@ -4934,7 +4935,7 @@ is_value() {
 						esac
 						# Swap bearbeiten
 					elif [ -n "$SW_DEV" ] ; then
-						swapoff "$SW_DEV"
+						swapoff "$PART_DEV1"
 						if [ $? != 0 ] ; then
 							no_umount_msg
 							U_MOUNT=no
@@ -4973,9 +4974,10 @@ is_value() {
 				-s)
 					# Swap einbinden# {{{
 					unset -- MOUNT
-					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
+					Sw_Dev=$(readlink -f $PART_DEV1)
+					SW_DEV="`print ${$(swapon -s)[(fr)${Sw_Dev}]}`"
 					if [[ -z $SW_DEV ]] ; then
-						swapon "$PART_DEV" &>/dev/null
+						swapon "$PART_DEV1" &>/dev/null
 						if [ $? != 0 ] ; then
 							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestoepselt sein.')
 							msgbox "$gv_Attention" "$MSG"
@@ -4988,7 +4990,8 @@ is_value() {
 					# Partition ausbinden# {{{
 					unset -- U_MOUNT
 					MOUNTPOINT="`print ${${(s: :)${(M)${(f)"$(mount)"}##*${PART_DEV1}[[:space:]]*}}[3]}`"
-					SW_DEV="`print ${$(swapon -s)[(fr)${PART_DEV1}]}`"
+					Sw_Dev=$(readlink -f $PART_DEV1)
+					SW_DEV="`print ${$(swapon -s)[(fr)${Sw_Dev}]}`"
 					if [ -n "$MOUNTPOINT" ] ; then
 						case $MOUNTPOINT in
 							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
@@ -5024,7 +5027,7 @@ is_value() {
 						yesno "$gv_Attention" "$YES_NO_MOUNT_MSG" ""
 						# Wenn ja, umounten
 						if [ "$gv_Auswahl" = yes ] ; then
-							swapoff "$SW_DEV"
+							swapoff "$PART_DEV1"
 							if [ $? != 0 ] ; then
 								no_umount_msg
 								U_MOUNT=no
