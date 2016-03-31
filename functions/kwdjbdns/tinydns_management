@@ -3,234 +3,487 @@
 # usage: tinydns_management
 #
 tinydns_management() {
-	unset -- DOMAIN_NAME H_IP DATA ROH HOSTNAME IP
+	unset -- HOSTNAME IP
 	#
 	if [[ -d ${SV_DIR}/${DNS} ]] ; then
 		# Programme pruefen und wenn nicht vorhanden beziehungsweise
 		# ausfuehrbar abbrechen.
-		PATH="$PATH:${SV_DIR}/${DNS}/root"
-		prog_check add-ns add-host add-mx
-		if [[ -n $NO_PROGS ]] ; then
-			break
+		#
+		# einige gettext Variablen
+		lv_Alias=$(gettext 'Alias')
+		lv_Alias6=$(gettext 'IPv6 Alias')
+		lv_Host6=$(gettext 'IPv6 Rechner')
+		lv_Nameserver=$(gettext 'Nameserver')
+		lv_Child_Nameserver=$(gettext 'Child Nameserver')
+		lv_Mailserver=$(gettext 'Mailserver')
+		TINYDNS_TITLE="${lv_Administration}::${lv_Tinydns}"
+		#
+		# Pruefen, ob es Ipv6 Unterstuetzung gibt.
+		if [ add-host6(x.) ] ; then
+			IPV6=yes
+		else
+			unset -- IPV6
 		fi
 		#
-		# Erst den domainnamen eingeben, sonst geht gar nichts.
+		# Funktion tinydns_conf_menue{{{
+		if [[ $IPV6 == yes ]] ; then
+			CONF_MENU=($gv_Display \"\" $lv_Nameserver $lv_Add \"$lv_Child_Nameserver\" $lv_Add
+			$gv_Host $lv_Add \"$lv_Host6\" $lv_Add $lv_Mailserver $lv_Add $gv_Delete \"\"
+			$lv_Database \"$lv_New_Create\" $gv_Back \"\")
+		else
+			CONF_MENU=($gv_Display \"\" $lv_Nameserver $lv_Add \"$lv_Child_Nameserver\" $lv_Add
+			$gv_Host $lv_Add $lv_Mailserver $lv_Add $gv_Delete \"\"
+			$lv_Database \"$lv_New_Create\" $gv_Back \"\")
+		fi
 		#
-		inputbox "$DOMAIN_TITLE" "$DOMAIN_MSG"
+		tinydns_conf_menue() {
+			menubox "$1" "$TINYDNS_TITLE" "$gv_Menupoint" "$CONF_MENU"
+		}
+		#}}}
 		#
-		if [ "$gv_Auswahl" ] ; then
-			# einige gettext Variablen
-			lv_Nameserver=$(gettext 'Nameserver')
-			lv_Mailserver=$(gettext 'Mailserver')
-			TINYDNS_TITLE="${lv_Administration}::${lv_Tinydns}"
-			#
+		cd ${SV_DIR}/${DNS}/root
+		tinydns_conf_menue
+		while [ "$gv_Auswahl" ] ; do
 			case $gv_Auswahl in
-				*.de | *.com | *.org | *.at | *.br | *.ch | *.dk | *.fr | *.hu | *.it | *.nl | *.no | *.ru | *.us )	
-					
-				DOMAIN_NAME="$gv_Auswahl"
-				# Funktion tinydns_conf_menue{{{
-				CONF_MENU=($gv_Display \"\" $lv_Nameserver $lv_Add $gv_Host $lv_Add
-					$lv_Mailserver $lv_Add $gv_Delete \"\"
-					$lv_Database \"$lv_New_Create\" $gv_Back \"\")
-				#
-				tinydns_conf_menue() {
-					menubox "$1" "$TINYDNS_TITLE" "$gv_Menupoint" "$CONF_MENU"
-				}
-				#}}}
-				#
-				cd ${SV_DIR}/${DNS}/root
-				tinydns_conf_menue
-				while [ "$gv_Auswahl" ] ; do
-					case $gv_Auswahl in
-						HELP*)
-							# Hilfetext fuer tinydns
-							#
-							script_help tinydns_help "${gv_Auswahl#HELP }"
-							tinydns_conf_menue "${gv_Auswahl#HELP }"
-							;;
-						$gv_Display)
-							# Konfigurationsanzeige{{{
-							if [ -s data ] ; then
-								view_file data
-							else
-								no_entry_msg 
-							fi
-							#}}}
-							tinydns_conf_menue $gv_Display
-							;;
-						$lv_Nameserver)
-							# Nameserver angeben{{{
-							iface_ip $NS_IP
-							if [ -n "$gv_Ip" ] ; then
-								# PTR wird von der Funktion ip_analyse belegt.
-								if [ -z "`grep "${PTR}:${gv_Ip}" data`" ] ; then
-									NS_IP="$gv_Ip"
-									add-ns $DOMAIN_NAME $gv_Ip
-									# Buchstabenreinfolge heraus bekommen (a,b,c,...).
-									# und PTR-Record eintragen.
-									NR=${${(s,:,)$(tail -1 data)}[3]}
-									>> data <<< "${PTR}:${gv_Ip}:${NR}:259200"
+				HELP*)
+					# Hilfetext fuer tinydns
+					script_help tinydns_help "${gv_Auswahl#HELP }"
+					tinydns_conf_menue "${gv_Auswahl#HELP }"
+					;;
+				$gv_Display)
+					# Konfigurationsanzeige{{{
+					if [ -s data ] ; then
+						view_file data
+					else
+						no_entry_msg 
+					fi
+					#}}}
+					tinydns_conf_menue $gv_Display
+					;;
+				$lv_Nameserver)
+					# Nameserver angeben{{{
+					# Funktion tinydns_ns_menu{{{
+					NSADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${lv_Nameserver})
+					#
+					tinydns_ns_menu() {
+						HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+							$gv_Save \"\" $gv_Back \"\")
+						menubox "$1" "$NSADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+					}
+					#}}}
+					tinydns_ns_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help tinydns_help
+								tinydns_ns_menu "${gv_Auswahl#HELP }"
+								;;
+							$gv_Host)
+								# Rechnernamen eingeben# {{{
+								conf_hostname -f $HOSTNAME
+								if [ -n "$gv_Hostname" ] ; then
+									HOSTNAME="$gv_Hostname"
 								else
-									unset -- NS_IP
-									MSG=$(gettext 'Dieser Nameserver ist schon vorhanden.')
-									msgbox "$gv_Attention" "$MSG" 
+									unset -- HOSTNAME
 								fi
-							fi
-							#}}}
-							tinydns_conf_menue $lv_Nameserver
-							;;
-						$gv_Host)
-							# Rechner + IP angeben{{{
-							# Funktion tinydns_host_menu{{{
-							HOSTADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${gv_Host})
-							#
-							tinydns_host_menu() {
-								HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
-								$gv_Save \"\" $gv_Back \"\")
-								menubox "$1" "$HOSTADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
-							}
-							#}}}
-							tinydns_host_menu
-							while [ -n "$gv_Auswahl" ] ; do
-								case "$gv_Auswahl" in
-									HELP*)
-										script_help tinydns_help
-										tinydns_host_menu "${gv_Auswahl#HELP }"
-										;;
-									$gv_Host)
-										# Rechnernamen eingeben# {{{
-										conf_hostname -f $HOSTNAME
-										if [ -n "$gv_Hostname" ] ; then
-											HOSTNAME="$gv_Hostname"
-										else
-											unset -- HOSTNAME
-										fi
-										## }}}
-										tinydns_host_menu $gv_Host
-										;;
-									$lv_Ip)
-										# IP-Adresse eingeben# {{{
-										iface_ip $IP
-										if [ -n "$gv_Ip" ] ; then
-											IP="$gv_Ip"
-										else
-											unset -- IP
-										fi
-										## }}}
-										tinydns_host_menu $lv_Ip
-										;;
-									$gv_Save)
-										# speichern# {{{
-										if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
-												if [ -z "`grep "=${HOSTNAME%%.*}.${DOMAIN_NAME}:${IP}" data`" ] ; then
-												add-host ${HOSTNAME%%.*}.${DOMAIN_NAME} $IP
-												# fertig
-												unset -- IP HOSTNAME
-												break
-											else
-												MSG=$(gettext 'Dieser $gv_Host (${HOSTNAME}:${IP}) ist schon vorhanden.')
-												is_existed_msg "$MSG"
-											fi
-										else
-											MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
-											msgbox "$gv_Info" "$MSG"
-										fi
-										## }}}
-										tinydns_host_menu
-										;;
-									$gv_Back)
+								## }}}
+								tinydns_ns_menu $gv_Host
+								;;
+							$lv_Ip)
+								# IP-Adresse eingeben# {{{
+								iface_ip $IP
+								if [ -n "$gv_Ip" ] ; then
+									IP="$gv_Ip"
+								else
+									unset -- IP
+								fi
+								## }}}
+								tinydns_ns_menu $lv_Ip
+								;;
+							$gv_Save)
+								# speichern# {{{
+								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+										if [ -z "`grep "\.${HOSTNAME}:${IP}" data`" ] ; then
+										tinydns-edit data data.new add ns $HOSTNAME $IP
+										# fertig
 										unset -- IP HOSTNAME
 										break
-										;;
-								esac
-							done
-							#}}}
-							tinydns_conf_menue $gv_Host
-							;;
-						$lv_Mailserver)
-							# Mailserver angeben{{{
-							iface_ip $MX_IP
-							if [ -n "$gv_Ip" ] ; then
-								if [ -z "`grep "@${DOMAIN_NAME}:${gv_Ip}" data`" ] ; then
-									MX_IP="$gv_Ip"
-									add-mx $DOMAIN_NAME $gv_Ip
+									else
+										MSG=$(gettext 'Dieser $lv_Nameserver (${HOSTNAME}:${IP}) ist schon vorhanden.')
+										is_existed_msg "$MSG"
+									fi
 								else
-									unset -- MX_IP
-									MSG=$(gettext 'Dieser Mailserver ist schon vorhanden.')
-									msgbox "$gv_Attention" "$MSG" 
+									MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+									msgbox "$gv_Info" "$MSG"
 								fi
-							fi
-							#}}}
-							tinydns_conf_menue $lv_Mailserver
-							;;
-						$gv_Delete)
-							# Datenbank Eintraege loeschen{{{
-							unset -- E_Menue
-							ANZ=1
-							while read DATA ; do
-								case $DATA in
-									.*)	#
-										# Nameserver
-										E_Menue[ANZ]="$DATA "$lv_Nameserver" off"
-										;;
-									=*)	#
-										# Rechner
-										E_Menue[ANZ]="$DATA "$gv_Host" off"
-										;;
-									@*)	#
-										# Mailserver
-										E_Menue[ANZ]="$DATA "$lv_Mailserver" off"
-										;;
-								esac
-								(( ANZ++ ))
-							done <data
-							#
-							if [ -n "${E_Menue[1]}" ] ; then
-								DEL_MENU=($E_Menue)
-								checklist "" "$TINYDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
-								while [ -n "$gv_Auswahl" ] ; do
-									case "$gv_Auswahl" in
-										HELP*)	script_help share/conf_del_help
-											checklist "${gv_Auswahl#HELP }" "$TINYDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
-											;;
-										*)
-											# Eintraege loeschen
-											for i in ${=gv_Auswahl} ; {
-												ROH="${i//\"}" 
-												grep -v $ROH data >data.$$
-												mv data.$$ data
-											}
-											break
-											;;
-									esac
-								done
-							else
-								no_entry_msg
-							fi
-							#}}}
-							tinydns_conf_menue $gv_Delete
-							;;
-						$lv_Database)
-							# Datenbank neu erstellen
-							make &>/dev/null
-							break
-							;;
-						$gv_Back)	break
-							;;
-					esac
-				done	
-				;;
-				*)	no_input_msg	
-				;;
+								## }}}
+								tinydns_ns_menu
+								;;
+							$gv_Back)
+								unset -- IP HOSTNAME
+								break
+								;;
+						esac
+					done
+					#}}}
+					tinydns_conf_menue $lv_Nameserver
+					;;
+				$lv_Child_Nameserver)
+					# Child Nameserver angeben{{{
+					# Funktion tinydns_childns_menu{{{
+					CHILDNSADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${lv_Child_Nameserver})
+					#
+					tinydns_childns_menu() {
+						HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+							$gv_Save \"\" $gv_Back \"\")
+						menubox "$1" "$CHILDNSADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+					}
+					#}}}
+					tinydns_childns_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help tinydns_help
+								tinydns_childns_menu "${gv_Auswahl#HELP }"
+								;;
+							$gv_Host)
+								# Rechnernamen eingeben# {{{
+								conf_hostname -f $HOSTNAME
+								if [ -n "$gv_Hostname" ] ; then
+									HOSTNAME="$gv_Hostname"
+								else
+									unset -- HOSTNAME
+								fi
+								## }}}
+								tinydns_childns_menu $gv_Host
+								;;
+							$lv_Ip)
+								# IP-Adresse eingeben# {{{
+								iface_ip $IP
+								if [ -n "$gv_Ip" ] ; then
+									IP="$gv_Ip"
+								else
+									unset -- IP
+								fi
+								## }}}
+								tinydns_childns_menu $lv_Ip
+								;;
+							$gv_Save)
+								# speichern# {{{
+								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+										if [ -z "`grep "&${HOSTNAME}:${IP}" data`" ] ; then
+										tinydns-edit data data.new add childns $HOSTNAME $IP
+										# fertig
+										unset -- IP HOSTNAME
+										break
+									else
+										MSG=$(gettext 'Dieser $lv_Child_Nameserver (${HOSTNAME}:${IP}) ist schon vorhanden.')
+										is_existed_msg "$MSG"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+								## }}}
+								tinydns_childns_menu
+								;;
+							$gv_Back)
+								unset -- IP HOSTNAME
+								break
+								;;
+						esac
+					done
+					#}}}
+					tinydns_conf_menue "$lv_Child_Nameserver"
+					;;
+				$gv_Host)
+					# Rechner + IP angeben{{{
+					# Funktion tinydns_host_menu{{{
+					HOSTADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${gv_Host})
+					#
+					tinydns_host_menu() {
+						HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+							$gv_Save \"\" $gv_Back \"\")
+						menubox "$1" "$HOSTADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+					}
+					#}}}
+					tinydns_host_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help tinydns_help
+								tinydns_host_menu "${gv_Auswahl#HELP }"
+								;;
+							$gv_Host)
+								# Rechnernamen eingeben# {{{
+								conf_hostname -f $HOSTNAME
+								if [ -n "$gv_Hostname" ] ; then
+									HOSTNAME="$gv_Hostname"
+								else
+									unset -- HOSTNAME
+								fi
+								## }}}
+								tinydns_host_menu $gv_Host
+								;;
+							$lv_Ip)
+								# IP-Adresse eingeben# {{{
+								iface_ip $IP
+								if [ -n "$gv_Ip" ] ; then
+									IP="$gv_Ip"
+								else
+									unset -- IP
+								fi
+								## }}}
+								tinydns_host_menu $lv_Ip
+								;;
+							$gv_Save)
+								# speichern# {{{
+								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+									if [ -z "`grep "=${HOSTNAME}:${IP}" data`" ] ; then
+										tinydns-edit data data.new add host $HOSTNAME $IP
+										tinydns-edit data data.new add alias $HOSTNAME $IP
+										# fertig
+										unset -- IP HOSTNAME
+										break
+									else
+										MSG=$(gettext 'Dieser $gv_Host (${HOSTNAME}:${IP}) ist schon vorhanden.')
+										is_existed_msg "$MSG"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+								## }}}
+								tinydns_host_menu
+								;;
+							$gv_Back)
+								unset -- IP HOSTNAME
+								break
+								;;
+						esac
+					done
+					#}}}
+					tinydns_conf_menue $gv_Host
+					;;
+				$lv_Host6)
+					# Rechner + IP angeben{{{
+					# Funktion tinydns_host6_menu{{{
+					HOST6ADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${lv_Host6})
+					#
+					tinydns_host6_menu() {
+						HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+							$gv_Save \"\" $gv_Back \"\")
+						menubox "$1" "$HOST6ADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+					}
+					#}}}
+					tinydns_host6_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help tinydns_help
+								tinydns_host6_menu "${gv_Auswahl#HELP }"
+								;;
+							$gv_Host)
+								# Rechnernamen eingeben# {{{
+								conf_hostname -f $HOSTNAME
+								if [ -n "$gv_Hostname" ] ; then
+									HOSTNAME="$gv_Hostname"
+								else
+									unset -- HOSTNAME
+								fi
+								## }}}
+								tinydns_host6_menu $gv_Host
+								;;
+							$lv_Ip)
+								# IPv6-Adresse eingeben# {{{
+								MSG=$(gettext 'Geben Sie die IPv6 Adresse fuer den Rechner ein.')
+								inputbox "$TINYDNS_TITLE" "$MSG" "$IP"
+								if [ -n "$gv_Auswahl" ] ; then
+									ip_analyse "$gv_Auswahl"
+									if [ -n "$gv_Ip" ] ; then
+										IP="$gv_Ip"
+									else
+										unset -- IP
+									fi
+								else
+									no_input_msg
+								fi
+								## }}}
+								tinydns_host6_menu $lv_Ip
+								;;
+							$gv_Save)
+								# speichern# {{{
+								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+									if [ -z "`grep "=${HOSTNAME}:${IP}" data`" ] ; then
+										tinydns-edit data data.new add host6 $HOSTNAME $IP
+										tinydns-edit data data.new add alias6 $HOSTNAME $IP
+										# fertig
+										unset -- IP HOSTNAME
+										break
+									else
+										MSG=$(gettext 'Dieser $gv_Host (${HOSTNAME}:${IP}) ist schon vorhanden.')
+										is_existed_msg "$MSG"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+								## }}}
+								tinydns_host6_menu
+								;;
+							$gv_Back)
+								unset -- IP HOSTNAME
+								break
+								;;
+						esac
+					done
+					#}}}
+					tinydns_conf_menue "$lv_Host6"
+					;;
+				$lv_Mailserver)
+					# Mailserver angeben{{{
+					# Funktion tinydns_mx_menu{{{
+					MXADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${lv_Mailserver})
+					#
+					tinydns_mx_menu() {
+						HOSTADD_MENU=($gv_Host \"$HOSTNAME\" $lv_Ip \"$IP\"
+							$gv_Save \"\" $gv_Back \"\")
+						menubox "$1" "$MXADD_TITLE" "$gv_Menupoint" "$HOSTADD_MENU"
+					}
+					#}}}
+					tinydns_mx_menu
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help tinydns_help
+								tinydns_mx_menu "${gv_Auswahl#HELP }"
+								;;
+							$gv_Host)
+								# Rechnernamen eingeben# {{{
+								conf_hostname -f $HOSTNAME
+								if [ -n "$gv_Hostname" ] ; then
+									HOSTNAME="$gv_Hostname"
+								else
+									unset -- HOSTNAME
+								fi
+								## }}}
+								tinydns_mx_menu $gv_Host
+								;;
+							$lv_Ip)
+								# IP-Adresse eingeben# {{{
+								iface_ip $IP
+								if [ -n "$gv_Ip" ] ; then
+									IP="$gv_Ip"
+								else
+									unset -- IP
+								fi
+								## }}}
+								tinydns_mx_menu $lv_Ip
+								;;
+							$gv_Save)
+								# speichern# {{{
+								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
+									if [ -z "`grep "@${HOSTNAME}:${IP}" data`" ] ; then
+										tinydns-edit data data.new add mx $HOSTNAME $IP
+										# fertig
+										unset -- IP HOSTNAME
+										break
+									else
+										MSG=$(gettext 'Dieser $lv_Mailserver (${HOSTNAME}:${IP}) ist schon vorhanden.')
+										is_existed_msg "$MSG"
+									fi
+								else
+									MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+									msgbox "$gv_Info" "$MSG"
+								fi
+								## }}}
+								tinydns_mx_menu
+								;;
+							$gv_Back)
+								unset -- IP HOSTNAME
+								break
+								;;
+						esac
+					done
+					#}}}
+					tinydns_conf_menue $lv_Mailserver
+					;;
+				$gv_Delete)
+					# Datenbank Eintraege loeschen{{{
+					unset -- E_Menue
+					while read DATA ; do
+						case $DATA in
+							.*)	#
+								# Nameserver
+								E_Menue+=($DATA $lv_Nameserver off)
+								;;
+							\&*)#
+								# Child Nameserver
+								E_Menue+=(\"$DATA\" \"$lv_Child_Nameserver\" off)
+								;;
+							=*)	#
+								# Rechner
+								E_Menue+=($DATA $gv_Host off)
+								;;
+							+*)	#
+								# Alias
+								E_Menue+=($DATA $lv_Alias off)
+								;;
+							@*)	#
+								# Mailserver
+								E_Menue+=($DATA $lv_Mailserver off)
+								;;
+							6*)	#
+								# IPv6 Rechner
+								E_Menue+=($DATA \"$lv_Host6\" off)
+								;;
+							3*)	#
+								# IPv6 Alias
+								E_Menue+=($DATA \"$lv_Alias6\" off)
+								;;
+						esac
+					done <data
+					#
+					if [ -n "${E_Menue[1]}" ] ; then
+						DEL_MENU=($E_Menue)
+						checklist "" "$TINYDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
+						while [ -n "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help share/conf_del_help
+									checklist "${gv_Auswahl#HELP }" "$TINYDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
+									;;
+								*)
+									# Eintraege loeschen
+									for i in ${=gv_Auswahl} ; {
+										Tmp="${i//\"}" 
+										grep -v $Tmp data >data.$$
+										mv data.$$ data
+									}
+									break
+									;;
+							esac
+						done
+					else
+						no_entry_msg
+					fi
+					#}}}
+					tinydns_conf_menue $gv_Delete
+					;;
+				$lv_Database)
+					# Datenbank neu erstellen
+					make &>/dev/null
+					break
+					;;
+				$gv_Back)	break
+					;;
 			esac
-		else
-			no_input_msg
-		fi
+		done	
 	else
-		no_dns_msg $DNS
+		MSG=$(gettext 'Es ist noch kein tindns Server eingerichtet.')
+		msgbox "$gv_Info" "$MSG"
 	fi
 	#
-	unset -- DOMAIN_NAME H_IP DATA ROH HOSTNAME IP
+	unset -- HOSTNAME IP
 }
 #}}}
 ### Modeline {{{
