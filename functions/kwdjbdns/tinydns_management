@@ -266,7 +266,7 @@ tinydns_management() {
 					tinydns_conf_menue $gv_Host
 					;;
 				$lv_Host6)
-					# Rechner + IP angeben{{{
+					# IPv6 Rechner + IP angeben{{{
 					# Funktion tinydns_host6_menu{{{
 					HOST6ADD_TITLE=(${lv_Administration}::${lv_Tinydns}::${lv_Host6})
 					#
@@ -296,17 +296,11 @@ tinydns_management() {
 								;;
 							$lv_Ip)
 								# IPv6-Adresse eingeben# {{{
-								MSG=$(gettext 'Geben Sie die IPv6 Adresse fuer den Rechner ein.')
-								inputbox "$TINYDNS_TITLE" "$MSG" "$IP"
-								if [ -n "$gv_Auswahl" ] ; then
-									ip_analyse "$gv_Auswahl"
-									if [ -n "$gv_Ip" ] ; then
-										IP="$gv_Ip"
-									else
-										unset -- IP
-									fi
+								iface_ip $IP
+								if [ -n "$gv_Ip" ] ; then
+									IP="$gv_Ip"
 								else
-									no_input_msg
+									unset -- IP
 								fi
 								## }}}
 								tinydns_host6_menu $lv_Ip
@@ -314,7 +308,7 @@ tinydns_management() {
 							$gv_Save)
 								# speichern# {{{
 								if [ -n "$HOSTNAME" -a -n "$IP" ] ; then
-									if [ -z "`grep "=${HOSTNAME}:${IP}" data`" ] ; then
+									if [ -z "`grep "6${HOSTNAME}:${IP//:/}" data`" ] ; then
 										tinydns-edit data data.new add host6 $HOSTNAME $IP
 										tinydns-edit data data.new add alias6 $HOSTNAME $IP
 										# fertig
