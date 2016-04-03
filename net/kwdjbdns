@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 31.03.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.04.2016
 #
 # Script: kwdjbdns, konfiguriert, loescht Dan Bernsteins DNS server
 # Version: 0.5.0
@@ -78,6 +78,15 @@ check_dns_user() {
 	}
 }
 ## }}}
+# Funktion (is_existed_msg), Nachricht das dieser Eintrag schon vorhanden ist.# {{{
+is_existed_msg() {
+	if [[ ${#argv} == 1 ]] ; then
+		msgbox "$gv_Attention" "$1"
+	else
+		no_para_msg $0
+	fi
+}
+#}}}
 # Funktion main_menu{{{
 MAIN_MENU=($gv_Configuration \"\" $lv_Dnscache \"\" $lv_Tinydns \"\"
 	$lv_Axfrdns \"\" $lv_Pickdns \"\" $lv_Rbldns \"\" $gv_Exit \"\")
