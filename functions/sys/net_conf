@@ -280,9 +280,9 @@ net_conf() {
 					Ips_Nr=($gv_Auswahl)
 					if [ "${#Ips_Nr[@]}" -le 3 ] ; then
 						Anz=0
-						for i in $gv_Auswahl ; {
+						for i in ${=gv_Auswahl} ; {
 							Tmp="$i"
-							ip_analyse "$i"
+							ip_analyse "$Tmp"
 							case $Tmp in
 								${IP1}.${IP2}.${IP3}.${IP4})	
 									if [ $IP4 != 0 -a $IP4 != 255 ] ; then
@@ -293,6 +293,11 @@ net_conf() {
 									else
 										no_valid_ip_msg -i "$Tmp"
 									fi
+									;;
+								$gv_Ip_Adr)
+									# IPv6 Adresse
+									(( Anz++ ))
+									gv_Ip[Anz]="$gv_Ip_Adr"
 									;;
 								*)
 									no_valid_ip_msg -i "$Tmp"
@@ -310,7 +315,7 @@ net_conf() {
 				;;
 			--prefix|-p)
 				# IP Prefix Eingabe# {{{
-				IP_MSG=$(gettext 'Geben Sie bitte den IP-Prefix ein (z.B. 192.168.0).')
+				IP_MSG=$(gettext 'Geben Sie bitte den IP-Prefix ein (z.B. 192.168.0 oder 2a02:8108:47c0:12c8::/62).')
 				inputbox "$gv_Configuration" "$IP_MSG" "$2"
 				#
 				if [ -n "$gv_Auswahl" ] ; then
@@ -319,6 +324,9 @@ net_conf() {
 						${IP1}.${IP2}.${IP3}|${IP1}.${IP2}|${IP1})
 								# alles OK
 								gv_Ip="$gv_Auswahl"
+							;;
+						$gv_Ip_Adr)
+							gv_Ip="$gv_Auswahl"
 							;;
 						*)	
 							no_valid_ip_msg -p "$gv_Auswahl"
@@ -332,19 +340,24 @@ net_conf() {
 				;;
 			*)
 				# normale IP Eingabe# {{{
-				IP_MSG=$(gettext 'Geben Sie bitte die IP Adresse ein (z.B. 192.168.0.1).')
+				IP_MSG=$(gettext 'Geben Sie bitte die IP Adresse ein (z.B. 192.168.0.1 oder 2a02:8108:1680:39a0:82fa:5bff:fe02:304a).')
 				inputbox "$gv_Configuration" "$IP_MSG" "$1"
 				#
 				if [ -n "$gv_Auswahl" ] ; then
 					ip_analyse "$gv_Auswahl"
 					case $gv_Auswahl in
-						${IP1}.${IP2}.${IP3}.${IP4})	
+						${IP1}.${IP2}.${IP3}.${IP4})
+							# IPv4 Adresse	
 							if [ $IP4 != 0 -a $IP4 != 255 ] ; then
 								# alles OK
 								gv_Ip="$gv_Auswahl"
 							else
 								no_valid_ip_msg -i "$gv_Auswahl"
 							fi
+							;;
+						$gv_Ip_Adr)
+							# IPv6 Adresse
+							gv_Ip="$gv_Auswahl"
 							;;
 						*)
 							no_valid_ip_msg -i "$gv_Auswahl"
@@ -363,7 +376,7 @@ net_conf() {
 	#
 	# usage: iface_nameserver
 	iface_nameserver() {
-		NS_MSG=$(gettext 'Geben Sie bitte bis zu 3 Nameserver Adressen ein (z.B. 194.25.2.129).')
+		NS_MSG=$(gettext 'Geben Sie bitte bis zu 3 Nameserver IP Adressen ein, getrennt durch ein Leerzeichen.')
 		inputbox "$gv_Configuration" "$NS_MSG" "$1"
 		if [ "$gv_Auswahl" ] ; then
 			unset -- gv_Nameserver
@@ -373,7 +386,7 @@ net_conf() {
 			Ns_Nr=($gv_Auswahl)
 			if [ "${#Ns_Nr[@]}" -le 3 ] ; then
 				Anz=0
-				for i in $gv_Auswahl ; {
+				for i in ${=gv_Auswahl} ; {
 					ip_analyse "$i"
 					case $i in
 						${IP1}.${IP2}.${IP3}.${IP4})	
@@ -385,6 +398,11 @@ net_conf() {
 							else
 								no_valid_ip_msg -i "$i"
 							fi
+							;;
+						$gv_Ip_Adr)
+							(( Anz++ ))
+							gv_Nameserver[Anz]="$i"
+							gv_Dhcp="no"
 							;;
 						*)	no_input_msg
 							;;
@@ -472,14 +490,14 @@ net_conf() {
 	#}}}
 	# Funktion (ip_analyse), um die IP Adresse zu zerlegen{{{
 	#
-	# Notiz: nicht IPv6 tauglich
+	# Notiz: IPv6 tauglich?
 	#
 	# usage: ip_analyse IPs
 	#        IP - IP Adressen
 	#
 	ip_analyse() {
 		unset -- IP1 IP2 IP3 IP4 PTR gv_Ip_Adr
-		if [ "$#" -ge 1 ] ; then
+		if [[ ${#argv} -ge 1 ]] ; then
 			local Anz
 			integer Anz
 			Anz=1
@@ -488,7 +506,7 @@ net_conf() {
 				fe*::[a-f0-9]*|fc00::/7|fd00::/8)
 					# fe80:: bis febf:: Link-Lokale Adressen; werden nur im lokalen Netz verwendet und
 					# nicht im Internet geroutet; entsprechen in etwa den privaten Adressen bei IPv4
-					# (~IPv4: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+					# (IPv4: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
 					# fc00::/7 ... fdff::/7 Unique-Local Unicast; Wird im Internet nicht geroutet. 
 					# ff00::/8 Multicast.
 					;;
@@ -496,7 +514,11 @@ net_conf() {
 					gv_Ip_Adr[Anz]="$i"
 					(( Anz++ ))
 					;;
-				2[a-f0-9]*::/[1-9]*)	# IPv6 Netze
+				2[a-f0-9]*:*:[a-f0-9]*/[1-9]*)	# IPv6 Netze
+					gv_Ip_Adr[Anz]="$i"
+					(( Anz++ ))
+					;;
+				2[a-f0-9]*:[a-f0-9]*::/[1-9]*)	# IPv6 Prefixe
 					gv_Ip_Adr[Anz]="$i"
 					(( Anz++ ))
 					;;
