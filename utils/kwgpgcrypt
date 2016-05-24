@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 23.05.2016
 #
 # Script: kwgpgcrypt, ent/verschluesselt Dateien oder ganze Verzeichnisse.
 # Version: 0.1.1
@@ -66,7 +66,7 @@ main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
-# privaten Schluessel erzeugen (pub_create){{{
+# Funktion (pub_create), privaten Schluessel erzeugen (pub_create){{{
 #
 pub_create() {
 	if [ -f ${gv_HomePath}/.gnupg/pubring.gpg ] ; then
@@ -88,7 +88,7 @@ pub_create() {
 	RET=0
 }
 #}}}
-# privaten Schluessel erzeugen falls noch nicht vorhanden{{{
+# Funktion (pub_new_create), privaten Schluessel erzeugen falls noch nicht vorhanden{{{
 # sonst wird die Verzeichnisstruktur von gnupg nicht erstellt.
 #
 pub_new_create() {
@@ -114,7 +114,7 @@ pub_new_create() {
 	fi
 }
 #}}}
-# Funktion Anzeige aller privaten/oefentlichen Schluessel.{{{
+# Funktion (private_list), Anzeige aller privaten/oefentlichen Schluessel.{{{
 #
 # usage: private_list -u (eigene) oder nur private_list
 private_list() {
@@ -124,7 +124,6 @@ private_list() {
 	read_key() {
 		while read a Key Date REST ; do
 			if [ -z ${(M)${U_ID}##*${Key#*/}*} ] ; then
-				(( ANZ++ ))
 				case "$a" in
 					pub)
 						U_ID="${Key#*/}"
@@ -150,8 +149,8 @@ private_list() {
 				esac
 			fi
 			if [ -n "$NAME" ] ; then
-				I_Menue_Multi[ANZ]="$U_ID \"${NAME//\"/} $VERFALL\" off"
-				I_Menue[ANZ]="$U_ID \"${NAME//\"/} $VERFALL\""
+				I_Menue_Multi+=($U_ID \"${NAME//\"/} $VERFALL\" off)
+				I_Menue+=($U_ID \"${NAME//\"/} $VERFALL\")
 				unset -- NAME
 			fi
 		done
@@ -162,21 +161,19 @@ private_list() {
 		-u)	#
 			# eigene Schluessel
 			#
-			ANZ=0
 			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys "$USER" 2>/dev/null)"}##(s#)(pub|uid)*}} | \
 			read_key
 			;;
 		*)	#
 			# alle Schluessel
 			#
-			ANZ=0
 			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys 2>/dev/null)"}##(s#)(pub|uid)*}} | \
 			read_key
 			;;
 	esac
 }
 #}}}
-# Funktion parse_opt# {{{
+# Funktion (parse_opt)# {{{
 #
 parse_opt() {
 	unset -- KEY_SERV_ALL DEFAULT_KEY TRUSTED_KEY

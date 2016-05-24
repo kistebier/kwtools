@@ -4,21 +4,21 @@
 #
 gpgcrypt_opt() {
 	case $1 in
-		sign)	PROG_OPT="--yes --homedir $PGP_HOME -s -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
+		sign)	PROG_OPT="--batch --yes --homedir $PGP_HOME -s -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
 				;;
-		sign-key)	PROG_OPT="--yes --homedir $PGP_HOME -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" --sign-key "$2""
+		sign-key)	PROG_OPT="--batch --yes --homedir $PGP_HOME -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" --sign-key "$2""
 				;;
-		crypt)	PROG_OPT="--yes --homedir $PGP_HOME -e -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
+		crypt)	PROG_OPT="--batch --yes --homedir $PGP_HOME -e -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
 				;;
-		both)	PROG_OPT="--yes --homedir $PGP_HOME -se -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
+		both)	PROG_OPT="--batch --yes --homedir $PGP_HOME -se -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2}.gpg"
 				;;
 		decr*)	if [ "$F_OPT" = / ] ; then
-					PROG_OPT="--yes --homedir $PGP_HOME -d -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2%.*}'"
+					PROG_OPT="--batch --yes --homedir $PGP_HOME -d -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2%.*}'"
 				else
-					PROG_OPT="--yes --homedir $PGP_HOME -d -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2%.*}"
+					PROG_OPT="--batch --yes --homedir $PGP_HOME -d -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" < "$2" > ${2%.*}"
 				fi
 				;;
-		revoke)	PROG_OPT="--yes --homedir $PGP_HOME -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" --gen-revoke --output ${PGP_HOME}/${gv_Auswahl}_revoke.txt $2"
+		revoke)	PROG_OPT="--batch --yes --homedir $PGP_HOME -r "$USER" --passphrase-fd 3 3<<< "$PASSPHRASE" --gen-revoke --output ${PGP_HOME}/${gv_Auswahl}_revoke.txt $2"
 				;;
 	esac
 }	
