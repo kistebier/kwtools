@@ -734,7 +734,7 @@ fs_conf() {
 							# Ist das DEV schon gemountet kann man das FS problemlos
 							# vergroessern.
 							if [ ! -z "$MOUNTPOINT" ] ; then
-								btrfs filesystem resize ${New_Size#-}m $MOUNTPOINT 2>&1 | \
+								$(export LC_ALL=C ; btrfs filesystem resize ${New_Size#-}m $MOUNTPOINT 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							fi
 							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
@@ -771,7 +771,7 @@ fs_conf() {
 								e2fsck -f -y $DEV 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 								# Dateisystem ext2/3/4 reduzieren
-								resize2fs -p $DEV ${New_Size#-}M 2>&1 | \
+								$(export LC_ALL=C ; resize2fs -p $DEV ${New_Size#-}M 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -788,11 +788,11 @@ fs_conf() {
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
 								# Dateisystem vergroessern
-								fatresize -s ${New_Size#+}Mi -p $DEV 2>&1 | \
+								$(export LC_ALL=C ; fatresize -s ${New_Size#+}Mi -p $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem reduzieren
-								fatresize -s ${New_Size#-}Mi -p $DEV 2>&1 | \
+								$(export LC_ALL=C ; fatresize -s ${New_Size#-}Mi -p $DEV 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -831,14 +831,14 @@ fs_conf() {
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
 								# Dateisystem ntfs vergroessern
-								echo y | ntfsresize -f -s ${New_Size#+} $DEV 2>&1 | \
+								$(export LC_ALL=C ; echo y | ntfsresize -f -s ${New_Size#+} $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
                                 # NTFS Probleme checken und fixen
                                 ntfsfix $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem ntfs reduzieren
-								echo y | ntfsresize -f -s ${New_Size#-} $DEV 2>&1 | \
+								$(export LC_ALL=C ; echo y | ntfsresize -f -s ${New_Size#-} $DEV 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
                                 # NTFS Probleme checken und fixen
                                 ntfsfix $DEV 2>&1 | \
@@ -858,11 +858,11 @@ fs_conf() {
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
 								# Dateisystem reiserfs vergroessern
-								resize_reiserfs -s ${New_Size#+}M $DEV 2>&1 | \
+								$(export LC_ALL=C ; resize_reiserfs -s ${New_Size#+}M $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem reiserfs verkleinern
-								echo y | resize_reiserfs -s ${New_Size#-}M $DEV 2>&1 | \
+								$(export LC_ALL=C ; echo y | resize_reiserfs -s ${New_Size#-}M $DEV 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -907,7 +907,7 @@ fs_conf() {
 							#(( Resize_Size = ${New_Size#+} * 1048576 / 512 ))
 							# Dateisystem vergroessern.
 							#growfs.ufs -s $Resize_Size $DEV 2>&1 | \
-							growfs.ufs -s ${New_Size}m $DEV 2>&1 | \
+								$(export LC_ALL=C ; growfs.ufs -s ${New_Size}m $DEV 2>&1) | \
 								progressbox $gv_Enlarge $DEV || prog_failure
 						else
 							no_reduce_fs_msg "$FS"
@@ -960,7 +960,7 @@ fs_conf() {
 						;;
 					*)
 						# Dieses FS wird noch nicht unterstuetzt
-						mount_check -a "$DEV"
+						#mount_check -a "$DEV"
 						no_fs_support_msg "$gv_Fs"
 						return 1
 						;;

@@ -330,7 +330,7 @@ lv_free_size() {
 					# Falls dieses Laufwerk verschluesselt ist, stoppen.
 					resize_cryptdisk_stop $MAP_DEV
 					# LV vergroessern
-					lvextend -L${New_Size#+}M $DEV 2>&1 | \
+					$(export LC_ALL=C ; lvextend -L${New_Size#+}M $DEV 2>&1) | \
 						progressbox $gv_Enlarge $MAP_DEV || prog_failure
 					# Falls dieses Laufwerk verschluesselt war, 
 					# starten und Groesse anpassen.
@@ -345,7 +345,7 @@ lv_free_size() {
 						# Falls dieses Laufwerk verschluesselt ist, stoppen.
 						resize_cryptdisk_stop $MAP_DEV
 						# LV reduzieren
-						echo y | lvreduce -L${New_Size#-}M $DEV 2>&1 | \
+						$(export LC_ALL=C ; echo y | lvreduce -L${New_Size#-}M $DEV 2>&1) | \
 							progressbox $gv_Reduce $MAP_DEV || prog_failure
 						# Falls dieses Laufwerk verschluesselt war, 
 						# starten und Groesse anpassen.
