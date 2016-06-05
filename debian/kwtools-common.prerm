@@ -20,9 +20,11 @@ set -e
 case "$1" in
     remove|upgrade|deconfigure)
 		DIR=/usr/share/kwtools/functions
-		cd $DIR
-		rm -rf sys >/dev/null 2>&1
-		rm -rf ${DIR%/*/*}/doc/kwtools-common >/dev/null 2>&1
+		if [ -d "$DIR" ] ; then
+			cd $DIR
+			rm -rf sys >/dev/null 2>&1
+			rm -rf ${DIR%/*/*}/doc/kwtools-common >/dev/null 2>&1
+		fi
 		exit 0
         ;;
     failed-upgrade)
