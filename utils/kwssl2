@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 29.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.06.2016
 #
 # Script: kwssl2, erstellt eine PKI (Public Key Infrastructur),
 # CAs, Zertifikate, signiert diese ....
 #
-# Version: 0.0.4
+# Version: 0.0.5
 #
 
 # Ausführen von Befehlen auf bestimmte Signale.
@@ -51,7 +51,7 @@ fi
 
 # Variablen belegen# {{{
 UNSET=(CA_NAME COMMONNAME COUNTRYCODE PASSWORD COUNTRY LOCATION
-	ORGANISATION ORGANISATIONUNIT MAIL VALIDITY KEYLENGTH DIGEST gv_Pass
+	ORGANISATION ORGANISATIONUNIT OU_I MAIL VALIDITY KEYLENGTH DIGEST gv_Pass
 	FILENAME CA_CAPASSWD CA_CAPASSWORD)
 #
 KWSSL_DIR="${gv_HomePath}/.kwtools/kwssl2"
@@ -551,7 +551,7 @@ get_info_files() {
 							(( Anz++ ))
 							CERTS_FILE+=($CERTFILE)
 							CERTS_CN+=($COMMONNAME)
-							CERTS_NON_VAL_M+=($Anz \"$COMMONNAME $lv_Validity\" off)
+							CERTS_NON_VAL_M+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT} $lv_Validity\" off)
 							;;
 					esac
 				fi
@@ -566,7 +566,7 @@ get_info_files() {
 							(( Anz++ ))
 							CERTS_FILE+=($CERTFILE)
 							CERTS_CN+=($COMMONNAME)
-							CERTS_VAL_M+=($Anz \"$COMMONNAME $lv_Validity\" off)
+							CERTS_VAL_M+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT} $lv_Validity\" off)
 							;;
 					esac
 				fi
@@ -579,7 +579,7 @@ get_info_files() {
 					(( Anz++ ))
 					CERTS_FILE+=($CERTFILE)
 					CERTS_CN+=($COMMONNAME)
-					CERTS_ALL_VAL_M+=($Anz \"$COMMONNAME $lv_Validity\" off)
+					CERTS_ALL_VAL_M+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT} $lv_Validity\" off)
 				fi
 				## }}}
 				;;
@@ -618,13 +618,13 @@ get_req_key_files() {
 			(( Anz++ ))
 			REQS_FILE+=($f)
 			REQS_CN+=($COMMONNAME)
-			REQS_ALL_E+=($Anz \"$COMMONNAME\")
-			REQS_ALL_M+=($Anz \"$COMMONNAME\" off)
+			REQS_ALL_E+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT}\")
+			REQS_ALL_M+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT}\" off)
 			# Schluessel suchen
 			if [ -f "${f/\/req\///keys/}" ] ; then
 				# Variablen belegen
 				KEYS_FILE[Anz]="${f/\/req\///keys/}"
-				KEYS_ALL_M+=($Anz \"$COMMONNAME\" off)
+				KEYS_ALL_M+=($Anz \"${COMMONNAME}/${ORGANISATIONUNIT}\" off)
 			fi
 		fi
 	}
@@ -633,7 +633,7 @@ get_req_key_files() {
 # Funktion (gen_name), generiert den Dateinamen fuer Zertifikate,# {{{
 # Schluessel und fuer Anforderungen.
 gen_name() {
-	GEN_NAME="`print ${COMMONNAME}${MAIL}${ORGANISATIONUNIT}${ORGANISATION}${LOCATION}${COUNTRY}${COUNTRYCODE} | openssl base64 | tr -d '\n'`"
+	GEN_NAME="`print ${COMMONNAME}${MAIL}${ORGANISATIONUNIT}${ORGANISATION}${LOCATION}${COUNTRY}${COUNTRYCODE} | openssl enc -base64 | tr -d '\n'`"
 }
 ## }}}
 # Funktion (integrate_files_to_ca), kopiert einige Dateien# {{{
@@ -1149,6 +1149,7 @@ read_openssl_conf() {
 					;;
 				OU=*)
 					ORGANISATIONUNIT="${a#*=}"
+					OU_I+=(${a#*=})
 					;;
 				CN=*)
 					COMMONNAME="${a#*=}"
@@ -1244,7 +1245,7 @@ sign_ca_request() {
 #
 validity_input() {
 	VALIDITY_MSG=$(gettext 'Geben Sie die Gueltigkeit des Zertifikats in Tagen ein.')
-	number_input -i "$lv_Ssl_Validity" "$VALIDITY_MSG" "$VALIDITY"
+	number_input "$lv_Ssl_Validity" "$VALIDITY_MSG" "$VALIDITY"
 	if [ -n "$NUMBER" ] ; then
 		VALIDITY="$NUMBER"
 	else

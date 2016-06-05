@@ -109,7 +109,7 @@ manage_export_most() {
 									openssl x509 -in ${CA_OPEN_NAME}/cacert.pem -outform DER -out "$EXPORT_FILENAME" || prog_failure
 									;;
 								txt)
-									openssl x509 -in ${CA_OPEN_NAME}/cacert.pem -text -noout > "$EXPORT_FILENAME" || prog_failure
+									openssl x509 -in ${CA_OPEN_NAME}/cacert.pem -text > "$EXPORT_FILENAME" || prog_failure
 									;;
 							esac
 							break
@@ -140,7 +140,7 @@ manage_export_most() {
 									;;
 								txt)
 									# Text Export
-									openssl x509 -in "$In_File" -text -noout > "$EXPORT_FILENAME" || prog_failure
+									openssl x509 -in "$In_File" -text > "$EXPORT_FILENAME" || prog_failure
 									;;
 								zip)
 									# ZIP Export, mit Zertifikat, Schluessel, CA# {{{
@@ -209,7 +209,7 @@ manage_export_most() {
 											-crldays $DEFAULT_REVOKE_DAYS || prog_failure
 										if [ "$RET" != 1 ] ; then
 											openssl crl -in ./tmp/crl.pem \
-												-text -noout > "$EXPORT_FILENAME" || \
+												-text -out "$EXPORT_FILENAME" || \
 												prog_failure
 										fi
 										# Passwoerter loeschen
