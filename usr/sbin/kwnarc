@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.03.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 18.03.2016
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -1750,12 +1750,12 @@ fi
 if [ "$MASQUERADE" = 'yes' ] ; then
 	# IPv4
 	$IPTABLES -A FORWARD -j SPOOF_CHK || abortexit
-	$IPTABLES -A FORWARD -p tcp -j SANITY_CHK || abortexit
+	$IPTABLES -A FORWARD -p tcp -i $EXTERNAL_INTERFACE -j SANITY_CHK || abortexit
 	$IPTABLES -A FORWARD -j STATE_CHK || abortexit
 	# IPv6
 	$IP6TABLES -A FORWARD -j RH_CHK || abortexit
 	$IP6TABLES -A FORWARD -j SPOOF_CHK || abortexit
-	$IP6TABLES -A FORWARD -p tcp -j SANITY_CHK || abortexit
+	$IP6TABLES -A FORWARD -p tcp -i $EXTERNAL_INTERFACE -j SANITY_CHK || abortexit
 	$IP6TABLES -A FORWARD -j STATE_CHK || abortexit
 	if [ "$LAN_INTERFACE" != '' ] ; then
 		if [ "$PROTECT_FROM_LAN" = 'yes' ] ; then
