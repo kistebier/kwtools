@@ -735,7 +735,7 @@ fs_conf() {
 							# vergroessern.
 							if [ ! -z "$MOUNTPOINT" ] ; then
 								$(export LC_ALL=C ; btrfs filesystem resize ${New_Size#-}m $MOUNTPOINT 2>&1) | \
-									progressbox $gv_Enlarge $DEV || prog_failure
+									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 							# Wurde ein Laufwerk ins Arbeitsverz. gemountet, wird es wieder
 							# umountet.
@@ -834,14 +834,14 @@ fs_conf() {
 								$(export LC_ALL=C ; echo y | ntfsresize -f -s ${New_Size#+} $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
                                 # NTFS Probleme checken und fixen
-                                ntfsfix $DEV 2>&1 | \
+								ntfsfix $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
 								# Dateisystem ntfs reduzieren
 								$(export LC_ALL=C ; echo y | ntfsresize -f -s ${New_Size#-} $DEV 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
                                 # NTFS Probleme checken und fixen
-                                ntfsfix $DEV 2>&1 | \
+								ntfsfix $DEV 2>&1 | \
 									progressbox $gv_Reduce $DEV || prog_failure
 							fi
 						fi
@@ -907,7 +907,7 @@ fs_conf() {
 							#(( Resize_Size = ${New_Size#+} * 1048576 / 512 ))
 							# Dateisystem vergroessern.
 							#growfs.ufs -s $Resize_Size $DEV 2>&1 | \
-								$(export LC_ALL=C ; growfs.ufs -s ${New_Size}m $DEV 2>&1) | \
+								$(export LC_ALL=C ; growfs.ufs -s ${New_Size#+}m $DEV 2>&1) | \
 								progressbox $gv_Enlarge $DEV || prog_failure
 						else
 							no_reduce_fs_msg "$FS"
