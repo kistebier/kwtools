@@ -1,0 +1,78 @@
+# Funktion (kwbtrfs_conf),Konfiguration# {{{
+#
+kwbtrfs_conf() {
+	# Variable
+	lv_Compress=$(gettext 'Kompression')
+
+	# Funktion (conf_menu), Konfigurationsmenue# {{{
+	#
+	conf_menu() {
+		MENU=($lv_Compress \"$COMPRESS\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MENU"
+	}
+	## }}}
+	
+	conf_menu
+	while [ -n "$gv_Auswahl" ] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help conf_help
+				conf_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Compress)
+				# Kompressions Algorithmus auswaehlen# {{{
+				# Funktion (compress_menu)# {{{
+				#
+				compress_menu() {
+					MENU=($gv_None \"\" zlib \"\" lzo \"\" $gv_Back \"\")
+					menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MENU"
+				}
+				## }}}
+				compress_menu $COMPRESS
+				while [ -n $gv_Auswahl ] ; do
+					case $gv_Auswahl in
+						HELP*)
+							script_help conf_help
+							compress_menu "${gv_Auswahl#HELP }"
+							;;
+						$gv_None)
+							# kein Kompressions Algorithmus
+							unset -- COMPRESS
+							break
+							;;
+						$gv_Back)
+							break
+							;;
+						*)
+							# Auswahl uebernehmen
+							COMPRESS="$gv_Auswahl"
+							break
+							;;
+					esac
+				done
+				## }}}
+				conf_menu "$lv_Compress"
+				;;
+			$gv_Save)
+				> $CONF <<< "# Beginn $CONF
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# Kompressions Algorithmus
+COMPRESS=\"$COMPRESS\""
+
+# End $CONF"
+	
+				break
+				;;
+			$gv_Back)
+				break
+				;;
+		esac
+	done
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}

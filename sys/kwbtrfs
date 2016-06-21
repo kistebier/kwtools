@@ -1,0 +1,1096 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.06.2016
+#
+# Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
+# Version: 0.0.1
+#
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm --inversescreen off ; setterm --reset ;
+umount_dev ; rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthaelt die globalen Scripteinstellungen und laedt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# Pruefen, ob btrfs installiert ist.
+prog_check btrfs mkfs.btrfs
+if [[ -n $NO_PROGS ]] ; then
+	exit 0
+fi
+
+# Pruefen, ob die Version von btrfs die richtige ist.
+Version=${${(M)$(btrfs --version)##*v*}#v}
+if [[ $Version < 4.5.2 ]] ; then
+	MSG=$(gettext 'Sie benoetigen eine btrfs ($Version) Version die groesser oder gleich 4.5.2 ist.')
+	msgbox "$gv_Info" "$MSG"
+	exit 0
+fi
+
+# Pruefen, ob man der Benutzer root ist.
+root_check
+
+# Nachdem das Script initialisiert wurde, kann man die anderen
+# benoetigten Funktionen laden. Die Funktion sys_conf wird bereits
+# von der Funktion script_init ausgefuehrt.
+# autoload -U ...
+
+# Variablen
+lv_Filesystem=$(gettext 'Dateisystem')
+lv_Subvolumes=$(gettext 'Unterlaufwerke')
+lv_Drive=$(gettext 'Laufwerk')
+lv_Devices=$(gettext 'Laufwerke')
+#
+CONF="/etc/kwtools/kwbtrfs.cf"
+
+# Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
+read_file -f $CONF
+
+# Funktion main_menu# {{{
+#
+main_menu() {
+    MAIN_MENU=($gv_Configuration \"\" $lv_Filesystem \"\" $lv_Subvolumes \"\"
+		$lv_Devices \"\" $gv_Exit \"\")
+	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
+}
+## }}}
+# Funktion (search_btrfs_filesystem), sucht nach Devices mit btrfs Dateisystem# {{{
+#
+# usage: search_btrfs_filesystem
+#
+search_btrfs_filesystem() {
+	unset -- BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_LABEL_DEV BTRFS_LABEL_DEV_E \
+		BTRFS_LABEL_DEV_M BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_UUID_DEV \
+		BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M
+	local dev label uuid
+	btrfs filesystem show > ${gv_WorkDir}/btrfs-all-devices.txt
+	if [ "`wc -l <${gv_WorkDir}/btrfs-all-devices.txt`" -gt 1 ] ; then
+		while read a b c d rest ; do 
+			case $a in
+				Label:)
+					# Label und/oder UUID uebernehmen
+					# LABEL
+					if [ "${b//\'/}" != none ] ; then
+						label="${b//\'/}"
+						BTRFS_LABEL_DEV+=($label)
+						BTRFS_LABEL_DEV_E+=($label \"\")
+						BTRFS_LABEL_DEV_M+=($label \"\" off)
+						btrfs filesystem show $label > ${gv_WorkDir}/btrfs-device.txt
+						Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
+						if (( $Dev_Anz > 1 )) ; then
+							parse_uuid_label $label
+							BTRFS_DEV+=($REALDEV)
+							while read a rest ; do
+								case $a in
+									devid)
+										# Device uebernehmen	
+										dev=${rest##* }
+										BTRFS_MD+=($dev)
+										BTRFS_MD_E+=($dev \"\")
+										BTRFS_MD_M+=($dev \"\" off)
+										;;
+								esac
+							done < ${gv_WorkDir}/btrfs-device.txt
+						else
+							dev="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
+							BTRFS_DEV+=($dev)
+							BTRFS_DEV_E+=($dev \"\")
+							BTRFS_DEV_M+=($dev \"\" off)
+						fi
+					# UUID
+					elif [ "$d" != none ] ; then
+						uuid="$d"
+						BTRFS_UUID_DEV+=($uuid)
+						BTRFS_UUID_DEV_E+=($uuid \"\")
+						BTRFS_UUID_DEV_M+=($uuid \"\" off)
+						btrfs filesystem show $uuid > ${gv_WorkDir}/btrfs-device.txt
+						Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
+						if (( $Dev_Anz > 1 )) ; then
+							parse_uuid_label $uuid
+							BTRFS_DEV+=($REALDEV)
+							while read a rest ; do
+								case $a in
+									devid)
+										# Device uebernehmen	
+										dev=${rest##* }
+										BTRFS_MD+=($dev)
+										BTRFS_MD_E+=($dev \"\")
+										BTRFS_MD_M+=($dev \"\" off)
+										;;
+								esac
+							done < ${gv_WorkDir}/btrfs-device.txt
+						else
+							dev="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
+							BTRFS_DEV+=($dev)
+							BTRFS_DEV_E+=($dev \"\")
+							BTRFS_DEV_M+=($dev \"\" off)
+						fi
+					fi
+					;;
+#				devid)
+#					# Device uebernehmen	
+#					dev=${rest##* }
+#					BTRFS_DEV+=($dev)
+#					BTRFS_DEV_E+=($dev \"\")
+#					BTRFS_DEV_M+=($dev \"\" off)
+#					;;
+			esac
+		done < ${gv_WorkDir}/btrfs-all-devices.txt
+	fi
+}
+## }}}
+# Funktion (search_devices), sucht Partitionen, RAID Arrays, LVs und Cryptsetup# {{{
+# Laufwerke
+#
+# usage: search_devices [ -a | -c | -p ]
+# -a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
+# -c - Cryptsetup Laufwerke
+# -p - Partitionen
+#
+search_devices() {
+	unset -- NO_BTRFS_DEV NO_BTRFS_DEV_E NO_BTRFS_DEV_M
+	case $1 in
+		-a)
+			# alle Laufwerke suchen
+			for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
+				check_fs $dev
+				NO_BTRFS_DEV+=($dev)
+				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+			}
+			;;
+		-c)
+			# nur Cryptsetup Laufwerke suchen
+			for dev in  ${=MAP_DEV_E} ; {
+				check_fs $dev
+				NO_BTRFS_DEV+=($dev)
+				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+			}
+			;;
+		-p)
+			# nur Partitionen suchen
+			for dev in ${=PART} ; {
+				check_fs $dev
+				NO_BTRFS_DEV+=($dev)
+				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+			}
+			;;
+	esac
+}
+## }}}
+# Funktion (mount_btrfs_dev_check), falls die btrfs Devices nicht eingebunden sind# {{{
+# wird es jetzt getan.
+#
+# usage: mount_btrfs_dev_check
+#
+mount_btrfs_dev_check() {
+	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
+	for i in ${=BTRFS_DEV} ; {
+		mount_check -c $i
+		if [[ $MOUNT == no ]] ; then
+			mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
+			if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
+				MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
+				BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
+				BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
+				BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
+			fi
+		else
+			BTRFS_PATH+=($MOUNTPOINT)
+			BTRFS_PATH_E+=($MOUNTPOINT \"\")
+			BTRFS_PATH_M+=($MOUNTPOINT \"\" off)
+		fi
+	}
+}
+## }}}
+# Funktion (btrfs_dev_checklist), btrfs Laufwerke zur Auswahl anzeigen# {{{
+#
+btrfs_dev_checklist() {
+	if [[ ${#argv} -ge 1 ]] ; then
+		TITLE="$1"
+		MENU=($BTRFS_PATH_M)
+		MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs Laufwerke aus.')
+		checklist "$2" "$TITLE" "$MSG" "$MENU"
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+# Funktion (umount_dev), bindet alle Laufwerke aus die ins Arbeitsverzeichnis# {{{
+# eingebunden wurden.
+#
+umount_dev() {
+	if [[ -n ${MOUNT_DEVS[1]} ]] || [[ -n ${SUBVOL_MOUNT_DEVS[1]} ]] ; then
+		for i in ${=SUBVOL_MOUNT_DEVS} ${=MOUNT_DEVS} ; {
+			mount_check -a $i
+		}
+	fi
+}
+## }}}
+# Funktion (no_btrfs_dev_msg), Nachricht das keine Laufwerke mit BTRFS vorhanden sind# {{{
+#
+no_btrfs_dev_msg() {
+	MSG=$(gettext 'Es sind keine Laufwerke mit dem BTRFS Dateisystem vorhandn.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+fs_conf
+
+# nach Festplatten suchen
+disk
+if [[ -z ${DISK_DEV[1]} ]] ; then
+    no_disks_msg
+    exit 0
+fi
+
+# nach Linux Partitionen auf allen Festplatten suchen
+partdb
+if [[ -z ${PART[1]} ]] ; then
+	no_part_msg
+    exit 0
+fi
+
+# RAID Arrays erkennen
+if [[ -x ${commands[mdadm]} ]] ; then
+	raid
+
+fi
+# Logische Volumes erkennen
+if [[ -x ${commands[lvm]} ]] ; then
+	lvm_version
+	lv
+fi
+# cryptsetup Laufwerke erkennen
+if [[ -x ${commands[cryptsetup]} ]] ; then
+	search_cryptdev -a
+	if [[ -n ${MAP_DEV_E[1]} ]] ; then
+		unset -- CRYPT_DEV
+		for i in ${=MAP_DEV_E} ; {
+			CRYPT_DEV+=(/dev/mapper/${i})
+		}
+	fi
+fi
+
+main_menu
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			main_menu "${gv_Auswahl#HELP }"
+			;;
+		$gv_Configuration)
+			# Konfiguration# {{{
+			autoload -U kwbtrfs_conf
+			kwbtrfs_conf
+			## }}}
+			main_menu $gv_Configuration
+			;;
+		$lv_Filesystem)
+			# Dateisystem # {{{
+			lv_Detail=$(gettext 'detaillierte Information')
+			lv_Df=$(gettext 'Blockbelegung')
+			lv_Defrag=$(gettext 'Defragmentierung')
+			lv_Sync=$(gettext 'Synchronisation')
+			# Funktion (filesystem_menu)# {{{
+			#
+			filesystem_menu() {
+				MENU=($gv_Display \"\" \"$lv_Detail\" \"\" $lv_Df \"\" $lv_Defrag \"\"
+				$gv_Enlarge \"\" $gv_Reduce \"\" $lv_Sync \"\" $gv_Back \"\")
+				menubox "$1" "$lv_Filesystem" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			search_btrfs_filesystem
+			if [[ -n ${BTRFS_DEV[1]} ]] ; then
+				filesystem_menu
+				while [[ -n $gv_Auswahl ]] ; do
+					case $gv_Auswahl in
+						HELP*)
+							# Hilfe
+							script_help filesystem_help
+							filesystem_menu "${gv_Auswahl#HELP }"
+							;;
+						$gv_Display)
+							# Ansicht ueber die btrfs Laufwerke# {{{
+							mount_btrfs_dev_check
+							btrfs_dev_checklist "$lv_Filesystem"
+							while [[ $gv_Auswahl_Display ]] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe
+										script_help filesystem_help
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
+										;;
+									/*)
+										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
+										rm -rf ${gv_WorkDir}/btrfs_show &>/dev/null
+										for i in ${=gv_Auswahl} ; {
+											echo "$i" >>${gv_WorkDir}/btrfs_show
+											echo "--------------------------------" >>${gv_WorkDir}/btrfs_show
+											btrfs filesystem show $i  >>${gv_WorkDir}/btrfs_show
+										}
+										view_file ${gv_WorkDir}/btrfs_show
+										## }}}
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
+										;;
+									*)
+										# zurueck
+										break
+										;;
+								esac
+							done
+							## }}}
+							filesystem_menu $gv_Display
+							;;
+						$lv_Detail)
+							# Ansicht ueber die btrfs Laufwerke# {{{
+							mount_btrfs_dev_check
+							btrfs_dev_checklist "$lv_Filesystem"
+							while [[ $gv_Auswahl_Display ]] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe
+										script_help filesystem_help
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
+										;;
+									/*)
+										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
+										rm -rf ${gv_WorkDir}/btrfs_usage &>/dev/null
+										for i in ${=gv_Auswahl} ; {
+											echo "$i" >>${gv_WorkDir}/btrfs_usage
+											echo "--------------------------------" >>${gv_WorkDir}/btrfs_usage
+											btrfs filesystem usage $i -h -T >>${gv_WorkDir}/btrfs_usage
+										}
+										view_file ${gv_WorkDir}/btrfs_usage
+										## }}}
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
+										;;
+									*)
+										# zurueck
+										break
+										;;
+								esac
+							done
+							## }}}
+							filesystem_menu $gv_Detail
+							;;
+						$lv_Df)
+							# Ansicht ueber die belegten Bloecke von btrfs Laufwerken# {{{
+							mount_btrfs_dev_check
+							btrfs_dev_checklist "$lv_Filesystem"
+							while [[ ${gv_Auswahl_Display[1]} ]] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe
+										script_help filesystem_help
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
+										;;
+									/*)
+										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
+										rm -rf ${gv_WorkDir}/btrfs_df &>/dev/null
+										for i in ${=gv_Auswahl} ; {
+											echo "$i" >>${gv_WorkDir}/btrfs_df
+											echo "--------------------------------" >>${gv_WorkDir}/btrfs_df
+											btrfs filesystem df -h $i >>${gv_WorkDir}/btrfs_df
+										}
+										view_file ${gv_WorkDir}/btrfs_df
+										## }}}
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
+										;;
+									*)
+										# zurueck
+										break
+										;;
+								esac
+							done
+							## }}}
+							filesystem_menu $lv_Df
+							;;
+						$lv_Defrag)
+							# Defragmentierung von btrfs Laufwerken# {{{
+							mount_btrfs_dev_check
+							btrfs_dev_checklist "$lv_Filesystem"
+							while [[ ${gv_Auswahl_Display[1]} ]] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe
+										script_help filesystem_help
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
+										;;
+									/*)
+										# Defragmentierung der ausgewaehlten Laufwerke anzeigen# {{{
+										# Mit Kompression oder ohne.
+										if [[ -n $COMPRESS ]] ; then
+											Compress="-c${COMPRESS}"
+										else
+											unset -- Compresos
+										fi
+										# Funktion (defrag_msg), Anzeige welches Laufwerk# {{{
+										# defragmentiert wird.
+										#
+										defrag_msg() {
+											unset -- Dev
+											if [[ ${#argv} == 1 ]] ; then
+												Dev="$1"
+												MSG=$(gettext 'Defragmentiere das Laufwerk $Dev.')
+											else
+												no_para_msg $0
+											fi
+										}
+										## }}}
+										for i in ${=gv_Auswahl} ; {
+											defrag_msg "$i"
+											btrfs filesystem defragment -v -r -f $i $Compress | \
+												progressbox "$lv_Defrag" "$MSG" || \
+												prog_failure
+										}
+										## }}}
+										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
+										;;
+									*)
+										# zurueck
+										break
+										;;
+								esac
+							done
+							## }}}
+							filesystem_menu $lv_Defrag
+							;;
+						$gv_Enlarge)
+							# Dateisystem vergroessern# {{{
+							#
+							#
+							## }}}
+							filesystem_menu $gv_Enlarge
+							;;
+						$gv_Reduce)
+							# Dateisystem verkleinern# {{{
+							#
+							#
+							## }}}
+							filesystem_menu $gv_Reduce
+							;;
+						$lv_Sync)
+							# Dateisystem synchronisieren, nur RAID Arrays# {{{
+							# ###############
+							# TODO:
+							## }}}
+							filesystem_menu $lv_Sync
+							;;
+						$gv_Back)
+						# zurueck
+						break
+						;;
+					esac
+				done
+			else
+				no_btrfs_dev_msg
+			fi
+			## }}}
+			main_menu $lv_Filesystem
+			;;
+		$lv_Subvolumes)
+			# Subvolumes# {{{
+			# Variablen
+			lv_Subvolume=$(gettext 'Unterlaufwerk')
+			lv_Suvol_Name=$(gettext 'Unterlaufwerksname')
+			lv_Snapshot=$(gettext 'Snapshot')
+			lv_Name=$(gettext 'Snapshotname')
+			# Funktion (subvolumes_menu)# {{{
+			#
+			subvolumes_menu() {
+				MENU=($gv_Display \"\" $gv_Create \"\" $gv_Delete \"\"
+				$lv_Snapshot \"\" $gv_Back \"\")
+				menubox "$1" "$lv_Subvolumes" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			# Funktion (no_subvolume_msg), Nachricht das keine Subvolumes vorhanden sind# {{{
+			#
+			no_subvolume_msg() {
+				MSG=$(gettext 'Es sind keine $lv_Subvolumes vorhanden.')
+				msgbox "$gv_Info" "$MSG"
+			}
+			## }}}
+			# Funktion (search_subvolumes), suche nach Subvolumes# {{{
+			#
+			search_subvolumes() {
+				unset -- SUBVOL_DEV SUBVOL_DEV_E SUBVOL_DEV_M
+				for i in ${=BTRFS_DEV} ; {
+					mount_check -c $i
+					if [[ $MOUNT == no ]] ; then
+						MOUNT_DEV=(${gv_WorkDir}/${i##*/})
+						mkdir $MOUNT_DEV &>/dev/null
+						if mount -o rw -t btrfs $i $MOUNT_DEV &>/dev/null ; then
+							MOUNT_DEVS+=($MOUNT_DEV)
+							btrfs subvolume list -tu $MOUNT_DEV >${gv_WorkDir}/subvolumes
+							list_subvolumes
+						fi
+					else
+						MOUNT_DEV=($MOUNTPOINT)
+						btrfs subvolume list -tu $MOUNT_DEV >${gv_WorkDir}/subvolumes
+						list_subvolumes
+					fi
+				}
+			}
+			## }}}
+			# Funktion (list_subvolumes), listet Subvolumes auf# {{{
+			#
+			list_subvolumes() {
+				if [[ -s ${gv_WorkDir}/subvolumes ]] ; then
+					for s in ${(R)${(M)${(o)$(awk -F ' ' '{print $5}' ${gv_WorkDir}/subvolumes)}##[a-zA-Z0-9]*}##uuid} ; {
+						# suche nach subvol=/subvolumename
+						Tmp="`print ${${(s: :)${(M)${(f)"$(mount)"}##*subvol=/${s}*}}[3]}`"
+						
+						if [[ ! -n $Tmp ]] ; then
+							if [[ ! -d ${MOUNT_DEV%/}/${s} ]] ; then
+								mkdir ${MOUNT_DEV%/}/${s} &>/dev/null
+							fi
+							if mount -t btrfs -o subvol=${s},rw $i ${MOUNT_DEV%/}/${s} &>/dev/null ; then
+								SUBVOL_MOUNT_DEVS+=(${MOUNT_DEV%/}/${s})
+								SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
+								SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
+								SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
+							fi
+						else
+							SUBVOL_DEV+=($Tmp)
+							SUBVOL_DEV_E+=($Tmp \"\")
+							SUBVOL_DEV_M+=($Tmp \"\" off)
+						fi
+					}
+				else
+					no_subvolume_msg
+				fi
+				sleep 5
+			}
+			## }}}
+			# Funktion (subvol_checklist), Subvolumes zur Auswahl anzeigen# {{{
+			#
+			subvol_checklist() {
+				MENU=($SUBVOL_DEV_M)
+				MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs $lv_Subvolumes aus.')
+				checklist "$1" "$lv_Subvolumes" "$MSG" "$MENU"
+			}
+			## }}}
+			# Funktion (subvol_snapshot_menu)# {{{
+			#
+			subvol_snapshot_menu() {
+				MENU=($lv_Subvolume \"$SUBVOLUME\" $lv_Name \"$NAME\" $gv_Create \"\" $gv_Back \"\")
+				menubox "$1" "$lv_Snapshot" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			# Funktion (subvol_snapshot_choice_menu), Subvolumes zur Auswahl anzeigen# {{{
+			#
+			subvol_snapshot_choice_menu() {
+				MENU=($SUBVOL_DEV_E $gv_Back \"\")
+				MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Subvolume aus.')
+				menubox "$1" "$lv_Snapshot" "$MSG" "$MENU"
+			}
+			## }}}
+			# Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
+			#
+			btrfs_choice_menu() {
+				MENU=($BTRFS_PATH_E $gv_Back \"\")
+				MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Drive aus.')
+				menubox "$1" "$lv_Subvolumes" "$MSG" "$MENU"
+			}
+			## }}}
+			# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
+			#
+			subvol_create_menu() {
+				MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
+				$gv_Create \"\" $gv_Back \"\")
+				menubox "$1" "$lv_Subvolumes" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			#
+			search_btrfs_filesystem
+			if [[ -n ${BTRFS_DEV[1]} ]] ; then
+				subvolumes_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case $gv_Auswahl in
+						HELP*)
+							# Hilfe
+							script_help subvolumes_help
+							subvolumes_menu "${gv_Auswahl#HELP }"
+							;;
+						$gv_Display)
+							# Anzeige von Informationen von Subvolumes # {{{
+							search_subvolumes
+							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+								subvol_checklist
+								while [ -n ${gv_Auswahl[1]} ] ; do
+									case $gv_Auswahl in
+										HELP*)
+											script_helpt subvolumes_help
+											subvol_checklist "${gv_Auswahl#HELP }"
+											;;
+										/*)
+											# Information ueber die ausgewaehlten Subvolumes anzeigen# {{{
+											rm -rf ${gv_WorkDir}/show_subvol &>/dev/null
+											for i in ${=gv_Auswahl} ; {
+												btrfs subvolume show $i >> ${gv_WorkDir}/show_subvol
+											}
+											view_file  ${gv_WorkDir}/show_subvol
+											## }}}
+											subvol_checklist ${gv_Auswahl[1]}
+											;;
+										*)
+											# zurueck
+											break
+									esac
+								done
+							else
+								no_subvolume_msg
+							fi
+							## }}}
+							subvolumes_menu "$gv_Display"
+							;;
+						$gv_Create)
+							# Subvolumes erstellen# {{{
+							unset -- SUBVOL_NAME
+							mount_btrfs_dev_check
+							if [[ -n ${BTRFS_PATH[1]} ]] ; then
+								# vorhandene  Subvolumes finden
+								search_subvolumes
+								subvol_create_menu
+								while [ "$gv_Auswahl_Display" ] ; do
+									case $gv_Auswahl in
+										HELP*)
+											script_help subvol_create_help
+											subvol_create_menu "${gv_Auswahl#HELP }"
+											;;
+										$lv_Drive)
+											# btrfs Laufwerk auswaehlen# {{{
+											btrfs_choice_menu
+											while [ "$gv_Auswahl" ] ; do
+												case $gv_Auswahl in
+													HELP*)
+														script_help subvol_create_help
+														btrfs_choice_menu "${gv_Auswahl#HELP }"
+														;;
+													/*)
+														# Auswahl uebernehmen
+														DRIVE="$gv_Auswahl"
+														break
+														;;
+													*)
+														break
+														;;
+												esac
+											done
+											## }}}
+											subvol_create_menu "$lv_Drive"
+											;;
+										$lv_Suvol_Name)
+											# Snapshot Name eingeben# {{{
+											MSG=$(gettext 'Geben Sie einen Namen fuer das lv_Subvolume ein.')
+											inputbox "$lv_Subvolumes" "$MSG" "$SUBVOL_NAME"
+											while [ -n "$gv_Auswahl" ] ; do
+												# Pruefen, ob es das Subvolume schon gibt.
+												Tmp="`print ${(M)${SUBVOL_DEV##*/}##*${gv_Auswahl}}`"
+												if [[ ! -n $Tmp ]] ; then
+													SUBVOL_NAME="$gv_Auswahl"
+													break
+												else
+													IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein.')
+													msgbox "$gv_Info" "$IS_MSG"
+													inputbox "$lv_Subvolumes" "$MSG" "$SUBVOL_NAME"
+												fi
+											done
+											## }}}
+											subvol_create_menu "$lv_Suvol_Name"
+											;;
+										$gv_Create)
+											# Subvolume erstellen# {{{
+											if [[ -n $DRIVE ]] && [[ -n $SUBVOL_NAME ]] ; then
+												MSG=$(gettext 'erzeuge $lv_Subvolume $SUBVOL_NAME')
+												btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" | \
+												progressbox "$lv_Subvolumes" "$MSG" || prog_failure|| prog_failure
+												search_subvolumes
+												break
+											else
+												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Drive und $lv_Suvol_Name mit Werten belegen.')
+												msgbox "$gv_Info" "$MSG"
+												subvol_create_menu "$gv_Auswahl"
+											fi
+											## }}}
+											;;
+										*)
+											break
+											;;
+									esac
+								done
+							else
+								no_btrfs_dev_msg
+							fi
+							## }}}
+							subvolumes_menu "$gv_Create"
+							;;
+						$gv_Delete)
+							# Subvolumes loeschen# {{{
+							search_subvolumes
+							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+								subvol_checklist
+								while [ -n ${gv_Auswahl_Display[1]} ] ; do
+									case $gv_Auswahl in
+										HELP*)
+											script_help subvolumes_help
+											subvol_checklist "${gv_Auswahl#HELP }"
+											;;
+										/*)
+											# ausgewaehlte Subvolumes loeschen# {{{
+											# Auswahl sicher
+											SUBVOL_DEVS="$gv_Auswahl"
+											# Frage, ob die asgewaehlten Subvolumes wirklich
+											# geloescht werden sollen.
+											DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
+${=gv_Auswahl// /\\n}
+geloescht werden?')
+											yesno "$lv_Subvolumes" "$DEL_MSG" "$gv_No"
+											#
+											if [[ $gv_Auswahl == yes ]] ; then
+												MSG=$(gettext 'Loesche $lv_Subvolumes')
+												btrfs subvolume delete -C ${=SUBVOL_DEVS} | \
+													progressbox "$lv_Subvolumes" "$MSG" || \
+													prog_failure
+												search_subvolumes
+											fi
+											## }}}
+											subvol_checklist
+											;;
+										*)
+											# zurueck
+											break
+									esac
+								done
+							else
+								no_subvolume_msg
+							fi
+							## }}}
+							subvolumes_menu "$gv_Delete"
+							;;
+						$lv_Snapshot)
+							# Snapshots von Subvolumes erstellen# {{{
+							search_subvolumes
+							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+								subvol_snapshot_menu
+								while [ -n $gv_Auswahl_Display ] ; do
+									case $gv_Auswahl in
+										HELP*)
+											script_help subvolumes_snapshot_help
+											subvol_snapshot_menu "${gv_Auswahl#HELP }"
+											;;
+										$lv_Subvolume)
+											# ausgewaehlte Subvolume auswaehlen# {{{
+											subvol_snapshot_choice_menu
+											while [ "$gv_Auswahl" ] ; do
+												case $gv_Auswahl in
+													HELP*)
+														script_help subvolumes_snapshot_help
+														subvol_snapshot_choice_menu "${gv_Auswahl#HELP }"
+														;;
+													/*)
+														# Auswahl uebernehmen
+														SUBVOLUME="$gv_Auswahl"
+														break
+														;;
+													*)
+														break
+														;;
+												esac
+											done
+											## }}}
+											subvol_snapshot_menu $lv_Subvolume
+											;;
+										$lv_Name)
+											# Snapshot Name eingeben# {{{
+											MSG=$(gettext 'Geben Sie einen Namen fuer den lv_Snapshot ein.')
+											if [[ ! -n $NAME ]] && [[ -n $SUBVOLUME ]] ; then
+												DATE=$(date -u +%Y-%m-%d)
+												NAME="${SUBVOLUME}-${DATE}"
+											fi
+											inputbox "$lv_Snapshot" "$MSG" "$NAME"
+											if [[ $gv_Auswahl ]] ; then
+												NAME="$gv_Auswahl"
+											else
+												unset -- NAME
+											fi
+											## }}}
+											subvol_snapshot_menu $lv_Name
+											;;
+										$gv_Create)
+											# Snapshot erstellen# {{{
+											if [[ -n $SUBVOLUME ]] && [[ -n $NAME ]] ; then
+												MSG=(gettext 'erzeuge $lv_Snapshot.')
+												btrfs subvolume snapshot $SUBVOLUME "$NAME" |\
+													progressbox "$lv_Snapshot" "$MSG" || prog_failure
+												break
+											else
+												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Subvolume und $lv_Name mit Werten belegen.')
+												msgbox "$gv_Info" "$MSG"
+												subvol_snapshot_menu
+											fi
+											## }}}
+											;;
+										*)
+											# zurueck
+											break
+											;;
+									esac
+								done
+							else
+								no_subvolume_msg
+							fi
+							## }}}
+							subvolumes_menu "$lv_Snapshot"
+							;;
+						$gv_Back)
+							# zurueck
+							break
+							;;
+					esac
+				done
+			else
+				no_btrfs_dev_msg
+			fi
+			## }}}
+			main_menu $lv_Subvolumes
+			;;
+		$lv_Devices)
+			# Management fuer multiple Devices, wie z.B. RAID# {{{
+			lv_Raid=$(gettext 'RAID')
+			lv_Encrypt_Raid=$(gettext 'verschluesseltes RAID')
+			lv_Device_Add=$(gettext 'Laufwerk hinzufuegen')
+			lv_Device_Remove=$(gettext 'Laufwerk entfernen')
+			lv_Device_Replace=$(gettext 'Laufwerk tauschen')
+			#
+			# Funktion (device_menu)# {{{
+			#
+			device_menu() {
+				MENU=($gv_Display \"\" $gv_Create \"\" \"$lv_Device_Add\" \"\"
+				\"$lv_Device_Remove\" \"\" \"$lv_Device_Replace\" \"\" $gv_Back \"\")
+				menubox "$1" "$lv_Devices" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			# Funktion (create_menu)# {{{
+			#
+			create_menu() {
+				MENU=($lv_Drive \"\" $lv_Raid \"\" \"$lv_Encrypt_Raid\" \"\"
+					$gv_Back \"\")
+				menubox "$1" "$lv_Devices" "$gv_Menupoint" "$MENU"
+			}
+			## }}}
+			device_menu
+			while [ -n "$gv_Auswahl" ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						# Hilfe
+						script_help devices_help
+						device_menu "${gv_Auswahl#HELP }"
+						;;
+					$gv_Display)
+						# Detaillierte Informationen ueber btrfs Laufwerke,#{{{
+						# anzeigen
+						search_btrfs_filesystem
+						if [[ -n ${BTRFS_DEV[1]} ]] ; then
+							mount_btrfs_dev_check
+							btrfs_dev_checklist "$lv_Devices"
+							while [[ $gv_Auswahl_Display ]] ; do
+								case $gv_Auswahl in
+									HELP*)
+										# Hilfe
+										script_help btrfs_usage_help
+										btrfs_dev_checklist "$lv_Devices" "${gv_Auswahl#HELP }"
+										;;
+									/*)
+										# Information ueber die ausgewaehlten Laufwerke# {{{
+										# anzeigen
+										rm -rf ${gv_WorkDir}/btrfs_usage &>/dev/null
+										for i in ${=gv_Auswahl} ; {
+											echo "$i" >>${gv_WorkDir}/btrfs_usage
+											echo "--------------------------------" >>${gv_WorkDir}/btrfs_usage
+											btrfs device usage -h "$i" >>${gv_WorkDir}/btrfs_usage
+										}
+										view_file ${gv_WorkDir}/btrfs_usage
+										## }}}
+										btrfs_dev_checklist "$lv_Devices" "${gv_Auswahl[1]}"
+										;;
+									*)
+										# zurueck
+										break
+										;;
+								esac
+							done
+						else
+							no_btrfs_dev_msg
+						fi
+						## }}}
+						device_menu "$gv_Display"
+						;;
+					$gv_Create)
+						# btrfs Laufwerke, RAID Arrays erstellen# {{{
+						#
+						FORMAT_TITLE=$(gettext 'Formatierung')
+						#
+						# Funktionen (format_menu)# {{{
+						#
+						format_menu() {
+							FORMAT_MENU=($NO_BTRFS_DEV_M)
+							FORMAT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus auf denen ein BTRFS Dateisystem erzeugt werden soll.')
+							checklist "$1" "$lv_Devices" "$FORMAT_MSG" "$FORMAT_MENU"
+						}
+						## }}}
+						# Funktionen (no_nobtrfs_drive_msg), Nachricht das es keine Laufwerke# {{{
+						# ohne BTRFS Dateisystem gibt.
+						#
+						no_nobtrfs_drive_msg() {
+							MSG=$(gettext 'Es sind keine Laufwerke ohne BTRFS Dateisystem vorhanden.')
+							msgbox "$gv_Info" "$MSG"
+						}
+						## }}}
+						#
+						create_menu
+						while [ -n "$gv_Auswahl" ] ; do
+							case $gv_Auswahl in
+								HELP*)
+									script_help device_create_help
+									create_menu "${gv_Auswahl#HELP }"
+									;;
+								$lv_Drive)
+									# Laufwerke mit BTRFS formatieren# {{{
+									search_devices -a
+									if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+										format_menu
+										while [ -n ${gv_Auswahl[1]} ] ; do
+											case $gv_Auswahl in
+												HELP*)
+													script_help device_create_help
+													format_menu "${gv_Auswahl#HELP }"
+													;;
+												/dev/*)
+													# Auswahl uebernehmen# {{{
+													FORMAT_DEVS="$gv_Auswahl"
+													FORMAT_MSG=$(gettext 'Sollen diese Laufwerke ${=FORMAT_DEVS// /\\n}
+													wirklich mit dem BTRFS Dateisystem formatiert werden (${gv_Yes}/${gv_No})?')
+													yesno "$FORMAT_TITLE" "$FORMAT_MSG" "$gv_No"
+													if [[ $gv_Auswahl == yes ]] ; then
+														for i in ${=FORMAT_DEVS} ; {
+															mkfs.btrfs -v -f $i | progressbox "$FORMAT_TITLE" "$MSG" || \
+																prog_failure
+														}
+													fi
+													# Laufwerke ohne BTRFS neu suchen
+													search_no_btrfs -a
+													unset -- FORMAT_DEVS
+													## }}}
+													break
+													;;
+												*)
+													break
+													;;
+											esac
+										done
+									else
+										no_nobtrfs_drive_msg
+									fi
+									## }}}
+									create_menu $lv_Drive
+									;;
+								$lv_Raid)
+									# RAID erstellen# {{{
+#									autoload -U raid_create_conf
+#									raid_create_conf
+									## }}}
+									hier_ist_noch_nichts $lv_Raid
+									create_menu $lv_Raid
+									;;
+								$lv_Encrypt_Raid)
+									# verschluesseltes RAID erstellen# {{{
+#									autoload -U raid_create_conf
+#									raid_create_conf -c
+									## }}}
+									hier_ist_noch_nichts $lv_Encrypt_Raid
+									create_menu $lv_Encrypt_Raid
+									;;
+								$gv_Back)
+									# zuruecck
+									break
+									;;
+							esac
+						done
+						## }}}
+						device_menu "$gv_Create"
+						;;
+					$lv_Device_Add)
+						# Festplatte/Partition hinzufuegen
+						#
+						hier_ist_noch_nichts "$lv_Device_Add"
+						device_menu "$lv_Device_Add"
+						;;
+					$lv_Device_Remove)
+						# Festplatte/Partition entfernen
+						#
+						hier_ist_noch_nichts "$lv_Device_Remove"
+						device_menu "$lv_Device_Remove"
+						;;
+					$lv_Device_Replace)
+						# Festplatte/Partition austauschen
+						#
+						hier_ist_noch_nichts "$lv_Device_Replace"
+						device_menu "$lv_Device_Replace"
+						;;
+					$gv_Back)
+						# zurueck
+						break
+						;;
+				esac
+			done
+			## }}}
+			main_menu $lv_Raid
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+umount_dev
+exit 0
+
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
