@@ -1515,22 +1515,14 @@ lv_free_size() {
 							OpenCount=$(dmsetup info -c --noheadings -o open $Crypt_Dev 2>/dev/null)
 							# >=1 heist vorhandene Laufwerke sind gemountet.
 							if (( $OpenCount >= 1 )) ; then
-								# Devices mit LABEL oder UUID Bezeichnung
-								# in richtige Devices umwandeln.
-								parse_uuid_label $Crypt_Dev
-								if [ -n "$REALDEV" ] ; then
-									MAP_DEV_E+=($REALDEV)
-									MAP_DEV+=(${REALDEV##*/} \"\")
-									MAP_DEV_M+=(${REALDEV##*/} \"\" off)
-								fi
+								MAP_DEV_E+=($Crypt_Dev)
+								MAP_DEV+=($Crypt_Dev \"\")
+								MAP_DEV_M+=($Crypt_Dev \"\" off)
 							# =0 heist vorhandenes Laufwerk nicht gemountet.
 							elif (( OpenCount == 0 )) ; then
-								parse_uuid_label $Crypt_Dev
-								if [ -n "$REALDEV" ] ; then
-									MAP_DEV_E+=($REALDEV)
-									MAP_DEV+=(${REALDEV##*/} \"\")
-									MAP_DEV_M+=(${REALDEV##*/} \"\" off)
-								fi
+								MAP_DEV_E+=($Crypt_Dev)
+								MAP_DEV+=($Crypt_Dev \"\")
+								MAP_DEV_M+=($Crypt_Dev \"\" off)
 							fi
 						fi
 					done
@@ -1554,23 +1546,17 @@ lv_free_size() {
 					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
 					Active=${${"$(dmsetup info $Crypt_Dev 2>/dev/null)"}/(#b)[[:space:]]#*(ACTIVE)*/${match[1]}}
 						if [[ $Active != ACTIVE ]] ; then
-							parse_uuid_label $Crypt_Dev
-							if [ -n "$REALDEV" ] ; then
-								MAP_DEV_E+=($REALDEV)
-								MAP_DEV+=(${REALDEV##*/} \"\")
-								MAP_DEV_M+=(${REALDEV##*/} \"\" off)
-							fi
+							MAP_DEV_E+=($Crypt_Dev)
+							MAP_DEV+=($Crypt_Dev \"\")
+							MAP_DEV_M+=($Crypt_Dev \"\" off)
 						fi
 					done
 					;;
 				*)	# alle Cryptdisks in /etc/crypttab.
 					egrep -v "^[[:space:]]*(#|$)" $TABFILE | while read Crypt_Dev Rest ; do
-						parse_uuid_label $Crypt_Dev
-						if [ -n "$REALDEV" ] ; then
-							MAP_DEV_E+=($REALDEV)
-							MAP_DEV+=(${REALDEV##*/} \"\")
-							MAP_DEV_M+=(${REALDEV##*/} \"\" off)
-						fi
+						MAP_DEV_E+=($Crypt_Dev)
+						MAP_DEV+=($Crypt_Dev \"\")
+						MAP_DEV_M+=($Crypt_Dev \"\" off)
 					done
 					;;
 			esac
