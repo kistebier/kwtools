@@ -490,7 +490,7 @@ lv_free_size() {
 		fi
 	}
 	#}}}
-	# Funktion (parse_uuid_label), parse UUID= symlinks# {{{
+	# Funktion (parse_uuid_label), parse UUID LABEL symlinks# {{{
 	#
 	# usage: parse_uuid_label [ UUID | LABEL | DEVICE ]
 	#
@@ -500,23 +500,24 @@ lv_free_size() {
 			local Dev
 			Dev="$1"
 			for i in ${=Dev} ; {
-			    if [ "${i#UUID=}" != "$i" ] ; then
-			        REALDEV+=($(readlink -f /dev/disk/by-uuid/${i#UUID=}))
-			    elif [ "${i#LABEL=}" != "$i" ] ; then
-			        REALDEV+=($(readlink -f /dev/disk/by-label/${i#LABEL=}))
-				else
-					case "${i}" in
-						/dev*)	#REALDEV+=($(readlink -f $i))
+				case "${i#*=}" in
+					*-*-*-*-*)
+			        	REALDEV+=($(readlink -f /dev/disk/by-uuid/${i#*=}))
+						;;
+					[a-zA-Z0-9]*)
+			        	REALDEV+=($(readlink -f /dev/disk/by-label/${i#*=}))
+						;;
+					/dev*)
+						REALDEV+=($i)
+						;;
+					*)
+						if [ -b "$i" ] ; then
 							REALDEV+=($i)
-							;;
-						*)	if [ -f "$i" ] ; then
-								REALDEV+=($i)
-							else
-								REALDEV+=(/dev/mapper/${i})
-							fi
-							;;
-					esac
-			    fi
+						else
+							REALDEV+=(/dev/mapper/${i})
+						fi
+						;;
+				esac
 			}
 		else
 			no_para_msg $0
