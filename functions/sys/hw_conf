@@ -754,15 +754,15 @@ lv_free_size() {
 				## }}}
 				;;
 			*)
-				# alle Partitionen, ausser RAID, LVM und crypto_LUKS{{{
+				# alle Partitionen, ausser bios_grub, RAID, LVM und crypto_LUKS{{{
 				# ${gv_WorkDir}/partdb auslesen
 				for t in ${gv_WorkDir}/*_partdb ; {
 					Tmp="${t##*/}"
 					Disk="/dev/${Tmp%_partdb}"
 					while read part Rest ; do
 						case "$Rest" in
-							*lvm|*raid)
-								# ohne LVM und RAID Partition.
+							*bios_grub|*lvm|*raid)
+								# ohne bios_grub LVM und RAID Partition.
 								;;
 							*linux-swap|*swap*)
 								Part_Desc=$(blkid -o value -s TYPE -p ${Disk}${part# })
