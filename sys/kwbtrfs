@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.06.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.06.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -176,30 +176,75 @@ search_devices() {
 	case $1 in
 		-a)
 			# alle Laufwerke suchen
-			for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-				check_fs $dev
-				NO_BTRFS_DEV+=($dev)
-				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-			}
+			#
+			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+			# von Laufwerken eines BTRFS RAID Arrays.
+			search_btrfs_filesystem
+			if [ -n ${BTRFS_MD[1]} ] ; then
+				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
+					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
+				}
+			else
+				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+				}
+			fi
 			;;
 		-c)
 			# nur Cryptsetup Laufwerke suchen
-			for dev in  ${=MAP_DEV_E} ; {
-				check_fs $dev
-				NO_BTRFS_DEV+=($dev)
-				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-			}
+			#
+			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+			# von Laufwerken eines BTRFS RAID Arrays.
+			search_btrfs_filesystem
+			if [ -n ${BTRFS_MD[1]} ] ; then
+				for dev in  ${=CRYPT_DEV} ; {
+					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
+				}
+			else
+				for dev in  ${=CRYPT_DEV} ; {
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+				}
+			fi
 			;;
 		-p)
 			# nur Partitionen suchen
-			for dev in ${=PART} ; {
-				check_fs $dev
-				NO_BTRFS_DEV+=($dev)
-				NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-				NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-			}
+			#
+			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+			# von Laufwerken eines BTRFS RAID Arrays.
+			search_btrfs_filesystem
+			if [ -n ${BTRFS_MD[1]} ] ; then
+				for dev in ${=PART} ; {
+					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
+				}
+			else
+				for dev in ${=PART} ; {
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+				}
+			fi
 			;;
 	esac
 }
