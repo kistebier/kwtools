@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 02.07.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 11.07.2016
 #
 # Script: kwquota, Frontend fuer quota (ext234], reiserfs, jfs) und xfs_quota
 #
-# Version: 0.1.0
+# Version: 0.1.1
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -43,6 +43,8 @@ root_check
 # eventuelle Kernel Module laden
 kernel_release
 load_module 'quota_v1 quota_v2'
+#check, ob 32 Bit oder 64 Bit Betriebssystem
+check_kernel_format
 
 # Quota im Kernel pruefen
 if [ ! -d /proc/sys/fs/quota ] ; then
@@ -51,14 +53,13 @@ if [ ! -d /proc/sys/fs/quota ] ; then
 	exit 0
 fi
 
-# checken, ob quota in der /etc/fstab aktiviert wurde.
 # Funktion (read_fstab_quota), liest alle Quota aus der fstab ein# {{{
-# read_fstab [ usrquota | grpquota | prjquota | quota ]
+# read_fstab [ usrquota | grpquota | usrjquota | grpjquota | prjquota | quota ]
 #
 # usage: read_fstab_quota
 read_fstab_quota() {
 	read_fstab quota
-	if [ -n "$FSTAB_VALUES" ] ; then
+	if [[ -n ${FSTAB_VALUES[1]} ]] ; then
 		unset -- Mountpoint Mountpoint_M Fsystem
 		for i in {1..${#FSTAB_VALUES[@]}} ; {
 			Mp=${${(ws: :)${FSTAB_VALUES[i]}}[2]}
@@ -77,18 +78,19 @@ no_quota_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
+# checken, ob quota in der /etc/fstab aktiviert wurde.
 read_fstab_quota
-if [ -z "$Mountpoint" ] ; then
+if [[ -z ${Mountpoint[1]} ]] ; then
 	no_quota_msg
 	exit 0
 fi
 
-# Programme checken, ob verfuegbar
+# Programme checken, ob verfuegbar# {{{
 prog_check quota quotaon quotaoff quotacheck edquota setquota repquota
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
 else
-	QUOTA_VERSION=${${${(ws: :)${(M)${(f)"$(quota -V)"}##*version*}}[4]}%.}
+	QUOTA_VERSION=${${${(ws: :)${(M)${(f)"$(export LC_ALL=C; quota -V)"}##*version*}}[4]}%.}
 	if [[ "$QUOTA_VERSION" -ge 3.15 ]] ; then
 		REPQUOTA_UOPT="-vusp"
 		REPQUOTA_GOPT="-vgsp"
@@ -97,31 +99,48 @@ else
 		REPQUOTA_GOPT="-vgs"
 	fi
 fi
-
+## }}}
+# Quota Format abhaengig vom Kernel pruefen# {{{
+# und Variable QUOTA_FM mit dem richtigem Werten belegen.
+#
+if [[ -n $gv_Kernel_Fm ]] ; then
+	case $gv_Kernel_Fm in
+		32)
+			QUOTA_FM="--format=vfsv0"
+			;;
+		64)
+			QUOTA_FM="--format=vfsv1"
+			;;
+		*)	unset -- QUOTA_FM
+	esac
+fi
+## }}}
 # (a)quota.user und (a)quota.group erstellen, falls nötig# {{{
 if [ -n "${Mountpoint_E[1]}" ] ; then
 	Anz="${(w)#Mountpoint_E}"
 	for n in {1..${(w)#Mountpoint_E}} ; {
 		if mountpoint ${Mountpoint_E[n]} >/dev/null ; then
 			if [ "${Fsystem[n]}" != xfs ] ; then
-				# xfs FSs werden ausgelassen.
-				if test ! -f ${Mountpoint_E[n]}/*quota.(user|group) ; then
+				# xfs Dateisysteme werden ausgelassen.
+				if [[ ! -f ${Mountpoint_E[n]}/aquota.user ]] || \
+					[[ ! -f ${Mountpoint_E[n]}/aquota.group ]]  ; then
 					MSG=$(gettext 'Es wird jetzt auf dem Quota-Laufwerk ${Mountpoint_E[n]} die Dateien (a)quota.user und (a)quota.group erstellt.\n\nDies koennte etwas Zeit in Anspruch nehmen.')
 					infobox "$gv_Info" "$MSG" 3
-					quotacheck -ugmf ${Mountpoint_E[n]} &>/dev/null || prog_failure
+					quotacheck $QUOTA_FM -ugmf ${Mountpoint_E[n]} &>/dev/null || prog_failure
 				fi
 			fi
 		fi
 	}
 fi
 ## }}}
-
-# Variablen
+# Variablen# {{{
 XFS_PROJECTS=/etc/projects
 XFS_PROJID=/etc/projid
 USER_LOGFILE="${gv_WorkDir}/user"
 GROUP_LOGFILE="${gv_WorkDir}/group"
 PROJECT_LOGFILE="${gv_WorkDir}/project"
+lv_Drives=$(gettext 'Laufwerke')
+lv_Warn=$(gettext 'Warnung')
 lv_Project=$(gettext 'Projekt')
 lv_Status_On=$(gettext 'An')
 lv_Status_Off=$(gettext 'Aus')
@@ -136,6 +155,7 @@ elif [ -f /usr/local/etc/warnquota.conf ] ; then
 else
 	QUOTA_WARN_CF=/etc/warnquota.conf
 fi
+## }}}
 
 # Nachdem das Script initialiiert wurde, kann man die anderen
 # benötigten Funktionen laden. Die Funktion sys_conf wird bereits
@@ -143,13 +163,9 @@ fi
 autoload -U kwquota_conf kwquota_config kwquota_change
 
 CONF_MENU="$gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\""
+MAIN_MENU=($gv_Display \"\" $gv_Configuration \"\" $lv_Drives \"\" $lv_Warn \"\"
+	$gv_Exit \"\")
 # Funktion main_menu# {{{
-#
-lv_Drives=$(gettext 'Laufwerke')
-lv_Warn=$(gettext 'Warnung')
-lv_Project=$(gettext 'Projekt')
-MAIN_MENU=($gv_Display \"\" $gv_Configuration \"\"
-	$lv_Drives \"\" $lv_Warn \"\" $gv_Exit \"\")
 #
 main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -265,32 +281,32 @@ quota_check_fs() {
 	fi
 }
 ## }}}
-	# Funktion (quota_status), fuer das Dateisystem xfs# {{{
-	#
-	# usage: quota_status QU_OPT QUOTA_PART
-	# QU_OPT - -u | -g | -p fuer User Group and Project
-	# QUOTA_PART - Quota Laufwerk
-	#
-	quota_status() {
-		if [ $# = 2 ] ; then
-			# Hier benoetigen wir eine englische Ausgabe.
-			LC_ALL=C xfs_quota -x -c "state -v $1" $2 2>/dev/null \
-			   >${gv_WorkDir}/state || prog_failure
-			if [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Accounting:*}}[2]}`" = OFF ] ; then
-				# Quota Status: total ausgeschaltet
-				print "$lv_Status_Total_Off"
-			elif [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Enforcement:*}}[2]}`" = OFF ] ; then
-				# Quota Status: ausgeschaltet
-				print "$lv_Status_Off"
-			else
-				# Quota Status: eingeschaltet
-				print "$lv_Status_On"
-			fi
+# Funktion (quota_status), fuer das Dateisystem xfs# {{{
+#
+# usage: quota_status QU_OPT QUOTA_PART
+# QU_OPT - -u | -g | -p fuer User Group and Project
+# QUOTA_PART - Quota Laufwerk
+#
+quota_status() {
+	if [ $# = 2 ] ; then
+		# Hier benoetigen wir eine englische Ausgabe.
+		(export LC_ALL=C ; xfs_quota -x -c "state -v $1" $2 2>/dev/null \
+			>${gv_WorkDir}/state || prog_failure)
+		if [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Accounting:*}}[2]}`" = OFF ] ; then
+			# Quota Status: total ausgeschaltet
+			print "$lv_Status_Total_Off"
+		elif [ "`print ${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##*Enforcement:*}}[2]}`" = OFF ] ; then
+			# Quota Status: ausgeschaltet
+			print "$lv_Status_Off"
 		else
-			no_para_msg $0
+			# Quota Status: eingeschaltet
+			print "$lv_Status_On"
 		fi
-	}
-	## }}}
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
 # Funktion (no_quota_fs_msg), Filesystem wird nicht unterstuetzt.# {{{
 #
 # usage: no_quota_fs_msg
@@ -306,12 +322,10 @@ no_quota_fs_msg() {
 # -c - anlegen
 #
 ext_ug_quota_check() {
-	unset -- CREATE
 	if [ "$1" = -d ] ; then
 		UG_WHAT_TITLE="$gv_Delete"
 	elif [ "$1" = -c ] ; then
 		UG_WHAT_TITLE="$gv_Create"
-		CREATE=yes
 	else
 		UG_WHAT_TITLE="$gv_Change"
 	fi
@@ -319,34 +333,41 @@ ext_ug_quota_check() {
 	case "$QFS" in
 		xfs)
 			# xfs logdateien erstellen
-			LC_ALL=C xfs_quota -x -c 'report -u -bir -ht' $QUOTA_PART 2>/dev/null >$USER_LOGFILE
+			(export LC_ALL=C ; xfs_quota -x -c 'report -u -bir -ht' $QUOTA_PART 2>/dev/null >$USER_LOGFILE)
 			if [ "`wc -l < $USER_LOGFILE`" -gt 1 ] ; then
 				QUOTA_STATE="$(quota_status -u $QUOTA_PART)"
 			fi
-			LC_ALL=C xfs_quota -x -c 'report -g -bir -ht' $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE
+			(export LC_ALL=C ; xfs_quota -x -c 'report -g -bir -ht' $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE)
 			if [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
 				QUOTA_STATE="$(quota_status -g $QUOTA_PART)"
 			fi
-			LC_ALL=C xfs_quota -x -c 'report -p -bir -ht' $QUOTA_PART 2>/dev/null >$PROJECT_LOGFILE
+			(export LC_ALL=C ; xfs_quota -x -c 'report -p -bir -ht' $QUOTA_PART 2>/dev/null >$PROJECT_LOGFILE)
 			if [ "`wc -l < $PROJECT_LOGFILE`" -gt 1 ] ; then
 				QUOTA_STATE="$(quota_status -p $QUOTA_PART)"
 			fi
 			;;
-		ext[23]|reiserfs|jfs)
-			# ext2/3, jfs und reiserfs logdateien erstellen
-			repquota $REPQUOTA_UOPT $QUOTA_PART 2>/dev/null >$USER_LOGFILE
+		ext[234]|reiserfs|jfs)
+			# ext2/3/4, jfs und reiserfs logdateien erstellen
+			(export LC_ALL=C ; repquota $REPQUOTA_UOPT $QUOTA_FM $QUOTA_PART 2>/dev/null >$USER_LOGFILE)
 			if [ "`wc -l < $USER_LOGFILE`" -gt 1 ] ; then
-				QUOTA_STATE=${${(ws: :)$(quotaon -pu ${QUOTA_PART})}[7]}
+				QUOTA_STATE=${${(ws: :)$(export LC_ALL=C ; quotaon -pu ${QUOTA_PART})}[7]}
 			fi
 			# Group Quota herraus finden
-			repquota $REPQUOTA_GOPT $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE
+			(export LC_ALL=C ; repquota $REPQUOTA_GOPT $QUOTA_FM $QUOTA_PART 2>/dev/null >$GROUP_LOGFILE)
 			if [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
-				QUOTA_STATE=${${(ws: :)$(quotaon -pg ${QUOTA_PART})}[7]}
+				QUOTA_STATE=${${(ws: :)$(export LC_ALL=C ; quotaon -pg ${QUOTA_PART})}[7]}
 			fi
 			;;
 	esac
 }
 ## }}}
+
+# Minimum Uid, fuer User Auswahl
+UID_MIN=${${(ws: :)${(M)${(f)"$(< /etc/login.defs)"}##UID_MIN*}}[2]}
+# Minimum Gid, fuer Group Auswahl
+GID_MIN=${${(ws: :)${(M)${(f)"$(< /etc/login.defs)"}##GID_MIN*}}[2]}
+#awk -F: '$3 > $UID_MIN {print $1}' /etc/passwd
+#####################################
 # Funktion Hardware herrausfinden 
 #
 ##################################################################
@@ -356,6 +377,7 @@ ext_ug_quota_check() {
 ##################################################################
 hw_conf
 net_conf
+
 main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
@@ -384,23 +406,23 @@ while [ "$gv_Auswahl" ] ; do
 										# Bei xfs xfs eigene Werkzeuge benutzen, falls vorhanden.
 										if [ "$QFS" = xfs -a -x "${commands[xfs_quota]}" ] ; then
 											if [ ! -s "$gv_LogFile" ] ; then
-												xfs_quota -x -c 'report -bir -th' $p > $gv_LogFile
+												(export LC_ALL=C ; xfs_quota -x -c 'report -bir -th' $p > $gv_LogFile)
 											else
-												xfs_quota -x -c 'report -bir -th' $p >> $gv_LogFile
+												(export LC_ALL=C ; xfs_quota -x -c 'report -bir -th' $p >> $gv_LogFile)
 											fi
 										else
 											# normale tabellarische Anzeige
 											# Benutzer herraus finden
 											if [ ! -s "$USER_LOGFILE" ] ; then
-												repquota ${=REPQUOTA_UOPT} $p 2>/dev/null > $USER_LOGFILE
+												(export LC_ALL=C ; repquota $REPQUOTA_UOPT $QUOTA_FM $p 2>/dev/null > $USER_LOGFILE)
 											else
-												repquota ${=REPQUOTA_UOPT} $p 2>/dev/null >> $USER_LOGFILE
+												(export LC_ALL=C ; repquota $REPQUOTA_UOPT $QUOTA_FM $p 2>/dev/null >> $USER_LOGFILE)
 											fi
 											# Gruppen herraus finden
 											if [ ! -s "$GROUP_LOGFILE" ] ; then
-												repquota ${=REPQUOTA_GOPT} $p 2>/dev/null > $GROUP_LOGFILE
+												(export LC_ALL=C ; repquota $REPQUOTA_GOPT $QUOTA_FM $p 2>/dev/null > $GROUP_LOGFILE)
 											else
-												repquota ${=REPQUOTA_GOPT} $p 2>/dev/null >> $GROUP_LOGFILE
+												(export LC_ALL=C ; repquota $REPQUOTA_GOPT $QUOTA_FM $p 2>/dev/null >> $GROUP_LOGFILE)
 											fi
 										fi
 										break
@@ -474,7 +496,7 @@ while [ "$gv_Auswahl" ] ; do
 									# xfs Dateisystem# {{{
 									# pruefen, ob xfs_quota ausfuehrbar ist.
 									prog_check_xfs_quota
-									xfs_quota -x -c 'report -bir -ht' $QUOTA_PART 2>/dev/null >$gv_LogFile
+									(export LC_ALL=C ; xfs_quota -x -c 'report -bir -ht' $QUOTA_PART 2>/dev/null >$gv_LogFile)
 									ZNr="`wc -l < $gv_LogFile`"
 									if [ "$ZNr" -gt 0 ] ; then
 										# welches Quota# {{{
@@ -533,7 +555,7 @@ while [ "$gv_Auswahl" ] ; do
 													;;
 												$lv_On)
 													# Quota auf dem Laufwerk einschalten# {{{
-													xfs_quota -x -c "enable $QU_OPT -v" $FS_MP || prog_failure
+													(export LC_ALL=C ; xfs_quota -x -c "enable $QU_OPT -v" $FS_MP || prog_failure)
 													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
 													## }}}
 													xfs_drive_menu $lv_On
@@ -544,7 +566,7 @@ while [ "$gv_Auswahl" ] ; do
 														BAK_MSG=$(gettext 'Es existiert schon eine Backup Datei. Ueberschreiben (ja/nein)?')
 														yesno "$XFS_DRIVE_TITLE" "$BAK_MSG" ""
 														if [ "$gv_Auswahl" = yes ] ; then
-															xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure
+															(export LC_ALL=C ; xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure)
 															# Ist die Datei leer wird sie gleich
 															# wieder geloescht.
 															if [ ! -s "$Q_BAK_FILE" ] ; then
@@ -552,7 +574,7 @@ while [ "$gv_Auswahl" ] ; do
 															fi
 														fi
 													else
-														xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure
+														(export LC_ALL=C ; xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure)
 														# Ist die Datei leer wird sie gleich
 														# wieder geloescht.
 														if [ ! -s "$Q_BAK_FILE" ] ; then
@@ -566,7 +588,7 @@ while [ "$gv_Auswahl" ] ; do
 													# Quota Informationen aus einer Datei zurueck# {{{
 													# spielen
 													if [ -s "$Q_BAK_FILE" ] ; then
-														xfs_quota -x -c "restore -f $Q_BAK_FILE" $FS_MP || prog_failure
+														(export LC_ALL=C ; xfs_quota -x -c "restore -f $Q_BAK_FILE" $FS_MP || prog_failure)
 													else
 														MSG=$(gettext 'Es ist kein Backup vorhanden.')
 														msgbox "$gv_Info" "$MSG"
@@ -577,13 +599,13 @@ while [ "$gv_Auswahl" ] ; do
 												$lv_Clean_Space)
 													# Platz schaffen auf dem Laufwerk von# {{{
 													# einigen Quota Metadaten.
-													xfs_quota -x -c "remove $QU_OPT -v" $FS_MP || prog_failure
+													(export LC_ALL=C ; xfs_quota -x -c "remove $QU_OPT -v" $FS_MP || prog_failure)
 													## }}}
 													xfs_drive_menu $lv_Clean_Space
 													;;
 												$lv_Off)
 													# Quota auf dem Laufwerk ausschalten# {{{
-													xfs_quota -x -c "disable $QU_OPT -v" $FS_MP || prog_failure
+													(export LC_ALL=C ; xfs_quota -x -c "disable $QU_OPT -v" $FS_MP || prog_failure)
 													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
 													## }}}
 													xfs_drive_menu $lv_Off
@@ -597,7 +619,7 @@ while [ "$gv_Auswahl" ] ; do
 Notiz: Sie muessen das Laufwerk danach neu einbinden oder den Rechner neu starten.')
 													yesno "$XFS_DRIVE_TITLE" "$OFF_MSG" ""
 													if [ "$gv_Auswahl" = yes ] ; then
-														xfs_quota -x -c "off $QU_OPT -v" $FS_MP || prog_failure
+														(export LC_ALL=C ; xfs_quota -x -c "off $QU_OPT -v" $FS_MP || prog_failure)
 													fi
 													QUOTA_STATE="$(quota_status "$QU_OPT" "$QUOTA_PART")"
 													## }}}
@@ -616,7 +638,7 @@ Notiz: Sie muessen das Laufwerk danach neu einbinden oder den Rechner neu starte
 									## }}}
 									;;
 								ext[234]|reiserfs|jfs)
-									# ext2/3, jfs und reiserfs Dateisysteme# {{{
+									# ext2/3/4, jfs und reiserfs Dateisysteme# {{{
 									ext_ug_quota_check
 									if [ -s "$USER_LOGFILE" -o -s "$GROUP_LOGFILE" ] ; then
 										DRIVE_ON_OFF_MENU=($lv_On \"\" $lv_Off \"\" $gv_Back \"\")
