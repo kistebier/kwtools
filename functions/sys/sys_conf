@@ -1491,6 +1491,28 @@ sys_conf() {
 		print ${${(s: :)${(M)${(f)"$(< /proc/meminfo)"}##MemTotal*}}[2]}
 	}
 	## }}}
+	# Funktion (check_kernel_format), check ob 32bit oder 64bit Kernel.# {{{
+	# ##############################
+	# INFO: oder doch eher?
+	# cat /proc/cpuinfo | grep --color -E -i ' lm '
+	# lm = long format
+	# ##############################
+	#
+	# usage: check_kernel_format
+	#
+	check_kernel_format() {
+		unset -- gv_Kernel_Fm
+		Tmp=$(uname -m)
+		case $Tmp in
+			x86_64)
+				gv_Kernel_Fm=64
+				;;
+			i[3456]86)
+				gv_Kernel_Fm=32
+				;;
+		esac
+	}
+	## }}}
 	# Funktion (check_number), ueberpruft Zahleneingaben{{{
 	#
 	# benoetigt die Funktion no_dezimal_msg und check_integer
@@ -5935,66 +5957,65 @@ search_fdisks() {
 	# Funktion (user_group_check), um herauszufinden welche User, Gruppen und{{{
 	# deren IDs angelegt sind.
 	#
-	# usage: user_group_check [ -p | -g ]
-	# -p - Datei /etc/passwd einlesen
-	# -g - Datei /etc/group einlesen
+	# usage: user_group_check [ -p | -g ] Minimum_id
+	# -p - Datei User einlesen
+	# -g - Datei Groups einlesen
+	# Minimum_id - minimale Uer/Group ID ab der Werte in den Arrays
+	# aufgenommen werden sollen
 	#
 	user_group_check() {
-	# Funktion zum einlesen der /etc/group oder /etc/passwd{{{
-	#
-	read_passwd_group() {
-		unset -- U_G_ARRAY_S U_G_ARRAY U_G_ARRAY_M U_G_ID_ARRAY U_G_ID_ARRAY_M U_U_ID_ARRAY U_U_ID_ARRAY_M
-		# Flags: o=sortieren aufsteigend, M=Muster, q=quoten, f=zeilenweise, #s=Zeilenanfang
-		# s=Trennzeichen
-		#
-		# Liest Datei ein und nimmt den User|Groupnamen um die uid|gid herauszufinden
-		# und speichert diese alle in Arrays.
-		print -l ${${(oMq)"${(f)$(< /etc/${2})}"##(#s)[a-zA-Z0-9]*}%%:*} | \
-		while read u ; do
-			U_G_ARRAY_S+=($u)
-			U_G_ARRAY+=($u \"\")
-			U_G_ARRAY_M+=($u \"\" off)
-			if [ "$1" = -g ] ; then
-				U_G_ID_ARRAY+=(${(s: :)${(s,:,)${(Mq)"${(qf)$(< /etc/${2})}"##(#s)${u}*}}[3]} $u)
-				U_G_ID_ARRAY_M+=(${(s: :)${(s,:,)${(Mq)"${(qf)$(< /etc/${2})}"##(#s)${u}*}}[3]} $u off)
-			elif [ "$1" = -p ] ; then
-				U_U_ID_ARRAY+=(${(s: :)${(s,:,)${(Mq)"${(qf)$(< /etc/${2})}"##(#s)${u}*}}[3]} $u)
-				U_U_ID_ARRAY_M+=(${(s: :)${(s,:,)${(Mq)"${(qf)$(< /etc/${2})}"##(#s)${u}*}}[3]} $u off)
-			fi
-		done
-	}
-	#}}}
-	case $1 in
-		-g)	#
-			# vorhandene Gruppen herausfinden.
-			#
-			if [ -f /etc/group ] ; then
-				read_passwd_group -g group
-			else
-				MSG=$(gettext 'Es ist keine /etc/group Datei vorhanden.')
-				msgbox "$gv_Attention" "$MSG"
-				return 1
-			fi
-			;;
-		-p)	#
-			# vorhandene User herausfinden.
-			#
-			if [ -f /etc/passwd ] ; then
-				read_passwd_group -p passwd
-			else
-				MSG=$(gettext 'Es ist keine /etc/passwd Datei vorhanden.')
-				msgbox "$gv_Attention" "$MSG"
-				return 1
-			fi
-			;;
-	esac
-	# Pruefen, ob die Variable U_G_ARRAY belegt ist.
-	if [ -z "${U_G_ARRAY[1]}" ] ; then
-		MSG=$(gettext 'Es ist kein(e) Benutzer/Gruppe vorhanden.')
-		msgbox "$gv_Attention" "$MSG"
-		return 1
-	fi
-	return 0
+		unset -- U_G_ARRAY_S U_G_ARRAY U_G_ARRAY_M U_G_ID_ARRAY U_G_ID_ARRAY_M \
+			U_U_ID_ARRAY U_U_ID_ARRAY_M
+		local Opt Min
+		if [[ ${#argv} == 2 ]] ; then
+			Opt="$1"
+			Min="${2:-0}"
+		elif [[ ${#argv} == 1 ]] ; then
+			Opt="$1"
+			Min=0
+		else
+			no_para_msg "$0"
+			return 1
+		fi
+		case "$Opt" in
+			-g)	#
+				# vorhandene Gruppen herausfinden.
+				#
+				getent group | sort | awk -F: '{print $1,$3}' | \
+				while read Group Gid ; do 
+					if [[ $Gid -ge $Min ]] ; then
+						U_G_ARRAY_S+=($Group)
+						U_G_ARRAY+=($Group \"\")
+						U_G_ARRAY_M+=($Group \"\" off)
+						U_G_ID_ARRAY+=($Gid $Group)
+						U_G_ID_ARRAY_M+=($Gid $Group off)
+					fi
+				done
+				;;
+			-p)	#
+				# vorhandene User herausfinden.
+				#
+				getent passwd | sort | awk -F: '{print $1,$3}' | \
+				while read User Uid ; do 
+					if [[ $Uid -ge $Min ]] ; then
+						U_G_ARRAY_S+=($User)
+						U_G_ARRAY+=($User \"\")
+						U_G_ARRAY_M+=($User \"\" off)
+						U_U_ID_ARRAY+=($Uid $User)
+						U_U_ID_ARRAY_M+=($Uid $User off)
+					fi
+				done
+				;;
+			*)	# nichts
+				;;
+		esac
+		# Pruefen, ob die Variable U_G_ARRAY belegt ist.
+		if [ -z "${U_G_ARRAY[1]}" ] ; then
+			MSG=$(gettext 'Es ist kein(e) Benutzer/Gruppe vorhanden.')
+			msgbox "$gv_Attention" "$MSG"
+			return 1
+		fi
+		return 0
 	}
 	#}}}
 	# Funktion (user_group_passwd), user und group Passwoerter eingeben# {{{
