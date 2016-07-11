@@ -10,11 +10,12 @@ kwquota_config() {
 		# Variablen# {{{
 		case "$1" in
 			xfs)
-				# um quota zu verwalten.
+				# Programm um Quota zu verwalten
 				QUOTA_PROG=xfs_quota
 				QUOTA_DRIVE="$2"
 				;;
-			*)	#QUOTA_PROG=quotatool
+			ext[234]|reiserfs|jfs)
+				# Programm um Quota zu verwalten
 				QUOTA_PROG=setquota
 				QUOTA_DRIVE="$2"
 				;;
@@ -275,7 +276,7 @@ kwquota_config() {
 					if [ -n "$SIZE" ] ; then
 						BH_LIMIT="$SIZE"
 					else
-						BH_LIMIT=0
+						BH_LIMIT=0KiB
 					fi
 					## }}}
 					kwquota_conf_menu $lv_BH_Limit
@@ -288,7 +289,7 @@ kwquota_config() {
 					if [ -n "$SIZE" ] ; then
 						BS_LIMIT="$SIZE"
 					else
-						BS_LIMIT=0
+						BS_LIMIT=0KiB
 					fi
 					## }}}
 					kwquota_conf_menu $lv_BS_Limit
@@ -341,7 +342,7 @@ kwquota_config() {
 					if [ -n "$SIZE" ] ; then
 						RTBH_LIMIT="$SIZE"
 					else
-						RTBH_LIMIT=0
+						RTBH_LIMIT=0KiB
 					fi
 					## }}}
 					kwquota_conf_menu $lv_RT_BH_Limit
@@ -354,7 +355,7 @@ kwquota_config() {
 					if [ -n "$SIZE" ] ; then
 						RTBS_LIMIT="$SIZE"
 					else
-						RTBS_LIMIT=0
+						RTBS_LIMIT=0KiB
 					fi
 					## }}}
 					kwquota_conf_menu $lv_RT_BS_Limit
@@ -490,12 +491,51 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 									fi
 									## }}}
 									;;
-								*)
+								ext[234]|reiserfs|jfs)
 									# andere Dateisysteme# {{{
-									# ###################################
-									# sind noch keine
-									# ###################################
+									if [ -n "$Q_Value" -a -n "$Q_Unit" ] ; then
+										case "$Q_Unit" in
+											tib|TiB|Tib)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Value}T"
+												else
+													PROG_OPT="${Q_Value}T"
+												fi
+												;;
+											gib|GiB|Gib)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Value}G"
+												else
+													PROG_OPT="${Q_Value}G"
+												fi
+												;;
+											mib|MiB|Mib)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Value}M"
+												else
+													PROG_OPT="${Q_Value}M"
+												fi
+												;;
+											kib|KiB|Kib)
+												if [ -n "$PROG_OPT" ] ; then
+													PROG_OPT="$PROG_OPT ${Q_Value}K"
+												else
+													PROG_OPT="${Q_Value}K"
+												fi
+												;;
+										esac
+									elif [ -n "$Q_Value" ] ; then
+										# isoft und ihard
+										if [ -n "$PROG_OPT" ] ; then
+											PROG_OPT="$PROG_OPT ${Q_Value}"
+										else
+											PROG_OPT="${Q_Value}"
+										fi
+									fi
 									## }}}
+									;;
+								*)	# andere Dateisysteme werden noch nicht unterstuetzt.
+									no_quota_fs_msg
 									;;
 							esac
 						fi
@@ -513,13 +553,13 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 									T_Opt="$1"
 									#
 									if [ "$BL_GR_TIME" = "$RT_BL_GR_TIME" -a "$BL_GR_TIME" = "$I_GR_TIME" ] ; then
-										xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $I_TIMER_OPT $RTB_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+										(export LC_ALL=C ; xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $I_TIMER_OPT $RTB_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure)
 									elif [ "$BL_GR_TIME" ] ; then
-										xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+										(export LC_ALL=C ; xfs_quota -x -c "timer $T_Opt $B_TIMER_OPT $BL_GR_TIME" $QUOTA_DRIVE || prog_failure)
 									elif [ "$I_GR_TIME" ] ; then
-										xfs_quota -x -c "timer $T_Opt $I_TIMER_OPT $I_GR_TIME" $QUOTA_DRIVE || prog_failure
+										(export LC_ALL=C ; xfs_quota -x -c "timer $T_Opt $I_TIMER_OPT $I_GR_TIME" $QUOTA_DRIVE || prog_failure)
 									elif [ "$RT_BL_GR_TIME" ] ; then
-										xfs_quota -x -c "timer $T_Opt $RTB_TIMER_OPT $RT_BL_GR_TIME" $QUOTA_DRIVE || prog_failure
+										(export LC_ALL=C ; xfs_quota -x -c "timer $T_Opt $RTB_TIMER_OPT $RT_BL_GR_TIME" $QUOTA_DRIVE || prog_failure)
 									fi
 								else
 									no_para_msg $0
@@ -538,11 +578,11 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 							# check ob vorhanden user/Gruppe/project
 							# -u/-g/-p
 							if [ -n "$USER_ID" ] ; then
-								xfs_quota -x -c "limit -u $PROG_OPT $USER_ID" $QUOTA_DRIVE || prog_failure
+								(export LC_ALL=C ; xfs_quota -x -c "limit -u $PROG_OPT $USER_ID" $QUOTA_DRIVE || prog_failure)
 								# Ueberschreitungszeit fuer Benutzer setzen
 								xfs_set_grace_period -u
 							elif [ -n "$GROUP_ID" ] ; then
-								xfs_quota -x -c "limit -g $PROG_OPT $GROUP_ID" $QUOTA_DRIVE || prog_failure
+								(export LC_ALL=C ; xfs_quota -x -c "limit -g $PROG_OPT $GROUP_ID" $QUOTA_DRIVE || prog_failure)
 								# Ueberschreitungszeit fuer Gruppe setzen
 								xfs_set_grace_period -g
 								# Projekt kreieren oder aendern?
@@ -560,10 +600,10 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 									else
 										> "$XFS_PROJID" <<< "${PROJECT_ID}:${PROJECT_NR}"
 									fi
-									xfs_quota -x -c "project -s $PROJECT_ID" $QUOTA_DRIVE || prog_failure
-									xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure
+									(export LC_ALL=C ; xfs_quota -x -c "project -s $PROJECT_ID" $QUOTA_DRIVE || prog_failure)
+									(export LC_ALL=C ; xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure)
 								else
-									xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure
+									(export LC_ALL=C ; xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure)
 								fi
 								# Ueberschreitungszeit fuer Project setzen
 								xfs_set_grace_period -p
@@ -641,23 +681,15 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 							quota_opt_exec() {
 								# Limits
 								if [ "$BH_LIMIT" -a "$BS_LIMIT" -a "$IH_LIMIT" -a "$IS_LIMIT" ] ; then
-									#PROG_OPT="$PROG_UG_OPT -b -l ${BH_LIMIT// /} -q ${BS_LIMIT// /}"
-									###################################
-									# Block Limits in Byte umrechnen
-									###################################
-									convert_drive_size "${${BH_LIMIT// /}##*[0-9]}" "${${BH_LIMIT// /}%%[a-zA-Z]}"
-									if [ -n "$SIZE_B" ] ; then
-										BH_Size="$SIZE_B:r"
-									fi
-									convert_drive_size "${${BS_LIMIT// /}##*[0-9]}" "${${BS_LIMIT// /}%%[a-zA-Z]}"
-									if [ -n "$SIZE_B" ] ; then
-										BS_Size="$SIZE_B:r"
-									fi
+									quota_opt $QFS bhard ${BH_LIMIT%%[a-zA-Z]*} ${BH_LIMIT##*[0-9]}
+									quota_opt $QFS bsoft ${BS_LIMIT%%[a-zA-Z]*} ${BS_LIMIT##*[0-9]}
+									quota_opt $QFS ihard $IH_LIMIT
+									quota_opt $QFS isoft $IS_LIMIT
 									#
-									# Format: block-softlimit block-hardlimit inode-hardlimit
-									# inode-softlimit, in Bytes/Integer Zahlen
-									PROG_OPT="$PROG_UG_OPT $BS_Size $BH_Size $IS_LIMIT $IH_LIMIT"
-									setquota ${=PROG_OPT} $QUOTA_DRIVE || prog_failure
+									# Format: block-softlimit block-hardlimit in (TGMK) und
+									# inode-hardlimit inode-softlimit in Integer Zahlen
+									PROG_OPT_C="$PROG_UG_OPT $PROG_OPT"
+									(export LC_ALL=C ; setquota $QUOTA_FM ${=PROG_OPT_C} $QUOTA_DRIVE || prog_failure)
 								else
 									no_choice_msg
 								fi
@@ -678,7 +710,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 									# ausfuehren
 									if [ -n "$BLS_GR_TIME" -a -n "$IS_GR_TIME" ] ; then
 										PROG_TIME_OPT="$QU_OPT -t $BLS_GR_TIME $IS_GR_TIME"
-										setquota ${=PROG_TIME_OPT} $QUOTA_DRIVE || prog_failure
+										(export LC_ALL=C ; setquota $QUOTA_FM ${=PROG_TIME_OPT} $QUOTA_DRIVE || prog_failure)
 									fi
 								fi
 							}

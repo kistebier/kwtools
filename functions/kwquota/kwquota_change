@@ -4,10 +4,9 @@
 # -c - quota erstellen
 #
 kwquota_change() {
-	if [ $# = 1  -a "$1" = -c ] ; then
-		unset -- Opt
+	if [[ ${#argv} == 1 ]] && [[ $1 == -c ]] ; then
 		local Opt
-		Opt=$1
+		Opt="$1"
 	fi
 	#
 	read_fstab_quota
@@ -40,7 +39,7 @@ kwquota_change() {
 								if [ "$PROJ_CREATE" = yes ] ; then
 									kwquota_config "$QFS" "$QUOTA_PART"
 									break 2
-								elif [ -n "$User_Qu" ] ; then
+								elif [ -n "${User_Qu[1]}" ] ; then
 									# aendern# {{{
 									C_MENU=($User_Qu)
 									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
@@ -90,20 +89,22 @@ kwquota_change() {
 							fi
 							## }}}
 							;;
-						ext[23]|reiserfs|jfs)
+						ext[234]|reiserfs|jfs)
 							# alle anderen Dateisysteme# {{{
 							unset -- User_Qu
 							if [ "$Opt" = -c ] ; then
 								ext_ug_quota_check -c
+								# Daten einlesen
+								read_choice_data -c
 							else
 								ext_ug_quota_check
+								# Daten einlesen
+								read_choice_data
 							fi
-							# Daten einlesen
-							read_choice_data
 							# Gibt es einen User oder eine Gruppe dann wird sie
 							# zur Auswahl angeboten.
 							if [ ! -z "$WHAT_QUOTA" ] ; then
-								if [ -n "$User_Qu" ] ; then
+								if [ -n "${User_Qu[1]}" ] ; then
 									# aendern# {{{
 									C_MENU=($User_Qu)
 									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
@@ -141,8 +142,61 @@ kwquota_change() {
 									done
 									## }}}
 								else
-									no_quota_user_group_msg
-									break 2
+									if [ "$WHAT_QUOTA" = User ] ; then
+										user_group_check -p "$UID_MIN"
+										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
+											# User auswaehlen
+											U_MENU=($U_G_ARRAY)
+											U_MSG=$(gettext 'Waehlen Sie einen Benutzer aus.')
+											# Funktion (user_menu) Userauswahl# {{{
+											user_menu() {
+												menubox "$1" "$C_TITLE" "$C_MSG" "$U_MENU"
+											}
+											## }}}
+											user_menu
+											while [[ -n $gv_Auswahl ]] ; do
+												case $gv_Auswahl in
+													HELP*)
+														script_help share/user_help
+														user_menu ${gv_Auswahl#HELP }
+														;;
+													*)
+														USER_ID="$gv_Auswahl"
+														kwquota_config "$QFS" "$QUOTA_PART"
+														;;
+												esac
+											done
+										else
+											break 2
+										fi
+									else
+										user_group_check -g "$GID_MIN"
+										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
+											# Gruppe auswaehlen
+											G_MENU=($U_G_ARRAY)
+											G_MSG=$(gettext 'Waehlen Sie eine Gruppe aus.')
+											# Funktion (group_menu) Groupauswahl# {{{
+											group_menu() {
+												menubox "$1" "$C_TITLE" "$G_MSG" "$G_MENU"
+											}
+											## }}}
+											group_menu
+											while [[ -n $gv_Auswahl ]] ; do
+												case $gv_Auswahl in
+													HELP*)
+														script_help share/group_help
+														group_menu ${gv_Auswahl#HELP }
+														;;
+													*)
+														GROUP_ID="$gv_Auswahl"
+														kwquota_config "$QFS" "$QUOTA_PART"
+														;;
+												esac
+											done
+										else
+											break 2
+										fi
+									fi
 								fi
 							fi
 							## }}}

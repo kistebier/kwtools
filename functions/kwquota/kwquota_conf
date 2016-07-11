@@ -14,10 +14,14 @@ kwquota_conf() {
 	# bei mehr als einem quota diese dementsprechend zur
 	# Verfuegung stellen.
 	#
-	# usage: read_choice_data
+	# usage: read_choice_data [ -c ]
+	# -c - create quota, kein einlesen der bestehenden Quotas,
+	# bei den Dateisystemen ext[234], reiserfs und jfs.
 	#
 	read_choice_data() {
 		unset -- PROJ_CREATE
+		local Opt
+		Opt="$1"
 		if [ "`wc -l < $USER_LOGFILE`" -gt 1 -a "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
 			CHOICE_MENU=($gv_User \"\" $gv_Group \"\" $gv_Back \"\")
 			menubox "$WHAT_QUOTA" "$UG_WHAT_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
@@ -32,8 +36,12 @@ kwquota_conf() {
 						WHAT_QUOTA=User
 						QU_OPT=-u
 						case "$QFS" in
-							xfs) read_xfs_data "$USER_LOGFILE"	;;
-							ext[23]|reiserfs|jfs)	read_data "$USER_LOGFILE"	;;
+							xfs) read_xfs_data "$USER_LOGFILE" ;;
+							ext[234]|reiserfs|jfs)
+								if [[ -z $Opt ]] ; then
+									read_data "$USER_LOGFILE"
+								fi
+								;;
 						esac
 						return 0
 						;;
@@ -43,8 +51,12 @@ kwquota_conf() {
 						WHAT_QUOTA=Group
 						QU_OPT=-g
 						case "$QFS" in
-							xfs) read_xfs_data "$GROUP_LOGFILE"	;;
-							ext[23]|reiserfs|jfs)	read_data "$GROUP_LOGFILE"	;;
+							xfs) read_xfs_data "$GROUP_LOGFILE" ;;
+							ext[234]|reiserfs|jfs)
+								if [[ -z $Opt ]] ; then
+									read_data "$GROUP_LOGFILE"
+								fi
+								;;
 						esac
 						return 0
 						;;
@@ -57,7 +69,11 @@ kwquota_conf() {
 			QU_OPT=-u
 			case "$QFS" in
 				xfs) read_xfs_data "$USER_LOGFILE"	;;
-				ext[23]|reiserfs|jfs)	read_data "$USER_LOGFILE"	;;
+				ext[234]|reiserfs|jfs)	read_data "$USER_LOGFILE"	;;
+					if [[ -z $Opt ]] ; then
+						read_data "$USER_LOGFILE"
+					fi
+					;;
 			esac
 		elif [ "`wc -l < $GROUP_LOGFILE`" -gt 1 ] ; then
 			C_TITLE=(${UG_WHAT_TITLE}::${gv_Group})
@@ -65,7 +81,11 @@ kwquota_conf() {
 			QU_OPT=-g
 			case "$QFS" in
 				xfs) read_xfs_data "$GROUP_LOGFILE"	;;
-				ext[23]|reiserfs|jfs)	read_data "$GROUP_LOGFILE"	;;
+				ext[234]|reiserfs|jfs)
+					if [[ -z $Opt ]] ; then
+						read_data "$GROUP_LOGFILE"
+					fi
+					;;
 			esac
 		elif [ "`wc -l < $PROJECT_LOGFILE`" -gt 1 ] ; then
 			if [ "$CREATE" = yes ] ; then
@@ -138,7 +158,7 @@ kwquota_conf() {
 										# Gibt es einen User oder eine Gruppe dann wird sie
 										# zur Auswahl angeboten.
 										# Quota loeschen
-										if [ -n "$User_Qu_M" ] ; then
+										if [ -n "${User_Qu_M[1]}" ] ; then
 											DEL_MENU=($User_Qu_M)
 											checklist "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 											while [ -n "$gv_Auswahl" ] ; do
@@ -150,7 +170,7 @@ kwquota_conf() {
 														# Auswahl loeschen
 														# User/gruppen/Projekte auf Null setzen
 														for i in $gv_Auswahl ; {
-															xfs_quota -x -c "limit bhard=0 bsoft=0 ihard=0 isoft=0 rtbhard=0 rtbsoft=0 $i" "$QUOTA_PART" || prog_failure
+															(export LC_ALL=C ; xfs_quota -x -c "limit bhard=0 bsoft=0 ihard=0 isoft=0 rtbhard=0 rtbsoft=0 $i" "$QUOTA_PART" || prog_failure)
 															# Projekte loeschen
 															case "$WHAT_QUOTA" in
 																Proj*)
@@ -189,14 +209,14 @@ kwquota_conf() {
 										fi
 										## }}}
 										;;
-									ext[23]|reiserfs|jfs)
-										# ext2/3, jfs und reiserfs Dateisysteme# {{{
+									ext[234]|reiserfs|jfs)
+										# ext2/3/4, jfs und reiserfs Dateisysteme# {{{
 										ext_ug_quota_check -d
 										# Daten einlesen
 										read_choice_data
 										# Gibt es einen User oder eine Gruppe dann wird sie
 										# zur Auswahl angeboten.
-										if [ -n "$User_Qu_M" ] ; then
+										if [ -n "${User_Qu_M[1]}" ] ; then
 											# loeschen
 											DEL_MENU=($User_Qu_M)
 											checklist "" "$C_TITLE" "$gv_Menupoint" "$DEL_MENU"
@@ -207,8 +227,8 @@ kwquota_conf() {
 														;;
 													*)
 														# Auswahl loeschen
-														for i in $gv_Auswahl ; {
-															edquota -p root $QU_OPT $i -f $QUOTA_PART || prog_failure
+														for i in ${=gv_Auswahl} ; {
+															edquota -p root $QU_OPT $QUOTA_FM $i -f $QUOTA_PART || prog_failure
 														}
 														break 2
 														;;
