@@ -9,6 +9,20 @@ kwquota_change() {
 		Opt="$1"
 	fi
 	#
+	# Funktion (check_exist_ug), pruefen ob User schon Quota hat# {{{
+	check_exist_ug() {
+		if [ -f "$1" ] ; then
+			unset -- UG_ARRAY
+			for i in ${=U_G_ARRAY_S} ; {
+				if ! grep "$i" "$1" ; then
+					UG_ARRAY+=($i \"\")
+				fi
+			}
+		else
+			no_para_msg "$0"
+		fi
+	}
+	## }}}
 	read_fstab_quota
 	if [ -n "${Mountpoint[1]}" ] ; then
 		MPT_MENU=($Mountpoint)
@@ -142,11 +156,14 @@ kwquota_change() {
 									done
 									## }}}
 								else
+									# Benutzer anlegen# {{{
 									if [ "$WHAT_QUOTA" = User ] ; then
 										user_group_check -p "$UID_MIN"
 										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
+											#  Pruefen ob User schon Quota hat
+											check_exist_ug "$USER_LOGFILE"
 											# User auswaehlen
-											U_MENU=($U_G_ARRAY)
+											U_MENU=($UG_ARRAY)
 											U_MSG=$(gettext 'Waehlen Sie einen Benutzer aus.')
 											# Funktion (user_menu) Userauswahl# {{{
 											user_menu() {
@@ -169,11 +186,15 @@ kwquota_change() {
 										else
 											break 2
 										fi
+										## }}}
 									else
+										# Gruppe anlegen# {{{
 										user_group_check -g "$GID_MIN"
 										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
+											#  Pruefen ob Gruppe schon Quota hat
+											check_exist_ug "$GROUP_LOGFILE"
 											# Gruppe auswaehlen
-											G_MENU=($U_G_ARRAY)
+											G_MENU=($UG_ARRAY)
 											G_MSG=$(gettext 'Waehlen Sie eine Gruppe aus.')
 											# Funktion (group_menu) Groupauswahl# {{{
 											group_menu() {
@@ -197,6 +218,7 @@ kwquota_change() {
 											break 2
 										fi
 									fi
+									## }}}
 								fi
 							fi
 							## }}}
