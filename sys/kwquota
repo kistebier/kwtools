@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 11.07.2016
+# Autor: Kai Wilke  <kiste@netzworkk.de> 12.07.2016
 #
 # Script: kwquota, Frontend fuer quota (ext234], reiserfs, jfs) und xfs_quota
 #
@@ -204,18 +204,18 @@ read_data() {
 			while read u b bused bsoft bhard bgrace iused isoft ihard igrace ; do
 				if [ "$u" != root ] ; then
 					if [ -z "$igrace" ] ; then
-						User_Qu[Anz]="$Anz \"$u $bsoft $bhard $iused $isoft\""
+						User_Qu[Anz]="$Anz \"$u ${bsoft}iB ${bhard}iB $isoft $ihard\""
 						User_Qu_E[Anz]="$u \"\""
 						(( Anz++ ))
-						if [ "$bsoft" != 0 -o "$bhard" != 0 -o "$iused" != 0 -o "$isoft" != 0 ] ; then
+						if [ "$bsoft" != 0K -o "$bhard" != 0K -o "$iused" != 0 -o "$isoft" != 0 ] ; then
 							User_Qu_M[Anz1]="$u \"\" off"
 							(( Anz1++ ))
 						fi
 					else
-						User_Qu[Anz]="$Anz \"$u $bsoft $bhard $isoft $ihard\""
+						User_Qu[Anz]="$Anz \"$u ${bsoft}iB ${bhard}iB $isoft $ihard\""
 						User_Qu_E[Anz]="$u \"\""
 						(( Anz++ ))
-						if [ "$bsoft" != 0 -o "$bhard" != 0 -o "$isoft" != 0 -o "$ihard" != 0 ] ; then
+						if [ "$bsoft" != 0K -o "$bhard" != 0K -o "$isoft" != 0 -o "$ihard" != 0 ] ; then
 							User_Qu_M[Anz1]="$u \"\" off"
 							(( Anz1++ ))
 						fi
