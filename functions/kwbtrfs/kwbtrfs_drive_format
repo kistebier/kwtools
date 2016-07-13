@@ -1,0 +1,71 @@
+# Funktion (kwbtrfs_drive_format), Laufwerke mit BTRFS formatieren# {{{
+#
+# usage: kwbtrfs_drive_format
+#
+kwbtrfs_drive_format() {
+	search_devices -a
+	if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+		# Funktionen (format_menu)# {{{
+		#
+		format_menu() {
+			FORMAT_MENU=($NO_BTRFS_DEV_M)
+			FORMAT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus auf denen ein BTRFS Dateisystem erzeugt werden soll.')
+			checklist "$1" "$lv_Devices" "$FORMAT_MSG" "$FORMAT_MENU"
+		}
+		## }}}
+		# Funktionen (no_drive_msg), Nachricht das es keine Laufwerke# {{{
+		# zum formatieren gibt.
+		#
+		no_drive_msg() {
+			MSG=$(gettext 'Es sind keine Laufwerke vorhanden um diese mit einem BTRFS Dateisystem zu formatieren.')
+			msgbox "$gv_Info" "$MSG"
+		}
+		## }}}
+		#
+		format_menu
+		while [ -n ${gv_Auswahl[1]} ] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help device_create_help
+					format_menu "${gv_Auswahl#HELP }"
+					;;
+				/dev/*)
+					# Auswahl uebernehmen# {{{
+					FORMAT_DEVS="$gv_Auswahl"
+					FORMAT_TITLE=$(gettext 'Formatierung')
+					FORMAT_MSG=$(gettext 'Sollen diese Laufwerke ${=FORMAT_DEVS// /\\n}
+					wirklich mit dem BTRFS Dateisystem formatiert werden (${gv_Yes}/${gv_No})?')
+					# Formatieren (ja/nein)?
+					yesno "$FORMAT_TITLE" "$FORMAT_MSG" "$gv_No"
+					if [[ $gv_Auswahl == yes ]] ; then
+						for i in ${=FORMAT_DEVS} ; {
+							# Pruefen ob das Laufwerk
+							# eingebunden ist und ausbinden.
+							mount_check -a $i
+							if [[ $U_MOUNT == yes ]] ; then
+								mkfs.btrfs -v -f $i | \
+									progressbox "$FORMAT_TITLE" "$MSG" || \
+								prog_failure
+							fi
+						}
+					fi
+					# Laufwerke ohne BTRFS neu suchen
+					search_devices -a
+					unset -- FORMAT_DEVS
+					## }}}
+					break
+					;;
+				*)
+					break
+					;;
+			esac
+		done
+	else
+		no_drive_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
