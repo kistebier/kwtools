@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 22.06.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -939,6 +939,7 @@ geloescht werden?')
 			# Management fuer multiple Devices, wie z.B. RAID# {{{
 			lv_Raid=$(gettext 'RAID')
 			lv_Encrypt_Raid=$(gettext 'verschluesseltes RAID')
+			lv_Device_Convert=$(gettext 'Laufwerk konvertieren')
 			lv_Device_Add=$(gettext 'Laufwerk hinzufuegen')
 			lv_Device_Remove=$(gettext 'Laufwerk entfernen')
 			lv_Device_Replace=$(gettext 'Laufwerk tauschen')
@@ -1009,24 +1010,6 @@ geloescht werden?')
 					$gv_Create)
 						# btrfs Laufwerke, RAID Arrays erstellen# {{{
 						#
-						FORMAT_TITLE=$(gettext 'Formatierung')
-						#
-						# Funktionen (format_menu)# {{{
-						#
-						format_menu() {
-							FORMAT_MENU=($NO_BTRFS_DEV_M)
-							FORMAT_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus auf denen ein BTRFS Dateisystem erzeugt werden soll.')
-							checklist "$1" "$lv_Devices" "$FORMAT_MSG" "$FORMAT_MENU"
-						}
-						## }}}
-						# Funktionen (no_nobtrfs_drive_msg), Nachricht das es keine Laufwerke# {{{
-						# ohne BTRFS Dateisystem gibt.
-						#
-						no_nobtrfs_drive_msg() {
-							MSG=$(gettext 'Es sind keine Laufwerke ohne BTRFS Dateisystem vorhanden.')
-							msgbox "$gv_Info" "$MSG"
-						}
-						## }}}
 						#
 						create_menu
 						while [ -n "$gv_Auswahl" ] ; do
@@ -1037,41 +1020,8 @@ geloescht werden?')
 									;;
 								$lv_Drive)
 									# Laufwerke mit BTRFS formatieren# {{{
-									search_devices -a
-									if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
-										format_menu
-										while [ -n ${gv_Auswahl[1]} ] ; do
-											case $gv_Auswahl in
-												HELP*)
-													script_help device_create_help
-													format_menu "${gv_Auswahl#HELP }"
-													;;
-												/dev/*)
-													# Auswahl uebernehmen# {{{
-													FORMAT_DEVS="$gv_Auswahl"
-													FORMAT_MSG=$(gettext 'Sollen diese Laufwerke ${=FORMAT_DEVS// /\\n}
-													wirklich mit dem BTRFS Dateisystem formatiert werden (${gv_Yes}/${gv_No})?')
-													yesno "$FORMAT_TITLE" "$FORMAT_MSG" "$gv_No"
-													if [[ $gv_Auswahl == yes ]] ; then
-														for i in ${=FORMAT_DEVS} ; {
-															mkfs.btrfs -v -f $i | progressbox "$FORMAT_TITLE" "$MSG" || \
-																prog_failure
-														}
-													fi
-													# Laufwerke ohne BTRFS neu suchen
-													search_no_btrfs -a
-													unset -- FORMAT_DEVS
-													## }}}
-													break
-													;;
-												*)
-													break
-													;;
-											esac
-										done
-									else
-										no_nobtrfs_drive_msg
-									fi
+									autoload -U kwbtrfs_drive_format
+									kwbtrfs_drive_format
 									## }}}
 									create_menu $lv_Drive
 									;;
@@ -1099,6 +1049,14 @@ geloescht werden?')
 						done
 						## }}}
 						device_menu "$gv_Create"
+						;;
+					$lv_Device_Convert)
+						# ext[234] Laufwerk nach btrfs konvertieren
+						#autoload -U kwtbtrs_drive_convert
+						#kwbtrfs_drive_convert
+						#
+						hier_ist_noch_nichts "$lv_Device_Convert"
+						device_menu "$lv_Device_Convert"
 						;;
 					$lv_Device_Add)
 						# Festplatte/Partition hinzufuegen
