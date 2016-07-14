@@ -13,62 +13,21 @@ raid_create_conf() {
 	fi
 	# Variablen# {{{
 	lv_Raid_Level=$(gettext 'RAID Level')
-	lv_Mix_Metadata=$(gettext 'Mixed Data/Meta')
-	lv_Nodesize=$(gettext 'Nodesize')
-	lv_Label=$(gettext 'Label')
-	lv_Nodiscard=$(gettext 'No discard')
-	lv_Rootdir=$(gettext 'Wurzelverzeichnis')
-	lv_Features=$(gettext 'Faehigkeiten')
 	##################################
 	# HOWTO: raid
 	##################################
 	raid
 	unset -- FEATURES LABEL ROOTDIR RAIDDISKS
 	RAIDLEVEL=raid5
-	MIX_METADATA=no
-	NODISCARD=no
-	NODESIZE=${NODESIZE:-16k}
-	## }}}
-	# Funktion (raid_create_option), zusaetzliche Optionen sammeln# {{{
-	#
-	# -K = --nodiscard
-	# -L = --label
-	# -M = --mixed
-	# -n = --nodesize
-	# -O = --features
-	# -r = --rootdir
-	#
-	raid_create_option() {
-		unset -- RAID_OPT
-		if [[ $MIX_METADATA == yes ]] ; then
-			RAID_OPT="-M"
-		fi
-		if [[ $NODISCARD == yes ]] ; then
-			RAID_OPT="$RAID_OPT -K"
-		fi
-		if [[ -n $NODESIZE ]] ; then
-			RAID_OPT="$RAID_OPT -n $NODESIZE"
-		fi
-		if [[ -n $FEATURES ]] ; then
-			RAID_OPT="$RAID_OPT -O $FEATURES"
-		fi
-		if [[ -n $ROOTDIR ]] ; then
-			RAID_OPT="$RAID_OPT -r $ROOTDIR"
-		fi
-		if [[ -n $LABEL ]] ; then
-			RAID_OPT="$RAID_OPT -L $LABEL"
-		fi
-	}
 	## }}}
 	# Funktion (create_menu)# {{{
 	create_menu() {
 		# Menue fuer die Erstellung von Arrays
+		CREATE_TITLE="${lv_Devices}::${gv_Create}::${lv_Raid}"
 		CREATE_MENU=($lv_Raid_Level \"$RAIDLEVEL\"
-		$lv_Raiddisks \"$RAIDDISKS\" $lv_Mix_Metadata \"$MIX_METADATA\"
-		$lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\"
-		$lv_Nodiscard \"$NODISCARD\" $lv_Rootdir \"$ROOTDIR\"
-		$lv_Features \"$FEATURES\" $gv_Create \"\" $gv_Back \"\")
-		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CREATE_MENU"
+		$lv_Raiddisks \"$RAIDDISKS\" $lv_Options \"\"
+		$gv_Create \"\" $gv_Back \"\")
+		menubox "$1" "$CREATE_TITLE" "$gv_Menupoint" "$CREATE_MENU"
 	}
 	## }}}
 	create_menu
@@ -132,144 +91,40 @@ raid_create_conf() {
 				## }}}
 				create_menu $lv_Raiddisks
 				;;
-			$lv_Mix_Metadata)
-				# einstellen, ob Mixed Mode oder nicht.# {{{
+			$lv_Options)
+				# Optionen fuer das Erstellen des Laufwerks
+				autoload -U kwbtrfs_create_options
+				kwbtrfs_create_options -r
 				#
-				MIX_METADATA_TITLE=$(gettext '${gv_Create}::${lv_Mix_Metadata}')
-				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden (ja/nein)?\nDies ist sinnvoll bei kleinen Laufwerken und ein Dateisystem kleiner als 5GiB besitzen. Dadrueber verschlechtert es die Geschwindigkeit auf grossen Dateisystemen.')
-				yesno "$MIX_METADATA_TITLE" "$MSG" no
-				if [[ $gv_Auswahl == yes ]] ; then
-					MIX_METADATA=yes
-				else
-					MIX_METADATA=no
-				fi
-				## }}}
-				create_menu $lv_Mix_Metadata
-				;;
-			$lv_Nodesize)
-				# einstellen der Nodesize{{{
-				local Anz
-				integer Anz
-				NODESIZE_TITLE="${gv_Create}::${lv_Nodesize}"
-				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize an (4-64KiB).')
-				number_input "$NODESIZE_TITLE" "$NODESIZE_MSG" "$NODESIZE"
-				#
-				# Jetzt wird durchgezaehlt, ob der Wert ein vielfaches von 4 ist.
-				#
-				if [ "$NUMBER" -ge 4 -a "$NUMBER" -le 64 ] ; then
-					NODESIZE="$NUMBER"
-					Anz=4
-					while [ "$Anz" -lt "$NODESIZE" ] ; do
-						(( Anz = Anz+4 ))
-					done
-					#
-					# Ist es kein Vielfaches von 4 kommt eine Fehlermeldung.
-					#
-					if [ "$NODESIZE" -ne "$Anz" ] ; then 
-						NODESIZE=64
-						MSG=$(gettext 'Die Nodesize muss ein Vielfaches von 4 sein.')
-						msgbox "$gv_Attention" "$MSG"
-					fi 
-				else
-					NODESIZE=64
-					MSG=$(gettext 'Die Nodesize muss >=4 und <=64 sein.')
-					msgbox "$gv_Attention" "$MSG"
-				fi
-				#}}}
-				create_menu $lv_Nodesize
-				;;
-			$lv_Label)
-				# einstellen des Label# {{{
-				#
-				LABEL_TITLE="${gv_Create}::${lv_Label}"
-				MSG=$(gettext'Geben Sie einen eindeutigen Namen fuer das RAID Array ein.')
-				inputbox "$LABEL_TITLE" "$MSG" "$LABEL"
-				if [[ -n $gv_Auswahl ]] ; then
-					LABEL="$gv_Auswahl"
-				else
-					unset -- LABEL
-				fi
-				## }}}
-				create_menu $lv_Label
-				;;
-			$lv_Nodiscard)
-				# einstellen, ob das Laufwerk nicht getrimmt werden soll oder doch.# {{{
-				#
-				NODISCARD_TITLE=$(gettext '${gv_Create}::${lv_Nodiscard}')
-				MSG=$(gettext 'Sollen das Laufwerk nicht auf Geschwindigkeit getrimmt werden (ja/nein)?')
-				yesno "$NODISCARD_TITLE" "$MSG" no
-				if [[ $gv_Auswahl == yes ]] ; then
-					NODISCARD=yes
-				else
-					NODISCARD=no
-				fi
-				## }}}
-				create_menu $lv_Nodiscard
-				;;
-			$lv_Rootdir)
-				#
-				#
-				create_menu $lv_Rootdir
-				;;
-			$lv_Features)
-				# Dateisystem Faehigkeiten einstellen# {{{
-				##################################################
-				# TODO: FEATURE_MENU mit vorherigen Werten belegen?
-				##################################################
-				#
-				unset -- FEATURE_MENU
-				FEATURE_TITLE=$(gettext '${gv_Create}::${lv_Features}')
-				FEATURE_MSG=$(gettext 'Waehlen Sie die Faehigkeiten aus die zusaetzlich aktiviert werden sollen.')
-				#
-				mkfs.btrfs -O list-all | while read feature Char Rest ; do
-					case $feature in
-						Filesystem)
-							;;
-						*)
-							FEATURE_MENU+($feature \"$Rest\" off)
-							;;
-					esac
-				done
-				#
-				checklist "" "$FEATURE_TITLE" "$FEATURE_MSG" "$FEATURE_MENU"
-				while [[ -n ${gv_Auswahl[1]} ]] ; then
-					case $gv_Auswahl in
-						HELP*)
-							script_help raid_create_features_help
-							checklist "${gv_Auswahl#HELP }" "$FEATURE_TITLE" "$FEATURE_MSG" "$FEATURE_MENU"
-							;;
-						*)	# Auswahl uerbernehmen
-							FEATURES="${=gv_Auswahl// /, }"
-							break
-							;;
-					esac
-				done
-				## }}}
-				create_menu $lv_Features
+				create_menu $lv_Options
 				;;
 			$gv_Create)
 				# Sind alle nötigen Variablen belegt?# {{{
 				#
 				if [[ -n "${RAIDDISKS[1]}" ]] && [[ -n $RAIDLEVEL ]] ; then
-					# zusaetzliche Optionen sammeln
-					raid_create_option
-					#
-					CREATE_RAID_MSG=$(gettext 'Jetzt wird das RAID Array erzeugt. Alle Daten gehen auf diesem Array verloren. Fortfahren (ja/nein)?')
+					CREATE_MSG="${gv_Create}..."
+					CREATE_RAID_MSG=$(gettext 'Jetzt wird das RAID Array erzeugt. Alle Daten gehen auf diesem Array verloren.\n\n Fortfahren (ja/nein)?')
 					yesno "$gv_Attention" "$CREATE_RAID_MSG" "yes"
 					if [ "$gv_Auswahl" = yes ] ; then
-						mkfs.btrfs -v -f -d $RAIDLEVEL -m $RAIDLEVEL ${=RAID_OPT} ${=RAIDDISKS}
+						# Die Variable CREATE_OPT wurde in der Funktionsdatei
+						# kwbtrfs_create_options belegt
+						mkfs.btrfs -d $RAIDLEVEL -m $RAIDLEVEL ${=CREATE_OPT} ${=RAIDDISKS} | \
+							progressbox "$CREATE_TITLE" "$CREATE_MSG" || \
+							(prog_failure ; return 1)
+						return 0
 					fi
 				else
 					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Raid_Level und $lv_Raiddisks auswaehlen und mit den richtigen Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
-				## }}}
 				create_menu
+				## }}}
 				;;
 			$gv_Back)	break
 				;;
 		esac
 	done
+	return 0
 }
 #}}}
 ### Modeline {{{
