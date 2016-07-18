@@ -4,12 +4,20 @@
 #
 kwbtrfs_drive_format() {
 	search_devices -a
+	# Funktionen (no_drive_msg), Nachricht das es keine Laufwerke# {{{
+	# zum formatieren gibt.
+	#
+	no_drive_msg() {
+		MSG=$(gettext 'Es sind keine Laufwerke vorhanden um diese mit einem BTRFS Dateisystem zu formatieren.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
 	if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
 		# Funktionen (format_menu)# {{{
 		#
 		format_menu() {
 			FORMAT_DRIVE_MENU=($NO_BTRFS_DEV_E)
-			FOEMAT_DRIVE_TITLE="${lv_Devices}::${gv_Create}"
+			FORMAT_DRIVE_TITLE="${lv_Devices}::${gv_Create}"
 			FORMAT_DRIVE_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus auf dem ein BTRFS Dateisystem erzeugt werden soll.')
 			menubox "$1" "$FORMAT_DRIVE_TITLE" "$FORMAT_DRIVE_MSG" "$FORMAT_DRIVE_MENU"
 		}
@@ -20,14 +28,6 @@ kwbtrfs_drive_format() {
 			FORMAT_C_MENU=($lv_Options \"\" $gv_Create \"\" $gv_Back \"\")
 			FORMAT_C_TITLE="${lv_Devices}::${gv_Create}::${lv_Drive}"
 			menubox "$1" "$FORMAT_C_TITLE" "$gv_Menupoint" "$FORMAT_C_MENU"
-		}
-		## }}}
-		# Funktionen (no_drive_msg), Nachricht das es keine Laufwerke# {{{
-		# zum formatieren gibt.
-		#
-		no_drive_msg() {
-			MSG=$(gettext 'Es sind keine Laufwerke vorhanden um diese mit einem BTRFS Dateisystem zu formatieren.')
-			msgbox "$gv_Info" "$MSG"
 		}
 		## }}}
 		#
@@ -41,6 +41,9 @@ kwbtrfs_drive_format() {
 				/dev/*)
 					# Auswahl uebernehmen# {{{
 					FORMAT_DEV="$gv_Auswahl"
+					unset -- CREATE_OPT
+					# Standard Optionen
+					CREATE_OPT="-v -f"
 					format_create_menu
 					while [[ -n $gv_Auswahl ]] ; do
 						case $gv_Auswahl in
@@ -49,17 +52,17 @@ kwbtrfs_drive_format() {
 								format_create_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Options)
-								# Optionen fuer das Erstellen des Laufwerks
+								# Optionen fuer das Erstellen des Laufwerks# {{{
 								autoload -U kwbtrfs_create_options
-								kwbtrfs_create_options -f
-								#
+								kwbtrfs_create_options -f mkfs.btrfs
+								## }}}
 								format_create_menu $lv_Options
 								;;
 							$gv_Create)
-								# Laufwerk formatieren/erstellen
+								# Laufwerk formatieren# {{{
 								FORMAT_P_MSG="${FORMAT_TITLE} ${FORMAT_DEV}..."
 								FORMAT_TITLE=$(gettext 'Formatierung')
-								FORMAT_MSG=$(gettext 'Soll dieses Laufwerke $FORMAT_DEV wirklich mit dem BTRFS Dateisystem formatiert werden (${gv_Yes}/${gv_No})?')
+								FORMAT_MSG=$(gettext 'Soll dieses Laufwerk $FORMAT_DEV wirklich mit dem BTRFS Dateisystem formatiert werden (${gv_Yes}/${gv_No})?')
 								# Formatieren (ja/nein)?
 								yesno "$FORMAT_TITLE" "$FORMAT_MSG" "$gv_No"
 								if [[ $gv_Auswahl == yes ]] ; then
@@ -77,7 +80,7 @@ kwbtrfs_drive_format() {
 								# Laufwerke neu suchen
 								search_devices -a
 								unset -- FORMAT_DEV
-								#
+								## }}}
 								break
 								;;
 							*|$gv_Back)
@@ -87,7 +90,7 @@ kwbtrfs_drive_format() {
 						esac
 					done
 					## }}}
-					format_menu
+					format_menu $FORMAT_DEV
 					;;
 				*|$gv_Back)
 					# zurueck

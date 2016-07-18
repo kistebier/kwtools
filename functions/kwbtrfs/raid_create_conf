@@ -13,6 +13,9 @@ raid_create_conf() {
 	fi
 	# Variablen# {{{
 	lv_Raid_Level=$(gettext 'RAID Level')
+	unset -- CREATE_OPT
+	# Standard Optionen
+	CREATE_OPT="-v -f"
 	##################################
 	# HOWTO: raid
 	##################################
@@ -94,7 +97,7 @@ raid_create_conf() {
 			$lv_Options)
 				# Optionen fuer das Erstellen des Laufwerks
 				autoload -U kwbtrfs_create_options
-				kwbtrfs_create_options -r
+				kwbtrfs_create_options -r mkfs.btrfs
 				#
 				create_menu $lv_Options
 				;;
