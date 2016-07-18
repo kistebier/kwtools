@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 13.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 18.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -169,6 +169,7 @@ search_btrfs_filesystem() {
 # usage: search_devices [ -a | -c | -p ]
 # -a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
 # -c - Cryptsetup Laufwerke
+# -e - ext[234] Laufwerke
 # -p - Partitionen
 #
 search_devices() {
@@ -221,6 +222,19 @@ search_devices() {
 					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 				}
 			fi
+			;;
+		-e)
+			# alle ext[234] Laufwerke suchen
+			for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
+				check_fs $dev
+				case $gv_Fs in
+					ext[234])
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+						;;
+				esac
+			}
 			;;
 		-p)
 			# nur Partitionen suchen
@@ -948,8 +962,9 @@ geloescht werden?')
 			# Funktion (device_menu)# {{{
 			#
 			device_menu() {
-				MENU=($gv_Display \"\" $gv_Create \"\" \"$lv_Device_Add\" \"\"
-				\"$lv_Device_Remove\" \"\" \"$lv_Device_Replace\" \"\" $gv_Back \"\")
+				MENU=($gv_Display \"\" $gv_Create \"\" \"$lv_Device_Convert\" \"\"
+				\"$lv_Device_Add\" \"\" \"$lv_Device_Remove\" \"\"
+				\"$lv_Device_Replace\" \"\" $gv_Back \"\")
 				menubox "$1" "$lv_Devices" "$gv_Menupoint" "$MENU"
 			}
 			## }}}
@@ -1050,11 +1065,10 @@ geloescht werden?')
 						device_menu "$gv_Create"
 						;;
 					$lv_Device_Convert)
-						# ext[234] Laufwerk nach btrfs konvertieren
-						#autoload -U kwtbtrs_drive_convert
-						#kwbtrfs_drive_convert
-						#
-						hier_ist_noch_nichts "$lv_Device_Convert"
+						# ext[234] Laufwerk nach btrfs konvertieren# {{{
+						autoload -U kwbtrfs_drive_convert
+						kwbtrfs_drive_convert
+						## }}}
 						device_menu "$lv_Device_Convert"
 						;;
 					$lv_Device_Add)
