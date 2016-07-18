@@ -149,7 +149,6 @@ kwbtrfs_create_options() {
 				;;
 			$lv_Cplabel)
 				# einstellen, ob Label beibehalten werden soll oder nicht.# {{{
-				#
 				CPLABEL_TITLE="${lv_Options}::${lv_Cplabel}"
 				MSG=$(gettext 'Soll das urspruengliche Label des Dateisystems beim konvertieren beibehalten werden (${gv_Yes}/${gv_No})?.')
 				yesno "$CPLABEL_TITLE" "$MSG" "$gv_Yes"
@@ -164,7 +163,6 @@ kwbtrfs_create_options() {
 				;;
 			$lv_Mix_Metadata)
 				# einstellen, ob Mixed Mode oder nicht.# {{{
-				#
 				MIX_METADATA_TITLE="${lv_Options}::${lv_Mix_Metadata}"
 				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einenm Dateisystem kleiner als 5GiB besitzen. Ueber 5GiB verschlechtert es die Geschwindigkeit.')
 				yesno "$MIX_METADATA_TITLE" "$MSG" "$gv_No"
@@ -208,17 +206,34 @@ kwbtrfs_create_options() {
 				#}}}
 				options_menu "$lv_Nodesize"
 				;;
-			lv_Nodatasum)
-				hier_ist_noch_nichts "$lv_Nodatasum"
+			$lv_Nodatasum)
+				# Datei Checksumme ausschalten (ja/nein).# {{{
+				NODATASUM_TITLE="${lv_Options}::${lv_Nodatasum}"
+				MSG=$(gettext 'Soll die Berechnung der Checksumme aller Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
+				yesno "$NODATASUM_TITLE" "$MSG" "$gv_Yes"
+				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+					NODATASUM="$gv_Yes"
+				else
+					NODATASUM="$gv_No"
+				fi
+				## }}}
 				options_menu "$lv_Nodatasum"
 				;;
-			lv_Noinline)
-				hier_ist_noch_nichts "$lv_Noinline"
+			$lv_Noinline)
+				# inlining von kleinen Dateien ausschalten (ja/nein).# {{{
+				NOINLINE_TITLE="${lv_Options}::${lv_Noinline}"
+				MSG=$(gettext 'Soll inlining von kleinen Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
+				yesno "$NOINLINE_TITLE" "$MSG" "$gv_Yes"
+				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+					NOINLINE="$gv_Yes"
+				else
+					NOINLINE="$gv_No"
+				fi
+				## }}}
 				options_menu "$lv_Noinline"
 				;;
-			lv_Noxattr)
+			$lv_Noxattr)
 				# einstellen, ob xattrs und ACLs ignoriert werden sollen oder nicht.# {{{
-				#
 				XATTR_TITLE="${lv_Options}::${lv_Noxattr}"
 				MSG=$(gettext 'Sollen xattrs und ACLs beim konvertieren ignoriert werden (${gv_Yes}/${gv_No})?.')
 				yesno "$XATTR_TITLE" "$MSG" "$gv_No"

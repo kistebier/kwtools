@@ -7,7 +7,7 @@ kwbtrfs_drive_convert() {
 	# Funktionen (no_ext_drive_msg), Nachricht das es keine ext[234] Laufwerke gibt.# {{{
 	#
 	no_ext_drive_msg() {
-		MSG=$(gettext 'Es sind keine ext2/3/4 Laufwerke vorhanden um diese nach BTRFS zu konvertieren.')
+		MSG=$(gettext 'Es sind keine ext2/3/4 Laufwerke vorhanden um diese nach btrfs zu konvertieren.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
@@ -21,7 +21,7 @@ kwbtrfs_drive_convert() {
 		convert_menu() {
 			CONVERT_DRIVE_MENU=($NO_BTRFS_DEV_E)
 			CONVERT_DRIVE_TITLE="${lv_Devices}::${lv_Device_Convert}"
-			CONVERT_DRIVE_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus das nach BTRFS konvertiert werden soll.')
+			CONVERT_DRIVE_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus das nach btrfs konvertiert werden soll.')
 			menubox "$1" "$CONVERT_DRIVE_TITLE" "$CONVERT_DRIVE_MSG" "$CONVERT_DRIVE_MENU"
 		}
 		## }}}
@@ -53,10 +53,10 @@ kwbtrfs_drive_convert() {
 								# Laufwerk konvertieren# {{{
 								CONVERT_P_MSG="${CONVERT_TITLE} ${CONVERT_DEV}..."
 								CONVERT_TITLE=$(gettext 'Konvertierung')
-								CONVERT_MSG=$(gettext 'Soll dieses Laufwerk $CONVERT_DEV wirklich nach BTRFS konvertiert werden (${gv_Yes}/${gv_No})?')
+								CONVERT_MSG=$(gettext 'Soll dieses Laufwerk $CONVERT_DEV wirklich nach btrfs konvertiert werden (${gv_Yes}/${gv_No})?')
 								# Formatieren (ja/nein)?
 								yesno "$CONVERT_TITLE" "$CONVERT_MSG" "$gv_No"
-								if [[ $gv_Auswahl == yes ]] ; then
+								if [[ $gv_Auswahl == $gv_Yes ]] ; then
 									# Pruefen ob das Laufwerk
 									# eingebunden ist und ausbinden.
 									mount_check -a $CONVERT_DEV
