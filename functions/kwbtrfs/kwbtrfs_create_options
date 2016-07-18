@@ -1,66 +1,131 @@
 # Funktion (kwbtrfs_create_options), Optionen zum erstellen/formatieren eines
 # BTRFS Laufwerks
 #
-# usage: kwbtrfs_create_options [ -f | -r ]
+# usage: kwbtrfs_create_options [ -c | -f | -r ] BTRFS-PROGRAM
+# -c - fuer die Konvertierung
 # -f - fuer die Formatierung
 # -r - fuer die Erstellung von RAID Arrays
+# BTRFS-PROGRAM - Programm mkfs.btrfs oder btrfs-convert
 #
 kwbtrfs_create_options() {
-	if [[ $1 == -f ]] || [[ $1 == -r ]]; then
-		unset -- LABEL CREATE_OPT
+	if [[ ${#argv} == 2 ]] ; then
+		unset -- CPLABEL FEATURES LABEL MIX_METADATA NODATASUM NODESIZE NODISCARD \
+			NOINLINE NOXATTR ROOTDIR
 		local Opt
 		Opt="$1"
+		case $1 in
+			-[cfr])	Opt="$1"
+				CREATE_PROG="$2"
+				;;
+			*)
+				no_para_msg"$0"
+				return 1
+				;;
+		esac
 	else
 		no_para_msg"$0"
 		return 1
 	fi
-	# Variablen
+	### Variablen ###
+	# only convert
+	lv_Nodatasum=$(gettext 'Keine Checksumme')
+	lv_Noxattr=$(gettext 'Keine ACLs')
+	lv_Noinline=$(gettext 'No inlining')
+	lv_Cplabel=$(gettext 'Label kopieren')
+	# raid
 	lv_Mix_Metadata=$(gettext 'Mixed Data/Meta')
-	lv_Nodesize=$(gettext 'Nodesize')
-	lv_Label=$(gettext 'Label')
+	# create/format
 	lv_Nodiscard=$(gettext 'No discard')
 	lv_Rootdir=$(gettext 'Wurzelverzeichnis')
+	# all
+	lv_Nodesize=$(gettext 'Nodesize')
+	lv_Label=$(gettext 'Label')
 	lv_Features=$(gettext 'Faehigkeiten')
+	#
 	MIX_METADATA=no
 	NODISCARD=no
 	NODESIZE=${NODESIZE:-16k}
 	#
 	# Funktion (create_options), zusaetzliche Optionen sammeln# {{{
 	#
-	# -K = --nodiscard
-	# -L = --label
-	# -M = --mixed
-	# -n = --nodesize
-	# -O = --features
-	# -r = --rootdir
-	#
 	create_options() {
-		unset -- CREATE_OPT
-		# standard Optionen
-		CREATE_OPT="-v -f"
-		if [[ $MIX_METADATA == yes ]] ; then
-			CREATE_OPT="$CREATE_OPT -M"
-		fi
-		if [[ $NODISCARD == yes ]] ; then
-			CREATE_OPT="$CREATE_OPT -K"
-		fi
-		if [[ -n $NODESIZE ]] ; then
-			CREATE_OPT="$CREATE_OPT -n $NODESIZE"
-		fi
-		if [[ -n $FEATURES ]] ; then
-			CREATE_OPT="$CREATE_OPT -O $FEATURES"
-		fi
-		if [[ -n $ROOTDIR ]] ; then
-			CREATE_OPT="$CREATE_OPT -r $ROOTDIR"
-		fi
-		if [[ -n $LABEL ]] ; then
-			CREATE_OPT="$CREATE_OPT -L $LABEL"
-		fi
+		# Optionen
+		case "$Opt" in
+			-c)	# only convert
+				if [[ $CPLABEL == $gv_Yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --copy-label"
+				fi
+				if [[ -n $FEATURES ]] ; then
+					CREATE_OPT="$CREATE_OPT --features $FEATURES"
+				fi
+				if [[ -n $LABEL ]] ; then
+					CREATE_OPT="$CREATE_OPT --label $LABEL"
+				fi
+				if [[ $NODATASUM == $gv_Yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --no-datasum"
+				fi
+				if [[ -n $NODESIZE ]] ; then
+					CREATE_OPT="$CREATE_OPT --nodesize $NODESIZE"
+				fi
+				if [[ $NOINLINE == $gv_Yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --no-inline"
+				fi
+				if [[ $NOXATTR == $gv_Yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --no-xattr"
+				fi
+				;;
+			-f)
+				# only format
+				if [[ -n $FEATURES ]] ; then
+					CREATE_OPT="$CREATE_OPT --features $FEATURES"
+				fi
+				if [[ -n $LABEL ]] ; then
+					CREATE_OPT="$CREATE_OPT --label $LABEL"
+					unset -- SETLABEL
+				fi
+				if [[ -n $NODESIZE ]] ; then
+					CREATE_OPT="$CREATE_OPT --nodesize $NODESIZE"
+				fi
+				if [[ $NODISCARD == yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --nodiscard"
+				fi
+				if [[ -n $ROOTDIR ]] ; then
+					CREATE_OPT="$CREATE_OPT --rootdir $ROOTDIR"
+				fi
+				;;
+			-r)	# only create raid
+				if [[ -n $FEATURES ]] ; then
+					CREATE_OPT="$CREATE_OPT --features $FEATURES"
+				fi
+				if [[ -n $LABEL ]] ; then
+					CREATE_OPT="$CREATE_OPT --label $LABEL"
+					unset -- SETLABEL
+				fi
+				if [[ $MIX_METADATA == yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --mixed"
+				fi
+				if [[ $NODISCARD == yes ]] ; then
+					CREATE_OPT="$CREATE_OPT --nodiscard"
+				fi
+				if [[ -n $NODESIZE ]] ; then
+					CREATE_OPT="$CREATE_OPT --nodesize $NODESIZE"
+				fi
+				if [[ -n $ROOTDIR ]] ; then
+					CREATE_OPT="$CREATE_OPT --rootdir $ROOTDIR"
+				fi
+				;;
+		esac
 	}
 	## }}}
 	# Funktion (options_menu)# {{{
 	options_menu() {
-		if [[ $Opt == -f ]] ; then
+		if [[ $Opt == -c ]] ; then
+			# Menue fuer die Formatierung
+			OPTIONS_MENU=(\"$lv_Nodatasum\" \"$NODATASUM\" \"$lv_Noxattr\" \"$NOXATTR\"
+			\"$lv_Noinline\" \"$NOINLINE\" \"$lv_Cplabel\" \"$CPLABEL\"
+			$lv_Label \"$LABEL\" \"$lv_Nodesize\" \"$NODESIZE\"
+			$lv_Features \"$FEATURES\" $gv_Save \"\" $gv_Back \"\")
+		elif [[ $Opt == -f ]] ; then
 			# Menue fuer die Formatierung
 			OPTIONS_MENU=($lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\"
 			\"$lv_Nodiscard\" \"$NODISCARD\" $lv_Rootdir \"$ROOTDIR\"
@@ -82,25 +147,40 @@ kwbtrfs_create_options() {
 				script_help device_create_options_help
 				options_menu "${gv_Auswahl#HELP }"
 				;;
+			$lv_Cplabel)
+				# einstellen, ob Label beibehalten werden soll oder nicht.# {{{
+				#
+				CPLABEL_TITLE="${lv_Options}::${lv_Cplabel}"
+				MSG=$(gettext 'Soll das urspruengliche Label des Dateisystems beim konvertieren beibehalten werden (${gv_Yes}/${gv_No})?.')
+				yesno "$CPLABEL_TITLE" "$MSG" "$gv_Yes"
+				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+					CPLABEL="$gv_Yes"
+					unset -- LABEL
+				else
+					CPLABEL="$gv_No"
+				fi
+				## }}}
+				options_menu "$lv_Cplabel"
+				;;
 			$lv_Mix_Metadata)
 				# einstellen, ob Mixed Mode oder nicht.# {{{
 				#
-				MIX_METADATA_TITLE=$(gettext '${gv_Create}::${lv_Mix_Metadata}')
-				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden (ja/nein)?\nDies ist sinnvoll bei kleinen Laufwerken und ein Dateisystem kleiner als 5GiB besitzen. Dadrueber verschlechtert es die Geschwindigkeit auf grossen Dateisystemen.')
-				yesno "$MIX_METADATA_TITLE" "$MSG" no
-				if [[ $gv_Auswahl == yes ]] ; then
-					MIX_METADATA=yes
+				MIX_METADATA_TITLE="${lv_Options}::${lv_Mix_Metadata}"
+				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einenm Dateisystem kleiner als 5GiB besitzen. Ueber 5GiB verschlechtert es die Geschwindigkeit.')
+				yesno "$MIX_METADATA_TITLE" "$MSG" "$gv_No"
+				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+					MIX_METADATA="$gv_Yes"
 				else
-					MIX_METADATA=no
+					MIX_METADATA="$gv_No"
 				fi
 				## }}}
-				options_menu $lv_Mix_Metadata
+				options_menu "$lv_Mix_Metadata"
 				;;
 			$lv_Nodesize)
 				# einstellen der Nodesize{{{
 				local Anz
 				integer Anz
-				NODESIZE_TITLE="${gv_Create}::${lv_Nodesize}"
+				NODESIZE_TITLE="${lv_Options}::${lv_Nodesize}"
 				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize an (4-64KiB).')
 				number_input "$NODESIZE_TITLE" "$NODESIZE_MSG" "$NODESIZE"
 				#
@@ -126,26 +206,48 @@ kwbtrfs_create_options() {
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}
-				options_menu $lv_Nodesize
+				options_menu "$lv_Nodesize"
+				;;
+			lv_Nodatasum)
+				hier_ist_noch_nichts "$lv_Nodatasum"
+				options_menu "$lv_Nodatasum"
+				;;
+			lv_Noinline)
+				hier_ist_noch_nichts "$lv_Noinline"
+				options_menu "$lv_Noinline"
+				;;
+			lv_Noxattr)
+				# einstellen, ob xattrs und ACLs ignoriert werden sollen oder nicht.# {{{
+				#
+				XATTR_TITLE="${lv_Options}::${lv_Noxattr}"
+				MSG=$(gettext 'Sollen xattrs und ACLs beim konvertieren ignoriert werden (${gv_Yes}/${gv_No})?.')
+				yesno "$XATTR_TITLE" "$MSG" "$gv_No"
+				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+					NOXATTR="$gv_Yes"
+				else
+					NOXATTR="$gv_No"
+				fi
+				## }}}
+				options_menu "$lv_Noxattr"
 				;;
 			$lv_Label)
 				# einstellen des Label# {{{
-				#
-				LABEL_TITLE="${gv_Create}::${lv_Label}"
+				LABEL_TITLE="${lv_Options}::${lv_Label}"
 				MSG=$(gettext'Geben Sie einen eindeutigen Namen fuer das RAID Array ein.')
 				inputbox "$LABEL_TITLE" "$MSG" "$LABEL"
 				if [[ -n $gv_Auswahl ]] ; then
 					LABEL="$gv_Auswahl"
+					unset -- CPLABEL
 				else
 					unset -- LABEL
 				fi
 				## }}}
-				options_menu $lv_Label
+				options_menu "$lv_Label"
 				;;
 			$lv_Nodiscard)
 				# einstellen, ob das Laufwerk nicht getrimmt werden soll oder doch.# {{{
 				#
-				NODISCARD_TITLE=$(gettext '${gv_Create}::${lv_Nodiscard}')
+				NODISCARD_TITLE="${lv_Options}::${lv_Nodiscard}"
 				MSG=$(gettext 'Sollen das Laufwerk nicht auf Geschwindigkeit getrimmt werden (ja/nein)?')
 				yesno "$NODISCARD_TITLE" "$MSG" no
 				if [[ $gv_Auswahl == yes ]] ; then
@@ -154,12 +256,13 @@ kwbtrfs_create_options() {
 					NODISCARD=no
 				fi
 				## }}}
-				options_menu $lv_Nodiscard
+				options_menu "$lv_Nodiscard"
 				;;
 			$lv_Rootdir)
 				#
+				hier_ist_noch_nichts "$lv_Rootdir"
 				#
-				options_menu $lv_Rootdir
+				options_menu "$lv_Rootdir"
 				;;
 			$lv_Features)
 				# Dateisystem Faehigkeiten einstellen# {{{
@@ -169,10 +272,10 @@ kwbtrfs_create_options() {
 				##################################################
 				#
 				unset -- FEATURE_MENU
-				FEATURE_TITLE=$(gettext '${gv_Create}::${lv_Features}')
+				FEATURE_TITLE="${lv_Options}::${lv_Features}"
 				FEATURE_MSG=$(gettext 'Waehlen Sie die Faehigkeiten aus die zusaetzlich aktiviert werden sollen.')
 				#
-				mkfs.btrfs -O list-all | while read feature Char Rest ; do
+				$CREATE_PROG -O list-all | while read feature Char Rest ; do
 					case $feature in
 						Filesystem)
 							;;
@@ -196,7 +299,7 @@ kwbtrfs_create_options() {
 					esac
 				done
 				## }}}
-				options_menu $lv_Features
+				options_menu "$lv_Features"
 				;;
 			$gv_Save)
 				# eingestellte Optionen speichern
