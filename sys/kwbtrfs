@@ -315,7 +315,7 @@ umount_dev() {
 # Funktion (no_btrfs_dev_msg), Nachricht das keine Laufwerke mit BTRFS vorhanden sind# {{{
 #
 no_btrfs_dev_msg() {
-	MSG=$(gettext 'Es sind keine Laufwerke mit dem BTRFS Dateisystem vorhandn.')
+	MSG=$(gettext 'Es sind keine Laufwerke mit dem btrfs Dateisystem vorhanden.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
@@ -990,13 +990,13 @@ geloescht werden?')
 						search_btrfs_filesystem
 						if [[ -n ${BTRFS_DEV[1]} ]] ; then
 							mount_btrfs_dev_check
-							btrfs_dev_checklist "$lv_Devices"
+							btrfs_dev_checklist "${lv_Devices}::${gv_Display}"
 							while [[ $gv_Auswahl_Display ]] ; do
 								case $gv_Auswahl in
 									HELP*)
 										# Hilfe
-										script_help btrfs_usage_help
-										btrfs_dev_checklist "$lv_Devices" "${gv_Auswahl#HELP }"
+										script_help devices_usage_help
+										btrfs_dev_checklist "${lv_Devices}::${gv_Display}" "${gv_Auswahl#HELP }"
 										;;
 									/*)
 										# Information ueber die ausgewaehlten Laufwerke# {{{
@@ -1009,7 +1009,7 @@ geloescht werden?')
 										}
 										view_file ${gv_WorkDir}/btrfs_usage
 										## }}}
-										btrfs_dev_checklist "$lv_Devices" "${gv_Auswahl[1]}"
+										btrfs_dev_checklist "${lv_Devices}::${gv_Display}" "${gv_Auswahl[1]}"
 										;;
 									*)
 										# zurueck
