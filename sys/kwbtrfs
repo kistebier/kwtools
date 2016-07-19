@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 18.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 19.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -173,7 +173,7 @@ search_btrfs_filesystem() {
 # -p - Partitionen
 #
 search_devices() {
-	unset -- NO_BTRFS_DEV NO_BTRFS_DEV_E NO_BTRFS_DEV_M
+	unset -- FS NO_BTRFS_DEV NO_BTRFS_DEV_E NO_BTRFS_DEV_M
 	case $1 in
 		-a)
 			# alle Laufwerke suchen
@@ -232,6 +232,8 @@ search_devices() {
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+						# wird benoetigt beim konvertieren fuer fsck
+						FS+=($gv_Fs)
 						;;
 				esac
 			}
