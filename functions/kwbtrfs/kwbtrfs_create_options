@@ -28,8 +28,8 @@ kwbtrfs_create_options() {
 	fi
 	### Variablen ###
 	# only convert
-	lv_Nodatasum=$(gettext 'Keine Checksumme')
-	lv_Noxattr=$(gettext 'Keine ACLs')
+	lv_Nodatasum=$(gettext 'keine Checksumme')
+	lv_Noxattr=$(gettext 'keine ACLs')
 	lv_Noinline=$(gettext 'No inlining')
 	lv_Cplabel=$(gettext 'Label kopieren')
 	# raid
@@ -40,11 +40,11 @@ kwbtrfs_create_options() {
 	# all
 	lv_Nodesize=$(gettext 'Nodesize')
 	lv_Label=$(gettext 'Label')
-	lv_Features=$(gettext 'Faehigkeiten')
+	lv_Features=$(gettext 'Eigenschaften')
 	#
 	MIX_METADATA=no
 	NODISCARD=no
-	NODESIZE=${NODESIZE:-16k}
+	NODESIZE=${NODESIZE:-16}
 	#
 	# Funktion (create_options), zusaetzliche Optionen sammeln# {{{
 	#
@@ -65,7 +65,7 @@ kwbtrfs_create_options() {
 					CREATE_OPT="$CREATE_OPT --no-datasum"
 				fi
 				if [[ -n $NODESIZE ]] ; then
-					CREATE_OPT="$CREATE_OPT --nodesize $NODESIZE"
+					CREATE_OPT="$CREATE_OPT --nodesize ${NODESIZE}k"
 				fi
 				if [[ $NOINLINE == $gv_Yes ]] ; then
 					CREATE_OPT="$CREATE_OPT --no-inline"
@@ -151,8 +151,8 @@ kwbtrfs_create_options() {
 				# einstellen, ob Label beibehalten werden soll oder nicht.# {{{
 				CPLABEL_TITLE="${lv_Options}::${lv_Cplabel}"
 				MSG=$(gettext 'Soll das urspruengliche Label des Dateisystems beim konvertieren beibehalten werden (${gv_Yes}/${gv_No})?.')
-				yesno "$CPLABEL_TITLE" "$MSG" "$gv_Yes"
-				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+				yesno "$CPLABEL_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
 					CPLABEL="$gv_Yes"
 					unset -- LABEL
 				else
@@ -164,9 +164,9 @@ kwbtrfs_create_options() {
 			$lv_Mix_Metadata)
 				# einstellen, ob Mixed Mode oder nicht.# {{{
 				MIX_METADATA_TITLE="${lv_Options}::${lv_Mix_Metadata}"
-				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einenm Dateisystem kleiner als 5GiB besitzen. Ueber 5GiB verschlechtert es die Geschwindigkeit.')
-				yesno "$MIX_METADATA_TITLE" "$MSG" "$gv_No"
-				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Bloecke zusammengelegt werden oder nicht (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einem Dateisystem kleiner als 5GiB besitzen. Ueber 5GiB kann es zu Leistungseinbussen fuehren.')
+				yesno "$MIX_METADATA_TITLE" "$MSG" no
+				if [[ $gv_Auswahl == yes ]] ; then
 					MIX_METADATA="$gv_Yes"
 				else
 					MIX_METADATA="$gv_No"
@@ -179,7 +179,7 @@ kwbtrfs_create_options() {
 				local Anz
 				integer Anz
 				NODESIZE_TITLE="${lv_Options}::${lv_Nodesize}"
-				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize an (4-64KiB).')
+				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize, in KiB, ein (4-64).')
 				number_input "$NODESIZE_TITLE" "$NODESIZE_MSG" "$NODESIZE"
 				#
 				# Jetzt wird durchgezaehlt, ob der Wert ein vielfaches von 4 ist.
@@ -194,12 +194,12 @@ kwbtrfs_create_options() {
 					# Ist es kein Vielfaches von 4 kommt eine Fehlermeldung.
 					#
 					if [ "$NODESIZE" -ne "$Anz" ] ; then 
-						NODESIZE=64
+						NODESIZE=16
 						MSG=$(gettext 'Die Nodesize muss ein Vielfaches von 4 sein.')
 						msgbox "$gv_Attention" "$MSG"
 					fi 
 				else
-					NODESIZE=64
+					NODESIZE=16
 					MSG=$(gettext 'Die Nodesize muss >=4 und <=64 sein.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
@@ -210,8 +210,8 @@ kwbtrfs_create_options() {
 				# Datei Checksumme ausschalten (ja/nein).# {{{
 				NODATASUM_TITLE="${lv_Options}::${lv_Nodatasum}"
 				MSG=$(gettext 'Soll die Berechnung der Checksumme aller Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
-				yesno "$NODATASUM_TITLE" "$MSG" "$gv_Yes"
-				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+				yesno "$NODATASUM_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
 					NODATASUM="$gv_Yes"
 				else
 					NODATASUM="$gv_No"
@@ -223,8 +223,8 @@ kwbtrfs_create_options() {
 				# inlining von kleinen Dateien ausschalten (ja/nein).# {{{
 				NOINLINE_TITLE="${lv_Options}::${lv_Noinline}"
 				MSG=$(gettext 'Soll inlining von kleinen Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
-				yesno "$NOINLINE_TITLE" "$MSG" "$gv_Yes"
-				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+				yesno "$NOINLINE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
 					NOINLINE="$gv_Yes"
 				else
 					NOINLINE="$gv_No"
@@ -236,8 +236,8 @@ kwbtrfs_create_options() {
 				# einstellen, ob xattrs und ACLs ignoriert werden sollen oder nicht.# {{{
 				XATTR_TITLE="${lv_Options}::${lv_Noxattr}"
 				MSG=$(gettext 'Sollen xattrs und ACLs beim konvertieren ignoriert werden (${gv_Yes}/${gv_No})?.')
-				yesno "$XATTR_TITLE" "$MSG" "$gv_No"
-				if [[ $gv_Auswahl == $gv_Yes ]] ; then
+				yesno "$XATTR_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
 					NOXATTR="$gv_Yes"
 				else
 					NOXATTR="$gv_No"
@@ -248,7 +248,7 @@ kwbtrfs_create_options() {
 			$lv_Label)
 				# einstellen des Label# {{{
 				LABEL_TITLE="${lv_Options}::${lv_Label}"
-				MSG=$(gettext'Geben Sie einen eindeutigen Namen fuer das RAID Array ein.')
+				MSG=$(gettext 'Geben Sie einen eindeutigen Namen fuer das Laufwerk ein.')
 				inputbox "$LABEL_TITLE" "$MSG" "$LABEL"
 				if [[ -n $gv_Auswahl ]] ; then
 					LABEL="$gv_Auswahl"
@@ -263,7 +263,7 @@ kwbtrfs_create_options() {
 				# einstellen, ob das Laufwerk nicht getrimmt werden soll oder doch.# {{{
 				#
 				NODISCARD_TITLE="${lv_Options}::${lv_Nodiscard}"
-				MSG=$(gettext 'Sollen das Laufwerk nicht auf Geschwindigkeit getrimmt werden (ja/nein)?')
+				MSG=$(gettext 'Soll das Laufwerk nicht auf Geschwindigkeit getrimmt werden (ja/nein)?')
 				yesno "$NODISCARD_TITLE" "$MSG" no
 				if [[ $gv_Auswahl == yes ]] ; then
 					NODISCARD=yes
@@ -274,28 +274,32 @@ kwbtrfs_create_options() {
 				options_menu "$lv_Nodiscard"
 				;;
 			$lv_Rootdir)
-				#
-				hier_ist_noch_nichts "$lv_Rootdir"
-				#
+				# Eingabe des Wurzelverzeichnis mit dessen Daten das neue Laufwerk# {{{
+				# gefuellt werden soll. Dieses muss nicht eingebunden sein.
+				ROOTDIR_TITLE="${lv_Options}::${lv_Rootdir}"
+				ROOTDIR_MSG=$(gettext 'Geben Sie das Wurzelverzeichnis ein mit dessen Daten das neue Laufwerk gefuellt werden soll.')
+				inputbox "$ROOTDIR_TITLE" "$ROOTDIR_MSG" "$ROOTDIR"
+				if [[ ${gv_Auswahl[1]} == / ]] ; then
+					ROOTDIR="$gv_Auswahl"
+				else
+					unset -- ROOTDIR
+					no_input_msg
+				fi
+				## }}}
 				options_menu "$lv_Rootdir"
 				;;
 			$lv_Features)
-				# Dateisystem Faehigkeiten einstellen# {{{
-				##################################################
-				# TODO: FEATURE_MENU mit vorherigen Werten belegen?
-				# list-all?
-				##################################################
-				#
+				# Dateisystem Eigenschaften einstellen# {{{
 				unset -- FEATURE_MENU
 				FEATURE_TITLE="${lv_Options}::${lv_Features}"
-				FEATURE_MSG=$(gettext 'Waehlen Sie die Faehigkeiten aus die zusaetzlich aktiviert werden sollen.')
+				FEATURE_MSG=$(gettext 'Waehlen Sie die Dateisystem Eigenschaften die zusaetzlich aktiviert werden sollen aus.')
 				#
-				$CREATE_PROG -O list-all | while read feature Char Rest ; do
+				$CREATE_PROG -O list-all 2>&1 | while read feature Char Rest ; do
 					case $feature in
-						Filesystem)
+						Filesystem*)
 							;;
 						*)
-							FEATURE_MENU+($feature \"$Rest\" off)
+							FEATURE_MENU+=($feature \"$Rest\" off)
 							;;
 					esac
 				done
@@ -308,7 +312,7 @@ kwbtrfs_create_options() {
 							checklist "${gv_Auswahl#HELP }" "$FEATURE_TITLE" "$FEATURE_MSG" "$FEATURE_MENU"
 							;;
 						*)	# Auswahl uerbernehmen
-							FEATURES="${=gv_Auswahl// /, }"
+							FEATURES="${=gv_Auswahl_Display// /,}"
 							break
 							;;
 					esac

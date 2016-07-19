@@ -25,6 +25,14 @@ kwbtrfs_drive_convert() {
 			menubox "$1" "$CONVERT_DRIVE_TITLE" "$CONVERT_DRIVE_MSG" "$CONVERT_DRIVE_MENU"
 		}
 		## }}}
+		# Funktionen (convert_create_menu)# {{{
+		#
+		convert_create_menu() {
+			CONVERT_C_MENU=($lv_Options \"\" $lv_Convert \"\" $gv_Back \"\")
+			CONVERT_C_TITLE="${lv_Devices}::${gv_Create}::${lv_Convert}"
+			menubox "$1" "$CONVERT_C_TITLE" "$gv_Menupoint" "$CONVERT_C_MENU"
+		}
+		## }}}
 		convert_menu
 		while [[ -n $gv_Auswahl ]] ; do
 			case $gv_Auswahl in
@@ -35,32 +43,38 @@ kwbtrfs_drive_convert() {
 				/dev/*)
 					# Auswahl uebernehmen# {{{
 					CONVERT_DEV="$gv_Auswahl"
-					format_create_menu
+					convert_create_menu
 					while [[ -n $gv_Auswahl ]] ; do
 						case $gv_Auswahl in
 							HELP*)
 								script_help device_convert_help
-								format_create_menu "${gv_Auswahl#HELP }"
+								convert_create_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Options)
 								# Optionen fuer das konvertieren des Laufwerks# {{{
 								autoload -U kwbtrfs_create_options
 								kwbtrfs_create_options -c btrfs-convert
 								## }}}
-								format_create_menu $lv_Options
+								convert_create_menu $lv_Options
 								;;
 							$lv_Convert)
 								# Laufwerk konvertieren# {{{
-								CONVERT_P_MSG="${CONVERT_TITLE} ${CONVERT_DEV}..."
 								CONVERT_TITLE=$(gettext 'Konvertierung')
+								CONVERT_P_MSG="${CONVERT_TITLE} ${CONVERT_DEV}..."
 								CONVERT_MSG=$(gettext 'Soll dieses Laufwerk $CONVERT_DEV wirklich nach btrfs konvertiert werden (${gv_Yes}/${gv_No})?')
 								# Formatieren (ja/nein)?
-								yesno "$CONVERT_TITLE" "$CONVERT_MSG" "$gv_No"
-								if [[ $gv_Auswahl == $gv_Yes ]] ; then
+								yesno "$CONVERT_TITLE" "$CONVERT_MSG" no
+								if [[ $gv_Auswahl == yes ]] ; then
 									# Pruefen ob das Laufwerk
 									# eingebunden ist und ausbinden.
 									mount_check -a $CONVERT_DEV
 									if [[ $U_MOUNT == yes ]] ; then
+										# Ueber den Index das Dateisystem herausbekommen
+										Index=$NO_BTRFS_DEV[(i)$CONVERT_DEV]
+										Fs="${FS[Index]}"
+										# fsck auf das zu konvertierende Laufwerk ausfuehren.
+										# fsck.ext[234] -f -y device
+										fsck.${Fs} -f -y $CONVERT_DEV &>/dev/null
 										# Die Variable CREATE_OPT wurde in der Funktionsdatei
 										# kwbtrfs_create_options belegt
 										btrfs-convert ${=CREATE_OPT} $CONVERT_DEV | \
