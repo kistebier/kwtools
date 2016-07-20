@@ -33,6 +33,28 @@ kwbtrfs_drive_convert() {
 			menubox "$1" "$CONVERT_C_TITLE" "$gv_Menupoint" "$CONVERT_C_MENU"
 		}
 		## }}}
+		# Funktion (remove_original_metadata), loescht die Metadaten# {{{
+		# des original Dateisystems
+		#
+		# usage: remove_original_metadata
+		#
+		remove_original_metadata() {
+			# Einhaegeverzeichnis erstellen
+			mkdir ${gv_WorkDir}/mnt &>/dev/null
+			# Dateisystem einhaengen
+			mount -t btrfs $CONVERT_DEV ${gv_WorkDir}/mnt &>/dev/null
+			# Metadaten vom original Daeisystem loeschen
+			btrfs subvolume delete ${gv_WorkDir}/mnt/ext2_saved &>/dev/null
+			# Dateisystem defragmentieren
+			btrfs filesystem defrag -v -r -f -t 32M ${gv_WorkDir}/mnt | \
+				progressbox "$CONVERT_TITLE" "${lv_Defrag}: ${CONVERT_DEV}..."
+			# Metadaten Block Gruppen abgleichen
+			btrfs balance start -v -m ${gv_WorkDir}/mnt | \
+				progressbox "$CONVERT_TITLE" "${lv_Balance}: ${CONVERT_DEV}..."
+			# Dateisystem ausbinden
+			umount ${gv_WorkDir}/mnt &>/dev/null
+		}
+		## }}}
 		convert_menu
 		while [[ -n $gv_Auswahl ]] ; do
 			case $gv_Auswahl in
@@ -80,6 +102,10 @@ kwbtrfs_drive_convert() {
 										btrfs-convert ${=CREATE_OPT} $CONVERT_DEV | \
 											progressbox "$CONVERT_TITLE" "$CONVERT_P_MSG" || \
 											(prog_failure ; return 1)
+										# original Metadaten loeschen?
+										if [[ $RMOMETA == $gv_Yes ]] ; then
+											remove_original_metadata
+										fi
 									fi
 								fi
 								# Laufwerke neu suchen
@@ -95,7 +121,6 @@ kwbtrfs_drive_convert() {
 						esac
 					done
 					## }}}
-					format_menu $FORMAT_DEV
 					;;
 				*|$gv_Back)
 					# zurueck
