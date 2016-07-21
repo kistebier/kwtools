@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 21.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -589,8 +589,8 @@ while [ "$gv_Auswahl" ] ; do
 		$lv_Subvolumes)
 			# Subvolumes# {{{
 			# Variablen
-			lv_Subvolume=$(gettext 'Unterlaufwerk')
-			lv_Suvol_Name=$(gettext 'Unterlaufwerksname')
+			lv_Subvolume=$(gettext 'Subvolume')
+			lv_Suvol_Name=$(gettext 'Subvolumename')
 			lv_Snapshot=$(gettext 'Snapshot')
 			lv_Name=$(gettext 'Snapshotname')
 			# Funktion (subvolumes_menu)# {{{
@@ -657,7 +657,6 @@ while [ "$gv_Auswahl" ] ; do
 				else
 					no_subvolume_msg
 				fi
-				sleep 5
 			}
 			## }}}
 			# Funktion (subvol_checklist), Subvolumes zur Auswahl anzeigen# {{{
@@ -665,14 +664,14 @@ while [ "$gv_Auswahl" ] ; do
 			subvol_checklist() {
 				MENU=($SUBVOL_DEV_M)
 				MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs $lv_Subvolumes aus.')
-				checklist "$1" "$lv_Subvolumes" "$MSG" "$MENU"
+				checklist "$1" "${lv_Subvolumes}::${gv_Delete}" "$MSG" "$MENU"
 			}
 			## }}}
 			# Funktion (subvol_snapshot_menu)# {{{
 			#
 			subvol_snapshot_menu() {
 				MENU=($lv_Subvolume \"$SUBVOLUME\" $lv_Name \"$NAME\" $gv_Create \"\" $gv_Back \"\")
-				menubox "$1" "$lv_Snapshot" "$gv_Menupoint" "$MENU"
+				menubox "$1" "${lv_Subvolumes}::${lv_Snapshot}" "$gv_Menupoint" "$MENU"
 			}
 			## }}}
 			# Funktion (subvol_snapshot_choice_menu), Subvolumes zur Auswahl anzeigen# {{{
@@ -680,7 +679,7 @@ while [ "$gv_Auswahl" ] ; do
 			subvol_snapshot_choice_menu() {
 				MENU=($SUBVOL_DEV_E $gv_Back \"\")
 				MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Subvolume aus.')
-				menubox "$1" "$lv_Snapshot" "$MSG" "$MENU"
+				menubox "$1" "${lv_Subvolumes}::${lv_Snapshot}::${lv_Subvolume}" "$MSG" "$MENU"
 			}
 			## }}}
 			# Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
@@ -688,7 +687,7 @@ while [ "$gv_Auswahl" ] ; do
 			btrfs_choice_menu() {
 				MENU=($BTRFS_PATH_E $gv_Back \"\")
 				MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Drive aus.')
-				menubox "$1" "$lv_Subvolumes" "$MSG" "$MENU"
+				menubox "$1" "${lv_Subvolumes}::${gv_Create}::${lv_Drive}" "$MSG" "$MENU"
 			}
 			## }}}
 			# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
@@ -696,7 +695,7 @@ while [ "$gv_Auswahl" ] ; do
 			subvol_create_menu() {
 				MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
 				$gv_Create \"\" $gv_Back \"\")
-				menubox "$1" "$lv_Subvolumes" "$gv_Menupoint" "$MENU"
+				menubox "$1" "${lv_Subvolumes}::${gv_Create}" "$gv_Menupoint" "$MENU"
 			}
 			## }}}
 			#
@@ -753,7 +752,7 @@ while [ "$gv_Auswahl" ] ; do
 								while [ "$gv_Auswahl_Display" ] ; do
 									case $gv_Auswahl in
 										HELP*)
-											script_help subvol_create_help
+											script_help subvolumes_create_help
 											subvol_create_menu "${gv_Auswahl#HELP }"
 											;;
 										$lv_Drive)
@@ -762,7 +761,7 @@ while [ "$gv_Auswahl" ] ; do
 											while [ "$gv_Auswahl" ] ; do
 												case $gv_Auswahl in
 													HELP*)
-														script_help subvol_create_help
+														script_help subvolumes_create_help
 														btrfs_choice_menu "${gv_Auswahl#HELP }"
 														;;
 													/*)
@@ -780,8 +779,9 @@ while [ "$gv_Auswahl" ] ; do
 											;;
 										$lv_Suvol_Name)
 											# Snapshot Name eingeben# {{{
-											MSG=$(gettext 'Geben Sie einen Namen fuer das lv_Subvolume ein.')
-											inputbox "$lv_Subvolumes" "$MSG" "$SUBVOL_NAME"
+											SUBVOL_NAME_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Suvol_Name}"
+											MSG=$(gettext 'Geben Sie einen Namen fuer das $lv_Subvolume ein.')
+											inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
 											while [ -n "$gv_Auswahl" ] ; do
 												# Pruefen, ob es das Subvolume schon gibt.
 												Tmp="`print ${(M)${SUBVOL_DEV##*/}##*${gv_Auswahl}}`"
@@ -791,7 +791,7 @@ while [ "$gv_Auswahl" ] ; do
 												else
 													IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein.')
 													msgbox "$gv_Info" "$IS_MSG"
-													inputbox "$lv_Subvolumes" "$MSG" "$SUBVOL_NAME"
+													inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
 												fi
 											done
 											## }}}
@@ -841,9 +841,8 @@ while [ "$gv_Auswahl" ] ; do
 											# Frage, ob die asgewaehlten Subvolumes wirklich
 											# geloescht werden sollen.
 											DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
-${=gv_Auswahl// /\\n}
-geloescht werden?')
-											yesno "$lv_Subvolumes" "$DEL_MSG" "$gv_No"
+${=SUBVOL_DEVS// /\\n}geloescht werden?')
+											yesno "$lv_Subvolumes" "$DEL_MSG" no
 											#
 											if [[ $gv_Auswahl == yes ]] ; then
 												MSG=$(gettext 'Loesche $lv_Subvolumes')
@@ -906,7 +905,7 @@ geloescht werden?')
 												DATE=$(date -u +%Y-%m-%d)
 												NAME="${SUBVOLUME}-${DATE}"
 											fi
-											inputbox "$lv_Snapshot" "$MSG" "$NAME"
+											inputbox "${lv_Subvolumes}::${lv_Snapshot}::${lv_Name}" "$MSG" "$NAME"
 											if [[ $gv_Auswahl ]] ; then
 												NAME="$gv_Auswahl"
 											else
@@ -919,8 +918,9 @@ geloescht werden?')
 											# Snapshot erstellen# {{{
 											if [[ -n $SUBVOLUME ]] && [[ -n $NAME ]] ; then
 												MSG=(gettext 'erzeuge $lv_Snapshot.')
-												btrfs subvolume snapshot $SUBVOLUME "$NAME" |\
-													progressbox "$lv_Snapshot" "$MSG" || prog_failure
+												btrfs subvolume snapshot $SUBVOLUME "$NAME" | \
+													progressbox "$lv_Snapshot" "$MSG" || \
+													prog_failure
 												break
 											else
 												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Subvolume und $lv_Name mit Werten belegen.')
