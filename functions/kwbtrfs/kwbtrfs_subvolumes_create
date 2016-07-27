@@ -10,6 +10,14 @@ kwbtrfs_subvolumes_create() {
 		lv_Suvol_Name=$(gettext 'Subvolumename')
 		# vorhandene  Subvolumes finden
 		search_subvolumes
+		# Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
+		#
+		btrfs_choice_menu() {
+			MENU=($BTRFS_PATH_E $gv_Back \"\")
+			MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Drive aus.')
+			menubox "$1" "${lv_Subvolumes}::${gv_Create}::${lv_Drive}" "$MSG" "$MENU"
+		}
+		## }}}
 		# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
 		#
 		subvol_create_menu() {
