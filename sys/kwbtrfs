@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 25.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 27.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -589,10 +589,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Subvolumes# {{{
 			# Variablen
 			lv_Subvolume=$(gettext 'Subvolume')
-			lv_Suvol_Name=$(gettext 'Subvolumename')
 			lv_Snapshot=$(gettext 'Snapshot')
-			lv_Name=$(gettext 'Snapshotname')
-			lv_Metanr=$(gettext 'Metadaten Nummer')
 			lv_Findnew=$(gettext 'Zustand Dateien')
 			# Funktion (subvolumes_menu)# {{{
 			#
@@ -668,21 +665,6 @@ while [ "$gv_Auswahl" ] ; do
 				checklist "$1" "$lv_Subvolumes" "$MSG" "$MENU"
 			}
 			## }}}
-			# Funktion (subvol_snapshot_menu)# {{{
-			#
-			subvol_snapshot_menu() {
-				MENU=($lv_Subvolume \"$SUBVOLUME\" $lv_Name \"$NAME\" $gv_Create \"\" $gv_Back \"\")
-				menubox "$1" "${lv_Subvolumes}::${lv_Snapshot}" "$gv_Menupoint" "$MENU"
-			}
-			## }}}
-			# Funktion (subvol_findnew_menu)# {{{
-			#
-			subvol_findnew_menu() {
-				MENU=($lv_Subvolume \"$SUBVOLUME\" \"$lv_Metanr\" \"$METANR\"
-				$gv_Display \"\" $gv_Back \"\")
-				menubox "$1" "${lv_Subvolumes}::${lv_Findnew}" "$gv_Menupoint" "$MENU"
-			}
-			## }}}
 			# Funktion (subvol_snapshot_choice_menu), Subvolumes zur Auswahl anzeigen# {{{
 			#
 			subvol_snapshot_choice_menu() {
@@ -699,14 +681,6 @@ while [ "$gv_Auswahl" ] ; do
 				menubox "$1" "${lv_Subvolumes}::${gv_Create}::${lv_Drive}" "$MSG" "$MENU"
 			}
 			## }}}
-			# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
-			#
-			subvol_create_menu() {
-				MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
-				$gv_Create \"\" $gv_Back \"\")
-				menubox "$1" "${lv_Subvolumes}::${gv_Create}" "$gv_Menupoint" "$MENU"
-			}
-			## }}}
 			#
 			search_btrfs_filesystem
 			if [[ -n ${BTRFS_DEV[1]} ]] ; then
@@ -719,311 +693,37 @@ while [ "$gv_Auswahl" ] ; do
 							subvolumes_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Display)
-							# Anzeige von Informationen von Subvolumes # {{{
-							search_subvolumes
-							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-								subvol_checklist
-								while [[ -n ${gv_Auswahl[1]} ]] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help subvolumes_help
-											subvol_checklist "${gv_Auswahl#HELP }"
-											;;
-										/*)
-											# Information ueber die ausgewaehlten Subvolumes anzeigen# {{{
-											rm -rf ${gv_WorkDir}/show_subvol &>/dev/null
-											for i in ${=gv_Auswahl} ; {
-												btrfs subvolume show $i >> ${gv_WorkDir}/show_subvol
-											}
-											view_file  ${gv_WorkDir}/show_subvol
-											## }}}
-											subvol_checklist
-											;;
-										*)
-											# zurueck
-											break
-									esac
-								done
-							else
-								no_subvolume_msg
-							fi
+							# Anzeige der vorhandenen Subvolumes# {{{
+							autoload -U kwbtrfs_subvolumes_display
+							kwbtrfs_subvolumes_display
 							## }}}
 							subvolumes_menu "$gv_Display"
 							;;
 						$gv_Create)
-							# Subvolumes erstellen# {{{
-							unset -- SUBVOL_NAME
-							mount_btrfs_dev_check
-							if [[ -n ${BTRFS_PATH[1]} ]] ; then
-								# vorhandene  Subvolumes finden
-								search_subvolumes
-								subvol_create_menu
-								while [ "$gv_Auswahl_Display" ] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help subvolumes_create_help
-											subvol_create_menu "${gv_Auswahl#HELP }"
-											;;
-										$lv_Drive)
-											# btrfs Laufwerk auswaehlen# {{{
-											btrfs_choice_menu
-											while [ "$gv_Auswahl" ] ; do
-												case $gv_Auswahl in
-													HELP*)
-														script_help subvolumes_create_help
-														btrfs_choice_menu "${gv_Auswahl#HELP }"
-														;;
-													/*)
-														# Auswahl uebernehmen
-														DRIVE="$gv_Auswahl"
-														break
-														;;
-													*)
-														break
-														;;
-												esac
-											done
-											## }}}
-											subvol_create_menu "$lv_Drive"
-											;;
-										$lv_Suvol_Name)
-											# Snapshot Name eingeben# {{{
-											SUBVOL_NAME_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Suvol_Name}"
-											MSG=$(gettext 'Geben Sie einen Namen fuer das $lv_Subvolume ein.')
-											inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
-											while [ -n "$gv_Auswahl" ] ; do
-												# Pruefen, ob es das Subvolume schon gibt.
-												Tmp="`print ${(M)${SUBVOL_DEV##*/}##*${gv_Auswahl}}`"
-												if [[ ! -n $Tmp ]] ; then
-													SUBVOL_NAME="$gv_Auswahl"
-													break
-												else
-													IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein.')
-													msgbox "$gv_Info" "$IS_MSG"
-													inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
-												fi
-											done
-											## }}}
-											subvol_create_menu "$lv_Suvol_Name"
-											;;
-										$gv_Create)
-											# Subvolume erstellen# {{{
-											if [[ -n $DRIVE ]] && [[ -n $SUBVOL_NAME ]] ; then
-												MSG=$(gettext 'erzeuge $lv_Subvolume $SUBVOL_NAME')
-												btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" | \
-												progressbox "$lv_Subvolumes" "$MSG" || prog_failure|| prog_failure
-												search_subvolumes
-												break
-											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Drive und $lv_Suvol_Name mit Werten belegen.')
-												msgbox "$gv_Info" "$MSG"
-												subvol_create_menu "$gv_Auswahl"
-											fi
-											## }}}
-											;;
-										*)
-											break
-											;;
-									esac
-								done
-							else
-								no_btrfs_dev_msg
-							fi
+							# Subvolume erstellen# {{{
+							autoload -U kwbtrfs_subvolumes_create
+							kwbtrfs_subvolumes_create
 							## }}}
 							subvolumes_menu "$gv_Create"
 							;;
 						$gv_Delete)
 							# Subvolumes loeschen# {{{
-							search_subvolumes
-							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-								subvol_checklist
-								while [ -n ${gv_Auswahl_Display[1]} ] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help subvolumes_help
-											subvol_checklist "${gv_Auswahl#HELP }"
-											;;
-										/*)
-											# ausgewaehlte Subvolumes loeschen# {{{
-											# Auswahl sicher
-											SUBVOL_DEVS="$gv_Auswahl"
-											# Frage, ob die asgewaehlten Subvolumes wirklich
-											# geloescht werden sollen.
-											DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
-${=SUBVOL_DEVS// /\\n}geloescht werden?')
-											yesno "$lv_Subvolumes" "$DEL_MSG" no
-											#
-											if [[ $gv_Auswahl == yes ]] ; then
-												MSG=$(gettext 'Loesche $lv_Subvolumes')
-												btrfs subvolume delete -C ${=SUBVOL_DEVS} | \
-													progressbox "$lv_Subvolumes" "$MSG" || \
-													prog_failure
-												search_subvolumes
-											fi
-											## }}}
-											subvol_checklist
-											;;
-										*)
-											# zurueck
-											break
-									esac
-								done
-							else
-								no_subvolume_msg
-							fi
+							autoload -U kwbtrfs_subvolumes_delete
+							kwbtrfs_subvolumes_delete
 							## }}}
 							subvolumes_menu "$gv_Delete"
 							;;
 						$lv_Snapshot)
-							# Snapshots von Subvolumes erstellen# {{{
-							search_subvolumes
-							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-								subvol_snapshot_menu
-								while [[ -n $gv_Auswahl ]] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help subvolumes_snapshot_help
-											subvol_snapshot_menu "${gv_Auswahl#HELP }"
-											;;
-										$lv_Subvolume)
-											# ausgewaehlte Subvolume auswaehlen# {{{
-											subvol_snapshot_choice_menu
-											while [ "$gv_Auswahl" ] ; do
-												case $gv_Auswahl in
-													HELP*)
-														script_help subvolumes_snapshot_help
-														subvol_snapshot_choice_menu "${gv_Auswahl#HELP }"
-														;;
-													/*)
-														# Auswahl uebernehmen
-														SUBVOLUME="$gv_Auswahl"
-														break
-														;;
-													*)
-														break
-														;;
-												esac
-											done
-											## }}}
-											subvol_snapshot_menu $lv_Subvolume
-											;;
-										$lv_Name)
-											# Snapshot Name eingeben# {{{
-											MSG=$(gettext 'Geben Sie einen Namen fuer den lv_Snapshot ein.')
-											if [[ ! -n $NAME ]] && [[ -n $SUBVOLUME ]] ; then
-												DATE=$(date -u +%Y-%m-%d)
-												NAME="${SUBVOLUME}-${DATE}"
-											fi
-											inputbox "${lv_Subvolumes}::${lv_Snapshot}::${lv_Name}" "$MSG" "$NAME"
-											if [[ -n $gv_Auswahl ]] ; then
-												NAME="$gv_Auswahl"
-											else
-												unset -- NAME
-											fi
-											## }}}
-											subvol_snapshot_menu $lv_Name
-											;;
-										$gv_Create)
-											# Snapshot erstellen# {{{
-											if [[ -n $SUBVOLUME ]] && [[ -n $NAME ]] ; then
-												MSG=(gettext 'erzeuge $lv_Snapshot.')
-												btrfs subvolume snapshot $SUBVOLUME "$NAME" | \
-													progressbox "$lv_Snapshot" "$MSG" || \
-													prog_failure
-												break
-											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Subvolume und $lv_Name mit Werten belegen.')
-												msgbox "$gv_Info" "$MSG"
-												subvol_snapshot_menu
-											fi
-											## }}}
-											;;
-										*)
-											# zurueck
-											break
-											;;
-									esac
-								done
-							else
-								no_subvolume_msg
-							fi
+							# Snapshot eines Subvolume erstellen.# {{{
+							autoload -U kwbtrfs_subvolumes_snapshot
+							kwbtrfs_subvolumes_snapshot
 							## }}}
 							subvolumes_menu "$lv_Snapshot"
 							;;
 						$lv_Findnew)
-							# Anzeige von neu erstellten Dateien# {{{
-							search_subvolumes
-							if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-								subvol_findnew_menu
-								while [[ -n ${gv_Auswahl[1]} ]] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help subvolumes_findnew_help
-											subvol_findnew_menu "${gv_Auswahl#HELP }"
-											;;
-										$lv_Subvolume)
-											# ausgewaehlte Subvolume auswaehlen# {{{
-											subvol_snapshot_choice_menu
-											while [[ -n $gv_Auswahl ]] ; do
-												case $gv_Auswahl in
-													HELP*)
-														script_help subvolumes_findnew_help
-														subvol_snapshot_choice_menu "${gv_Auswahl#HELP }"
-														;;
-													/*)
-														# Auswahl uebernehmen
-														SUBVOLUME="$gv_Auswahl"
-														###################
-														# back verifice benutzen?
-														GENNR=$(btrfs subvolume show $SUBVOLUME | \
-														   	awk -F ' ' /Generation/'{print $2}')
-														break
-														;;
-													*)
-														break
-														;;
-												esac
-											done
-											## }}}
-											subvol_findnew_menu $lv_Name
-											;;
-										$lv_Metanr)
-											# Metainformationsnummer eingeben# {{{
-											MSG=$(gettext 'Geben Sie eine Nummer <=${GENNR}, ab der ein Suchvorgang beginnen soll um den Zustand von Dateien anzuzeigen, ein.')
-											number_input "${lv_Subvolumes}::${lv_Findnew}::${lv_Metanr}" "$MSG" "${METANR:-$GENNR}"
-											if [[ -n $NUMBER ]] ; then
-												METANR="$NUMBER"
-											else
-												unset -- METANR
-											fi
-											## }}}
-											subvol_findnew_menu $lv_Name
-											;;
-										$gv_Display)
-											# Anzeige# {{{
-											if [[ -n $SUBVOLUME ]] && [[ -n $METANR ]] ; then
-												btrfs subvolume find-new $SUBVOLUME $METANR > ${gv_WorkDir}/find-new
-												if [[ `wc -l < ${gv_WorkDir}/find-new` -gt 1 ]] ; then
-													view_file ${gv_WorkDir}/find-new
-												else
-													MSG=$(gettext 'Es sind keine neuen Dateien vorhanden.')
-													msgbox "$gv_Info" "$MSG"
-												fi
-											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Subvolume und $lv_Metanr mit Werten belegen.')
-												msgbox "$gv_Info" "$MSG"
-											fi
-											## }}}
-											subvol_findnew_menu
-											;;
-										*)
-											break
-											;;
-									esac
-								done
-							else
-								no_subvolume_msg
-							fi
+							# Anzeige vom Zustand der Dateien# {{{
+							autoload -U kwbtrfs_subvolumes_findnew
+							kwbtrfs_subvolumes_findnew
 							## }}}
 							subvolumes_menu "$lv_Findnew"
 							;;
