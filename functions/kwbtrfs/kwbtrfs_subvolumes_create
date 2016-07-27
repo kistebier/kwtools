@@ -1,0 +1,98 @@
+# Funktion (kwbtrfs_subvolumes_create), Subvolumes erstellen# {{{
+#
+# usage: kwbtrfs_subvolumes_create
+#
+kwbtrfs_subvolumes_create() {
+	unset -- SUBVOL_NAME
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		# Variable
+		lv_Suvol_Name=$(gettext 'Subvolumename')
+		# vorhandene  Subvolumes finden
+		search_subvolumes
+		# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
+		#
+		subvol_create_menu() {
+			MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
+			$gv_Create \"\" $gv_Back \"\")
+			menubox "$1" "${lv_Subvolumes}::${gv_Create}" "$gv_Menupoint" "$MENU"
+		}
+		## }}}
+		subvol_create_menu
+		while [ "$gv_Auswahl_Display" ] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help subvolumes_create_help
+					subvol_create_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Drive)
+					# btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+								script_help subvolumes_create_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }"
+								;;
+							/*)
+								# Auswahl uebernehmen
+								DRIVE="$gv_Auswahl"
+								break
+								;;
+							*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					subvol_create_menu "$lv_Drive"
+					;;
+				$lv_Suvol_Name)
+					# Snapshot Name eingeben# {{{
+					SUBVOL_NAME_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Suvol_Name}"
+					MSG=$(gettext 'Geben Sie einen Namen fuer das $lv_Subvolume ein.')
+					inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
+					while [ -n "$gv_Auswahl" ] ; do
+						# Pruefen, ob es das Subvolume schon gibt.
+						Tmp="`print ${(M)${SUBVOL_DEV##*/}##*${gv_Auswahl}}`"
+						if [[ ! -n $Tmp ]] ; then
+							SUBVOL_NAME="$gv_Auswahl"
+							break
+						else
+							IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein.')
+							msgbox "$gv_Info" "$IS_MSG"
+							inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
+						fi
+					done
+					## }}}
+					subvol_create_menu "$lv_Suvol_Name"
+					;;
+				$gv_Create)
+					# Subvolume erstellen# {{{
+					if [[ -n $DRIVE ]] && [[ -n $SUBVOL_NAME ]] ; then
+						MSG=$(gettext 'erzeuge $lv_Subvolume $SUBVOL_NAME')
+						btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" | \
+						progressbox "$lv_Subvolumes" "$MSG" || prog_failure|| prog_failure
+						search_subvolumes
+						break
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Drive und $lv_Suvol_Name mit Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+						subvol_create_menu "$gv_Auswahl"
+					fi
+					## }}}
+					;;
+				*)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}

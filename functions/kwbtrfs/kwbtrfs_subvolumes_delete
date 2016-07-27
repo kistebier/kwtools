@@ -1,0 +1,48 @@
+#Funktion (kwbtrfs_subvolumes_delete), Subvolumes loeschen# {{{
+#
+# usage: kwbtrfs_subvolumes_delete
+#
+kwbtrfs_subvolumes_delete() {
+	search_subvolumes
+	if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+		subvol_checklist
+		while [ -n ${gv_Auswahl[1]} ] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help subvolumes_help
+					subvol_checklist "${gv_Auswahl#HELP }"
+					;;
+				/*)
+					# ausgewaehlte Subvolumes loeschen# {{{
+					# Auswahl sicher
+					SUBVOL_DEVS="$gv_Auswahl"
+					# Frage, ob die ausgewaehlten Subvolumes wirklich
+					# geloescht werden sollen.
+					DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
+${=SUBVOL_DEVS// /\\n}geloescht werden ($gv_Yes/$gv_No)?')
+					yesno "$lv_Subvolumes" "$DEL_MSG" no
+					#
+					if [[ $gv_Auswahl == yes ]] ; then
+						MSG=$(gettext 'Loesche $lv_Subvolumes')
+						btrfs subvolume delete -C ${=SUBVOL_DEVS} | \
+							progressbox "$lv_Subvolumes" "$MSG" || \
+							prog_failure
+						search_subvolumes
+					fi
+					## }}}
+					subvol_checklist
+					;;
+				*)
+					# zurueck
+					break
+			esac
+		done
+	else
+		no_subvolume_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
