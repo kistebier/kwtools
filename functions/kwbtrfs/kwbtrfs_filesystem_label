@@ -1,0 +1,92 @@
+# Funktion (kwbtrfs_filesystem_label), Label aendern.# {{{
+#
+# usage: kwbtrfs_filesystem_label
+#
+kwbtrfs_filesystem_label() {
+	# Variablen# {{{
+	lv_Btrfs_Drive=$(gettext 'btrfs Laufwerk')
+	lv_Newlabel=$(gettext 'neues Label')
+	NEWLABEL_TITLE="${lv_Filesystem}::${lv_Newlabel}"
+	## }}}
+	# Funktion (btrfs_drive_choice_menu), btrfs Laufwerk auswaehlen# {{{
+	btrfs_drive_choice_menu() {
+		BTRFS_MENU=($BTRFS_DEV_E $gv_Back \"\")
+		BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
+		menubox "$1" "$NEWLABEL_TITLE" "$BTRFS_MSG" "$BTRFS_MENU"
+	}
+	## }}}
+	# Funktion (btrfs_filesystem_label_menu), Label aendern# {{{
+	btrfs_filesystem_label_menu() {
+		BTRFS_LABEL_MENU=(\"$lv_Btrfs_Drive\" \"$BTRFS_DRIVE\"
+		\"$lv_Newlabel\" \"$NEWLABEL\" $gv_Create \"\" $gv_Back \"\")
+		menubox "$1" "$NEWLABEL_TITLE" "$gv_Menupoint" "$BTRFS_LABEL_MENU"
+	}
+	## }}}
+	#
+	btrfs_filesystem_label_menu
+	while [[ -n $gv_Auswahl ]] ; do
+		case $gv_Auswahl in
+			HELP*)
+				script_help filesystem_label_help
+				btrfs_filesystem_label_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Btrfs_Drive)
+				# btrfs Laufwerk auswaehlen# {{{
+				btrfs_drive_choice_menu
+				while [[ -n $gv_Auswahl ]] ; do
+					case $gv_Auswahl in
+						HELP*)
+							script_help filesystem_label_help
+							btrfs_drive_choice_menu "${gv_Auswahl#HELP }"
+							;;
+						/*)
+							BTRFS_DRIVE="$gv_Auswahl"
+							# Ueber den Index das dazugehoerige Label
+							# herausbekommen.
+							Index=$BTRFS_DEV[(i)$BTRFS_DRIVE]
+							OLDLABEL="${BTRFS_LABEL_DEV[Index]}"
+							break
+							;;
+						*)
+							break
+							;;
+					esac
+				done
+				## }}}
+				btrfs_filesystem_label_menu "$lv_Btrfs_Drive"
+				;;
+			$lv_Newlabel)
+				# einstellen des Label# {{{
+				MSG=$(gettext 'Geben Sie einen neuen eindeutigen Namen fuer das Laufwerk ein.')
+				inputbox "$NEWLABEL_TITLE" "$MSG" "${NEWLABEL:-$OLDLABEL}"
+				if [[ -n $gv_Auswahl ]] ; then
+					NEWLABEL="$gv_Auswahl"
+				else
+					unset -- NEWLABEL
+				fi
+				## }}}
+				btrfs_filesystem_label_menu "$lv_Newlabel"
+				;;
+			$gv_Create)
+				# Label aendern# {{{
+				if [[ -n $BTRFS_DRIVE ]] && [[ -n $NEWLABEL ]] ; then
+					btrfs filesystem label $lv_Btrfs_Drive "$NEWLABEL" &>/dev/null
+				else
+					MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Btrfs_Drive und $lv_Newlabel mit Werten belegen.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+				## }}}
+				btrfs_filesystem_label_menu
+				;;
+			*)
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
