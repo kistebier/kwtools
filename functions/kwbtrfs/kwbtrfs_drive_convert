@@ -46,7 +46,7 @@ kwbtrfs_drive_convert() {
 			# Metadaten vom original Daeisystem loeschen
 			btrfs subvolume delete ${gv_WorkDir}/mnt/ext2_saved &>/dev/null
 			# Dateisystem defragmentieren
-			btrfs filesystem defrag -v -r -f -t 32M ${gv_WorkDir}/mnt | \
+			btrfs filesystem defrag -v  -c ${COMPRESS:-zlib} -r -f -t 32M ${gv_WorkDir}/mnt | \
 				progressbox "$CONVERT_TITLE" "${lv_Defrag}: ${CONVERT_DEV}..."
 			# Metadaten Block Gruppen abgleichen
 			btrfs balance start -v -m ${gv_WorkDir}/mnt | \
