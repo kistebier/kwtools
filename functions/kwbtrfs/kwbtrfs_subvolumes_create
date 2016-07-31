@@ -4,6 +4,8 @@
 #
 kwbtrfs_subvolumes_create() {
 	unset -- SUBVOL_NAME
+	# Pruefen, ob btrfs Laufwerke eingebunden sind und wenn
+	# nicht einbinden und Variblen BTRFS_PATH_? belegen.
 	mount_btrfs_dev_check
 	if [[ -n ${BTRFS_PATH[1]} ]] ; then
 		# Variable
@@ -14,20 +16,20 @@ kwbtrfs_subvolumes_create() {
 		#
 		btrfs_choice_menu() {
 			MENU=($BTRFS_PATH_E $gv_Back \"\")
-			MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Drive aus.')
-			menubox "$1" "${lv_Subvolumes}::${gv_Create}::${lv_Drive}" "$MSG" "$MENU"
+			menubox "$1" "${lv_Subvolumes}::${gv_Create}::${lv_Drive}" "$BTRFS_MSG" "$MENU"
 		}
 		## }}}
 		# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
 		#
 		subvol_create_menu() {
-			MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
+			CR_MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
+			CR_TITLE="${lv_Subvolumes}::${gv_Create}"
 			$gv_Create \"\" $gv_Back \"\")
-			menubox "$1" "${lv_Subvolumes}::${gv_Create}" "$gv_Menupoint" "$MENU"
+			menubox "$1" "$CR_TITLE" "$gv_Menupoint" "$CR_MENU"
 		}
 		## }}}
 		subvol_create_menu
-		while [ "$gv_Auswahl_Display" ] ; do
+		while [[ -n $gv_Auswahl ]] ; do
 			case $gv_Auswahl in
 				HELP*)
 					script_help subvolumes_create_help
@@ -67,7 +69,7 @@ kwbtrfs_subvolumes_create() {
 							SUBVOL_NAME="$gv_Auswahl"
 							break
 						else
-							IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein.')
+							IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
 							msgbox "$gv_Info" "$IS_MSG"
 							inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
 						fi
@@ -80,7 +82,7 @@ kwbtrfs_subvolumes_create() {
 					if [[ -n $DRIVE ]] && [[ -n $SUBVOL_NAME ]] ; then
 						MSG=$(gettext 'erzeuge $lv_Subvolume $SUBVOL_NAME')
 						btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" | \
-						progressbox "$lv_Subvolumes" "$MSG" || prog_failure|| prog_failure
+						progressbox "$lv_Subvolumes" "$MSG" || prog_failure
 						search_subvolumes
 						break
 					else
