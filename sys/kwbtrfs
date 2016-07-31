@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 28.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 31.07.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -60,12 +60,14 @@ root_check
 # autoload -U ...
 
 # Variablen
+lv_Btrfs_Drive=$(gettext 'btrfs Laufwerk')
 lv_Balance=$(gettext 'Metadatenabgleich')
 lv_Defrag=$(gettext 'Defragmentierung')
 lv_Filesystem=$(gettext 'Dateisystem')
 lv_Subvolumes=$(gettext 'Subvolumes')
 lv_Drive=$(gettext 'Laufwerk')
 lv_Devices=$(gettext 'Laufwerke')
+BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
 #
 CONF="/etc/kwtools/kwbtrfs.cf"
 
@@ -76,10 +78,16 @@ read_file -f $CONF
 #
 main_menu() {
     MAIN_MENU=($gv_Configuration \"\" $lv_Filesystem \"\" $lv_Subvolumes \"\"
-		$lv_Devices \"\" $gv_Exit \"\")
+		$lv_Devices \"\" $lv_Balance \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
+	# Funktion (btrfs_drive_choice_menu), btrfs Laufwerk auswaehlen# {{{
+	btrfs_drive_choice_menu() {
+		BTRFS_MENU=($BTRFS_DEV_E $gv_Back \"\")
+		menubox "$1" "$lv_Drive" "$BTRFS_MSG" "$BTRFS_MENU"
+	}
+	## }}}
 # Funktion (search_btrfs_filesystem), sucht nach Devices mit btrfs Dateisystem# {{{
 #
 # usage: search_btrfs_filesystem
@@ -580,12 +588,14 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Subvolume=$(gettext 'Subvolume')
 			lv_Snapshot=$(gettext 'Snapshot')
 			lv_Findnew=$(gettext 'Zustand Dateien')
+			lv_DefaultId=$(gettext 'Subvolume IDs')
 			## }}}
 			# Funktion (subvolumes_menu)# {{{
 			#
 			subvolumes_menu() {
 				MENU=($gv_Display \"\" $gv_Create \"\" $gv_Delete \"\"
-				$lv_Snapshot \"\" \"$lv_Findnew\" \"\" $gv_Back \"\")
+				$lv_Snapshot \"\" \"$lv_Findnew\" \"\" \"$lv_DefaultId\" \"\"
+				$gv_Back \"\")
 				menubox "$1" "$lv_Subvolumes" "$gv_Menupoint" "$MENU"
 			}
 			## }}}
@@ -599,7 +609,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Funktion (search_subvolumes), suche nach Subvolumes# {{{
 			#
 			search_subvolumes() {
-				unset -- SUBVOL_DEV SUBVOL_DEV_E SUBVOL_DEV_M
+				unset -- SUBVOL_DEV SUBVOL_DEV_E SUBVOL_DEV_M SUBVOL_ID SUBVOL_MOUNT_DEVS
 				for i in ${=BTRFS_DEV} ; {
 					mount_check -c $i
 					if [[ $MOUNT == no ]] ; then
@@ -622,7 +632,7 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			list_subvolumes() {
 				if [[ -s ${gv_WorkDir}/subvolumes ]] ; then
-					for s in ${(R)${(M)${(o)$(awk -F ' ' '{print $5}' ${gv_WorkDir}/subvolumes)}##[a-zA-Z0-9]*}##uuid} ; {
+					while read id gen tl uuid s ; do
 						# suche nach subvol=/subvolumename
 						Tmp="`print ${${(s: :)${(M)${(f)"$(mount)"}##*subvol=/${s}*}}[3]}`"
 						
@@ -635,13 +645,15 @@ while [ "$gv_Auswahl" ] ; do
 								SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
 								SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
 								SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
+								SUBVOL_ID+=($id)
 							fi
 						else
 							SUBVOL_DEV+=($Tmp)
 							SUBVOL_DEV_E+=($Tmp \"\")
 							SUBVOL_DEV_M+=($Tmp \"\" off)
+							SUBVOL_ID+=($id)
 						fi
-					}
+					done < ${gv_WorkDir}/subvolumes
 				else
 					no_subvolume_msg
 				fi
@@ -708,6 +720,13 @@ while [ "$gv_Auswahl" ] ; do
 							kwbtrfs_subvolumes_findnew
 							## }}}
 							subvolumes_menu "$lv_Findnew"
+							;;
+						$lv_DefaultId)
+							# Ids fuer die Subvolumes setzen.# {{{
+							autoload -U kwbtrfs_subvolumes_id
+							kwbtrfs_subvolumes_id
+							## }}}
+							subvolumes_menu "$lv_DefaultId"
 							;;
 						$gv_Back)
 							# zurueck
@@ -868,7 +887,13 @@ while [ "$gv_Auswahl" ] ; do
 				esac
 			done
 			## }}}
-			main_menu $lv_Raid
+			main_menu $lv_Devices
+			;;
+		$lv_Balance)
+			# Metadatenabgleich# {{{
+			hier_ist_noch_nichts $lv_Balance
+			## }}}
+			main_menu $lv_Balance
 			;;
 		$gv_Exit)	break
 			;;
