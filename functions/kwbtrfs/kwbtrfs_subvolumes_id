@@ -1,0 +1,113 @@
+# Funktion (kwbtrfs_subvolumes_id), Standard ID fuer Subvolumes setzen
+#
+# usage: kwbtrfs_subvolumes_id
+#
+kwbtrfs_subvolumes_id() {
+	##############################################
+	# TODO: btrfs_subvolume und btrfs_dev Auswahl=ja?
+	# mount_btrfs_dev_check?
+	##############################################
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		# vorhandene  Subvolumes finden
+		# Variable# {{{
+		lv_Id=$(gettext 'ID')
+		ID_TITLE="${lv_Subvolume}::${lv_DefaultId}"
+		## }}}
+		# Funktion (subvol_id_menu), Menue fuer das einstallen der IDs# {{{
+		subvol_id_menu() {
+			ID_MENU=($lv_Drive \"$DRIVE\" $lv_Id \"$ID\"
+			$gv_Create \"\" $gv_Back \"\")
+			menubox "$1" "$ID_TITLE" "$gv_Menupoint" "$ID_MENU"
+		}
+		## }}}
+		# Funktion (btrfs_id_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
+		#
+		btrfs_id_choice_menu() {
+			SV_ID_MENU=($BTRFS_PATH_E $SUBVOL_DEV_E $gv_Back \"\")
+			BTRFS_SV_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive oder $lv_Subvolume aus.')
+			menubox "$1" "$ID_TITLE" "$BTRFS_SV_MSG" "$SV_ID_MENU"
+		}
+		## }}}
+		search_subvolumes
+		subvol_id_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help subvolumes_id_help
+					subvol_id_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Drive)
+					# btrfs Laufwerk auswaehlen# {{{
+					#
+					btrfs_id_choice_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+								script_help subvolumes_id_help
+								btrfs_id_choice_menu "${gv_Auswahl#HELP }"
+								;;
+							/*)
+								# btrfs Laufwerks Auswahl uebernehmen
+								DRIVE="$gv_Auswahl"
+								break
+								;;
+							*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					subvol_id_menu "$lv_Drive"
+					;;
+				$lv_Id)
+					# ID Numer eingeben# {{{
+					MSG=$(gettext 'Geben Sie eine ID fuer das $lv_Drive $DRIVE ein.\n\nDie ID 5 ist ein fester Alias fuer das root Dateisystem. Lesen Sie bitte die Hilfe davor.\n')
+					number_input "$ID_TITLE" "$MSG" "$ID"
+					while [[ -n $NUMBER ]] ; do
+						# Pruefen, ob es das Subvolume schon gibt.
+						Tmp="`print ${(M)${SUBVOL_ID}##*${NUMBER}}`"
+						if [[ ! -n $Tmp ]] ; then
+							ID="$NUMBER"
+							break
+						else
+							ID_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
+							msgbox "$gv_Info" "$ID_MSG"
+							number_input "$ID_TITLE" "$MSG" "$ID"
+						fi
+					done
+					## }}}
+					subvol_id_menu "$lv_Id"
+					;;
+				$gv_Create)
+					# Subvolume ID einstellen# {{{
+					if [[ -n $DRIVE ]] && [[ -n $ID ]] ; then
+						MSG=$(gettext 'Soll das Laufwerk wirklich diese ID ($ID) bekommen (gv_Yes/gv_No)?\n\nBei $gv_Yes wird die Struktur des Laufwerks geaendert.')
+						yesno "$ID_TITLE" "$MSG" no
+						if [[ $gv_Auswahl == yes ]] ; then
+							btrfs subvolume set-default $ID "$DRIVE" || prog_failure
+							# neu einlesen
+							search_subvolumes
+						fi
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Drive und $lv_Id mit Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					subvol_id_menu
+					;;
+				*)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
