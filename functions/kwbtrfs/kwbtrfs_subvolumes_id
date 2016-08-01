@@ -17,7 +17,7 @@ kwbtrfs_subvolumes_id() {
 		# Funktion (subvol_id_menu), Menue fuer das einstallen der IDs# {{{
 		subvol_id_menu() {
 			ID_MENU=($lv_Drive \"$DRIVE\" $lv_Id \"$ID\"
-			$gv_Create \"\" $gv_Back \"\")
+			$gv_Change \"\" $gv_Back \"\")
 			menubox "$1" "$ID_TITLE" "$gv_Menupoint" "$ID_MENU"
 		}
 		## }}}
@@ -38,8 +38,7 @@ kwbtrfs_subvolumes_id() {
 					subvol_id_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Drive)
-					# btrfs Laufwerk auswaehlen# {{{
-					#
+					# Laufwerk/Subvolume auswaehlen# {{{
 					btrfs_id_choice_menu
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
@@ -48,7 +47,7 @@ kwbtrfs_subvolumes_id() {
 								btrfs_id_choice_menu "${gv_Auswahl#HELP }"
 								;;
 							/*)
-								# btrfs Laufwerks Auswahl uebernehmen
+								# Laufwerk/Subvolume uebernehmen
 								DRIVE="$gv_Auswahl"
 								break
 								;;
@@ -79,7 +78,7 @@ kwbtrfs_subvolumes_id() {
 					## }}}
 					subvol_id_menu "$lv_Id"
 					;;
-				$gv_Create)
+				$gv_Change)
 					# Subvolume ID einstellen# {{{
 					if [[ -n $DRIVE ]] && [[ -n $ID ]] ; then
 						MSG=$(gettext 'Soll das Laufwerk wirklich diese ID ($ID) bekommen (gv_Yes/gv_No)?\n\nBei $gv_Yes wird die Struktur des Laufwerks geaendert.')
