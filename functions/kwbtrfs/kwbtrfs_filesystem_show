@@ -1,0 +1,39 @@
+#Funktion (kwbtrfs_filesystem_show), Ansicht ueber die btrfs Laufwerke# {{{
+#
+# usage kwbtrfs_filesystem_show
+#
+kwbtrfs_filesystem_show() {
+	mount_btrfs_dev_check
+	btrfs_dev_checklist "$lv_Filesystem"
+	while [[ $gv_Auswahl_Display ]] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfe
+				script_help filesystem_help
+				btrfs_dev_checklist "${lv_Filesystem}::${gv_Display}" "${gv_Auswahl#HELP }"
+				;;
+			/*)
+				# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
+				rm -rf ${gv_WorkDir}/btrfs_show &>/dev/null
+				for i in ${=gv_Auswahl} ; {
+					echo "$i" >>${gv_WorkDir}/btrfs_show
+					echo "--------------------------------" >>${gv_WorkDir}/btrfs_show
+					btrfs filesystem show $i  >>${gv_WorkDir}/btrfs_show
+				}
+				view_file ${gv_WorkDir}/btrfs_show
+				## }}}
+				btrfs_dev_checklist "${lv_Filesystem}::${gv_Display}" "${gv_Auswahl[1]}"
+				;;
+			*)
+				# zurueck
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
