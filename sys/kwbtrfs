@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 31.07.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 02.08.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -397,147 +397,29 @@ while [ "$gv_Auswahl" ] ; do
 							;;
 						$gv_Display)
 							# Ansicht ueber die btrfs Laufwerke# {{{
-							mount_btrfs_dev_check
-							btrfs_dev_checklist "$lv_Filesystem"
-							while [[ $gv_Auswahl_Display ]] ; do
-								case $gv_Auswahl in
-									HELP*)
-										# Hilfe
-										script_help filesystem_help
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
-										;;
-									/*)
-										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
-										rm -rf ${gv_WorkDir}/btrfs_show &>/dev/null
-										for i in ${=gv_Auswahl} ; {
-											echo "$i" >>${gv_WorkDir}/btrfs_show
-											echo "--------------------------------" >>${gv_WorkDir}/btrfs_show
-											btrfs filesystem show $i  >>${gv_WorkDir}/btrfs_show
-										}
-										view_file ${gv_WorkDir}/btrfs_show
-										## }}}
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
-										;;
-									*)
-										# zurueck
-										break
-										;;
-								esac
-							done
+							autoload -U kwbtrfs_filesystem_show
+							kwbtrfs_filesystem_show
 							## }}}
 							filesystem_menu $gv_Display
 							;;
 						$lv_Detail)
-							# Ansicht ueber die btrfs Laufwerke# {{{
-							mount_btrfs_dev_check
-							btrfs_dev_checklist "$lv_Filesystem"
-							while [[ $gv_Auswahl_Display ]] ; do
-								case $gv_Auswahl in
-									HELP*)
-										# Hilfe
-										script_help filesystem_help
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
-										;;
-									/*)
-										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
-										rm -rf ${gv_WorkDir}/btrfs_usage &>/dev/null
-										for i in ${=gv_Auswahl} ; {
-											echo "$i" >>${gv_WorkDir}/btrfs_usage
-											echo "--------------------------------" >>${gv_WorkDir}/btrfs_usage
-											btrfs filesystem usage $i -h -T >>${gv_WorkDir}/btrfs_usage
-										}
-										view_file ${gv_WorkDir}/btrfs_usage
-										## }}}
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
-										;;
-									*)
-										# zurueck
-										break
-										;;
-								esac
-							done
+							# detailierte Ansicht ueber die btrfs Laufwerke# {{{
+							autoload -U kwbtrfs_filesystem_usage
+							kwbtrfs_filesystem_usage
 							## }}}
 							filesystem_menu $gv_Detail
 							;;
 						$lv_Df)
 							# Ansicht ueber die belegten Bloecke von btrfs Laufwerken# {{{
-							mount_btrfs_dev_check
-							btrfs_dev_checklist "$lv_Filesystem"
-							while [[ ${gv_Auswahl_Display[1]} ]] ; do
-								case $gv_Auswahl in
-									HELP*)
-										# Hilfe
-										script_help filesystem_help
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
-										;;
-									/*)
-										# Information ueber die ausgewaehlten Laufwerke anzeigen# {{{
-										rm -rf ${gv_WorkDir}/btrfs_df &>/dev/null
-										for i in ${=gv_Auswahl} ; {
-											echo "$i" >>${gv_WorkDir}/btrfs_df
-											echo "--------------------------------" >>${gv_WorkDir}/btrfs_df
-											btrfs filesystem df -h $i >>${gv_WorkDir}/btrfs_df
-										}
-										view_file ${gv_WorkDir}/btrfs_df
-										## }}}
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
-										;;
-									*)
-										# zurueck
-										break
-										;;
-								esac
-							done
+							autoload -U kwbtrfs_filesystem_df
+							kwbtrfs_filesystem_df
 							## }}}
 							filesystem_menu $lv_Df
 							;;
 						$lv_Defrag)
-							# Defragmentierung von btrfs Laufwerken# {{{
-							mount_btrfs_dev_check
-							btrfs_dev_checklist "$lv_Filesystem"
-							while [[ ${gv_Auswahl_Display[1]} ]] ; do
-								case $gv_Auswahl in
-									HELP*)
-										# Hilfe
-										script_help filesystem_help
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl#HELP }"
-										;;
-									/*)
-										# Defragmentierung der ausgewaehlten Laufwerke anzeigen# {{{
-										# Mit Kompression oder ohne.
-										if [[ -n $COMPRESS ]] ; then
-											Compress="-c${COMPRESS}"
-										else
-											unset -- Compresos
-										fi
-										# Funktion (defrag_msg), Anzeige welches Laufwerk# {{{
-										# defragmentiert wird.
-										#
-										defrag_msg() {
-											unset -- Dev
-											if [[ ${#argv} == 1 ]] ; then
-												Dev="$1"
-												MSG=$(gettext 'Defragmentiere das Laufwerk $Dev.')
-											else
-												no_para_msg $0
-											fi
-										}
-										## }}}
-										for i in ${=gv_Auswahl} ; {
-											defrag_msg "$i"
-											btrfs filesystem defragment -v -r -f $i $Compress | \
-												progressbox "$lv_Defrag" "$MSG" || \
-												prog_failure
-										}
-										## }}}
-										btrfs_dev_checklist "$lv_Filesystem" "${gv_Auswahl[1]}"
-										;;
-									*)
-										# zurueck
-										break
-										;;
-								esac
-							done
+							# Defragmentierung eines btrfs Laufwerks# {{{
+							autoload -U kwbtrfs_filesystem_defrag
+							kwbtrfs_filesystem_defrag
 							## }}}
 							filesystem_menu $lv_Defrag
 							;;
