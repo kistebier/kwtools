@@ -1,4 +1,4 @@
-# Funktion (raid_create_conf), Erstellung von verschluesselten und #{{{
+# Funktion (kwbtrfs_raid_create_conf), Erstellung von verschluesselten und #{{{
 # unverschluesselten btrfs RAID Arrays.
 #
 # usage: kwbtrfs_raid_create_conf [-c ]
@@ -13,13 +13,10 @@ kwbtrfs_raid_create_conf() {
 	fi
 	# Variablen# {{{
 	lv_Raid_Level=$(gettext 'RAID Level')
+	lv_Raiddisks=$(gettext 'RAID Laufwerke')
 	unset -- CREATE_OPT
 	# Standard Optionen
 	CREATE_OPT="-f"
-	##################################
-	# HOWTO: raid
-	##################################
-	raid
 	unset -- FEATURES LABEL ROOTDIR RAIDDISKS
 	RAIDLEVEL=raid5
 	## }}}
@@ -28,7 +25,7 @@ kwbtrfs_raid_create_conf() {
 		# Menue fuer die Erstellung von Arrays
 		CREATE_TITLE="${lv_Devices}::${gv_Create}::${lv_Raid}"
 		CREATE_MENU=($lv_Raid_Level \"$RAIDLEVEL\"
-		$lv_Raiddisks \"$RAIDDISKS\" $lv_Options \"\"
+		\"$lv_Raiddisks\" \"$RAIDDISKS\" $lv_Options \"\"
 		$gv_Create \"\" $gv_Back \"\")
 		menubox "$1" "$CREATE_TITLE" "$gv_Menupoint" "$CREATE_MENU"
 	}
@@ -38,7 +35,7 @@ kwbtrfs_raid_create_conf() {
 		case "$gv_Auswahl" in
 			HELP*)
 				# Hilfe
-				script_help raid_create_help
+				script_help device_create_raid_help
 				create_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Raid_Level)
@@ -91,8 +88,13 @@ kwbtrfs_raid_create_conf() {
 				;;
 			$lv_Raiddisks)
 				# Auswahl der Laufwerke# {{{
-				autoload -U kwbtrfs_raiddisk
-				kwbtrfs_raiddisk "$OPT"
+				if [[ -n $RAIDLEVEL ]] ; then
+					autoload -U kwbtrfs_raiddisk
+					kwbtrfs_raiddisk "$OPT"
+				else
+					MSG=$(gettext 'Sie muessen erst ein $lv_Raid_Level auswaehlen.')
+					msgbox "$gv_Info" "$MSG"
+				fi
 				## }}}
 				create_menu $lv_Raiddisks
 				;;
