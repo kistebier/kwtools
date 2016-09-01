@@ -1,11 +1,11 @@
 # Funktion (raid_create_conf), Erstellung von verschluesselten und #{{{
 # unverschluesselten btrfs RAID Arrays.
 #
-# usage: raid_create_conf [-c ]
+# usage: kwbtrfs_raid_create_conf [-c ]
 # -c - encrypted RAID Arrays
 # - - RAID Arrays
 #
-raid_create_conf() {
+kwbtrfs_raid_create_conf() {
 	if [[ $1 == -c ]] ; then
 		OPT=cryptdisks
 	else
@@ -63,20 +63,22 @@ raid_create_conf() {
 							RAIDLEVEL="$gv_Auswahl"
 							#
 							case "$RAIDLEVEL" in
-								dup|raid0|raid1|single)
+								$lv_Single|$lv_Dup)
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 1 sein muss.')
+								raid[01])
 									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid5)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 3 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid6)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 4 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 3 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid10)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Arrays groesser gleich 2 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 4 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 							esac
@@ -89,8 +91,8 @@ raid_create_conf() {
 				;;
 			$lv_Raiddisks)
 				# Auswahl der Laufwerke# {{{
-				autoload -U raiddisk
-				raiddisk "$OPT"
+				autoload -U kwbtrfs_raiddisk
+				kwbtrfs_raiddisk "$OPT"
 				## }}}
 				create_menu $lv_Raiddisks
 				;;

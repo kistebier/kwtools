@@ -1,0 +1,209 @@
+# Funktion für RAID-Partitionen{{{
+#
+# usage: kwbtrfs_raiddisk [ raiddisks | cryptdisks ]
+# raiddisks  - unverschluesselte Laufwerke benutzen
+# cryptdisks - verschluesselte Laufwerke benutzen
+#
+kwbtrfs_raiddisk() {
+	if [[ ${#argv} -eq 1 ]] ; then
+		unset -- RAIDDISKS
+		case "$1" in
+			cryptdisks)
+				# verschluesselte Laufwerke
+				search_devices -c
+				;;
+			raiddisks)
+				# Partitionen
+				search_devices -p
+				;;
+		esac
+		# Funktion (raiddisk_menu)# {{{
+		#
+		raiddisk_menu() {
+			RAIDDISK_MENU=($NO_BTRFS_DEV_M)
+			RAIDDISK_TITLE=(${gv_Create}::${lv_Raiddisks})
+			RAIDDISK_MSG=$(gettext 'Waehlen Sie die Laufwerke fuer ihr RAID Array aus.')
+			checklist "" "$RAIDDISK_TITLE" "$RAIDDISK_MSG" "$RAIDDISK_MENU"
+		}
+		## }}}
+		case "$RAIDLEVEL" in
+			$lv_Single)
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								RAIDDISKS="$gv_Auswahl_Display"
+								break
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+			$lv_Dup)
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								RAIDDISKS="$gv_Auswahl_Display"
+								break
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+			raid[01])
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								PANZ=0
+								for i in ${=gv_Auswahl} ; {
+									(( PANZ++ ))
+								}
+								if [[ $PANZ -ge 2 ]] ; then
+									RAIDDISKS=($gv_Auswahl_Display)
+									break
+								else
+									no_raid_part_anz_msg "2"
+									raiddisk_menu
+								fi
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+			raid5)
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								PANZ=0
+								for i in ${=gv_Auswahl} ; {
+									(( PANZ++ ))
+								}
+								if [[ $PANZ -ge 2 ]] ; then
+									RAIDDISKS=($gv_Auswahl_Display)
+									break
+								else
+									no_raid_part_anz_msg "2"
+									raiddisk_menu
+								fi
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+			raid6)
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								PANZ=0
+								for i in ${=gv_Auswahl} ; {
+									(( PANZ++ ))
+								}
+								if [[ $PANZ -ge 3 ]] ; then
+									RAIDDISKS=($gv_Auswahl_Display)
+									break
+								else
+									no_raid_part_anz_msg "3"
+									raiddisk_menu
+								fi
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+			raid10)
+				# Laufwerksauswahl# {{{
+				if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+					raiddisk_menu
+					while [ "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help device_create_raid_help
+								raiddisk_menu
+								;;
+							*)	#
+								# überprüfen, ob die richtige Festplatten/Partitionsanzahl
+								# angegeben wurde.
+								PANZ=0
+								for i in ${=gv_Auswahl} ; {
+									(( PANZ++ ))
+								}
+								if [[ $PANZ -ge 4 ]] ; then
+									RAIDDISKS=($gv_Auswahl_Display)
+									break
+								else
+									no_raid_part_anz_msg "4"
+									raiddisk_menu
+								fi
+								;;
+						esac
+					done
+				else
+					no_btrfs_dev_msg
+				fi
+				## }}}
+				;;
+		esac
+	else
+		no_para_msg $0
+		return 1
+	fi
+	return 0
+}
+#}}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
