@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 01.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 02.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -310,6 +310,19 @@ umount_dev() {
 no_btrfs_dev_msg() {
 	MSG=$(gettext 'Es sind keine Laufwerke mit dem btrfs Dateisystem vorhanden.')
 	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
+#
+btrfs_choice_menu() {
+	if [[ ${#argv} == 3 ]] ; then
+		MENU=($3 $gv_Back \"\")
+		menubox "$1" "$2" "$BTRFS_MSG" "$MENU"
+	else
+		no_part_msg $0
+		return 1
+	fi
+	return 0
 }
 ## }}}
 
@@ -743,9 +756,10 @@ while [ "$gv_Auswahl" ] ; do
 						device_menu "$lv_Device_Convert"
 						;;
 					$lv_Device_Add)
-						# Festplatte/Partition hinzufuegen
-						#
-						hier_ist_noch_nichts "$lv_Device_Add"
+						# Laufwerk hinzufuegen# {{{
+						autoload -U kwbtrfs_device_add
+						kwbtrfs_device_add
+						## }}}
 						device_menu "$lv_Device_Add"
 						;;
 					$lv_Device_Remove)

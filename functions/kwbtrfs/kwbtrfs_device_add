@@ -1,0 +1,100 @@
+# Funktion (kwbtrfs_device_add), Festplatte/Partition hinzufuegen# {{{
+#
+# usage: kwbtrfs_device_add
+#
+kwbtrfs_device_add() {
+	lv_Is_Drive=$(gettext 'btrfs Laufwerk')
+	ADD_TITLE="${lv_Devices}::${lv_Device_Add}"
+	# Funktion (device_add_menu)# {{{
+	#
+	device_add_menu() {
+		ADD_MENU=(\"$lv_Is_Drive\" \"$IS_DRIVE\" $lv_Drive \"$DRIVE\"
+		$lv_Device_Add \"\" $gv_Back \"\")
+		menubox "$1" "$ADD_TITLE" "$gv_Menupoint" "$ADD_MENU"
+	}
+	## }}}
+	search_btrfs_filesystem
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		device_add_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help device_add_help
+					device_add_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Is_Drive)
+					# bestehendes btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu "" "$ADD_TITLE" "$BTRFS_PATH_E"
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help device_add_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }" "$ADD_TITLE" "$BTRFS_PATH_E"
+								;;
+							/*)
+								IS_DRIVE="$gv_Auswahl"
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					device_add_menu "$lv_Is_Drive"
+					;;
+				$lv_Drive)
+					# Laufwerk auswaehlen das addiert werden soll.# {{{
+					search_devices -a
+					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+						btrfs_choice_menu "" "$ADD_TITLE" "$NO_BTRFS_DEV_E"
+						while [[ -n $gv_Auswahl ]] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+									script_help device_add_help
+									btrfs_choice_menu "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_E"
+									;;
+								/*)
+									DRIVE="$gv_Auswahl"
+									break
+									;;
+								$gv_Back|*)
+									break
+									;;
+							esac
+						done
+					else
+						no_btrfs_dev_msg
+						return 1
+					fi
+					## }}}
+					device_add_menu "$lv_Drive"
+					;;
+				$lv_Device_Add)
+					# Laufwerk addieren# {{{
+					if [[ -n $DRIVE ]] && [[ -n $IS_DRIVE ]] ; then
+						btrfs device add $DRIVE $IS_DRIVE 
+						break
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Is_Drive und $lv_Drive mt Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+						device_add_menu "$lv_Drive"
+					fi
+					## }}}
+					;;
+				$gv_Back|*)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
