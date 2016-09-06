@@ -1,0 +1,136 @@
+# Funktion (kwbtrfs_device_replace), Festplatte/Partition entfernen# {{{
+#
+# usage: kwbtrfs_device_replace
+#
+kwbtrfs_device_replace() {
+	REPLACE_TITLE="${lv_Devices}::${lv_Device_Replace}"
+	# Funktion (device_replace_menu)# {{{
+	#
+	device_replace_menu() {
+		REPLACE_MENU=(\"$lv_Is_Drive\" \"$IS_DRIVE\" $lv_Target_Device \"$TARGET_DRIVE\"
+			$lv_Src_Device \"$SRC_DRIVE\" \"$lv_Device_Replace\" \"\" $gv_Back \"\")
+		menubox "$1" "$REPLACE_TITLE" "$gv_Menupoint" "$REPLACE_MENU"
+	}
+	## }}}
+	search_btrfs_filesystem
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		device_replace_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help device_replace_help
+					device_replace_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Is_Drive)
+					# bestehendes btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu "" "$REPLACE_TITLE" "$BTRFS_PATH_E"
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help device_replace_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }" "$REPLACE_TITLE" "$BTRFS_PATH_E"
+								;;
+							/*)
+								IS_DRIVE="$gv_Auswahl"
+								DEV=${${(ws: :)${(M)${(f)"$(mount)"}##*${IS_DRIVE} *}}[1]}
+								Index=$BTRFS_DEV[(i)$DEV]
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					device_replace_menu "$lv_Is_Drive"
+					;;
+				$lv_Target_Device)
+					# Laufwerk auswaehlen das getauscht werden soll.# {{{
+					if [[ -n $Index ]] ; then
+						MD_DEV_E=(${BTRFS_MD_E[Index]})
+						if [[ -n ${MD_DEV_E[1]} ]] ; then
+							btrfs_choice_menu "" "$REPLACE_TITLE" "$MD_DEV_E"
+							while [[ -n $gv_Auswahl ]] ; do
+								case "$gv_Auswahl" in
+									HELP*)
+										script_help device_replace_help
+										btrfs_choice_menu "${gv_Auswahl#HELP }" "$REPLACE_TITLE" "$MD_DEV_E"
+										;;
+									/*)
+										TARGET_DRIVE="$gv_Auswahl"
+										break
+										;;
+									$gv_Back|*)
+										break
+										;;
+								esac
+							done
+						else
+							no_btrfs_md_dev_msg
+							return 1
+						fi
+					else
+						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					device_replace_menu "$lv_Target_Device"
+					;;
+				$lv_Src_Device)
+					# iQuellllaufwerk auswaehlen das mit dem Ziellaufwerk# {{{
+					#  getauscht werden soll.
+					search_devices -a
+					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
+						btrfs_choice_menu "" "$ADD_TITLE" "$NO_BTRFS_DEV_E"
+						while [[ -n $gv_Auswahl ]] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+									script_help device_replace_help
+									btrfs_choice_menu "${gv_Auswahl#HELP }" "$REPLACE_TITLE" "$NO_BTRFS_DEV_E"
+									;;
+								/*)
+									SRC_DRIVE="$gv_Auswahl"
+									break
+									;;
+								$gv_Back|*)
+									break
+									;;
+							esac
+						done
+					else
+						no_free_btrfs_dev_msg
+						return 1
+					fi
+					## }}}
+					device_add_menu "$lv_Src_Device"
+					;;
+				$lv_Device_Replace)
+					# Laufwerk tauschen# {{{
+					if [[ -n $TARGET_DRIVE ]] && [[ -n $SRC_DRIVE ]] && \
+						[[ -n $IS_DRIVE ]] ; then
+						btrfs-replace "$SRC_DRIVE" "$TARGET_DRIVE" "$IS_DRIVE"
+						break
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\", \"$lv_Target_Device\" und \"$lv_Src_Device\" mit Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+						device_replace_menu "$lv_Is_Drive"
+					fi
+					## }}}
+					;;
+				$gv_Back|*)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}

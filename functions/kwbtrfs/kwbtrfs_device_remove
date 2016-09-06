@@ -1,0 +1,107 @@
+# Funktion (kwbtrfs_device_remove), Festplatte/Partition entfernen# {{{
+#
+# usage: kwbtrfs_device_remove
+#
+kwbtrfs_device_remove() {
+	REMOVE_TITLE="${lv_Devices}::${lv_Device_Remove}"
+	# Funktion (device_remove_menu)# {{{
+	#
+	device_remove_menu() {
+		REMOVE_MENU=(\"$lv_Is_Drive\" \"$IS_DRIVE\" $lv_Devices \"$DRIVE\"
+		\"$lv_Device_Remove\" \"\" $gv_Back \"\")
+		menubox "$1" "$REMOVE_TITLE" "$gv_Menupoint" "$REMOVE_MENU"
+	}
+	## }}}
+	search_btrfs_filesystem
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		device_remove_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					script_help device_remove_help
+					device_remove_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Is_Drive)
+					# bestehendes btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu "" "$REMOVE_TITLE" "$BTRFS_PATH_E"
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help device_remove_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }" "$REMOVE_TITLE" "$BTRFS_PATH_E"
+								;;
+							/*)
+								IS_DRIVE="$gv_Auswahl"
+								DEV=${${(ws: :)${(M)${(f)"$(mount)"}##*${IS_DRIVE} *}}[1]}
+								Index=$BTRFS_DEV[(i)$DEV]
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					device_remove_menu "$lv_Is_Drive"
+					;;
+				$lv_Devices)
+					# Laufwerk auswaehlen das entfernt werden soll.# {{{
+					if [[ -n $Index ]] ; then
+						MD_DEV_M=(${BTRFS_MD_M[Index]})
+						if [[ -n ${MD_DEV_M[1]} ]] ; then
+							btrfs_choice_checklist "" "$REMOVE_TITLE" "$MD_DEV_M"
+							while [[ -n $gv_Auswahl ]] ; do
+								case "$gv_Auswahl" in
+									HELP*)
+										script_help device_remove_help
+										btrfs_choice_checklist "${gv_Auswahl#HELP }" "$REMOVE_TITLE" "$MD_DEV_M"
+										;;
+									/*)
+										DRIVE="$gv_Auswahl_Display"
+										break
+										;;
+									$gv_Back|*)
+										break
+										;;
+								esac
+							done
+						else
+							no_btrfs_md_dev_msg
+							return 1
+						fi
+					else
+						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					device_remove_menu "$lv_Drive"
+					;;
+				$lv_Device_Remove)
+					# Laufwerk entfernen# {{{
+					if [[ -n $DRIVE ]] && [[ -n $IS_DRIVE ]] ; then
+						btrfs device remove ${=DRIVE} "$IS_DRIVE"
+						break
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+						device_remove_menu "$lv_Is_Drive"
+					fi
+					## }}}
+					;;
+				$gv_Back|*)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
