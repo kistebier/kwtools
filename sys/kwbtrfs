@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 02.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -157,7 +157,7 @@ search_btrfs_filesystem() {
 # Funktion (search_devices), sucht Partitionen, RAID Arrays, LVs und Cryptsetup# {{{
 # Laufwerke
 #
-# usage: search_devices [ -a | -c | -p ]
+# usage: search_devices [ -a | -c | -e | -p ]
 # -a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
 # -c - Cryptsetup Laufwerke
 # -e - ext[234] Laufwerke
@@ -172,21 +172,23 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [ -n ${BTRFS_MD[1]} ] ; then
+			if [[ -n ${BTRFS_MD[1]} ]] ; then
 				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+					if [[ -z ${(M)${BTRFS_MD}##$dev} ]] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			else
+			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
 				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
 				}
 			fi
 			;;
@@ -196,21 +198,23 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [ -n ${BTRFS_MD[1]} ] ; then
+			if [[ -n ${BTRFS_MD[1]} ]] ; then
 				for dev in  ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+					if [[ -z ${(M)${BTRFS_MD}##$dev} ]] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			else
+			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
 				for dev in  ${=CRYPT_DEV} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
 				}
 			fi
 			;;
@@ -235,7 +239,7 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [ -n ${BTRFS_MD[1]} ] ; then
+			if [[ -n ${BTRFS_MD[1]} ]] ; then
 				for dev in ${=PART} ; {
 					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
 						check_fs $dev
@@ -244,12 +248,14 @@ search_devices() {
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			else
+			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
 				for dev in ${=PART} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
+						check_fs $dev
+						NO_BTRFS_DEV+=($dev)
+						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
+					fi
 				}
 			fi
 			;;
@@ -312,12 +318,40 @@ no_btrfs_dev_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
+# Funktion (no_free_btrfs_dev_msg), Nachricht das keine freien Laufwerke mit BTRFS vorhanden sind# {{{
+#
+no_free_btrfs_dev_msg() {
+	MSG=$(gettext 'Es sind keine freien btrfs Laufwerke vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_btrfs_md_dev_msg), Nachricht das keine BTRFS Laufwerke,# {{{
+# welche aus mehreren Laufwerken bestehen, vorhanden sind.
+#
+no_btrfs_md_dev_msg() {
+	MSG=$(gettext 'Es sind keine btrfs Laufwerke, welche aus mehreren Laufwerken (z.B RAID) bestehen, vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
 # Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
 #
 btrfs_choice_menu() {
 	if [[ ${#argv} == 3 ]] ; then
 		MENU=($3 $gv_Back \"\")
 		menubox "$1" "$2" "$BTRFS_MSG" "$MENU"
+	else
+		no_part_msg $0
+		return 1
+	fi
+	return 0
+}
+## }}}
+# Funktion (btrfs_choice_checklist), mehrere btrfs Laufwerke zur Auswahl anzeigen# {{{
+#
+btrfs_choice_checklist() {
+	if [[ ${#argv} == 3 ]] ; then
+		MENU=($3)
+		checklist "$1" "$2" "$BTRFS_MSG" "$MENU"
 	else
 		no_part_msg $0
 		return 1
@@ -639,11 +673,14 @@ while [ "$gv_Auswahl" ] ; do
 			# Management fuer multiple Devices, wie z.B. RAID# {{{
 			lv_Options=$(gettext 'Optionen')
 			lv_Raid=$(gettext 'RAID')
+			lv_Is_Drive=$(gettext 'btrfs Laufwerk')
 			lv_Encrypt_Raid=$(gettext 'verschluesseltes RAID')
 			lv_Device_Convert=$(gettext 'Laufwerk konvertieren')
-			lv_Device_Add=$(gettext 'Laufwerk hinzufuegen')
-			lv_Device_Remove=$(gettext 'Laufwerk entfernen')
+			lv_Device_Add=$(gettext 'Laufwerke hinzufuegen')
+			lv_Device_Remove=$(gettext 'Laufwerke entfernen')
 			lv_Device_Replace=$(gettext 'Laufwerk tauschen')
+			lv_Src_Device=$(gettext 'Quelllaufwerk')
+			lv_Target_Device=$(gettext 'Ziellaufwerk')
 			#
 			# Funktion (device_menu)# {{{
 			#
@@ -763,15 +800,17 @@ while [ "$gv_Auswahl" ] ; do
 						device_menu "$lv_Device_Add"
 						;;
 					$lv_Device_Remove)
-						# Festplatte/Partition entfernen
-						#
-						hier_ist_noch_nichts "$lv_Device_Remove"
+						# Festplatte/Partition entfernen# {{{
+						autoload -U kwbtrfs_device_remove
+						kwbtrfs_device_remove
+						## }}}
 						device_menu "$lv_Device_Remove"
 						;;
 					$lv_Device_Replace)
-						# Festplatte/Partition austauschen
-						#
-						hier_ist_noch_nichts "$lv_Device_Replace"
+						# Festplatte/Partition austauschen# {{{
+						autoload -U kwbtrfs_device_replace
+						kwbtrfs_device_replace
+						## }}}
 						device_menu "$lv_Device_Replace"
 						;;
 					$gv_Back)
