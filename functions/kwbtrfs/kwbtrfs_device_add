@@ -3,12 +3,11 @@
 # usage: kwbtrfs_device_add
 #
 kwbtrfs_device_add() {
-	lv_Is_Drive=$(gettext 'btrfs Laufwerk')
 	ADD_TITLE="${lv_Devices}::${lv_Device_Add}"
 	# Funktion (device_add_menu)# {{{
 	#
 	device_add_menu() {
-		ADD_MENU=(\"$lv_Is_Drive\" \"$IS_DRIVE\" $lv_Drive \"$DRIVE\"
+		ADD_MENU=(\"$lv_Is_Drive\" \"$IS_DRIVE\" $lv_Devices \"$DRIVE\"
 		\"$lv_Device_Add\" \"\" $gv_Back \"\")
 		menubox "$1" "$ADD_TITLE" "$gv_Menupoint" "$ADD_MENU"
 	}
@@ -44,19 +43,19 @@ kwbtrfs_device_add() {
 					## }}}
 					device_add_menu "$lv_Is_Drive"
 					;;
-				$lv_Drive)
+				$lv_Devices)
 					# Laufwerk auswaehlen das addiert werden soll.# {{{
 					search_devices -a
 					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
-						btrfs_choice_menu "" "$ADD_TITLE" "$NO_BTRFS_DEV_E"
+						btrfs_choice_checklist "" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 						while [[ -n $gv_Auswahl ]] ; do
 							case "$gv_Auswahl" in
 								HELP*)
 									script_help device_add_help
-									btrfs_choice_menu "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_E"
+									btrfs_choice_checklist "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 									;;
 								/*)
-									DRIVE="$gv_Auswahl"
+									DRIVE="$gv_Auswahl_Display"
 									break
 									;;
 								$gv_Back|*)
@@ -65,21 +64,21 @@ kwbtrfs_device_add() {
 							esac
 						done
 					else
-						no_btrfs_dev_msg
+						no_free_btrfs_dev_msg
 						return 1
 					fi
 					## }}}
 					device_add_menu "$lv_Drive"
 					;;
 				$lv_Device_Add)
-					# Laufwerk addieren# {{{
+					# Laufwerke addieren# {{{
 					if [[ -n $DRIVE ]] && [[ -n $IS_DRIVE ]] ; then
-						btrfs device add $DRIVE $IS_DRIVE 
+						btrfs device add ${=DRIVE} "$IS_DRIVE"
 						break
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Is_Drive und $lv_Drive mt Werten belegen.')
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
-						device_add_menu "$lv_Drive"
+						device_add_menu "$lv_Is_Drive"
 					fi
 					## }}}
 					;;
