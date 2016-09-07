@@ -12,6 +12,23 @@ kwbtrfs_device_add() {
 		menubox "$1" "$ADD_TITLE" "$gv_Menupoint" "$ADD_MENU"
 	}
 	## }}}
+		# Funktion (balance_add_data), Dateisystem Komponeneten zuordnen# {{{
+		# und Daten gleichmaessig verteilen
+		#
+		# usage: balance_add_data
+		#
+		balance_add_data() {
+			# Dateisysteme Komponeneten zuordnen
+			btrfs device scan "$IS_DRIVE" | \
+				progressbox "$ADD_TITLE" "${lv_Scan}: ${IS_DRIVE}..." || \
+				(prog_failure ; return 1)
+			# Metadaten gleichmaessig verteilen
+			btrfs balance start -f -v -d -m -s "$IS_DRIVE" | \
+				progressbox "$ADD_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
+				(prog_failure ; return 1)
+			return 0
+		}
+		## }}}
 	search_btrfs_filesystem
 	mount_btrfs_dev_check
 	if [[ -n ${BTRFS_PATH[1]} ]] ; then
@@ -55,7 +72,15 @@ kwbtrfs_device_add() {
 									btrfs_choice_checklist "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 									;;
 								/*)
-									DRIVE="$gv_Auswahl_Display"
+									# Laufwerke uebernehmen und ausbinden.
+									# Pruefen ob die Laufwerke
+									# eingebunden sind und ausbinden.
+									for i in ${=gv_Auswahl_Display} ; {
+										mount_check -a $i
+										if [[ $U_MOUNT == yes ]] ; then
+											DRIVE+="$i"
+										fi
+									}
 									break
 									;;
 								$gv_Back|*)
@@ -64,7 +89,7 @@ kwbtrfs_device_add() {
 							esac
 						done
 					else
-						no_free_btrfs_dev_msg
+						no_free_dev_msg
 						return 1
 					fi
 					## }}}
@@ -72,8 +97,11 @@ kwbtrfs_device_add() {
 					;;
 				$lv_Device_Add)
 					# Laufwerke addieren# {{{
-					if [[ -n $DRIVE ]] && [[ -n $IS_DRIVE ]] ; then
-						btrfs device add ${=DRIVE} "$IS_DRIVE"
+					if [[ -n ${DRIVE[1]} ]] && [[ -n $IS_DRIVE ]] ; then
+						btrfs device add -f ${=DRIVE} "$IS_DRIVE" || \
+							(prog_failure ; return 1)
+						# Daten gleichmaessig verteilen
+						balance_add_data || return 1
 						break
 					else
 						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
