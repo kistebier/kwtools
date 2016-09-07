@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 06.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 07.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -63,6 +63,7 @@ root_check
 lv_Btrfs_Drive=$(gettext 'btrfs Laufwerk')
 lv_Balance=$(gettext 'Metadatenabgleich')
 lv_Defrag=$(gettext 'Defragmentierung')
+lv_Scan=$(gettext 'scannen')
 lv_Filesystem=$(gettext 'Dateisystem')
 lv_Subvolumes=$(gettext 'Subvolumes')
 lv_Drive=$(gettext 'Laufwerk')
@@ -172,23 +173,21 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [[ -n ${BTRFS_MD[1]} ]] ; then
+			if [ -n "${BTRFS_MD[1]}" ] ; then
 				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					if [[ -z ${(M)${BTRFS_MD}##$dev} ]] ; then
+					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
+			else
 				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 				}
 			fi
 			;;
@@ -198,23 +197,21 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [[ -n ${BTRFS_MD[1]} ]] ; then
+			if [ -n "${BTRFS_MD[1]}" ] ; then
 				for dev in  ${=CRYPT_DEV} ; {
-					if [[ -z ${(M)${BTRFS_MD}##$dev} ]] ; then
+					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
+			else
 				for dev in  ${=CRYPT_DEV} ; {
-					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 				}
 			fi
 			;;
@@ -239,7 +236,7 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [[ -n ${BTRFS_MD[1]} ]] ; then
+			if [ -n "${BTRFS_MD[1]}" ] ; then
 				for dev in ${=PART} ; {
 					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
 						check_fs $dev
@@ -248,14 +245,12 @@ search_devices() {
 						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 					fi
 				}
-			elif [[ -n ${BTRFS_DEV[1]} ]] ; then
+			else
 				for dev in ${=PART} ; {
-					if [[ -z ${(M)${BTRFS_DEV}##$dev} ]] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
+					check_fs $dev
+					NO_BTRFS_DEV+=($dev)
+					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
+					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
 				}
 			fi
 			;;
@@ -318,10 +313,10 @@ no_btrfs_dev_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (no_free_btrfs_dev_msg), Nachricht das keine freien Laufwerke mit BTRFS vorhanden sind# {{{
+# Funktion (no_free_dev_msg), Nachricht das keine freien Laufwerke vorhanden sind# {{{
 #
-no_free_btrfs_dev_msg() {
-	MSG=$(gettext 'Es sind keine freien btrfs Laufwerke vorhanden.')
+no_free_dev_msg() {
+	MSG=$(gettext 'Es sind keine freien Laufwerke vorhanden.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
