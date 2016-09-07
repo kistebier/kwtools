@@ -118,6 +118,8 @@ kwbtrfs_raid_create_conf() {
 						mkfs.btrfs -d $RAIDLEVEL -m $RAIDLEVEL ${=CREATE_OPT} ${=RAIDDISKS} | \
 							progressbox "$CREATE_TITLE" "$CREATE_MSG" || \
 							(prog_failure ; return 1)
+						# Dateisystem Komponenten zuordnen
+						btrfs device scan &>/dev/null
 						return 0
 					fi
 				else
