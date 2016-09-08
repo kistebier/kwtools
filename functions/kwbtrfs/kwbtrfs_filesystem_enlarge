@@ -59,11 +59,15 @@ kwbtrfs_filesystem_enlarge() {
 				$gv_Enlarge)
 					# vergroessern des ausgewaehlten Laufwerk# {{{
 					if [[ -n $DRIVE ]] ; then
-						ENLARGE_MSG="${gv_Enlarge}: ${DRIVE}..."
-						btrfs filesystem resize max "$DRIVE" | \
-							progressbox "$ENLARGE_TITLE" "$ENLARGE_MSG" || \
-							(prog_failure ; return 1)
-						return 0
+#						ENLARGE_MSG="${gv_Enlarge}: ${DRIVE}..."
+#						btrfs filesystem resize max "$DRIVE" | \
+#							progressbox "$ENLARGE_TITLE" "$ENLARGE_MSG" || \
+#							(prog_failure ; return 1)
+						if resize_fs +0 "$DRIVE" ; then
+							return 0
+						else
+							return 1
+						fi
 					else
 						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
 						msgbox "$gv_Info" "$MSG"
