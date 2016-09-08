@@ -1,0 +1,90 @@
+# Funktion (kwbtrfs_filesystem_enlarge), vergeossern von btrfs Laufwerken# {{{
+#
+# usage: kwbtrfs_filesystem_enlarge
+#
+kwbtrfs_filesystem_enlarge() {
+	# alte Variablen loeschen
+	unset -- DRIVE
+	# Variablen
+	lv_Max=$(gettext 'maximale Groessse')
+	DRIVE_MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
+	ENLARGE_TITLE="${lv_Filesystem}::${gv_Enlarge}"
+	# Funktion (btrfs_enlarge_menu)# {{{
+	btrfs_enlarge_menu() {
+		ENLARGE_MENU=(\"$lv_Btrfs_Drive\" \"$DRIVE\" $gv_Enlarge \"\" $gv_Back \"\")
+		menubox "$1" "$ENLARGE_TITLE" "$gv_Menupoint" "$ENLARGE_MENU"
+	}
+	## }}}
+	# Funktion (btrfs_drive_menu)# {{{
+	btrfs_drive_menu() {
+		DRIVE_MENU=($2)
+		btrfs_choice_menu "$1" "$ENLARGE_TITLE" "$DRIVE_MENU"
+	}
+	## }}}
+	# vorhandene Laufwerke mounten
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		btrfs_enlarge_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					# Hilfe
+					script_help filesystem_enlarge_help
+					btrfs_enlarge_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Btrfs_Drive)
+					# Laufwerk auswaehlen# {{{
+					btrfs_drive_menu "" "$BTRFS_PATH_E"
+					while [[-n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								# Hilfe
+								script_help filesystem_enlarge_help
+								btrfs_drive_menu "${gv_Auswahl#HELP }" "$BTRFS_PATH_E"
+								;;
+							/*)
+								# Laufwerk uebernehmen
+								DRIVE="$gv_Auswahl"
+								break
+								;;
+							*)
+								# zurueck
+								break
+								;;
+						esac
+					done
+					## }}}
+					btrfs_enlarge_menu "$lv_Btrfs_Drive"
+					;;
+				$gv_Enlarge)
+					# vergroessern des ausgewaehlten Laufwerk# {{{
+					if [[ -n $DRIVE ]] ; then
+						ENLARGE_MSG="${gv_Enlarge}: ${DRIVE}..."
+						btrfs filesystem resize max "$DRIVE" | \
+							progressbox "$ENLARGE_TITLE" "$ENLARGE_MSG" || \
+							(prog_failure ; return 1)
+						return 0
+					else
+						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
+						msgbox "$gv_Info" "$MSG"
+						btrfs_enlarge_menu "$lv_Btrfs_Drive"
+					fi
+					## }}}
+					;;
+				*)
+					# zurueck
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
