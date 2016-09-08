@@ -1,0 +1,114 @@
+# Funktion (kwbtrfs_filesystem_reduce), vergeossern von btrfs Laufwerken# {{{
+#
+# usage: kwbtrfs_filesystem_reduce
+#
+kwbtrfs_filesystem_reduce() {
+	# alte Variablen loeschen
+	unset -- DRIVE SIZE
+	# Variablen
+	DRIVE_MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
+	REDUCE_TITLE="${lv_Filesystem}::${gv_Reduce}"
+	# Funktion (btrfs_reduce_menu)# {{{
+	btrfs_reduce_menu() {
+		REDUCE_MENU=(\"$lv_Btrfs_Drive\" \"$DRIVE\" $lv_Size \"$SIZE\"
+		$gv_Reduce \"\" $gv_Back \"\")
+		menubox "$1" "$REDUCE_TITLE" "$gv_Menupoint" "$REDUCE_MENU"
+	}
+	## }}}
+	# Funktion (btrfs_drive_menu)# {{{
+	btrfs_drive_menu() {
+		DRIVE_MENU=($2)
+		btrfs_choice_menu "$1" "$REDUCE_TITLE" "$DRIVE_MENU"
+	}
+	## }}}
+	# vorhandene Laufwerke mounten
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		btrfs_reduce_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case $gv_Auswahl in
+				HELP*)
+					# Hilfe
+					script_help filesystem_reduce_help
+					btrfs_reduce_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Btrfs_Drive)
+					# Laufwerk auswaehlen# {{{
+					btrfs_drive_menu "" "$BTRFS_PATH_E"
+					while [[-n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								# Hilfe
+								script_help filesystem_reduce_help
+								btrfs_drive_menu "${gv_Auswahl#HELP }" "$BTRFS_PATH_E"
+								;;
+							/*)
+								# Laufwerk uebernehmen
+								DRIVE="$gv_Auswahl"
+								break
+								;;
+							*)
+								# zurueck
+								break
+								;;
+						esac
+					done
+					## }}}
+					btrfs_reduce_menu "$lv_Btrfs_Drive"
+					;;
+				$lv_Size)
+					# Groesse eingeben# {{{
+					if [[ -n $DRIVE ]] ; then
+						REDUCE_SIZE_MSG=$(gettext 'Geben Sie bitte die Groesse, um die das btrfs Laufwerk verkleinert werden soll, ein (1GiB = 1024 MiB)')
+						number_input -D "$REDUCE_TITLE" "$REDUCE_SIZE_MSG" "$SIZE"
+						if [[ -n $NUMBER ]] ; then
+							# nach MiB umrechnen
+							convert_mib_size ${gv_Auswahl##*[0-9]} ${gv_Auswahl%%[a-zA-Z]}
+							if [[ -n $SIZE_MIB ]] ; then
+								SIZE="$SIZE_MIB:r"
+							fi
+						fi
+					else
+						msgbox "$gv_Info" "$DRIVE_MSG"
+						btrfs_reduce_menu "$lv_Btrfs_Drive"
+					fi
+					## }}}
+					btrfs_reduce_menu "$lv_Size"
+					;;
+				$gv_Reduce)
+					# verkleinern des ausgewaehlten Laufwerk# {{{
+					if [[ -n $DRIVE ]] && [[ -n $SIZE ]] ; then
+#						ENLARGE_MSG="${gv_Reduce}: ${DRIVE}..."
+#						btrfs filesystem resize -${SIZE}M "$DRIVE" | \
+#							progressbox "$REDUCE_TITLE" "$REDUCE_MSG" || \
+#							(prog_failure ; return 1)
+#						return 0
+						if resize_fs -${SIZE} "$DRIVE" ; then
+							return 0
+						else
+							return 1
+						fi
+					else
+						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Btrfs_Drive\" und \"$SIZE\" mit Werten belegen.')
+						msgbox "$gv_Info" "$MSG"
+						btrfs_reduce_menu "$lv_Btrfs_Drive"
+					fi
+					## }}}
+					;;
+				*)
+					# zurueck
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
