@@ -3,6 +3,7 @@
 # usage: kwbtrfs_device_replace
 #
 kwbtrfs_device_replace() {
+	unset -- IS_DRIVE DRIVE SRC_DRIVE TARGET_DRIVE
 	REPLACE_TITLE="${lv_Devices}::${lv_Device_Replace}"
 	# Funktion (device_replace_menu)# {{{
 	#
@@ -19,11 +20,11 @@ kwbtrfs_device_replace() {
 		#
 		balance_add_data() {
 			# Dateisysteme Komponeneten zuordnen
-			btrfs device scan "$IS_DRIVE" | \
-				progressbox "$REPLACE_TITLE" "${lv_Scan}: ${IS_DRIVE}..." || \
+			btrfs device scan --all-devices | \
+				progressbox "$REPLACE_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
 				(prog_failure ; return 1)
-			# Metadaten gleichmaessig verteilen
-			btrfs balance start -f -v -d -m -s "$IS_DRIVE" | \
+			# Daten gleichmaessig verteilen
+			btrfs balance start -f -v "$IS_DRIVE" | \
 				progressbox "$REPLACE_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
 			return 0
@@ -63,7 +64,8 @@ kwbtrfs_device_replace() {
 					device_replace_menu "$lv_Is_Drive"
 					;;
 				$lv_Target_Device)
-					# Laufwerk auswaehlen das getauscht werden soll.# {{{
+					# Laufwerk auswaehlen das mit dem Quelllaufwerk# {{{
+					# getauscht werden soll.
 					if [[ -n $Index ]] ; then
 						MD_DEV_E=(${BTRFS_MD_E[Index]})
 						if [[ -n ${MD_DEV_E[1]} ]] ; then
@@ -95,8 +97,7 @@ kwbtrfs_device_replace() {
 					device_replace_menu "$lv_Target_Device"
 					;;
 				$lv_Src_Device)
-					# Quelllaufwerk auswaehlen das mit dem Ziellaufwerk# {{{
-					#  getauscht werden soll.
+					# Laufwerk auswaehlen das getauscht werden soll.# {{{
 					search_devices -a
 					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
 						btrfs_choice_menu "" "$ADD_TITLE" "$NO_BTRFS_DEV_E"

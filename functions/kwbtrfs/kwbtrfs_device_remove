@@ -3,6 +3,7 @@
 # usage: kwbtrfs_device_remove
 #
 kwbtrfs_device_remove() {
+	unset -- IS_DRIVE DRIVE
 	REMOVE_TITLE="${lv_Devices}::${lv_Device_Remove}"
 	# Funktion (device_remove_menu)# {{{
 	#
@@ -18,7 +19,7 @@ kwbtrfs_device_remove() {
 		#
 		balance_remove_data() {
 			# Daten gleichmaessig verteilen
-			btrfs balance start -f -v -d -m -s "$IS_DRIVE" | \
+			btrfs balance start -f -v "$IS_DRIVE" | \
 				progressbox "$REMOVE_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
 			return 0
@@ -58,7 +59,7 @@ kwbtrfs_device_remove() {
 					device_remove_menu "$lv_Is_Drive"
 					;;
 				$lv_Devices)
-					# Laufwerk auswaehlen das entfernt werden soll.# {{{
+					# Laufwerke auswaehlen die entfernt werden sollen.# {{{
 					if [[ -n $Index ]] ; then
 						MD_DEV_M=(${BTRFS_MD_M[Index]})
 						if [[ -n ${MD_DEV_M[1]} ]] ; then

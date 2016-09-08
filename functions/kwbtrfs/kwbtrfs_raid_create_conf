@@ -119,7 +119,9 @@ kwbtrfs_raid_create_conf() {
 							progressbox "$CREATE_TITLE" "$CREATE_MSG" || \
 							(prog_failure ; return 1)
 						# Dateisystem Komponenten zuordnen
-						btrfs device scan &>/dev/null
+						btrfs device scan --all-devices | \
+							progressbox "$CREATE_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
+							(prog_failure ; return 1)
 						return 0
 					fi
 				else

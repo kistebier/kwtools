@@ -3,6 +3,7 @@
 # usage: kwbtrfs_device_add
 #
 kwbtrfs_device_add() {
+	unset -- IS_DRIVE DRIVE
 	ADD_TITLE="${lv_Devices}::${lv_Device_Add}"
 	# Funktion (device_add_menu)# {{{
 	#
@@ -19,11 +20,11 @@ kwbtrfs_device_add() {
 		#
 		balance_add_data() {
 			# Dateisystem Komponenten zuordnen
-			btrfs device scan "$IS_DRIVE" | \
-				progressbox "$ADD_TITLE" "${lv_Scan}: ${IS_DRIVE}..." || \
+			btrfs device scan --all-devices | \
+				progressbox "$ADD_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
 				(prog_failure ; return 1)
-			# Metadaten gleichmaessig verteilen
-			btrfs balance start -f -v -d -m -s "$IS_DRIVE" | \
+			# Daten gleichmaessig verteilen
+			btrfs balance start -f -v "$IS_DRIVE" | \
 				progressbox "$ADD_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
 			return 0
