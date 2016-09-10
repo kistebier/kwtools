@@ -430,23 +430,24 @@ Bei \"nein\" wird abgebrochen.')
 							unset -- Parts
 							disk
 							partdb
-							if [ -n "${PART_E[1]}" ] ; then
-								# Partitionen
-								if [ -n "$PART_E" ] ; then
-									Parts="$Parts $PART_E"
-								fi
+							# heraussuchen von unverschluesselten Partitionen
+							# die in keinem btrfs RAID Array vorkommen.
+							search_devices -p
+							if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
+								Parts="$NO_BTRFS_DEV_E"
 								# Swap Laufwerke
-								if [ -n "${SWAP_DEV_E[1]}" ] ; then
+								if [ -n "${SWAP_DEV[1]}" ] ; then
 									Parts="$Parts $SWAP_DEV_E"
 								fi
-								# RAID Arrays finden und zur Auswahl stellen.
+								# RAID Arrays finden die in keinem LV sind und
+								# zur Auswahl stellen.
 								raid_filter -l
 								# LV's finden.
 								lv
-								if [ -n "${LV_E[1]}" ] ; then
+								if [ -n "${LV[1]}" ] ; then
 									Parts="$Parts $LV_E"
 								fi
-								if [ -n "${R_DEVS_E[1]}" ] ; then
+								if [ -n "${R_DEVS[1]}" ] ; then
 									Parts="$Parts $R_DEVS_E"
 								fi
 								# Gefundene Devices zur Auswahl anbieten.
