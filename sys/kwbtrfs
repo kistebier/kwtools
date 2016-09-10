@@ -228,173 +228,6 @@ no_btrfs_md_dev_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (search_btrfs_filesystem), sucht nach Devices mit btrfs Dateisystem# {{{
-#
-# usage: search_btrfs_filesystem
-#
-search_btrfs_filesystem() {
-	unset -- BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_LABEL_DEV BTRFS_LABEL_DEV_E \
-		BTRFS_LABEL_DEV_M BTRFS_MD BTRFS_MD_E BTRFS_MD_M BTRFS_UUID_DEV \
-		BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M dev1 dev dev_E dev_M
-	local label uuid
-	btrfs filesystem show > ${gv_WorkDir}/btrfs-all-devices.txt
-	if [ "`wc -l <${gv_WorkDir}/btrfs-all-devices.txt`" -gt 1 ] ; then
-		Anz=1
-		while read a b c d rest ; do 
-			case $a in
-				Label:)
-					# Label und UUID uebernehmen
-					label="${b//\'/}"
-					uuid="$d"
-					BTRFS_LABEL_DEV+=($label)
-					BTRFS_LABEL_DEV_E+=($label \"\")
-					BTRFS_LABEL_DEV_M+=($label \"\" off)
-					BTRFS_UUID_DEV+=($uuid)
-					BTRFS_UUID_DEV_E+=($uuid \"\")
-					BTRFS_UUID_DEV_M+=($uuid \"\" off)
-					if [[ $label != none ]] ; then
-						btrfs filesystem show $label > ${gv_WorkDir}/btrfs-device.txt
-						Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
-					elif [[ $uuid != none ]] ; then
-						btrfs filesystem show $uuid > ${gv_WorkDir}/btrfs-device.txt
-						Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
-					fi
-					# Devices auflisten
-					if (( $Dev_Anz > 1 )) ; then
-						dev1=${(M)$(< ${gv_WorkDir}/btrfs-device.txt)[(fr)*/dev/*]}
-						BTRFS_DEV[Anz]=($dev1)
-						BTRFS_DEV_E[Anz]=($dev1 \"\")
-						BTRFS_DEV_M[Anz]=($dev1 \"\" off)
-						while read a rest1 ; do
-							case $a in
-								devid)
-									# Device uebernehmen	
-									dev+=(${rest1##* })
-									dev_E+=(${rest1##* } \"\")
-									dev_M+=(${rest1##* } \"\" off)
-									;;
-							esac
-						done < ${gv_WorkDir}/btrfs-device.txt
-						BTRFS_MD[Anz]=("$dev")
-						BTRFS_MD_E[Anz]=("$dev_E")
-						BTRFS_MD_M[Anz]=("$dev_M")
-						(( Anz++ ))
-					else
-						dev1="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
-						BTRFS_DEV[Anz]=($dev1)
-						BTRFS_DEV_E[Anz]=($dev1 \"\")
-						BTRFS_DEV_M[Anz]=($dev1 \"\" off)
-						(( Anz++ ))
-					fi
-					;;
-			esac
-		done < ${gv_WorkDir}/btrfs-all-devices.txt
-	fi
-}
-## }}}
-# Funktion (search_devices), sucht Partitionen, RAID Arrays, LVs und Cryptsetup# {{{
-# Laufwerke
-#
-# usage: search_devices [ -a | -c | -e | -p ]
-# -a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
-# -c - Cryptsetup Laufwerke
-# -e - ext[234] Laufwerke
-# -p - Partitionen
-#
-search_devices() {
-	unset -- FS NO_BTRFS_DEV NO_BTRFS_DEV_E NO_BTRFS_DEV_M
-	case $1 in
-		-a)
-			# alle Laufwerke suchen
-			#
-			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
-			# von Laufwerken eines BTRFS RAID Arrays.
-			search_btrfs_filesystem
-			if [ -n "${#BTRFS_MD[*]}" ] ; then
-				Nr=${#BTRFS_MD[*]}
-				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD[Nr]}[(fr)*$dev*]} ] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
-				}
-			else
-				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-				}
-			fi
-			;;
-		-c)
-			# nur Cryptsetup Laufwerke suchen
-			#
-			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
-			# von Laufwerken eines BTRFS RAID Arrays.
-			search_btrfs_filesystem
-			if [ -n "${BTRFS_MD[1]}" ] ; then
-				for dev in  ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD}[(fr)*$dev*]} ] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
-				}
-			else
-				for dev in  ${=CRYPT_DEV} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-				}
-			fi
-			;;
-		-e)
-			# alle ext[234] Laufwerke suchen
-			for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-				check_fs $dev
-				case $gv_Fs in
-					ext[234])
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-						# wird benoetigt beim konvertieren fuer fsck
-						FS+=($gv_Fs)
-						;;
-				esac
-			}
-			;;
-		-p)
-			# nur Partitionen suchen
-			#
-			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
-			# von Laufwerken eines BTRFS RAID Arrays.
-			search_btrfs_filesystem
-			if [ -n "${BTRFS_MD[1]}" ] ; then
-				for dev in ${=PART} ; {
-					if [ -z ${(M)${BTRFS_MD}[(fr)*$dev*]} ] ; then
-						check_fs $dev
-						NO_BTRFS_DEV+=($dev)
-						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-						NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-					fi
-				}
-			else
-				for dev in ${=PART} ; {
-					check_fs $dev
-					NO_BTRFS_DEV+=($dev)
-					NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
-					NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-				}
-			fi
-			;;
-	esac
-}
-## }}}
 # Funktion (umount_dev), bindet alle Laufwerke aus die ins Arbeitsverzeichnis# {{{
 # eingebunden wurden.
 #
@@ -430,16 +263,20 @@ if [[ -z ${PART[1]} ]] ; then
     exit 0
 fi
 
-# RAID Arrays erkennen
-if [[ -x ${commands[mdadm]} ]] ; then
-	raid
-
 fi
 # Logische Volumes erkennen
 if [[ -x ${commands[lvm]} ]] ; then
 	lvm_version
 	lv
 fi
+
+# RAID Arrays erkennen
+if [[ -x ${commands[mdadm]} ]] ; then
+	raid
+	# RAID Arrays herausfiltern die in Logischen Volumes
+	# vorkommen
+	raid_filter -l
+
 # cryptsetup Laufwerke erkennen
 if [[ -x ${commands[cryptsetup]} ]] ; then
 	search_cryptdev -a
