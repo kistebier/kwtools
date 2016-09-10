@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.09.2016
 #
 # Script: kwlosetup, verschluesselt Partitionen oder ganze Laufwerke
-# Version: 0.1.15
+# Version: 0.1.16
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -433,19 +433,22 @@ while [ "$gv_Auswahl" ] ; do
 			if [ -n "$ENCRYPT" ] ; then
 				# Festplatten finden
 				disk
-				# Partitionen finden und zur Auswahl stellen.
+				# Partitionen finden.
 				partdb
-				if [ -n "$PART_E" ] ; then
-					Parts="$PART_E"
+				# heraussuchen von unverschluesselten Partitionen
+				# die in keinem btrfs RAID Array vorkommen.
+				search_devices -p
+				if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
+					Parts="$NO_BTRFS_DEV_E"
 					# RAID Arrays finden und zur Auswahl stellen.
 					raid_filter -l
 					# LV's finden.
 					lv
-					if [ -n "$LV_E" ] ; then
+					if [ -n "${LV[1]}" ] ; then
 						Parts="$Parts $LV_E"
 					fi
-					if [ -n "$MD_DEV" ] ; then
-						Parts="$Parts $MD_DEV_E"
+					if [ -n "${R_DEVS[1]}" ] ; then
+						Parts="$Parts $R_DEVS_E"
 					fi
 					# Gefundene Devices zur Auswahl anbieten.
 					part_choice "$Parts"
