@@ -3,6 +3,7 @@
 # usage: kwbtrfs_filesystem_label
 #
 kwbtrfs_filesystem_label() {
+	unset -- BTRFS_DRIVE NEWLABEL
 	# Variable# {{{
 	lv_Newlabel=$(gettext 'neues Label')
 	NEWLABEL_TITLE="${lv_Filesystem}::${lv_Newlabel}"
@@ -24,12 +25,12 @@ kwbtrfs_filesystem_label() {
 				;;
 			$lv_Btrfs_Drive)
 				# btrfs Laufwerk auswaehlen# {{{
-				btrfs_drive_choice_menu
+				btrfs_choice_menu "" "$NEWLABEL_TITLE" "$BTRFS_DEV_E"
 				while [[ -n $gv_Auswahl ]] ; do
 					case $gv_Auswahl in
 						HELP*)
 							script_help filesystem_label_help
-							btrfs_drive_choice_menu "${gv_Auswahl#HELP }"
+							btrfs_choice_menu "${gv_Auswahl#HELP }" "$NEWLABEL_TITLE" "$BTRFS_DEV_E"
 							;;
 						/*)
 							BTRFS_DRIVE="$gv_Auswahl"
@@ -62,7 +63,8 @@ kwbtrfs_filesystem_label() {
 			$gv_Create)
 				# Label aendern# {{{
 				if [[ -n $BTRFS_DRIVE ]] && [[ -n $NEWLABEL ]] ; then
-					btrfs filesystem label $lv_Btrfs_Drive "$NEWLABEL" &>/dev/null
+					btrfs filesystem label $BTRFS_DRIVE "$NEWLABEL" &>/dev/null
+					unset -- BTRFS_DRIVE NEWLABEL
 				else
 					MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Btrfs_Drive und $lv_Newlabel mit Werten belegen.')
 					msgbox "$gv_Info" "$MSG"

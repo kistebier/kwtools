@@ -20,11 +20,11 @@ kwbtrfs_device_add() {
 		#
 		balance_add_data() {
 			# Dateisystem Komponenten zuordnen
-			btrfs device scan --all-devices | \
+			btrfs device scan --all-devices 2>&1 | \
 				progressbox "$ADD_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
 				(prog_failure ; return 1)
 			# Daten gleichmaessig verteilen
-			btrfs balance start -f -v "$IS_DRIVE" | \
+			btrfs balance start -f -v -d -m -s "$IS_DRIVE" 2>&1 | \
 				progressbox "$ADD_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
 			return 0
@@ -65,12 +65,12 @@ kwbtrfs_device_add() {
 					# Laufwerk auswaehlen das addiert werden soll.# {{{
 					search_devices -a
 					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
-						btrfs_choice_checklist "" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
+						drive_choice_checklist "" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 						while [[ -n $gv_Auswahl ]] ; do
 							case "$gv_Auswahl" in
 								HELP*)
 									script_help device_add_help
-									btrfs_choice_checklist "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
+									drive_choice_checklist "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 									;;
 								/*)
 									# Laufwerke uebernehmen und ausbinden.
@@ -79,7 +79,7 @@ kwbtrfs_device_add() {
 									for i in ${=gv_Auswahl_Display} ; {
 										mount_check -a $i
 										if [[ $U_MOUNT == yes ]] ; then
-											DRIVE+="$i"
+											DRIVE+=($i)
 										fi
 									}
 									break
@@ -99,11 +99,13 @@ kwbtrfs_device_add() {
 				$lv_Device_Add)
 					# Laufwerke addieren# {{{
 					if [[ -n ${DRIVE[1]} ]] && [[ -n $IS_DRIVE ]] ; then
-						btrfs device add -f ${=DRIVE} "$IS_DRIVE" || \
+						ADD_MSG="${ADD_TITLE}: ${=DRIVE// /\n}..."
+						btrfs device add -f ${=DRIVE} "$IS_DRIVE" 2>&1 | \
+							progressbox "$ADD_TITLE" "$ADD_MSG" || \
 							(prog_failure ; return 1)
 						# Daten gleichmaessig verteilen
 						balance_add_data || return 1
-						break
+						return 0
 					else
 						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"

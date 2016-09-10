@@ -6,6 +6,7 @@
 # - - RAID Arrays
 #
 kwbtrfs_raid_create_conf() {
+	unset -- RAIDLEVEL RAIDDISKS CREATE_OPT
 	if [[ $1 == -c ]] ; then
 		OPT=cryptdisks
 	else
@@ -14,17 +15,17 @@ kwbtrfs_raid_create_conf() {
 	# Variablen# {{{
 	lv_Raid_Level=$(gettext 'RAID Level')
 	lv_Raiddisks=$(gettext 'RAID Laufwerke')
+	CREATE_TITLE="${lv_Devices}::${gv_Create}::${lv_Raid}"
 	unset -- CREATE_OPT
 	# Standard Optionen
 	CREATE_OPT="-f"
 	unset -- FEATURES LABEL ROOTDIR RAIDDISKS
-	RAIDLEVEL=raid5
+	RAIDLEVEL="${RAIDLEVEL:-raid5}"
 	## }}}
 	# Funktion (create_menu)# {{{
 	create_menu() {
 		# Menue fuer die Erstellung von Arrays
-		CREATE_TITLE="${lv_Devices}::${gv_Create}::${lv_Raid}"
-		CREATE_MENU=($lv_Raid_Level \"$RAIDLEVEL\"
+		CREATE_MENU=(\"$lv_Raid_Level\" \"$RAIDLEVEL\"
 		\"$lv_Raiddisks\" \"$RAIDDISKS\" $lv_Options \"\"
 		$gv_Create \"\" $gv_Back \"\")
 		menubox "$1" "$CREATE_TITLE" "$gv_Menupoint" "$CREATE_MENU"
@@ -62,6 +63,8 @@ kwbtrfs_raid_create_conf() {
 							case "$RAIDLEVEL" in
 								$lv_Single|$lv_Dup)
 									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 1 sein muss.')
+									msgbox "$gv_Info" "$MSG"
+									;;
 								raid[01])
 									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
@@ -99,39 +102,41 @@ kwbtrfs_raid_create_conf() {
 				create_menu $lv_Raiddisks
 				;;
 			$lv_Options)
-				# Optionen fuer das Erstellen des Laufwerks
+				# Optionen fuer das Erstellen des Laufwerks# {{{
 				autoload -U kwbtrfs_create_options
 				kwbtrfs_create_options -r mkfs.btrfs
-				#
+				## }}}
 				create_menu $lv_Options
 				;;
 			$gv_Create)
 				# Sind alle nötigen Variablen belegt?# {{{
 				#
 				if [[ -n "${RAIDDISKS[1]}" ]] && [[ -n $RAIDLEVEL ]] ; then
-					CREATE_MSG="${gv_Create}..."
+					CREATE_MSG="${gv_Create}: ${RAIDLEVEL}\n ${=RAIDDISKS// /\n}..."
 					CREATE_RAID_MSG=$(gettext 'Jetzt wird das RAID Array erzeugt. Alle Daten gehen auf diesem Array verloren.\n\n Fortfahren (ja/nein)?')
 					yesno "$gv_Attention" "$CREATE_RAID_MSG" "yes"
 					if [ "$gv_Auswahl" = yes ] ; then
 						# Die Variable CREATE_OPT wurde in der Funktionsdatei
 						# kwbtrfs_create_options belegt
-						mkfs.btrfs -d $RAIDLEVEL -m $RAIDLEVEL ${=CREATE_OPT} ${=RAIDDISKS} | \
+						mkfs.btrfs -d $RAIDLEVEL -m $RAIDLEVEL ${=CREATE_OPT} \
+							${=RAIDDISKS} 2>&1 | \
 							progressbox "$CREATE_TITLE" "$CREATE_MSG" || \
 							(prog_failure ; return 1)
 						# Dateisystem Komponenten zuordnen
-						btrfs device scan --all-devices | \
-							progressbox "$CREATE_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
+						btrfs device scan --all-devices 2>&1 | \
+							progressbox "$CREATE_TITLE" \
+							"${lv_Scan}: ${lv_All_Devices}..." 2>&1|| \
 							(prog_failure ; return 1)
 						return 0
 					fi
 				else
 					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Raid_Level und $lv_Raiddisks auswaehlen und mit den richtigen Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
+					create_menu $lv_Raiddisks
 				fi
-				create_menu
 				## }}}
 				;;
-			$gv_Back)	break
+			$gv_Back|*)	break
 				;;
 		esac
 	done

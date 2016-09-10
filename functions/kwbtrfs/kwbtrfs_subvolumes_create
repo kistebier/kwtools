@@ -16,7 +16,7 @@ kwbtrfs_subvolumes_create() {
 		# Funktion (subvol_create_menu), Menue fuer das erstellen von Subvolumes# {{{
 		#
 		subvol_create_menu() {
-			CR_MENU=($lv_Drive \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
+			CR_MENU=(\"$lv_Btrfs_Drive\" \"$DRIVE\" $lv_Suvol_Name \"$SUBVOL_NAME\"
 			CR_TITLE="${lv_Subvolumes}::${gv_Create}"
 			$gv_Create \"\" $gv_Back \"\")
 			menubox "$1" "$CR_TITLE" "$gv_Menupoint" "$CR_MENU"
@@ -29,7 +29,7 @@ kwbtrfs_subvolumes_create() {
 					script_help subvolumes_create_help
 					subvol_create_menu "${gv_Auswahl#HELP }"
 					;;
-				$lv_Drive)
+				$lv_Btrfs_Drive)
 					# btrfs Laufwerk auswaehlen# {{{
 					btrfs_choice_menu "" "$SV_CREATE_TITLE" "$BTRFS_PATH_E"
 					while [ "$gv_Auswahl" ] ; do
@@ -49,7 +49,7 @@ kwbtrfs_subvolumes_create() {
 						esac
 					done
 					## }}}
-					subvol_create_menu "$lv_Drive"
+					subvol_create_menu "$lv_Btrfs_Drive"
 					;;
 				$lv_Suvol_Name)
 					# Snapshot Name eingeben# {{{

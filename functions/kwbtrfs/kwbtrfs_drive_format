@@ -4,14 +4,6 @@
 #
 kwbtrfs_drive_format() {
 	search_devices -a
-	# Funktionen (no_drive_msg), Nachricht das es keine Laufwerke# {{{
-	# zum formatieren gibt.
-	#
-	no_drive_msg() {
-		MSG=$(gettext 'Es sind keine Laufwerke vorhanden um diese mit einem btrfs Dateisystem zu formatieren.')
-		msgbox "$gv_Info" "$MSG"
-	}
-	## }}}
 	if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
 		# Funktionen (format_menu)# {{{
 		#
@@ -99,7 +91,7 @@ kwbtrfs_drive_format() {
 			esac
 		done
 	else
-		no_drive_msg
+		no_free_dev_msg
 		return 1
 	fi
 	return 0

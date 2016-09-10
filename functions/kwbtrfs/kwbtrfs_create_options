@@ -49,7 +49,7 @@ kwbtrfs_create_options() {
 	NOINLINE="$gv_Yes"
 	NODISCARD="$gv_No"
 	NOXATTR="$gv_No"
-	NODESIZE=${NODESIZE:-16}
+	NODESIZE=${NODESIZE:-16384}
 	RMOMETA="$gv_No"
 	#
 	# Funktion (create_options), zusaetzliche Optionen sammeln# {{{
@@ -139,7 +139,7 @@ kwbtrfs_create_options() {
 			$lv_Features \"$FEATURES\" $gv_Save \"\" $gv_Back \"\")
 		elif [[ $Opt == -r ]] ; then
 			# Menue fuer die Erstellung von RAID Arrays
-			OPTIONS_MENU=($lv_Mix_Metadata \"$MIX_METADATA\"
+			OPTIONS_MENU=(\"$lv_Mix_Metadata\" \"$MIX_METADATA\"
 			$lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\"
 			\"$lv_Nodiscard\" \"$NODISCARD\" $lv_Rootdir \"$ROOTDIR\"
 			$lv_Features \"$FEATURES\" $gv_Save \"\" $gv_Back \"\")
@@ -186,28 +186,28 @@ kwbtrfs_create_options() {
 				local Anz
 				integer Anz
 				NODESIZE_TITLE="${lv_Options}::${lv_Nodesize}"
-				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize, in KiB, ein (4-64).')
+				NODESIZE_MSG=$(gettext 'Geben Sie bitte die Nodesize, in Byte, ein (16384-65536).')
 				number_input "$NODESIZE_TITLE" "$NODESIZE_MSG" "$NODESIZE"
 				#
 				# Jetzt wird durchgezaehlt, ob der Wert ein vielfaches von 4 ist.
 				#
-				if [ "$NUMBER" -ge 4 -a "$NUMBER" -le 64 ] ; then
+				if [ "$NUMBER" -ge 16384 -a "$NUMBER" -le 65536 ] ; then
 					NODESIZE="$NUMBER"
-					Anz=4
+					Anz=16384
 					while [ "$Anz" -lt "$NODESIZE" ] ; do
-						(( Anz = Anz+4 ))
+						(( Anz = Anz+4096 ))
 					done
 					#
-					# Ist es kein Vielfaches von 4 kommt eine Fehlermeldung.
+					# Ist es kein Vielfaches von 4096 kommt eine Fehlermeldung.
 					#
 					if [ "$NODESIZE" -ne "$Anz" ] ; then 
-						NODESIZE=16
-						MSG=$(gettext 'Die Nodesize muss ein Vielfaches von 4 sein.')
+						NODESIZE=16384
+						MSG=$(gettext 'Die Nodesize muss ein Vielfaches von 4096 sein. Der minimalste Wert ist 16384 und der maximalste 65536.')
 						msgbox "$gv_Attention" "$MSG"
 					fi 
 				else
-					NODESIZE=16
-					MSG=$(gettext 'Die Nodesize muss >=4 und <=64 sein.')
+					NODESIZE=16384
+					MSG=$(gettext 'Die Nodesize muss >=4096 und <=65536 sein.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}

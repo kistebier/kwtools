@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 08.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -70,6 +70,8 @@ lv_Subvolumes=$(gettext 'Subvolumes')
 lv_Drive=$(gettext 'Laufwerk')
 lv_Devices=$(gettext 'Laufwerke')
 BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
+DRIVE_MSG=$(gettext 'Waehlen Sie ein $lv_Drive aus.')
+SEVERAL_DRIVE_MSG=$(gettext 'Waehlen Sie ein oder mehrere $lv_Devices aus.')
 #
 CONF="/etc/kwtools/kwbtrfs.cf"
 
@@ -84,23 +86,160 @@ main_menu() {
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
-	# Funktion (btrfs_drive_choice_menu), btrfs Laufwerk auswaehlen# {{{
-	btrfs_drive_choice_menu() {
-		BTRFS_MENU=($BTRFS_DEV_E $gv_Back \"\")
-		menubox "$1" "$lv_Drive" "$BTRFS_MSG" "$BTRFS_MENU"
+# Funktion (btrfs_choice_menu), btrfs Laufwerk auswaehlen# {{{
+btrfs_choice_menu() {
+	if [[ ${#argv} == 3 ]] ; then
+		BTRFS_MENU=($3 $gv_Back \"\")
+		menubox "$1" "$2" "$BTRFS_MSG" "$BTRFS_MENU"
+	else
+		no_part_msg $0
+		return 1
+	fi
+	return 0
+}
+## }}}
+# Funktion (btrfs_dev_checklist), btrfs Laufwerke zur Auswahl anzeigen# {{{
+#
+btrfs_dev_checklist() {
+	if [[ ${#argv} -ge 1 ]] ; then
+		TITLE="$1"
+		MENU=($BTRFS_PATH_M)
+		MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs Laufwerke aus.')
+		checklist "$2" "$TITLE" "$MSG" "$MENU"
+	else
+		no_para_msg $0
+	fi
+}
+## }}}
+# Funktion (drive_choice_menu), Laufwerke zur Auswahl anzeigen# {{{
+#
+drive_choice_menu() {
+	if [[ ${#argv} == 3 ]] ; then
+		MENU=($3 $gv_Back \"\")
+		menubox "$1" "$2" "$DRIVE_MSG" "$MENU"
+	else
+		no_part_msg $0
+		return 1
+	fi
+	return 0
+}
+## }}}
+# Funktion (drive_choice_checklist), mehrere Laufwerke zur Auswahl anzeigen# {{{
+#
+drive_choice_checklist() {
+	if [[ ${#argv} == 3 ]] ; then
+		MENU=($3)
+		checklist "$1" "$2" "$SEVERAL_DRIVE_MSG" "$MENU"
+	else
+		no_part_msg $0
+		return 1
+	fi
+	return 0
+}
+## }}}
+# Funktion (mount_btrfs_dev_check), falls die btrfs Devices nicht eingebunden sind# {{{
+# wird es jetzt getan.
+#
+# usage: mount_btrfs_dev_check
+#
+mount_btrfs_dev_check() {
+	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
+	for i in ${=BTRFS_DEV} ; {
+		Nr=${#BTRFS_MD[*]}
+		if [[ -n $Nr ]] ; then
+			if [[ -n ${(M)${BTRFS_MD[Nr]}[(fr)*$i*]} ]] ; then
+				###########################
+				# TODO: wirklich mit Index?
+				Index=$BTRFS_DEV[(i)$i]
+				###########################
+			else
+				unset -- Index
+			fi
+			if [[ -z $Index ]] ; then
+				mount_check -c $i
+				if [[ $MOUNT == no ]] ; then
+					mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
+					if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
+						MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
+						BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
+						BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
+						BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
+					fi
+				else
+					BTRFS_PATH+=($MOUNTPOINT)
+					BTRFS_PATH_E+=($MOUNTPOINT \"\")
+					BTRFS_PATH_M+=($MOUNTPOINT \"\" off)
+				fi
+			else
+				mount_check -c $i
+				if [[ $MOUNT == no ]] ; then
+					Uuid="${BTRFS_UUID_DEV[Index]}"
+					mkdir ${gv_WorkDir}/${Uuid##*-} &>/dev/null
+					if mount -t btrfs UUID="$Uuid" ${gv_WorkDir}/${Uuid##*-} &>/dev/null ; then
+						MOUNT_DEVS+=(${gv_WorkDir}/${Uuid##*-})
+						BTRFS_PATH+=(${gv_WorkDir}/${Uuid##*-})
+						BTRFS_PATH_E+=(${gv_WorkDir}/${Uuid##*-} \"\")
+						BTRFS_PATH_M+=(${gv_WorkDir}/${Uuid##*-} \"\" off)
+					fi
+				else
+					BTRFS_PATH+=($MOUNTPOINT)
+					BTRFS_PATH_E+=($MOUNTPOINT \"\")
+					BTRFS_PATH_M+=($MOUNTPOINT \"\" off)
+				fi
+			fi
+		else
+			mount_check -c $i
+			if [[ $MOUNT == no ]] ; then
+				mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
+				if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
+					MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
+					BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
+					BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
+					BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
+				fi
+			else
+				BTRFS_PATH+=($MOUNTPOINT)
+				BTRFS_PATH_E+=($MOUNTPOINT \"\")
+				BTRFS_PATH_M+=($MOUNTPOINT \"\" off)
+			fi
+		fi
 	}
-	## }}}
+}
+## }}}
+# Funktion (no_btrfs_dev_msg), Nachricht das keine Laufwerke mit BTRFS vorhanden sind# {{{
+#
+no_btrfs_dev_msg() {
+	MSG=$(gettext 'Es sind keine Laufwerke mit btrfs Dateisystem vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_free_dev_msg), Nachricht das keine freien Laufwerke vorhanden sind# {{{
+#
+no_free_dev_msg() {
+	MSG=$(gettext 'Es sind keine freien Laufwerke vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_btrfs_md_dev_msg), Nachricht das keine BTRFS Laufwerke,# {{{
+# welche aus mehreren Laufwerken bestehen, vorhanden sind.
+#
+no_btrfs_md_dev_msg() {
+	MSG=$(gettext 'Es sind keine btrfs Laufwerke, welche aus mehreren Laufwerken (z.B RAID) bestehen, vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
 # Funktion (search_btrfs_filesystem), sucht nach Devices mit btrfs Dateisystem# {{{
 #
 # usage: search_btrfs_filesystem
 #
 search_btrfs_filesystem() {
 	unset -- BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_LABEL_DEV BTRFS_LABEL_DEV_E \
-		BTRFS_LABEL_DEV_M BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_UUID_DEV \
-		BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M
-	local dev label uuid
+		BTRFS_LABEL_DEV_M BTRFS_MD BTRFS_MD_E BTRFS_MD_M BTRFS_UUID_DEV \
+		BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M dev1 dev dev_E dev_M
+	local label uuid
 	btrfs filesystem show > ${gv_WorkDir}/btrfs-all-devices.txt
 	if [ "`wc -l <${gv_WorkDir}/btrfs-all-devices.txt`" -gt 1 ] ; then
+		Anz=1
 		while read a b c d rest ; do 
 			case $a in
 				Label:)
@@ -122,26 +261,30 @@ search_btrfs_filesystem() {
 					fi
 					# Devices auflisten
 					if (( $Dev_Anz > 1 )) ; then
-						parse_uuid_label $uuid
-						BTRFS_DEV+=($REALDEV)
-						BTRFS_DEV_E+=($REALDEV \"\")
-						BTRFS_DEV_M+=($REALDEV \"\" off)
-						while read a rest ; do
+						dev1=${(M)$(< ${gv_WorkDir}/btrfs-device.txt)[(fr)*/dev/*]}
+						BTRFS_DEV[Anz]=($dev1)
+						BTRFS_DEV_E[Anz]=($dev1 \"\")
+						BTRFS_DEV_M[Anz]=($dev1 \"\" off)
+						while read a rest1 ; do
 							case $a in
 								devid)
 									# Device uebernehmen	
-									dev=${rest##* }
-									BTRFS_MD+=($dev)
-									BTRFS_MD_E+=($dev \"\")
-									BTRFS_MD_M+=($dev \"\" off)
+									dev+=(${rest1##* })
+									dev_E+=(${rest1##* } \"\")
+									dev_M+=(${rest1##* } \"\" off)
 									;;
 							esac
 						done < ${gv_WorkDir}/btrfs-device.txt
+						BTRFS_MD[Anz]=("$dev")
+						BTRFS_MD_E[Anz]=("$dev_E")
+						BTRFS_MD_M[Anz]=("$dev_M")
+						(( Anz++ ))
 					else
-						dev="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
-						BTRFS_DEV+=($dev)
-						BTRFS_DEV_E+=($dev \"\")
-						BTRFS_DEV_M+=($dev \"\" off)
+						dev1="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
+						BTRFS_DEV[Anz]=($dev1)
+						BTRFS_DEV_E[Anz]=($dev1 \"\")
+						BTRFS_DEV_M[Anz]=($dev1 \"\" off)
+						(( Anz++ ))
 					fi
 					;;
 			esac
@@ -167,9 +310,10 @@ search_devices() {
 			# vorhandene BTRFS Laufwerke suchen zum heraus filtern
 			# von Laufwerken eines BTRFS RAID Arrays.
 			search_btrfs_filesystem
-			if [ -n "${BTRFS_MD[1]}" ] ; then
+			if [ -n "${#BTRFS_MD[*]}" ] ; then
+				Nr=${#BTRFS_MD[*]}
 				for dev in ${=PART} ${=MD_DEV} ${=LV} ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+					if [ -z ${(M)${BTRFS_MD[Nr]}[(fr)*$dev*]} ] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
@@ -193,7 +337,7 @@ search_devices() {
 			search_btrfs_filesystem
 			if [ -n "${BTRFS_MD[1]}" ] ; then
 				for dev in  ${=CRYPT_DEV} ; {
-					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+					if [ -z ${(M)${BTRFS_MD}[(fr)*$dev*]} ] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
@@ -232,7 +376,7 @@ search_devices() {
 			search_btrfs_filesystem
 			if [ -n "${BTRFS_MD[1]}" ] ; then
 				for dev in ${=PART} ; {
-					if [ -z ${(M)${BTRFS_MD}##$dev} ] ; then
+					if [ -z ${(M)${BTRFS_MD}[(fr)*$dev*]} ] ; then
 						check_fs $dev
 						NO_BTRFS_DEV+=($dev)
 						NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
@@ -251,44 +395,6 @@ search_devices() {
 	esac
 }
 ## }}}
-# Funktion (mount_btrfs_dev_check), falls die btrfs Devices nicht eingebunden sind# {{{
-# wird es jetzt getan.
-#
-# usage: mount_btrfs_dev_check
-#
-mount_btrfs_dev_check() {
-	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
-	for i in ${=BTRFS_DEV} ; {
-		mount_check -c $i
-		if [[ $MOUNT == no ]] ; then
-			mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
-			if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
-				MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
-				BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
-				BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
-				BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
-			fi
-		else
-			BTRFS_PATH+=($MOUNTPOINT)
-			BTRFS_PATH_E+=($MOUNTPOINT \"\")
-			BTRFS_PATH_M+=($MOUNTPOINT \"\" off)
-		fi
-	}
-}
-## }}}
-# Funktion (btrfs_dev_checklist), btrfs Laufwerke zur Auswahl anzeigen# {{{
-#
-btrfs_dev_checklist() {
-	if [[ ${#argv} -ge 1 ]] ; then
-		TITLE="$1"
-		MENU=($BTRFS_PATH_M)
-		MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs Laufwerke aus.')
-		checklist "$2" "$TITLE" "$MSG" "$MENU"
-	else
-		no_para_msg $0
-	fi
-}
-## }}}
 # Funktion (umount_dev), bindet alle Laufwerke aus die ins Arbeitsverzeichnis# {{{
 # eingebunden wurden.
 #
@@ -298,54 +404,6 @@ umount_dev() {
 			mount_check -a $i
 		}
 	fi
-}
-## }}}
-# Funktion (no_btrfs_dev_msg), Nachricht das keine Laufwerke mit BTRFS vorhanden sind# {{{
-#
-no_btrfs_dev_msg() {
-	MSG=$(gettext 'Es sind keine Laufwerke mit dem btrfs Dateisystem vorhanden.')
-	msgbox "$gv_Info" "$MSG"
-}
-## }}}
-# Funktion (no_free_dev_msg), Nachricht das keine freien Laufwerke vorhanden sind# {{{
-#
-no_free_dev_msg() {
-	MSG=$(gettext 'Es sind keine freien Laufwerke vorhanden.')
-	msgbox "$gv_Info" "$MSG"
-}
-## }}}
-# Funktion (no_btrfs_md_dev_msg), Nachricht das keine BTRFS Laufwerke,# {{{
-# welche aus mehreren Laufwerken bestehen, vorhanden sind.
-#
-no_btrfs_md_dev_msg() {
-	MSG=$(gettext 'Es sind keine btrfs Laufwerke, welche aus mehreren Laufwerken (z.B RAID) bestehen, vorhanden.')
-	msgbox "$gv_Info" "$MSG"
-}
-## }}}
-# Funktion (btrfs_choice_menu), btrfs Laufwerke zur Auswahl anzeigen# {{{
-#
-btrfs_choice_menu() {
-	if [[ ${#argv} == 3 ]] ; then
-		MENU=($3 $gv_Back \"\")
-		menubox "$1" "$2" "$BTRFS_MSG" "$MENU"
-	else
-		no_part_msg $0
-		return 1
-	fi
-	return 0
-}
-## }}}
-# Funktion (btrfs_choice_checklist), mehrere btrfs Laufwerke zur Auswahl anzeigen# {{{
-#
-btrfs_choice_checklist() {
-	if [[ ${#argv} == 3 ]] ; then
-		MENU=($3)
-		checklist "$1" "$2" "$BTRFS_MSG" "$MENU"
-	else
-		no_part_msg $0
-		return 1
-	fi
-	return 0
 }
 ## }}}
 
@@ -813,7 +871,10 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Devices
 			;;
 		$lv_Balance)
-			# Metadatenabgleich# {{{
+			# Datenabgleich# {{{
+			# autoload -U kwbtrfs_balance
+			# kwbtrfs_balance
+			#
 			hier_ist_noch_nichts $lv_Balance
 			## }}}
 			main_menu $lv_Balance

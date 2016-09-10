@@ -19,7 +19,7 @@ kwbtrfs_device_remove() {
 		#
 		balance_remove_data() {
 			# Daten gleichmaessig verteilen
-			btrfs balance start -f -v "$IS_DRIVE" | \
+			btrfs balance start -f -v -d -m -s "$IS_DRIVE" 2>&1 | \
 				progressbox "$REMOVE_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
 			return 0
@@ -63,12 +63,12 @@ kwbtrfs_device_remove() {
 					if [[ -n $Index ]] ; then
 						MD_DEV_M=(${BTRFS_MD_M[Index]})
 						if [[ -n ${MD_DEV_M[1]} ]] ; then
-							btrfs_choice_checklist "" "$REMOVE_TITLE" "$MD_DEV_M"
+							drive_choice_checklist "" "$REMOVE_TITLE" "$MD_DEV_M"
 							while [[ -n $gv_Auswahl ]] ; do
 								case "$gv_Auswahl" in
 									HELP*)
 										script_help device_remove_help
-										btrfs_choice_checklist "${gv_Auswahl#HELP }" "$REMOVE_TITLE" "$MD_DEV_M"
+										drive_choice_checklist "${gv_Auswahl#HELP }" "$REMOVE_TITLE" "$MD_DEV_M"
 										;;
 									/*)
 										DRIVE="$gv_Auswahl_Display"
@@ -93,11 +93,13 @@ kwbtrfs_device_remove() {
 				$lv_Device_Remove)
 					# Laufwerk entfernen# {{{
 					if [[ -n $DRIVE ]] && [[ -n $IS_DRIVE ]] ; then
-						btrfs device remove ${=DRIVE} "$IS_DRIVE" || \
+						REMOVE_MSG="${REMOVE_TITLE}: ${=DRIVE// /\n}..."
+						btrfs device remove ${=DRIVE} "$IS_DRIVE" 2>&1 | \
+							progressbox "$REMOVE_TITLE" "$REMOVE_MSG" || \
 							(prog_failure ; return 1)
 						# Daten gleichmaessig verteilen
 						balance_remove_data || return 1
-						break
+						return 0
 					else
 						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
