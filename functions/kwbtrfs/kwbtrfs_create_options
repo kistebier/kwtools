@@ -38,6 +38,7 @@ kwbtrfs_create_options() {
 	# create/format
 	lv_Nodiscard=$(gettext 'No discard')
 	lv_Rootdir=$(gettext 'Wurzelverzeichnis')
+	lv_Uuid=$(gettext 'UUID')
 	# all
 	lv_Nodesize=$(gettext 'Nodesize')
 	lv_Label=$(gettext 'Label')
@@ -87,7 +88,9 @@ kwbtrfs_create_options() {
 				fi
 				if [[ -n $LABEL ]] ; then
 					CREATE_OPT="$CREATE_OPT --label $LABEL"
-					unset -- SETLABEL
+				fi
+				if [[ -n $UUID ]] ; then
+					CREATE_OPT="$CREATE_OPT --uuid $UUID"
 				fi
 				if [[ -n $NODESIZE ]] ; then
 					CREATE_OPT="$CREATE_OPT --nodesize $NODESIZE"
@@ -105,7 +108,6 @@ kwbtrfs_create_options() {
 				fi
 				if [[ -n $LABEL ]] ; then
 					CREATE_OPT="$CREATE_OPT --label $LABEL"
-					unset -- SETLABEL
 				fi
 				if [[ $MIX_METADATA == yes ]] ; then
 					CREATE_OPT="$CREATE_OPT --mixed"
@@ -126,23 +128,23 @@ kwbtrfs_create_options() {
 	# Funktion (options_menu)# {{{
 	options_menu() {
 		if [[ $Opt == -c ]] ; then
-			# Menue fuer die Formatierung
-			OPTIONS_MENU=(\"$lv_Nodatasum\" \"$NODATASUM\" \"$lv_Noxattr\" \"$NOXATTR\"
-			\"$lv_Noinline\" \"$NOINLINE\" \"$lv_Cplabel\" \"$CPLABEL\"
-			$lv_Label \"$LABEL\" \"$lv_Nodesize\" \"$NODESIZE\"
-			$lv_Features \"$FEATURES\" \"$lv_Rm_Metadata\" \"$RMOMETA\"
+			# Menue fuer die Konvertierung
+			OPTIONS_MENU=($lv_Features \"$FEATURES\" \"$lv_Nodatasum\" \"$NODATASUM\"
+			\"$lv_Noxattr\" \"$NOXATTR\" \"$lv_Noinline\" \"$NOINLINE\"
+			\"$lv_Cplabel\" \"$CPLABEL\" $lv_Label \"$LABEL\"
+			\"$lv_Nodesize\" \"$NODESIZE\" \"$lv_Rm_Metadata\" \"$RMOMETA\"
 			$gv_Save \"\" $gv_Back \"\")
 		elif [[ $Opt == -f ]] ; then
 			# Menue fuer die Formatierung
-			OPTIONS_MENU=($lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\"
-			\"$lv_Nodiscard\" \"$NODISCARD\" $lv_Rootdir \"$ROOTDIR\"
-			$lv_Features \"$FEATURES\" $gv_Save \"\" $gv_Back \"\")
+			OPTIONS_MENU=($lv_Features \"$FEATURES\" $lv_Nodesize \"$NODESIZE\"
+			$lv_Label \"$LABEL\" $lv_Uuid \"$UUID\" \"$lv_Nodiscard\" \"$NODISCARD\"
+			$lv_Rootdir \"$ROOTDIR\" $gv_Save \"\" $gv_Back \"\")
 		elif [[ $Opt == -r ]] ; then
 			# Menue fuer die Erstellung von RAID Arrays
-			OPTIONS_MENU=(\"$lv_Mix_Metadata\" \"$MIX_METADATA\"
-			$lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\"
+			OPTIONS_MENU=($lv_Features \"$FEATURES\" \"$lv_Mix_Metadata\" \"$MIX_METADATA\"
+			$lv_Nodesize \"$NODESIZE\" $lv_Label \"$LABEL\" $lv_Uuid \"$UUID\"
 			\"$lv_Nodiscard\" \"$NODISCARD\" $lv_Rootdir \"$ROOTDIR\"
-			$lv_Features \"$FEATURES\" $gv_Save \"\" $gv_Back \"\")
+			$gv_Save \"\" $gv_Back \"\")
 		fi
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$OPTIONS_MENU"
 	}
@@ -258,13 +260,49 @@ kwbtrfs_create_options() {
 				MSG=$(gettext 'Geben Sie einen eindeutigen Namen fuer das Laufwerk ein.')
 				inputbox "$LABEL_TITLE" "$MSG" "$LABEL"
 				if [[ -n $gv_Auswahl ]] ; then
-					LABEL="$gv_Auswahl"
-					CPLABEL="$gv_No"
+					if [[ -z ${${BTRFS_LABEL_DEV}[(fr)$gv_Auswahl]} ]] ; then
+						LABEL="$gv_Auswahl"
+						CPLABEL="$gv_No"
+					else
+						MSG=$(gettext 'Der eingegebene Name ist schon vorhanden. Geben Sie einen anderen ein!')
+						msgbox "$gv_Info" "$MSG"
+						unset -- LABEL
+					fi
 				else
 					unset -- LABEL
 				fi
 				## }}}
 				options_menu "$lv_Label"
+				;;
+			$lv_Uuid)
+				# einstellen der UUID# {{{
+				UUID_TITLE="${lv_Options}::${lv_Uuid}"
+				MSG=$(gettext 'Geben Sie eine noch nicht vorhandene $lv_Uuid fuer das Laufwerk ein.')
+				inputbox "$UUID_TITLE" "$MSG" "$UUID"
+				if [[ -n $gv_Auswahl ]] ; then
+					case "$gv_Auswahl" in
+						[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*)
+							# pruefen, ob UUID schon vorhanden ist.
+							if [[ -z ${${BTRFS_UUID_DEV}[(fr)$gv_Auswahl]} ]] ; then
+								UUID="$gv_Auswahl"
+							else
+								MSG=$(gettext 'Die eingegebene $lv_Uuid ist schon vorhanden. Geben Sie eine andere ein!')
+								msgbox "$gv_Info" "$MSG"
+								unset -- UUID
+							fi
+							#
+							;;
+						*)
+							# keine richtige UUID Eingabe.
+							no_input_msg
+							unset -- UUID
+							;;
+					esac
+				else
+					unset -- UUID
+				fi
+				## }}}
+				options_menu "$lv_Uuid"
 				;;
 			$lv_Nodiscard)
 				# einstellen, ob das Laufwerk nicht getrimmt werden soll oder doch.# {{{
