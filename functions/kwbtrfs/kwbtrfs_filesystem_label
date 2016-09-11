@@ -53,7 +53,13 @@ kwbtrfs_filesystem_label() {
 				MSG=$(gettext 'Geben Sie einen neuen eindeutigen Namen fuer das Laufwerk ein.')
 				inputbox "$NEWLABEL_TITLE" "$MSG" "${NEWLABEL:-$OLDLABEL}"
 				if [[ -n $gv_Auswahl ]] ; then
-					NEWLABEL="$gv_Auswahl"
+					if [[ -z ${${BTRFS_LABEL_DEV}[(fr)$gv_Auswahl]} ]] ; then
+						NEWLABEL="$gv_Auswahl"
+					else
+						MSG=$(gettext 'Der eingegebene Name ist schon vorhanden. Geben Sie einen anderen ein!')
+						msgbox "$gv_Info" "$MSG"
+						unset -- NEWLABEL
+					fi
 				else
 					unset -- NEWLABEL
 				fi
