@@ -84,16 +84,18 @@ kwbtrfs_subvolumes_id() {
 						MSG=$(gettext 'Soll das Laufwerk wirklich diese ID ($ID) bekommen (gv_Yes/gv_No)?\n\nBei $gv_Yes wird die Struktur des Laufwerks geaendert.')
 						yesno "$ID_TITLE" "$MSG" no
 						if [[ $gv_Auswahl == yes ]] ; then
-							btrfs subvolume set-default $ID "$DRIVE" || prog_failure
+							btrfs subvolume set-default $ID "$DRIVE" 2>&1 || \
+								(prog_failure ; return 1)
 							# neu einlesen
 							search_subvolumes
+							break
 						fi
 					else
 						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Drive und $lv_Id mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
+						subvol_id_menu
 					fi
 					## }}}
-					subvol_id_menu
 					;;
 				*)
 					break

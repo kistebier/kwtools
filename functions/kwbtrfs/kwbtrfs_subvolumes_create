@@ -75,8 +75,9 @@ kwbtrfs_subvolumes_create() {
 					# Subvolume erstellen# {{{
 					if [[ -n $DRIVE ]] && [[ -n $SUBVOL_NAME ]] ; then
 						MSG=$(gettext 'erzeuge $lv_Subvolume $SUBVOL_NAME')
-						btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" | \
-						progressbox "$lv_Subvolumes" "$MSG" || prog_failure
+						btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" 2>&1 | \
+							progressbox "$lv_Subvolumes" "$MSG" || \
+							(prog_failure ; return 1)
 						search_subvolumes
 						break
 					else

@@ -19,18 +19,18 @@ kwbtrfs_subvolumes_delete() {
 					# Frage, ob die ausgewaehlten Subvolumes wirklich
 					# geloescht werden sollen.
 					DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
-${=SUBVOL_DEVS// /\\n}geloescht werden ($gv_Yes/$gv_No)?')
+${=SUBVOL_DEVS// /\n}geloescht werden ($gv_Yes/$gv_No)?')
 					yesno "$lv_Subvolumes" "$DEL_MSG" no
 					#
 					if [[ $gv_Auswahl == yes ]] ; then
 						MSG=$(gettext 'Loesche $lv_Subvolumes')
-						btrfs subvolume delete -C ${=SUBVOL_DEVS} | \
+						btrfs subvolume delete -C ${=SUBVOL_DEVS} 2>&1 | \
 							progressbox "$lv_Subvolumes" "$MSG" || \
-							prog_failure
+							(prog_failure ; return 1)
 						search_subvolumes
+						break
 					fi
 					## }}}
-					subvol_checklist
 					;;
 				*)
 					# zurueck
