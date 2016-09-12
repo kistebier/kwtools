@@ -1632,10 +1632,10 @@ lv_free_size() {
 	#
 	# usage: search_devices [ -a | -c | -e | -p | -pc ]
 	# -a -  alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
-	# -c -  Cryptsetup Laufwerke
-	# -e -  ext[234] Laufwerke
-	# -p -  Partitionen
-	# -pc - Partitionen und Cryptsetup Laufwerke
+	# -c -  nur Cryptsetup Laufwerke
+	# -e -  nur ext[234] Laufwerke
+	# -p -  nur Partitionen
+	# -pc - nur Partitionen und Cryptsetup Laufwerke
 	#
 	search_devices() {
 		unset -- FS NO_BTRFS_DEV NO_BTRFS_DEV_E NO_BTRFS_DEV_M
@@ -1643,7 +1643,7 @@ lv_free_size() {
 			-a)
 				# alle Laufwerke suchen
 				#
-				# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+				# vorhandene BTRFS Laufwerke suchen zum herausfiltern
 				# von Laufwerken eines BTRFS RAID Arrays.
 				search_btrfs_filesystem
 				if [ -n "${#BTRFS_MD[*]}" ] ; then
@@ -1668,7 +1668,7 @@ lv_free_size() {
 			-c)
 				# nur Cryptsetup Laufwerke suchen
 				#
-				# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+				# vorhandene BTRFS Laufwerke suchen zum herausfiltern
 				# von Laufwerken eines BTRFS RAID Arrays.
 				search_btrfs_filesystem
 				if [ -n "${#BTRFS_MD[*]}" ] ; then
@@ -1708,7 +1708,7 @@ lv_free_size() {
 			-p)
 				# nur Partitionen suchen
 				#
-				# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+				# vorhandene BTRFS Laufwerke suchen zum herausfiltern
 				# von Laufwerken eines BTRFS RAID Arrays.
 				search_btrfs_filesystem
 				if [ -n "${#BTRFS_MD[*]}" ] ; then
@@ -1733,7 +1733,7 @@ lv_free_size() {
 			-pc)
 				# nur Partitionen und verschluesselte Laufwerke suchen
 				#
-				# vorhandene BTRFS Laufwerke suchen zum heraus filtern
+				# vorhandene BTRFS Laufwerke suchen zum herausfiltern
 				# von Laufwerken eines BTRFS RAID Arrays.
 				search_btrfs_filesystem
 				if [ -n "${#BTRFS_MD[*]}" ] ; then
