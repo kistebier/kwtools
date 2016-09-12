@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2016-07-03">
+        <meta name="date" content="2016-09-12">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -82,7 +82,9 @@
 			<a href="hw.html#raid_used_dev_size" target="_self">raid_used_dev_size</a><br>
 			<a href="hw.html#resize_cryptdisk" target="_self">resize_cryptdisk</a><br>
 			<a href="hw.html#resize_cryptdisk_stop" target="_self">resize_cryptdisk_stop</a><br>
+			<a href="hw.html#search_btrfs_filesystem" target="_self">search_btrfs_filesystem</a><br>
 			<a href="hw.html#search_cryptdev" target="_self">search_cryptdev</a><br>
+			<a href="hw.html#search_devices" target="_self">search_devices</a><br>
 			<a href="hw.html#vg_display" target="_self">vg_display</a><br>
 			<a href="hw.html#vg_free_size" target="_self">vg_free_size</a></p>
 			<h4>Nachrichten und Fehlermeldungen</h4>
@@ -593,6 +595,32 @@
                 </tr>
                 <tr>
                         <td></td>
+                        <td vAlign=top><b><a name="search_btrfs_filesystem">search_btrfs_filesystem</a></b>
+			<p>Die Funktion search_btrfs_filesystem sucht nach Laufwerken mit btrfs
+			Dateisystem.<br>
+			search_btrfs_filesystem<br>
+			<b><font color="darkYellow">Variablen</font></b><br>
+			BTRFS_LABEL_DEV - Array mit den Label aller gefundenen btrfs Laufwerke.<br>
+			BTRFS_UUID_DEV - Array mit der UUID aller gefundenen btrfs Laufwerke.<br>
+			BTRFS_DEV - Array mit den Devices aller gefundenen btrfs Laufwerke.<br>
+			BTRFS_DEV_E - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+			die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+			BTRFS_DEV_M - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+			die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+			BTRFS_MD - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+			mehreren Devices bestehen.<br>
+			BTRFS_MD_E - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+			mehreren Devices bestehen, f&uuml;r die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+			BTRFS_MD_M - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+			mehreren Devices bestehen, f&uuml;r die Auswahl mit den Funktionen
+			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
+                        <td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
                         <td vAlign=top><b><a name="search_cryptdev">search_cryptdev</a></b>
 			<p>Die Funktion search_cryptdev sucht nach verschl&uuml;sselten
 			Laufwerken anhand der Datei /etc/crypttab.<br>
@@ -601,13 +629,39 @@
 			-l - suche nach nur Luks verschl&uuml;sselten Laufwerken<br>
 			-s - suche nach inaktiven verschl&uuml;sselten Laufwerken<br>
 			nichts - alle verschl&uuml;sselten Laufwerke in /etc/crypttab<br>
-			<b><font color="darkYellow">Variable</font></b><br>
+			<b><font color="darkYellow">Variablen</font></b><br>
 			MAP_DEV_E - Array mit den verschl&uuml;sselten Laufwerken.<br>
 			MAP_DEV - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
 			Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
 			MAP_DEV_M - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
-			Funktionen <a target="_blank" href="sys.html#checklist">checklist</a> und <a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
+			Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
 			<td></td>
+                </tr>
+                <tr>
+                        <td vAlign=top colspan="3"><br></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td vAlign=top><b><a name="search_devices">search_devices</a></b>
+			<p>Die Funktion search_devices sucht nach Partitionen, Software RAID Arrays,
+			Logischen Volumes und Cryptsetup Laufwerken. Devices die in btrfs Laufwerken,
+			die aus mehreren Devices bestehen, werden herausgefiltert.<br>
+			search_devices [ -a | -c | -e | -p | -pc ]<br>
+			-a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
+			Laufwerke.<br>
+			-c - nur Cryptsetup Laufwerke.<br>
+			-e - nur ext[234] Laufwerke.<br>
+			-p - nur Partitionen<br>
+			-pc - nur Partitionen und Cryptsetup Laufwerke.<br>
+			<b><font color="darkYellow">Variablen</font></b><br>
+			NO_BTRFS_DEV - Array mit den Devices aller gefundenen btrfs Laufwerke.<br>
+			NO_BTRFS_DEV_E - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+			die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+			NO_BTRFS_DEV_M - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+			die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+			FS - Array mit dem Dateisystemtyp der ext2/3/4 Laufwerke um das richtige fsck
+			Kommando ausf&uuml;hren zu k&ouml;nnen.</p></td>
+                        <td></td>
                 </tr>
                 <tr>
                         <td vAlign=top colspan="3"><br></td>
