@@ -1,0 +1,347 @@
+# Funktion (kwbtrfs_balance), fuer die Balance von btrfs Laufwerken.
+#
+# usage: kwbtrfs_balance
+#
+kwbtrfs_balance() {
+	unset -- DFILTER MFILTER SFILTER DRIVE DRIVE_ANZ
+	# Variablen# {{{
+	lv_Filter=$(gettext 'Filter')
+	lv_Profiles=$(gettext 'Profile')
+	lv_Usage=$(gettext 'Benutzung')
+	lv_Convert=$(gettext 'Umwandlung')
+	lv_Soft=$(gettext 'weich')
+	lv_Data=$(gettext 'Datenblockgruppen')
+	lv_Meta=$(gettext 'Metadaten')
+	lv_System=$(gettext 'System')
+	BALANCE_TITLE="$lv_Balance"
+	BALANCE_FILTER_TITLE="${lv_Balance}::${lv_Filter}"
+	BALANCE_FILTER_MSG=$(gettext 'Waehlen Sie einen $lv_Filter aus.')
+	CONVERT_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein Raidlevel fuer den Filter \"convert\" aus.')
+	PROFILE_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein oder mehrere Profile fuer den Filter \"profiles\" aus.')
+	DATA="${DATA:-yes}"
+	META="${META:-yes}"
+	SYSTEM="${SYSTEM:-yes}"
+	## }}}
+	# Funktion (balance_filter_menu), Auswahl eines Filter# {{{
+	balance_filter_menu() {
+		BALANCE_FILTER_MENU=($lv_Convert \"$CONVERT\" $lv_Profiles \"$PROFILES\"
+		$lv_Usage \"$USAGE\" $lv_Soft \"$SOFT\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$BALANCE_FILTER_TITLE" "$BALANCE_FILTER_MSG" "$BALANCE_FILTER_MENU"
+	}
+	## }}}
+	# Funktion (balance_menu),# {{{
+	balance_menu() {
+		BALANCE_MENU=(\"$lv_Btrfs_Drive\" \"$DRIVE\" $lv_Data \"$DATA\" $lv_Meta \"$META\"
+		$lv_System \"$SYSTEM\" $lv_Filter \"\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$BALANCE_TITLE" "$gv_Menupoint" "$BALANCE_MENU"
+	}
+	## }}}
+	# Funktion (option_question_msg), Frage auf welche Optionen die Filter# {{{
+	# angewendet werden sollen.
+	option_question_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			local Opt
+			Opt="$1"
+			case "$OPt" in
+				$lv_Data)
+					Opt="$lv_Data"
+					;;
+				$lv_Meta)
+					Opt="$lv_Meta Chunks"
+					;;
+				$lv_System)
+					Opt="$lv_System Chunks"
+					;;
+			esac
+			OPT_MSG=$(gettext 'Sollen die $lv_Filter auf die $Opt angewendet werden (ja/nein)?')
+		else
+			no_part_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
+	# Funktion (raid_level_menu), Auswahl eines Raidlevels# {{{
+	raid_level_menu() {
+		if [[ ${#argv} == 2 ]] ; then
+			if [[ $DRIVE_ANZ -eq 1 ]] ; then
+				RAIDLEVEL_MENU=($gv_None \"\" $lv_Single \"$lv_Redundanz -\"
+				$lv_Dup \"$lv_Redundanz -\")
+			elif [[ $DRIVE_ANZ -eq 2 ]] ; then
+				RAIDLEVEL_MENU=($gv_None \"\" $lv_Single \"$lv_Redundanz -\"
+				$lv_Dup \"$lv_Redundanz -\"	raid0 \"$lv_Redundanz -\"
+				raid1 \"$lv_Redundanz +\" raid5 \"$lv_Redundanz +\")
+			elif [[ $DRIVE_ANZ -eq 3 ]] ; then
+				RAIDLEVEL_MENU=($gv_None \"\" $lv_Single \"$lv_Redundanz -\"
+				$lv_Dup \"$lv_Redundanz -\" raid0 \"$lv_Redundanz -\"
+				raid1 \"$lv_Redundanz +\"	raid5 \"$lv_Redundanz +\"
+				raid6 \"$lv_Redundanz +\")
+			elif [[ $DRIVE_ANZ -ge 4 ]] ; then
+				RAIDLEVEL_MENU=($gv_None \"\" $lv_Single \"$lv_Redundanz -\"
+				$lv_Dup \"$lv_Redundanz -\" raid0 \"$lv_Redundanz -\"
+				raid1 \"$lv_Redundanz +\"	raid5 \"$lv_Redundanz +\"
+				raid6 \"$lv_Redundanz +\" raid10 \"$lv_Redundanz +\")
+			fi
+			menubox "$1" "$BALANCE_FILTER_TITLE" "$2" "$RAIDLEVEL_MENU"
+		else
+			no_part_msg $0
+			return 1
+		fi
+	}
+	## }}}
+	# Funktion (profiles_checklist), Profile auswaehlen# {{{
+	profiles_checklist() {
+		PROFILES_MENU=($lv_Single \"$lv_Redundanz -\" off $lv_Dup \"$lv_Redundanz -\" off
+		raid0 \"$lv_Redundanz -\" off raid1 \"$lv_Redundanz +\" off
+		raid5 \"$lv_Redundanz +\" off raid6 \"$lv_Redundanz +\" off
+		raid10 \"$lv_Redundanz +\" off)
+		checklist "$1" "$BALANCE_FILTER_TITLE" "$PROFILE_FILTER_MSG" "$PROFILES_MENU"
+	}
+	## }}}
+	search_btrfs_filesystem
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		balance_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					script_help balance_help
+					balance_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Btrfs_Drive)
+					# bestehendes btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu "" "$BALANCE_TITLE" "$BTRFS_PATH_E"
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help balance_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }" "$BALANCE_TITLE" "$BTRFS_PATH_E"
+								;;
+							/*)
+								# Laufwerk uebernehmen und per Index die Laufwerksanzahl
+								# heraus bekommen.
+								DRIVE="$gv_Auswahl"
+								Index=$BTRFS_PATH[(i)$DRIVE]
+								DRIVE_ANZ=${DEV_ANZ[Index]}
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					balance_menu $lv_Btrfs_Drive
+					;;
+				$lv_Data)
+					# Frage, ob die Filter auf die Datenblockgruppen angewendet werden soll.# {{{
+					option_question_msg $lv_Data
+					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
+					if [[ $gv_Auswahl == yes ]] ; then
+						DATA="yes"
+					else
+						DATA="no"
+					fi
+					## }}}
+					balance_menu $lv_Data
+					;;
+				$lv_Meta)
+					# Frage, ob die Filter auf die Metadaten Chunks angewendet werden soll.# {{{
+					option_question_msg $lv_Meta
+					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
+					if [[ $gv_Auswahl == yes ]] ; then
+						META="yes"
+					else
+						META="no"
+					fi
+					## }}}
+					balance_menu $lv_Meta
+					;;
+				$lv_System)
+					# Frage, ob die Filter auf die System Chunks angewendet werden soll.# {{{
+					option_question_msg $lv_System
+					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
+					if [[ $gv_Auswahl == yes ]] ; then
+						SYSTEM="yes"
+					else
+						SYSTEM="no"
+					fi
+					## }}}
+					balance_menu $lv_System
+					;;
+				$lv_Filter)
+					# Filter auswaehlen# {{{
+					if [[ -n $DRIVE ]] ; then
+						balance_filter_menu
+						while [[ -n $gv_Auswahl ]] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+									script_help balance_filter_help
+									balance_filter_menu "${gv_Auswahl#HELP }"
+									;;
+								$lv_Convert)
+									# convert Filter auswaehlen# {{{
+									raid_level_menu "" "$CONVERT_FILTER_MSG"
+									while [[ -n $gv_Auswahl ]] ; do
+										case "$gv_Auswahl" in
+											HELP*)
+												script_help balance_filter_help
+												raid_level_menu "${gv_Auswahl#HELP }" "$CONVERT_FILTER_MSG"
+												;;
+											*)
+												# Raidlevel uebernehmen oder auch nicht.
+												if [[ $gv_Auswahl == $gv_None ]] ; then
+													unset -- CONVERT
+												else
+													CONVERT="$gv_Auswahl"
+												fi
+												break
+												;;
+										esac
+									done
+									## }}}
+									balance_filter_menu $lv_Convert
+									;;
+								$lv_Profiles)
+									# Profil Filter auswaehlen# {{{
+									profiles_checklist ""
+									while [[ -n $gv_Auswahl ]] ; do
+										case "$gv_Auswahl" in
+											HELP*)
+												script_help balance_filter_help
+												profiles_checklist "${gv_Auswahl#HELP }"
+												;;
+											*)
+												# Raidlevel uebernehmen oder auch nicht.
+												PROFILES="${gv_Auswahl_Display// /\|}"
+												break
+												;;
+										esac
+									done
+									## }}}
+									balance_filter_menu $lv_Profiles
+									;;
+								$lv_Usage)
+									balance_filter_menu $lv_Usage
+									;;
+								$lv_Soft)
+									# Soll der Filter soft aktviert werden (ja/nein).# {{{
+									MSG=$(gettext 'Soll der Filter $lv_Soft aktiviert werden (ja/nein)?')
+									yesno "$BALANCE_FILTER_TITLE" "$MSG" no
+									if [[ $gv_Auswahl == yes ]] ; then
+										SOFT=yes
+									else
+										SOFT=no
+									fi
+									## }}}
+									balance_filter_menu $lv_Soft
+									;;
+								$gv_Save)
+									# Filter zusammen zaehlen# {{{
+									if [[ $DATA == yes ]] ; then
+										if [[ -n $CONVERT ]] ; then
+											DFILTER+=(convert=${CONVERT})
+										fi
+										if [[ -n $PROFILES ]] ; then
+											DFILTER+=(profiles=${PROFILES})
+										fi
+										if [[ -n $USAGE ]] ; then
+											DFILTER+=(usage=${USAGE})
+										fi
+										if [[ $SOFT == yes ]] ; then
+											DFILTER+=(soft)
+										fi
+										DFILTER="${DFILTER// /,}"
+									else
+										unset -- DFILTER
+									fi
+									if [[ $META == yes ]] ; then
+										if [[ -n $CONVERT ]] ; then
+											MFILTER+=(convert=${CONVERT})
+										fi
+										if [[ -n $PROFILES ]] ; then
+											MFILTER+=(profiles=${PROFILES})
+										fi
+										if [[ -n $USAGE ]] ; then
+											MFILTER+=(usage=${USAGE})
+										fi
+										if [[ $SOFT == yes ]] ; then
+											MFILTER+=(soft)
+										fi
+										MFILTER="${MFILTER// /,}"
+									else
+										unset -- MFILTER
+									fi
+									if [[ $SYSTEM == yes ]] ; then
+										if [[ -n $CONVERT ]] ; then
+											SFILTER+=(convert=${CONVERT})
+										fi
+										if [[ -n $PROFILES ]] ; then
+											SFILTER+=(profiles=${PROFILES})
+										fi
+										if [[ -n $USAGE ]] ; then
+											SFILTER+=(usage=${USAGE})
+										fi
+										if [[ $SOFT == yes ]] ; then
+											SFILTER+=(soft)
+										fi
+										SFILTER="${SFILTER// /,}"
+									else
+										unset -- SFILTER
+									fi
+									## }}}
+									break
+									;;
+								$gv_Back)
+									break
+									;;
+							esac
+						done
+						balance_menu $lv_Filter
+					else
+						MSG=$(gettext 'Sie muessen erst ein \"$lv_Btrfs_Drive\" auswaehlen.')
+						msgbox "$gv_Info" "$MSG"
+						balance_menu $lv_Btrfs_Drive
+					fi
+					## }}}
+					;;
+				$gv_Save)
+					# Befehl btrfs balance ausfuehren# {{{
+					BALANCE_MSG="${lv_Balance}: ${DRIVE} ..."
+					if [[ -n $DRIVE ]] ; then
+						BALANCE_OPT="-f -v"
+						if [[ -n $DFILTER ]] ; then
+							BALANCE_OPT="$BALANCE_OPT -d${DFILTER}"
+						fi
+						if [[ -n $MFILTER ]] ; then
+							BALANCE_OPT="$BALANCE_OPT -m${MFILTER}"
+						fi
+						if [[ -n $SFILTER ]] ; then
+							BALANCE_OPT="$BALANCE_OPT -s${SFILTER}"
+						fi
+						btrfs balance start ${=BALANCE_OPT} $DRIVE 2>&1 | \
+							progressbox "$BALANCE_TITLE" "$BALANCE_MSG" || \
+							(prog_failure ; return 1)
+					else
+						MSG=$(gettext 'Sie muessen mindestens ein \"$lv_Btrfs_Drive\" auswaehlen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					balance_menu $lv_Btrfs_Drive
+					;;
+				$gv_Back)
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
