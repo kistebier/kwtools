@@ -117,7 +117,7 @@ kwbtrfs_balance() {
 	usage_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			Value="$1"
-			USAGE_MSG=$(gettext 'Geben Sie den Wert in Prozent, unter dem die Blockgruppen ausgeglichen werden sollen, ein. Die jetzige Benutzung des laufwerks betraegt ${Value}.')
+			USAGE_MSG=$(gettext 'Geben Sie einen Wert in Prozent, unter dem die Blockgruppen ausgeglichen werden sollen, ein. Die jetzige Benutzung des laufwerks betraegt ${Value}%.')
 		else
 			no_part_msg $0
 		fi
@@ -315,33 +315,33 @@ kwbtrfs_balance() {
 												usage_menu "${gv_Auswahl#HELP }"
 												;;
 											$lv_Data)
-												DUSAGE="${Data_Usage}%"
+												DUSAGE="$Data_Usage"
 												usage_msg "$DUSAGE"
-												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${DUSAGE%?}"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "$DUSAGE"
 												if [[ -n $NUMBER ]] ; then
-													DUSAGE="${NUMBER}%"
+													DUSAGE="$NUMBER"
 												else
 													unset -- DUSAGE
 												fi
 												usage_menu $lv_Data
 												;;
 											$lv_Meta)
-												MUSAGE="${Meta_Usage}%"
+												MUSAGE="$Meta_Usage"
 												usage_msg "$MUSAGE"
-												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${MUSAGE%?}"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "$MUSAGE"
 												if [[ -n $NUMBER ]] ; then
-													MUSAGE="${NUMBER}%"
+													MUSAGE="$NUMBER"
 												else
 													unset -- MUSAGE
 												fi
 												usage_menu $lv_Meta
 												;;
 											$lv_System)
-												SUSAGE="${System_Usage}%"
+												SUSAGE="$System_Usage"
 												usage_msg "$SUSAGE"
-												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${SUSAGE%?}"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "$SUSAGE"
 												if [[ -n $NUMBER ]] ; then
-													SUSAGE="${NUMBER}%"
+													SUSAGE="$NUMBER"
 												else
 													unset -- SUSAGE
 												fi
