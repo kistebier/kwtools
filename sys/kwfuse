@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.09.2016
 #
 # Script: Konfiguration, mount und umount von Dateisystemen mit FUSE.
-# Version: 0.1.12
+# Version: 0.1.13
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -52,10 +52,11 @@ autoload -U read_fstab no_tabentry_msg
 #
 # read_conf DATEIRC
 
-# Kernelversion pruefen, muss >=2.4.21 sein.# {{{
+# Kernelversion pruefen, muss >=2.4.22 sein.# {{{
 kernel_release
 if [[ "${gv_K_Release%%-*}" < 2.4.22 ]] ; then
-	msgbox "$gv_Attention" no_kernel_support
+	MSG=$(gettext 'Sie benoetigen eine Kernel Version >=2.4.22.')
+	msgbox "$gv_Attention" "$MSG"
 	exit 0
 fi
 ## }}}
