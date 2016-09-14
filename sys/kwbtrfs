@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 11.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 13.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -37,6 +37,14 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
+# Kernel Version pruefen
+kernel_release
+if [[ ${gv_K_Release%%-*} < 4.6.0 ]] ; then
+	MSG=$(gettext 'Sie benoetigen eine Kernel Version >=4.6.0.')
+	msgbox "$gv_Info" "$MSG"
+	exit 0
+fi
+
 # Pruefen, ob btrfs installiert ist.
 prog_check btrfs mkfs.btrfs
 if [[ -n $NO_PROGS ]] ; then
@@ -46,7 +54,7 @@ fi
 # Pruefen, ob die Version von btrfs die richtige ist.
 Version=${${(M)$(btrfs --version)##*v*}#v}
 if [[ $Version < 4.5.2 ]] ; then
-	MSG=$(gettext 'Sie benoetigen eine btrfs ($Version) Version die groesser oder gleich 4.5.2 ist.')
+	MSG=$(gettext 'Sie benoetigen eine btrfs ($Version) Version >=4.5.2.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
 fi
@@ -62,12 +70,15 @@ root_check
 # Variablen
 lv_All_Devices=$(gettext 'alle Laufwerke')
 lv_Btrfs_Drive=$(gettext 'btrfs Laufwerk')
-lv_Balance=$(gettext 'Datenabgleich')
+lv_Balance=$(gettext 'Balance')
 lv_Defrag=$(gettext 'Defragmentierung')
 lv_Scan=$(gettext 'scannen')
 lv_Filesystem=$(gettext 'Dateisystem')
 lv_Subvolumes=$(gettext 'Subvolumes')
 lv_Drive=$(gettext 'Laufwerk')
+lv_Single=$(gettext 'single')
+lv_Dup=$(gettext 'dup')
+lv_Redundanz=$(gettext 'Redundanzdaten')
 lv_Devices=$(gettext 'Laufwerke')
 BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
 DRIVE_MSG=$(gettext 'Waehlen Sie ein $lv_Drive aus.')
@@ -145,25 +156,17 @@ drive_choice_checklist() {
 mount_btrfs_dev_check() {
 	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
 	for i in ${=BTRFS_DEV} ; {
-		Nr=${#BTRFS_MD[*]}
-		if [[ -n $Nr ]] ; then
-			if [[ -n ${(M)${BTRFS_MD[Nr]}[(fr)*$i*]} ]] ; then
-				###########################
-				# TODO: wirklich mit Index?
-				Index=$BTRFS_DEV[(i)$i]
-				###########################
-			else
-				unset -- Index
-			fi
-			if [[ -z $Index ]] ; then
+		if [[ -n ${#BTRFS_MD[*]} ]] ; then
+			Index=$BTRFS_DEV[(i)$i]
+			if [[ -z ${(M)${=BTRFS_MD[Index]}[(fr)*$i*]} ]] ; then
 				mount_check -c $i
 				if [[ $MOUNT == no ]] ; then
-					mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
-					if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
-						MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
-						BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
-						BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
-						BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
+					mkdir /tmp/${i##*/} &>/dev/null
+					if mount -t btrfs $i /tmp/${i##*/} &>/dev/null ; then
+						MOUNT_DEVS+=(/tmp/${i##*/})
+						BTRFS_PATH+=(/tmp/${i##*/})
+						BTRFS_PATH_E+=(/tmp/${i##*/} \"\")
+						BTRFS_PATH_M+=(/tmp/${i##*/} \"\" off)
 					fi
 				else
 					BTRFS_PATH+=($MOUNTPOINT)
@@ -174,12 +177,12 @@ mount_btrfs_dev_check() {
 				mount_check -c $i
 				if [[ $MOUNT == no ]] ; then
 					Uuid="${BTRFS_UUID_DEV[Index]}"
-					mkdir ${gv_WorkDir}/${Uuid##*-} &>/dev/null
-					if mount -t btrfs UUID="$Uuid" ${gv_WorkDir}/${Uuid##*-} &>/dev/null ; then
-						MOUNT_DEVS+=(${gv_WorkDir}/${Uuid##*-})
-						BTRFS_PATH+=(${gv_WorkDir}/${Uuid##*-})
-						BTRFS_PATH_E+=(${gv_WorkDir}/${Uuid##*-} \"\")
-						BTRFS_PATH_M+=(${gv_WorkDir}/${Uuid##*-} \"\" off)
+					mkdir /tmp/${Uuid##*-} &>/dev/null
+					if mount -t btrfs UUID="$Uuid" /tmp/${Uuid##*-} &>/dev/null ; then
+						MOUNT_DEVS+=(/tmp/${Uuid##*-})
+						BTRFS_PATH+=(/tmp/${Uuid##*-})
+						BTRFS_PATH_E+=(/tmp/${Uuid##*-} \"\")
+						BTRFS_PATH_M+=(/tmp/${Uuid##*-} \"\" off)
 					fi
 				else
 					BTRFS_PATH+=($MOUNTPOINT)
@@ -190,12 +193,12 @@ mount_btrfs_dev_check() {
 		else
 			mount_check -c $i
 			if [[ $MOUNT == no ]] ; then
-				mkdir ${gv_WorkDir}/${i##*/} &>/dev/null
-				if mount -t btrfs $i ${gv_WorkDir}/${i##*/} &>/dev/null ; then
-					MOUNT_DEVS+=(${gv_WorkDir}/${i##*/})
-					BTRFS_PATH+=(${gv_WorkDir}/${i##*/})
-					BTRFS_PATH_E+=(${gv_WorkDir}/${i##*/} \"\")
-					BTRFS_PATH_M+=(${gv_WorkDir}/${i##*/} \"\" off)
+				mkdir /tmp/${i##*/} &>/dev/null
+				if mount -t btrfs $i /tmp/${i##*/} &>/dev/null ; then
+					MOUNT_DEVS+=(/tmp/${i##*/})
+					BTRFS_PATH+=(/tmp/${i##*/})
+					BTRFS_PATH_E+=(/tmp/${i##*/} \"\")
+					BTRFS_PATH_M+=(/tmp/${i##*/} \"\" off)
 				fi
 			else
 				BTRFS_PATH+=($MOUNTPOINT)
@@ -228,13 +231,16 @@ no_btrfs_md_dev_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (umount_dev), bindet alle Laufwerke aus die ins Arbeitsverzeichnis# {{{
-# eingebunden wurden.
+# Funktion (umount_dev), bindet alle Laufwerke aus die ins tmp-Verzeichnis# {{{
+# eingebunden wurden und loescht die Mountpoints.
 #
 umount_dev() {
 	if [[ -n ${MOUNT_DEVS[1]} ]] || [[ -n ${SUBVOL_MOUNT_DEVS[1]} ]] ; then
 		for i in ${=SUBVOL_MOUNT_DEVS} ${=MOUNT_DEVS} ; {
 			mount_check -a $i
+		}
+		for i in ${=MOUNT_DEVS} ; {
+			rmdir $i &>/dev/null
 		}
 	fi
 }
@@ -708,11 +714,9 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Devices
 			;;
 		$lv_Balance)
-			# Datenabgleich# {{{
-			# autoload -U kwbtrfs_balance
-			# kwbtrfs_balance
-			#
-			hier_ist_noch_nichts $lv_Balance
+			# Balance# {{{
+			 autoload -U kwbtrfs_balance
+			 kwbtrfs_balance
 			## }}}
 			main_menu $lv_Balance
 			;;
