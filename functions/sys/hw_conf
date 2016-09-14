@@ -1498,15 +1498,16 @@ lv_free_size() {
 	search_btrfs_filesystem() {
 		unset -- BTRFS_DEV BTRFS_DEV_E BTRFS_DEV_M BTRFS_LABEL_DEV BTRFS_LABEL_DEV_E \
 			BTRFS_LABEL_DEV_M BTRFS_MD BTRFS_MD_E BTRFS_MD_M BTRFS_UUID_DEV \
-			BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M dev1 dev dev_E dev_M
+			BTRFS_UUID_DEV_E BTRFS_UUID_DEV_M DEV_ANZ dev1
 		local label uuid
 		btrfs filesystem show > ${gv_WorkDir}/btrfs-all-devices.txt
 		if [ "`wc -l <${gv_WorkDir}/btrfs-all-devices.txt`" -gt 1 ] ; then
-			Anz=1
+			Anz=0
 			while read a b c d rest ; do 
 				case $a in
 					Label:)
 						# Label und UUID uebernehmen
+						(( Anz++ ))
 						label="${b//\'/}"
 						uuid="$d"
 						BTRFS_LABEL_DEV+=($label)
@@ -1517,17 +1518,18 @@ lv_free_size() {
 						BTRFS_UUID_DEV_M+=($uuid \"\" off)
 						if [[ $label != none ]] ; then
 							btrfs filesystem show $label > ${gv_WorkDir}/btrfs-device.txt
-							Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
+							DEV_ANZ[Anz]="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
 						elif [[ $uuid != none ]] ; then
 							btrfs filesystem show $uuid > ${gv_WorkDir}/btrfs-device.txt
-							Dev_Anz="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
+							DEV_ANZ[Anz]="`awk '/Total devices/{print $3}' ${gv_WorkDir}/btrfs-device.txt`"
 						fi
 						# Devices auflisten
-						if (( $Dev_Anz > 1 )) ; then
+						if (( ${DEV_ANZ[Anz]} > 1 )) ; then
 							dev1=${(M)$(< ${gv_WorkDir}/btrfs-device.txt)[(fr)*/dev/*]}
 							BTRFS_DEV[Anz]=($dev1)
 							BTRFS_DEV_E[Anz]=($dev1 \"\")
 							BTRFS_DEV_M[Anz]=($dev1 \"\" off)
+							unset -- dev dev_E dev_M
 							while read a rest1 ; do
 								case $a in
 									devid)
@@ -1541,13 +1543,11 @@ lv_free_size() {
 							BTRFS_MD[Anz]=("$dev")
 							BTRFS_MD_E[Anz]=("$dev_E")
 							BTRFS_MD_M[Anz]=("$dev_M")
-							(( Anz++ ))
 						else
 							dev1="`awk '/devid/{print $8}' ${gv_WorkDir}/btrfs-device.txt`"
 							BTRFS_DEV[Anz]=($dev1)
 							BTRFS_DEV_E[Anz]=($dev1 \"\")
 							BTRFS_DEV_M[Anz]=($dev1 \"\" off)
-							(( Anz++ ))
 						fi
 						;;
 				esac
