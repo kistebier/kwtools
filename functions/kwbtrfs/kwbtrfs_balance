@@ -3,12 +3,12 @@
 # usage: kwbtrfs_balance
 #
 kwbtrfs_balance() {
-	unset -- DFILTER MFILTER SFILTER DRIVE DRIVE_ANZ
+	unset -- DFILTER MFILTER SFILTER DRIVE DRIVE_ANZ DUSAGE MUSAGE SUSAGE
 	# Variablen# {{{
 	lv_Filter=$(gettext 'Filter')
 	lv_Profiles=$(gettext 'Profile')
 	lv_Usage=$(gettext 'Benutzung')
-	lv_Convert=$(gettext 'Umwandlung')
+	lv_Conversion=$(gettext 'Konvertierung')
 	lv_Soft=$(gettext 'weich')
 	lv_Data=$(gettext 'Datenblockgruppen')
 	lv_Meta=$(gettext 'Metadaten')
@@ -24,7 +24,7 @@ kwbtrfs_balance() {
 	## }}}
 	# Funktion (balance_filter_menu), Auswahl eines Filter# {{{
 	balance_filter_menu() {
-		BALANCE_FILTER_MENU=($lv_Convert \"$CONVERT\" $lv_Profiles \"$PROFILES\"
+		BALANCE_FILTER_MENU=($lv_Conversion \"$CONVERT\" $lv_Profiles \"$PROFILES\"
 		$lv_Usage \"$USAGE\" $lv_Soft \"$SOFT\" $gv_Save \"\" $gv_Back \"\")
 		menubox "$1" "$BALANCE_FILTER_TITLE" "$BALANCE_FILTER_MSG" "$BALANCE_FILTER_MENU"
 	}
@@ -96,6 +96,30 @@ kwbtrfs_balance() {
 		raid5 \"$lv_Redundanz +\" off raid6 \"$lv_Redundanz +\" off
 		raid10 \"$lv_Redundanz +\" off)
 		checklist "$1" "$BALANCE_FILTER_TITLE" "$PROFILE_FILTER_MSG" "$PROFILES_MENU"
+	}
+	## }}}
+	# Funktion (usage_menu), einstellen der Benutzung von# {{{
+	# Datenblockgruppen, Metadaten Chunks und System Chunks
+	# Groesse in Prozent des ausgewaehlten btrfs Laufwerks
+	usage_menu() {
+		USAGE_MENU=($lv_Data \"$DUSAGE\" $lv_Meta \"$MUSAGE\"
+		$lv_System \"$SUSAGE\" $gv_Back \"\")
+		menubox "$1" "$BALANCE_TITLE" "$gv_Menupoint" "$USAGE_MENU"
+	}
+	## }}}
+	# Funktion (usage_msg), Nachricht mit dem jeweiligen# {{{
+	# jetzigen WERT der Benutzung in Prozent versehen.
+	#
+	# usage: usage_msg VALUE
+	# VALUE - jetziger Wert
+	#
+	usage_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			Value="$1"
+			USAGE_MSG=$(gettext 'Geben Sie die Groesse der Benutzung in Prozent ein. Die jetzige Groesse der Benutzung betraegt ${Value}.')
+		else
+			no_part_msg $0
+		fi
 	}
 	## }}}
 	search_btrfs_filesystem
@@ -179,7 +203,7 @@ kwbtrfs_balance() {
 									script_help balance_filter_help
 									balance_filter_menu "${gv_Auswahl#HELP }"
 									;;
-								$lv_Convert)
+								$lv_Conversion)
 									# convert Filter auswaehlen# {{{
 									raid_level_menu "" "$CONVERT_FILTER_MSG"
 									while [[ -n $gv_Auswahl ]] ; do
@@ -200,7 +224,7 @@ kwbtrfs_balance() {
 										esac
 									done
 									## }}}
-									balance_filter_menu $lv_Convert
+									balance_filter_menu $lv_Conversion
 									;;
 								$lv_Profiles)
 									# Profil Filter auswaehlen# {{{
@@ -222,6 +246,89 @@ kwbtrfs_balance() {
 									balance_filter_menu $lv_Profiles
 									;;
 								$lv_Usage)
+									# Benutzung der Datenblockgruppen, Metadaten Chunks# {{{
+									# und System Chunks in Prozent eingeben.
+									# einlesen der Benutzung des Laufwerks# {{{
+									typeset -F 3 Data_Usage Meta_Usage System_Usage
+									btrfs filesystem df $DRIVE > ${gv_WorkDir}/df
+									while read opt profile size usage ; do
+										case "${opt%,}" in
+											Data)
+												# Groessen nach Byte umrechnen
+												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
+												Total="$SIZE_B"
+												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
+												Usage="$SIZE_B"
+												# Benutzung in Prozent ausrechnen
+												(( Data_Usage = Usage * 100 / Total ))
+												;;
+											System)
+												# Groessen nach Byte umrechnen
+												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
+												Total="$SIZE_B"
+												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
+												Usage="$SIZE_B"
+												# Benutzung in Prozent ausrechnen
+												(( System_Usage = Usage * 100 / Total ))
+												;;
+											Metadata)
+												# Groessen nach Byte umrechnen
+												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
+												Total="$SIZE_B"
+												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
+												Usage="$SIZE_B"
+												# Benutzung in Prozent ausrechnen
+												(( Meta_Usage = Usage * 100 / Total ))
+												;;
+										esac
+									done < ${gv_WorkDir}/df
+									## }}}
+									usage_menu
+									while [[ -n $gv_Auswahl ]] ; do
+										case "$gv_Auswahl" in
+											HELP*)
+												script_help balance_filter_usage_help
+												usage_menu "${gv_Auswahl#HELP }"
+												;;
+											$lv_Data)
+												DUSAGE="${Data_Usage}%"
+												usage_msg "$DUSAGE"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${DUSAGE%?}"
+												if [[ -n $NUMBER ]] ; then
+													DUSAGE="${NUMBER}%"
+												else
+													unset -- DUSAGE
+												fi
+												usage_menu $lv_Data
+												;;
+											$lv_Meta)
+												MUSAGE="${Meta_Usage}%"
+												usage_msg "$MUSAGE"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${MUSAGE%?}"
+												if [[ -n $NUMBER ]] ; then
+													MUSAGE="${NUMBER}%"
+												else
+													unset -- MUSAGE
+												fi
+												usage_menu $lv_Meta
+												;;
+											$lv_System)
+												SUSAGE="${System_Usage}%"
+												usage_msg "$SUSAGE"
+												number_input -z "$BALANCE_TITLE" "$USAGE_MSG" "${SUSAGE%?}"
+												if [[ -n $NUMBER ]] ; then
+													SUSAGE="${NUMBER}%"
+												else
+													unset -- SUSAGE
+												fi
+												usage_menu $lv_System
+												;;
+											*)
+												break
+												;;
+										esac
+									done
+									## }}}
 									balance_filter_menu $lv_Usage
 									;;
 								$lv_Soft)
@@ -245,8 +352,8 @@ kwbtrfs_balance() {
 										if [[ -n $PROFILES ]] ; then
 											DFILTER+=(profiles=${PROFILES})
 										fi
-										if [[ -n $USAGE ]] ; then
-											DFILTER+=(usage=${USAGE})
+										if [[ -n $DUSAGE ]] ; then
+											DFILTER+=(usage=${DUSAGE})
 										fi
 										if [[ $SOFT == yes ]] ; then
 											DFILTER+=(soft)
@@ -262,8 +369,8 @@ kwbtrfs_balance() {
 										if [[ -n $PROFILES ]] ; then
 											MFILTER+=(profiles=${PROFILES})
 										fi
-										if [[ -n $USAGE ]] ; then
-											MFILTER+=(usage=${USAGE})
+										if [[ -n $MUSAGE ]] ; then
+											MFILTER+=(usage=${MUSAGE})
 										fi
 										if [[ $SOFT == yes ]] ; then
 											MFILTER+=(soft)
@@ -279,8 +386,8 @@ kwbtrfs_balance() {
 										if [[ -n $PROFILES ]] ; then
 											SFILTER+=(profiles=${PROFILES})
 										fi
-										if [[ -n $USAGE ]] ; then
-											SFILTER+=(usage=${USAGE})
+										if [[ -n $SUSAGE ]] ; then
+											SFILTER+=(usage=${SUSAGE})
 										fi
 										if [[ $SOFT == yes ]] ; then
 											SFILTER+=(soft)
