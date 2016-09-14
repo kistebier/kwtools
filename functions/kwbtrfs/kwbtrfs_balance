@@ -17,6 +17,7 @@ kwbtrfs_balance() {
 	BALANCE_FILTER_TITLE="${lv_Balance}::${lv_Filter}"
 	BALANCE_FILTER_MSG=$(gettext 'Waehlen Sie einen $lv_Filter aus.')
 	CONVERT_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein Raidlevel fuer den Filter \"convert\" aus.')
+	PROFILES_VALUE="$lv_Single $lv_Dup raid0 raid1 raid5 raid6 raid10"
 	PROFILE_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein oder mehrere Profile fuer den Filter \"profiles\" aus.')
 	DATA="${DATA:-yes}"
 	META="${META:-yes}"
@@ -61,8 +62,8 @@ kwbtrfs_balance() {
 		return 0
 	}
 	## }}}
-	# Funktion (raid_level_menu), Auswahl eines Raidlevels# {{{
-	raid_level_menu() {
+	# Funktion (conversion_menu), Auswahl eines Raidlevels# {{{
+	conversion_menu() {
 		if [[ ${#argv} == 2 ]] ; then
 			if [[ $DRIVE_ANZ -eq 1 ]] ; then
 				RAIDLEVEL_MENU=($gv_None \"\" $lv_Single \"$lv_Redundanz -\"
@@ -91,11 +92,11 @@ kwbtrfs_balance() {
 	## }}}
 	# Funktion (profiles_checklist), Profile auswaehlen# {{{
 	profiles_checklist() {
-		PROFILES_MENU=($lv_Single \"$lv_Redundanz -\" off $lv_Dup \"$lv_Redundanz -\" off
-		raid0 \"$lv_Redundanz -\" off raid1 \"$lv_Redundanz +\" off
-		raid5 \"$lv_Redundanz +\" off raid6 \"$lv_Redundanz +\" off
-		raid10 \"$lv_Redundanz +\" off)
-		checklist "$1" "$BALANCE_FILTER_TITLE" "$PROFILE_FILTER_MSG" "$PROFILES_MENU"
+#		PROFILES_MENU=($lv_Single \"$lv_Redundanz -\" off $lv_Dup \"$lv_Redundanz -\" off
+#		raid0 \"$lv_Redundanz -\" off raid1 \"$lv_Redundanz +\" off
+#		raid5 \"$lv_Redundanz +\" off raid6 \"$lv_Redundanz +\" off
+#		raid10 \"$lv_Redundanz +\" off)
+		checklist "$1" "$BALANCE_FILTER_TITLE" "$PROFILE_FILTER_MSG" "$VALUE_ARRAY"
 	}
 	## }}}
 	# Funktion (usage_menu), einstellen der Benutzung von# {{{
@@ -116,7 +117,7 @@ kwbtrfs_balance() {
 	usage_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			Value="$1"
-			USAGE_MSG=$(gettext 'Geben Sie die Groesse der Benutzung in Prozent ein. Die jetzige Groesse der Benutzung betraegt ${Value}.')
+			USAGE_MSG=$(gettext 'Geben Sie den Wert in Prozent, unter dem die Blockgruppen ausgeglichen werden sollen, ein. Die jetzige Benutzung des laufwerks betraegt ${Value}.')
 		else
 			no_part_msg $0
 		fi
@@ -205,12 +206,12 @@ kwbtrfs_balance() {
 									;;
 								$lv_Conversion)
 									# convert Filter auswaehlen# {{{
-									raid_level_menu "" "$CONVERT_FILTER_MSG"
+									conversion_menu "" "$CONVERT_FILTER_MSG"
 									while [[ -n $gv_Auswahl ]] ; do
 										case "$gv_Auswahl" in
 											HELP*)
 												script_help balance_filter_help
-												raid_level_menu "${gv_Auswahl#HELP }" "$CONVERT_FILTER_MSG"
+												conversion_menu "${gv_Auswahl#HELP }" "$CONVERT_FILTER_MSG"
 												;;
 											*)
 												# Raidlevel uebernehmen oder auch nicht.
@@ -228,7 +229,11 @@ kwbtrfs_balance() {
 									;;
 								$lv_Profiles)
 									# Profil Filter auswaehlen# {{{
-									profiles_checklist ""
+									# vorherige Werte mit on belegen
+									generate_is_file "${${PROFILES//|/ }//\\/}"
+									is_value "${=PROFILES_VALUE}"
+									#
+									profiles_checklist "${DEFAULT_VALUE[1]}"
 									while [[ -n $gv_Auswahl ]] ; do
 										case "$gv_Auswahl" in
 											HELP*)
@@ -249,7 +254,8 @@ kwbtrfs_balance() {
 									# Benutzung der Datenblockgruppen, Metadaten Chunks# {{{
 									# und System Chunks in Prozent eingeben.
 									# einlesen der Benutzung des Laufwerks# {{{
-									typeset -F 3 Data_Usage Meta_Usage System_Usage
+									typeset -F 3 Tmp
+									integer Data_Usage Meta_Usage System_Usage
 									btrfs filesystem df $DRIVE > ${gv_WorkDir}/df
 									while read opt profile size usage ; do
 										case "${opt%,}" in
@@ -260,7 +266,13 @@ kwbtrfs_balance() {
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
 												Usage="$SIZE_B"
 												# Benutzung in Prozent ausrechnen
-												(( Data_Usage = Usage * 100 / Total ))
+												(( Tmp = Usage * 100 / Total ))
+												if [[ $Tmp -lt 1 ]] ; then
+													Data_Usage="$Tmp:r"
+													(( Data_Usage++ ))
+												else
+													Data_Usage="$Tmp:r"
+												fi
 												;;
 											System)
 												# Groessen nach Byte umrechnen
@@ -269,7 +281,13 @@ kwbtrfs_balance() {
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
 												Usage="$SIZE_B"
 												# Benutzung in Prozent ausrechnen
-												(( System_Usage = Usage * 100 / Total ))
+												(( Tmp = Usage * 100 / Total ))
+												if [[ $Tmp -lt 1 ]] ; then
+													System_Usage="$Tmp:r"
+													(( System_Usage++ ))
+												else
+													System_Usage="$Tmp:r"
+												fi
 												;;
 											Metadata)
 												# Groessen nach Byte umrechnen
@@ -278,7 +296,13 @@ kwbtrfs_balance() {
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
 												Usage="$SIZE_B"
 												# Benutzung in Prozent ausrechnen
-												(( Meta_Usage = Usage * 100 / Total ))
+												(( Tmp = Usage * 100 / Total ))
+												if [[ $Tmp -lt 1 ]] ; then
+													Meta_Usage="$Tmp:r"
+													(( Meta_Usage++ ))
+												else
+													Meta_Usage="$Tmp:r"
+												fi
 												;;
 										esac
 									done < ${gv_WorkDir}/df
