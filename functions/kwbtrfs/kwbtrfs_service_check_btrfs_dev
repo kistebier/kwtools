@@ -1,0 +1,61 @@
+# Funktion (kwbtrfs_service_check_btrfs_dev), Device Auswahl von einem btrfs Laufwerk.# {{{
+#
+# usage: kwbtrfs_service_check_btrfs_dev
+#
+kwbtrfs_service_check_btrfs_dev() {
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		btrfs_choice_menu "" "$SERVICE_CHECK_TITLE" "$BTRFS_PATH_E"
+		while [[ -n $gv_Auswahl ]] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					script_help service_check_help
+					btrfs_choice_menu "${gv_Auswahl#HELP }" "$SERVICE_CHECK_TITLE" "$BTRFS_PATH_E"
+					;;
+				/*)
+					# Laufwerk uebernehmen# {{{
+					DRIVE="$gv_Auswahl"
+					if [[ ${#BTRFS_MD[*]} -gt 0 ]] ; then
+						# Devices aus BTRFS_MD zur Auswahl
+						# anbieten. 
+						Index=$BTRFS_PATH[(i)$DRIVE]
+						DEV_MD_E=(${BTRFS_MD_E[Index]})
+						#
+						drive_choice_menu "" "$SERVICE_CHECK_TITLE" "$DEV_MD_E"
+						while [[ -n $gv_Auswahl ]] ; do
+							case "$gv_Auswahl" in
+								HELP*)
+									script_help service_check_help
+									drive_choice_menu "${gv_Auswahl#HELP }" "$SERVICE_CHECK_TITLE" "$DEV_MD_E"
+									;;
+								/*)
+									# Laufwerk uebernehmen
+									DEV="$gv_Auswahl"
+									break
+									;;
+								*)
+									break
+							esac
+						done
+					else
+						Index=$BTRFS_PATH[(i)$DRIVE]
+						DEV=${BTRFS_DEV[Index]}
+					fi
+					## }}}
+					break
+					;;
+				*)
+					# abbrechen/zurueck
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+	fi
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
