@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 14.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 15.09.2016
 #
 # Script: kwbtrfs, bearbeitet btrfs Dateisysteme.
 # Version: 0.0.1
@@ -67,24 +67,26 @@ root_check
 # von der Funktion script_init ausgefuehrt.
 # autoload -U ...
 
-# Variablen
+# Variablen# {{{
 lv_All_Devices=$(gettext 'alle Laufwerke')
 lv_Btrfs_Drive=$(gettext 'btrfs Laufwerk')
 lv_Balance=$(gettext 'Gleichgewicht')
 lv_Defrag=$(gettext 'Defragmentierung')
-lv_Scan=$(gettext 'scannen')
-lv_Filesystem=$(gettext 'Dateisystem')
-lv_Subvolumes=$(gettext 'Subvolumes')
-lv_Drive=$(gettext 'Laufwerk')
-lv_Single=$(gettext 'single')
-lv_Dup=$(gettext 'dup')
-lv_Redundanz=$(gettext 'Redundanzdaten')
+lv_Detail=$(gettext 'detaillierte Information')
 lv_Devices=$(gettext 'Laufwerke')
+lv_Drive=$(gettext 'Laufwerk')
+lv_Dup=$(gettext 'dup')
+lv_Filesystem=$(gettext 'Dateisystem')
+lv_Redundanz=$(gettext 'Redundanzdaten')
+lv_Scan=$(gettext 'scannen')
+lv_Service=$(gettext 'Wartung')
+lv_Single=$(gettext 'single')
+lv_Subvolumes=$(gettext 'Subvolumes')
 BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
+CONF="/etc/kwtools/kwbtrfs.cf"
 DRIVE_MSG=$(gettext 'Waehlen Sie ein $lv_Drive aus.')
 SEVERAL_DRIVE_MSG=$(gettext 'Waehlen Sie ein oder mehrere $lv_Devices aus.')
-#
-CONF="/etc/kwtools/kwbtrfs.cf"
+## }}}
 
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
 read_file -f $CONF
@@ -93,7 +95,7 @@ read_file -f $CONF
 #
 main_menu() {
     MAIN_MENU=($gv_Configuration \"\" $lv_Filesystem \"\" $lv_Subvolumes \"\"
-		$lv_Devices \"\" $lv_Balance \"\" $gv_Exit \"\")
+		$lv_Devices \"\" $lv_Balance \"\" $lv_Service \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
@@ -156,7 +158,8 @@ drive_choice_checklist() {
 mount_btrfs_dev_check() {
 	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
 	for i in ${=BTRFS_DEV} ; {
-		if [[ -n ${#BTRFS_MD[*]} ]] ; then
+		if [[ ${#BTRFS_MD[*]} -gt 0 ]] ; then
+			# Index wird fuer die Variable Uuid benoetigt.
 			Index=$BTRFS_DEV[(i)$i]
 			if [[ -z ${(M)${=BTRFS_MD[Index]}[(fr)*$i*]} ]] ; then
 				mount_check -c $i
@@ -228,6 +231,15 @@ no_free_dev_msg() {
 #
 no_btrfs_md_dev_msg() {
 	MSG=$(gettext 'Es sind keine btrfs Laufwerke, welche aus mehreren Laufwerken (z.B RAID) bestehen, vorhanden.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
+# Funktion (no_btrfs_choice_msg), Nachricht das man erst ein $lv_Btrfs_Drive auswaehlen muss# {{{
+#
+# usage no_btrfs_choice_msg
+#
+no_btrfs_choice_msg() {
+	MSG=$(gettext 'Sie muessen mindestens ein $lv_Btrfs_Drive auswaehlen.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
@@ -311,7 +323,6 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$lv_Filesystem)
 			# Dateisystem # {{{
-			lv_Detail=$(gettext 'detaillierte Information')
 			lv_Df=$(gettext 'Blockbelegung')
 			lv_Label=$(gettext 'Label')
 			lv_Size=$(gettext 'Groesse')
@@ -561,7 +572,8 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Subvolumes
 			;;
 		$lv_Devices)
-			# Management fuer multiple Devices, wie z.B. RAID# {{{
+			# Management fuer (multiple) Devices, wie z.B. RAID# {{{
+			# Variablen# {{{
 			lv_Options=$(gettext 'Optionen')
 			lv_Raid=$(gettext 'RAID')
 			lv_Is_Drive=$(gettext 'btrfs Laufwerk')
@@ -572,9 +584,8 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Device_Replace=$(gettext 'Laufwerk tauschen')
 			lv_Src_Device=$(gettext 'Quelllaufwerk')
 			lv_Target_Device=$(gettext 'Ziellaufwerk')
-			#
+			## }}}
 			# Funktion (device_menu)# {{{
-			#
 			device_menu() {
 				MENU=($gv_Display \"\" $gv_Create \"\" \"$lv_Device_Convert\" \"\"
 				\"$lv_Device_Add\" \"\" \"$lv_Device_Remove\" \"\"
@@ -620,6 +631,7 @@ while [ "$gv_Auswahl" ] ; do
 											echo "$i" >>${gv_WorkDir}/btrfs_usage
 											echo "--------------------------------" >>${gv_WorkDir}/btrfs_usage
 											btrfs device usage -h "$i" >>${gv_WorkDir}/btrfs_usage
+											echo "" >>${gv_WorkDir}/btrfs_usage
 										}
 										view_file ${gv_WorkDir}/btrfs_usage
 										## }}}
@@ -719,6 +731,13 @@ while [ "$gv_Auswahl" ] ; do
 			 kwbtrfs_balance
 			## }}}
 			main_menu $lv_Balance
+			;;
+		$lv_Service)
+			# Wartung der btrfs Laufwerke# {{{
+			autoload -U kwbtrfs_service
+			kwbtrfs_service
+			## }}}
+			main_menu $lv_Service
 			;;
 		$gv_Exit)	break
 			;;
