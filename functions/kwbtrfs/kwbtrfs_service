@@ -96,8 +96,8 @@ kwbtrfs_service() {
 								rm -rf ${gv_WorkDir}/btrfs_stats &>/dev/null
 								for i in ${=gv_Auswahl} ; {
 									echo "$i" >>${gv_WorkDir}/btrfs_stats
-									echo "--------------------------------" >>${gv_WorkDir}/btrfs_usage
-									btrfs device stats "$i" >>${gv_WorkDir}/btrfs_usage
+									echo "--------------------------------" >>${gv_WorkDir}/btrfs_stats
+									btrfs device stats "$i" >>${gv_WorkDir}/btrfs_stats
 									echo "" >>${gv_WorkDir}/btrfs_stats
 								}
 								view_file ${gv_WorkDir}/btrfs_stats
@@ -239,9 +239,13 @@ kwbtrfs_service() {
 											[0-2]) CHECK_OPT="$CHECK_OPT --super $SUPER"
 												;;
 										esac
-										btrfs check ${=CHECK_OPT} $DEV 2>&1 || \
-											(prog_failure ; unset -- DRIVE DEV)
-											unset -- DRIVE DEV
+										# ausfuehren
+										rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
+										echo "$i" >>${gv_WorkDir}/btrfs_check
+										btrfs check ${=CHECK_OPT} $DEV \
+											>> ${gv_WorkDir}/btrfs_check
+										view_file ${gv_WorkDir}/btrfs_check
+										unset -- DRIVE DEV
 									else
 										unset -- DRIVE DEV
 									fi
@@ -251,7 +255,8 @@ kwbtrfs_service() {
 								## }}}
 								check_menu "$lv_Btrfs_Drive"
 								;;
-							$gv_Back)
+							$gv_Back|*)
+								# zurueck/abbrechen
 								break
 								;;
 						esac
@@ -260,7 +265,7 @@ kwbtrfs_service() {
 					service_menu "$lv_Check"
 					;;
 				$gv_Back)
-					# zurueck
+					# zurueck/abbrechen
 					break
 					;;
 			esac
