@@ -1,10 +1,10 @@
 #!/bin/zsh
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.09.2016
 #
 # Script: install, installiert die kwtools Scripts und kompiliert,
 # wenn angegeben alle Funktionen.
 #
-# Version: 0.2.9
+# Version: 0.3.0
 #
 setopt shwordsplit extendedglob
 NAME=kwtools
@@ -86,6 +86,7 @@ LOGROTATED_PATH="/etc/logrotate.d"
 GRUB_PATH="/etc/grub.d"
 PPP_PATH="/etc/ppp"
 SKEL_DIR="/etc/skel"
+SYSTEMD_PATH=/lib/systemd/system
 AUTO_KDE_FILE="${SKEL_DIR}/.kde/Autostart/firstlogin.desktop"
 AUTO_GNOME_FILE="${SKEL_DIR}/.config/autostart/firstlogin.desktop"
 # install Optionen
@@ -163,6 +164,9 @@ fi
 if [ ! -d "$KWRSYNC_BACKUP_PATH" ] ; then
 	$INSTALL $INSTALL_DIR_OPT $KWRSYNC_BACKUP_PATH
 fi
+if [ ! -d "$SYSTEMD_PATH" ] ; then
+	$INSTALL $INSTALL_DIR_OPT $SYSTEMD_PATH
+fi
 #
 # Alle Dateien kopieren
 #
@@ -227,7 +231,7 @@ echo ""
 pushd $DOC_PATH
 for i in kwtools-{bin,graphic,multi,sys,utils} \
 	kwtools-multi-{xmms2,xmms2d} kwtools-net-djbdns \
-	kwtools-sys-{fuse,grub2,kwpasswd,lvm,parted,quota,raid,rc} \
+	kwtools-sys-{btrfs,fuse,grub2,kwpasswd,lvm,parted,quota,raid,rc} \
 	kwtools-utils-ssl ; do
 	if [ -d ${DOC_PATH}/${i} ] ; then
 		rm -rfv ${DOC_PATH}/${i}
@@ -335,23 +339,28 @@ $INSTALL $INSTALL_FILE_OPT ./etc/logrotate.d/kwrsync_backup ${LOGROTATED_PATH}
 
 # kwnarc Init Script kopieren
 if [ -e /etc/debian_version ] ; then
-	if [ -e ./etc/init.d/kwnarc.debian ] ; then
-		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.debian ${INITD_PATH}/kwnarc
-		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	if [ -e .${INITD_PATH}/kwnarc.debian ] ; then
+		$INSTALL $INSTALL_EXEC_OPT .${INITD_PATH}/kwnarc.debian ${INITD_PATH}/kwnarc
+		ln -sf ${INITD_PATH}/kwnarc ${SBIN_PATH}/rckwnarc
 	fi
 elif [ -e /etc/SuSE-release ] ; then
-	if [ -e ./etc/init.d/kwnarc.suse ] ; then
-		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.suse ${INITD_PATH}/kwnarc
-		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	if [ -e .${INITD_PATH}/kwnarc.suse ] ; then
+		$INSTALL $INSTALL_EXEC_OPT .${INITD_PATH}/kwnarc.suse ${INITD_PATH}/kwnarc
+		ln -sf ${INITD_PATH}/kwnarc ${SBIN_PATH}/rckwnarc
 	fi
 else 
 	# Rest ist RedHat basiert (CentOS und Fedora)
-	if [ -e ./etc/init.d/kwnarc.rh ] ; then
-		$INSTALL $INSTALL_EXEC_OPT ./etc/init.d/kwnarc.rh ${INITD_PATH}/kwnarc
-		ln -sf /etc/init.d/kwnarc ${SBIN_PATH}/rckwnarc
+	if [ -e .${INITD_PATH}/kwnarc.rh ] ; then
+		$INSTALL $INSTALL_EXEC_OPT .${INITD_PATH}/kwnarc.rh ${INITD_PATH}/kwnarc
+		ln -sf ${INITD_PATH}/kwnarc ${SBIN_PATH}/rckwnarc
 	fi
 fi
 
+# kwnarc systemd Startdatei kopieren
+if [ -e .${SYSTEMD_PATH}/kwnarc.service ] ; then
+	$INSTALL $INSTALL_FILE_OPT .${SYSTEMD_PATH}/kwnarc.service ${SYSTEMD_PATH}
+	ln -sf ${SYSTEMD_PATH}/kwnarc.service /etc/systemd/system/multi-user.target.wants/
+fi
 sed	-e "s#KWTOOLS.*#KWTOOLS_PATH="$EXEC_PATH"#" \
 	-e "s#HELP.*#HELP_PATH="${SHARE_PATH}/help"#" ${ETC_PATH}/main.cf >/tmp/main.cf$$
 mv /tmp/main.cf$$ ${ETC_PATH}/main.cf

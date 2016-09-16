@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.11.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.09.2016
 #
 # Script: uninstall, deinstalliert alle Dateien der
 #         kwtools.
@@ -28,6 +28,7 @@ KW_SKEL_FILES="${KW_SKEL_DIR}/.firstlogin ${KW_SKEL_DIR}/.bash_login
 KW_CONF_FILES="/etc /usr/local/etc"
 KW_PPP="/etc/ppp/ip-up.d /etc/ppp/ip-down.d"
 KW_INIT="/etc/init.d"
+KW_SYSTEMD="/lib/systemd/system"
 KW_CROND="/etc/cron.d"
 KW_LOGROTATED="/etc/logrotate.d"
 KW_GRUB_FILES="/etc/grub.d/42_passwd"
@@ -40,13 +41,13 @@ KW_MANPAGES="create.cal.pl.1.gz kwdjbdns.1.gz kwholiday.1.gz
    	kwrip.1.gz kwvmstat.1.gz kwxmms2.1.gz kwxmms2d.1.gz
 	kwplaner.1.gz kwrsync.1.gz kwrsync_cron.1.gz kwsnd2sndfm.1.gz
 	kwssl2.1.gz kwtermin.1.gz kwtermin_cron.1.gz kwvcdburn.1.gz
-	cd_dvdrc.5.gz kwcryptsetuprc.5.gz kwecryptfsrc.5.gz kwpwsaferc.5.gz
+	cd_dvdrc.5.gz kwbtrfs.cf.5.gz kwcryptsetuprc.5.gz kwecryptfsrc.5.gz kwpwsaferc.5.gz
 	kwcamerarc.5.gz kwnarc.conf.5.gz kwlosetuprc.5.gz
 	kwrsync_backup.cf.5.gz main.cf.5.gz
 	kwplanerrc.5.gz kwriprc.5.gz kwrsyncrc.5.gz kwrsynctab.5.gz
 	kwsnd2sndfmrc.5.gz kwuserrc.5.gz kwvcdburnrc.5.gz kwvmstatrc.5.gz
 	kwxmms2rc.5.gz
-	kwauth.8.gz kwcrypt.8.gz kwcryptsetup.8.gz kwecryptfs.8.gz kwfuse.8.gz
+	kwauth.8.gz kwbtrfs.8.gz kwcrypt.8.gz kwcryptsetup.8.gz kwecryptfs.8.gz kwfuse.8.gz
 	kwgrub2.8.gz kwgroup.8.gz kwlosetup.8.gz kwlogrotate.8.gz
 	kwlvm.8.gz kwnarc.8.gz kwnarcconf.8.gz kwnetconf.8.gz kwnetcardconf.8.gz
 	kwparted.8.gz kwquota.8.gz kwrsync_backup.8.gz kwrsync_backup_cron.8.gz
@@ -121,9 +122,13 @@ for i in $KW_PPP ; {
 }
 
 # Init Scripts loeschen
-rm -f /etc/init.d/kwnarc &>/dev/null
-rm -f /etc/init.d/rc?.d/???kwnarc &>/dev/null
+rm -f ${KW_INIT}/kwnarc &>/dev/null
+rm -f ${KW_INIT}/rc?.d/???kwnarc &>/dev/null
 rm -f /etc/rc?.d/init.d/???kwnarc &>/dev/null
+
+# Systemd Startdatei und Link loeschen
+rm -f ${KW_SYSTEMD}/kwnarc.service &>/dev/null
+rm -f /etc/systemd/system/multi-user.target.wants/kwnarc.service &>/dev/null
 
 # Cron Dateien loeschen
 rm -f ${KW_CROND}/kwrsync_backup &>/dev/null
