@@ -6,14 +6,9 @@ kwbtrfs_service() {
 	# Variablen# {{{
 	lv_Stats=$(gettext 'Fehler Statistik')
 	lv_Check=$(gettext 'Ueberpruefung')
-	lv_Backup=$(gettext 'Sicherungskopie')
-	lv_Qgroup=$(gettext 'Quota Gruppe')
-	lv_Readonly=$(gettext 'nur lesbar')
-	lv_Subvolume_Id=$(gettext 'Subvolume ID')
-	lv_Superblock=$(gettext 'Superblock')
-	lv_Verify_Csum=$(gettext 'Checksumme')
+	lv_Rescue=$(gettext 'Rettung')
+	lv_Restore=$(gettext 'Wiederherstellung')
 	SERVICE_STATS_TITLE="${lv_Service}::${lv_Stats}"
-	SERVICE_CHECK_TITLE="${lv_Service}::${lv_Check}"
 	## }}}
 	# Funktion (service_menu)# {{{
 	service_menu() {
@@ -21,52 +16,6 @@ kwbtrfs_service() {
 		menubox "$1" "$lv_Service" "$gv_Menupoint" "$MENU"
 	}
 	## }}}
-	# Funktion (check_subvolume_id), Subvolume ID auswaehlen# {{{
-	#
-	# usage: check_subvolume_id
-	#
-	check_subvolume_id() {
-		if [[ -n $DRIVE ]] ; then
-			btrfs subvolume list -a "$DRIVE" > ${gv_WorkDir}subvol_id
-			if [[ -s ${gv_WorkDir}subvol_id ]] ; then
-				while read id nr rest ; do
-					ID+=(nr \"${rest##* }\")
-				done < ${gv_WorkDir}subvol_id
-				SV_ID_MSG=$(gettext 'Waehlen Sie bitte eine $lv_Subvolume_Id aus.')
-				# Funktion (check_subvolume_id_menu)# {{{
-				check_subvolume_id_menu() {
-					SV_ID_MENU=($gv_None \"\" $ID $gv_Back \"\")
-					menubox "$1" "$SERVICE_CHECK_TITLE" "$SV_ID_MSG" "$SV_ID_MENU"
-				}
-				## }}}
-				check_subvolume_id_menu
-				while [[ -n $gv_Auswahl ]] ; do
-					case "$gv_Auswahl" in
-						HELP*)
-							;;
-						$gv_None)
-							unset -- SV_ID
-							break
-							;;
-						[0-9]*)
-							# ID uebernehmen
-							SV_ID="$gv_Auswah"
-							break
-							;;
-						*)
-							break
-							;;
-					esac
-				done
-			else
-				MSG=$(gettext 'Es sind keine Subvolumes vorhanden')
-				msgbox "$gv_Info" "$MSG"
-			fi
-		else
-			no_btrfs_choice_msg
-		fi
-	}
-	# }}}
 	search_btrfs_filesystem
 	if [[ -n ${BTRFS_DEV[1]} ]] ; then
 		service_menu
@@ -115,154 +64,26 @@ kwbtrfs_service() {
 					;;
 				$lv_Check)
 					# btrfs Laufwerk ueberpruefen# {{{
-					# autoload -U kwbtrfs_service_check
-					# kwbtrfs_service_check
-					#
-					# Funktion (check_menu)# {{{
-					check_menu() {
-						MENU=(\"$lv_Btrfs_Drive\" \"$DEV\" $lv_Backup \"$BACKUP\"
-						$lv_Verify_Csum \"$VCSUM\" \"$lv_Qgroup\" \"$QGROUP\"
-						\"$lv_Subvolume_Id\" \"$SV_ID\" $lv_Superblock \"$SUPER\"
-						$gv_Save \"\" $gv_Back \"\")
-						menubox "$1" "$SERVICE_CHECK_TITLE" "$gv_Menupoint" "$MENU"
-					}
-					## }}}
-					check_menu
-					while [[ -n $gv_Auswahl ]] ; do
-						case "$gv_Auswahl" in
-							HELP*)
-								script_help service_check_help
-								check_menu "${gv_Auswahl#HELP }"
-								;;
-							$lv_Btrfs_Drive)
-								# btrfs Laufwerk auswaehlen# {{{
-								autoload -U kwbtrfs_service_check_btrfs_dev
-								kwbtrfs_service_check_btrfs_dev
-								## }}}
-								check_menu $lv_Btrfs_Drive
-								;;
-							$lv_Backup)
-								# benutze das 1. gueltige Backup (ja/nein).# {{{
-								MSG=$(gettext 'Soll die erste gueltige $lv_Backup benutzt werden (ja/nein)?')
-								yesno "$SERVICE_CHECK_TITLE" "$MSG" yes
-								if [[ $gv_Auswahl == yes ]] ; then
-									BACKUP=yes
-								else
-									BACKUP=no
-								fi
-								## }}}
-								check_menu $lv_Backup
-								;;
-							$lv_Verify_Csum)
-								# ueberpruefe die Checksumme der Datenbloecke (ja/nein).# {{{
-								MSG=$(gettext 'Soll die Checksumme der Datenbloecke ueberprueft werden (ja/nein)?')
-								yesno "$SERVICE_CHECK_TITLE" "$MSG" yes
-								if [[ $gv_Auswahl == yes ]] ; then
-									VCSUM=yes
-								else
-									VCSUM=no
-								fi
-								## }}}
-								check_menu $lv_Verify_Csum
-								;;
-							$lv_Qgroup)
-								# ueberpruefe Quota Gruppen Buchhaltung und vergleiche# {{{
-								# sie mit der Dateisystem Buchhaltung (ja/nein).
-								MSG=$(gettext 'Soll die Quota Gruppen Buchhaltung ueberprueft und mit der Dateisystem Buchhaltung verglichen werden (ja/nein)?')
-								yesno "$SERVICE_CHECK_TITLE" "$MSG" yes
-								if [[ $gv_Auswahl == yes ]] ; then
-									QGROUP=yes
-								else
-									QGROUP=no
-								fi
-								## }}}
-								check_menu $lv_Qgroup
-								;;
-							$lv_Subvolume_Id)
-								# erweiter die Ueberpruefung auf Subvolume ID# {{{
-								check_subvolume_id
-								## }}}
-								check_menu $lv_Subvolume_Id
-								;;
-							$lv_Superblock)
-								# benutze Superblock Kopie (0, 1 oder 2)# {{{
-								# Funktion (superblock_menu)# {{{
-								superblock_menu() {
-									MENU=($gv_None \"\" 0 \"\" 1 \"\" 2 \"\" $gv_Back \"\")
-									menubox "$1" "$SERVICE_CHECK_TITLE" "$gv_Menupoint" "$MENU"
-								}
-								## }}}
-								superblock_menu
-								while [[ -n $gv_Auswahl ]] ; do
-									case $gv_Auswahl in
-										HELP*)
-											script_help service_check_help
-											superblock_menu "${gv_Auswahl#HELP }"
-											;;
-										[0-2])
-											# uebernehmen
-											SUPER="$gv_Auswahl"
-											break
-											;;
-										$gv_None)
-											unset -- SUPER
-											break
-											;;
-										$gv_Back|*)
-											break
-											;;
-									esac
-								done
-								## }}}
-								check_menu $lv_Superblock
-								;;
-							$gv_Save)
-								# Ueberpruefung starten# {{{
-								if [[ -n $DRIVE ]] && [[ -n $DEV ]] ; then
-									# Laufwerk ausbinden
-									mount_check -a $DRIVE
-									if [[ $U_MOUNT == yes ]] ; then
-										CHECK_OPT="--readonly --progress"
-										if [[ $BACKUP == yes ]] ; then
-											CHECK_OPT="$CHECK_OPT --backup"
-										fi
-										if [[ $VCSUM == yes ]] ; then
-											CHECK_OPT="$CHECK_OPT --check-data-csum"
-										fi
-										if [[ $QGROUP == yes ]] ; then
-											CHECK_OPT="$CHECK_OPT --qgroup-report"
-										fi
-										if [[ -n $SV_ID ]] ; then
-											CHECK_OPT="$CHECK_OPT --subvol-extents $SV_ID"
-										fi
-										case $SUPER in
-											[0-2]) CHECK_OPT="$CHECK_OPT --super $SUPER"
-												;;
-										esac
-										# ausfuehren
-										rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
-										echo "$i" >>${gv_WorkDir}/btrfs_check
-										btrfs check ${=CHECK_OPT} $DEV \
-											>> ${gv_WorkDir}/btrfs_check
-										view_file ${gv_WorkDir}/btrfs_check
-										unset -- DRIVE DEV
-									else
-										unset -- DRIVE DEV
-									fi
-								else
-									no_btrfs_choice_msg
-								fi
-								## }}}
-								check_menu "$lv_Btrfs_Drive"
-								;;
-							$gv_Back|*)
-								# zurueck/abbrechen
-								break
-								;;
-						esac
-					done
+					autoload -U kwbtrfs_service_check
+					kwbtrfs_service_check
 					## }}}
 					service_menu "$lv_Check"
+					;;
+				$lv_Rescue)
+					# btrfs Laufwerk retten# {{{
+#					autoload -U kwbtrfs_service_rescue
+#					kwbtrfs_service_rescue
+					## }}}
+					hier_ist_noch_nichts "$lv_Rescue"
+					service_menu "$lv_Rescue"
+					;;
+				$lv_Restore)
+					# btrfs Laufwerk wiederherstellen# {{{
+#					autoload -U kwbtrfs_service_Restore
+#					kwbtrfs_service_Restore
+					## }}}
+					hier_ist_noch_nichts "$lv_Restore"
+					service_menu "$lv_Restore"
 					;;
 				$gv_Back)
 					# zurueck/abbrechen
