@@ -4,15 +4,17 @@
 #
 kwbtrfs_service() {
 	# Variablen# {{{
-	lv_Stats=$(gettext 'Fehler Statistik')
 	lv_Check=$(gettext 'Ueberpruefung')
+	lv_Image=$(gettext 'Abbild')
 	lv_Rescue=$(gettext 'Rettung')
 	lv_Restore=$(gettext 'Wiederherstellung')
+	lv_Stats=$(gettext 'Fehler Statistik')
 	SERVICE_STATS_TITLE="${lv_Service}::${lv_Stats}"
 	## }}}
 	# Funktion (service_menu)# {{{
 	service_menu() {
-		MENU=(\"$lv_Stats\" \"\" $lv_Check \"\" $gv_Back \"\")
+		MENU=(\"$lv_Stats\" \"\" $lv_Check \"\" $lv_Image \"\" $lv_Rescue \"\"
+		$lv_Restore \"\" $gv_Back \"\")
 		menubox "$1" "$lv_Service" "$gv_Menupoint" "$MENU"
 	}
 	## }}}
@@ -69,6 +71,13 @@ kwbtrfs_service() {
 					## }}}
 					service_menu "$lv_Check"
 					;;
+				$lv_Image)
+					# Abbild vom btrfs Laufwerk erstellen# {{{
+					autoload -U kwbtrfs_service_image
+					kwbtrfs_service_image
+					## }}}
+					service_menu "$lv_Image"
+					;;
 				$lv_Rescue)
 					# btrfs Laufwerk retten# {{{
 #					autoload -U kwbtrfs_service_rescue
@@ -79,8 +88,8 @@ kwbtrfs_service() {
 					;;
 				$lv_Restore)
 					# btrfs Laufwerk wiederherstellen# {{{
-#					autoload -U kwbtrfs_service_Restore
-#					kwbtrfs_service_Restore
+#					autoload -U kwbtrfs_service_restore
+#					kwbtrfs_service_restore
 					## }}}
 					hier_ist_noch_nichts "$lv_Restore"
 					service_menu "$lv_Restore"
