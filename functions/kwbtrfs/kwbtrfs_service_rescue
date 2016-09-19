@@ -1,0 +1,82 @@
+# Funktion (kwbtrfs_service_rescue), btrfs Laufwerk ueberpruefen# {{{
+#
+# usage: kwbtrfs_service_rescue
+#
+kwbtrfs_service_rescue() {
+	unset -- DRIVE DEV REPAIR
+	# Variabeln# {{{
+	lv_Chunk_Recover=$(gettext 'Chunks wiederherstellen')
+	lv_Super_Recover=$(gettext 'Superblock wiederherstellen')
+	lv_Zero_Log=$(gettext 'Dateisystem Log Baum')
+	SERVICE_RESCUE_TITLE="${lv_Service}::${lv_Rescue}"
+	## }}}
+	# Funktion (rescue_menu)# {{{
+	rescue_menu() {
+		MENU=(\"$lv_Btrfs_Drive\" \"$DEV\" \"$lv_Chunk_Recover\" \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SERVICE_RESCUE_TITLE" "$gv_Menupoint" "$MENU"
+	}
+	## }}}
+	rescue_menu
+	while [[ -n $gv_Auswahl ]] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help service_rescue_help
+				rescue_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Btrfs_Drive)
+				# btrfs Laufwerk auswaehlen# {{{
+				autoload -U kwbtrfs_service_rescue_btrfs_dev
+				kwbtrfs_service_rescue_btrfs_dev
+				## }}}
+				rescue_menu $lv_Btrfs_Drive
+				;;
+			$lv_Chunk_Recover)
+				# Chunk Baum rparieren
+				if [[ -n $DEV ]] ; then
+					btrfs rescue chunk-recover -y -v $DEV 2>&1 | \
+						progressbox "$SERVICE_RESCUE_TITLE" "$lv_Chunk_Recover" || \
+						prog_failure
+				else
+					no_btrfs_dev_msg
+				fi
+				#
+				rescue_menu $lv_Chunk_Recover
+				;;
+			$lv_Super_Recover)
+				# Superbloecke wieder reparieren
+				if [[ -n $DEV ]] ; then
+					btrfs rescue super-recover -y -v $DEV 2>&1 | \
+						progressbox "$SERVICE_RESCUE_TITLE" "$lv_Super_Recover" || \
+						prog_failure
+				else
+					no_btrfs_dev_msg
+				fi
+				#
+				rescue_menu $lv_Super_Recover
+				;;
+			$lv_Zero_Log)
+				# Dateisystem Log Baum loeeschen
+				if [[ -n $DEV ]] ; then
+					btrfs rescue zero-log $DEV 2>&1 | \
+						progressbox "$SERVICE_RESCUE_TITLE" "$lv_Zero_Log" || \
+						prog_failure
+				else
+					no_btrfs_dev_msg
+				fi
+				#
+				rescue_menu $lv_Zero_Log
+				;;
+			$gv_Back|*)
+				# zurueck/abbrechen
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
