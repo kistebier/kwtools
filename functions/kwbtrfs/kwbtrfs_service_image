@@ -1,0 +1,218 @@
+# Funktion (kwbtrfs_service_image), Abbild eines btrfs Laufwerk erstellen# {{{
+#
+# usage: kwbtrfs_service_image
+#
+kwbtrfs_service_image() {
+	unset -- DRIVE DEV RESTORE IMAGE_FILE IMAGE_OPT
+	# Variabeln# {{{
+	lv_Compress_Level=$(gettext 'Kompressionsstaerke')
+	lv_Threads=$(gettext 'CPU Anzahl')
+	lv_Image_File=$(gettext 'Abbild Datei')
+	lv_Old_Methode=$(gettext 'alte Methode')
+	lv_Sanitize=$(gettext 'Dateinamen bereinigen')
+	lv_Walk=$(gettext 'alle Metadaten')
+	lv_Multiple=$(gettext 'mehrere Laufwerke')
+	SERVICE_IMAGE_TITLE="${lv_Service}::${lv_Image}"
+	OLD="no"
+	RESTORE="no"
+	SANITIZE="no"
+	WALK="no"
+	MULTIPLE="no"
+	## }}}
+	# Funktion (image_menu)# {{{
+	image_menu() {
+		MENU=(\"$lv_Btrfs_Drive\" \"$DEV\" $lv_Restore \"$RESTORE\"
+		\"$lv_Image_File\" \"$IMAGE_FILE\" $lv_Compress_Level \"$COMPRESS_LEVEL\"
+		\"$lv_Threads\" \"$THREADS\" \"$lv_Old_Methode\" \"$OLD\"
+		\"$lv_Sanitize\" \"$SANITIZE\" \"$lv_Walk\" \"$WALK\"
+		\"$lv_Multiple\" \"$MULTIPLE\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$SERVICE_IMAGE_TITLE" "$gv_Menupoint" "$MENU"
+	}
+	## }}}
+	image_menu
+	while [[ -n $gv_Auswahl ]] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help service_image_help
+				image_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Btrfs_Drive)
+				# btrfs Laufwerk auswaehlen# {{{
+				autoload -U kwbtrfs_service_check_btrfs_dev
+				kwbtrfs_service_check_btrfs_dev
+				## }}}
+				image_menu $lv_Btrfs_Drive
+				;;
+			$lv_Restore)
+				# Image wiederherstellen (ja/nein).# {{{
+				MSG=$(gettext 'Soll ein \"$lv_Image\" wieder hergestellt werden (ja/nein)?')
+				yesno "$SERVICE_IMAGE_TITLE" "$MSG" no
+				if [[ $gv_Auswahl == yes ]] ; then
+					RESTORE=yes
+				else
+					RESTORE=no
+					unset -- IMAGE_FILE
+				fi
+				## }}}
+				image_menu $lv_Restore
+				;;
+			$lv_Image_File)
+				# Auswahl der Image Datei mit Pfad# {{{
+				if [[ $RESTORE == yes ]] ; then
+					FORMAT=data
+					SUFFIX=".img .IMG"
+					file_choice "${IMAGE_FILE%/*}/" only "$IMAGE_FILE"
+					if [[ -n $WERT ]] ; then
+						IMAGE_FILE="${VERZ}/${WERT}"
+					else
+						unset -- IMAGE_FILE
+					fi
+				else
+					# Verzeichnis fuer Image Datei waehlen
+					dselect "${IMAGE_FILE%/*}" 
+					if [[ -n $VERZ ]] ; then
+						# Wenn Verzeichnis nicht existiert anlegen
+						dselect_check -c "$VERZ"
+						if [[ -n $VERZ ]] ; then
+							IMAGE_FILE="${VERZ}/${DEV##*/}.img"
+						fi
+					else
+						no_input_msg
+					fi
+				fi
+				## }}}
+				image_menu $lv_Image_File
+				;;
+			$lv_Compress_Level)
+				# Eingabe der Kompressionsstaerke (1-9)# {{{
+				COMPRESS_MSG=$(gettext 'Geben Sie bitte die Kompressionsstaerke, eine Zahl zwischen 1 und 9, ein.')
+				number_input "$SERVICE_IMAGE_TITLE" "$COMPRESS_MSG" "$COMPRESS_LEVEL"
+				if [[ -n $NUMBER ]] ; then
+					COMPRESS_LEVEL="$NUMBER"
+				else
+					COMPRESS_LEVEL="9"
+				fi
+				## }}}
+				image_menu $lv_Compress_Level
+				;;
+			$lv_Threads)
+				# Eingabe der CPU Anzahl (1-32)# {{{
+				Anz=${${(ws,:,)${(M)${(f)"$(< /proc/cpuinfo)"}[(fR)*processor*]}}[2]}
+				(( Anz++ ))
+				MSG=$(gettext 'Geben Sie bitte die Anzahl der Prozessoren die benutzt werden sollen ein, maximal 32. Ihr Rechner besitzt $Anz Prozessoren.')
+				THREADS=${THREADS:-$Anz}
+				number_input "$SERVICE_IMAGE_TITLE" "$MSG" "$THREADS"
+				if [[ $NUMBER -ge 1 ]] && [[ $NUMBER -le 32 ]] ; then
+					THREADS="$NUMBER"
+				else
+					MSG=$(gettext 'Die Anzahl der Prozessoren muss zwischen 1 und maximal 32 liegen. Es wird die gefundene Prozesser Anzahl ($Anz) benutzt.')
+					msgbox "$gv_Info" "$MSG"
+					THREADS="$Anz"
+				fi
+				## }}}
+				image_menu $lv_Compress_Level
+				;;
+			$lv_Old_Methode)
+				# ueberpruefe die Checksumme der Datenbloecke (ja/nein).# {{{
+				MSG=$(gettext 'Soll die alte Methode zur Wiederherstellung benutzt werden (ja/nein)?')
+				yesno "$SERVICE_IMAGE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					OLD=yes
+				else
+					OLD=no
+				fi
+				## }}}
+				image_menu $lv_Old_Methode
+				;;
+			$lv_Sanitize)
+				# (ja/nein).# {{{
+				MSG=$(gettext '(Sollen Dateinamen durch Muell ersetzt werden (ja/nein)?')
+				yesno "$SERVICE_IMAGE_TITLE" "$MSG" no
+				if [[ $gv_Auswahl == yes ]] ; then
+					SANITIZE=yes
+				else
+					SANITIZE=no
+				fi
+				## }}}
+				image_menu $lv_Sanitize
+				;;
+			$lv_Walk)
+				# Sicherstellen das alle Metadaten mit aufgenommen werden(ja/nein).# {{{
+				MSG=$(gettext 'Soll sichergestellt werden das alle Metadaten ins $lv_Image aufgenommen werden (ja/nein)?')
+				yesno "$SERVICE_IMAGE_TITLE" "$MSG" no
+				if [[ $gv_Auswahl == yes ]] ; then
+					WALK=yes
+				else
+					WALK=no
+				fi
+				## }}}
+				image_menu $lv_Walk
+				;;
+			$lv_Multiple)
+				# Wiederherstellung fuer mehrere Laufwerke (ja/nein)# {{{
+				MSG=$(gettext 'Soll die Wiederherstellung fuer mehrere Laufwerke aktiviert werden (ja/nein)?')
+				yesno "$SERVICE_IMAGE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					MULTIPLE=yes
+				else
+					MULTIPLE=no
+				fi
+				## }}}
+				image_menu $lv_Multiple
+				;;
+			$gv_Save)
+				# Ueberpruefung starten# {{{
+				if [[ -n $IMAGE_FILE ]] && [[ -n $DEV ]] ; then
+					# Optionen zusammen zaehlen
+					if [[ $RESTORE == yes ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -r"
+						unset -- COMPRESS_LEVEL SANITIZE WALK
+					else
+						unset -- MULTIPLE
+					fi
+					if [[ -n $COMPRESS_LEVEL ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -c $COMPRESS_LEVEL"
+					fi
+					if [[ -n $THREADS ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -t $THREADS"
+					fi
+					if [[ $OLD == yes ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -o"
+					fi
+					if [[ -n $SANITIZE ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -s"
+					fi
+					if [[ -n $WALK ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -w"
+					fi
+					if [[ -n $MULTIPLE ]] ; then
+						IMAGE_OPT="$IMAGE_OPT -m"
+					fi
+					# ausfuehren
+					if [[ $RESTORE == yes ]] ; then
+						btrfs-image ${=IMAGE_OPT} "$IMAGE_FILE" $DEV &>/dev/null
+					else
+						btrfs-image ${=IMAGE_OPT} $DEV "$IMAGE_FILE" &>/dev/null
+					fi
+					# Variabeln mit Laufwerken loeschen
+					unset -- DRIVE DEV IMAGE_FILE
+				else
+					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte \"$lv_Btrfs_Drive\" und \"$lv_Image_File\" mit werten belegen.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+				## }}}
+				image_menu "$lv_Btrfs_Drive"
+				;;
+			$gv_Back|*)
+				# zurueck/abbrechen
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
