@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 23.05.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 20.09.2016
 #
 # Script: kwgpgcrypt, ent/verschluesselt Dateien oder ganze Verzeichnisse.
-# Version: 0.1.1
+# Version: 0.1.2
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -40,6 +40,14 @@ if [ -z "$PROGS" ] ; then
 	exit 0
 else
 	PROG=${commands[gpg]}
+fi
+
+# gnupg Version
+VERSION=${${(ws: :)${(M)${(f)"$(gpg --version)"}##(#s)gpg*}}[3]}
+if [[ $VERSION > 1.4.21 ]] ; then
+	MSG=$(gettext 'kwgpgcrypt unterstuetzt bis jetzt nur gnupg bis Version 1.4.21.')
+	msgbox "$gv_Info" "$MSG"
+	exit 0
 fi
 
 PGP_HOME="${gv_HomePath}/.gnupg"
