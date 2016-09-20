@@ -34,9 +34,9 @@ gpgcrypt_conf() {
 			$lv_Keyserv)
 				# Schluessel Server angeben.{{{
 				#
-				PROTOCOL=${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[1]}
-				KEY_SERV=${${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[2]}##*/}
-				PORT=${${(s,:,)${KEY_SERV_ALL:-hkp://subkeys.pgp.net}}[3]}
+				PROTOCOL=${${(s,:,)${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}}[1]}
+				KEY_SERV=${${${(s,:,)${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}}[2]}##*/}
+				PORT=${${(s,:,)${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}}[3]}
 				KEY_TITLE=(${gv_Configuration}::${lv_Keyserv})
 				#
 				lv_Protocol=$(gettext 'Protokoll')
@@ -62,7 +62,7 @@ gpgcrypt_conf() {
 							;;
 						$lv_Protocol)
 							# Protokoll auswaehlen{{{
-							Prot=(hkp \"\" ldap \"\" mailto \"\")
+							Prot=(hkp \"\" hkps \"\" ldap \"\" mailto \"\")
 							PROT_MSG=$(gettext 'Waehlen Sie hier das Protokoll aus, welches benutzt werden soll.')
 							menubox "$PROTOCOL" "$KEY_TITLE" "$PROT_MSG" "$Prot"
 							while [ "$gv_Auswahl" ] ; do
@@ -80,7 +80,7 @@ gpgcrypt_conf() {
 							;;
 						$lv_Keyserv)
 							# Schluesselserver eingeben{{{
-							HOSTNAME_MSG=$(gettext 'Geben Sie hier bitte einen Schluesselserver ein (z. B. wwwkeys.de.pgp.net).')
+							HOSTNAME_MSG=$(gettext 'Geben Sie hier bitte einen Schluesselserver ein (z. B. hkps.pool.sks-keyservers.net).')
 							conf_hostname -a "$HOSTNAME_MSG" "$KEY_SERV"
 							if [ "$gv_Hostname" ] ; then
 								KEY_SERV="$gv_Hostname"
