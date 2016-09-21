@@ -8,13 +8,14 @@ kwbtrfs_service() {
 	lv_Image=$(gettext 'Abbild')
 	lv_Rescue=$(gettext 'Rettung')
 	lv_Restore=$(gettext 'Wiederherstellung')
+	lv_Scrub=$(gettext 'Saeuberung')
 	lv_Stats=$(gettext 'Fehler Statistik')
 	SERVICE_STATS_TITLE="${lv_Service}::${lv_Stats}"
 	## }}}
 	# Funktion (service_menu)# {{{
 	service_menu() {
-		MENU=(\"$lv_Stats\" \"\" $lv_Check \"\" $lv_Image \"\" $lv_Rescue \"\"
-		$lv_Restore \"\" $gv_Back \"\")
+		MENU=(\"$lv_Stats\" \"\" $lv_Check \"\" $lv_Scrub \"\" $lv_Image \"\"
+		$lv_Rescue \"\" $lv_Restore \"\" $gv_Back \"\")
 		menubox "$1" "$lv_Service" "$gv_Menupoint" "$MENU"
 	}
 	## }}}
@@ -75,6 +76,13 @@ kwbtrfs_service() {
 					# Abbild vom btrfs Laufwerk erstellen# {{{
 					autoload -U kwbtrfs_service_image
 					kwbtrfs_service_image
+					## }}}
+					service_menu "$lv_Image"
+					;;
+				$lv_Scrub)
+					# Saeuberung einesbtrfs Laufwerk# {{{
+					autoload -U kwbtrfs_service_scrub
+					kwbtrfs_service_scrub
 					## }}}
 					service_menu "$lv_Image"
 					;;
