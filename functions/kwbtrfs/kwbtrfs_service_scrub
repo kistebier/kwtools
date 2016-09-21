@@ -1,0 +1,216 @@
+# Funktion (kwbtrfs_service_scrub), btrfs Laufwerk ueberpruefen# {{{
+#
+# usage: kwbtrfs_service_scrub
+#
+kwbtrfs_service_scrub() {
+	unset -- DRIVE PRIO_CLASSDATA
+	# Variabeln# {{{
+	lv_Prio_Class=$(gettext 'IO Prioritaet Klasse')
+	lv_Prio_Classdata=$(gettext 'IO Prioritaet Klassendaten')
+	lv_Raw=$(gettext 'grobe Statistik')
+	lv_Readonly=$(gettext 'nur lesbar')
+	lv_Seperate=$(gettext 'seperate Statistik')
+	lv_Idle=$(gettext 'Idle')
+	lv_Best_Effort=$(gettext 'Best-effort')
+	lv_Realtime=$(gettext 'Realtime')
+	SERVICE_SCRUB_TITLE="${lv_Service}::${lv_Scrub}"
+	RAW="yes"
+	SEPERATE="yes"
+	READONLY="no"
+	## }}}
+	# Funktion (scrub_menu)# {{{
+	scrub_menu() {
+		SCRUB_MENU=(\"$lv_Btrfs_Drive\" \"$DRIVE\" \"$lv_Raw\" \"$RAW\"
+		\"$lv_Seperate\" \"$SEPERATE\" \"$lv_Readonly\" \"$READONLY\"
+		\"$lv_Prio_Class\" \"$PRIO_CLASS\" \"$lv_Prio_Classdata\" \"$PRIO_CLASSDATA\"
+		$gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$SERVICE_SCRUB_TITLE" "$gv_Menupoint" "$SCRUB_MENU"
+	}
+	## }}}
+	# Funktion (prioclass_menu)# {{{
+	prioclass_menu() {
+		MENU=($lv_Idle \"\" $lv_Best_Effort \"\" $lv_Realtime \"\"
+		$gv_Back \"\")
+		menubox "$1" "$SERVICE_SCRUB_TITLE" "$gv_Menupoint" "$MENU"
+	}
+	## }}}
+	search_btrfs_filesystem
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		scrub_menu
+		while [[ -n $gv_Auswahl ]] ; do
+			case "$gv_Auswahl" in
+				HELP*)
+					script_help service_scrub_help
+					scrub_menu "${gv_Auswahl#HELP }"
+					;;
+				$lv_Btrfs_Drive)
+					# bestehendes btrfs Laufwerk auswaehlen# {{{
+					btrfs_choice_menu "" "$SERVICE_SCRUB_TITLE" "$BTRFS_PATH_E"
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help service_scrub_help
+								btrfs_choice_menu "${gv_Auswahl#HELP }" "$SERVICE_SCRUB_TITLE" "$BTRFS_PATH_E"
+								;;
+							/*)
+								# Laufwerk uebernehmen
+								DRIVE="$gv_Auswahl"
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+					## }}}
+					scrub_menu $lv_Btrfs_Drive
+					;;
+				$lv_Raw)
+					# grobe Statistik pro Device (ja/nein).# {{{
+					MSG=$(gettext 'Soll eine grobe Statistik pro Laufwerk angezeigt werden (ja/nein)?')
+					yesno "$SERVICE_SCRUB_TITLE" "$MSG" yes
+					if [[ $gv_Auswahl == yes ]] ; then
+						RAW=yes
+					else
+						RAW=no
+					fi
+					## }}}
+					scrub_menu $lv_Raw
+					;;
+				$lv_Seperate)
+					# seperate Statistik pro Device (ja/nein).# {{{
+					MSG=$(gettext 'Soll eine Statistik pro Laufwerk angezeigt werden (ja/nein)?')
+					yesno "$SERVICE_SCRUB_TITLE" "$MSG" yes
+					if [[ $gv_Auswahl == yes ]] ; then
+						SEPERATE=yes
+					else
+						SEPERATE=no
+					fi
+					## }}}
+					scrub_menu $lv_Seperate
+					;;
+				$lv_Readonly)
+					# Readonly (ja/nein).# {{{
+					MSG=$(gettext 'Soll die Saeuberung im nur lesbar Modus laufen (ja/nein)?\n\nBei \"ja\" wird nichts auf dem Laufwerk korrigiert.')
+					yesno "$SERVICE_SCRUB_TITLE" "$MSG" no
+					if [[ $gv_Auswahl == yes ]] ; then
+						READONLY=yes
+					else
+						READONLY=no
+					fi
+					## }}}
+					scrub_menu $lv_Readonly
+					;;
+				$lv_Prio_Class)
+					# IO Prioritaet fuer die Klasse auswaehlen.# {{{
+					prioclass_menu
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help service_scrub_help
+								prioclass_menu "${gv_Auswahl#HELP }"
+								;;
+							$lv_Idle|$lv_Best_Effort|$lv_Readonly)
+								# uebernehmen
+								PRIO_CLASS="$gv_Auswahl"
+								# Pruefen, ob PRIO_CLASS = lv_Idle ist und
+								# wenn ja PRIO_CLASSDATA loeschen.
+								if [[ $PRIO_CLASS == $lv_Idle ]] ; then
+									unset -- PRIO_CLASSDATA
+								fi
+								break
+								;;
+							*)
+								# abbrechen
+								break
+								;;
+						esac
+					done
+					## }}}
+					scrub_menu $lv_Prio_Class
+					;;
+				$lv_Prio_Classdata)
+					# IO Prioritaet fuer die Klassendaten auswaehlen.# {{{
+					IO_MSG=$(gettext 'Geben Sie bitte eine Prioritaetsstufe zwischen 0 und 7 ein.')
+					if [[ -n $PRIO_CLASS ]] ; then
+						case $PRIO_CLASS in
+							$lv_Idle)
+								# nichts zum auswaehlen
+								MSG=$(gettext 'Fuer diese Klasse \"$PRIO_CLASS\" koennen Sie keine Prioritaetsstufe eingeben.')
+								msgbox "$gv_Info" "$MSG"
+								unset -- PRIO_CLASSDATA
+								;;
+							$lv_Best_Effort|$lv_Realtime)
+								# Prioritaetsstufen 0-7 eingeben
+								number_input "$SERVICE_SCRUB_TITLE" "$IO_MSG" "$PRIO_CLASSDATA"
+								if [[ $NUMBER -ge 0 ]] && [[ $NUMBER -le 7 ]] ; then
+									PRIO_CLASSDATA="$NUMBER"
+								else
+									no_input_msg
+									unset -- PRIO_CLASSDATA
+								fi
+								;;
+						esac
+					else
+						MSG=$(gettext 'Sie muessen erst eine $lv_Prio_Class auswahlen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
+					## }}}
+					scrub_menu $lv_Prio_Classdata
+					;;
+				$gv_Save)
+					# Ueberpruefung starten# {{{
+					if [[ -n $DRIVE ]] ; then
+						# -B - nicht im Hintergrund laufen
+						SCRUB_OPT=""
+						if [[ $SEPERATE == yes ]] ; then
+							SCRUB_OPT="$SCRUB_OPT -d"
+						fi
+						if [[ $RAW == yes ]] ; then
+							SCRUB_OPT="$SCRUB_OPT -R"
+						fi
+						if [[ $READONLY == yes ]] ; then
+							SCRUB_OPT="$SCRUB_OPT -r"
+						fi
+						if [[ -n $PRIO_CLASS ]] ; then
+							SCRUB_OPT="$SCRUB_OPT -c $PRIO_CLASS"
+						fi
+						if [[ -n $PRIO_CLASSDATA ]] ; then
+							SCRUB_OPT="$SCRUB_OPT -n $PRIO_CLASSDATA"
+						fi
+						# ausfuehren
+						SCRUB_MSG="${lv_Scrub}: ${DRIVE}..."
+						btrfs scrub start ${=SCRUB_OPT} $DRIVE
+						PID="`pidof btrfs`"
+						while [[ -n $PID ]] ; do
+							btrfs scrub status -d $DRIVE | \
+								progressbox "$SERVICE_SCRUB_TITLE" "$SCRUB_MSG" || \
+								prog_failure
+							sleep 5
+							PID="`pidof btrfs`"
+						done
+						unset -- DRIVE PRIO_CLASSDATA
+					else
+						no_btrfs_choice_msg
+					fi
+					## }}}
+					scrub_menu "$lv_Btrfs_Drive"
+					;;
+				$gv_Back|*)
+					# zurueck/abbrechen
+					break
+					;;
+			esac
+		done
+	else
+		no_btrfs_dev_msg
+		return 1
+	fi
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
