@@ -285,11 +285,11 @@ kwcryptsetup_conf() {
 							unset -- Parts
 							disk
 							partdb
-							if [ -n "${PART_E[1]}" ] ; then
-								# Partitionen
-								if [ -n "$PART_E" ] ; then
-									Parts="$Parts $PART_E"
-								fi
+							# heraussuchen von unverschluesselten Partitionen
+							# die in keinem btrfs RAID Array vorkommen.
+							search_devices -p
+							if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
+								Parts="$NO_BTRFS_DEV_E"
 								# RAID Arrays finden und zur Auswahl stellen.
 								raid_filter -l
 								# LV's finden.
