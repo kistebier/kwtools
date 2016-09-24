@@ -5,6 +5,7 @@
 kwbtrfs_service() {
 	# Variablen# {{{
 	lv_Check=$(gettext 'Ueberpruefung')
+	lv_Findroot=$(gettext 'Wurzel finden')
 	lv_Image=$(gettext 'Abbild')
 	lv_Rescue=$(gettext 'Rettung')
 	lv_Restore=$(gettext 'Wiederherstellung')
@@ -15,7 +16,7 @@ kwbtrfs_service() {
 	# Funktion (service_menu)# {{{
 	service_menu() {
 		MENU=(\"$lv_Stats\" \"\" $lv_Check \"\" $lv_Scrub \"\" $lv_Image \"\"
-		$lv_Rescue \"\" $lv_Restore \"\" $gv_Back \"\")
+		$lv_Rescue \"\" \"$lv_Findroot\" \"\" $lv_Restore \"\" $gv_Back \"\")
 		menubox "$1" "$lv_Service" "$gv_Menupoint" "$MENU"
 	}
 	## }}}
@@ -92,6 +93,13 @@ kwbtrfs_service() {
 					kwbtrfs_service_rescue
 					## }}}
 					service_menu "$lv_Rescue"
+					;;
+				$lv_Findroot)
+					# btrfs Baum Wurzel finden# {{{
+					autoload -U kwbtrfs_service_find_root
+					kwbtrfs_service_find_root
+					## }}}
+					service_menu "$lv_Findroot"
 					;;
 				$lv_Restore)
 					# btrfs Laufwerk wiederherstellen# {{{
