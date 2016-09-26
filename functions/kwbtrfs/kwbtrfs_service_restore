@@ -1,0 +1,296 @@
+# Funktion (kwbtrfs_service_restore), btrfs Laufwerk wiederherstellen# {{{
+#
+# usage: kwbtrfs_service_restore
+#
+kwbtrfs_service_restore() {
+	unset -- DRIVE DEV RPATH
+	# Variabeln# {{{
+	lv_Dir=$(gettext 'Verzeichnis')
+	lv_Dry_Run=$(gettext 'Probelauf')
+	lv_List_Roots=$(gettext 'Subvolumes auflisten')
+	lv_Symlinks=$(gettext 'symbolische Links')
+	lv_Ignore=$(gettext 'Fehler ignorieren')
+	lv_Overwrite=$(gettext 'ueberschreiben')
+	lv_Root_Id=$(gettext 'Root ID')
+	lv_Rpath=$(gettext 'Wiederherstellungs Verz.')
+	lv_Snapshots=$(gettext 'Snapshots')
+	lv_Xattr=$(gettext 'erweiterte Attribute')
+	SERVICE_RESTORE_TITLE="${lv_Service}::${lv_Restore}"
+	## }}}
+	# Funktion (restore_menu)# {{{
+	# #######################################
+	# TODO: -t -f fehlen noch
+	restore_menu() {
+		MENU=(\"$lv_Btrfs_Drive\" \"$DEV\" \"$lv_Rpath\" \"$RPATH\"
+		$lv_Snapshots \"$SNAPSHOTS\" \"$lv_Xattr\" \"$XATTR\"
+		$lv_Meta \"$META\" \"$lv_Symlinks\" \"$SYMLINKS\"
+		\"$lv_Ignore\" \"$IGNORE\" $lv_Overwrite \"$OVERWRITE\"
+		$lv_Superblock \"$SUPER\" \"$lv_Root_Id\" \"$ROOT_ID\"
+		$lv_Dir \"$DIR\" \"$lv_List_Roots\" \"$LIST_ROOTS\"
+		$lv_Dry_Run \"$DRY_RUN\" $gv_Save \"\" $gv_Back \"\")
+		menubox "$1" "$SERVICE_RESTORE_TITLE" "$gv_Menupoint" "$MENU"
+	}
+	## }}}
+	restore_menu
+	while [[ -n $gv_Auswahl ]] ; do
+		case "$gv_Auswahl" in
+			HELP*)
+				script_help service_restore_help
+				restore_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Btrfs_Drive)
+				# btrfs Laufwerk auswaehlen# {{{
+				autoload -U kwbtrfs_service_restore_btrfs_dev
+				kwbtrfs_service_restore_btrfs_dev
+				## }}}
+				restore_menu $lv_Btrfs_Drive
+				;;
+			$lv_Rpath)
+				# Verzeichnis auswaehlen in dem die Daten wiederhergestellt# {{{
+				# werden sollen.
+				dselect "$RPATH"
+				if [[ -d $VERZ ]] ; then
+					dselect -c "$VERZ"
+					if [[ -n $VERZ ]] ; then
+						RPATH="$VERZ"
+					else
+						unset -- RPATH
+					fi
+				fi
+				## }}}
+				restore_menu $lv_Rpath
+				;;
+			$lv_Snapshots)
+				# Snapshots erhalten (ja/nein).# {{{
+				MSG=$(gettext 'Sollen Snapshots erhalten bleiben (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					SNAPSHOTS=yes
+				else
+					SNAPSHOTS=no
+				fi
+				## }}}
+				restore_menu $lv_Snapshots
+				;;
+			$lv_Xattr)
+				# Xattr erhalten (ja/nein).# {{{
+				MSG=$(gettext 'Sollen $lv_Xattr erhalten bleiben (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					XATTR=yes
+				else
+					XATTR=no
+				fi
+				## }}}
+				restore_menu $lv_Xattr
+				;;
+			$lv_Meta)
+				# Metadaten wiederherstellen (ja/nein).# {{{
+				MSG=$(gettext 'Sollen die $lv_Meta fuer Dateien und Verzeichnisse wiederhergestellt werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					META=yes
+				else
+					META=no
+				fi
+				## }}}
+				restore_menu $lv_Meta
+				;;
+			$lv_Symlinks)
+				# symbolische Links als Datei wiederherstellen (ja/nein).# {{{
+				MSG=$(gettext 'Sollen $lv_Symlinks als normale Datei wiederhergestellt werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					SYMLINKS=yes
+				else
+					SYMLINKS=no
+				fi
+				## }}}
+				restore_menu $lv_Symlinks
+				;;
+			$lv_Ignore)
+				# Fehler ignorieren (ja/nein).# {{{
+				MSG=$(gettext 'Sollen Fehler bei der Wiederherstellung ignoriert werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					IGNORE=yes
+				else
+					IGNORE=no
+				fi
+				## }}}
+				restore_menu $lv_Ignore
+				;;
+			$lv_Overwrite)
+				# Dateien/Verzeichnisse beim erneuten Versuch ueberschreiben (ja/nein).# {{{
+				MSG=$(gettext 'Sollen Dateien und Verzeichnisse beim erneuten wiederherstellen ueberschrieben werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					OVERWRITE=yes
+				else
+					OVERWRITE=no
+				fi
+				## }}}
+				restore_menu $lv_Overwrite
+				;;
+			$lv_Dir)
+				# Verzeichnisse suchen (ja/nein).# {{{
+				MSG=$(gettext 'Sollen Verzeichnisse gesucht werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					DIR=yes
+				else
+					DIR=no
+				fi
+				## }}}
+				restore_menu $lv_Dir
+				;;
+			$lv_List_Roots)
+				# Subvolumes auflisten (ja/nein).# {{{
+				MSG=$(gettext 'Sollen $lv_Subvolumes aufgelistet werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					LIST_ROOTS=yes
+				else
+					LIST_ROOTS=no
+				fi
+				## }}}
+				restore_menu $lv_List_Roots
+				;;
+			$lv_Superblock)
+				# benutze Superblock Kopie (0, 1 oder 2)# {{{
+				# Funktion (superblock_menu)# {{{
+				superblock_menu() {
+					MENU=($gv_None \"\" 0 \"\" 1 \"\" 2 \"\" $gv_Back \"\")
+					menubox "$1" "$SERVICE_RESTORE_TITLE" "$gv_Menupoint" "$MENU"
+				}
+				## }}}
+				superblock_menu
+				while [[ -n $gv_Auswahl ]] ; do
+					case $gv_Auswahl in
+						HELP*)
+							script_help service_restore_help
+							superblock_menu "${gv_Auswahl#HELP }"
+							;;
+						[0-2])
+							# uebernehmen
+							SUPER="$gv_Auswahl"
+							break
+							;;
+						$gv_None)
+							unset -- SUPER
+							break
+							;;
+						$gv_Back|*)
+							break
+							;;
+					esac
+				done
+				## }}}
+				restore_menu $lv_Superblock
+				;;
+			$lv_Root_Id)
+				# Subvolume ID eingeben.# {{{
+				MSG=$(gettext 'Geben  Sie die Subvolume ID ein dessen Dateien wiederhergestellt werden sollen.')
+				number_input "$SERVICE_RESTORE_TITLE" "$MSG" "$ROOT_ID"
+				if [[ -n $NUMBER ]] ; then
+					ROOT_ID="$NUMBER"
+				else
+					unset -- ROOT_ID
+				fi
+				## }}}
+				restore_menu $lv_Root_Id
+				;;
+			$lv_Dry_Run)
+				# Probelauf (ja/nein).# {{{
+				MSG=$(gettext 'Soll ein $lv_Dry_Run durchgefuehrt werden (ja/nein)?')
+				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
+				if [[ $gv_Auswahl == yes ]] ; then
+					DRY_RUN=yes
+				else
+					DRY_RUN=no
+				fi
+				## }}}
+				restore_menu $lv_List_Roots
+				;;
+			$gv_Save)
+				# Ueberpruefung starten# {{{
+				# #########################
+				# TODO: -t und -f fehlen noch
+				if [[ -n $DRIVE ]] && [[ -n $DEV ]] ; then
+					# Laufwerk ausbinden
+					mount_check -a $DRIVE
+					if [[ $U_MOUNT == yes ]] ; then
+						RESTORE_OPT="--verbose"
+						if [[ $LIST_ROOTS == yes ]] ; then
+							RESTORE_OPT="$RESTORE_OPT -l"
+							if [[ -n $ROOT_ID ]] ; then
+								RESTORE_OPT="$RESTORE_OPT --root $ROOT_ID"
+							fi
+						else
+							if [[ $SNAPSHOTS == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -s"
+							fi
+							if [[ $XATTR == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -x"
+							fi
+							if [[ $META == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -m"
+							fi
+							if [[ $SYMLINKS == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -S"
+							fi
+							if [[ $IGNORE == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -i"
+							fi
+							if [[ $OVERWRITE == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -o"
+							fi
+							if [ -n $SUPER ]] ; then
+								case $SUPER in
+									[0-2]) RESTORE_OPT="$RESTORE_OPT --super $SUPER"
+										;;
+								esac
+							fi
+							if [[ -n $ROOT_ID ]] ; then
+								RESTORE_OPT="$RESTORE_OPT --root $ROOT_ID"
+							fi
+							if [[ $DIR ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -d"
+							fi
+							if [[ $DRY_RUN == yes ]] ; then
+								RESTORE_OPT="$RESTORE_OPT -D"
+							fi
+						fi
+						# ausfuehren
+						rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
+						echo "$DEV" >>${gv_WorkDir}/btrfs_check
+						echo "---------------------------" \
+							>> ${gv_WorkDir}/btrfs_check
+						btrfs check ${=RESTORE_OPT} $DEV 2>&1 \
+							>> ${gv_WorkDir}/btrfs_check
+						view_file ${gv_WorkDir}/btrfs_check
+						# Variabeln mit Laufwerken loeschen
+						unset -- DRIVE DEV
+					else
+						# Variabeln mit Laufwerken loeschen
+						unset -- DRIVE DEV
+					fi
+				else
+					no_btrfs_choice_msg
+				fi
+				## }}}
+				restore_menu "$lv_Btrfs_Drive"
+				;;
+			$gv_Back|*)
+				# zurueck/abbrechen
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
