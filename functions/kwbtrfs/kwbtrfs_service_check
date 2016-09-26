@@ -10,7 +10,6 @@ kwbtrfs_service_check() {
 #	lv_Readonly=$(gettext 'nur lesbar')
 	lv_Repair=$(gettext 'reparieren')
 	lv_Subvolume_Id=$(gettext 'Subvolume ID')
-	lv_Superblock=$(gettext 'Superblock')
 	lv_Verify_Csum=$(gettext 'pruefe Checksumme')
 	SERVICE_CHECK_TITLE="${lv_Service}::${lv_Check}"
 	REPAIR="${REPAIR:-no}"
@@ -194,10 +193,12 @@ kwbtrfs_service_check() {
 						if [[ -n $SV_ID ]] ; then
 							CHECK_OPT="$CHECK_OPT --subvol-extents $SV_ID"
 						fi
-						case $SUPER in
-							[0-2]) CHECK_OPT="$CHECK_OPT --super $SUPER"
-								;;
-						esac
+						if [ -n $SUPER ]] ; then
+							case $SUPER in
+								[0-2]) CHECK_OPT="$CHECK_OPT --super $SUPER"
+									;;
+							esac
+						fi
 						# ausfuehren
 						rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
 						echo "$DEV" >>${gv_WorkDir}/btrfs_check
