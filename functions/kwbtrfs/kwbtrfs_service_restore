@@ -40,8 +40,8 @@ kwbtrfs_service_restore() {
 				;;
 			$lv_Btrfs_Drive)
 				# btrfs Laufwerk auswaehlen# {{{
-				autoload -U kwbtrfs_service_restore_btrfs_dev
-				kwbtrfs_service_restore_btrfs_dev
+				autoload -U kwbtrfs_service_check_btrfs_dev
+				kwbtrfs_service_check_btrfs_dev
 				## }}}
 				restore_menu $lv_Btrfs_Drive
 				;;
@@ -50,7 +50,7 @@ kwbtrfs_service_restore() {
 				# werden sollen.
 				dselect "$RPATH"
 				if [[ -d $VERZ ]] ; then
-					dselect -c "$VERZ"
+					dselect_check -c "$VERZ"
 					if [[ -n $VERZ ]] ; then
 						RPATH="$VERZ"
 					else
