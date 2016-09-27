@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 29.06.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 27.09.2016
 #
 # Script: kwmutt, konfiguriert den Mail-Client Mutt.
 #
-# Version: 0.1.2
+# Version: 0.1.3
 
 ###################################################################
 # TODO:
@@ -48,6 +48,30 @@ script_init
 # Pruefen ob mutt installiert ist.
 prog_check mutt
 if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# Mutt Release ueberpruefen
+Tmp=${(M)${(f)"$(mutt -vv)"}##Mutt*}
+if [[ -n $Tmp ]] ; then
+	Release=${${(ws: :)${(M)${(f)"$(mutt -vv)"}##Mutt*}}[2]}
+fi
+case "$Release" in
+	[1-9]\.[0-9]*\.[0-9]*)
+		# Mutt ohne Patches
+		;;
+	*)
+		# Mutt + Patches
+		Tmp=${(M)${(f)"$(mutt -vv)"}##NeoMutt*}
+		if [[ -n $Tmp ]] ; then
+			Release=${${${${(ws: :)${(M)${(f)"$(mutt -vv)"}##NeoMutt*}}[3]}/\(/}/\)}
+		fi
+		;;
+esac
+
+if [[ $Release < 1.7.0 ]] ; then
+	MSG=$(gettext '$gv_ScriptName benoetigt eine Mutt Release >=1.7.0.')
+	msgbox "$gv_Info" "$MSG"
 	exit 0
 fi
 

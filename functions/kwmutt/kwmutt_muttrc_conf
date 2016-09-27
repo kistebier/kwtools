@@ -7,7 +7,7 @@ kwmutt_muttrc_conf() {
 	Unset=(autoedit abort_nosubject abort_unmodified
 	allow_8bit beep beep_new charset delete edit_headers followup_to
 	fast_reply editor hdr_order hostname ignore_list_reply_to include
-	ispell locale mark_old markers metoo mixmaster move
+	ispell mark_old markers metoo mixmaster move
 	postpone query_command quit quote_regexp realname reply_regexp
 	reply_to reverse_alias reverse_name shell signature smileys
 	tilde use_envelope_from user_agent write_bcc)
@@ -31,7 +31,6 @@ kwmutt_muttrc_conf() {
 		include \"$include\"
 		quit \"$quit\"
 		charset \"$charset\"
-		locale \"$locale\"
 		ispell \"$ispell\"
 		signature \"$signature\"
 		abort_nosubject \"$abort_nosubject\"
@@ -309,41 +308,6 @@ kwmutt_muttrc_conf() {
 				fi
 				## }}}
 				muttrc_conf_menu ispell
-				;;
-			locale)
-				# locale auswaehlen# {{{
-				if [ -d /usr/share/locale ] ; then
-					# locale sammeln und zur Auswahl stellen
-					integer Anz
-					Anz=0
-					for i in /usr/share/locale/*(/N:t) ; {
-						(( Anz++ ))
-						Dir[Anz]="$i \"\""
-					}
-					#
-					if [ -n "${Dir[1]}" ] ; then
-						LOCALE_MENU=($Dir)
-						menubox "$locale" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
-						while [ -n "$gv_Auswahl" ] ; do
-							case "$gv_Auswahl" in
-								HELP*)	script_help kwmutt_muttrc_help
-									menubox "${gv_Auswahl#HELP }" "$MUTTRC_TITLE" "$gv_Menupoint" "$LOCALE_MENU"
-									;;
-								*)	# Auswahl uebernehmen
-									locale="$gv_Auswahl"
-									break
-									;;
-							esac
-						done
-					else
-						MSG=$(gettext 'Es sind keine locale Dateien vorhanden.')
-						msgbox "$gv_Info" "$MSG"
-					fi
-				else
-					no_dir_msg /usr/share/locale
-				fi
-				## }}}
-				muttrc_conf_menu locale
 				;;
 			mark_old)
 				# neue ungelesene Nachrichten beim verlassen von mutt als old kennzeichnen# {{{
