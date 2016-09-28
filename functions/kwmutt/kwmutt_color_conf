@@ -31,6 +31,7 @@ kwmutt_color_conf() {
 	lv_Indicator=$(gettext 'ausgewaehlte Nachricht')
 	lv_Message=$(gettext 'Informative Nachrichten')
 	lv_Search=$(gettext 'Farbe fuer Suchergebnisse')
+	lv_Sidebar_Color=$(gettext 'Farbe fuer Seitenleiste')
 	lv_Signature=$(gettext 'Sender Signaturfarbe')
 	lv_Status=$(gettext 'Statuszeile')
 	# Textkoerper
@@ -315,6 +316,14 @@ kwmutt_color_conf() {
 									inverse_color_name "$SEARCH_OLD_BG_COLOR"
 									SEARCH_BG_COLOR="$Bg_Color"
 									;;
+								sidebar_new)
+									SIDEBAR_OLD_TYPE_COLOR="$Fg"
+									inverse_color_name type "$SIDEBAR_OLD_TYPE_COLOR"
+									SIDEBAR_TYPE_COLOR="$Type_Color"
+									SIDEBAR_OLD_BG_COLOR="$Bg"
+									inverse_color_name "$SIDEBAR_OLD_BG_COLOR"
+									SIDEBAR_BG_COLOR="$Bg_Color"
+									;;
 								signature)
 									SIGNATURE_OLD_TYPE_COLOR="$Fg"
 									inverse_color_name type "$SIGNATURE_OLD_TYPE_COLOR"
@@ -505,6 +514,7 @@ kwmutt_color_conf() {
 		\"$lv_Indicator\" \"$INDICATOR_TYPE_COLOR $INDICATOR_BG_COLOR\"
 		\"$lv_Message\" \"$MESSAGE_TYPE_COLOR $MESSAGE_BG_COLOR\"
 		\"$lv_Search\" \"$SEARCH_TYPE_COLOR $SEARCH_BG_COLOR\"
+		\"$lv_Sidebar_Color\" \"$SIDEBAR_TYPE_COLOR $SIDEBAR_BG_COLOR\"
 		\"$lv_Signature\" \"$SIGNATURE_TYPE_COLOR $SIGNATURE_BG_COLOR\"
 		$lv_Status \"$STATUS_TYPE_COLOR $STATUS_BG_COLOR\"
 		-----$lv_Body----- \"\"
@@ -799,7 +809,7 @@ kwmutt_color_conf() {
 								mv "$gv_LogFile" "$File" 2>&1
 								## }}}
 								;;
-							normal|search|signature|status|tilde|tree|underline)
+							normal|search|sidebar_new|signature|status|tilde|tree|underline)
 								# allgemeine Farben einstellen# {{{
 								sed -e "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
 								"$File" > $gv_LogFile 2>&1
@@ -883,8 +893,8 @@ kwmutt_color_conf() {
 	default_color_read() {
 		# Gibt es keine Farbdateien werden die Standard-dunkel
 		# Farbeinstellungen kopiert.
-		if [[ ! -f $M_COLOR_INDEX && ! -f $M_COLORS ]] ; then
-			default_color -d	 
+		if [[ ! -f $M_COLOR_INDEX ]] && [[ ! -f $M_COLORS ]] ; then
+			default_color -d
 		fi
 		# Hintergrund einlesen ob black oder white.
 		read_colors dark_light "$M_COLOR_INDEX"
@@ -1444,10 +1454,24 @@ kwmutt_color_conf() {
 				## }}}
 				color_menu $lv_Underline
 				;;
+			$lv_Sidebar_Color)
+				# Seitenleiste, Farbe fuer neue Mails in den Mailboxen# {{{
+				TYPE_COLOR="$SIDEBAR_TYPE_COLOR"
+				BG_COLOR="$SIDEBAR_BG_COLOR"
+				# alten Wert sichern.
+				Value_Old="$SIDEBAR_OLD_TYPE_COLOR.*$SIDEBAR_OLD_BG_COLOR"
+				# Farbe einstellen
+				color_conf sidebar_new "$M_COLORS"
+				# Farbe neu einlesen
+				read_colors typ "$M_COLORS"
+				## }}}
+				color_menu $lv_Sidebar_Color
+				;;
 			$gv_Back)	break
 				;;
 		esac
 	done
+	return 0
 }
 #}}}
 ### Modeline {{{

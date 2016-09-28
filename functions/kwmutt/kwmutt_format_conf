@@ -4,7 +4,7 @@
 kwmutt_format_conf() {
 	Unset=(attribution attach_format alias_format compose_format date_format
 	folder_format forward_format index_format message_format mix_entry_format
-	pager_format pgp_entry_format query_format status_format)
+	pager_format pgp_entry_format query_format sidebar_format status_format)
 	unset -- $Unset
 	# Funktion (format_conf_menu), menu fuer die Drucker Konfiguration# {{{
 	FORMAT_TITLE="$lv_Format"
@@ -22,6 +22,7 @@ kwmutt_format_conf() {
 		pager_format \"$pager_format\"
 		pgp_entry_format \"$pgp_entry_format\"
 		query_format \"$query_format\"
+		sidebar_format \"$sidebar_format\"
 		status_format \"$status_format\"
 		$gv_Save \"\"
 		$gv_Back \"\")
@@ -48,6 +49,7 @@ kwmutt_format_conf() {
 	pager_format="${pager_format:--%Z- %C/%m: %-20.20n   %s%*  -- (%P)}"
 	pgp_entry_format="${pgp_entry_format:-%4n %t%f %4l/0x%k %-4a %2c %u}"
 	query_format="${query_format:-%4c %t %-25.25a %-25.25n %?e?(%e)?}"
+	sidebar_format="${sidebar_format:-\"%B%?F? [%F]?%* %?N?%N/?%S\"}"
 	status_format="${status_format:--%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---}"
 	## }}}
 	format_conf_menu
@@ -212,6 +214,18 @@ kwmutt_format_conf() {
 				fi
 				## }}}
 				format_conf_menu query_format
+				;;
+			sidebar_format)
+				# Anzeige (Format) der Seitenleiste# {{{
+				MSG=$(gettext 'Geben Sie die Formatzeichen ein, wie die Seitenleiste dargestellt werden sollen.')
+				inputbox "$SIDEBAR_TITLE" "$MSG" "$sidebar_format"
+				if [ -n "$gv_Auswahl" ] ; then
+					sidebar_format="$gv_Auswahl"
+				else
+					sidebar_format="%B%* %n"
+				fi
+				## }}}
+				format_conf_menu sidebar_format
 				;;
 			status_format)
 				# Bestimmt das Format der Status-Zeile, die im Index-Menue angezeigt wird.# {{{

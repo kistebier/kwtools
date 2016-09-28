@@ -122,7 +122,10 @@ macro index \eA "!abook\n" 'Adressbuch oeffnen'
 macro pager \eA "!abook\n" 'Adressbuch oeffnen'
 macro pager A |'abook --add-email'\n 'Email-Adresse ins Adressbuch eintragen'
 # macro generic,index,pager \ca "<shell-escape>abook<return>" "launch abook"
-# macro index,pager A "<pipe-message>abook --add-email<return>" "add the sender address to abook"
+# macro index,pager A "<pipe-message>abook --add-email<return>" 'Email-Adresse ins abook Adressbuch eintragen'
+# 
+# Adressbuch owncloud
+# macro index,pager A "<pipe-message>pycard-import<return>" 'fuegt Email-Adresse zu pycardsyncer hinzu'
 #
 # muttrc editieren und einlesen
 macro generic \em "!vim ~/.muttrc\n:source ~/.muttrc\n" 'mit vim .muttrc oeffnen und neu einlesen'
@@ -151,6 +154,15 @@ macro pager \eua ":source ~/.kwtools/kwmutt/un_autoview\n<exit><display-message>
 # Show trace of mail routing
 macro   pager   \et ":unset weed\n|mailhops|less -c\n" "Zeigt den Weg einer Mail"
 
+# Seitenleiste
+# Taste b, Seitenleiste (un)sichtbar machen.
+macro pager b "<enter-command>toggle sidebar_visible<enter><redraw-screen>" "Seitenleiste (un)sichtbar"
+# ctrl-n, ctrl-p um die naechste, vorherige Mailbox zu springen
+# ctrl-o um eine ausgewaehlte Mailbox zu oeffnen
+bind pager \cp sidebar-prev
+bind pager \cp sidebar-next
+bind pager \co sidebar-open
+
 #}}}
 
 ##======================================================================
@@ -166,6 +178,18 @@ macro index \ed "l~d `date +%d`\n" 'Nur Nachrichten von heute anzeigen'
 
 # Suche in gesamten Nachrichten, nicht nur in den Headern
 macro index \e/ "/~B " "Suche Nachricht im Kopf und Text"
+
+# Seitenleiste
+# Taste b, Seitenleiste (un)sichtbar machen.
+macro index b "<enter-command>toggle sidebar_visible<enter><refresh>" "Seitenleiste (un)sichtbar"
+# ctrl-n, ctrl-p um die naechste, vorherige Mailbox zu springen
+# ctrl-o um eine ausgewaehlte Mailbox zu oeffnen
+bind index \cp sidebar-prev
+bind index \cn sidebar-next
+bind index \co sidebar-open
+
+# Remap bounce-message function to "B"
+bind index B bounce-message
 
 # Alle New Messages als gelesen markieren (,ar)
 # ar=all read
