@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 27.09.2016
+# Autor: Kai Wilke  <kiste@netzworkk.de> 28.09.2016
 #
 # Script: kwmutt, konfiguriert den Mail-Client Mutt.
 #
@@ -141,28 +141,28 @@ lv_Mutt_Start=$(gettext 'Mutt starten')
 lv_Print=$(gettext 'Drucker')
 lv_Send=$(gettext 'Versand')
 ## }}}
-		# Funktion (default_color), kopiert die Standardfarben# {{{
-		#
-		# usage: default_color [ -d ]
-		#
-		# -d - dunkel - schawrzer Hintergrund
-		#
-		default_color() {
-			if [[ $# == 1 && $1 == -d ]] ; then
-				# Standard Farben einstellen/kopieren (dunkel - schwarzer Hintergrund).
-				cp "${DATA_PATH}/${gv_ScriptName}/color.dark" "$M_COLORS" &>/dev/null
-				cp "${DATA_PATH}/${gv_ScriptName}/color.index.dark" "$M_COLOR_INDEX" &>/dev/null
-				cp "${DATA_PATH}/${gv_ScriptName}/color.index.spam.dark" "${MUTT}/color.index.spam" &>/dev/null
-				cp ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
-			else
-				# Standard Farben einstellen/kopieren (hell - weisser Hintergrund).
-				cp "${DATA_PATH}/${gv_ScriptName}/color.light" "$M_COLORS" &>/dev/null
-				cp "${DATA_PATH}/${gv_ScriptName}/color.index.light" "$M_COLOR_INDEX" &>/dev/null
-				cp "${DATA_PATH}/${gv_ScriptName}/color.index.spam.light" "${MUTT}/color.index.spam" &>/dev/null
-				cp ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
-			fi
-		}
-		## }}}
+# Funktion (default_color), kopiert die Standardfarben# {{{
+#
+# usage: default_color [ -d ]
+#
+# -d - dunkel - schawrzer Hintergrund
+#
+default_color() {
+	if [[ $# == 1 && $1 == -d ]] ; then
+		# Standard Farben einstellen/kopieren (dunkel - schwarzer Hintergrund).
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.dark" "$M_COLORS" &>/dev/null
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.index.dark" "$M_COLOR_INDEX" &>/dev/null
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.index.spam.dark" "${MUTT}/color.index.spam" &>/dev/null
+		cp -au ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
+	else
+		# Standard Farben einstellen/kopieren (hell - weisser Hintergrund).
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.light" "$M_COLORS" &>/dev/null
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.index.light" "$M_COLOR_INDEX" &>/dev/null
+		cp -au "${DATA_PATH}/${gv_ScriptName}/color.index.spam.light" "${MUTT}/color.index.spam" &>/dev/null
+		cp -au ${DATA_PATH}/${gv_ScriptName}/color.header* "$MUTT" &>/dev/null
+	fi
+}
+## }}}
 # Funktion (first_var_muttrc),leere Variablen von kwmuttrc mit Standardwerten fuellen.# {{{
 first_var_muttrc() {
 	abort_nosubject="${abort_nosubject:-ask-yes}"
@@ -231,44 +231,45 @@ read_mutt_files() {
 				# nicht belegt, wird auch source $ABOOK deaktiviert.
 				if [[ $i == $M_ABOOK ]] ; then
 					if [ -z "$alias_file" ] ; then
-						sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+						sed -e "s,^source[[:space:]].*$i,#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 						mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 					else
-						sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+						sed -e "s,^#*source[[:space:]]$i,source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 						mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 					fi
 				else
-					sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+					sed -e "s,^#*source[[:space:]]$i,source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 					mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 				fi
 			else
-				sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+				sed -e "s,^source[[:space:]]$i,#source $i," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 				mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 			fi
 		fi
 	}
 	## }}}
 	# Farben# {{{
-	for i in $M_COLOR_HDR $M_COLOR_HDR_AGENTS \
-		$M_COLOR_INDEX $M_COLOR_INDEX_SPAM \
-		$M_COLOR_FRIENDS ; {
-		if [[ -f $i ]] ; then
-			sed -e "s,^(#|$).*source[[:space:]].*${i##*/.},source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
-			mv "$gv_LogFile" "$M_COLORS" &>/dev/null
-		else
-			sed -e "s,^source[[:space:]].*${i##*/.},#source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
-			mv "$gv_LogFile" "$M_COLORS" &>/dev/null
-
-		fi
-	}
+	if [[ -f $M_COLORS ]] ; then
+		for i in $M_COLOR_HDR $M_COLOR_HDR_AGENTS \
+			$M_COLOR_INDEX $M_COLOR_INDEX_SPAM \
+			$M_COLOR_FRIENDS ; {
+			if [[ -f $i ]] ; then
+				sed -e "s,^#*source[[:space:]]$i,source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
+				mv "$gv_LogFile" "$M_COLORS" &>/dev/null
+			else
+				sed -e "s,^source[[:space:]]$i,#source $i," "$M_COLORS" > "$gv_LogFile" &>/dev/null
+				mv "$gv_LogFile" "$M_COLORS" &>/dev/null
+			fi
+		}
+	fi
 	## }}}
 	# Default Server# {{{
 	for i in $L_DEFAULT_SERVER $L_DEFAULT_SMTP ; {
 		if [[ -L ${MUTT}/${i} ]] ; then
-			sed -e "s,^#*source[[:space:]].*${i##*/.},source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+			sed -e "s,^#*source[[:space:]]${MUTT}/${i},source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 			mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 		else
-			sed -e "s,^source[[:space:]].*${i##*/.},#source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
+			sed -e "s,^source[[:space:]]${MUTT}/${i},#source ${MUTT}/${i}," "$MUTTCONF" > "$gv_LogFile" &>/dev/null
 			mv "$gv_LogFile" "$MUTTCONF" &>/dev/null
 
 		fi
