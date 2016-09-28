@@ -29,6 +29,7 @@ kwmutt_conf() {
 	lv_Smtp_Sendmail=$(gettext 'SMTP-Sendmail')
 	lv_Sort=$(gettext 'Sortierung')
 	lv_Urlview=$(gettext 'urlview')
+	lv_Sidebar=$(gettext 'Seitenleiste')
 	#
 	lv_Choice=$(gettext 'Auswahl')
 	lv_Serv_Test=$(gettext 'Server testen')
@@ -73,7 +74,7 @@ kwmutt_conf() {
 	CONF_MENU=($lv_Default \"\" $lv_Server \"\" $lv_Imap_Cf \"\" $lv_Pop_Cf \"\"
 		$lv_Print \"\" $lv_Sign \"\" $lv_Kbd \"\" $lv_Security \"\"
 		$lv_Colors \"\" $lv_Format \"\" $lv_Pager \"\"
-		$lv_Sort \"\" $lv_Urlview \"\" $gv_Back \"\")
+		$lv_Sort \"\" $lv_Urlview \"\" $lv_Sidebar \"\" $gv_Back \"\")
 	#
 	conf_menu() {
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
@@ -221,6 +222,14 @@ kwmutt_conf() {
 				read_mutt_files
 				## }}}
 				conf_menu $lv_Urlview
+				;;
+			$lv_Sidebar)
+				# Seitenleisten Einstellungen# {{{
+				autoload -U kwmutt_sidebar_conf kwmutt_sidebar_config
+				kwmutt_sidebar_conf
+				read_mutt_files
+				## }}}
+				conf_menu $lv_Sidebar
 				;;
 			$gv_Back)	break
 				;;
