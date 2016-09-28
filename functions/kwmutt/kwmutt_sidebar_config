@@ -1,0 +1,90 @@
+# Funktion (kwmutt_sidebar_config), schreibt die Konfigurationsdatei fuer die Seitenleiste
+#
+# usage: kwmutt_sidebar_config
+#
+kwmutt_sidebar_config() {
+#
+# Konfiguration schreiben.
+#
+> $M_SIDEBAR <<< "# Beginn $M_SIDEBAR
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+#
+# Liste von Trennzeichen fuer die Anzeige der Mailboxen Verzeichnisse.
+set sidebar_delim_chars=\"$sidebar_delim_chars\"
+
+# Trennzeichen zwischen Seitenleiste und geoeffneter Mailbox.
+set sidebar_divider_char=\"$sidebar_divider_char\"
+
+# Sollen die Mailboxen in der Seitenleiste eingerueckt werden (yes/no).
+set sidebar_folder_indent=\"$sidebar_folder_indent\"
+
+# Formatzeichen, wie die Seitenleiste die Mailboxen anzeigen soll.
+set sidebar_format=\"$sidebar_format\"
+
+# Zeichen, wie die Mailboxen in der Seitenleiste eingerueckt
+# werden sollen (Standard ist 2 Leerzeichen)
+set sidebar_indent_string="${sidebar_indent_string//"/\"}"
+
+# nur Mailboxen mit neuen Mails in der Seitenleiste anzeigen (yes/no).
+set sidebar_new_mail_only=\"$sidebar_new_mail_only\"
+
+# When set, the <sidebar-next-new> command will not stop  and  the
+# end  of the list of mailboxes, but wrap around to the beginning.
+# The <sidebar-prev-new> command is similarly  affected,  wrapping
+# around to the end of the list (yes/no).
+set sidebar_next_new_wrap=\"$sidebar_next_new_wrap\"
+
+# Seitenleiste auf der rechten Seite anzeigen (yes/no).
+set sidebar_on_right=\"$sidebar_on_right\"
+
+# Mailboxen in der Seitenleiste verkuerzt darstellen (yes/no).
+set sidebar_short_path=\"$sidebar_short_path\"
+
+# Sortierung der Mailboxen in der Seitenleiste.
+# alpha, count,flagged, new oder unsorted
+set sidebar_sort_method=\"$sidebar_sort_method\"
+
+# Seitenleiste standardmaessig sichtbar (yes/no).
+set sidebar_visible=\"$sidebar_visible\"
+
+# Breite der Seitenleiste (Zeichenanzahl).
+set sidebar_width=\"$sidebar_width\"
+
+# #################################
+# TODO: Farbeinstellung nach color!
+# color of folders with new mail
+color sidebar_new yellow default
+# #################################
+
+# #################################
+# TODO: Tastatureinstellung nach mkbd?
+# ctrl-n, ctrl-p to select next, prev folder
+# ctrl-o to open selected folder
+bind index \CP sidebar-prev
+bind index \CN sidebar-next
+bind index \CO sidebar-open
+bind pager \CP sidebar-prev
+bind pager \CN sidebar-next
+bind pager \CO sidebar-open
+
+# b toggles sidebar visibility
+# macro index,pager b \"<enter-command>toggle sidebar_visible<enter>\"
+
+# Remap bounce-message function to "B"
+bind index B bounce-message
+
+#
+# Mario Holbe suggests:
+macro index b \"<enter-command>toggle sidebar_visible<enter><refresh>\"
+macro pager b \"<enter-command>toggle sidebar_visible<enter><redraw-screen>\"
+# 
+# #################################
+
+# End $M_SORT"
+}
+#
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
