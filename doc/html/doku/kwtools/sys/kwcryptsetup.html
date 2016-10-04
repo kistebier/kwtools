@@ -7,7 +7,7 @@
         <meta name="author" content="Kai Wilke / netzworkk.de">
         <meta name="publisher" content="Kai Wilke / netzworkk.de">
         <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2016-09-30">
+        <meta name="date" content="2016-10-04">
         <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
         <meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
@@ -88,87 +88,93 @@
                 <tr>
                         <td></td>
                         <td vAlign=top><h3><a name=conf></a>1. Konfiguration</a></h3>
-				<p>Hier kann man einige Standardwerte f&uuml;r verschl&uuml;sselte Laufwerke 
-				konfigurieren.</p>
-				<p><b>Ausrichtung:</b> Geben Sie ein vielfaches von 512 Byte Sektoren ein
-				(8 = 4096 Byte). Das dient f&uuml;r die "stripe" Option auf
-				RAID Laufwerken oder Logischen Volumes (LVM). Lesen Sie
-				dazu auch man 8 mkfs.xfs.</p>
-				<p><b>Gr&ouml;sse:</b> Geben Sie die Gr&ouml;sse des Containers ein. Standard 
-				Blockgr&ouml;sse ist 1 MByte. Die Gr&ouml;sse der zu erstellenden verschl&uuml;sselten 
-				Datei (Container) muss gr&ouml;sser als 2 MByte sein (ben&ouml;ntigt der LUKS-Header).
-				Sie k&ouml;nnen als Masseinheit folgende Zeichen benutzen, k|K-KiloByte,
-				m|M-MegaByte, g|G-GigaByte, t|T-TerraByte oder p|P-PetaByte.</p>
-				<p><b>gnupg:</b> Soll gnupg zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
-				werden (ja/nein)? Geht nicht zusammen mit der Option "ssl".</p>
-				<p><b>Hash:</b> Auswahl des Hashwertes der f&uuml;r die Passphrase verwendet werden
-				soll (Standard ist ripemd160)?</p>
-				<p><b>LUKS verwenden:</b> Soll die Erweiterung LUKS (Linux Unified Key Setup) verwendet 
-				werden (ja/nein)? Standard ist ja. Dies sollten Sie eigentlich immer ausw&auml;hlen.
-				Es ist die sicherste Methode.</p>
-				<p><b>Mountverz.:</b> Muss ein externes oder internes Device gemountet werden, 
-				w&auml;hlen Sie dies hier aus. Es muss in der Datei /etc/fstab stehen.
-				Zum Beispiel kann der Schl&uuml;ssel f&uuml;r das verschl&uuml;sselte Device
-				auf einem USBstick liegen.</p>
-				<p><b>nur lesen:</b> Soll das Laufwerk im Nur Lesemodus erstellt werden
-				(ja/nein)? Kann man z.B. nutzen um eine verschl&uuml;sselte
-				CD/DVD's zu erstellen.</p>
-				<p><b>Noauto:</b> Soll das verschl&uuml;sselte Laufwerk beim Start
-				des Rechners manuell erstellt werden (ja/nein)? Also nicht 
-				automatisch.</p>
-				<p><b>NOTIZ:</b> Bei Benutzung von pam-mount sollten Sie immer &quot;nein&quot;
-				benutzen, da es sonst zu Fehlern beim mounten/login des Laufwerks kommt. Das
-				verschl&uuml;sselte Laufwerk darf noch nicht gestartet sein.</p>
-				<p><b>Offset:</b> Geben Sie eine Zahl ein um wieviele Sektoren der
-				1. Sektor verschoben werden soll. Ab diesem Sektor wird das Laufwerk
-				auf das verschl&uuml;sselte Laufwerk abgebildet. Hat das original
-				Laufwerk 10000 Sektoren und &quot;Offset&quot; ist 300 wird das
-				original Laufwerk ab Sektor 300 bis zum Ende auf das verschl&uuml;sselte
-				Laufwerk abgebildet. Siehe auch die Option &quot;Skip&quot;.</p>
-				<p><b>Passwort &uuml;berpr&uuml;fen:</b> Soll die Passwort-Eingabe nochmal 
-				&uuml;berpr&uuml;ft werden (ja/nein)?</p>
-				<p><b>Passwort-Zeit:</b> Geben Sie die Zeit, in Mikrosekunden, f&uuml;r den
-				Passwort Prozess ein (Standard ist 1).</p>
-				<p><b>Schl&uuml;sseldatei:</b> W&auml;hlen Sie hier die Datei aus, die den/die 
-				Schl&uuml;ssel enth&auml;lt. Wenn Sie keine Datei ausw&auml;hlen wird "none"
-				genommen und Sie m&uuml;ssen die Passphrase interactiv eingeben.</p>
-				<p><b>NOTIZ:</b> Bei Verwendung der LUKS Erweiterung k&ouml;nnen Sie bis zu 8 
-				Passphrasen in der Schl&uuml;sseldatei verwenden. Soll beim Login
-				das Laufwerk automatisch aktiviert werden, muss die
-				Passphrase gleich dem Login Passwort des Benutzers sein, und Sie ben&ouml;tigen dazu 
-				pam-mount. Schauen Sie nach dem richtigen Paketnamen in Ihrer Distribution nach.
-				Wenn Sie bei diesem Szenario das Login Passwort &auml;ndern m&uuml;ssen Sie auch die
-				Passphrase des Laufwerks &auml;ndern.</p>
-				<p><b>Schl&uuml;sselgr&ouml;sse:</b> Auswahl der Schl&uuml;sselgr&ouml;sse. Zur Auswahl 
-				stehen 128, 192 und 256 Bit &#040;Standard ist 256&#041;.</p>
-				<p><b>Skip:</b> Geben Sie eine Zahl ein wieviele Sektoren am Anfang des
-				verschl&uuml;sselten Laufwerks zur Berechnung des Initialisierungsvektor
-				(IV) &uuml;bersprungen werden sollen. Die Berechnung des IV behandelt Sektor 0
-				des verschl&uuml;sselten Laufwerks als w&auml;re es Sektor Skip=n.
-				Dadurch kann man aus der Mitte eines verschl&uuml;sselten Laufwerks ein
-				St&uuml;ck rausschneiden und es mit dem Schl&uuml;ssel des original
-				Laufwerks immer noch korrekt ver- und vor allem entschl&uuml;sseln, so
-				dass dasselbe rauskommt, als h&auml;tte man Sektor n+Skip vom original
-				Laufwerk ver- bzw. entschl&uuml;sselt.</p>
-				<p><b>ssl:</b> Soll openssl zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
-				werden (ja/nein)? Geht nicht zusammen mit der Option "gnupg".</p>
-				<p><b>swap:</b> Soll ein verschl&uuml;sseltes Swap-laufwerk erstellt werden 
-				(ja/nein)?</b>
-				<p><b>NOTIZ:</b> Suspend-to-RAM und Suspend-to-Disk funtionieren mit einer
-				verschl&uuml;sselten SWAP-Partition noch nicht. Die Community
-				arbeitet jedoch an diesem Problem.</p>
-				<p><b>tempor&auml;r:</b> Soll ein verschl&uuml;sseltes tempor&auml;res Laufwerk erstellt werden (ja/nein)? Bei ja kann man ausw&auml;hlen
-				wie das Laufwerk formatiert werden soll. Dient unter anderem zum
-				testen.</p>
-				<p><b>Timeout:</b> Geben Sie den Timeout, in Sekunden, f&uuml;r die Passwortabfrage ein
-				(Standard ist 5).</p>
-				<p><b>Verz&ouml;gerung:</b> Soll das verschl&uuml;sselte Laufwerk beim
-				Start des Rechners verz&ouml;gert erstellt werden, zum Beispiel nach
-				dem erstellen von RAID Arrays (ja/nein)?</p>
-				<p><b>Warnung:</b> Soll beim starten des Laufwerks eine Warnung ausgegeben
-				werden, wenn dieses nicht existiert (ja/nein)?</p>
-				<p><b>Wiederholungen:</b> Geben Sie ein, wie oft die Passphrasenabfrage
-				versucht werden soll zu wiederholen (Standard ist 3).</p></td>
+							<p>Hier kann man einige Standardwerte f&uuml;r verschl&uuml;sselte Laufwerke 
+							konfigurieren.</p>
+							<p><b>Ausrichtung:</b> Geben Sie ein vielfaches von 512 Byte Sektoren ein
+							(8 = 4096 Byte). Das dient f&uuml;r die "stripe" Option auf
+							RAID Laufwerken oder Logischen Volumes (LVM). Lesen Sie
+							dazu auch man 8 mkfs.xfs.</p>
+							<p><b>Gr&ouml;sse:</b> Geben Sie die Gr&ouml;sse des Containers ein. Standard 
+							Blockgr&ouml;sse ist 1 MByte. Die Gr&ouml;sse der zu erstellenden verschl&uuml;sselten 
+							Datei (Container) muss gr&ouml;sser als 2 MByte sein (ben&ouml;ntigt der LUKS-Header).
+							Sie k&ouml;nnen als Masseinheit folgende Zeichen benutzen, k|K-KiloByte,
+							m|M-MegaByte, g|G-GigaByte, t|T-TerraByte oder p|P-PetaByte.</p>
+							<p><b>gnupg:</b> Soll gnupg zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
+							werden (ja/nein)? Geht nicht zusammen mit der Option "ssl".</p>
+							<p><b>Hash:</b> Auswahl des Hashwertes der f&uuml;r die Passphrase verwendet werden
+							soll (Standard ist ripemd160)?</p>
+							<p><b>LUKS:</b> Soll die Erweiterung LUKS (Linux Unified Key Setup) verwendet 
+							werden (ja/nein)? Standard ist ja. Dies sollten Sie eigentlich immer ausw&auml;hlen.
+							Es ist die sicherste Methode.</p>
+							<p><b>LUKS Header:</b> Falls der LUKS-Header auf ein extra Laufwerk oder eine
+							Datei geschrieben werden soll kann man dies hier ausw&auml;hlen.</p>
+							<p><b>TCRYPT:</b> Soll die Erweiterung TCRYPT (TrueCrypt) verwendet werden
+							(ja/nein)?</p>
+							<p><b>TCRYPT verstecken:</b> Soll das TCRYPT verschl&uuml;sselte Laufwerk
+							versteckt werden (ja/nein)?</p>
+							<p><b>Mountverz.:</b> Muss ein externes oder internes Device gemountet werden, 
+							w&auml;hlen Sie dies hier aus. Es muss in der Datei /etc/fstab stehen.
+							Zum Beispiel kann der Schl&uuml;ssel f&uuml;r das verschl&uuml;sselte Device
+							auf einem USBstick liegen.</p>
+							<p><b>nur lesen:</b> Soll das Laufwerk im Nur Lesemodus erstellt werden
+							(ja/nein)? Kann man z.B. nutzen um eine verschl&uuml;sselte
+							CD/DVD's zu erstellen.</p>
+							<p><b>Noauto:</b> Soll das verschl&uuml;sselte Laufwerk beim Start
+							des Rechners manuell erstellt werden (ja/nein)? Also nicht 
+							automatisch.</p>
+							<p><b>NOTIZ:</b> Bei Benutzung von pam-mount sollten Sie immer &quot;nein&quot;
+							benutzen, da es sonst zu Fehlern beim mounten/login des Laufwerks kommt. Das
+							verschl&uuml;sselte Laufwerk darf noch nicht gestartet sein.</p>
+							<p><b>Offset:</b> Geben Sie eine Zahl ein um wieviele Sektoren der
+							1. Sektor verschoben werden soll. Ab diesem Sektor wird das Laufwerk
+							auf das verschl&uuml;sselte Laufwerk abgebildet. Hat das original
+							Laufwerk 10000 Sektoren und &quot;Offset&quot; ist 300 wird das
+							original Laufwerk ab Sektor 300 bis zum Ende auf das verschl&uuml;sselte
+							Laufwerk abgebildet. Siehe auch die Option &quot;Skip&quot;.</p>
+							<p><b>Passwort &uuml;berpr&uuml;fen:</b> Soll die Passwort-Eingabe nochmal 
+							&uuml;berpr&uuml;ft werden (ja/nein)?</p>
+							<p><b>Passwort-Zeit:</b> Geben Sie die Zeit, in Mikrosekunden, f&uuml;r den
+							Passwort Prozess ein (Standard ist 1).</p>
+							<p><b>Schl&uuml;sseldatei:</b> W&auml;hlen Sie hier die Datei aus, die den/die 
+							Schl&uuml;ssel enth&auml;lt. Wenn Sie keine Datei ausw&auml;hlen wird "none"
+							genommen und Sie m&uuml;ssen die Passphrase interactiv eingeben.</p>
+							<p><b>NOTIZ:</b> Bei Verwendung der LUKS Erweiterung k&ouml;nnen Sie bis zu 8 
+							Passphrasen in der Schl&uuml;sseldatei verwenden. Soll beim Login
+							das Laufwerk automatisch aktiviert werden, muss die
+							Passphrase gleich dem Login Passwort des Benutzers sein, und Sie ben&ouml;tigen dazu 
+							pam-mount. Schauen Sie nach dem richtigen Paketnamen in Ihrer Distribution nach.
+							Wenn Sie bei diesem Szenario das Login Passwort &auml;ndern m&uuml;ssen Sie auch die
+							Passphrase des Laufwerks &auml;ndern.</p>
+							<p><b>Schl&uuml;sselgr&ouml;sse:</b> Auswahl der Schl&uuml;sselgr&ouml;sse. Zur Auswahl 
+							stehen 128, 192 und 256 Bit &#040;Standard ist 256&#041;.</p>
+							<p><b>Skip:</b> Geben Sie eine Zahl ein wieviele Sektoren am Anfang des
+							verschl&uuml;sselten Laufwerks zur Berechnung des Initialisierungsvektor
+							(IV) &uuml;bersprungen werden sollen. Die Berechnung des IV behandelt Sektor 0
+							des verschl&uuml;sselten Laufwerks als w&auml;re es Sektor Skip=n.
+							Dadurch kann man aus der Mitte eines verschl&uuml;sselten Laufwerks ein
+							St&uuml;ck rausschneiden und es mit dem Schl&uuml;ssel des original
+							Laufwerks immer noch korrekt ver- und vor allem entschl&uuml;sseln, so
+							dass dasselbe rauskommt, als h&auml;tte man Sektor n+Skip vom original
+							Laufwerk ver- bzw. entschl&uuml;sselt.</p>
+							<p><b>ssl:</b> Soll openssl zum entschl&uuml;sseln der Schl&uuml;sseldatei verwendet
+							werden (ja/nein)? Geht nicht zusammen mit der Option "gnupg".</p>
+							<p><b>swap:</b> Soll ein verschl&uuml;sseltes Swap-laufwerk erstellt werden 
+							(ja/nein)?</b>
+							<p><b>NOTIZ:</b> Suspend-to-RAM und Suspend-to-Disk funtionieren mit einer
+							verschl&uuml;sselten SWAP-Partition noch nicht. Die Community
+							arbeitet jedoch an diesem Problem.</p>
+							<p><b>tempor&auml;r:</b> Soll ein verschl&uuml;sseltes tempor&auml;res Laufwerk erstellt werden (ja/nein)? Bei ja kann man ausw&auml;hlen
+							wie das Laufwerk formatiert werden soll. Dient unter anderem zum
+							testen.</p>
+							<p><b>Timeout:</b> Geben Sie den Timeout, in Sekunden, f&uuml;r die Passwortabfrage ein
+							(Standard ist 5).</p>
+							<p><b>Verz&ouml;gerung:</b> Soll das verschl&uuml;sselte Laufwerk beim
+							Start des Rechners verz&ouml;gert erstellt werden, zum Beispiel nach
+							dem erstellen von RAID Arrays (ja/nein)?</p>
+							<p><b>Warnung:</b> Soll beim starten des Laufwerks eine Warnung ausgegeben
+							werden, wenn dieses nicht existiert (ja/nein)?</p>
+							<p><b>Wiederholungen:</b> Geben Sie ein, wie oft die Passphrasenabfrage
+							versucht werden soll zu wiederholen (Standard ist 3).</p></td>
                         <td></td>
                 </tr>
                 <tr>
