@@ -89,6 +89,7 @@ kwcryptsetup_conf() {
 			KONF_MENU=($lv_Align \"$ALIGN\" $lv_Cipher \"$CIPHER\"
 			$lv_Hash \"$HASH\" $lv_Use_Luks \"$USELUKS\"
 			$lv_Header \"$LUKSHEADER\" $lv_Use_Tcrypt \"$USETCRYPT\"
+			\"$lv_Tcrypt_Hidden\" \"$TCRYPTHIDDEN\"
 			$lv_Mountdir \"$MOUNT_PATH\" $lv_Offset \"$OFFSET\"
 			\"$lv_Readonly\" \"$READONLY\" $lv_Discard \"$DISCARD\"
 			\"$lv_Verify\" \"$VERIFY\" $lv_Iteration_Time \"$ITERATION_TIME\"
@@ -106,7 +107,9 @@ kwcryptsetup_conf() {
 			KONF_MENU=($lv_Align \"$ALIGN\" $lv_Size \"$SIZE\"
 			$lv_Cipher \"$CIPHER\" $lv_Hash \"$HASH\"
 			$lv_Use_Luks \"$USELUKS\" $lv_Header \"$LUKSHEADER\"
-			$lv_Use_Tcrypt \"$USETCRYPT\" $lv_Mountdir \"$MOUNT_PATH\"
+			$lv_Use_Tcrypt \"$USETCRYPT\"
+			\"$lv_Tcrypt_Hidden\" \"$TCRYPTHIDDEN\"
+			$lv_Mountdir \"$MOUNT_PATH\"
 			$lv_Offset \"$OFFSET\" \"$lv_Readonly\" \"$READONLY\" 
 			$lv_Discard \"$DISCARD\" \"$lv_Verify\" \"$VERIFY\"
 			$lv_Iteration_Time \"$ITERATION_TIME\"
@@ -351,9 +354,17 @@ kwcryptsetup_conf() {
 				conf_menu $lv_Use_Tcrypt
 				;;
 			$lv_Tcrypt_Hidden)
-				##################################### {{{
-				# TODO: Einstellung fehlt noch
-				hier_ist_noch_nichts "$lv_Tcrypt_Hidden"
+				# TCRYPT Laufwerk verstecken (ja/nein)# {{{
+				TCRYPT_MSG=$(gettext 'Soll das TCRYPT verschluesselte Laufwerk versteckt werden (ja/nein)?')
+				yesno "$gv_Configuration" "$TCRYPT_MSG" "$TCRYPTHIDDEN"
+				if [ "$gv_Auswahl" = yes ] ; then
+					TCRYPTHIDDEN=yes
+					# Option --allow-discard kann nicht mit --tcrypt-hidden
+					# kombiniert werden.
+					DISCARD=no
+				else
+					TCRYPTHIDDEN=no
+				fi
 				## }}}
 				conf_menu $lv_Tcrypt_Hidden
 				;;
