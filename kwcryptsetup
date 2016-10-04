@@ -107,7 +107,6 @@ lv_Container=$(gettext 'Container')
 lv_Drives=$(gettext 'Laufwerke')
 lv_Key=$(gettext 'Schluessel')
 lv_Luks=$(gettext 'LUKS')
-lv_Tcrypt=$(gettext 'TCRYPT')
 lv_Partition=$(gettext 'Partition')
 lv_Swap=$(gettext 'Swap')
 lv_Start=$(gettext 'start')
@@ -185,7 +184,7 @@ Das verschluesselte Geraet $dst wird entfernt.')
 	## }}}
 # Funktion parse_opts# {{{
 parse_opts() {
-	local Opt ARG PARAM VALUE
+	local Opt Opts IFS PARAM VALUE
 
 	# Variablen# {{{
 	################################
@@ -222,20 +221,18 @@ parse_opts() {
 #	SKIP=""
 #	VERIFY=""
 	## }}}
-	Opt="`print ${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${DST}[[:space:]]*}}[4]}`"
-	while test "x$Opt" != "x" ; do
-      	ARG="${Opt/,*/}"
-       	Opt="${Opt##${ARG}}"
-		Opt=${Opt##,}
-       	PARAM="${ARG/=*/}"
-		#
-        case "$ARG" in
+#	print ${(M)"${(f)$(< $TABFILE)}"##(s#)${DST}[[:space:]]*} | \
+	Opts="`print ${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${DST}[[:space:]]*}}[4]}`"
+	IFSOLD="$IFS"
+	IFS=','
+	for Opt in ${=Opts} ; {
+        case "$Opt" in
           *=*)
-            PARAM="${ARG/=*/}"
-            VALUE="${ARG##$PARAM=}"
+            PARAM="${Opt/=*/}"
+            VALUE="${Opt##$PARAM=}"
             ;;
           *)
-            PARAM="$ARG"
+            PARAM="$Opt"
             VALUE=""
             ;;
         esac
@@ -347,9 +344,9 @@ parse_opts() {
 			luks)
 				USELUKS="yes"
 				;;
-			luksheader)
+			header)
 	            if [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Kein Wert fuer luksheader vorhanden.')
+					MSG=$(gettext '$DST: Kein Wert fuer header vorhanden.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -411,11 +408,15 @@ parse_opts() {
 			tcrypthidden)
 				TCRYPTPARAMS="$TCRYPTPARAMS --tcrypt-hidden"
 				;;
+			veracrypt)
+				TCRYPTPARAMS="$TCRYPTPARAMS --veracrypt"
+				;;
 		esac
 		CRYPTTAB_OPTIONS="$CRYPTTAB_OPTIONS $PARAM"
 		[ -z "$VALUE" ] && VALUE="yes"
 		eval export CRYPTTAB_OPTION_$PARAM="\"$VALUE\""
-	done
+	}
+	IFS="$IFSOLD"
 	export CRYPTTAB_OPTIONS
 
 	return 0

@@ -36,11 +36,6 @@ kwcryptsetup_conf() {
 	lv_Size=$(gettext 'Groesse')
 	lv_Skip=$(gettext 'Skip')
 	lv_Use_Luks="$lv_Luks"
-	lv_Use_Tcrypt="$lv_Tcrypt"
-	#####################################
-	# TODO: verstecken?, noch nicht im Menue integriert.
-	lv_Tcrypt_Hidden=$(gettext 'TCRYPT verstecken')
-	################################
 	lv_Timeout=$(gettext 'Timeout')
 	lv_Tmp=$(gettext 'Tmpfs')
 	lv_Tries=$(gettext 'Wiederholungen')
@@ -71,7 +66,7 @@ kwcryptsetup_conf() {
 			$lv_Tries \"$TRIES\" 
 			$gv_Save \"\" $gv_Back \"\")
 		elif [[ $Konf_Opt == --cont ]] ; then
-			unset -- USELUKS USETCRYPT
+			unset -- USELUKS
 			KONF_MENU=($lv_Size \"$SIZE\" $lv_Cipher \"$CIPHER\"
 			$lv_Hash \"$HASH\" $lv_Mountdir \"$MOUNT_PATH\"
 			$lv_Offset \"$OFFSET\" \"$lv_Readonly\" \"$READONLY\"
@@ -88,8 +83,7 @@ kwcryptsetup_conf() {
 		elif [[ $Konf_Opt == --part ]] ; then
 			KONF_MENU=($lv_Align \"$ALIGN\" $lv_Cipher \"$CIPHER\"
 			$lv_Hash \"$HASH\" $lv_Use_Luks \"$USELUKS\"
-			$lv_Header \"$LUKSHEADER\" $lv_Use_Tcrypt \"$USETCRYPT\"
-			\"$lv_Tcrypt_Hidden\" \"$TCRYPTHIDDEN\"
+			$lv_Header \"$LUKSHEADER\"
 			$lv_Mountdir \"$MOUNT_PATH\" $lv_Offset \"$OFFSET\"
 			\"$lv_Readonly\" \"$READONLY\" $lv_Discard \"$DISCARD\"
 			\"$lv_Verify\" \"$VERIFY\" $lv_Iteration_Time \"$ITERATION_TIME\"
@@ -107,8 +101,6 @@ kwcryptsetup_conf() {
 			KONF_MENU=($lv_Align \"$ALIGN\" $lv_Size \"$SIZE\"
 			$lv_Cipher \"$CIPHER\" $lv_Hash \"$HASH\"
 			$lv_Use_Luks \"$USELUKS\" $lv_Header \"$LUKSHEADER\"
-			$lv_Use_Tcrypt \"$USETCRYPT\"
-			\"$lv_Tcrypt_Hidden\" \"$TCRYPTHIDDEN\"
 			$lv_Mountdir \"$MOUNT_PATH\"
 			$lv_Offset \"$OFFSET\" \"$lv_Readonly\" \"$READONLY\" 
 			$lv_Discard \"$DISCARD\" \"$lv_Verify\" \"$VERIFY\"
@@ -331,42 +323,12 @@ kwcryptsetup_conf() {
 				yesno "$gv_Configuration" "$LUKS_MSG" "$USELUKS"
 				if [ "$gv_Auswahl" = yes ] ; then
 					USELUKS=yes
-					USETCRYPT=no
 					MAKESWAP=no
 				else
 					USELUKS=no
 				fi
 				## }}}
 				conf_menu $lv_Use_Luks
-				;;
-			$lv_Use_Tcrypt)
-				# Soll die Erweiterung Luks verwendet werden?# {{{
-				TCRYPT_MSG=$(gettext 'Soll die Erweiterung TCRYPT verwendet werden (ja/nein)?')
-				yesno "$gv_Configuration" "$TCRYPT_MSG" "$USETCRYPT"
-				if [ "$gv_Auswahl" = yes ] ; then
-					USETCRYPT=yes
-					USELUKS=no
-					MAKESWAP=no
-				else
-					USETCRYPT=no
-				fi
-				## }}}
-				conf_menu $lv_Use_Tcrypt
-				;;
-			$lv_Tcrypt_Hidden)
-				# TCRYPT Laufwerk verstecken (ja/nein)# {{{
-				TCRYPT_MSG=$(gettext 'Soll das TCRYPT verschluesselte Laufwerk versteckt werden (ja/nein)?')
-				yesno "$gv_Configuration" "$TCRYPT_MSG" "$TCRYPTHIDDEN"
-				if [ "$gv_Auswahl" = yes ] ; then
-					TCRYPTHIDDEN=yes
-					# Option --allow-discard kann nicht mit --tcrypt-hidden
-					# kombiniert werden.
-					DISCARD=no
-				else
-					TCRYPTHIDDEN=no
-				fi
-				## }}}
-				conf_menu $lv_Tcrypt_Hidden
 				;;
 			$lv_Mountdir) 
 				# Mount Verzeichnis eingeben
@@ -538,7 +500,6 @@ kwcryptsetup_conf() {
 				if [ "$gv_Auswahl" = yes ] ; then
 					MAKESWAP=yes
 					USELUKS=no
-					USETCRYPT=no
 				else
 					MAKESWAP=no
 				fi
@@ -650,7 +611,7 @@ kwcryptsetup_conf() {
 				else
 					# Einstellungen fuer das veraendern von Laufwerken.# {{{
 					unset -- OPT PLAINPARAMS LUKSPARAMS LUKSFORMAT EXTRAPARAMS \
-						TCRYPTPARAMS PARAMS
+						PARAMS
 					if [ -n "$CIPHER" ] ; then
 						OPT="${OPT},cipher=$CIPHER"
 						PARAMS="$PARAMS --cipher=$CIPHER"
@@ -687,7 +648,8 @@ kwcryptsetup_conf() {
 						if [ -n "$ALIGN" ] ; then
 							LUKSFORMAT="--align-payload=$ALIGN"
 						fi
-						if [ -n "$HEADER" ] ; then
+						if [ -n "$LUKSHEADER" ] ; then
+							OPT="${OPT},header=$LUKSHEADER"
 							LUKSPARAMS="$LUKSPARAMS --header=$LUKSHEADER"
 						fi
 						if [ -n "$KEYSLOT" ] ; then
@@ -695,15 +657,7 @@ kwcryptsetup_conf() {
 							LUKSPARAMS="$LUKSPARAMS --key-slot $KEYSLOT"
 						fi
 					fi
-					if [ "$USETCRYPT" = yes ] ; then
-						OPT="${OPT},tcrypt"
-						if [ -n "$TCRYPTHIDDEN" ] ; then
-							OPT="${OPT},tcypthidden"
-							TCRYPTPARAMS="$TCRYPTPARAMS --tcrypt-hidden=$TCRYPTHIDDEN"
-						fi
-					fi
-					if [ "$MAKESWAP" = yes ] && [ "$USELUKS" != yes ] && \
-						[ "$USETCRYPT" != yes ] ; then
+					if [ "$MAKESWAP" = yes ] && [ "$USELUKS" != yes ] ; then
 						OPT="${OPT},swap"
 						PARAMS="$PARAMS --key-file=/dev/urandom"
 						KEY_FILE=/dev/urandom

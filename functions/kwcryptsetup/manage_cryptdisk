@@ -170,7 +170,7 @@ manage_cryptdisk() {
 
 		# Laufwerk erstellen/initiieren
 		########################################
-		# TODO: TCRYPT checken!
+		# TODO:
 		# --keyfile muss irgendwie eingebunden/geaendert werden.
 		#
 		# Schlüsseldatei und Schlüsselscript benutzen
@@ -181,12 +181,6 @@ manage_cryptdisk() {
 				$KEYSCRIPT $keyscriptarg | \
 					cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
-			elif [ "$USETCRYPT" = yes ] ; then
-				$KEYSCRIPT $keyscriptarg | \
-					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
-				$KEYSCRIPT $keyscriptarg | \
-					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
-					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			else
 				$KEYSCRIPT $keyscriptarg | \
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
@@ -204,12 +198,6 @@ manage_cryptdisk() {
 				print "$gv_Pass" | \
 					cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
-			elif [ "$USETCRYPT" = yes ] ; then
-				print "$gv_Pass" | \
-					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
-				print "$gv_Pass" | \
-					cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
-					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			else
 				print "$gv_Pass" | \
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
@@ -221,10 +209,6 @@ manage_cryptdisk() {
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} $LUKSFORMAT luksFormat $SRC &>/dev/null || return=1
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} ${=EXTRAPARAMS} \
 					open --type luks $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
-			elif [ "$USETCRYPT" = yes ] ; then
-				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} luksFormat $SRC &>/dev/null || return=1
-				cryptsetup ${=PARAMS} ${=TCRYPTPARAMS} ${=EXTRAPARAMS} \
-					open --type tcrypt $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			else
 				cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
 					open --type plain $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
