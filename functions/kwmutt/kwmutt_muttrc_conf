@@ -5,9 +5,9 @@
 #
 kwmutt_muttrc_conf() {
 	Unset=(autoedit abort_nosubject abort_unmodified
-	allow_8bit beep beep_new charset delete edit_headers followup_to
+	allow_8bit beep beep_new charset send_charset delete edit_headers followup_to
 	fast_reply editor hdr_order hostname ignore_list_reply_to include
-	ispell mark_old markers metoo mixmaster move
+	ispell locale mark_old markers metoo mixmaster move
 	postpone query_command quit quote_regexp realname reply_regexp
 	reply_to reverse_alias reverse_name shell signature smileys
 	tilde use_envelope_from user_agent write_bcc)
@@ -31,6 +31,8 @@ kwmutt_muttrc_conf() {
 		include \"$include\"
 		quit \"$quit\"
 		charset \"$charset\"
+		send_charset \"$send_charset\"
+		locale \"$locale\"
 		ispell \"$ispell\"
 		signature \"$signature\"
 		abort_nosubject \"$abort_nosubject\"
@@ -170,15 +172,27 @@ kwmutt_muttrc_conf() {
 				;;
 			charset)
 				# Eingabe des Zeichensatzes# {{{
-				MSG=$(gettext 'Geben Sie den Zeichensatz ein (z.B. fuer Westeuropa iso-8859-1).')
+				MSG=$(gettext 'Geben Sie den Zeichensatz der verwendet werden soll ein.')
 				inputbox "$MUTTRC_TITLE" "$MSG" "$charset"
 				if [ -n "$gv_Auswahl" ] ; then
 					charset="$gv_Auswahl"
 				else
-					charset="iso-8859-1"
+					charset="utf-8"
 				fi
 				## }}}
 				muttrc_conf_menu charset
+				;;
+			send_charset)
+				# Eingabe des Zeichensatzes# {{{
+				MSG=$(gettext 'Geben Sie die Zeichensaetze, getrennt durch ein ":" Zeichen, ein die fuer ausgehende Mail verwendet werden sollen ein (z.B. us-ascii:iso-8859-1:iso-8859-15:utf-8).')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$send_charset"
+				if [ -n "$gv_Auswahl" ] ; then
+					send_charset="$gv_Auswahl"
+				else
+					send_charset="us-ascii:iso-8859-15:utf-8"
+				fi
+				## }}}
+				muttrc_conf_menu send_charset
 				;;
 			delete)
 				# Sollen Nachrichten automatisch ohne Nachfrage geloescht werden? # {{{
@@ -308,6 +322,18 @@ kwmutt_muttrc_conf() {
 				fi
 				## }}}
 				muttrc_conf_menu ispell
+				;;
+			locale)
+				# Eingabe des Zeichensatzes# {{{
+				MSG=$(gettext 'Geben Sie die locale die verwendet werden sollen ein.')
+				inputbox "$MUTTRC_TITLE" "$MSG" "$locale"
+				if [ -n "$gv_Auswahl" ] ; then
+					locale="$gv_Auswahl"
+				else
+					locale="C"
+				fi
+				## }}}
+				muttrc_conf_menu locale
 				;;
 			mark_old)
 				# neue ungelesene Nachrichten beim verlassen von mutt als old kennzeichnen# {{{
