@@ -99,6 +99,32 @@ hw_conf() {
 		fi
 	}
 	## }}}
+	# Funktion (check_write_part), prueft ob ein Laufwerk read-write eingebunden ist.# {{{
+	#
+	# usage: check_write_part MOUNTPOINT MOUNTPOINT ...
+	#
+	check_write_part() {
+		unset -- READ_ONLY READ_WRITE
+		local dir
+		if [[ ${#argv} -ge 1 ]] ; then
+			for dir in $@ ; {
+				if mountpoint $dir &>/dev/null ; then
+					READ_ONLY=${(M)${${(ws: :)${(M)${(f)"$(< /proc/mounts)"}##*[[:space:]]${dir}[[:space:]]*}}[4]}##*(ro,|,ro|,ro,|[[:space:]]ro[[:space:]])*}
+					if [ -n "$READ_ONLY" ] ; then
+						no_read_write_part_msg $dir
+						return 0
+					else
+						READ_WRITE=yes
+					fi
+				fi
+			}
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
+	}
+	## }}}
 	# Funktion (disk), Hardware-Erkennung der Festplatten{{{
 	#
 	# sucht nach ide/scsi Festplatten und berechnet die Kapazitaet
@@ -1890,6 +1916,23 @@ vg_free_size() {
 	no_raid_anz_msg() {
 		MSG=$(gettext 'Es konnte nicht die Anzahl der zum Array dazu gehoerigen Laufwerke ermittelt werden.')
 		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
+	# Funktion (no_read_write_part_msg), Nachricht das das Laufwerk nicht# {{{
+	# schreibbar eingebunden.
+	#
+	# usage: no_read_write_part_msg MOUNTPOINT
+	#
+	no_read_write_part_msg() {
+		if [[ ${#argv} == 1 ]] ; then
+			Mountpoint="$1"
+			MSG=$(gettext 'Das Laufwerk $Mountpoint ist nicht schreibbar ins Dateisystem eingebunden.')
+			msgbox "$gv_Info" "$MSG"
+		else
+			no_para_msg $0
+			return 1
+		fi
+		return 0
 	}
 	## }}}
 	# Funktion (no_vg_msg), Nachricht falls keine VG's vorhanden sind{{{
