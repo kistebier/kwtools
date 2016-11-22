@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 05.10.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.11.2016
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschluesselten
 # Devices mittels cryptsetup.
@@ -9,7 +9,7 @@
 # /lib/cryptsetup/cryptdisks.functions uebernommen, angepasst
 # oder erweitert.
 #
-# Version: 0.2.1
+# Version: 0.2.2
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -112,6 +112,7 @@ lv_Swap=$(gettext 'Swap')
 lv_Start=$(gettext 'start')
 lv_State=$(gettext 'Status')
 lv_Stop=$(gettext 'stop')
+lv_Update_Initrd=$(gettext 'initrd aktualisieren')
 lv_Management=$(gettext 'Management')
 lv_File=$(gettext 'Datei')
 lv_Keyscript=$(gettext 'Schluessel Script')
@@ -125,7 +126,8 @@ export KEYFILE_PASSWD_MSG
 # Funktion main_menu# {{{
 #
 MAIN_MENU=($gv_Configuration \"\" $lv_State \"\" $lv_Luks \"\"
-$lv_Drives \"\" $lv_Key \"\" $lv_Start \"\" $lv_Stop \"\" $gv_Exit \"\")
+$lv_Drives \"\" $lv_Key \"\" $lv_Start \"\" $lv_Stop \"\"
+\"$lv_Update_Initrd\" \"\" $gv_Exit \"\")
 main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
@@ -1128,6 +1130,12 @@ while [ "$gv_Auswahl" ] ; do
 			fi
 			## }}}
 			main_menu $lv_Stop
+			;;
+		$lv_Update_Initrd)
+			# Aktualisierung der Kernel initrd.img's# {{{
+			update_initrd
+			main_menu "$lv_Update_Initrd"
+			## }}}
 			;;
 		$gv_Exit)	break
 			;;
