@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 22.11.2016
 #
 # Script: kwgrub2, konfiguriert und installiert grub2
-# Version: 0.1.1
+# Version: 0.1.2
 
 trap 'setterm --inversescreen off ; setterm --reset ; 
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -52,49 +52,13 @@ main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
-# Funktion (check_write_part), prueft ob das Geraet read-write eingebunden ist.# {{{
+# Funktion (no_conf_msg), Grub2 Konfigurations Datei konnte nicht gefunden werden.# {{{
 #
-check_write_part() {
-	unset -- READ_WRITE
-	local Tmp Read_Only
-	for i in /boot/grub /boot/grub2 /boot / ; {
-		if mountpoint $i &>/dev/null ; then
-			if ! touch ${GRUB_DIR}/testfile$$ &>/dev/null ; then
-				unset -- READ_WRITE
-				break
-			else
-				READ_WRITE=yes
-				rm -rf ${GRUB_DIR}/testfile$$ &>/dev/null
-				break
-			fi
-		fi
-	}
-#						Tmp=${${(s: :)${(M)${(f)"$(< /proc/mounts)"}##(#s)*[[:space]]*${i}[[:space:]]*}}[4]}
-#						if [ -n "$Tmp" ] ; then
-#							Read_Only=${(M)$(print $Tmp)##(ro,|,ro|[[:space:]]*ro[[:space:]])*}
-#							if [ -n "$Read_Only" ] ; then
-#								no_read_write_msg
-#								break
-#							fi
-#						fi
-#					fi
-#				}
-}
-## }}}
-# Funktion (no_read_write_msg), Grub Laufwerk ist nicht schreibbar eingebunden# {{{
-#
-no_read_write_msg() {
-	MSG=$(gettext 'Das Verzeichnis /boot/grub ist nicht schreibbar ins Dateisystem eingebunden.')
+no_conf_msg() {
+	MSG=$(gettext 'Grub2 Bootmenue Datei ($GRUB_CONFFILE) konnte nicht gefunden werden. Erstellen Sie erst eine mittels der Menuepunkte $gv_Configuration und $lv_Actual.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-					# Funktion (no_conf_msg), Grub2 Konfigurations Datei konnte nicht gefunden werden.# {{{
-					#
-					no_conf_msg() {
-						MSG=$(gettext 'Grub2 Bootmenue Datei ($GRUB_CONFFILE) konnte nicht gefunden werden. Erstellen Sie erst eine mittels der Menuepunkte $gv_Configuration und $lv_Actual.')
-						msgbox "$gv_Info" "$MSG"
-					}
-					## }}}
 ##################################################################
 #
 # Hauptprogramm
@@ -173,7 +137,7 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			# Pruefen, ob das Verzeichnis/Laufwerk mit den Bootloader
 			# Konfigurationsdateien read-write eingebunden ist?
-			check_write_part
+			check_write_part /boot/grub /boot/grub2 /boot /
 			if [[ $READ_WRITE == yes ]] ; then
 				ACTUAL_TITLE=(${gv_Mainmenu}::${lv_Actual})
 				ACTUAL_MSG=$(gettext 'Update der $GRUB_CONFFILE Datei.')
