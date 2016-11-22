@@ -5856,6 +5856,23 @@ search_fdisks() {
 	fi
 	}
 	#}}}
+	# Funktion (update_initrd), updatet die Linux Kernel initrd.img's# {{{
+	# benoetigt die Funktion check_write_part aus der Funktionsdatei
+	# hw_conf
+	#
+	# usage: update_initrd
+	#
+	update_initrd() {
+		check_write_part /boot /
+		if [[ $READ_WRITE == yes ]] ; then
+			UI_TITLE=$(gettext 'update_initrd')
+			prog_exec -p update-initramfs '-u -k all' 2>&1 | \
+			   progressbox "$UI_TITLE"	|| \
+				(print ; prog_failure ; return 1)
+		fi
+		return 0
+	}
+	## }}}
 	# Funktion (user_device_check), um Rechte des Devices/Datei, fuer User zu pruefen{{{
 	#
 	# usage: user_device_check "$DEVICE" RECHTE
