@@ -1,830 +1,863 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD><TITLE>Projekt:netzworkk:Doku:devel:hw</TITLE>
-        <meta name="generator" content="vim">
-        <meta name="keywords" lang="en" content="Linux, linux, Netzworkk, kwtools">
-        <meta name="description" lang="en" content="">
-        <meta name="author" content="Kai Wilke / netzworkk.de">
-        <meta name="publisher" content="Kai Wilke / netzworkk.de">
-        <meta name="copyright" content="Kai Wilke / netzworkk.de">
-        <meta name="date" content="2016-09-15">
-        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
-        <meta name="content-language" content="de">
+	<meta name="generator" content="vim">
+	<meta name="keywords" lang="en" content="Linux, linux, Netzworkk, kwtools">
+	<meta name="description" lang="en" content="">
+	<meta name="author" content="Kai Wilke / netzworkk.de">
+	<meta name="publisher" content="Kai Wilke / netzworkk.de">
+	<meta name="copyright" content="Kai Wilke / netzworkk.de">
+	<meta name="date" content="2016-11-23">
+	<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+	<meta name="content-language" content="de">
 	<meta name="Robots" content="index,follow">
 	<link rel="icon" href="../../images/favicon.ico" type="image/ico">
-        <LINK href="../../css/style.css" type=text/css rel=stylesheet>
+	<LINK href="../../css/style.css" type=text/css rel=stylesheet>
 </HEAD>
 <BODY>
-<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
+	<TABLE cellSpacing=0 cellPadding=0 width="100%" border=0>
         <TBODY>
-                <TR>
-                        <TD width="2%" height=15></TD>
-                        <TD width="96%"></TD>
-                        <TD width="2%"></TD>
-                </TR>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><center>
-			<a href="../../doku/devel/fs.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
-			<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
-			<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><hr><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><h1>Allgemeine Funktionen die die Hardware betreffen.</h1></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><p>Man muss diese Funktion (hw_conf) nur ausf&uuml;hren, dann kann man alle enthaltenenen Funktionen ausf&uuml;hren, wie z. B. "cdrom". Wenn nichts zu der
-			Syntax steht, wird die Funktion einfach nur aufgerufen.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><hr></td>
-                </tr>
-		<tr>
-			<td></td>
-			<td><h4>Hardwarefunktionen</h4><p>
-			<a href="hw.html#cdrom" target="_self">cdrom</a><br>
-			<a href="hw.html#char_device_anzeige" target="_self">char_device_anzeige</a><br>
-			<a href="hw.html#check_crypt_map_dev" target="_self">check_crypt_map_dev</a><br>
-			<a href="hw.html#disk" target="_self">disk</a><br>
-			<a href="hw.html#floppy" target="_self">floppy</a><br>
-			<a href="hw.html#limit_size_conf" target="_self">limit_size_conf</a><br>
-			<a href="hw.html#lv" target="_self">lv</a><br>
-			<a href="hw.html#lv_free_size" target="_self">lv_free_size</a><br>
-			<a href="hw.html#lv_resize" target="_self">lv_resize</a><br>
-			<a href="hw.html#lvm_version" target="_self">lvm_version</a><br>
-			<a href="hw.html#mdadm_conf_scan" target="_self">mdadm_conf_scan</a><br>
-			<a href="hw.html#netcard" target="_self">netcard</a><br>
-			<a href="hw.html#parse_uuid_label" target="_self">parse_uuid_label</a><br>
-			<a href="hw.html#part_choice" target="_self">part_choice</a><br>
-			<a href="hw.html#part_md_lose" target="_self">part_md_lose</a><br>
-			<a href="hw.html#partdb" target="_self">partdb</a><br>
-			<a href="hw.html#part_resize" target="_self">part_resize</a><br>
-			<a href="hw.html#raid" target="_self">raid</a><br>
-			<a href="hw.html#raid_anz" target="_self">raid_anz</a><br>
-			<a href="hw.html#raid_enlarge_dev" target="_self">raid_enlarge_dev</a><br>
-			<a href="hw.html#raid_filter" target="_self">raid_filter</a><br>
-			<a href="hw.html#raid_is_layout" target="_self">raid_is_layout</a><br>
-			<a href="hw.html#raid_is_level" target="_self">raid_is_level</a><br>
-			<a href="hw.html#raid_reduce_dev" target="_self">raid_reduce_dev</a><br>
-			<a href="hw.html#raid_resize" target="_self">raid_resize</a><br>
-			<a href="hw.html#raid_search_part_state" target="_self">raid_search_part_state</a><br>
-			<a href="hw.html#raid_used_dev_size" target="_self">raid_used_dev_size</a><br>
-			<a href="hw.html#resize_cryptdisk" target="_self">resize_cryptdisk</a><br>
-			<a href="hw.html#resize_cryptdisk_stop" target="_self">resize_cryptdisk_stop</a><br>
-			<a href="hw.html#search_btrfs_filesystem" target="_self">search_btrfs_filesystem</a><br>
-			<a href="hw.html#search_cryptdev" target="_self">search_cryptdev</a><br>
-			<a href="hw.html#search_devices" target="_self">search_devices</a><br>
-			<a href="hw.html#vg_display" target="_self">vg_display</a><br>
-			<a href="hw.html#vg_free_size" target="_self">vg_free_size</a></p>
-			<h4>Nachrichten und Fehlermeldungen</h4>
-			<p><a href="hw.html#no_block_device_msg" target="_self">no_block_device_msg</a><br>
-			<a href="hw.html#no_dev_cd" target="_self">no_dev_cd</a><br>
-			<a href="hw.html#no_disk_msg" target="_self">no_disk_msg</a><br>
-			<a href="hw.html#no_disks_msg" target="_self">no_disks_msg</a><br>
-			<a href="hw.html#no_linux_part_msg" target="_self">no_linux_part_msg</a><br>
-			<a href="hw.html#no_lv_msg" target="_self">no_lv_msg</a><br>
-			<a href="hw.html#no_netcard_msg" target="_self">no_netcard_msg</a><br>
-			<a href="hw.html#no_part_choice_msg" target="_self">no_part_choice_msg</a><br>
-			<a href="hw.html#no_part_msg" target="_self">no_part_msg</a><br>
-			<a href="hw.html#no_raid_anz_msg" target="_self">no_raid_anz_msg</a><br>
-			<a href="hw.html#no_vg_msg" target="_self">no_vg_msg</a><br>
-			<a href="hw.html#over_limit_size_msg" target="_self">over_limit_size_msg</a></p></td>
-			<td></td>
-		</tr>
-                <tr>
-                        <td vAlign=top colspan="3"><hr></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="cdrom">cdrom</a></b>
-			<p>Sucht nach (E)IDE und SCSI CD/DVD Laufwerken und speichert sie in den Array's
-			CD_DEV, CD_DEV_E und CD_DEV_M um sie zur Auswahl anzubieten. Dazu ben&ouml;tigt
-			man eine kernel Release >=2.6.0 und hwinfo.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			CD_DEV - CD/DVD Laufwerke<br>
-			CD_DEV_E - CD/DVD Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
-			CD_DEV_M - CD/DVD Laufwerksanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="char_device_anzeige">char_device_anzeige</a></b>
-			<p>char_device_anzeige sucht nach den Zeichenorientierten Ger&auml;ten tts/*, ttyS*, lp*, 
-			printers* usb/*,..., im Verzeichnis /dev, und bietet die gefundenen zur Auswahl an. Dabei 
-			wird auch auf das dynamische Dateisystem "devfsd" R&uuml;cksicht genommen.<br>
-			<b>Notiz: </b>Zur Zeit gehen nur diese Ger&auml;te, z.B. wird kein Mausger&auml;t angezeigt. 
-			Andere Ger&auml;te werden von den Scripts bisher nicht gebraucht.<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			CHAR_ARRAY - Charakter Device Anzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="check_crypt_map_dev">check_crypt_map_dev</a></b>
-			<p>Die Funktion check_crypt_map_dev pr&uuml;ft beim Script kwcryptsetup ein Laufwerk
-			auf UUID und LABEL und belegt darauf hin die Variable MAP_DEV mit dem richtigen Pfad zum
-    		Device. Wird von den Funktionen
-			<a target="_self" href="hw.html#lv_resize">lv_resize</a>,
-			<a target="_self" href="hw.html#part_resize">part_resize</a> und
-			<a target="_self" href="hw.html#raid_resize">raid_resize</a> benutzt.<br>
-			check_crypt_map_dev DEVICE<br>
-			DEVICE - Laufwerk welches auf UUID und Label &uuml;berpr&uuml;ft werden soll<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			MAP_DEV - Variable die die richtige Ger&auml;tedatei enth&auml;lt</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="disk">disk</a></b>
-							<p>Hier werden alle Festplatten herausgesucht, wenn kernel >=2.6.0 l&auml;uft
-							und hwinfo installiert ist. Es wird alles in den Variablen DISK_DEV,
-							DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP, DISK_DEV_CAP_BYTE, DISK_DEV_NAME,
-							FP_INFO und HW_SECTOR_SIZE gespeichert.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			DISK_DEV - Festplatten<br>
-			DISK_DEV_E - Festplattenanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
-			DISK_DEV_M - Festplattenanzeige fuer die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a><br>
-			DISK_DEV_CAP - Gr&ouml;sse der Festplatte in Sektoren<br>
-			DISK_DEV_CAP_BYTE - Gr&ouml;sse der Festplatte in Byte<br>
-			DISK_DEV_NAME - Festplattenname in folgender Syntax: Modell-Gr&ouml;sse<br>
-			FP_INFO - Festplatteninformation, Festplatte und Modell<br>
-			HW_SECTOR_SIZE - Sektorgr&ouml;sse der Festplatte</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="floppy">floppy</a></b>
-			<p>Hier werden alle Disketten Laufwerke herausgesucht, wenn kernel
-			>=2.6.0 l&auml;uft und hwinfo installiert ist.
-			Es wird alles in den Variablen FLOPPY_DEV, FLOPPY_DEV_E und 
-			FLOPPY_DEV_M gespeichert.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			FLOPPY_DEV - Laufwerke<br>
-			FLOPPY_DEV_E - Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
-			FLOPPY_DEV_M - Laufwerksanzeige f&uuml;r die Funktionen
-			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="limit_size_conf">limit_size_conf</a></b>
-			<p>Die Funktion limit_size_conf konfiguriert die Gr&ouml;sse des
-			Block Hardlimit und des Block Softlimit, f&uuml;r &quot;Quota&quot;,
-			und &uuml;berpr&uuml;ft auch gleich ob das Softlimit &lt;&#061;
-			dem Hardlimit ist.<br>
-			limit_size_conf [ -h | -s ] LIMIT<br>
-			-h - Hardlimit einstellen<br>
-			-s - Softlimit einstellen<br>
-			LIMIT - Block_Hardlimit/Block_Softlimit mit einander vergleichen.
-			LIMIT muss mit &uuml;bergeben werden, wenn auch leer ("").<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			SIZE - Variable die den &uuml;berpr&uuml;ften Wert 
-			enth&auml;lt.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="lv">lv</a></b>
-			<p>Sucht nach allen aktiven LV's (Logischen Volumes) und speichert
-			sie in den Array's LV, LV_E und LV_M, um sie zur Auswahl anzubieten.<br>
-			lv [ -a ]<br>
-			-a - alle LV's in den Variablen speichern, ansonsten werden die LV's die die Quelle von Snapshots sind und der dazugeh&ouml;rige Snapshot nicht mit in den Variablen gespeichert.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			LV - Logische Volume<br>
-			LV_E - LV's Anzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
-			LV_M - LV's Anzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="lv_free_size">lv_free_size</a></b>
-			<p>Pr&uuml;ft die Gr&ouml;sse von LVs (1|2) anhand vom Programm lvdisplay und speichert
-			diese in der Variablen LV_SIZE, in MebiByte.<br>
-			lv_free_size "$LV"<br>
-			LV - Logischeses Volume = /dev/VolumeGroup/LogicalVolume<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			LV_SIZE - beinhaltet die LV Gr&ouml;sse in MebiByte.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="lv_resize">lv_resize</a></b>
-			<p>Diese Funktion verg&ouml;ssert und verkleinert Logische Volumes und das dazugeh&ouml;rige 
-			Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
-			vom Script
-			<a target="_blank" href="../kwtools/sys/kwlvm.html#kwlvm">kwlvm</a> benutzt.<br>
-			lv_resize [+|-]SIZE LV<br>
-			+ - vergr&ouml;ssern<br>
-			- - verkleinern<br>
-			SIZE - Gr&ouml;sse die das Logische Volume besitzen soll in Mebibyte<br>
-			LV - Logisches Volume welches verkleinert oder vergr&ouml;ssert werden soll</p></td>
+			<TR>
+				<TD width="2%" height=15></TD>
+				<TD width="96%"></TD>
+				<TD width="2%"></TD>
+			</TR>
+			<tr>
+				<td></td>
+				<td vAlign=top><center>
+					<a href="../../doku/devel/fs.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+					<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+					<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><hr><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><h1>Allgemeine Funktionen die die Hardware betreffen.</h1></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><p>Man muss diese Funktion (hw_conf) nur ausf&uuml;hren, dann kann man alle enthaltenenen Funktionen ausf&uuml;hren, wie z. B. "cdrom". Wenn nichts zu der
+					Syntax steht, wird die Funktion einfach nur aufgerufen.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><hr></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><h4>Hardwarefunktionen</h4><p>
+					<a href="hw.html#cdrom" target="_self">cdrom</a><br>
+					<a href="hw.html#char_device_anzeige" target="_self">char_device_anzeige</a><br>
+					<a href="hw.html#check_crypt_map_dev" target="_self">check_crypt_map_dev</a><br>
+					<a href="hw.html#check_write_part" target="_self">check_write_part</a><br>
+					<a href="hw.html#disk" target="_self">disk</a><br>
+					<a href="hw.html#floppy" target="_self">floppy</a><br>
+					<a href="hw.html#limit_size_conf" target="_self">limit_size_conf</a><br>
+					<a href="hw.html#lv" target="_self">lv</a><br>
+					<a href="hw.html#lv_free_size" target="_self">lv_free_size</a><br>
+					<a href="hw.html#lv_resize" target="_self">lv_resize</a><br>
+					<a href="hw.html#lvm_version" target="_self">lvm_version</a><br>
+					<a href="hw.html#mdadm_conf_scan" target="_self">mdadm_conf_scan</a><br>
+					<a href="hw.html#netcard" target="_self">netcard</a><br>
+					<a href="hw.html#parse_uuid_label" target="_self">parse_uuid_label</a><br>
+					<a href="hw.html#part_choice" target="_self">part_choice</a><br>
+					<a href="hw.html#part_md_lose" target="_self">part_md_lose</a><br>
+					<a href="hw.html#partdb" target="_self">partdb</a><br>
+					<a href="hw.html#part_resize" target="_self">part_resize</a><br>
+					<a href="hw.html#raid" target="_self">raid</a><br>
+					<a href="hw.html#raid_anz" target="_self">raid_anz</a><br>
+					<a href="hw.html#raid_enlarge_dev" target="_self">raid_enlarge_dev</a><br>
+					<a href="hw.html#raid_filter" target="_self">raid_filter</a><br>
+					<a href="hw.html#raid_is_layout" target="_self">raid_is_layout</a><br>
+					<a href="hw.html#raid_is_level" target="_self">raid_is_level</a><br>
+					<a href="hw.html#raid_reduce_dev" target="_self">raid_reduce_dev</a><br>
+					<a href="hw.html#raid_resize" target="_self">raid_resize</a><br>
+					<a href="hw.html#raid_search_part_state" target="_self">raid_search_part_state</a><br>
+					<a href="hw.html#raid_used_dev_size" target="_self">raid_used_dev_size</a><br>
+					<a href="hw.html#resize_cryptdisk" target="_self">resize_cryptdisk</a><br>
+					<a href="hw.html#resize_cryptdisk_stop" target="_self">resize_cryptdisk_stop</a><br>
+					<a href="hw.html#search_btrfs_filesystem" target="_self">search_btrfs_filesystem</a><br>
+					<a href="hw.html#search_cryptdev" target="_self">search_cryptdev</a><br>
+					<a href="hw.html#search_devices" target="_self">search_devices</a><br>
+					<a href="hw.html#vg_display" target="_self">vg_display</a><br>
+					<a href="hw.html#vg_free_size" target="_self">vg_free_size</a></p>
+					<h4>Nachrichten und Fehlermeldungen</h4>
+					<p><a href="hw.html#no_block_device_msg" target="_self">no_block_device_msg</a><br>
+					<a href="hw.html#no_dev_cd" target="_self">no_dev_cd</a><br>
+					<a href="hw.html#no_disk_msg" target="_self">no_disk_msg</a><br>
+					<a href="hw.html#no_disks_msg" target="_self">no_disks_msg</a><br>
+					<a href="hw.html#no_linux_part_msg" target="_self">no_linux_part_msg</a><br>
+					<a href="hw.html#no_lv_msg" target="_self">no_lv_msg</a><br>
+					<a href="hw.html#no_netcard_msg" target="_self">no_netcard_msg</a><br>
+					<a href="hw.html#no_part_choice_msg" target="_self">no_part_choice_msg</a><br>
+					<a href="hw.html#no_part_msg" target="_self">no_part_msg</a><br>
+					<a href="hw.html#no_raid_anz_msg" target="_self">no_raid_anz_msg</a><br>
+					<a href="hw.html#no_read_write_part_msg" target="_self">no_read_write_part_msg</a><br>
+					<a href="hw.html#no_vg_msg" target="_self">no_vg_msg</a><br>
+					<a href="hw.html#over_limit_size_msg" target="_self">over_limit_size_msg</a></p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><hr></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="cdrom">cdrom</a></b>
+					<p>Sucht nach (E)IDE und SCSI CD/DVD Laufwerken und speichert sie in den Array's
+					CD_DEV, CD_DEV_E und CD_DEV_M um sie zur Auswahl anzubieten. Dazu ben&ouml;tigt
+					man eine kernel Release >=2.6.0 und hwinfo.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					CD_DEV - CD/DVD Laufwerke<br>
+					CD_DEV_E - CD/DVD Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+					CD_DEV_M - CD/DVD Laufwerksanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="char_device_anzeige">char_device_anzeige</a></b>
+					<p>char_device_anzeige sucht nach den Zeichenorientierten Ger&auml;ten tts/*, ttyS*, lp*, 
+					printers* usb/*,..., im Verzeichnis /dev, und bietet die gefundenen zur Auswahl an. Dabei 
+					wird auch auf das dynamische Dateisystem "devfsd" R&uuml;cksicht genommen.<br>
+					<b>Notiz: </b>Zur Zeit gehen nur diese Ger&auml;te, z.B. wird kein Mausger&auml;t angezeigt. 
+					Andere Ger&auml;te werden von den Scripts bisher nicht gebraucht.<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					CHAR_ARRAY - Charakter Device Anzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="check_crypt_map_dev">check_crypt_map_dev</a></b>
+					<p>Die Funktion check_crypt_map_dev pr&uuml;ft beim Script kwcryptsetup ein Laufwerk
+					auf UUID und LABEL und belegt darauf hin die Variabel MAP_DEV mit dem richtigen Pfad zum
+			    		Device. Wird von den Funktionen
+					<a target="_self" href="hw.html#lv_resize">lv_resize</a>,
+					<a target="_self" href="hw.html#part_resize">part_resize</a> und
+					<a target="_self" href="hw.html#raid_resize">raid_resize</a> benutzt.<br>
+					check_crypt_map_dev DEVICE<br>
+					DEVICE - Laufwerk welches auf UUID und Label &uuml;berpr&uuml;ft werden soll<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					MAP_DEV - Variabel die die richtige Ger&auml;tedatei enth&auml;lt</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="check_write_part">check_write_part</a></b>
+					<p>Diese Funktion pr&uuml;ft, ob ein Laufwerk schreibbar ins
+					Dateisystem eingebunden ist. Erst wird gepr&uuml;ft, ob es ein
+					Einh&auml;ngepunkt ist und dann ob es schreibbar eingebunden ist.
+					Sie sollten auf die Reihenfolge der &uuml;bergebenen
+					Einh&auml;gepunkte achten und den &quot;/&quot;
+					als letztes &uuml;bergeben, da nach dem ersten nur lesbar ins
+					Dateisystem gebundenen Laufwerk abgebrochen wird.<br>
+					check_write_part MOUNTPOINT MOUNTPOINT ...<br>
+					MOUNTPOINT - Verzeichnis an dem das Laufwerk eingebunden wurde<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					READ_WRITE - Variabel die mit yes belegt wird, wenn das Laufwerk
+					schreibbar eingebunden wurde</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="disk">disk</a></b>
+					<p>Hier werden alle Festplatten herausgesucht, wenn kernel >=2.6.0 l&auml;uft
+					und hwinfo installiert ist. Es wird alles in den Variabeln DISK_DEV,
+					DISK_DEV_E, DISK_DEV_M, DISK_DEV_CAP, DISK_DEV_CAP_BYTE, DISK_DEV_NAME,
+					FP_INFO und HW_SECTOR_SIZE gespeichert.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					DISK_DEV - Festplatten<br>
+					DISK_DEV_E - Festplattenanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+					DISK_DEV_M - Festplattenanzeige fuer die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a><br>
+					DISK_DEV_CAP - Gr&ouml;sse der Festplatte in Sektoren<br>
+					DISK_DEV_CAP_BYTE - Gr&ouml;sse der Festplatte in Byte<br>
+					DISK_DEV_NAME - Festplattenname in folgender Syntax: Modell-Gr&ouml;sse<br>
+					FP_INFO - Festplatteninformation, Festplatte und Modell<br>
+					HW_SECTOR_SIZE - Sektorgr&ouml;sse der Festplatte</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="floppy">floppy</a></b>
+					<p>Hier werden alle Disketten Laufwerke herausgesucht, wenn kernel
+					>=2.6.0 l&auml;uft und hwinfo installiert ist.
+					Es wird alles in den Variabeln FLOPPY_DEV, FLOPPY_DEV_E und 
+					FLOPPY_DEV_M gespeichert.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					FLOPPY_DEV - Laufwerke<br>
+					FLOPPY_DEV_E - Laufwerksanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+					FLOPPY_DEV_M - Laufwerksanzeige f&uuml;r die Funktionen
+					<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="limit_size_conf">limit_size_conf</a></b>
+					<p>Die Funktion limit_size_conf konfiguriert die Gr&ouml;sse des
+					Block Hardlimit und des Block Softlimit, f&uuml;r &quot;Quota&quot;,
+					und &uuml;berpr&uuml;ft auch gleich ob das Softlimit &lt;&#061;
+					dem Hardlimit ist.<br>
+					limit_size_conf [ -h | -s ] LIMIT<br>
+					-h - Hardlimit einstellen<br>
+					-s - Softlimit einstellen<br>
+					LIMIT - Block_Hardlimit/Block_Softlimit mit einander vergleichen.
+					LIMIT muss mit &uuml;bergeben werden, wenn auch leer ("").<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					SIZE - Variabel die den &uuml;berpr&uuml;ften Wert 
+					enth&auml;lt.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="lv">lv</a></b>
+					<p>Sucht nach allen aktiven LV's (Logischen Volumes) und speichert
+					sie in den Array's LV, LV_E und LV_M, um sie zur Auswahl anzubieten.<br>
+					lv [ -a ]<br>
+					-a - alle LV's in den Variabeln speichern, ansonsten werden die LV's die die Quelle von Snapshots sind und der dazugeh&ouml;rige Snapshot nicht mit in den Variabeln gespeichert.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					LV - Logische Volume<br>
+					LV_E - LV's Anzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+					LV_M - LV's Anzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a></p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="lv_free_size">lv_free_size</a></b>
+					<p>Pr&uuml;ft die Gr&ouml;sse von LVs (1|2) anhand vom Programm lvdisplay und speichert
+					diese in der Variabel LV_SIZE, in MebiByte.<br>
+					lv_free_size "$LV"<br>
+					LV - Logischeses Volume = /dev/VolumeGroup/LogicalVolume<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					LV_SIZE - beinhaltet die LV Gr&ouml;sse in MebiByte.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="lv_resize">lv_resize</a></b>
+					<p>Diese Funktion verg&ouml;ssert und verkleinert Logische Volumes und das dazugeh&ouml;rige 
+					Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
+					vom Script
+					<a target="_blank" href="../kwtools/sys/kwlvm.html#kwlvm">kwlvm</a> benutzt.<br>
+					lv_resize [+|-]SIZE LV<br>
+					+ - vergr&ouml;ssern<br>
+					- - verkleinern<br>
+					SIZE - Gr&ouml;sse die das Logische Volume besitzen soll in Mebibyte<br>
+					LV - Logisches Volume welches verkleinert oder vergr&ouml;ssert werden soll</p></td>
 					<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="lvm_version">lvm_version</a></b>
-			<p>Pr&uuml;ft die Version von lvm (1|2) und laedt die 
-			dementsprechenden Kernel Module. Desweiteren scannt sie 
-			gleich nach vorhandenen Volume Groups und aktiviert diese.
-			Ben&ouml;tigt die Funktion <a target="_blank" href="sys.html#load_module">load_module</a>.<br>
-			lvm_version [ -q ]<br>
-			-q - keine Fehlermeldung und kein Abbruch.<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			NO_LVM - beinhaltet "yes" falls LVM nicht installiert
-			ist.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="mdadm_conf_scan">mdadm_conf_scan</a></b>
-			<p>Diese Funktion dient zum updaten der Konfigurationsdatei
-			des Programms mdadm (Software-RAID).</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="netcard">netcard</a></b>
-			<p>Hier werden alle Netzwerkkarten die mit Ethernet, W-lan und
-			Tokenring zu tun haben gesucht 	und in der Variablen DEVICE_LIST
-			gespeichert. Diese Liste kann man mit der Funktion "<a target="_blank" href="sys.html#menubox">menubox</a>" zur
-			Auswahl anbieten. Dabei wird in /proc/net/dev nachgeschaut. Die
-			Variable besteht aus NetzkarteNr_Kartentyp_Mac-Adresse_Treiber.
-			Als Programm kommt unter anderem ethtool zum Einstaz.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			DEVICE_LIST - Netzkartenanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
-			<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="parse_uuid_label">parse_uuid_label</a></b>
-			<p>Die Funktion parse_uuid_label wandelt UUIDs, LABELs, Partitionen
-			und von mittels &quot;cryptsetup&quot; erstellten Laufwerken in die 
-			reale Ger&auml;tedatei um.<br>
-			parse_uuid_label [ UUID | LABEL | DEVICE ]<br>
-			UUID - Laufwerke die mittels UUID &uuml;bergeben werden (Bsp.:
-			UUID=d65fb840-76b7-480f-a703-547a551c0a3a).<br>
-			LABEL - Laufwerke die mittels LABEL &uuml;bergeben werden (Bsp.:
-			LABEL=BOOT).<br>
-			DEVICE - dies k&ouml;nnen Partitionen oder mittels 
-			&quot;cryptsetup&quot; verschl&uuml;sselte Laufwerke sein.
-			Bei verschl&uuml;sselten Laufwerken wird der Pfad /dev/mapper/
-			vorangestellt, da diese nur als Laufwerksname in der Datei
-			/etc/crypttab stehen. Alle anderen Laufwerke 
-			werden mittels dem Programm &quot;readlink&quot; heraus gefunden.<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			REALDEV - Array das alle &uuml;berpr&uuml;ften Laufwerke 
-			beinhaltet.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="part_choice">part_choice</a></b>
-			<p>Partitionsauswahl: Man muss vorher die Funktionen <a target="_self" href="hw.html#disk">disk</a> und <a target="_self" href="hw.html#partdb">partdb</a>
-			ausf&uuml;hren, dann kann man Partitionen ausw&auml;hlen.<br>
-			part_choice [ -m | -s ] $PART_DEVICES<br>
-			-m = mehrfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.htm#checklist">checklist</a>.<br>
-			-s = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
-			nichts = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			nichts = normale Auswahl (/dev/hda1)<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			WERT - beinhaltet den/die ausgew&auml;hlten Wert(e).</p></td>
-			<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="part_md_lose">part_md_lose</a></b>
-			<p>Diese Funktion sucht nach Partitionen die in keinem RAID 
-			Array vorhanden sind und speichert sie in einem Array. Man 
-			muss vorher die Funktionen <a target="_self" href="hw.html#disk">disk</a> und <a target="_self" href="hw.html#partdb">partdb</a>
-			ausf&uuml;hren, dann kann man diese Partitionen 
-			ausw&auml;hlen.<br>
-			part_md_lose<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			Part_Md_Lose_E - beinhaltet die Partitionen f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
-			<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="partdb">partdb</a></b>
-			<p>Sucht nach Partitionen auf den Festplatten und speichert
-			sie in verschiedenen Arrays, damit man sie zur Auswahl anbieten kann. Dabei
-			wird das Programm parted benutzt.<br>
-			partdb [ DISK | DISK "TYP TYP ..." ]<br>
-			partdb [  -i "TYP TYP ..." ]<br>
-			partdb DISK = nur diese Festplatte nach Linux -und Swap Partitionen
-			durchsuchen.<br>
-			partdb DISK "TYP" = nur diese Festplatte nach bestimmten Partitionstyp(en)
-			durchsuchen.<br>
-			partdb -i "TYP" = nach Partitionstyp(en) suchen, auf allen
-			Festplatten. TYP kann dabei ein Flag (lvm,raid) oder ein Dateisystem (fat32)
-			sein.<br>
-			partdb = alle Partitionen auf allen Festplatten suchen ausser bios_grub,
-			RAID, LVM und crypto_LUKS.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			PART - Partionen.<br>
-			PART_E - Partitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			PART_M - Partitionsanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
-			SWAP_DEV - Swappartitionen.<br>
-			SWAP_DEV_E - Swappartitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br> 
-			SWAP_DEV_M - Swappartitionsanzeige f&uuml;r die Funktionen
-			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="part_resize">part_resize</a></b>
-			<p>Diese Funktion verg&ouml;ssert und verkleinert Partitionen und das dazugeh&ouml;rige 
-			Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
-			vom Script
-			<a target="_blank" href="../kwtools/sys/kwparted.html#kwparted">kwparted</a> benutzt.<br>
-			part_resize [+|-]SIZE ENDSIZE PARTITION<br>
-			+ - vergr&ouml;ssern<br>
-			- - verkleinern<br>
-			SIZE - Gr&ouml;sse die die Partition besitzen soll in Mebibyte<br>
-			ENDSIZE - Gr&ouml;sse die die Partition am Ende besitzen soll in Mebibyte<br>
-			PARTITION - Partition die verkleinert oder vergr&ouml;ssert werden soll</p></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="lvm_version">lvm_version</a></b>
+					<p>Pr&uuml;ft die Version von lvm (1|2) und laedt die 
+					dementsprechenden Kernel Module. Desweiteren scannt sie 
+					gleich nach vorhandenen Volume Groups und aktiviert diese.
+					Ben&ouml;tigt die Funktion <a target="_blank" href="sys.html#load_module">load_module</a>.<br>
+					lvm_version [ -q ]<br>
+					-q - keine Fehlermeldung und kein Abbruch.<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					NO_LVM - beinhaltet "yes" falls LVM nicht installiert
+					ist.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="mdadm_conf_scan">mdadm_conf_scan</a></b>
+					<p>Diese Funktion dient zum updaten der Konfigurationsdatei
+					des Programms mdadm (Software-RAID).</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="netcard">netcard</a></b>
+					<p>Hier werden alle Netzwerkkarten die mit Ethernet, W-lan und
+					Tokenring zu tun haben gesucht 	und in der Variabel DEVICE_LIST
+					gespeichert. Diese Liste kann man mit der Funktion "<a target="_blank" href="sys.html#menubox">menubox</a>" zur
+					Auswahl anbieten. Dabei wird in /proc/net/dev nachgeschaut. Die
+					Variabel besteht aus NetzkarteNr_Kartentyp_Mac-Adresse_Treiber.
+					Als Programm kommt unter anderem ethtool zum Einstaz.<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					DEVICE_LIST - Netzkartenanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a></p></td>
 					<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid">raid</a></b>
-			<p>Sucht nach allen aktiven RAID Arrays die in /proc/mdstat
-			stehen und speichert sie in den Variablen MD_PART, MD_PART_E.
-			und MD_PART_M. Zum Einsatz kommt das Programm mdadm.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			MD_PART - RAID Arrays.<br>
-			MD_PART_E - RAID Arraysanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			MD_PART_M - RAID Arraysanzeige fuer die Funktionen
-			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_anz">raid_anz</a></b>
-			<p>Die Funktion ermittelt die Anzahl der sich im RAID Array 
-			befindenden Laufwerke.<br>
-			Beispiel:<br>
-			VAR=$(raid_anz ARRAY)<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			VAR - Variable die die Anzahl der Laufwerke 
-			enth&auml;lt.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_enlarge_dev">raid_enlarge_dev</a></b>
-			<p>Diese Funktion vergr&ouml;ssert ein RAID Array, wenn es 
-			eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
-			Laufwerk addiert und das dazugeh&ouml;rige Dateisystem,
-			von denen die die kwtools unterst&uuml;tzen, angepasst.
-			Dabei gibt es eine Men&uuml;f&uuml;hrung mit Auswahl der
-			noch freien RAID Partitionen. Diese Funktion wird von den 
-			Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html" name="kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html" name="kwraid" target="_blank">kwraid</a> genutzt.<br>
-			raid_enlarge_dev ARRAY
-			</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_filter">raid_filter</a></b>
-			<p>Sucht nach allen vorhanden RAID Arrays in /proc/mdstat und
-			filtert dementsprechend.<br>
-			raid_filter [ -l | -t ]<br>
-			-l = filtert RAID Arrays die in anderen Arrays und in LVM
-			(Logical Volume Management) vorkommen heraus. Wird vom Script
-			kwgrub ben&ouml;tigt, bei der Auswahl der Rootpartition.<br>
-			-t = filtert RAID Arrays die in anderen Arrays vorkommen, und
-			RAID10 Arrays heraus. RAID10 Arrays werden nicht von
-			LVM unterst&uuml;tzt.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			R_DEVS - RAID Arrays.<br>
-			R_DEVS_E - RAID Arrays f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_is_layout">raid_is_layout</a></b>
-			<p>Diese Funktion ermittelt das Layout eines RAID Arrays.<br>
-			Beispiel:<br>
-			VAR=$(raid_is_layout $ARRAY)<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			VAR - Variable die das Layout eines RAID Arrays 
-			enth&auml;lt (left-symmetric, right-asymmetric-6, ...).</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_is_level">raid_is_level</a></b>
-			<p>Diese Funktion ermittelt das Level eines RAID Arrays.<br>
-			Beispiel:<br>
-			VAR=$(raid_is_level $ARRAY)<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			VAR - Variable die das Level eines RAID Arrays 
-			enth&auml;lt (raid1, raid5, ...).</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_reduce_dev">raid_reduce_dev</a></b>
-			<p>Diese Funktion verkleinert ein RAID Array, wenn es 
-			eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
-			Laufwerk entfernt und das dazugeh&ouml;rige Dateisystem,
-			von denen die die kwtools unterst&uuml;tzen, angepasst.
-			Dabei gibt es eine Men&uuml;f&uuml;hrung mit Auswahl der
-			dazugeh&ouml;rigen RAID Partitionen. Falls das Array nicht 
-			mehr gen&uuml;gend Partitionen zum entfernen besitzt kommt
-			eine Meldung dar&uuml;ber. Diese Funktion wird
-			von den Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html#kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html#kwraid" target="_blank">kwraid</a> genutzt.<br>
-			raid_reduce_dev ARRAY</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_resize">raid_resize</a></b>
-			<p>Die Funktion raid_resize ver&auml;ndert die Gr&ouml;se von einem RAID Array.
-			Diese Funktion wird von den Funktionen
-			<a target="_self" href="hw.html#raid_enlarge_dev">raid_enlarge_dev</a> und
-			<a target="_self" href="hw.html#raid_reduce_dev">raid_reduce_dev</a>
-			benutzt.<br>
-			raid_resize [+|-]SIZE ARRAY DEVICE<br>
-			+ - vergr&ouml;ssern<br>
-			- - verkleinern<br>
-			SIZE - neue Gr&ouml;sse des Array in Kibibyte<br>
-			ARRAY - RAID Array welches bearbeitet werden soll<br>
-			DEVICE - Partition die entfernt oder hinzugef&uuml;gt werden soll</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_search_part_state">raid_search_part_state</a></b>
-			<p>Diese Funktion sucht nach dem Status der einzelnen, zum 
-			RAID Array, geh&ouml;rigen Laufwerke und speichert diese mit 
-			ihrem Status in einem Array.<br>
-			raid_search_part_state ARRAY<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			PARTS_STATE - beinhaltet die Laufwerke des Array mit Status
-			f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid_used_dev_size">raid_used_dev_size</a></b>
-			<p>Diese Funktion ermittelt die Gr&ouml;sse eines Laufwerks von einem RAID Array.<br>
-			Beispiel:<br>
-			VAR=$(raid_used_dev_size $ARRAY)<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			VAR - Variable die die Gr&ouml;sse (in KiB) eines Laufwerk von einem RAID Array 
-			enth&auml;lt.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="resize_cryptdisk">resize_cryptdisk</a></b>
-			<p>Die Funktion resize_cryptdisk startet ein verschl&uml;sseltes Laufwerk und passt
-			dessen Gr&ouml;se an.<br>
-			resize_cryptdisk DEVICE<br>
-			DEVICE - Laufwerk welches gestartet und angepasst werden soll</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="resize_cryptdisk_stop">resize_cryptdisk_stop</a></b>
-			<p>Die Funktion resize_cryptdisk_stop stoppt ein verschl&uml;sseltes Laufwerk.
-			dessen Gr&ouml;se an.<br>
-			resize_cryptdisk_stop DEVICE<br>
-			DEVICE - Laufwerk welches gestoppt werden soll</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="search_btrfs_filesystem">search_btrfs_filesystem</a></b>
-			<p>Die Funktion search_btrfs_filesystem sucht nach Laufwerken mit btrfs
-			Dateisystem.<br>
-			search_btrfs_filesystem<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			BTRFS_LABEL_DEV - Array mit den Label aller gefundenen btrfs Laufwerke.<br>
-			BTRFS_UUID_DEV - Array mit der UUID aller gefundenen btrfs Laufwerke.<br>
-			BTRFS_DEV - Array mit den Devices aller gefundenen btrfs Laufwerke.<br>
-			BTRFS_DEV_E - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
-			die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			BTRFS_DEV_M - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
-			die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
-			BTRFS_MD - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
-			mehreren Devices bestehen.<br>
-			BTRFS_MD_E - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
-			mehreren Devices bestehen, f&uuml;r die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
-			BTRFS_MD_M - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
-			mehreren Devices bestehen, f&uuml;r die Auswahl mit den Funktionen
-			<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
-			DEV_ANZ - Array mit der Anzahl der Laufwerke eines btrfs Laufwerks.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="search_cryptdev">search_cryptdev</a></b>
-			<p>Die Funktion search_cryptdev sucht nach verschl&uuml;sselten
-			Laufwerken anhand der Datei /etc/crypttab.<br>
-			search_cryptdev [ -a  | -s | -l ]<br>
-			-a - suche nach aktiven verschl&uuml;sselten Laufwerken<br>
-			-l - suche nach nur Luks verschl&uuml;sselten Laufwerken<br>
-			-s - suche nach inaktiven verschl&uuml;sselten Laufwerken<br>
-			nichts - alle verschl&uuml;sselten Laufwerke in /etc/crypttab<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			MAP_DEV_E - Array mit den verschl&uuml;sselten Laufwerken.<br>
-			MAP_DEV - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
-			Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			MAP_DEV_M - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
-			Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
-			<td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="search_devices">search_devices</a></b>
-			<p>Die Funktion search_devices sucht nach Partitionen, Software RAID Arrays,
-			Logischen Volumes und Cryptsetup Laufwerken. Devices die in btrfs Laufwerken
-			vorhanden sind,	die aus mehreren Devices bestehen, werden herausgefiltert.<br>
-			search_devices [ -a | -c | -e | -p | -pc ]<br>
-			-a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
-			Laufwerke.<br>
-			-c - nur Cryptsetup Laufwerke.<br>
-			-e - nur ext[234] Laufwerke.<br>
-			-p - nur Partitionen<br>
-			-pc - nur Partitionen und Cryptsetup Laufwerke.<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			NO_BTRFS_DEV - Array mit den Werten aller gefundenen Laufwerke.<br>
-			NO_BTRFS_DEV_E - Array mit den Werten aller gefundenen Laufwerke f&uuml;r
-			die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
-			NO_BTRFS_DEV_M - Array mit den Werten aller gefundenen Laufwerke f&uuml;r
-			die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
-			FS - Array mit dem Dateisystemtyp der ext2/3/4 Laufwerke um das richtige fsck
-			Kommando ausf&uuml;hren zu k&ouml;nnen.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="vg_display">vg_display</a></b>
-			<p>Suche nach vorhandenen VGs (1|2) anhand dem Programm vgscan und speichert diese in
-			verschiedenen Variablen.<br>
-			vg_display<br>
-			<b><font color="darkYellow">Variablen</font></b><br>
-			VG - Variable die die VGs beinhaltet.<br>
-			VG_E - Variable die die VGs f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a> beinhaltet.<br>
-			VG_M - Variable die die VGs f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a> und <a target="_blank" href="sys.html#radiolist">radiolist</a> beinhaltet.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="vg_free_size">vg_free_size</a></b>
-			<p>Berechnet die noch verbleibende Gr&ouml;sse von VGs (1|2) anhand vom
-			Programm vgdisplay und speichert diese in der Variablen VG_SIZE, in MebiByte.<br>
-			vg_free_size "$VG"<br>
-			VG - Volume Group = /dev/VolumeGroup oder VolumeGroup<br>
-			<b><font color="darkYellow">Variable</font></b><br>
-			VG_SIZE - beinhaltet die noch zu verf&uuml;gende VG Gr&ouml;sse in MebiByte.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><hr></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><h1>Hardwarenachrichten und Fehlermeldungen</h1></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid">no_block_device_msg</a></b>
-			<p>Info dar&uuml;ber, das das &uuml;bergebene Laufwerk kein 
-			Blockger&auml;t ist<br>
-			no_block_device_msg DEVICE</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_dev_cd">no_dev_cd</a></b>
-			<p>Info dar&uuml;ber das keine CD/DVD Laufwerke vorhanden 
-			sind oder Sie keine Rechte besitzen.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_disk_msg">no_disk_msg</a></b>
-				<p>Info das das &uuml;bergebene Laufwerk keine Festplatten ist.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_disks_msg">no_disks_msg</a></b>
-				<p>Info das keine Festplatten vorhanden sind.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_linux_part_msg">no_linux_part_msg</a></b>
-			<p>Info dar&uuml;ber das keine Linux Partitionen vorhanden sind.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_lv_msg">no_lv_msg</a></b>
-			<p>Info dar&uuml;ber das keine Logischen Volumes vorhanden sind.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_netcard_msg">no_netcard_msg</a></b>
-			<p>Info dar&uuml;ber das keine Netzwerkkarten vorhanden sind.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_part_choice_msg">no_part_choice_msg</a></b>
-			<p>Meldung dar&uuml;ber das man keine Partition ausgew&auml;hlt hat.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_part_msg">no_part_msg</a></b>
-			<p>Info dar&uuml;ber wenn keine Partition vorhanden ist.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="raid">no_raid_anz_msg</a></b>
-			<p>Info dar&uuml;ber das die Anzahl der zum RAID 
-			Array verf&uuml;gbaren Laufwerke nicht heraus gefunden werden 
-			konnte.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="no_vg_msg">no_vg_msg</a></b>
-			<p>Info dar&uuml;ber das keine Volume Groups vorhanden sind und Sie erst Volume
-			Groups und dann darauf logische Volumes erzeugen m&uuml;ssen.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td vAlign=top colspan="3"><br></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><b><a name="over_limit_size_msg">over_limit_size_msg</a></b>
-			<p>Nachricht das das Softlimit immer gleich oder kleiner als
-			das Hardlimit sein muss.</p></td>
-                        <td></td>
-                </tr>
-                <tr>
-                        <td></td>
-                        <td vAlign=top><br><hr><br><center>
-			<a href="../../doku/devel/fs.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
-			<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
-			<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
-                        <td></td>
-                </tr>
-        </TBODY>
-</TABLE>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="parse_uuid_label">parse_uuid_label</a></b>
+					<p>Die Funktion parse_uuid_label wandelt UUIDs, LABELs, Partitionen
+					und von mittels &quot;cryptsetup&quot; erstellten Laufwerken in die 
+					reale Ger&auml;tedatei um.<br>
+					parse_uuid_label [ UUID | LABEL | DEVICE ]<br>
+					UUID - Laufwerke die mittels UUID &uuml;bergeben werden (Bsp.:
+					UUID=d65fb840-76b7-480f-a703-547a551c0a3a).<br>
+					LABEL - Laufwerke die mittels LABEL &uuml;bergeben werden (Bsp.:
+					LABEL=BOOT).<br>
+					DEVICE - dies k&ouml;nnen Partitionen oder mittels 
+					&quot;cryptsetup&quot; verschl&uuml;sselte Laufwerke sein.
+					Bei verschl&uuml;sselten Laufwerken wird der Pfad /dev/mapper/
+					vorangestellt, da diese nur als Laufwerksname in der Datei
+					/etc/crypttab stehen. Alle anderen Laufwerke 
+					werden mittels dem Programm &quot;readlink&quot; heraus gefunden.<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					REALDEV - Array das alle &uuml;berpr&uuml;ften Laufwerke 
+					beinhaltet.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="part_choice">part_choice</a></b>
+					<p>Partitionsauswahl: Man muss vorher die Funktionen <a target="_self" href="hw.html#disk">disk</a> und <a target="_self" href="hw.html#partdb">partdb</a>
+					ausf&uuml;hren, dann kann man Partitionen ausw&auml;hlen.<br>
+					part_choice [ -m | -s ] $PART_DEVICES<br>
+					-m = mehrfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.htm#checklist">checklist</a>.<br>
+					-s = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+					nichts = einfache Auswahl f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					nichts = normale Auswahl (/dev/hda1)<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					WERT - beinhaltet den/die ausgew&auml;hlten Wert(e).</p></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="part_md_lose">part_md_lose</a></b>
+					<p>Diese Funktion sucht nach Partitionen die in keinem RAID 
+					Array vorhanden sind und speichert sie in einem Array. Man 
+					muss vorher die Funktionen <a target="_self" href="hw.html#disk">disk</a> und <a target="_self" href="hw.html#partdb">partdb</a>
+					ausf&uuml;hren, dann kann man diese Partitionen 
+					ausw&auml;hlen.<br>
+					part_md_lose<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					Part_Md_Lose_E - beinhaltet die Partitionen f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="partdb">partdb</a></b>
+					<p>Sucht nach Partitionen auf den Festplatten und speichert
+					sie in verschiedenen Arrays, damit man sie zur Auswahl anbieten kann. Dabei
+					wird das Programm parted benutzt.<br>
+					partdb [ DISK | DISK "TYP TYP ..." ]<br>
+					partdb [  -i "TYP TYP ..." ]<br>
+					partdb DISK = nur diese Festplatte nach Linux -und Swap Partitionen
+					durchsuchen.<br>
+					partdb DISK "TYP" = nur diese Festplatte nach bestimmten Partitionstyp(en)
+					durchsuchen.<br>
+					partdb -i "TYP" = nach Partitionstyp(en) suchen, auf allen
+					Festplatten. TYP kann dabei ein Flag (lvm,raid) oder ein Dateisystem (fat32)
+					sein.<br>
+					partdb = alle Partitionen auf allen Festplatten suchen ausser bios_grub,
+					RAID, LVM und crypto_LUKS.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					PART - Partionen.<br>
+					PART_E - Partitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					PART_M - Partitionsanzeige f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+					SWAP_DEV - Swappartitionen.<br>
+					SWAP_DEV_E - Swappartitionsanzeige f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br> 
+					SWAP_DEV_M - Swappartitionsanzeige f&uuml;r die Funktionen
+					<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="part_resize">part_resize</a></b>
+					<p>Diese Funktion verg&ouml;ssert und verkleinert Partitionen und das dazugeh&ouml;rige 
+					Dateisystem, soweit das das jeweilige Dateisystem unterst&uuml;tzt. Diese Funktion wird
+					vom Script
+					<a target="_blank" href="../kwtools/sys/kwparted.html#kwparted">kwparted</a> benutzt.<br>
+					part_resize [+|-]SIZE ENDSIZE PARTITION<br>
+					+ - vergr&ouml;ssern<br>
+					- - verkleinern<br>
+					SIZE - Gr&ouml;sse die die Partition besitzen soll in Mebibyte<br>
+					ENDSIZE - Gr&ouml;sse die die Partition am Ende besitzen soll in Mebibyte<br>
+					PARTITION - Partition die verkleinert oder vergr&ouml;ssert werden soll</p></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid">raid</a></b>
+					<p>Sucht nach allen aktiven RAID Arrays die in /proc/mdstat
+					stehen und speichert sie in den Variabeln MD_PART, MD_PART_E.
+					und MD_PART_M. Zum Einsatz kommt das Programm mdadm.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					MD_PART - RAID Arrays.<br>
+					MD_PART_E - RAID Arraysanzeige fuer die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					MD_PART_M - RAID Arraysanzeige fuer die Funktionen
+					<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
+				<td></td>
+				</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_anz">raid_anz</a></b>
+					<p>Die Funktion ermittelt die Anzahl der sich im RAID Array 
+					befindenden Laufwerke.<br>
+					Beispiel:<br>
+					VAR=$(raid_anz ARRAY)<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					VAR - Variabel die die Anzahl der Laufwerke 
+					enth&auml;lt.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_enlarge_dev">raid_enlarge_dev</a></b>
+					<p>Diese Funktion vergr&ouml;ssert ein RAID Array, wenn es 
+					eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
+					Laufwerk addiert und das dazugeh&ouml;rige Dateisystem,
+					von denen die die kwtools unterst&uuml;tzen, angepasst.
+					Dabei gibt es eine Men&uuml;f&uuml;hrung mit Auswahl der
+					noch freien RAID Partitionen. Diese Funktion wird von den 
+					Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html" name="kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html" name="kwraid" target="_blank">kwraid</a> genutzt.<br>
+					raid_enlarge_dev ARRAY
+					</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_filter">raid_filter</a></b>
+					<p>Sucht nach allen vorhanden RAID Arrays in /proc/mdstat und
+					filtert dementsprechend.<br>
+					raid_filter [ -l | -t ]<br>
+					-l = filtert RAID Arrays die in anderen Arrays und in LVM
+					(Logical Volume Management) vorkommen heraus. Wird vom Script
+					kwgrub ben&ouml;tigt, bei der Auswahl der Rootpartition.<br>
+					-t = filtert RAID Arrays die in anderen Arrays vorkommen, und
+					RAID10 Arrays heraus. RAID10 Arrays werden nicht von
+					LVM unterst&uuml;tzt.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					R_DEVS - RAID Arrays.<br>
+					R_DEVS_E - RAID Arrays f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_is_layout">raid_is_layout</a></b>
+					<p>Diese Funktion ermittelt das Layout eines RAID Arrays.<br>
+					Beispiel:<br>
+					VAR=$(raid_is_layout $ARRAY)<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					VAR - Variabel die das Layout eines RAID Arrays 
+					enth&auml;lt (left-symmetric, right-asymmetric-6, ...).</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_is_level">raid_is_level</a></b>
+					<p>Diese Funktion ermittelt das Level eines RAID Arrays.<br>
+					Beispiel:<br>
+					VAR=$(raid_is_level $ARRAY)<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					VAR - Variabel die das Level eines RAID Arrays 
+					enth&auml;lt (raid1, raid5, ...).</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_reduce_dev">raid_reduce_dev</a></b>
+					<p>Diese Funktion verkleinert ein RAID Array, wenn es 
+					eines der Level 1, 4, 5 oder 6 besitzt. Dabei wird ein 
+					Laufwerk entfernt und das dazugeh&ouml;rige Dateisystem,
+					von denen die die kwtools unterst&uuml;tzen, angepasst.
+					Dabei gibt es eine Men&uuml;f&uuml;hrung mit Auswahl der
+					dazugeh&ouml;rigen RAID Partitionen. Falls das Array nicht 
+					mehr gen&uuml;gend Partitionen zum entfernen besitzt kommt
+					eine Meldung dar&uuml;ber. Diese Funktion wird
+					von den Scripten <a target="_blank" href="../kwtools/sys/kwcryptsetup.html#kwcryptsetup">kwcryptsetup</a> und <a href="../kwtools/sys/kwraid.html#kwraid" target="_blank">kwraid</a> genutzt.<br>
+					raid_reduce_dev ARRAY</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_resize">raid_resize</a></b>
+					<p>Die Funktion raid_resize ver&auml;ndert die Gr&ouml;se von einem RAID Array.
+					Diese Funktion wird von den Funktionen
+					<a target="_self" href="hw.html#raid_enlarge_dev">raid_enlarge_dev</a> und
+					<a target="_self" href="hw.html#raid_reduce_dev">raid_reduce_dev</a>
+					benutzt.<br>
+					raid_resize [+|-]SIZE ARRAY DEVICE<br>
+					+ - vergr&ouml;ssern<br>
+					- - verkleinern<br>
+					SIZE - neue Gr&ouml;sse des Array in Kibibyte<br>
+					ARRAY - RAID Array welches bearbeitet werden soll<br>
+					DEVICE - Partition die entfernt oder hinzugef&uuml;gt werden soll</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_search_part_state">raid_search_part_state</a></b>
+					<p>Diese Funktion sucht nach dem Status der einzelnen, zum 
+					RAID Array, geh&ouml;rigen Laufwerke und speichert diese mit 
+					ihrem Status in einem Array.<br>
+					raid_search_part_state ARRAY<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					PARTS_STATE - beinhaltet die Laufwerke des Array mit Status
+					f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid_used_dev_size">raid_used_dev_size</a></b>
+					<p>Diese Funktion ermittelt die Gr&ouml;sse eines Laufwerks von einem RAID Array.<br>
+					Beispiel:<br>
+					VAR=$(raid_used_dev_size $ARRAY)<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					VAR - Variabel die die Gr&ouml;sse (in KiB) eines Laufwerk von einem RAID Array 
+					enth&auml;lt.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="resize_cryptdisk">resize_cryptdisk</a></b>
+					<p>Die Funktion resize_cryptdisk startet ein verschl&uml;sseltes Laufwerk und passt
+					dessen Gr&ouml;se an.<br>
+					resize_cryptdisk DEVICE<br>
+					DEVICE - Laufwerk welches gestartet und angepasst werden soll</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="resize_cryptdisk_stop">resize_cryptdisk_stop</a></b>
+					<p>Die Funktion resize_cryptdisk_stop stoppt ein verschl&uml;sseltes Laufwerk.
+					dessen Gr&ouml;se an.<br>
+					resize_cryptdisk_stop DEVICE<br>
+					DEVICE - Laufwerk welches gestoppt werden soll</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="search_btrfs_filesystem">search_btrfs_filesystem</a></b>
+					<p>Die Funktion search_btrfs_filesystem sucht nach Laufwerken mit btrfs
+					Dateisystem.<br>
+					search_btrfs_filesystem<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					BTRFS_LABEL_DEV - Array mit den Label aller gefundenen btrfs Laufwerke.<br>
+					BTRFS_UUID_DEV - Array mit der UUID aller gefundenen btrfs Laufwerke.<br>
+					BTRFS_DEV - Array mit den Devices aller gefundenen btrfs Laufwerke.<br>
+					BTRFS_DEV_E - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+					die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					BTRFS_DEV_M - Array mit den Devices aller gefundenen btrfs Laufwerke f&uuml;r
+					die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+					BTRFS_MD - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+					mehreren Devices bestehen.<br>
+					BTRFS_MD_E - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+					mehreren Devices bestehen, f&uuml;r die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a><br>
+					BTRFS_MD_M - Array mit den Devices aller gefundenen btrfs Laufwerke, die aus
+					mehreren Devices bestehen, f&uuml;r die Auswahl mit den Funktionen
+					<a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+					DEV_ANZ - Array mit der Anzahl der Laufwerke eines btrfs Laufwerks.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="search_cryptdev">search_cryptdev</a></b>
+					<p>Die Funktion search_cryptdev sucht nach verschl&uuml;sselten
+					Laufwerken anhand der Datei /etc/crypttab.<br>
+					search_cryptdev [ -a  | -s | -l ]<br>
+					-a - suche nach aktiven verschl&uuml;sselten Laufwerken<br>
+					-l - suche nach nur Luks verschl&uuml;sselten Laufwerken<br>
+					-s - suche nach inaktiven verschl&uuml;sselten Laufwerken<br>
+					nichts - alle verschl&uuml;sselten Laufwerke in /etc/crypttab<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					MAP_DEV_E - Array mit den verschl&uuml;sselten Laufwerken.<br>
+					MAP_DEV - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
+					Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					MAP_DEV_M - Array mit den verschl&uuml;sselten Laufwerken f&uuml;r die 
+					Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.</p></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="search_devices">search_devices</a></b>
+					<p>Die Funktion search_devices sucht nach Partitionen, Software RAID Arrays,
+					Logischen Volumes und Cryptsetup Laufwerken. Devices die in btrfs Laufwerken
+					vorhanden sind,	die aus mehreren Devices bestehen, werden herausgefiltert.<br>
+					search_devices [ -a | -c | -e | -p | -pc ]<br>
+					-a - alle; Partitionen, Laufwerke mit Software RAID, LV oder Cryptsetup
+					Laufwerke.<br>
+					-c - nur Cryptsetup Laufwerke.<br>
+					-e - nur ext[234] Laufwerke.<br>
+					-p - nur Partitionen<br>
+					-pc - nur Partitionen und Cryptsetup Laufwerke.<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					NO_BTRFS_DEV - Array mit den Werten aller gefundenen Laufwerke.<br>
+					NO_BTRFS_DEV_E - Array mit den Werten aller gefundenen Laufwerke f&uuml;r
+					die Auswahl mit der Funktion <a target="_blank" href="sys.html#menubox">menubox</a>.<br>
+					NO_BTRFS_DEV_M - Array mit den Werten aller gefundenen Laufwerke f&uuml;r
+					die Auswahl mit den Funktionen <a target="_blank" href="sys.html#checklist">checklist</a>/<a target="_blank" href="sys.html#radiolist">radiolist</a>.<br>
+					FS - Array mit dem Dateisystemtyp der ext2/3/4 Laufwerke um das richtige fsck
+					Kommando ausf&uuml;hren zu k&ouml;nnen.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="vg_display">vg_display</a></b>
+					<p>Suche nach vorhandenen VGs (1|2) anhand dem Programm vgscan und speichert diese in
+					verschiedenen Variabeln.<br>
+					vg_display<br>
+					<b><font color="darkYellow">Variabeln</font></b><br>
+					VG - Variabel die die VGs beinhaltet.<br>
+					VG_E - Variabel die die VGs f&uuml;r die Funktion <a target="_blank" href="sys.html#menubox">menubox</a> beinhaltet.<br>
+					VG_M - Variabel die die VGs f&uuml;r die Funktionen <a target="_blank" href="sys.html#checklist">checklist</a> und <a target="_blank" href="sys.html#radiolist">radiolist</a> beinhaltet.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="vg_free_size">vg_free_size</a></b>
+					<p>Berechnet die noch verbleibende Gr&ouml;sse von VGs (1|2) anhand vom
+					Programm vgdisplay und speichert diese in der Variabel VG_SIZE, in MebiByte.<br>
+					vg_free_size "$VG"<br>
+					VG - Volume Group = /dev/VolumeGroup oder VolumeGroup<br>
+					<b><font color="darkYellow">Variabel</font></b><br>
+					VG_SIZE - beinhaltet die noch zu verf&uuml;gende VG Gr&ouml;sse in MebiByte.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><hr></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><h1>Hardwarenachrichten und Fehlermeldungen</h1></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="raid">no_block_device_msg</a></b>
+					<p>Info dar&uuml;ber, das das &uuml;bergebene Laufwerk kein 
+					Blockger&auml;t ist<br>
+					no_block_device_msg DEVICE</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_dev_cd">no_dev_cd</a></b>
+					<p>Info dar&uuml;ber das keine CD/DVD Laufwerke vorhanden 
+					sind oder Sie keine Rechte besitzen.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_disk_msg">no_disk_msg</a></b>
+					<p>Info das das &uuml;bergebene Laufwerk keine Festplatten ist.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_disks_msg">no_disks_msg</a></b>
+					<p>Info das keine Festplatten vorhanden sind.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_linux_part_msg">no_linux_part_msg</a></b>
+					<p>Info dar&uuml;ber das keine Linux Partitionen vorhanden sind.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_lv_msg">no_lv_msg</a></b>
+					<p>Info dar&uuml;ber das keine Logischen Volumes vorhanden sind.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_netcard_msg">no_netcard_msg</a></b>
+					<p>Info dar&uuml;ber das keine Netzwerkkarten vorhanden sind.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_part_choice_msg">no_part_choice_msg</a></b>
+					<p>Meldung dar&uuml;ber das man keine Partition ausgew&auml;hlt hat.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_part_msg">no_part_msg</a></b>
+					<p>Info dar&uuml;ber wenn keine Partition vorhanden ist.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_raid_anz_msg">no_raid_anz_msg</a></b>
+					<p>Info dar&uuml;ber das die Anzahl der zum RAID 
+					Array verf&uuml;gbaren Laufwerke nicht heraus gefunden werden 
+					konnte.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_read_write_part_msg">no_read_write_part_msg</a></b>
+					<p>Info dar&uuml;ber das &uuml;bergebene Laufwerk nicht schreibbar
+					eingebunden ist.<br>
+					no_read_write_part_msg MOUNTPOINT</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="no_vg_msg">no_vg_msg</a></b>
+					<p>Info dar&uuml;ber das keine Volume Groups vorhanden sind und Sie erst Volume
+					Groups und dann darauf logische Volumes erzeugen m&uuml;ssen.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td vAlign=top colspan="3"><br></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><b><a name="over_limit_size_msg">over_limit_size_msg</a></b>
+					<p>Nachricht das das Softlimit immer gleich oder kleiner als
+					das Hardlimit sein muss.</p></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td vAlign=top><br><hr><br><center>
+					<a href="../../doku/devel/fs.html" target="Context"><img src="../../images/arraw_l.gif" width="20" height="20" border="0"></a>
+					<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/index.html" target="Context"><img src="../../images/arraw_h.gif" width="20" height="20" border="0"></a>
+					<img src="../../images/trans.gif" width="15" height="8" border="0"><a href="../../doku/devel/multi.html" target="Context"><img src="../../images/arraw_r.gif" width=21 height=18 border=0></a></center></td>
+				<td></td>
+			</tr>
+		</TBODY>
+	</TABLE>
 </BODY>
 </HTML>
