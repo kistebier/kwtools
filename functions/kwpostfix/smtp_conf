@@ -143,7 +143,7 @@ smtp_conf() {
 						HELP*) script_help smtp_help
 							conf_address_pref "${gv_Auswahl#HELP }"
 							;;
-						*)	# Auswahl uebernehmen
+						*)	# Auswahl übernehmen
 							smtp_address_preference="$gv_Auswahl"
 							postconf -e smtp_address_preference="$gv_Auswahl"
 							break
@@ -155,9 +155,9 @@ smtp_conf() {
 				conf_smtp_menu smtp_address_preference
 				;;
 			smtp_always_send_ehlo)
-				# Soll sich postfix immer als ESMTP-faehiger Server{{{
+				# Soll sich postfix immer als ESMTP-fähiger Server{{{
 				# indentifizieren?
-				SMTP_ALWAYS_SEND_EHLO_MSG=$(gettext 'Soll sich postfix immer als ESMTP-faehiger Server indentifizieren (ja/nein)?')
+				SMTP_ALWAYS_SEND_EHLO_MSG=$(gettext 'Soll sich postfix immer als ESMTP-fähiger Server indentifizieren (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_ALWAYS_SEND_EHLO_MSG"
 				smtp_always_send_ehlo="$WERT"
 				postconf -e smtp_always_send_ehlo="$WERT"
@@ -165,9 +165,9 @@ smtp_conf() {
 				conf_smtp_menu smtp_always_send_ehlo
 				;;
 			smtp_bind_address)
-				# Welche IPv4 Adresse soll fuer ausgehende{{{
+				# Welche IPv4 Adresse soll für ausgehende{{{
 				# Verbindungen genutzt werden
-				SMTP_BIND_ADDRESS_MSG=$(gettext 'Geben Sie die IPv4 Adresse ein, die fuer ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 192.168.0.1).')
+				SMTP_BIND_ADDRESS_MSG=$(gettext 'Geben Sie die IPv4 Adresse ein, die für ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 192.168.0.1).')
 				inputbox "$SMTP_TITLE" "$SMTP_BIND_ADDRESS_MSG" "$smtp_bind_address"
 				if [ "$gv_Auswahl" ] ; then
 					ip_analyse $gv_Auswahl
@@ -186,9 +186,9 @@ smtp_conf() {
 				conf_smtp_menu smtp_bind_address
 				;;
 			smtp_bind_address6)
-				# Welche IPv6 Adresse soll fuer ausgehende{{{
+				# Welche IPv6 Adresse soll für ausgehende{{{
 				# Verbindungen genutzt werden
-				SMTP_BIND_ADDRESS6_MSG=$(gettext 'Geben Sie die IPv6 Adresse ein, die fuer ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 2001:240:5c7:0:250:56ff:fe89:1).')
+				SMTP_BIND_ADDRESS6_MSG=$(gettext 'Geben Sie die IPv6 Adresse ein, die für ausgehende Verbindungen via SMTP genutzt werden soll (Bsp. 2001:240:5c7:0:250:56ff:fe89:1).')
 				inputbox "$SMTP_TITLE" "$SMTP_BIND_ADDRESS6_MSG" "$smtp_bind_address6"
 				if [ "$gv_Auswahl" ] ; then
 					ip_analyse $gv_Auswahl
@@ -215,8 +215,8 @@ smtp_conf() {
 				conf_smtp_menu smtp_body_checks
 				;;
 			smtp_cname_overrides_servername)
-				# Ueberschreiben von Servernamen bei CNAME records erlauben{{{
-				SMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das ueberschreiben der Servernamen, die der SMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
+				# Überschreiben von Servernamen bei CNAME records erlauben{{{
+				SMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das überschreiben der Servernamen, die der SMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_CNAME_OVERRIDES_SERVERNAME_MSG"
 				smtp_cname_overrides_servername="$WERT"
 				postconf -e smtp_cname_overrides_servername="$WERT"
@@ -224,7 +224,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_cname_overrides_servername
 				;;
 			smtp_connect_timeout)
-				# Timeout fuer den Aufbau der Verbindung{{{
+				# Timeout für den Aufbau der Verbindung{{{
 				number_input -a "$SMTP_TITLE" "$SMTP_CONNECT_TIMEOUT_MSG" "$smtp_connect_timeout"
 				if [ "$NUMBER" ] ; then
 					smtp_connect_timeout="$NUMBER"
@@ -302,7 +302,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_data_xfer_timeout
 				;;
 			smtp_defer_if_no_mx_address_found)
-				# Zurueckstellung von mails wenn ein MX record nicht aufgeloest werden kann# {{{
+				# Zurückstellung von mails wenn ein MX record nicht aufgelöst werden kann# {{{
 				ja_nein_tausch "$SMTP_TITLE" "$DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
 				smtp_defer_if_no_mx_address_found="$WERT"
 				postconf -e smtp_defer_if_no_mx_address_found="$WERT"
@@ -390,7 +390,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_destination_rate_delay
 				;;
 			smtp_destination_recipient_limit)
-				# max. Anzahl der Empfaenger in einer mail{{{
+				# max. Anzahl der Empfänger in einer mail{{{
 				# Standard = $default_destination_recipient_limit
 				default_or_input smtp_destination_recipient_limit number_input -i $smtp_destination_recipient_limit
 				if [[ -n $Value ]] ; then
@@ -401,7 +401,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_destination_recipient_limit
 				;;
 			smtp_discard_ehlo_keyword_address_maps)
-				# Tabelle EHLO Schluesselwoertern{{{
+				# Tabelle EHLO Schlüsselwörtern{{{
 				tab_support_choice "$gv_Auswahl"
 				smtp_discard_ehlo_keyword_address_maps="$MAPS"
 				postconf -e smtp_discard_ehlo_keyword_address_maps="$MAPS"
@@ -409,8 +409,8 @@ smtp_conf() {
 				conf_smtp_menu smtp_discard_ehlo_keyword_address_maps
 				;;
 			smtp_discard_ehlo_keywords)
-				# EHLO Schluesselwoertern{{{
-				SMTP_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schluesselwoertern (starttls, auth, ...) die der SMTP Client ignorieren soll, bei einer EHLO Antwort von einem entfernten SMTP Server.')
+				# EHLO Schlüsselwörtern{{{
+				SMTP_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schlüsselwörtern (starttls, auth, ...) die der SMTP Client ignorieren soll, bei einer EHLO Antwort von einem entfernten SMTP Server.')
 				inputbox "$SMTP_TITLE" "$SMTP_DISCARD_EHLO_KEYWORDS_MSG" "$smtp_discard_ehlo_keywords"
 				if [ "$gv_Auswahl" ] ; then
 					smtp_discard_ehlo_keywords="$gv_Auswahl"
@@ -436,7 +436,7 @@ smtp_conf() {
 								U_OPT=k
 								checklist "${gv_Auswahl#HELP }" "$SMTP_TITLE" "$SMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								smtp_dns_resolver_options="$gv_Auswahl"
 								postconf -e smtp_dns_resolver_options="$gv_Auswahl"
 								break
@@ -450,7 +450,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_dns_resolver_options
 				;;
 			smtp_enforce_tls)
-				# SSL/TLS fuer den Versand erzwingen{{{
+				# SSL/TLS für den Versand erzwingen{{{
 				ja_nein_tausch "$SMTP_TITLE" "$ENFORCE_TLS_MSG"
 				smtp_enforce_tls="$WERT"
 				postconf -e smtp_enforce_tls="$WERT"
@@ -541,7 +541,7 @@ smtp_conf() {
 								smtp_host_lookup_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
-								# Auswahl uebernehmen.
+								# Auswahl übernehmen.
 								smtp_host_lookup="$gv_Auswahl"
 								postconf -e smtp_host_lookup="$gv_Auswahl"
 								break
@@ -562,7 +562,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_initial_destination_concurrency
 				;;
 			smtp_line_length_limit)
-				# SMTP Line Laenge einstellen{{{
+				# SMTP Line Länge einstellen{{{
 				number_input -i "$smtp_line_length_limit"
 				if [ "$NUMBER" ] ; then
 					smtp_line_length_limit="$NUMBER"
@@ -582,7 +582,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_mail_timeout
 				;;
 			smtp_mime_header_checks)
-				# Tabelle mit Filtermustern fuer den Mime Header beim versenden einer mail# {{{
+				# Tabelle mit Filtermustern für den Mime Header beim versenden einer mail# {{{
 				default_or_input smtp_mime_header_checks tab_support_choice "$gv_Auswahl" $smtp_mime_header_checks
 				smtp_mime_header_checks="$Value"
 				postconf -e smtp_mime_header_checks="$Value"
@@ -620,7 +620,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_mx_session_limit
 				;;
 			smtp_nested_header_checks)
-				# Tabelle mit Filtermustern der Mailanhaenge Header, beim versenden einer mail# {{{
+				# Tabelle mit Filtermustern der Mailanhänge Header, beim versenden einer mail# {{{
 				default_or_input smtp_nested_header_checks tab_support_choice "$gv_Auswahl" $smtp_nested_header_checks
 				smtp_nested_header_checks="$Value"
 				postconf -e smtp_nested_header_checks="$Value"
@@ -628,9 +628,9 @@ smtp_conf() {
 				conf_smtp_menu smtp_nested_header_checks
 				;;
 			smtp_never_send_ehlo)
-				# Soll postfix sich nie als ESMTP-faehiger Server{{{
+				# Soll postfix sich nie als ESMTP-fähiger Server{{{
 				# identifizieren?
-				SMTP_NEVER_SEND_EHLO_MSG=$(gettext 'Soll postfix sich nie als ESMTP-faehiger Server identifizieren (ja/nein)?')
+				SMTP_NEVER_SEND_EHLO_MSG=$(gettext 'Soll postfix sich nie als ESMTP-fähiger Server identifizieren (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_NEVER_SEND_EHLO_MSG"
 				smtp_never_send_ehlo="$WERT"
 				postconf -e smtp_never_send_ehlo="$WERT"
@@ -639,7 +639,7 @@ smtp_conf() {
 				;;
 			smtp_per_record_deadline)
 				# Standard = no# {{{
-				SMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie koennen das Verhalten der smtp_*_timeout Limits veraendern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
+				SMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie können das Verhalten der smtp_*_timeout Limits verändern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_PER_RECORD_DEADLINE_MSG"
 				smtp_per_record_deadline="$WERT"
 				postconf -e smtp_per_record_deadline="$WERT"
@@ -647,7 +647,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_per_record_deadline
 				;;
 			smtp_pix_workaround_delay_time)
-				# Wartezeit fuer einen Fehler in CISCO PIX Firewalls{{{
+				# Wartezeit für einen Fehler in CISCO PIX Firewalls{{{
 				number_input -s "${smtp_pix_workaround_delay_time%?}"
 				if [ "$NUMBER" ] ; then
 					smtp_pix_workaround_delay_time="$NUMBER"
@@ -657,7 +657,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_pix_workaround_delay_time
 				;;
 			smtp_pix_workaround_maps)
-				# Standard ist leer. Tabelle fuer die PIX Workarounds# {{{
+				# Standard ist leer. Tabelle für die PIX Workarounds# {{{
 				# (CISCO) PIX Firewall Bugs.
 				tab_support_choice "$gv_Auswahl"
 				smtp_pix_workaround_maps="$MAPS"
@@ -792,8 +792,8 @@ smtp_conf() {
 				conf_smtp_menu smtp_sasl_auth_cache_name
 				;;
 			smtp_sasl_auth_cache_time)
-				# Maximale Alter der smtp_sasl_auth_cache_name Eintraegen# {{{
-				# bis sie geloescht werden. Standard = 90d.
+				# Maximale Alter der smtp_sasl_auth_cache_name Einträgen# {{{
+				# bis sie gelöscht werden. Standard = 90d.
 				number_input -d "${smtp_sasl_auth_cache_time%?}"
 				if [ "$NUMBER" ] ; then
 					smtp_sasl_auth_cache_time="$NUMBER"
@@ -822,7 +822,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_sasl_auth_soft_bounce
 				;;
 			smtp_sasl_mechanism_filter)
-				# Auswahl der zu beruecksichtigen SASL Mechanismen# {{{
+				# Auswahl der zu berücksichtigen SASL Mechanismen# {{{
 				generate_is_file "${smtp_sasl_mechanism_filter//,/}"
 				is_value "anonymous plain login cram-md5 digest-md5 ntlm"
 				#
@@ -847,7 +847,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_sasl_mechanism_filter
 				;;
 			smtp_sasl_password_maps)
-				# Tabelle mit Passwoertern fuer ausgehende{{{
+				# Tabelle mit Passwörtern für ausgehende{{{
 				# SMTP_AUTH Verbindungen.
 				tab_support_choice "$gv_Auswahl"
 				smtp_sasl_password_maps="$MAPS"
@@ -861,7 +861,7 @@ smtp_conf() {
 				# INFO:
 				# Konfigurationsdatei oder Treffpunkt
 				#############################
-				SMTPD_SASL_PATH_MSG=$(gettext 'Geben Sie den Pfad zum SASL-Socket fuer bestimmete SASL-Implementationen wie Dovecot ein. Siehe auch dem Punkt smtp_sasl_type.')
+				SMTPD_SASL_PATH_MSG=$(gettext 'Geben Sie den Pfad zum SASL-Socket für bestimmete SASL-Implementationen wie Dovecot ein. Siehe auch dem Punkt smtp_sasl_type.')
 				inputbox "$SMTPD_TITLE" "$SMTPD_SASL_PATH_MSG" "$smtp_sasl_path"
 				if [ -n "$gv_Auswahl" ] ; then
 					smtp_sasl_path="$gv_Auswahl"
@@ -874,7 +874,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_sasl_path
 				;;
 			smtp_sasl_security_options)
-				# zulaessige SMTP-AUTH Identifierzierungsmethoden{{{
+				# zulässige SMTP-AUTH Identifierzierungsmethoden{{{
 				# Standard = noplaintext, noanonymous
 				mail_mechanism "$smtp_sasl_security_options"
 				if [ "$WERT" ] ; then
@@ -888,7 +888,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_sasl_security_options
 				;;
 			smtp_sasl_tls_security_options)
-				# zulaessige SMTP-AUTH Identifierzierungsmethoden,{{{
+				# zulässige SMTP-AUTH Identifierzierungsmethoden,{{{
 				# bei TLS.
 				# Standard = $smtp_sasl_security_options
 				mail_mechanism "$smtp_sasl_tls_security_options"
@@ -917,7 +917,7 @@ smtp_conf() {
 				;;
 			smtp_sasl_type)
 				# Standard = cyrus, siehe postconf -A# {{{
-				SMTP_SASL_TYPE_MSG=$(gettext 'Waehlen Sie ein SASL Plugin mit der sich der Postfix SMTP Client authentifizieren soll aus.')
+				SMTP_SASL_TYPE_MSG=$(gettext 'Wählen Sie ein SASL Plugin mit der sich der Postfix SMTP Client authentifizieren soll aus.')
 				sasl_types -A "$SMTP_TITLE" "$SMTP_SASL_TYPE_MSG" "$smtp_sasl_type"
 				if [[ -n $WERT ]] ; then
 					smtp_sasl_type="$WERT"
@@ -931,7 +931,7 @@ smtp_conf() {
 				;;
 			smtp_send_dummy_mail_auth)
 				# Standard = no# {{{
-				SMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der SMTP-AUTH Identifierzierung die AUTH=<> Optionen anhaengen.\n\nSoll dies geschehen(ja/nein)?')
+				SMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der SMTP-AUTH Identifierzierung die AUTH=<> Optionen anhängen.\n\nSoll dies geschehen(ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SEND_DUMMY_MAIL_AUTH_MSG"
 				smtp_send_dummy_mail_auth="$WERT"
 				postconf -e smtp_send_dummy_mail_auth="$WERT"
@@ -948,7 +948,7 @@ smtp_conf() {
 				;;
 			smtp_sender_dependent_authentication)
 				# Standard ist = no.# {{{
-				SMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier koennen Sie die Authentifizierung des Postfix Clients mittels SMTP_AUTH aktivieren. Dabei wird der SMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
+				SMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier können Sie die Authentifizierung des Postfix Clients mittels SMTP_AUTH aktivieren. Dabei wird der SMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SENDER_DEP_AUTH_MSG"
 				smtp_sender_dependent_authentication="$WERT"
 				postconf -e smtp_sender_dependent_authentication="$WERT"
@@ -956,9 +956,9 @@ smtp_conf() {
 				conf_smtp_menu smtp_sender_dependent_authentication
 				;;
 			smtp_skip_5xx_greeting)
-				# Begruessungstext bei SMTP_Code 5xx{{{
+				# Begrüssungstext bei SMTP_Code 5xx{{{
 				# (dauerhafter Fehler) ignorieren?
-				SMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begruessungstext bei SMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
+				SMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begrüssungstext bei SMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_SKIP_5XX_GREETING_MSG"
 				smtp_skip_5xx_greeting="$WERT"
 				postconf -e smtp_skip_5xx_greeting="$WERT"
@@ -995,7 +995,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_CAfile
 				;;
 			smtp_tls_CApath)
-				# Verzeichnis in dem die Zertifikate liegen, fuer#{{{
+				# Verzeichnis in dem die Zertifikate liegen, für#{{{
 				# eingehende Mails. Diese werden dann mit den Rechten des Mail 
 				# Servers gelesen. 
 				dselect "$smtp_tls_CApath"
@@ -1022,7 +1022,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_block_early_mail_reply
 				;;
 			smtp_tls_cert_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				tls_file_choice 
 				smtp_tls_cert_file="$WERT"
 				postconf -e smtp_tls_cert_file="$WERT"
@@ -1031,8 +1031,8 @@ smtp_conf() {
 				;;
 			smtp_tls_ciphers)
 				# Standard = export# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
-				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
+				# Postfix Server mit der geeigneten TLS Verschlüsselung benutzen soll.
 				tls_ciphers "$smtp_tls_ciphers"
 				if [[ -n $WERT ]] ; then
 					smtp_tls_ciphers="$WERT"
@@ -1045,7 +1045,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_ciphers
 				;;
 			smtp_tls_dcert_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				tls_file_choice 
 				smtp_tls_dcert_file="$WERT"
 				postconf -e smtp_tls_dcert_file="$WERT"
@@ -1053,7 +1053,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_dcert_file
 				;;
 			smtp_tls_dkey_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				default_or_input smtp_tls_dkey_file tls_file_choice 
 				smtp_tls_dkey_file="$WERT"
 				postconf -e smtp_tls_dkey_file="$WERT"
@@ -1062,7 +1062,7 @@ smtp_conf() {
 				;;
 			smtp_tls_eccert_file)
 				# Datei mit dem Postfix SMTP client ECDSA Zertifikat im PEM Format.# {{{
-				# Diese Datei beinhaltet den Postfix SMTP Client ECDSA privaten Schluessel.
+				# Diese Datei beinhaltet den Postfix SMTP Client ECDSA privaten Schlüssel.
 				# Bsp.: /etc/postfix/ecdsa-ccert.pem
 				tls_file_choice 
 				smtp_tls_eccert_file="$WERT"
@@ -1080,7 +1080,7 @@ smtp_conf() {
 				;;
 			smtp_tls_enforce_peername)
 				# smtp_tls_enforce_peername aktivieren{{{
-				SMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte SMTP Server die Informationen, fuer Rechnernamen im Zertifikat suchen (ja/nein)?')
+				SMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte SMTP Server die Informationen, für Rechnernamen im Zertifikat suchen (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_TLS_ENFORCE_PEERNAME_MSG"
 				smtp_tls_enforce_peername="$WERT"
 				postconf -e smtp_tls_enforce_peername="$WERT"
@@ -1089,8 +1089,8 @@ smtp_conf() {
 				;;
 			smtp_tls_exclude_ciphers)
 				# Standard = # {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix SMTP Client Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix SMTP Client Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				tls_exclude_ciphers "$smtp_tls_exclude_ciphers"
 				if [[ -n $WERT ]] ; then
@@ -1116,12 +1116,12 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_fingerprint_cert_match
 				;;
 			smtp_tls_fingerprint_digest)
-				# Client Fingerprint auswaehlen (md5)# {{{
-				# Die Nachricht ueber den Algorithmus zum einrichten eines
+				# Client Fingerprint auswählen (md5)# {{{
+				# Die Nachricht über den Algorithmus zum einrichten eines
 				# entfernten Client-Zertifikates Fingerprints oder den Fingerprint
-				# des oeffentlichen Schluessel fuer die Parameter
+				# des öffentlichen Schlüssel für die Parameter
 				# check_ccert_access and permit_tls_clientcerts. Der Standard Algorithmus
-				# \"md5\" ist fuer die Rueckwaertskompalitaet mit Postfix Release <=2.5.
+				# \"md5\" ist für die Rueckwärtskompalität mit Postfix Release <=2.5.
 				# Standard = md5
 				tls_fingerprint_digest smtp_help $smtp_tls_fingerprint_digest
 				smtp_tls_fingerprint_digest="$WERT"
@@ -1130,7 +1130,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_fingerprint_digest
 				;;
 			smtp_tls_key_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				# Standard = $smtp_tls_cert_file
 				default_or_input smtp_tls_key_file tls_file_choice
 				smtp_tls_key_file="$WERT"
@@ -1139,7 +1139,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_key_file
 				;;
 			smtp_tls_loglevel)
-				# Loglevel auswaehlen{{{
+				# Loglevel auswählen{{{
 				# Standard = 0
 				loglevel $smtp_tls_loglevel
 				smtp_tls_loglevel="$WERT"
@@ -1149,7 +1149,7 @@ smtp_conf() {
 				;;
 			smtp_tls_mandatory_ciphers)
 				# Standard = medium# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
 				# Postfix Client benutzt soll.
 				tls_ciphers "$smtp_tls_mandatory_ciphers"
 				if [[ -n $WERT ]] ; then
@@ -1164,8 +1164,8 @@ smtp_conf() {
 				;;
 			smtp_tls_mandatory_exclude_ciphers)
 				# Standard = # {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix SMTP Client Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix SMTP Client Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				tls_exclude_ciphers "$smtp_tls_mandatory_exclude_ciphers"
 				if [[ -n $WERT ]] ; then
@@ -1196,7 +1196,7 @@ smtp_conf() {
 				;;
 			smtp_tls_note_starttls_offer)
 				# smtp_tls_note_starttls_offer aktivieren{{{
-				SMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten SMTP Server geloggt werden, falls TLS nicht fuer diesen Server aktiviert ist (ja/nein)?')
+				SMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten SMTP Server geloggt werden, falls TLS nicht für diesen Server aktiviert ist (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_TLS_NOTE_STARTTLS_OFFER_MSG"
 				smtp_tls_note_starttls_offer="$WERT"
 				postconf -e smtp_tls_note_starttls_offer="$WERT"
@@ -1204,7 +1204,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_note_starttls_offer
 				;;
 			smtp_tls_per_site)
-				# Tabelle fuer die Regeln der TLS Benutzung{{{
+				# Tabelle für die Regeln der TLS Benutzung{{{
 				tab_support_choice "$gv_Auswahl"
 				smtp_tls_per_site="$MAPS"
 				postconf -e smtp_tls_per_site="$MAPS"
@@ -1212,7 +1212,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_per_site
 				;;
 			smtp_tls_policy_maps)
-				# Tabelle mit den Policies fuer das Versenden von mails# {{{
+				# Tabelle mit den Policies für das Versenden von mails# {{{
 				# (SMTP_AUTH)
 				tab_support_choice "$gv_Auswahl"
 				smtp_tls_policy_maps="$MAPS"
@@ -1306,7 +1306,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_tls_verify_cert_match
 				;;
 			smtp_use_tls)
-				# tls fuer eingehende Verbindungen aktivieren{{{
+				# tls für eingehende Verbindungen aktivieren{{{
 				SMTP_USE_TLS_MSG=$(gettext 'Soll TLS benutzt werden, falls ein entfernter SMTP Server STARTTLS anbietet (ja/nein)?')
 				ja_nein_tausch "$SMTP_TITLE" "$SMTP_USE_TLS_MSG"
 				smtp_use_tls="$WERT"
@@ -1315,7 +1315,7 @@ smtp_conf() {
 				conf_smtp_menu smtp_use_tls
 				;;
 			smtp_xforward_timeout)
-				# Timeout fuer das senden eines XFORWARD Kommandos {{{
+				# Timeout für das senden eines XFORWARD Kommandos {{{
 				number_input -a "$SMTP_TITLE" "$SMTP_XFORWARD_TIMEOUT_MSG" "$smtp_xforward_timeout"
 				if [ "$NUMBER" ] ; then
 					smtp_xforward_timeout="$NUMBER"

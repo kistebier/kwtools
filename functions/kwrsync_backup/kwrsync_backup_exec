@@ -1,4 +1,4 @@
-# Funktion, kwrsync_backup_exec - Backup ausfuehren{{{
+# Funktion, kwrsync_backup_exec - Backup ausführen{{{
 #
 # usage: kwrsync_backup_exec
 #
@@ -16,7 +16,7 @@ kwrsync_backup_exec() {
 		# Funktion (no_lvm_conf_msg)# {{{
 		#
 		no_lvm_conf_msg() {
-			MSG=$(gettext 'Sie muessen erst LVM in der Konfiguration einstellen.')
+			MSG=$(gettext 'Sie müssen erst LVM in der Konfiguration einstellen.')
 			if [[ -n $gv_Terminal ]] ; then
 				msgbox "$gv_Info" "$MSG"
 			else
@@ -72,7 +72,7 @@ kwrsync_backup_exec() {
 				for d in ${BACKUP_PATH}/${Opt}.*(/N) ; {
 					(( Count++ ))
 				}
-				# Einen Zaehler zurueck zaehlen, da ja alles bei 0 anfaengt.
+				# Einen Zähler zurück zählen, da ja alles bei 0 anfängt.
 				if [ "$Count" -gt 0 ] ; then
 					(( Count-- ))
 				fi
@@ -96,14 +96,14 @@ kwrsync_backup_exec() {
 			echo "# Datum: `date +%c`" >> "$LOGFILE"
 			echo "################################" >> "$LOGFILE"
 			LOG_ROTATE_MSG=$(gettext 'Rotiere $DATE_OPT Snapshots ...')
-			# Einen Zaehler zurueck zaehlen, da ja alles bei 0 anfaengt.
+			# Einen Zähler zurück zählen, da ja alles bei 0 anfängt.
 			(( RotateCount = ROTATE_COUNT - 1 ))
 			sys_logger -n syslog "$gv_ScriptName" "$LOG_ROTATE_MSG"
 			if [ -d "${BACKUP_PATH}/${DATE_OPT}.${RotateCount}" ] ; then
-				# Anzeige waehrend des Loeschbefehls
+				# Anzeige während des Löschbefehls
 				if [[ -n $gv_Terminal ]] ; then
 					DEL_TITLE=$gv_Delete
-					DEL_MSG=$(gettext 'Loesche das letzte Backup ${DATE_OPT}.${RotateCount}.')
+					DEL_MSG=$(gettext 'Lösche das letzte Backup ${DATE_OPT}.${RotateCount}.')
 					rm -rvf ${BACKUP_PATH}/${DATE_OPT}.${RotateCount} | \
 						progressbox "$DEL_TITLE" "$DEL_MSG"
 				else
@@ -121,7 +121,7 @@ kwrsync_backup_exec() {
 					Start_Count=1
 				fi
 			fi
-			# 2 runter zaehlen
+			# 2 runter zählen
 			(( ROTATE_COUNT = ROTATE_COUNT - 2 ))
 			# Alle anderen Snapshots nach oben verschieben
 			for old in {$ROTATE_COUNT..$Start_Count} ; {
@@ -132,7 +132,7 @@ kwrsync_backup_exec() {
 					mv -v ${BACKUP_PATH}/${DATE_OPT}.${old} \
 					${BACKUP_PATH}/${DATE_OPT}.${new} | \
 					&>> "$LOGFILE"
-					# Datum zurueckspielen
+					# Datum zurückspielen
 					touch ${BACKUP_PATH}/${DATE_OPT}.${new} -r ${BACKUP_PATH}/.timestamp
 				fi
 			}
@@ -142,7 +142,7 @@ kwrsync_backup_exec() {
 				if [ -d ${BACKUP_PATH}/hourly.0 -a $DATE_OPT = hourly ] ; then
 					if [[ -n $gv_Terminal ]] ; then
 						PROG_OPT="-avl ${BACKUP_PATH}/hourly.0 ${BACKUP_PATH}/hourly.1"
-						# ausfuehren
+						# ausführen
 						R_TITLE=$(gettext 'Backuprotation')
 						cp ${=PROG_OPT} | tee -a "$LOGFILE" | \
 							progressbox "$R_TITLE" "$LOG_ROTATE_MSG"
@@ -157,14 +157,14 @@ kwrsync_backup_exec() {
 			fi
 		}
 		#}}}
-		# Funktion (rsync_exec), rsync ohne lvm ausfuehren{{{
+		# Funktion (rsync_exec), rsync ohne lvm ausführen{{{
 		rsync_exec() {
 			# IFS
 			IFSOLD="$IFS"
 			IFS="$IFSBAK"
-			# ausfuehren mit dialog Anzeige
+			# ausführen mit dialog Anzeige
 			if [[ -n $gv_Terminal ]] ; then
-				P_TITLE=$(gettext 'Ausfuehrung')
+				P_TITLE=$(gettext 'Ausführung')
 				P_MSG="$LOG_START_MSG (${S}-log)"
 				(rsync ${=RSYNC_OPT} | \
 					tee -a "$LOGFILE" || \ 
@@ -173,10 +173,10 @@ kwrsync_backup_exec() {
 			else
 				rsync ${=RSYNC_OPT} | \
 					tee -a ${BACKUP_PATH}/hourly.0/${S}-log | &>> "$LOGFILE"
-				# Rueckgabewert pruefen.
+				# Rueckgabewert prüfen.
 				# 0 = fehlerfrei, 
-				# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
-				# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+				# 24 ist harmlos; tritt auf, wenn während der Laufzeit
+				# von rsync noch (/tmp?) Dateien verändert oder gelöscht wurden.
 				# Alles andere ist fatal -- siehe man (1) rsync
 				if ! [ $? = 24 -o $? = 0 ] ; then
 					sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG"
@@ -191,11 +191,11 @@ kwrsync_backup_exec() {
 		}
 		#}}}
 	# Funktion (backup_exec), einlesen der Konfigurationsdaten der# {{{
-	# einzelnen Server und darauf rsync, RLVM, ... ausfuehren.
+	# einzelnen Server und darauf rsync, RLVM, ... ausführen.
 	backup_exec() {
 		unset -- BackupList
 		for S in rsync ${=SERVER} ; {
-			# Pruefen ob Rechner im Netz ist.
+			# Prüfen ob Rechner im Netz ist.
 			if [[ $S != rsync ]] ; then
 				if ! ping -c1 $S &>/dev/null ; then
 					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($S) ist nicht erreichbar! Er wird ausgelassen.')
@@ -211,7 +211,7 @@ kwrsync_backup_exec() {
 			echo "################################" >> "$LOGFILE"
 			# Konfigurationsdateien einlesen
 			if [ -f ${KWRSYNC_CF_DIR}/${S}.conf ] ; then
-				# Logdatei loeschen
+				# Logdatei löschen
 				rm -f ${BACKUP_PATH}/hourly.0/${S}-log &>/dev/null
 				# Exclude Datei
 				if [ -f ${KWRSYNC_CF_DIR}/${S}-exclude.conf ] ; then
@@ -278,11 +278,11 @@ kwrsync_backup_exec() {
 										RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
 											$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST .
 											${BACKUP_PATH}/hourly.0/${DST})
-										# rsync ausfuehren
+										# rsync ausführen
 										rsync_exec
-										# zurueck ins alte Verzeichnis
+										# zurück ins alte Verzeichnis
 										popd
-										# LV umounten und loeschen
+										# LV umounten und löschen
 										umount "$LVM_MOUNTPOINT"
 										#
 										$LVREMOVE_CMD --force "${RVG}/${SNAPSHOT_NAME}" | \
@@ -311,7 +311,7 @@ kwrsync_backup_exec() {
 									RSYNC_OPT=($DEFAULT_ARGS $RSYNC_CONF_ARGS $RSYNC_ARGS 
 										$SERVER_EX_FILE $SERVER_IN_FILE $LINK_DEST 
 										$SRC ${BACKUP_PATH}/hourly.0/${DST})
-									# rsync ausfuehren
+									# rsync ausführen
 									rsync_exec
 									;;
 								*@*:/*|/*)
@@ -327,7 +327,7 @@ kwrsync_backup_exec() {
 										$RSYNC_RSH_ARGS $SERVER_EX_FILE
 										$SERVER_IN_FILE $LINK_DEST 
 										$SRC ${BACKUP_PATH}/hourly.0/${DST})
-									# rsync ausfuehren
+									# rsync ausführen
 									rsync_exec
 									;;
 							esac
@@ -347,7 +347,7 @@ kwrsync_backup_exec() {
 							# und hinein wechseln.
 							mkdir -p -m 0755 ${BACKUP_PATH}/tmp
 							pushd ${BACKUP_PATH}/tmp
-							# Script/Befehl ausfuehren mit syslog
+							# Script/Befehl ausführen mit syslog
 							eval ${=SCRIPT} | &>> "$LOGFILE"
 							if [ "$?" != 0 ] ; then
 								# Fehler Loggen
@@ -357,7 +357,7 @@ kwrsync_backup_exec() {
 							# hourly Snapshot von Level-1 per Hardlink-Kopie 
 							# nach Level-0 kopieren
 							# siehe Option -l in man 1 cp.
-							# erstmal das Ziel fuer den Link herausfinden
+							# erstmal das Ziel für den Link herausfinden
 							if [[ ${DST%/*} == $DST ]] ; then
 								DST_LINK=""
 							else
@@ -366,7 +366,7 @@ kwrsync_backup_exec() {
 							if [ -d ${BACKUP_PATH}/hourly.1/${DST} ] ; then
 								if [[ -n $gv_Terminal ]] ; then
 									PROG_OPT="-avl ${BACKUP_PATH}/hourly.1/${DST} ${BACKUP_PATH}/hourly.0/${DST_LINK}"
-									# ausfuehren
+									# ausführen
 									R_TITLE=$(gettext 'Backuprotation')
 									cp ${=PROG_OPT} | tee -a "$LOGFILE" | \
 										progressbox "$R_TITLE" "$LOG_ROTATE_MSG"
@@ -384,7 +384,7 @@ kwrsync_backup_exec() {
 							cp -av ./tmp/* ${BACKUP_PATH}/hourly.0/${DST} 2>/dev/null | \
 								&>> "$LOGFILE"
 							popd
-							# temporares Verzeichnis loeschen
+							# temporares Verzeichnis löschen
 							rm -rf ${BACKUP_PATH}/tmp &>/dev/null
 							(( Nr++ ))
 							# IFS
@@ -409,15 +409,15 @@ kwrsync_backup_exec() {
 					sys_logger -n syslog "$gv_ScriptName" "$MSG"
 				fi
 			fi
-			# Logdatei loeschen
+			# Logdatei löschen
 			rm -f ${BACKUP_PATH}/hourly.0/${S}-log &>/dev/null
 		}
 	}
 	## }}}
-		# Funktion (backup_rot_exec), Rotierung und Backup ausfuehren# {{{
+		# Funktion (backup_rot_exec), Rotierung und Backup ausführen# {{{
 		#
 		backup_rot_exec() {
-			# Konfigurationen auf multiple Ziel Eintraege pruefen
+			# Konfigurationen auf multiple Ziel Einträge prüfen
 			# und gegebenfalls abbrechen
 			awk -F '\t' '(/^backup_script*/){print $3}'  \
 				${KWRSYNC_CF_DIR}/*.conf~*-exclude.conf~*-include.conf(.N) \
@@ -426,7 +426,7 @@ kwrsync_backup_exec() {
 				if [ `print -l ${(M)$(< ${gv_WorkDir}/conftest)##${b}*} | wc -l` -gt 1 ] ; then
 					Tmp=${(M)$(< ${gv_WorkDir}/conftest)[(fR)${b}*]}
 					#MSG=$(gettext 'ERROR: destination conflict between \"$b\" and \"$Tmp\" in multiple backup_script entries')
-					MSG=$(gettext 'ERROR: Zielkonflikt zwischen \"$b\" und \"$Tmp\" bei mehrfachen backup_script Eintraegen.')
+					MSG=$(gettext 'ERROR: Zielkonflikt zwischen \"$b\" und \"$Tmp\" bei mehrfachen backup_script Einträgen.')
 					if [[ -n $gv_Terminal ]] ; then
 						msgbox "$gv_Attention" "$MSG"
 					else
@@ -446,17 +446,17 @@ kwrsync_backup_exec() {
 			case "$DATE_OPT" in
 				hourly)
 					#
-					# preexec Script ausfuehren, falls vorhanden.
+					# preexec Script ausführen, falls vorhanden.
 					#
 					if [ -x "${PREEXEC%% *}" ] ; then
 						${=PREEXEC} | &>> "$LOGFILE"
 					fi
 					# Rotierung
 					backup_rotate
-					# Snapshot taetigen
+					# Snapshot tätigen
 					backup_exec
 					#
-					# postexec Script ausfuehren, falls vorhanden.
+					# postexec Script ausführen, falls vorhanden.
 					if [ -x "${POSTEXEC%% *}" ] ; then
 						${=POSTEXEC} | &>> "$LOGFILE"
 					fi

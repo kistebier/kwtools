@@ -1,6 +1,6 @@
 # Funktion zur Konfiguration von kwrip{{{
 #
-# benoetigt die Funktion net_conf
+# benötigt die Funktion net_conf
 #
 # usage: kwrip_conf
 kwrip_conf() {
@@ -62,7 +62,7 @@ while [ "$gv_Auswahl" ] ; do
 			konf_menue $lv_Audio_Opt
 			;;
 		$lv_Audio_Mountdir)
-			# Mount Partition fuer Audio angeben.# {{{
+			# Mount Partition für Audio angeben.# {{{
 			mount_path "$AUDIO_MOUNT_PATH"
 			if [ -n "$MOUNT_PATH" ] ; then
 				AUDIO_MOUNT_PATH="$MOUNT_PATH"
@@ -79,7 +79,7 @@ while [ "$gv_Auswahl" ] ; do
 			if [ "$VERZ" ] ; then
 				dselect_check -c "$VERZ"
 				if [-n  "$VERZ" ] ; then
-					# Verzeichnis auf Rechte pruefen.
+					# Verzeichnis auf Rechte prüfen.
 					if user_device_check "$VERZ" AIE ; then
 						AUDIO_DIR="$VERZ"
 					else
@@ -121,18 +121,18 @@ while [ "$gv_Auswahl" ] ; do
 			konf_menue $lv_Cddb_Use
 			;;
 		$lv_Read_Drive)
-			# Leselaufwerk auswaehlen. Wird von der Funktion cdrom bereitgestellt.{{{
+			# Leselaufwerk auswählen. Wird von der Funktion cdrom bereitgestellt.{{{
 			if [ -n "${CD_DEV_E[1]}" ] ; then
 				READ_CD_MENU=($CD_DEV_E)
 				READ_TITLE=(${gv_Configuration}::${lv_Read_Drive})
-				READ_MSG=$(gettext 'Waehlen Sie ihr Leselaufwerk aus.')
+				READ_MSG=$(gettext 'Wählen Sie ihr Leselaufwerk aus.')
 				menubox "$READ_DEVICE" "$READ_TITLE" "$READ_MSG" "$READ_CD_MENU"
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/cdrom_help
 							menubox "${gv_Auswahl#HELP }" "$READ_TITLE" "$READ_MSG" "$READ_CD_MENU"
 							;;
-						*)	# Laufwerk auf Leserechte pruefen
+						*)	# Laufwerk auf Leserechte prüfen
 							if user_device_check $gv_Auswahl A ; then
 								READ_DEVICE="$gv_Auswahl"
 							else
@@ -175,7 +175,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$lv_Encoder_Prog)
 			# Encoder Programme, wie lame oder oggenc einstellen.{{{
-			# Immer neu einlesen falls jemand diese im Netzwerk geloescht hat.
+			# Immer neu einlesen falls jemand diese im Netzwerk gelöscht hat.
 			prog_check lame oggenc
 			if [ -n "$PROGS" ] ; then
 				ENC_MENU=($PROGS_E)
@@ -188,7 +188,7 @@ while [ "$gv_Auswahl" ] ; do
 				menubox "$1" "$ENC_TITLE" "$gv_Menupoint" "$ENC_MENU"
 			}
 			## }}}
-			# Funktion (no_cddvdprog_opt) Nachricht das es noch keine Konfiguration fuer# {{{
+			# Funktion (no_cddvdprog_opt) Nachricht das es noch keine Konfiguration für# {{{
 			# dieses Encodierungsprogramm gibt
 			#
 			# usage no_cddvdprog_opt "PROG"
@@ -196,7 +196,7 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			#
 			no_cddvdprog_opt() {
-				MSG=$(gettext 'Sie haben noch keine richtigen Optionen fuer das Encodierungsprogramm "$FM_PROG" erzeugt. Es werden die Standard Optionen genommen. Siehe Manpages zu den einzelnen Programmen.')
+				MSG=$(gettext 'Sie haben noch keine richtigen Optionen für das Encodierungsprogramm "$FM_PROG" erzeugt. Es werden die Standard Optionen genommen. Siehe Manpages zu den einzelnen Programmen.')
 				msgbox "$gv_Info" "$MSG"
 			}
 			## }}}
@@ -207,7 +207,7 @@ while [ "$gv_Auswahl" ] ; do
 						encoder_prog_menu "${gv_Auswahl#HELP }"
 						;;
 					*)
-						# Auswahl wird uebernommen
+						# Auswahl wird übernommen
 						FM_PROG="$gv_Auswahl"
 						if [ "$FM_PROG" = lame -a -z "$LAME_ENC_OPT" ] ; then
 							no_cddvdprog_opt "$FM_PROG"
@@ -256,7 +256,7 @@ while [ "$gv_Auswahl" ] ; do
 			konf_menue $lv_Ogg_Enc_Opt
 			;;
 		$lv_Video_Mountdir)
-			# Mount Partition fuer Video angeben.# {{{
+			# Mount Partition für Video angeben.# {{{
 			mount_path "$VIDEO_MOUNT_PATH"
 			if [ -n "$MOUNT_PATH" ] ; then
 				VIDEO_MOUNT_PATH="$MOUNT_PATH"
@@ -272,7 +272,7 @@ while [ "$gv_Auswahl" ] ; do
 			if [ "$VERZ" ] ; then
 				dselect_check -c "$VERZ"
 				if [ "$VERZ" ] ; then
-					# Verzeichnis auf Rechte pruefen.
+					# Verzeichnis auf Rechte prüfen.
 					if user_device_check "$VERZ" AIE ; then
 						VIDEO_DIR="$VERZ"
 					else
@@ -292,7 +292,7 @@ while [ "$gv_Auswahl" ] ; do
 				kwrip_config
 				break
 			else
-				MSG=$(gettext 'Sie muessen wenigstens das Leselaufwerk auswaehlen.')
+				MSG=$(gettext 'Sie müssen wenigstens das Leselaufwerk auswählen.')
 				msgbox "$gv_Attention" "$MSG"
 			fi
 			;;

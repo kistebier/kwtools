@@ -1,9 +1,9 @@
-# Funktion (manage_keys), Verwaltung von privaten Schluesseln# {{{
+# Funktion (manage_keys), Verwaltung von privaten Schlüsseln# {{{
 #
 # usage: manage_keys
 #
 manage_keys() {
-	# Pruefen ob eine CA geoeffnet ist.
+	# Prüfen ob eine CA geöffnet ist.
 	if [ -n "$CA_OPEN_NAME" ] ; then
 		# Funktion (key_menu)# {{{
 		KEY_TITLE="${CA_OPEN_NAME}::${lv_Key}"
@@ -15,7 +15,7 @@ manage_keys() {
 		# }}}
 		# Funktion (no_keys_msg)# {{{
 		no_keys_msg() {
-			MSG=$(gettext 'Es sind keine Schluessel vorhanden.')
+			MSG=$(gettext 'Es sind keine Schlüssel vorhanden.')
 			msgbox "$gv_Info" "$MSG"
 		}
 		## }}}
@@ -27,7 +27,7 @@ manage_keys() {
 					key_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Export)
-					# Schluessel exportieren# {{{
+					# Schlüssel exportieren# {{{
 					autoload -U export_files
 					EXPORT_TITLE="${lv_Key}::${lv_Export}"
 					#
@@ -48,7 +48,7 @@ manage_keys() {
 									key_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
-									# Auswahl uebernehmen
+									# Auswahl übernehmen
 									INDEX="$gv_Auswahl"
 									Ex_File="${KEYS_FILE[gv_Auswahl]}"
 									export_files -keys "$Ex_File" "export_key_help"
@@ -63,7 +63,7 @@ manage_keys() {
 					key_menu $lv_Export
 					;;
 				$gv_Delete)
-					# Schluessel loeschen# {{{
+					# Schlüssel löschen# {{{
 					# Funktion (del_key_choice_menu)# {{{
 					KEY_DEL_TITLE="${lv_Key}::${gv_Delete}"
 					del_key_choice_menu() {
@@ -82,7 +82,7 @@ manage_keys() {
 									del_key_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
-									# Auswahl uebernehmen
+									# Auswahl übernehmen
 									for i in ${=gv_Auswahl} ; {
 										rm -rf "${KEYS_FILE[i]}" &>/dev/null
 									}

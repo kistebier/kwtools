@@ -2,12 +2,12 @@
 #
 # Autor: Kai Wilke  <kiste@netzworkk.de> 04.05.2015
 #
-# Script: kwecryptfs, erstellt ein verschluesseltes Dateisystem
-#         ueber einem Verzeichnis.
+# Script: kwecryptfs, erstellt ein verschlüsseltes Dateisystem
+#         über einem Verzeichnis.
 #
 # Version: 0.0.6
 
-# Ausfuehren von Befehlen auf bestimmte Signale.
+# Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
@@ -39,10 +39,10 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Pruefen ob man root ist.
+# Prüfen ob man root ist.
 root_check
 
-# Auf benutze Programme pruefen.
+# Auf benutze Programme prüfen.
 prog_check ecryptfsd
 if [ ! -z "$NO_PROGS" ] ; then
 	exit 0
@@ -50,14 +50,14 @@ fi
 
 kernel_release
 if [[ "${gv_K_Release%%-*}" < 2.6.24 ]] ; then
-	MSG=$(gettext 'Ihr Kernel ($gv_K_Release) ist zu alt fuer kwecryptfs.')
+	MSG=$(gettext 'Ihr Kernel ($gv_K_Release) ist zu alt für kwecryptfs.')
     msgbox "$gv_Attention" "$MSG"
     exit 0
 fi
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
 # ben�tigten Funktionen laden. Die Funktion sys_conf wird bereits
-# von der Funktion script_init ausgefuehrt.
+# von der Funktion script_init ausgeführt.
 autoload -U kwecryptfs_conf
 
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
@@ -65,7 +65,7 @@ read_file kwecryptfsrc
 
 # Variablen
 TABFILE="/etc/fstab"
-gv_Key=$(gettext 'Schluessel')
+gv_Key=$(gettext 'Schlüssel')
 
 # Kernel Modul ecryptfs laden
 load_module ecryptfs
@@ -132,7 +132,7 @@ parse_opts() {
 			case "$PARAM" in
 				ecryptfs_cipher)
 		            if [ -z "$VALUE" ] ; then
-						CIPHER="aes"
+						CIPHER="äs"
 					else
 						CIPHER="$VALUE"
 		            fi
@@ -260,7 +260,7 @@ read_fstab_value() {
 # Funktion (write_fstab), /etc/fstab neu schreiben# {{{
 #
 write_fstab() {
-	# fstab aendern/schreiben
+	# fstab ändern/schreiben
 	if [ -n "$FSTAB_OLD" ] ; then
 		print -l ${(R)${(f)"$(< $TABFILE)"}##(${FSTAB_OLD}[[:space:]]*${MOUNT_POINT}*)*} > ${gv_WorkDir}/fstab
 		>> "${gv_WorkDir}/fstab" <<< "$O_DIR	$M_POINT	ecryptfs	$OPT	${DUMP:-0}	${CHECK:-0}"
@@ -275,7 +275,7 @@ write_fstab() {
 # Funktion (no_tabentry_msg), kein Eintrag vorhanden.# {{{
 #
 no_tabentry_msg() {
-	MSG=$(gettext 'Es ist kein Eintrag fuer ecryptfs in der Datei /etc/fstab vorhanden.')
+	MSG=$(gettext 'Es ist kein Eintrag für ecryptfs in der Datei /etc/fstab vorhanden.')
     infobox "$gv_Info" "$MSG" 3
 }
 ## }}}
@@ -329,24 +329,24 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
         $gv_Directory)
-			# verschluesselte Verzeichnisse erstellen, aendern und loeschen# {{{
+			# verschlüsselte Verzeichnisse erstellen, ändern und löschen# {{{
 			autoload -U manage_cryptdir
 			manage_cryptdir
 			## }}}
 			main_menu $gv_Directory
 			;;
 		$gv_Key)
-			# Datei Schluesselverwaltung, einfacher Schluessel in Datei passwd=passphrase# {{{
+			# Datei Schlüsselverwaltung, einfacher Schlüssel in Datei passwd=passphrase# {{{
 			autoload -U manage_keys
 			manage_keys
 			## }}}
 			main_menu $gv_Key
 			;;
         $gv_Start)
-            # verschluesselte Verzeichnisse starten# {{{
+            # verschlüsselte Verzeichnisse starten# {{{
 			read_fstab ecryptfs
             if [ -n "${FSTAB_VALUES[1]}" ] ; then
-				# Pruefen ob verschluesseltes Verzeichnis eingebunden ist oder nicht.
+				# Prüfen ob verschlüsseltes Verzeichnis eingebunden ist oder nicht.
 				check_no_activ no
 				if [ -n "$A_DIR_M" ] ; then
 	                checklist "" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
@@ -359,7 +359,7 @@ while [ "$gv_Auswahl" ] ; do
 	                        *)
 								# Verzeichnisse mounten (f.E. USB_Keyfile).
 								mount_fs
-								# verschluesselte Verzeichnisse mounten.
+								# verschlüsselte Verzeichnisse mounten.
 								for i in ${=gv_Auswahl} ; {
 									mount "$i"
 								}
@@ -370,7 +370,7 @@ while [ "$gv_Auswahl" ] ; do
 						esac
 					done
 				else
-					MSG=$(gettext 'Es sind alle verschluesselten Verzeichnisse aktiv.')
+					MSG=$(gettext 'Es sind alle verschlüsselten Verzeichnisse aktiv.')
 					msgbox "$gv_Info" "$MSG"
 				fi
             else
@@ -380,10 +380,10 @@ while [ "$gv_Auswahl" ] ; do
             main_menu $gv_Start
             ;;
         $gv_Stop)
-            # verschluesselte Verzeichnisse beenden# {{{
+            # verschlüsselte Verzeichnisse beenden# {{{
 			read_fstab ecryptfs
             if [ -n "$FSTAB_VALUES" ] ; then
-				# Pruefen ob verschluesseltes Verzeichnis eingebunden ist oder nicht.
+				# Prüfen ob verschlüsseltes Verzeichnis eingebunden ist oder nicht.
 				check_no_activ yes
 				if [ -n "$A_DIR_M" ] ; then
 	                checklist "" "$gv_Stop" "$gv_Menupoint" "$A_DIR_M"
@@ -403,7 +403,7 @@ while [ "$gv_Auswahl" ] ; do
 						esac
 					done
 				else
-					MSG=$(gettext 'Es sind keine verschluesselten Verzeichnisse aktiv.')
+					MSG=$(gettext 'Es sind keine verschlüsselten Verzeichnisse aktiv.')
 					msgbox "$gv_Info" "$MSG"
 				fi
             else

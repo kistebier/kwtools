@@ -1,12 +1,12 @@
-# Funktion (kwbtrfs_service_scrub), Btrfs-Laufwerk ueberpruefen# {{{
+# Funktion (kwbtrfs_service_scrub), Btrfs-Laufwerk überprüfen# {{{
 #
 # usage: kwbtrfs_service_scrub
 #
 kwbtrfs_service_scrub() {
 	unset -- DRIVE PRIO_CLASSDATA
 	# Variabeln# {{{
-	lv_Prio_Class=$(gettext 'IO Prioritaet Klasse')
-	lv_Prio_Classdata=$(gettext 'IO Prioritaet Klassendaten')
+	lv_Prio_Class=$(gettext 'IO Priorität Klasse')
+	lv_Prio_Classdata=$(gettext 'IO Priorität Klassendaten')
 	lv_Raw=$(gettext 'grobe Statistik')
 	lv_Readonly=$(gettext 'nur lesbar')
 	lv_Seperate=$(gettext 'seperate Statistik')
@@ -45,7 +45,7 @@ kwbtrfs_service_scrub() {
 					scrub_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Btrfs_Drive)
-					# bestehendes Btrfs-Laufwerk auswaehlen# {{{
+					# bestehendes Btrfs-Laufwerk auswählen# {{{
 					btrfs_choice_menu "" "$SERVICE_SCRUB_TITLE" "$BTRFS_PATH_E"
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -54,7 +54,7 @@ kwbtrfs_service_scrub() {
 								btrfs_choice_menu "${gv_Auswahl#HELP }" "$SERVICE_SCRUB_TITLE" "$BTRFS_PATH_E"
 								;;
 							/*)
-								# Laufwerk uebernehmen
+								# Laufwerk übernehmen
 								DRIVE="$gv_Auswahl"
 								break
 								;;
@@ -92,7 +92,7 @@ kwbtrfs_service_scrub() {
 					;;
 				$lv_Readonly)
 					# Readonly (ja/nein).# {{{
-					MSG=$(gettext 'Soll die Saeuberung im nur lesbar Modus laufen (ja/nein)?\n\nBei \"ja\" wird nichts auf dem Laufwerk korrigiert.')
+					MSG=$(gettext 'Soll die Säuberung im nur lesbar Modus laufen (ja/nein)?\n\nBei \"ja\" wird nichts auf dem Laufwerk korrigiert.')
 					yesno "$SERVICE_SCRUB_TITLE" "$MSG" no
 					if [[ $gv_Auswahl == yes ]] ; then
 						READONLY=yes
@@ -103,7 +103,7 @@ kwbtrfs_service_scrub() {
 					scrub_menu $lv_Readonly
 					;;
 				$lv_Prio_Class)
-					# IO Prioritaet fuer die Klasse auswaehlen.# {{{
+					# IO Priorität für die Klasse auswählen.# {{{
 					prioclass_menu
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -112,10 +112,10 @@ kwbtrfs_service_scrub() {
 								prioclass_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Idle|$lv_Best_Effort|$lv_Readonly)
-								# uebernehmen
+								# übernehmen
 								PRIO_CLASS="$gv_Auswahl"
-								# Pruefen, ob PRIO_CLASS = lv_Idle ist und
-								# wenn ja PRIO_CLASSDATA loeschen.
+								# Prüfen, ob PRIO_CLASS = lv_Idle ist und
+								# wenn ja PRIO_CLASSDATA löschen.
 								if [[ $PRIO_CLASS == $lv_Idle ]] ; then
 									unset -- PRIO_CLASSDATA
 								fi
@@ -131,18 +131,18 @@ kwbtrfs_service_scrub() {
 					scrub_menu $lv_Prio_Class
 					;;
 				$lv_Prio_Classdata)
-					# IO Prioritaet fuer die Klassendaten auswaehlen.# {{{
-					IO_MSG=$(gettext 'Geben Sie bitte eine Prioritaetsstufe zwischen 0 und 7 ein.')
+					# IO Priorität für die Klassendaten auswählen.# {{{
+					IO_MSG=$(gettext 'Geben Sie bitte eine Prioritätsstufe zwischen 0 und 7 ein.')
 					if [[ -n $PRIO_CLASS ]] ; then
 						case $PRIO_CLASS in
 							$lv_Idle)
-								# nichts zum auswaehlen
-								MSG=$(gettext 'Fuer diese Klasse \"$PRIO_CLASS\" koennen Sie keine Prioritaetsstufe eingeben.')
+								# nichts zum auswählen
+								MSG=$(gettext 'Fuer diese Klasse \"$PRIO_CLASS\" können Sie keine Prioritätsstufe eingeben.')
 								msgbox "$gv_Info" "$MSG"
 								unset -- PRIO_CLASSDATA
 								;;
 							$lv_Best_Effort|$lv_Realtime)
-								# Prioritaetsstufen 0-7 eingeben
+								# Prioritätsstufen 0-7 eingeben
 								number_input "$SERVICE_SCRUB_TITLE" "$IO_MSG" "$PRIO_CLASSDATA"
 								if [[ $NUMBER -ge 0 ]] && [[ $NUMBER -le 7 ]] ; then
 									PRIO_CLASSDATA="$NUMBER"
@@ -153,14 +153,14 @@ kwbtrfs_service_scrub() {
 								;;
 						esac
 					else
-						MSG=$(gettext 'Sie muessen erst eine $lv_Prio_Class auswahlen.')
+						MSG=$(gettext 'Sie müssen erst eine $lv_Prio_Class auswahlen.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					## }}}
 					scrub_menu $lv_Prio_Classdata
 					;;
 				$gv_Save)
-					# Ueberpruefung starten# {{{
+					# Überprüfung starten# {{{
 					if [[ -n $DRIVE ]] ; then
 						# -B - nicht im Hintergrund laufen
 						SCRUB_OPT=""
@@ -179,7 +179,7 @@ kwbtrfs_service_scrub() {
 						if [[ -n $PRIO_CLASSDATA ]] ; then
 							SCRUB_OPT="$SCRUB_OPT -n $PRIO_CLASSDATA"
 						fi
-						# ausfuehren
+						# ausführen
 						SCRUB_MSG="${lv_Scrub}: ${DRIVE}..."
 						btrfs scrub start ${=SCRUB_OPT} $DRIVE
 						PID="`pidof btrfs`"
@@ -198,7 +198,7 @@ kwbtrfs_service_scrub() {
 					scrub_menu "$lv_Btrfs_Drive"
 					;;
 				$gv_Back|*)
-					# zurueck/abbrechen
+					# zurück/abbrechen
 					break
 					;;
 			esac

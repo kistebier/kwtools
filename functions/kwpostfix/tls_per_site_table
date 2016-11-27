@@ -2,8 +2,8 @@
 #
 tls_per_site_table() {
 	FILE="$1"
-	# Variable fuers Menue
-	lv_Keyword=$(gettext 'Schluesselwort')
+	# Variable fürs Menue
+	lv_Keyword=$(gettext 'Schlüsselwort')
 
 	# Funktion tls_per_site_menue{{{
 	tls_per_site_menue() {
@@ -12,8 +12,8 @@ tls_per_site_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$TLS_PER_SITE_MENU"
 	}
 	#}}}
-	# Funktion tls_per_site_aendern{{{
-	tls_per_site_aendern() {
+	# Funktion tls_per_site_ändern{{{
+	tls_per_site_ändern() {
 	tls_per_site_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -66,8 +66,8 @@ tls_per_site_table() {
 				tls_per_site_menue $lv_Port
 				;;
 			$lv_Keyword)
-				# Schluesselwort waehlen{{{
-				KEYWORD_MSG=$(gettext 'Waehlen Sie ein Schluesselwort aus.')
+				# Schlüsselwort wählen{{{
+				KEYWORD_MSG=$(gettext 'Wählen Sie ein Schlüsselwort aus.')
 				KEYWORD_MENU=(NONE \"\" MAY \"\" MUST_NOPEERMATCH \"\" 
 					MUST \"\")
 				# Funktion (keyword_menu)# {{{
@@ -83,7 +83,7 @@ tls_per_site_table() {
 							script_help tls_per_site_keyword_help
 							keyword_menu "${gv_Auswahl#HELP }"
 							;;
-						*)	# uebernehmen
+						*)	# übernehmen
 							KEYWORD="$gv_Auswahl"
 							break
 							;;
@@ -93,7 +93,7 @@ tls_per_site_table() {
 				tls_per_site_menue $lv_Keyword
 				;;
 			$gv_Save)
-				# Eintraege speichern{{{
+				# Einträge speichern{{{
 				if [ "$ADR" -a "$KEYWORD" ] ; then
 					if [ -n "$AENDERN_ADR" ] ; then
 						if [ -n "$PORT" ] ; then
@@ -113,7 +113,7 @@ tls_per_site_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen mindestens eine Adresse und ein Schluesselwort mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen mindestens eine Adresse und ein Schlüsselwort mit Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 					tls_per_site_menue
 				fi
@@ -132,24 +132,24 @@ tls_per_site_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- PORT ADR KEYWORD AENDERN_ADR AENDERN_ADR1
-				tls_per_site_aendern
+				tls_per_site_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -160,14 +160,14 @@ tls_per_site_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${${=gv_Auswahl}[1]}%:*}"
 								PORT="${${${=gv_Auswahl}[1]}#*:}"
 								KEYWORD="${${=gv_Auswahl}[2]}"
 								AENDERN_ADR="${${=gv_Auswahl}[1]}"
 								AENDERN_ADR1="${${=gv_Auswahl}[2]}"
-								tls_per_site_aendern
+								tls_per_site_ändern
 								break
 								;;
 						esac
@@ -179,7 +179,7 @@ tls_per_site_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)	
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -189,7 +189,7 @@ tls_per_site_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS ; do
 									grep -v "^${${${ADRESS// /.*}//\]/\\]}//\[/\\[}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

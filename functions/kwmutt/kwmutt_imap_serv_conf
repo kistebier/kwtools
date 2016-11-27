@@ -1,4 +1,4 @@
-# Funktion (kwmutt_imap_serv_conf), konfiguriert IMAP fuer mutt# {{{
+# Funktion (kwmutt_imap_serv_conf), konfiguriert IMAP für mutt# {{{
 #
 # usage: kwmutt_imap_serv_conf
 kwmutt_imap_serv_conf() {
@@ -26,7 +26,7 @@ kwmutt_imap_serv_conf() {
 		menubox "$1" "$IMAP_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
 	}
 	## }}}
-	# Funktion (imap_conf_serv_menu), menu fuer die Imap Konfiguration# {{{
+	# Funktion (imap_conf_serv_menu), menu für die Imap Konfiguration# {{{
 	IMAP_TITLE="$lv_Imap"
 	imap_conf_serv_menu() {
 		IMAP_CONF_SERV_MENU=(\"$lv_Default_Mailbox\" \"$DEFAULT_SERVER\"
@@ -54,7 +54,7 @@ kwmutt_imap_serv_conf() {
 					imap_conf_serv_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Default_Mailbox)
-					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
+					# Soll dieses Postfach als Standard Eröffnungsfach deklariert werden (ja/nein)?# {{{
 					yesno "$IMAP_TITLE" "$DEFAULT_MB_MSG" "$DEFAULT_SERVER"
 					if [ "$gv_Auswahl" = yes ] ; then
 						DEFAULT_SERVER="yes"
@@ -75,7 +75,7 @@ kwmutt_imap_serv_conf() {
 						Folder="$gv_Auswahl"
 						check_mail_server "$gv_Auswahl"
 					fi
-					# Falls ein Wert vorhanden ist uebernehmen.
+					# Falls ein Wert vorhanden ist übernehmen.
 					if [ -n "$Mailserver" ] ; then
 						folder="$Folder"
 					else
@@ -89,7 +89,7 @@ kwmutt_imap_serv_conf() {
 					imap_conf_serv_menu folder
 					;;
 				imap_user)
-					# Eingabe des Benutzers fuer den POP-Server.# {{{
+					# Eingabe des Benutzers für den POP-Server.# {{{
 					MSG=$(gettext 'Geben Sie den Benutzernamen zur Authentifizierung am IMAP Server ein.')
 					inputbox "$IMAP_TITLE" "$MSG" "$imap_user"
 					if [ -n "$gv_Auswahl" ] ; then
@@ -102,7 +102,7 @@ kwmutt_imap_serv_conf() {
 					;;
 				imap_pass)
 					# Passwort des IMAP-Users# {{{
-					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer Ihr IMAP Postfach ein.')
+					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort für Ihr IMAP Postfach ein.')
 					inputbox "$IMAP_TITLE" "$PASSWD_MSG" "$imap_pass"
 					if [ -n "$gv_Auswahl" ] ; then
 						imap_pass="$gv_Auswahl"
@@ -114,8 +114,8 @@ kwmutt_imap_serv_conf() {
 					imap_conf_serv_menu imap_pass
 					;;
 				mailboxes)
-					# mailboxen die nach neuen mails ueberprueft werden sollen.# {{{
-					MSG=$(gettext 'Geben Sie die Mailboxen ein die nach neuen mails ueberueft werden sollen. (z.B. +INBOX +INBOX.spam).')
+					# mailboxen die nach neuen mails überprüft werden sollen.# {{{
+					MSG=$(gettext 'Geben Sie die Mailboxen ein die nach neuen mails überüft werden sollen. (z.B. +INBOX +INBOX.spam).')
 					inputbox "$IMAP_TITLE" "$MSG" "$mailboxes"
 					if [ -n "$gv_Auswahl" ] ; then
 						mailboxes="$gv_Auswahl"
@@ -161,7 +161,7 @@ kwmutt_imap_serv_conf() {
 											checklist "" "$IMAP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
 											;;
 										*)
-											# Werte uebernehmen
+											# Werte übernehmen
 											imap_authenticators="${gv_Auswahl// /:}"
 											break
 											;;
@@ -171,14 +171,14 @@ kwmutt_imap_serv_conf() {
 								imap_auth_conf "$lv_Choice"
 								;;
 							$lv_Serv_Test)
-								# Auth Faehigkeiten des Servers testen# {{{
+								# Auth Fähigkeiten des Servers testen# {{{
 								if [ -n "$folder" ] ; then
 									check_mail_server -a "$folder"
 									if [ -n "$AUTHENTICATORS" ] ; then
 										imap_authenticators="$AUTHENTICATORS"
 									fi
 								else
-									MSG=$(gettext 'Sie muessen erst einen IMAP-Server im Menuepunkt folder einstellen.')
+									MSG=$(gettext 'Sie müssen erst einen IMAP-Server im Menuepunkt folder einstellen.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								# # }}}
@@ -244,7 +244,7 @@ kwmutt_imap_serv_conf() {
 				$gv_Save)
 					# Konfiguration speichern# {{{
 					if [ -n "$folder" ] ; then
-						# folder aufsplitten fuer den Rechnernamen.
+						# folder aufsplitten für den Rechnernamen.
 						# rechnername.imap wird die Konfigurationsdatei
 						# genannt.
 						parse_mail_host "$folder"
@@ -257,7 +257,7 @@ kwmutt_imap_serv_conf() {
 							no_input_msg
 						fi
 					else
-						MSG=$(gettext 'Sie muessen mindestens den Menuepunkt folder mit einem Wert belegen.')
+						MSG=$(gettext 'Sie müssen mindestens den Menuepunkt folder mit einem Wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					unset -- $Unset
@@ -286,7 +286,7 @@ kwmutt_imap_serv_conf() {
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					DISPLAY_TITLE="$gv_Display"
 					mail_account_choice "$DISPLAY_TITLE" "$DISPLAY_MB_MSG"
-					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					# Wenn es die ausgewählte Konfigurationsdatei gibt anzeigen.
 					if [ -f "$VALUE" ] ; then
 						view_file "$VALUE"
 					fi
@@ -297,9 +297,9 @@ kwmutt_imap_serv_conf() {
 				imap_serv_conf_menu $gv_Display
 				;;
 			$gv_Create)
-				# IMAP Konfigurations Eintraege erstellen{{{
+				# IMAP Konfigurations Einträge erstellen{{{
 				unset -- $Unset
-				# Mit Standard Variablen belegen, falls noetig.
+				# Mit Standard Variablen belegen, falls nötig.
 				imap_empty_var_fill
 				# IMAP Konfiguration
 				imap_conf_serv
@@ -307,7 +307,7 @@ kwmutt_imap_serv_conf() {
 				imap_serv_conf_menu $gv_Create
 				;;
 			$gv_Change)
-				# IMAP Konfigurations Eintraege veraendern.# {{{
+				# IMAP Konfigurations Einträge verändern.# {{{
 				read_accounts imap
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					CHANGE_MENU=($ACCOUNT_TMP)
@@ -317,12 +317,12 @@ kwmutt_imap_serv_conf() {
 							HELP*)	script_help share/conf_change_help
 								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
 								;;
-							*)	# Uebernahme/aendern 
+							*)	# Übernahme/ändern 
 								unset -- Old_Value
 								Old_Value="$gv_Auswahl"
 								# alte Konfiguration einlesen.
 								read_conf imap "$Old_Value"
-								# Mit Standard Variablen belegen, falls noetig.
+								# Mit Standard Variablen belegen, falls nötig.
 								imap_empty_var_fill
 								# Konfiguration bearbeiten.
 								imap_conf_serv
@@ -338,7 +338,7 @@ kwmutt_imap_serv_conf() {
 				imap_serv_conf_menu $gv_Change
 				;;
 			$gv_Delete)
-				# IMAP Kontos loeschen.# {{{
+				# IMAP Kontos löschen.# {{{
 				read_accounts imap
 				if [ -n "$ACCOUNT_TMP_M" ] ; then
 					DEL_MENU=($ACCOUNT_TMP_M)
@@ -348,7 +348,7 @@ kwmutt_imap_serv_conf() {
 							HELP*)	script_help share/conf_del_help
 								checklist "" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
-							*)	# Uebernahme (Konfigurationsdateien) loeschen
+							*)	# Übernahme (Konfigurationsdateien) löschen
 								for i in ${=gv_Auswahl} ; {
 									rm "$i" &>/dev/null
 								}

@@ -3,7 +3,7 @@
 # usage: manage_certs
 #
 manage_certs() {
-	# Pruefen ob eine CA geoeffnet ist.
+	# Prüfen ob eine CA geöffnet ist.
 	if [ -n "$CA_OPEN_NAME" ] ; then
 		# Funktion (cert_menu)# {{{
 		CERT_TITLE="${CA_OPEN_NAME}::${lv_Cert}"
@@ -64,7 +64,7 @@ manage_certs() {
 									;;
 								*)
 									# Auswahl anzeigen
-									# alte Datei loeschen
+									# alte Datei löschen
 									rm -f $DISPLAY_FILE &>/dev/null
 									# Anzeige Datei fuellen
 									for i in ${=gv_Auswahl} ; {
@@ -94,7 +94,7 @@ manage_certs() {
 					if [ -n "$CA_OPEN_NAME" ] ; then
 						Menu_Opt="$gv_Auswahl"
 						if [[ $Menu_Opt == $lv_ServerCA_Create ]] ; then
-							# Section mit uebergeben fuer die Funktion
+							# Section mit übergeben für die Funktion
 							# read_openssl_conf von conf_ca.
 							#
 							# Zertifikate konfigurieren, ... und erstellen.
@@ -130,7 +130,7 @@ manage_certs() {
 									cert_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
-									# Auswahl uebernehmen
+									# Auswahl übernehmen
 									INDEX="$gv_Auswahl"
 									Ex_File="${CERTS_FILE[gv_Auswahl]}"
 									export_files -certs "$Ex_File" "export_cert_help"
@@ -145,7 +145,7 @@ manage_certs() {
 					cert_menu $lv_Export
 					;;
 				$lv_RevokeValidity)
-					# Zertifikate fuer ungueltig erklaeren #{{{
+					# Zertifikate für ungueltig erklären #{{{
 					autoload -U revoke_files
 					CERT_REVOKE_TITLE="${lv_Cert}::${lv_RevokeValidity}"
 					#
@@ -181,7 +181,7 @@ manage_certs() {
 					cert_menu $lv_RevokeValidity
 					;;
 				$gv_Delete)
-					# Zertifikate loeschen# {{{
+					# Zertifikate löschen# {{{
 					# Funktion (del_cert_choice_menu)# {{{
 					CERT_DEL_TITLE="${lv_Cert}::${gv_Delete}"
 					del_cert_choice_menu() {
@@ -200,7 +200,7 @@ manage_certs() {
 									del_cert_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
-									# Auswahl uebernehmen# {{{
+									# Auswahl übernehmen# {{{
 									for i in ${=gv_Auswahl} ; {
 										rm -rfv "${CERTS_FILE[i]}" &>/dev/null
 									}

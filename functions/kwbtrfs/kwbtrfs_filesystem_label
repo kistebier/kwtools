@@ -1,14 +1,14 @@
-# Funktion (kwbtrfs_filesystem_label), Label aendern.# {{{
+# Funktion (kwbtrfs_filesystem_label), Label ändern.# {{{
 #
 # usage: kwbtrfs_filesystem_label
 #
 kwbtrfs_filesystem_label() {
 	unset -- BTRFS_DRIVE NEWLABEL
 	# Variable# {{{
-	lv_Newlabel=$(gettext 'neues Label')
+	lv_Newlabel=$(gettext 'neüs Label')
 	NEWLABEL_TITLE="${lv_Filesystem}::${lv_Newlabel}"
 	## }}}
-	# Funktion (btrfs_filesystem_label_menu), Label aendern# {{{
+	# Funktion (btrfs_filesystem_label_menu), Label ändern# {{{
 	btrfs_filesystem_label_menu() {
 		BTRFS_LABEL_MENU=(\"$lv_Btrfs_Drive\" \"$BTRFS_DRIVE\"
 		\"$lv_Newlabel\" \"$NEWLABEL\" $gv_Create \"\" $gv_Back \"\")
@@ -24,7 +24,7 @@ kwbtrfs_filesystem_label() {
 				btrfs_filesystem_label_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Btrfs_Drive)
-				# Btrfs-Laufwerk auswaehlen# {{{
+				# Btrfs-Laufwerk auswählen# {{{
 				btrfs_choice_menu "" "$NEWLABEL_TITLE" "$BTRFS_DEV_E"
 				while [[ -n $gv_Auswahl ]] ; do
 					case $gv_Auswahl in
@@ -34,7 +34,7 @@ kwbtrfs_filesystem_label() {
 							;;
 						/*)
 							BTRFS_DRIVE="$gv_Auswahl"
-							# Ueber den Index das dazugehoerige Label
+							# Über den Index das dazugehörige Label
 							# herausbekommen.
 							Index=$BTRFS_DEV[(i)$BTRFS_DRIVE]
 							OLDLABEL="${BTRFS_LABEL_DEV[Index]}"
@@ -50,7 +50,7 @@ kwbtrfs_filesystem_label() {
 				;;
 			$lv_Newlabel)
 				# einstellen des Label# {{{
-				MSG=$(gettext 'Geben Sie einen neuen eindeutigen Namen fuer das Laufwerk ein.')
+				MSG=$(gettext 'Geben Sie einen neuen eindeutigen Namen für das Laufwerk ein.')
 				inputbox "$NEWLABEL_TITLE" "$MSG" "${NEWLABEL:-$OLDLABEL}"
 				if [[ -n $gv_Auswahl ]] ; then
 					if [[ -z ${${BTRFS_LABEL_DEV}[(fr)$gv_Auswahl]} ]] ; then
@@ -67,12 +67,12 @@ kwbtrfs_filesystem_label() {
 				btrfs_filesystem_label_menu "$lv_Newlabel"
 				;;
 			$gv_Create)
-				# Label aendern# {{{
+				# Label ändern# {{{
 				if [[ -n $BTRFS_DRIVE ]] && [[ -n $NEWLABEL ]] ; then
 					btrfs filesystem label $BTRFS_DRIVE "$NEWLABEL" &>/dev/null
 					unset -- BTRFS_DRIVE NEWLABEL
 				else
-					MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Btrfs_Drive und $lv_Newlabel mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Btrfs_Drive und $lv_Newlabel mit Werten belegen.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}

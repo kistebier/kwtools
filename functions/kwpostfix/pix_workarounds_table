@@ -2,7 +2,7 @@
 #
 pix_workarounds_table() {
 	FILE="$1"
-	# Variable fuer das Menue
+	# Variable für das Menue
 	lv_Target_Adr=$(gettext 'Zieladresse')
 
 	# Funktion pix_workarounds_menue{{{
@@ -11,9 +11,9 @@ pix_workarounds_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$PIX_WORKAROUNDS_MENU"
 	}
 	#}}}
-	# Funktion pix_workarounds_aendern{{{
+	# Funktion pix_workarounds_ändern{{{
 	#
-	pix_workarounds_aendern() {
+	pix_workarounds_ändern() {
 	pix_workarounds_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -22,7 +22,7 @@ pix_workarounds_table() {
 				;;
 			$lv_Target_Adr)
 				# Zieladresse eingeben{{{
-				TARGET_MSG=$(gettext 'Geben Sie die Zieladresse fuer die die PIX Workarounds gelten sollen ein (Bsp. host.domain.de).')
+				TARGET_MSG=$(gettext 'Geben Sie die Zieladresse für die die PIX Workarounds gelten sollen ein (Bsp. host.domain.de).')
 				inputbox "$TABLE_TITLE" "$TARGET_MSG" "$ADR"
 				if [[ ${(w)#gv_Auswahl} == 1 ]] ; then
 					ADR="$gv_Auswahl"
@@ -47,7 +47,7 @@ pix_workarounds_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst eine Zieladresse eingeben.')
+					MSG=$(gettext 'Sie müssen erst eine Zieladresse eingeben.')
 					msgbox "$gv_Attention" "$MSG"
 					pix_workarounds_menue
 				fi
@@ -74,11 +74,11 @@ pix_workarounds_table() {
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR AENDERN_ADR
-				pix_workarounds_aendern
+				pix_workarounds_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
@@ -95,11 +95,11 @@ pix_workarounds_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								ADR=${${=gv_Auswahl}[1]}
 								AENDERN_ADR="$ADR"
-								pix_workarounds_aendern
+								pix_workarounds_ändern
 								break
 								;;
 						esac
@@ -111,7 +111,7 @@ pix_workarounds_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)

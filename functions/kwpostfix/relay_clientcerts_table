@@ -11,9 +11,9 @@ relay_clientcerts_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$RELAY_CLIENTCERTS_MENU"
 	}
 	#}}}
-	# Funktion relay_clientcerts_aendern{{{
+	# Funktion relay_clientcerts_ändern{{{
 	#
-	relay_clientcerts_aendern() {
+	relay_clientcerts_ändern() {
 	relay_clientcerts_menu
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
@@ -22,7 +22,7 @@ relay_clientcerts_table() {
 				;;
 			$lv_Fingerprint)
 				# Domains eingeben{{{
-				FINGERPRINT_MSG=$(gettext 'Geben Sie den Fingerprint des Zertifikats oder des oeffentlichen Schluessel des Client ein (Bsp. D7:04:2F:A7:0B:8C:A5:21:FA:31:77:E1:41:8A:EE:80).')
+				FINGERPRINT_MSG=$(gettext 'Geben Sie den Fingerprint des Zertifikats oder des öffentlichen Schlüssel des Client ein (Bsp. D7:04:2F:A7:0B:8C:A5:21:FA:31:77:E1:41:8A:EE:80).')
 				inputbox "$TABLE_TITLE" "$FINGERPRINT_MSG" "$FINGERPRINT"
 				case "$gv_Auswahl" in
 					*:*:*:*)
@@ -62,7 +62,7 @@ relay_clientcerts_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Fingerprint und $lv_User_Host mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Fingerprint und $lv_User_Host mit Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 					relay_clientcerts_menu
 				fi
@@ -89,11 +89,11 @@ relay_clientcerts_table() {
 			$gv_Create)
 				# Werte anlegen
 				unset -- AENDERN_ADR AENDERN_ADR1 FINGERPRINT USER_HOST
-				relay_clientcerts_aendern
+				relay_clientcerts_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
@@ -117,7 +117,7 @@ relay_clientcerts_table() {
 								USER_HOST=${${(w)=gv_Auswahl}[2]}
 								AENDERN_ADR="$FINGERPRINT"
 								AENDERN_ADR1="$USER_HOST"
-								relay_clientcerts_aendern
+								relay_clientcerts_ändern
 								break
 								;;
 						esac

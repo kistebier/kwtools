@@ -33,17 +33,17 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen
+# auf Programme prüfen
 prog_check gphoto2
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
 
-# Pruefen welches Home Verzeichnis vorliegt (Bsp. sudo, su)
-# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+# Prüfen welches Home Verzeichnis vorliegt (Bsp. sudo, su)
+# Soll die alte Konfiguration übernommen werden (ja/nein)?
 if [ -f "${gv_HomePath}/.kwtools/camerarc" -a ! -f "${gv_HomePath}/.kwtools/kwcamerarc" ] ; then
-	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/camerarc nach ${gv_HomePath}/.kwtools/kwcamerarc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/camerarc nach ${gv_HomePath}/.kwtools/kwcamerarc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/camerarc" "${gv_HomePath}/.kwtools/kwcamerarc" &>/dev/null
@@ -59,7 +59,7 @@ if [ -z "$IMAGE_DIR" ] ; then
 	IMAGE_DIR="$HOME"
 fi	
 #
-No_Config=$(gettext 'Sie muessen erst ihre Kamera konfigurieren.')
+No_Config=$(gettext 'Sie müssen erst ihre Kamera konfigurieren.')
 lv_Camera_Conf=$(gettext 'Kamera_Einstellung')
 lv_Download=$(gettext 'Download')
 #
@@ -90,7 +90,7 @@ kwcamera_gauge() {
 				Anz1=1
 				(( PERCENT1 = 100 / Anz ))
 				(( PERCENT = PERCENT + PERCENT1 ))
-				# Zeichen der Message zaehlen und dementsprechend die Groesse
+				# Zeichen der Message zählen und dementsprechend die Grösse
 				# des dialog Fensters anpassen.
 				count_char_to_line "$KWCAMERA_GAUGE_MSG"
 				# Prozess - download der Bilder
@@ -107,7 +107,7 @@ kwcamera_gauge() {
 				Anz1=1
 				(( PERCENT1 = 100 / Anz ))
 				(( PERCENT = PERCENT + PERCENT1 ))
-				# Zeichen der Message zaehlen und dementsprechend die Groesse
+				# Zeichen der Message zählen und dementsprechend die Grösse
 				# des dialog Fensters anpassen.
 				count_char_to_line "$KWCAMERA_GAUGE_MSG"
 				# Prozess - download der Bilder
@@ -159,13 +159,13 @@ while [ "$gv_Auswahl" ] ; do
 						conf_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Directory)
-						# Verzeichnis auswaehlen, wo die Bilder gespeichert werden sollen.# {{{
+						# Verzeichnis auswählen, wo die Bilder gespeichert werden sollen.# {{{
 						dselect "$IMAGE_DIR"
 						if [ "$VERZ" ] ; then
 							# Verzeichnis checken, oder nachfragen, ob es angelegt werden soll
 							dselect_check -c "$VERZ"
 							if [ "$VERZ" ] ; then
-								# Verzeichnis auf Rechte pruefen
+								# Verzeichnis auf Rechte prüfen
 								if user_device_check "$VERZ" AIE ; then
 									IMAGE_DIR="$VERZ"
 								else
@@ -179,14 +179,14 @@ while [ "$gv_Auswahl" ] ; do
 						conf_menu $gv_Directory
 						;;
 					$lv_Port)
-						# Port auswaehlen{{{
+						# Port auswählen{{{
 						char_device_anzeige
 						if [ "$CHAR_ARRAY" ] ; then
 							# Funktion char_conf_port_menu{{{
 							#
 							char_conf_port_menu() {
 								TITLE=(${gv_Configuration}::${lv_Port})
-								MSG=$(gettext 'Waehlen Sie ihren Kamera Anschluss aus.')
+								MSG=$(gettext 'Wählen Sie ihren Kamera Anschluss aus.')
 								menubox "$1" "$TITLE" "$MSG" "$CHAR_ARRAY"
 							}
 							#}}}
@@ -224,7 +224,7 @@ while [ "$gv_Auswahl" ] ; do
 							#
 							camera_conf_model_menu() {
 								TITLE=(${gv_Configuration}::${lv_Model})
-								MSG=$(gettext 'Waehlen Sie ihr Kamera Modell aus.')
+								MSG=$(gettext 'Wählen Sie ihr Kamera Modell aus.')
 								menubox "$1" "$TITLE" "$MSG" "$MOD_ARRAY"
 							}
 							#}}}
@@ -300,8 +300,8 @@ while [ "$gv_Auswahl" ] ; do
 							#
 							IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
 							#
-							TITLE=$(gettext 'Download::Praefix')
-							MSG=$(gettext 'Geben Sie bitte einen Praefix ein.')
+							TITLE=$(gettext 'Download::Präfix')
+							MSG=$(gettext 'Geben Sie bitte einen Präfix ein.')
 							inputbox "$TITLE" "$MSG" $IMAGE_PRAEFIX
 							#
 							if [ "$gv_Auswahl" ] ; then
@@ -318,7 +318,7 @@ while [ "$gv_Auswahl" ] ; do
 							#
 							ls (*/)#${IMAGE_PRAEFIX}-<0-1000000>.(jpg|JPG) &>/dev/null
 							while [ "$?" = 0 ] ; do
-								MSG1=$(gettext 'Dieser Praefix existiert schon.')
+								MSG1=$(gettext 'Dieser Präfix existiert schon.')
 								msgbox "$gv_Attention" "$MSG1"
 								#
 								inputbox "$TITLE" "$MSG" $IMAGE_PRAEFIX
@@ -364,7 +364,7 @@ while [ "$gv_Auswahl" ] ; do
 								down_choice_menu "${gv_Auswahl#HELP }"
 								;;
 							$gv_Display)
-								# Thumbnails temporaer herrunterladen# {{{
+								# Thumbnails temporär herrunterladen# {{{
 								create_file -d ${gv_WorkDir}/thumb
 								pushd ${gv_WorkDir}/thumb
 								if [ -z ./*(N.) ] ; then
@@ -377,7 +377,7 @@ while [ "$gv_Auswahl" ] ; do
 								down_choice_menu $gv_Display
 								;;
 							$lv_Choice)
-								# Eine Auswahl an Bildern zur Verfuegung# {{{
+								# Eine Auswahl an Bildern zur Verfügung# {{{
 								# stellen
 								unset -- Anz Suffix Choice_Menue
 								typeset -a Suffix
@@ -390,7 +390,7 @@ while [ "$gv_Auswahl" ] ; do
 									(( Anz++ ))
 								done <${gv_WorkDir}/list_img
 								#
-								DOWN_MSG=$(gettext 'Waehlen Sie ein oder mehrere Bilder zum download aus.')
+								DOWN_MSG=$(gettext 'Wählen Sie ein oder mehrere Bilder zum download aus.')
 								checklist "" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
@@ -398,8 +398,8 @@ while [ "$gv_Auswahl" ] ; do
 											checklist "${gv_Auswahl#HELP }" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
 											;;
 										*)
-											# Auswahl uebernehmen
-											# Array "Img_Anz" belegen fuer die Nachrichtenausgabe
+											# Auswahl übernehmen
+											# Array "Img_Anz" belegen für die Nachrichtenausgabe
 											unset -- Anz1
 											local Anz1
 											integer Anz1
@@ -420,7 +420,7 @@ while [ "$gv_Auswahl" ] ; do
 								;;
 							$lv_Complete)
 								# alle Bilder/Filme runterladen# {{{
-								# Array "Img_Anz" belegen fuer die Nachrichtenausgabe
+								# Array "Img_Anz" belegen für die Nachrichtenausgabe
 								unset -- Anz
 								local Anz
 								integer Anz

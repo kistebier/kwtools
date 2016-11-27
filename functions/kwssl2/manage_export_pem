@@ -15,7 +15,7 @@ manage_export_pem() {
 		Suffix="$3"
 		#
 		# Variablen
-		lv_Fingerprint_Add=$(gettext 'Fingerabdruck hinzufuegen')
+		lv_Fingerprint_Add=$(gettext 'Fingerabdruck hinzufügen')
 		PASS_VALUE="no"
 		CERT_VALUE="no"
 		KEY_VALUE="no"
@@ -29,7 +29,7 @@ manage_export_pem() {
 		export_pem_menu() {
 			case "$Opt" in
 				-keys)
-					# Schluessel export Menue# {{{
+					# Schlüssel export Menue# {{{
 					EXP_HELPFILE=export_key_pem_help
 					if [[ $PASS_VALUE == yes ]] ; then
 						EXPORT_PEM_MENU=(\"$lv_ExportFilename\" \"$EXPORT_FILENAME\"
@@ -92,7 +92,7 @@ manage_export_pem() {
 					export_pem_menu "${gv_Auswahl#HELP }"
 					;;
 				"$lv_ExportFilename")
-					# Dateiname fuer den Export eingeben# {{{
+					# Dateiname für den Export eingeben# {{{
 					export_filename $Suffix
 					## }}}
 					export_pem_menu $lv_ExportFilename
@@ -103,7 +103,7 @@ manage_export_pem() {
 					export_pem_menu $lv_Ssl_CA_Password
 					;;
 				$lv_Ssl_Key_Password)
-					# Schluessel Passwort eingeben
+					# Schlüssel Passwort eingeben
 					ca_passwd_input -keys
 					export_pem_menu $lv_Ssl_Key_Password
 					;;
@@ -113,26 +113,26 @@ manage_export_pem() {
 					export_pem_menu $lv_Ssl_Validity
 					;;
 				"$lv_CertAdd")
-					# Zertifikat hinzufuegen (yes/no)# {{{
+					# Zertifikat hinzufügen (yes/no)# {{{
 					cert_add
 					## }}}
 					export_pem_menu $lv_CertAdd
 					;;
 				"$lv_KeyAdd")
-					# Schluessel hinzufuegen (ja/nein)# {{{
+					# Schlüssel hinzufügen (ja/nein)# {{{
 					key_add
 					## }}}
 					export_pem_menu $lv_KeyAdd
 					;;
 				"$lv_PassAdd")
-					# Passwort hinzufuegen (yes/no)# {{{
+					# Passwort hinzufügen (yes/no)# {{{
 					pass_add
 					## }}}
 					export_pem_menu $lv_PassAdd
 					;;
 				"$lv_Fingerprint_Add")
-					# Fingerabdruck hinzufuegen (yes/no)# {{{
-					FINGERPRINT_MSG=$(gettext 'Fingerabdruck hinzufuegen (ja/nein).')
+					# Fingerabdruck hinzufügen (yes/no)# {{{
+					FINGERPRINT_MSG=$(gettext 'Fingerabdruck hinzufügen (ja/nein).')
 					yesno "$CERT_EXPORT_TITLE" "$FINGERPRINT_MSG" "$FINGERPRINT_VALUE"
 					if [ "$gv_Auswahl" != no ] ; then
 						FINGERPRINT_VALUE="yes"
@@ -147,20 +147,20 @@ manage_export_pem() {
 					# Funktion (create_export_ca_certs)# {{{
 					#
 					create_export_ca_certs() {
-						# Fingerprint und Schluessel mit hinzufuegen
+						# Fingerprint und Schlüssel mit hinzufügen
 						if [[ $FINGERPRINT_VALUE == yes ]] && \
 							[[ $KEY_VALUE == yes ]] ; then
 							fingerprint "$CACERT" "$EXPORT_FILENAME"
 							< $CACERT >> "$EXPORT_FILENAME" &>/dev/null
 							echo "" >> "$EXPORT_FILENAME" &>/dev/null
 							< $CAKEY >> "$EXPORT_FILENAME" &>/dev/null
-						# Schluessel mit hinzufuegen
+						# Schlüssel mit hinzufügen
 						elif [[ $FINGERPRINT_VALUE == no ]] && \
 							[[ $KEY_VALUE == yes ]] ; then
 							< $CACERT > "$EXPORT_FILENAME" &>/dev/null
 							echo "" >> "$EXPORT_FILENAME" &>/dev/null
 							< $CAKEY >> "$EXPORT_FILENAME" &>/dev/null
-						# Fingerprint mit hinzufuegen
+						# Fingerprint mit hinzufügen
 						elif [[ $FINGERPRINT_VALUE == yes ]] && \
 							[[ $KEY_VALUE == no ]] ; then
 							fingerprint "$CACERT" "$EXPORT_FILENAME"
@@ -177,7 +177,7 @@ manage_export_pem() {
 							cd $KWSSL_DIR
 							if [[ -n $CA_CAPASSWORD ]] && \
 								[[ -n $DEFAULT_REVOKE_DAYS ]] ; then
-								# ertsmal ./tmp loeschen
+								# ertsmal ./tmp löschen
 								rm -rf tmp &>/dev/null
 								# ./tmp erstellen
 								create_file -d tmp
@@ -225,7 +225,7 @@ manage_export_pem() {
 							## }}}
 							;;
 						-keys)
-							# Schluessel exportieren# {{{
+							# Schlüssel exportieren# {{{
 							# Algorithmus herausfinden
 							get_alg_privkey "$In_File"
 							# Zertifikat Variable belegen
@@ -256,7 +256,7 @@ manage_export_pem() {
 							else
 								< "$In_File" > "$EXPORT_FILENAME" &>/dev/null
 							fi
-							# Passwoerter loeschen
+							# Passwörter löschen
 							unset -- CA_CAPASSWORD CA_CAPASSWD
 							break
 							## }}}

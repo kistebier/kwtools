@@ -1,11 +1,11 @@
-# Funktion manage_keys Schluessel erstellen/loeschen# {{{
+# Funktion manage_keys Schlüssel erstellen/löschen# {{{
 #
 # usage: manage_keys
 #
 manage_keys() {
 	CREATE_KEY_TITLE="${gv_Key}::${gv_Create}"
-	lv_Encrypt_Input=$(gettext 'Schluesseleingabe')
-	lv_Encrypt_type=$(gettext 'Schluesseltyp')
+	lv_Encrypt_Input=$(gettext 'Schlüsseleingabe')
+	lv_Encrypt_type=$(gettext 'Schlüsseltyp')
 	lv_Genpass=$(gettext 'Passwort_generieren')
 	#
 	unset -- FILE_OPT
@@ -22,7 +22,7 @@ manage_keys() {
 				manage_key_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Create)
-				# Schluessel anlegen# {{{
+				# Schlüssel anlegen# {{{
 				unset -- KEY_CRYPT
 				# Funktion create_key_menu# {{{
 				#
@@ -45,7 +45,7 @@ manage_keys() {
 							dselect ${KEY_FILE%/*}
 							if [ -n "$VERZ" ] ; then
 								KEYNAME_TITLE="${gv_Key}::${gv_Filename}"
-								KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen fuer die Schluesseldatei ein.')
+								KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen für die Schlüsseldatei ein.')
 								inputbox "$KEYNAME_TITLE" "$KEYNAME_MSG" "${KEY_FILE_NAME##*/}"
 								if [ -n "$gv_Auswahl" ] ; then
 									KEY_FILE_NAME="${VERZ}/${gv_Auswahl}"
@@ -59,8 +59,8 @@ manage_keys() {
 							;;
 						$lv_Encrypt_Input)
 							# Passwort eingeben# {{{
-							PASSWD_MSG=$(gettext 'Geben Sie bitte eine Passphrase zum verschluesseln ein (mindestens 6 Zeichen lang).')
-							PASSWD1_MSG=$(gettext 'Geben Sie bitte die Passphrase zum verschluesseln erneut ein.')
+							PASSWD_MSG=$(gettext 'Geben Sie bitte eine Passphrase zum verschlüsseln ein (mindestens 6 Zeichen lang).')
+							PASSWD1_MSG=$(gettext 'Geben Sie bitte die Passphrase zum verschlüsseln erneut ein.')
 							password "$gv_Passwd_TITLE" "$PASSWD_MSG"
 							if [ -n "$PASSPHRASE" ] ; then
 								PASS="$PASSPHRASE"
@@ -78,8 +78,8 @@ manage_keys() {
 							create_key_menu $lv_Encrypt_Input
 							;;
 						$lv_Encrypt_type)
-							# Type der Verschluesselung. Dient zum voran stellen# {{{
-							# der Option fuer die Passphrase.
+							# Type der Verschlüsselung. Dient zum voran stellen# {{{
+							# der Option für die Passphrase.
 							# OPTION=PASSPHRASE
 							# Funktion key_type_menu# {{{
 							#
@@ -140,8 +140,8 @@ manage_keys() {
 							# Keyfile anlegen# {{{
 							if [ -n "$KEY_FILE_NAME" -a -n "$KEY_CRYPT" -a "$FILE_OPT" ] ; then
 								if [ -e "$KEY_FILE_NAME" ] ; then
-									# Datei ist vorhanden - ueberschreiben ?
-									MSG=$(gettext 'Die Datei $KEY_FILE_NAME ist schon vorhanden. Soll sie ueberschrieben werden (ja/nein)? Denken Sie an Ihre verschluesselten Dateien die Sie mit einem neuen Schluessel nicht mehr entschluesseln koennen.')
+									# Datei ist vorhanden - überschreiben ?
+									MSG=$(gettext 'Die Datei $KEY_FILE_NAME ist schon vorhanden. Soll sie überschrieben werden (ja/nein)? Denken Sie an Ihre verschlüsselten Dateien die Sie mit einem neuen Schlüssel nicht mehr entschlüsseln können.')
 									yesno "$gv_Attention" "$MSG" "no"
 									if [ "$gv_Auswahl" = yes ] ; then
 										> "$KEY_FILE_NAME" <<< "${FILE_OPT}=${KEY_CRYPT}"
@@ -159,7 +159,7 @@ manage_keys() {
 									break
 								fi
 							else
-								MSG=$(gettext 'Sie muessen erst die Menuepunkte $gv_Filename, einen Schluessel und Schluesseltyp eingeben bzw. generieren.')
+								MSG=$(gettext 'Sie müssen erst die Menuepunkte $gv_Filename, einen Schlüssel und Schlüsseltyp eingeben bzw. generieren.')
 								msgbox "$gv_Info" "$MSG"
 							fi
 							## }}}
@@ -173,7 +173,7 @@ manage_keys() {
 				manage_key_menu $gv_Create
 				;;
 			$gv_Delete)
-				# Schluesseldatei loeschen# {{{
+				# Schlüsseldatei löschen# {{{
 				file_choice "${KEY_FILE%/*}" multi
 				if [ -n "${WERT[1]}" ] ; then
 					while read i ; do

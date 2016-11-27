@@ -5,7 +5,7 @@
 # usage: kwrsynctab_conf
 #
 kwrsynctab_conf() {
-# Funktion net_conf ausfuehren
+# Funktion net_conf ausführen
 net_conf
 
 # Funktion manage_dir_menu# {{{
@@ -41,12 +41,12 @@ kwrsynctab_conf_choice() {
 				kwrsynctab_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Source_Dir)
-				# Quellverzeichnis auswaehlen{{{
+				# Quellverzeichnis auswählen{{{
 				dselect "$S_VERZ"
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						# Verzeichnis auf Rechte pruefen.
+						# Verzeichnis auf Rechte prüfen.
 						if user_device_check "$VERZ" AE ; then
 							S_VERZ="$VERZ"
 						else
@@ -61,7 +61,7 @@ kwrsynctab_conf_choice() {
 				# entferntes Verzeichnis eingeben{{{
 				R_DIR_MSG=$(gettext 'Geben Sie bitte das Zielverzeichnis ein.')
 				inputbox "$DIR_TITLE" "$R_DIR_MSG" "$R_VERZ"
-				# Ist gv_Auswahl groesser als einn Zeichen
+				# Ist gv_Auswahl grösser als einn Zeichen
 				# wird der letzte / abgetrennt.
 				if [ "${#gv_Auswahl}" = 1 ] ; then
 					R_VERZ="$gv_Auswahl"
@@ -86,8 +86,8 @@ kwrsynctab_conf_choice() {
 				kwrsynctab_menue $lv_Remote_Host
 				;;
 			$lv_Rsync_Args)
-	    	    # angeben von zusaetzlichen rsync Argumenten# {{{
-				RSYNC_ARGS_MSG=$(gettext 'Geben Sie zusaetzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) fuer rsync ein.')
+	    	    # angeben von zusätzlichen rsync Argumenten# {{{
+				RSYNC_ARGS_MSG=$(gettext 'Geben Sie zusätzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) für rsync ein.')
 				inputbox "$DIR_TITLE" "$RSYNC_ARGS_MSG" "${RSYNC_ARGS:--}"
 				if [ -n "$gv_Auswahl" ] ; then
 					RSYNC_ARGS="$gv_Auswahl"
@@ -99,9 +99,9 @@ kwrsynctab_conf_choice() {
 				;;
 			$lv_Exclude)
 				# Verzeichnisse/Dateien ausschliessen# {{{
-				EXCLUDE_MSG=$(gettext 'Geben Sie die Verzeichnisse/Dateien mit relativen Pfad an die ausgeschlossen werden sollen. Diese muessen durch ein Leerzeichen getrennt sein.')
+				EXCLUDE_MSG=$(gettext 'Geben Sie die Verzeichnisse/Dateien mit relativen Pfad an die ausgeschlossen werden sollen. Diese müssen durch ein Leerzeichen getrennt sein.')
 				inputbox "$DIR_TITLE" "$EXCLUDE_MSG" "${DIR_EXCLUDE:-$S_VERZ}"
-				# Ist gv_Auswahl groesser als ein Zeichen
+				# Ist gv_Auswahl grösser als ein Zeichen
 				# wird der letzte / abgetrennt.
 				if [ -n "$gv_Auswahl" ] ; then
 					DIR_EXCLUDE="$gv_Auswahl"
@@ -132,7 +132,7 @@ kwrsynctab_conf_choice() {
 					IFS="$IFSBAK"
 					break
 				else
-					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Sourceverz., Remoteverz. und Zielrechner mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Sourceverz., Remoteverz. und Zielrechner mit Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 					kwrsynctab_menue
 				fi
@@ -214,16 +214,16 @@ while [ -n "$gv_Auswahl" ] ; do
 			manage_dir_menu $gv_Create
 			;;
 		$gv_Change)
-			# Eintraege aendern# {{{
+			# Einträge ändern# {{{
 			# Funktion kwrsync_change_menu{{{
 			CHANGE_TITLE=(${lv_Directories}::${gv_Change})
-			CHANGE_MSG=$(gettext 'Waehlen Sie eine Konfiguration zum aendern aus.')
+			CHANGE_MSG=$(gettext 'Wählen Sie eine Konfiguration zum ändern aus.')
 			kwrsync_change_menu() {
 				CHANGE_MENU=($Kwrsync_Change_List $gv_Back \"\")
 				menubox "$1" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 			}
 			#}}}
-			# Konfiguration veraendern# {{{
+			# Konfiguration verändern# {{{
 			read_tab_entry
 			if [ -n "$S_VERZ" ] ; then
 				kwrsync_change_menu "$NR"
@@ -235,7 +235,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						$gv_Back)	break
 							;;
 						*)
-							# kwrsynctab Eintrage aendern
+							# kwrsynctab Eintrage ändern
 							NR="$gv_Auswahl"
 							CHANGE=yes
 							S_VERZ="${S_VERZ[gv_Auswahl]}"
@@ -269,7 +269,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			manage_dir_menu $gv_Change
 			;;
 		$gv_Delete)
-			# Eintrage loeschen# {{{
+			# Eintrage löschen# {{{
 			# Funktion kwrsync_delete_menu{{{
 			DEL_TITLE=(${lv_Directories}::${gv_Delete})
 			kwrsync_delete_menu() {
@@ -277,7 +277,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				checklist "$1" "$DEL_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 			}
 			#}}}
-			# Konfiguration loeschen# {{{
+			# Konfiguration löschen# {{{
 			read_tab_entry
 			if [ -n "$Kwrsync_Change_List_Multi" ] ; then
 				kwrsync_delete_menu
@@ -289,7 +289,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						$gv_Back)	break
 							;;
 						*)
-							# loeschen der Eintrage
+							# löschen der Eintrage
 							Line="${gv_Auswahl//\ /d ; }d"
 							sed -e "$Line" $KWRSYNCTAB > ${gv_WorkDir}/kwrsynctab
 							mv ${gv_WorkDir}/kwrsynctab $KWRSYNCTAB

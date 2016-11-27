@@ -3,7 +3,7 @@
 kwpwsafe_open_db() {
 	autoload -U kwpwsafe_db_conf
 	# Variablen# {{{
-	lv_Entries=$(gettext 'Eintraege')
+	lv_Entries=$(gettext 'Einträge')
 	lv_User_Cp=$(gettext 'Benutzer kopieren')
 	lv_Pw_Cp=$(gettext 'Passwort kopieren')
 	lv_Group_Create=$(gettext 'Gruppe anlegen')
@@ -12,22 +12,22 @@ kwpwsafe_open_db() {
 	lv_Notes=$(gettext 'Notiz')
 	#
 	UNSET=(PW_NAME PW_GROUP PW_USER PW_PASSWD PW_NOTES)
-	DATA_MSG=$(gettext 'Waehlen Sie einen Eintrag aus der Liste der Datenbank $DB_FILE.')
+	DATA_MSG=$(gettext 'Wählen Sie einen Eintrag aus der Liste der Datenbank $DB_FILE.')
 	OPEN_DB_TITLE="$lv_Db::${DB_FILE##*/}"
 	## }}}
-	# Funktion (no_delete_data_msg), konnte die Datensaetze nicht loeschen# {{{
+	# Funktion (no_delete_data_msg), konnte die Datensätze nicht löschen# {{{
 	no_delete_data_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			local Data
 			Data="$1"
-			MSG=$(gettext 'Konnte den Datensatz "$Data" nicht loeschen.')
+			MSG=$(gettext 'Konnte den Datensatz "$Data" nicht löschen.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
 		fi
 	}
 	## }}}
-	# Auswahl Abfrage, eingabe, aendern, loeschen
+	# Auswahl Abfrage, eingabe, ändern, löschen
 	# Funktion (open_db_menu)# {{{
 	#
 	OPEN_DB_MENU=($lv_Entries \"\" $gv_Create \"\"
@@ -67,10 +67,10 @@ kwpwsafe_open_db() {
 								data_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
-								# Menue fuer die Eintraege# {{{
+								# Menue für die Einträge# {{{
 								# Auswahl sichern
 								Data_key="$gv_Auswahl"
-								TERMINAL_MSG=$(gettext 'Druecken Sie ENTER, wenn Sie die Daten uebernommen haben.')
+								TERMINAL_MSG=$(gettext 'Drücken Sie ENTER, wenn Sie die Daten übernommen haben.')
 								#
 								entries_menu
 								while [ -n "$gv_Auswahl" ] ; do
@@ -89,11 +89,11 @@ ${gv_Passwd}:	$PW_PASSWD
 ${lv_Notes}:
 `print $PW_NOTES | tr '\012' '\n'`"
 												msgbox "$OPEN_DB_TITLE" "$MSG"
-												# Werte wieder loeschen
+												# Werte wieder löschen
 												unset -- PW_PASSWD PW_LOGIN PW_NOTES \
 													PW_NAME PW_GROUP
 											else
-												# keine Daten verfuegbar
+												# keine Daten verfügbar
 												no_entry_msg
 											fi
 											## }}}
@@ -142,7 +142,7 @@ ${lv_Notes}:
 				open_db_menu $gv_Create
 				;;
 			$gv_Change)
-				# Eintrag aendern# {{{
+				# Eintrag ändern# {{{
 				unset -- $UNSET
 				read_pwsafe_entry "$DB_FILE"
 				if [ -n "${PW_ENTRY[1]}" ] ; then
@@ -159,7 +159,7 @@ ${lv_Notes}:
 								if [ -n "$PW_NAME" -o -n "$PW_GROUP" ] ; then
 									kwpwsafe_db_conf
 								else
-									# keine Daten verfuegbar
+									# keine Daten verfügbar
 									no_entry_msg
 								fi
 								CHANGE=""
@@ -174,7 +174,7 @@ ${lv_Notes}:
 				open_db_menu $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen# {{{
+				# Einträge löschen# {{{
 				unset -- $UNSET
 				read_pwsafe_entry "$DB_FILE"
 				if [ -n "${PW_ENTRY_M[1]}" ] ; then
@@ -186,7 +186,7 @@ ${lv_Notes}:
 								checklist "${gv_Auswahl#HELP }" "$OPEN_DB_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)
-								# Auswahl loeschen
+								# Auswahl löschen
 								while read i ; do
 									print "$DB_PASS" | pwsafe --delete "$i" -q -f "$DB_FILE" &>/dev/null || \
 									no_delete_data_msg "$i"

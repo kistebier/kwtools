@@ -14,7 +14,7 @@ kwbtrfs_device_replace() {
 	}
 	## }}}
 		# Funktion (balance_replace_data), Dateisystem Komponeneten zuordnen# {{{
-		# und Daten gleichmaessig verteilen
+		# und Daten gleichmässig verteilen
 		#
 		# usage: balance_replace_data
 		#
@@ -23,7 +23,7 @@ kwbtrfs_device_replace() {
 			btrfs device scan --all-devices 2>&1 | \
 				progressbox "$REPLACE_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
 				(prog_failure ; return 1)
-			# Daten gleichmaessig verteilen
+			# Daten gleichmässig verteilen
 			btrfs balance start -f -v "$IS_DRIVE" 2>&1 | \
 				progressbox "$REPLACE_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
@@ -41,7 +41,7 @@ kwbtrfs_device_replace() {
 					device_replace_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Is_Drive)
-					# bestehendes Btrfs-Laufwerk auswaehlen# {{{
+					# bestehendes Btrfs-Laufwerk auswählen# {{{
 					btrfs_choice_menu "" "$REPLACE_TITLE" "$BTRFS_PATH_E"
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -62,7 +62,7 @@ kwbtrfs_device_replace() {
 					device_replace_menu "$lv_Is_Drive"
 					;;
 				$lv_Src_Device)
-					# Laufwerk auswaehlen das getauscht werden soll.# {{{
+					# Laufwerk auswählen das getauscht werden soll.# {{{
 					if [[ -n ${#BTRFS_MD[*]} ]] ; then
 						Nr=${#BTRFS_MD[*]}
 						MD_DEV_E=(${BTRFS_MD_E[Nr]})
@@ -88,14 +88,14 @@ kwbtrfs_device_replace() {
 							return 1
 						fi
 					else
-						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
+						MSG=$(gettext 'Sie müssen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					## }}}
 					device_replace_menu "$lv_Src_Device"
 					;;
 				$lv_Target_Device)
-					# Laufwerk auswaehlen das mit dem Quelllaufwerk# {{{
+					# Laufwerk auswählen das mit dem Quelllaufwerk# {{{
 					# getauscht werden soll.
 					search_devices -pc
 					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
@@ -107,7 +107,7 @@ kwbtrfs_device_replace() {
 									drive_choice_menu "${gv_Auswahl#HELP }" "$REPLACE_TITLE" "$NO_BTRFS_DEV_E"
 									;;
 								/*)
-									# uebernehmen und ausbinden
+									# übernehmen und ausbinden
 									mount_check -a $gv_Auswahl
 									if [[ $U_MOUNT == yes ]] ; then
 										TARGET_DRIVE="$gv_Auswahl"
@@ -135,11 +135,11 @@ kwbtrfs_device_replace() {
 							"$IS_DRIVE" 2>&1 | \
 							progressbox "$REPLACE_TITLE" "$REPLACE_MSG" || \
 							(prog_failure ; return 1)
-						# Daten gleichmaessig verteilen
+						# Daten gleichmässig verteilen
 						balance_replace_data || return 1
 						return 0
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\", \"$lv_Target_Device\" und \"$lv_Src_Device\" mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte \"$lv_Is_Drive\", \"$lv_Target_Device\" und \"$lv_Src_Device\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
 						device_replace_menu "$lv_Is_Drive"
 					fi

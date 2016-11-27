@@ -33,7 +33,7 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check calendar date
 if [ ! -z "$NO_PROGS" ] ; then
 	exit 0
@@ -66,10 +66,10 @@ lv_Termin=$(gettext 'Termine')
 lv_State_Cal=$(gettext 'feste_Kalenderdaten')
 lv_Holiday=$(gettext 'Ferien')
 lv_Birthday=$(gettext 'Geburtstage')
-lv_Daily=$(gettext 'taeglich')
-lv_Weekly=$(gettext 'woechentlich')
+lv_Daily=$(gettext 'täglich')
+lv_Weekly=$(gettext 'wöchentlich')
 lv_Monthly=$(gettext 'monatlich')
-lv_Yearly=$(gettext 'jaehrlich')
+lv_Yearly=$(gettext 'jährlich')
 lv_Actual=$(gettext 'aktuelle')
 
 # Verzeichnisse und Datei anlegen.
@@ -120,7 +120,7 @@ crontab_act() {
 	crontab -u $USER -l > ${gv_WorkDir}/${Cron_File}
 	Ist=${(M)${(f)"$(< ${gv_WorkDir}/${Cron_File})"}##*kwtermin_cron*}
 	if [ -z "$Ist" ] ; then
-		MSG=$(gettext 'Es ist kein Crontab Eintrag vorhanden. Soll dies jetzt geschehen, damit die Termine auch per mail vorgewarnt werden koennen?')
+		MSG=$(gettext 'Es ist kein Crontab Eintrag vorhanden. Soll dies jetzt geschehen, damit die Termine auch per mail vorgewarnt werden können?')
 		yesno "$gv_Info" "$MSG" ""
 		if [ "$gv_Auswahl" = yes ] ; then
 			print ${(R)${(f)"$(< ${gv_WorkDir}/${Cron_File})"}##*kwtermin_cron*} >${gv_WorkDir}/${Cron_File}$$
@@ -164,7 +164,7 @@ while [ "$gv_Auswahl" ] ; do
 			haupt_menue "${gv_Auswahl#HELP }"
 			;;
 		$lv_Termin)
-			# Termine eingeben, aendern und loeschen{{{
+			# Termine eingeben, ändern und löschen{{{
 			#
 			crontab_act
 			TERMIN_TITLE="$lv_Termin"
@@ -201,7 +201,7 @@ while [ "$gv_Auswahl" ] ; do
 							# extra Einstellungen, Wiederholung/Geburtstag/Ferien
 							case $6 in
 								[by])
-									# jaehrliche und Geburtstags - Wiederholungen# {{{
+									# jährliche und Geburtstags - Wiederholungen# {{{
 									# anzeigen
 									Act_Termin_Month="${1[5,6]}"
 									Act_Termin_Day="${1[7,8]}"
@@ -212,7 +212,7 @@ while [ "$gv_Auswahl" ] ; do
 									## }}}
 									;;
 								t)
-									# taegliche Wiederholungen# {{{
+									# tägliche Wiederholungen# {{{
 									# anzeigen
 									Update_Termin_Day="${YEAR}${MONTH}${DAY}"
 									if [ "$Update_Termin_Day" -le "$TerminCalc" -a "$Update_Termin_Day" -ge "$Termin_Date" ]; then
@@ -221,7 +221,7 @@ while [ "$gv_Auswahl" ] ; do
 									## }}}
 									;;
 								w)
-									# woechentliche Wiederholungen# {{{
+									# wöchentliche Wiederholungen# {{{
 									# anzeigen
 									Act_Termin_Day="${1[7,8]}"
 									Update_Termin="${YEAR}${MONTH}${Act_Termin_Day}"
@@ -276,16 +276,16 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					$gv_Create)
 						# termine eingeben# {{{
-						Termin_aendern=no
+						Termin_ändern=no
 						termin_input
 						## }}}
 						termin_menu $gv_Create
 						;;
 					$gv_Change)
-						# termine aendern# {{{
+						# termine ändern# {{{
 						# Funktion termin_choice_menu# {{{
 						CHANGE_TITLE=(${lv_Termin}::${gv_Change})
-						CHANGE_MSG=$(gettext 'Waehlen Sie einen Termin aus.')
+						CHANGE_MSG=$(gettext 'Wählen Sie einen Termin aus.')
 						THEME_CHOICE_MENU=($lv_Holiday \"\" $lv_Birthday \"\"
 						$lv_Daily \"\" $lv_Weekly \"\" $lv_Monthly \"\"
 						$lv_Yearly \"\" $lv_Actual \"\" $gv_Back \"\")
@@ -301,36 +301,36 @@ while [ "$gv_Auswahl" ] ; do
 									termin_choice_menu "${gv_Auswahl#HELP }"
 									;;
 								$lv_Holiday)
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -h
 									termin_choice_menu $lv_Holiday
 									;;
 								$lv_Birthday)
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -b
 									termin_choice_menu $lv_Birthday
 									;;
 								$lv_Daily)
 									cal_view_check
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -t
 									termin_choice_menu $lv_Daily
 									;;
 								$lv_Weekly)
 									cal_view_check
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -w
 									termin_choice_menu $lv_Weekly
 									;;
 								$lv_Monthly)
 									cal_view_check
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -m
 									termin_choice_menu $lv_Monthly
 									;;
 								$lv_Yearly)
 									cal_view_check
-									Termin_aendern=yes
+									Termin_ändern=yes
 									termin_change -y
 									termin_choice_menu $lv_Yearly
 									;;
@@ -338,7 +338,7 @@ while [ "$gv_Auswahl" ] ; do
 									;;
 								*)
 									cal_view_check
-									Termin_aendern=yes
+									Termin_ändern=yes
 									TerminCalc="`date -d \"$Termin_Date $CAL_VIEW\" +%Y%m%d`"
 									termin_change
 									termin_choice_menu $lv_Actual
@@ -349,7 +349,7 @@ while [ "$gv_Auswahl" ] ; do
 						termin_menu $gv_Change
 						;;
 					$gv_Delete)
-						# Termine loeschen von{{{
+						# Termine löschen von{{{
 						# Heute, der letzten Wo, Mon. Jahr, alle
 						#
 						lv_Today=$(gettext 'Heute')
@@ -359,7 +359,7 @@ while [ "$gv_Auswahl" ] ; do
 						lv_All=$(gettext 'alle')
 						#
 						DELETE_TITLE=(${lv_Termin}::${gv_Delete})
-						DELETE_MSG=$(gettext 'Auswahl des Loeschzeitraums')
+						DELETE_MSG=$(gettext 'Auswahl des Löschzeitraums')
 						DELETE_MENU=($lv_Today \"\" $lv_Week \"\" $lv_Month \"\"
 						$lv_Year \"\" $lv_All \"\" $gv_Back \"\")
 						menubox "" "$DELETE_TITLE" "$DELETE_MSG" "$DELETE_MENU"
@@ -411,7 +411,7 @@ while [ "$gv_Auswahl" ] ; do
 		$lv_State_Cal)
 			# Anzeige von festen Kalenderdaten{{{
 			# nach calendar.dateien in der Variable $CAL suchen
-			# und zur Auswahl zur Verfuegung stellen.
+			# und zur Auswahl zur Verfügung stellen.
 			#
 			if [ "$CAL" ] ; then
 				Anz=1
@@ -422,7 +422,7 @@ while [ "$gv_Auswahl" ] ; do
 				#
 				FIXED_MENU=($F_Cal)
 				FIXED_TITLE=($lv_State_Cal)
-				FIXED_MSG=$(gettext 'Waehlen Sie eine oder alle Kalenderdateien aus.')
+				FIXED_MSG=$(gettext 'Wählen Sie eine oder alle Kalenderdateien aus.')
 				# calenderdateien zur Auswahl stellen.
 				menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
 				while [ "$gv_Auswahl" ] ; do
@@ -440,7 +440,7 @@ while [ "$gv_Auswahl" ] ; do
 							if [ `wc -l <"$gv_LogFile"` -gt 0 ] ; then
 								view_file "$gv_LogFile"
 							else
-								MSG=$(gettext 'Es sind keine Kalenderdaten fuer die naechsten $CAL_VIEW_NR Tage vorhanden.')
+								MSG=$(gettext 'Es sind keine Kalenderdaten für die nächsten $CAL_VIEW_NR Tage vorhanden.')
 								msgbox "$gv_Attention" "$MSG"
 							fi
 							menubox "$DATEI" "$FIXED_TITLE" "$FIXED_MSG" "$FIXED_MENU"
@@ -448,7 +448,7 @@ while [ "$gv_Auswahl" ] ; do
 					esac
 				done
 			else
-				MSG=$(gettext 'Sie muessen erst mindestens 1 Kalender vorher auswaehlen. Tun Sie dies Bitte in der Konfiguration von kwplaner.')
+				MSG=$(gettext 'Sie müssen erst mindestens 1 Kalender vorher auswählen. Tun Sie dies Bitte in der Konfiguration von kwplaner.')
 				msgbox "$gv_Attention" "$MSG"
 			fi
 			#}}}

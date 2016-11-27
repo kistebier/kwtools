@@ -7,7 +7,7 @@ kwgrub2_conf() {
 		read_file -f "$GRUB_DEFAULT_CONFFILE"
 	fi
 	
-	# Variablen die nach dem speichern/zurueck geloescht werden sollen.# {{{
+	# Variablen die nach dem speichern/zurück gelöscht werden sollen.# {{{
 	UNSET_CONF_VAR=(GRUB_DEFAULT GRUB_SAVEDEFAULT GRUB_TIMEOUT GRUB_HIDDEN_TIMEOUT
 	GRUB_HIDDEN_TIMEOUT_QUIET GRUB_DEFAULT_BUTTON GRUB_TIMEOUT_BUTTON
 	GRUB_HIDDEN_TIMEOUT_BUTTON GRUB_BUTTON_CMOS_ADDRESS GRUB_DISBRUTOR
@@ -47,7 +47,7 @@ kwgrub2_conf() {
 	lv_Grub_Disable_Linux_Uuid=$(gettext 'UUID')
 	lv_Grub_Disable_Linux_Recovery=$(gettext 'Wiederherstellung')
 	lv_Grub_Video_Backend=$(gettext 'Video Backend')
-	lv_Grub_Gfxmode=$(gettext 'Aufloesung')
+	lv_Grub_Gfxmode=$(gettext 'Auflösung')
 	lv_Grub_Background=$(gettext 'Hintergrundbild')
 	lv_Grub_Theme=$(gettext 'Theme')
 	lv_Grub_Gfxpayload_Linux=$(gettext 'GFX Zuladung')
@@ -56,11 +56,11 @@ kwgrub2_conf() {
 	lv_Grub_Preload_Modules=$(gettext 'Kernel Module')
 	lv_Grub_Badram=$(gettext 'Speicheradressen')
 	#
-	DEFAULT_MSG=$(gettext 'Waehlen Sie einen Eintrag aus, den grub2 standardmaessig starten soll.')
-	GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
-	GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter fuer den Xen Kernel ein (s. kernel Dokumentation).')
-	HIDDEN_TIMEOUT_MSG=$(gettext 'Waehlen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrueckt um das Bootmenue anzuzeigen an.')
-	TIMEOUT_MSG=$(gettext 'Waehlen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
+	DEFAULT_MSG=$(gettext 'Wählen Sie einen Eintrag aus, den grub2 standardmässig starten soll.')
+	GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
+	GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Xen Kernel ein (s. kernel Dokumentation).')
+	HIDDEN_TIMEOUT_MSG=$(gettext 'Wählen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrückt um das Bootmenue anzuzeigen an.')
+	TIMEOUT_MSG=$(gettext 'Wählen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
 	## }}}
 	# Funktion (conf_menu){{{
 	conf_menu() {
@@ -102,8 +102,8 @@ kwgrub2_conf() {
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
 	#}}}
-	# Funktion (check_anz_menuentry), zaehlt die vorhandenen Menueeintraege# {{{
-	# Dient dazu damit man default Boot Eintrag auswaehlen kann (0, 1, 2...)
+	# Funktion (check_anz_menuentry), zählt die vorhandenen Menueeinträge# {{{
+	# Dient dazu damit man default Boot Eintrag auswählen kann (0, 1, 2...)
 	#
 	check_anz_menuentry() {
 		unset -- TMP_MENU
@@ -163,7 +163,7 @@ kwgrub2_conf() {
 				;;
 			"$lv_Grub_Savedefault")
 				# Savedefault# {{{
-				SAVE_DEFAULT_MSG=$(gettext 'Soll der letzte Menueeintrag, der mit \"grub-set-default\" oder \"grub-reboot\" ausgefuehrt wird, gespeichert werden (ja/nein)?')
+				SAVE_DEFAULT_MSG=$(gettext 'Soll der letzte Menueeintrag, der mit \"grub-set-default\" oder \"grub-reboot\" ausgeführt wird, gespeichert werden (ja/nein)?')
 				yesno "$gv_Configuration" "$SAVE_DEFAULT_MSG" "$GRUB_SAVEDEFAULT"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_SAVEDEFAULT="true"
@@ -233,7 +233,7 @@ kwgrub2_conf() {
 				;;
 			"$lv_Grub_Hidden_Timeout_Quiet")
 				# stiller versteckter Timeout # {{{
-				HIDDEN_TIMEOUT_QUIET_MSG=$(gettext 'Soll die Anzeige des Countdown vom \"versteckten Timeout\" unterdrueckt werden (ja/nein)?')
+				HIDDEN_TIMEOUT_QUIET_MSG=$(gettext 'Soll die Anzeige des Countdown vom \"versteckten Timeout\" unterdrückt werden (ja/nein)?')
 				yesno "$gv_Configuration" "$HIDDEN_TIMEOUT_QUIET_MSG" "$GRUB_HIDDEN_TIMEOUT_QUIET"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_HIDDEN_TIMEOUT_QUIET="true"
@@ -263,7 +263,7 @@ kwgrub2_conf() {
 							default_button_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_None)
-							# Ist der Wert von Default Button leer, wird die Var geloescht.
+							# Ist der Wert von Default Button leer, wird die Var gelöscht.
 							unset -- GRUB_DEFAULT_BUTTON
 							break
 							;;
@@ -291,7 +291,7 @@ kwgrub2_conf() {
 							timeout_button_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_None)
-							# Ist der Wert von Timeout Button leer, wird die Var geloescht.
+							# Ist der Wert von Timeout Button leer, wird die Var gelöscht.
 							unset -- GRUB_TIMEOUT_BUTTON
 							break
 							;;
@@ -319,7 +319,7 @@ kwgrub2_conf() {
 							hidden_timeout_button_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_None)
-							# Ist der Wert von Hidden Timeout Button leer, wird die Var geloescht.
+							# Ist der Wert von Hidden Timeout Button leer, wird die Var gelöscht.
 							unset -- GRUB_HIDDEN_TIMEOUT_BUTTON
 							break
 							;;
@@ -334,7 +334,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Button_Cmos_Address")
 				# CMOS Adresse festlegen{{{
 				CMOS_ADDRESS_TITLE=(${gv_Configuration}::${lv_Grub_Distributor})
-				CMOS_ADDRESS_MSG=$(gettext 'Geben Sie bitte die herstellerabhaengige Adresse zum starten Ihres Betriebssystem ein.')
+				CMOS_ADDRESS_MSG=$(gettext 'Geben Sie bitte die herstellerabhängige Adresse zum starten Ihres Betriebssystem ein.')
 				inputbox "$CMOS_ADDRESS_TITLE" "$CMOS_ADDRESS_MSG" "$GRUB_BUTTON_CMOS_ADDRESS"
 				#
 				if [ -n "$gv_Auswahl" ] ; then
@@ -360,9 +360,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Hidden_Timeout"
 				;;
 			"$lv_Grub_Terminal_Input")
-				# Terminal input auswaehlen{{{
+				# Terminal input auswählen{{{
 				TERMINAL_INPUT_TITLE=(${gv_Configuration}::${lv_Grub_Terminal_Input})
-				TERMINAL_INPUT_MSG=$(gettext 'Waehlen Sie fuer das Terminal die Eingabegeraete aus.')
+				TERMINAL_INPUT_MSG=$(gettext 'Wählen Sie für das Terminal die Eingabegeräte aus.')
 				# Funktion (terminal_input_menu)
 				terminal_input_menu() {
 					TERMINAL_INPUT_MENU=($gv_None \"\" off console \"PC BIOS/EFI\" off
@@ -390,9 +390,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Terminal_Input"
 				;;
 			"$lv_Grub_Terminal_Output")
-				# Terminal Output auswaehlen{{{
+				# Terminal Output auswählen{{{
 				TERMINAL_OUTPUT_TITLE=(${gv_Configuration}::${lv_Grub_Terminal_Output})
-				TERMINAL_OUTPUT_MSG=$(gettext 'Waehlen Sie fuer das Terminal die Ausgabegeraete aus.')
+				TERMINAL_OUTPUT_MSG=$(gettext 'Wählen Sie für das Terminal die Ausgabegeräte aus.')
 				TERMINAL_OUTPUT_MENU=($gv_None \"\" off console \"PC BIOS/EFI\" off
 				serial \"serial Terminal\" off gfxterm \"graphics-mode\" off
 				ofconsole  \"Open Firmware\" off vga_text \"VGA Text\" off)
@@ -415,9 +415,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Terminal_Output"
 				;;
 			$lv_Grub_Terminal)
-				# Terminal Input/Output auswaehlen{{{
+				# Terminal Input/Output auswählen{{{
 				TERMINAL_TITLE=(${gv_Configuration}::${lv_Grub_Terminal})
-				TERMINAL_MSG=$(gettext 'Waehlen Sie fuer das Terminal die Ein-/Ausgabegeraete aus.')
+				TERMINAL_MSG=$(gettext 'Wählen Sie für das Terminal die Ein-/Ausgabegeräte aus.')
 				TERMINAL_MENU=($gv_None \"\" off console \"PC BIOS/EFI\" off
 				serial \"serial Terminal\" off gfxterm \"graphics-mode\" off
 				ofconsole  \"Open Firmware\" off at_keyboard \"PC AT Keyboard\" off
@@ -443,7 +443,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Serial_Cmd")
 				# Serial Kommando festlegen{{{
 				SERIAL_CMD_TITLE=(${gv_Configuration}::${lv_Grub_Serial_Cmd})
-				SERIAL_CMD_MSG=$(gettext 'Geben Sie bitte die Optionen fuer das \"serial\" Kommando, getrennt durch ein Leerzeichen ein (Bsp.: serial --port=xxx --speed=xxx, s. info grub).')
+				SERIAL_CMD_MSG=$(gettext 'Geben Sie bitte die Optionen für das \"serial\" Kommando, getrennt durch ein Leerzeichen ein (Bsp.: serial --port=xxx --speed=xxx, s. info grub).')
 				inputbox "$SERIAL_CMD_TITLE" "$SERIAL_CMD_MSG" "$GRUB_SERIAL_COMMAND"
 				#
 				if [ -n "$gv_Auswahl" ] ; then
@@ -489,9 +489,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Cmdline_Linux"
 				;;
 			"$lv_Grub_Cmdline_Linux_Default")
-				# Linux Kernel Kommandozeilen Argumente fuer default Menue Eintrag eingeben# {{{
+				# Linux Kernel Kommandozeilen Argumente für default Menue Eintrag eingeben# {{{
 				GRUB_CMDLINE_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Linux_Default})
-				GRUB_CMDLINE_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter fuer den Standard Menueeintrag ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter für den Standard Menueeintrag ein (s. kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_DEFAULT_TITLE" "$GRUB_CMDLINE_DEFAULT_MSG" "$GRUB_CMDLINE_LINUX_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_LINUX_DEFAULT="$gv_Auswahl"
@@ -521,7 +521,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Netbsd_Default")
 				# NetBSD Kernel Kommandozeilen Argumente eingeben# {{{
 				GRUB_CMDLINE_NETBSD_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Netbsd_Default})
-				GRUB_CMDLINE_NETBSD_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter fuer den Standard Menueeintrag ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_NETBSD_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter für den Standard Menueeintrag ein (s. kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_NETBSD_DEFAULT_TITLE" "$GRUB_CMDLINE_NETBSD_DEFAULT_MSG" "$GRUB_CMDLINE_NETBSD_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_NETBSD_DEFAULT="$gv_Auswahl"
@@ -627,9 +627,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Video_Backend"
 				;;
 			$lv_Grub_Gfxmode)
-				# Aufloesung festlegen{{{
+				# Auflösung festlegen{{{
 				GFXMODE_TITLE=(${gv_Configuration}::${lv_Grub_Gfxmode})
-				GFXMODE_MSG=$(gettext 'Waehlen Sie die Aufloesung des grafischen Terminals aus.')
+				GFXMODE_MSG=$(gettext 'Wählen Sie die Auflösung des grafischen Terminals aus.')
 				#  Funktion (gfx_mode_menu)# {{{
 				gfx_mode_menu() {
 					GFXMODE_MENU=(640x480x24 \"\" 800x600x24 \"\" 1024x768x24 \"\" 1280x1024x24 \"\"
@@ -660,12 +660,12 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Gfxmode"
 				;;
 			$lv_Grub_Background)
-				# Hintergrundbild auswaehlen# {{{
+				# Hintergrundbild auswählen# {{{
 				dselect "${GRUB_BACKGROUND%/*}"
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						# Verzeichnis auf Rechte pruefen
+						# Verzeichnis auf Rechte prüfen
 						if ! user_device_check "$VERZ" AE ; then
 							break
 						fi
@@ -677,7 +677,7 @@ kwgrub2_conf() {
 						file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
 						if [ -n "${DF_ARRAY_M[1]}" ] ; then
 							FILE_TITLE=(${gv_Configuration}::${lv_Grub_Background})
-							FILE_MSG=$(gettext 'Waehlen Sie ein Hintergrundbild aus.')
+							FILE_MSG=$(gettext 'Wählen Sie ein Hintergrundbild aus.')
 							# Funktion (background_img_menu)# {{{
 							background_img_menu() {
 								FILE_MENU=($gv_None \"\" $DF_ARRAY_M)
@@ -691,12 +691,12 @@ kwgrub2_conf() {
 										background_img_menu "${gv_Auswahl#HELP }"
 										;;
 									$gv_None*)
-										# nichts uebernehmen
+										# nichts übernehmen
 										unset -- GRUB_BACKGROUND
 										break
 										;;
 									*)
-										# Auswahl uebernehmen
+										# Auswahl übernehmen
 										GRUB_BACKGROUND="${VERZ}/${gv_Auswahl}"
 										break
 										;;
@@ -714,12 +714,12 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Background"
 				;;
 			$lv_Grub_Theme)
-				# Theme auswaehlen# {{{
+				# Theme auswählen# {{{
 				dselect "${GRUB_THEME%/*}"
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
 					if [ -n "$VERZ" ] ; then
-						# Verzeichnis auf Rechte pruefen
+						# Verzeichnis auf Rechte prüfen
 						if ! user_device_check "$VERZ" AE ; then
 							break
 						fi
@@ -731,7 +731,7 @@ kwgrub2_conf() {
 						file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
 						if [ -n "${DF_ARRAY_M[1]}" ] ; then
 							FILE_TITLE=(${gv_Configuration}::${lv_Grub_Theme})
-							FILE_MSG=$(gettext 'Waehlen Sie ein Theme Bild aus.')
+							FILE_MSG=$(gettext 'Wählen Sie ein Theme Bild aus.')
 							# Funktion (theme_menu)# {{{
 							theme_menu() {
 								FILE_MENU=($gv_None \"\" $DF_ARRAY_M)
@@ -745,12 +745,12 @@ kwgrub2_conf() {
 										theme_menu "${gv_Auswahl#HELP }"
 										;;
 									$gv_None*)
-										# nichts uebernehmen
+										# nichts übernehmen
 										unset -- GRUB_THEME
 										break
 										;;
 									*)
-										# Auswahl uebernehmen
+										# Auswahl übernehmen
 										GRUB_THEME="${VERZ}/${gv_Auswahl}"
 										break
 										;;
@@ -768,9 +768,9 @@ kwgrub2_conf() {
 				conf_menu "$lv_Grub_Theme"
 				;;
 			"$lv_Grub_Gfxpayload_Linux")
-				# Zusatz zur Aufloesung festlegen{{{
+				# Zusatz zur Auflösung festlegen{{{
 				GFXPAYLOAD_TITLE=(${gv_Configuration}::${lv_Grub_Gfxpayload_Linux})
-				GFXPAYLOAD_MSG=$(gettext 'Waehlen Sie einen Zusatz zum Menuepunt \"Aufloesung\" aus.')
+				GFXPAYLOAD_MSG=$(gettext 'Wählen Sie einen Zusatz zum Menuepunt \"Auflösung\" aus.')
 				# Funktion (gfxpayload_menu)# {{{
 				gfxpayload_menu() {
 					GFXPAYLOAD_MENU=(kepp \"\" text \"\" 640x480x24 \"\"
@@ -812,7 +812,7 @@ kwgrub2_conf() {
 				# Klang festlegen{{{
 				unset -- Init_Tmp
 				INIT_TITLE=(${gv_Configuration}::${lv_Grub_Init_Tune})
-				INIT_MSG=$(gettext 'Geben Sie bitte die Werte fuer den Klang, getrennt durch ein Leerzeichen (Bsp.: 480 440 1) oder eine Musik Datei mit vollem Pfad ein (s. info grub).')
+				INIT_MSG=$(gettext 'Geben Sie bitte die Werte für den Klang, getrennt durch ein Leerzeichen (Bsp.: 480 440 1) oder eine Musik Datei mit vollem Pfad ein (s. info grub).')
 				inputbox "$INIT_TITLE" "$INIT_MSG" "$GRUB_INIT_TUNE"
 				#
 				if [ -n "$gv_Auswahl" -a -f "$gv_Auswahl" ] ; then
@@ -834,7 +834,7 @@ kwgrub2_conf() {
 					unset -- Init_Tmp
 					no_input_msg
 				fi
-				# Falls vorhanden Wert uebernehmen
+				# Falls vorhanden Wert übernehmen
 				if [ -n "$Init_Tmp" ] ; then
 					GRUB_INIT_TUNE="$Init_Tmp"
 				else
@@ -882,7 +882,7 @@ kwgrub2_conf() {
 						esac
 					}
 				fi
-				# Uebernahme der Werte
+				# Übernahme der Werte
 				GRUB_BADRAM="${Value//\ /}"
 				## }}}
 				conf_menu "$lv_Grub_Badram"
@@ -893,7 +893,7 @@ kwgrub2_conf() {
 				break
 				;;
 			$gv_Back)
-				# back und Var loeschen# {{{
+				# back und Var löschen# {{{
 				unset -- $UNSET_CONF_VAR
 				## }}}
 				break

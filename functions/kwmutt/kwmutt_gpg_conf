@@ -1,9 +1,9 @@
-# Funktion (kwmutt_gpg_conf), konfiguriert die gnupg Einstellungen fuer mutt# {{{
+# Funktion (kwmutt_gpg_conf), konfiguriert die gnupg Einstellungen für mutt# {{{
 #
 # usage: kwmutt_gpg_conf
 #
 kwmutt_gpg_conf() {
-	Unset=(pgp_autoencrypt pgp_good_sign pgp_check_exit pgp_long_ids pgp_retainable_sigs
+	Unset=(pgp_autöncrypt pgp_good_sign pgp_check_exit pgp_long_ids pgp_retainable_sigs
 		pgp_show_unusable pgp_sign_as pgp_strict_enc pgp_timeout pgp_sort_keys
 		pgp_auto_decode pgp_decode_command pgp_getkeys_command pgp_verify_command
 		pgp_decrypt_command pgp_sign_command pgp_encrypt_sign_command
@@ -11,11 +11,11 @@ kwmutt_gpg_conf() {
 		pgp_verify_key_command 	pgp_list_pubring_command pgp_list_secring_command
 		forward_decrypt)
 	unset -- $Unset
-	# Funktion (pgp_conf_menu), menu fuer die GPG/TLS Konfiguration# {{{
+	# Funktion (pgp_conf_menu), menu für die GPG/TLS Konfiguration# {{{
 	GPG_TITLE="$lv_Gpg"
 	gpg_conf_menu() {
 		GPG_CONF_MENU=(pgp_autosign \"$pgp_autosign\"
-		pgp_autoencrypt \"$pgp_autoencrypt\"
+		pgp_autöncrypt \"$pgp_autöncrypt\"
 		pgp_good_sign \"$pgp_good_sign\"
 		pgp_check_exit \"$pgp_check_exit\"
 		pgp_long_ids \"$pgp_long_ids\"
@@ -53,7 +53,7 @@ kwmutt_gpg_conf() {
 	# leere Variable mit Standardwerten fuellen.# {{{
 	forward_decrypt="${forward_decrypt:-yes}"
 	pgp_auto_decode="${pgp_auto_decode:-no}"
-	pgp_autoencrypt="${pgp_autoencrypt:-no}"
+	pgp_autöncrypt="${pgp_autöncrypt:-no}"
 	pgp_autosign="${pgp_autosign:-no}"
 	pgp_check_exit="${pgp_check_exit:-yes}"
 	pgp_decode_command="${pgp_decode_command:-gpg --status-fd=2 %?p?--passphrase-fd 0? --no-verbose --quiet --batch --output - %f}"
@@ -95,21 +95,21 @@ kwmutt_gpg_conf() {
 				#}}}
 				gpg_conf_menu pgp_autosign
 				;;
-			pgp_autoencrypt)
-				# automatisch verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu verschluesseln (ja/nein)?')
-				yesno "$GPG_TITLE" "$MSG" "$pgp_autoencrypt"
+			pgp_autöncrypt)
+				# automatisch verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu verschlüsseln (ja/nein)?')
+				yesno "$GPG_TITLE" "$MSG" "$pgp_autöncrypt"
 				if [ "$gv_Auswahl" = yes ] ; then
-					pgp_autoencrypt=yes
+					pgp_autöncrypt=yes
 				else
-					pgp_autoencrypt=no
+					pgp_autöncrypt=no
 				fi
 				#}}}
-				gpg_conf_menu pgp_autoencrypt
+				gpg_conf_menu pgp_autöncrypt
 				;;
 			pgp_good_sign)
 				# Nachricht das Signatur gueltig ist# {{{
-				MSG=$(gettext 'Geben Sie einen Text oder regulaeren Ausdruck ein der angezeigt werden soll wenn die Signatur gueltig ist.')
+				MSG=$(gettext 'Geben Sie einen Text oder regulären Ausdruck ein der angezeigt werden soll wenn die Signatur gueltig ist.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_good_sign"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_good_sign="$gv_Auswahl"
@@ -120,8 +120,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_good_sign
 				;;
 			pgp_check_exit)
-				# Exit Status ueberpruefen# {{{
-				MSG=$(gettext 'Soll Mutt den Exit Status der PGP Subprozesse beim signieren/verschluesseln ueberpruefen (ja/nein)?')
+				# Exit Status überprüfen# {{{
+				MSG=$(gettext 'Soll Mutt den Exit Status der PGP Subprozesse beim signieren/verschlüsseln überprüfen (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$pgp_check_exit"
 				if [ "$gv_Auswahl" = yes ] ; then
 					pgp_check_exit=yes
@@ -132,8 +132,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_check_exit
 				;;
 			pgp_long_ids)
-				# Soll 64bit oder 32bit Schluessel-ID benutzt werden# {{{
-				MSG=$(gettext 'Sollen die 64 Bit Schluessel-IDs benutzt werden (ja/nein)?')
+				# Soll 64bit oder 32bit Schlüssel-ID benutzt werden# {{{
+				MSG=$(gettext 'Sollen die 64 Bit Schlüssel-IDs benutzt werden (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$pgp_long_ids"
 				if [ "$gv_Auswahl" = yes ] ; then
 					pgp_long_ids=yes
@@ -144,8 +144,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_long_ids
 				;;
 			pgp_retainable_sigs)
-				# aeussere Schicht entfernen von Nachrichten# {{{
-				MSG=$(gettext 'Soll die aeussere Schicht bei signierten/verschluesselten Nachrichten entfernt werden (ja/nein)?')
+				# äussere Schicht entfernen von Nachrichten# {{{
+				MSG=$(gettext 'Soll die äussere Schicht bei signierten/verschlüsselten Nachrichten entfernt werden (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$pgp_retainable_sigs"
 				if [ "$gv_Auswahl" = yes ] ; then
 					pgp_retainable_sigs=yes
@@ -156,8 +156,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_retainable_sigs
 				;;
 			pgp_show_unusable)
-				# # unbrauchbare, abgelaufene Schluessel anzeigen{{{
-				MSG=$(gettext 'Sollen auch abgelaufene, unbrauchbare Schluessel im Schluesselauswahlmenue angezeigt werden (ja/nein)?')
+				# # unbrauchbare, abgelaufene Schlüssel anzeigen{{{
+				MSG=$(gettext 'Sollen auch abgelaufene, unbrauchbare Schlüssel im Schlüsselauswahlmenue angezeigt werden (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$pgp_show_unusable"
 				if [ "$gv_Auswahl" = yes ] ; then
 					pgp_show_unusable=yes
@@ -168,7 +168,7 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_show_unusable
 				;;
 			pgp_sign_as)
-				# Standard_Schluessel_ID auswaehlen, mit der unterschrieben wird.# {{{
+				# Standard_Schlüssel_ID auswählen, mit der unterschrieben wird.# {{{
 				# belegt die Variablen TRUSTED_KEY und DEFAULT_KEY.
 				autoload -U gpg_getkeys_id
 				gpg_getkeys_id
@@ -194,7 +194,7 @@ kwmutt_gpg_conf() {
 				;;
 			pgp_timeout)
 				# Timeout von PGP-Mantras# {{{
-				MSG=$(gettext 'Geben Sie an nach wievielen Sekunden ein Mantra aus dem Speicher geloescht werden soll.')
+				MSG=$(gettext 'Geben Sie an nach wievielen Sekunden ein Mantra aus dem Speicher gelöscht werden soll.')
 				number_input "$GPG_TITLE" "$MSG" "$pgp_timeout"
 				if [ -n "$NUMBER" ] ; then
 					pgp_timeout="$NUMBER"
@@ -205,7 +205,7 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_timeout
 				;;
 			pgp_sort_keys)
-				# Wie sollen die Schluessel sortiert angezeigt werden# {{{
+				# Wie sollen die Schlüssel sortiert angezeigt werden# {{{
 				S_MENU=(address \"\" keyid \"\" date \"\" trust \"\" reverse-address \"\" reverse-keyid \"\" reverse-date \"\" reverse-trust \"\" $gv_Back \"\")
 				menubox "$pgp_sort_keys" "$GPG_TITLE" "$gv_Menupoint" "$S_MENU"
 				while [ -n "$gv_Auswahl" ] ; do
@@ -214,7 +214,7 @@ kwmutt_gpg_conf() {
 							menubox "$pgp_sort_keys" "$GPG_TITLE" "$gv_Menupoint" "$S_MENU"
 							;;
 						*)
-							# Wert uebernehmen
+							# Wert übernehmen
 							pgp_sort_keys="$gv_Auswahl"
 							break
 					esac
@@ -223,8 +223,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_sort_keys
 				;;
 			pgp_auto_decode)
-				# entschluesseln nach altmodischer Art#{{{
-				MSG=$(gettext 'Soll Mutt versuchen verschluesselte Nachrichten nach der altmodischen Art zu entschluesseln (ja/nein)?')
+				# entschlüsseln nach altmodischer Art#{{{
+				MSG=$(gettext 'Soll Mutt versuchen verschlüsselte Nachrichten nach der altmodischen Art zu entschlüsseln (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$pgp_auto_decode"
 				if [ "$gv_Auswahl" = yes ] ; then
 					pgp_auto_decode=yes
@@ -235,9 +235,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_auto_decode
 				;;
 			pgp_decode_command)
-				# Kommando zum dekodieren von application/pgp Anhaengen # {{{
+				# Kommando zum dekodieren von application/pgp Anhängen # {{{
 				Gpg_Old="$pgp_decode_command"
-				MSG=$(gettext 'Geben Sie den Befehl ein um application/pgp Anhaenge zu dekodieren.')
+				MSG=$(gettext 'Geben Sie den Befehl ein um application/pgp Anhänge zu dekodieren.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_decode_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_decode_command="$gv_Auswahl"
@@ -248,9 +248,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_decode_command
 				;;
 			pgp_getkeys_command)
-				# Kommando zum falls mutt Informatioen ueber oeffentlich# {{{
-				# Schluessel benoetigt
-				MSG=$(gettext 'Geben Sie den Befehl fuer mutt ein wenn es Informationen ueber oeffentliche Schluessel benoetigt.')
+				# Kommando zum falls mutt Informatiön über öffentlich# {{{
+				# Schlüssel benötigt
+				MSG=$(gettext 'Geben Sie den Befehl für mutt ein wenn es Informationen über öffentliche Schlüssel benötigt.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_getkeys_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_getkeys_command="$gv_Auswahl"
@@ -261,9 +261,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_getkeys_command
 				;;
 			pgp_verify_command)
-				# Kommando zum ueberpruefen von pgp/mime Signaturen# {{{
+				# Kommando zum überprüfen von pgp/mime Signaturen# {{{
 				Gpg_Old="$pgp_verify_command"
-				MSG=$(gettext 'Geben Sie den Befehl zur Ueberpruefung von PGP/MIME-Signaturen ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zur Überprüfung von PGP/MIME-Signaturen ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_verify_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_verify_command="$gv_Auswahl"
@@ -274,9 +274,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_verify_command
 				;;
 			pgp_decrypt_command)
-				# Kommando zum entschluesseln# {{{
+				# Kommando zum entschlüsseln# {{{
 				Gpg_Old="$pgp_decrypt_command"
-				MSG=$(gettext 'Geben Sie den Befehl zum entschluesseln von PGP/MIME kodierten Nachrichten ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zum entschlüsseln von PGP/MIME kodierten Nachrichten ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_decrypt_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_decrypt_command="$gv_Auswahl"
@@ -302,7 +302,7 @@ kwmutt_gpg_conf() {
 			pgp_encrypt_sign_command)
 				# Kommando zum sign/encrypt eines Teil des Body# {{{
 				Gpg_Old="$pgp_encrypt_sign_command"
-				MSG=$(gettext 'Geben Sie den Befehl zum gleichzeitigen signieren und verschluesseln eines Teil des Nachrichtenrumpfes ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zum gleichzeitigen signieren und verschlüsseln eines Teil des Nachrichtenrumpfes ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_encrypt_sign_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_encrypt_sign_command="$gv_Auswahl"
@@ -315,7 +315,7 @@ kwmutt_gpg_conf() {
 			pgp_encrypt_only_command)
 				# Kommando zum sign/encrypt eines Teil des Body ohne signieren# {{{
 				Gpg_Old="$pgp_encrypt_only_command"
-				MSG=$(gettext 'Geben Sie den Befehl zum verschluesseln eines Teil des Nachrichtenrumpfes ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zum verschlüsseln eines Teil des Nachrichtenrumpfes ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_encrypt_only_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_encrypt_only_command="$gv_Auswahl"
@@ -326,9 +326,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_encrypt_only_command
 				;;
 			pgp_import_command)
-				# Kommando zum importieren von Schluesseln# {{{
+				# Kommando zum importieren von Schlüsseln# {{{
 				Gpg_Old="$pgp_import_command"
-				MSG=$(gettext 'Geben Sie den Befehl zum importieren von Schluesseln ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zum importieren von Schlüsseln ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_import_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_import_command="$gv_Auswahl"
@@ -339,9 +339,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_import_command
 				;;
 			pgp_export_command)
-				# Kommando zum exportieren von Schluesseln# {{{
+				# Kommando zum exportieren von Schlüsseln# {{{
 				Gpg_Old="$pgp_export_command"
-				MSG=$(gettext 'Geben Sie den Befehl zum exportieren von Schluesseln ein.')
+				MSG=$(gettext 'Geben Sie den Befehl zum exportieren von Schlüsseln ein.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_export_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_export_command="$gv_Auswahl"
@@ -352,9 +352,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_export_command
 				;;
 			pgp_verify_key_command)
-				# Kommando fuer Schluessel-Informationen aus dem Menue# {{{
+				# Kommando für Schlüssel-Informationen aus dem Menue# {{{
 				Gpg_Old="$pgp_verify_key_command"
-				MSG=$(gettext 'Geben Sie den Befehl ein um Schluessel-Informationen aus dem Menue zur Schluesselauswahl zu ueberpruefen.')
+				MSG=$(gettext 'Geben Sie den Befehl ein um Schlüssel-Informationen aus dem Menue zur Schlüsselauswahl zu überprüfen.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_verify_key_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_verify_key_command="$gv_Auswahl"
@@ -365,9 +365,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_verify_key_command
 				;;
 			pgp_list_pubring_command)
-				# Kommando zum  Anzeigen des oeffentlichen Schluesselbundes# {{{
+				# Kommando zum  Anzeigen des öffentlichen Schlüsselbundes# {{{
 				Gpg_Old="$pgp_list_pubring_command"
-				MSG=$(gettext 'Geben Sie den Befehl ein zum Anzeigen des oeffentlichen Schluesselbundes.')
+				MSG=$(gettext 'Geben Sie den Befehl ein zum Anzeigen des öffentlichen Schlüsselbundes.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_list_pubring_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_list_pubring_command="$gv_Auswahl"
@@ -378,9 +378,9 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_list_pubring_command
 				;;
 			pgp_list_secring_command)
-				# Kommando zum Anzeigen des geheimen Schluesselbundes# {{{
+				# Kommando zum Anzeigen des geheimen Schlüsselbundes# {{{
 				Gpg_Old="$pgp_list_secring_command"
-				MSG=$(gettext 'Geben Sie den Befehl ein zum Anzeigen des geheimen Schluesselbundes.')
+				MSG=$(gettext 'Geben Sie den Befehl ein zum Anzeigen des geheimen Schlüsselbundes.')
 				inputbox "$GPG_TITLE" "$MSG" "$pgp_list_secring_command"
 				if [ -n "$gv_Auswahl" ] ; then
 					pgp_list_secring_command="$gv_Auswahl"
@@ -391,8 +391,8 @@ kwmutt_gpg_conf() {
 				gpg_conf_menu pgp_list_secring_command
 				;;
 			forward_decrypt)
-				# Soll die aeussere Schicht beim Weiterleiten entfernt werden?# {{{
-				MSG=$(gettext '(Soll beim weiterleiten einer Nachricht die aeussere Schicht der Verschluesselung entfernt werden (ja/nein)?')
+				# Soll die äussere Schicht beim Weiterleiten entfernt werden?# {{{
+				MSG=$(gettext '(Soll beim weiterleiten einer Nachricht die äussere Schicht der Verschlüsselung entfernt werden (ja/nein)?')
 				yesno "$GPG_TITLE" "$MSG" "$forward_decrypt"
 				if [ "$gv_Auswahl" = yes ] ; then
 					forward_decrypt=yes

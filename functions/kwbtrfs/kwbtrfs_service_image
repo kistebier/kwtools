@@ -5,7 +5,7 @@
 kwbtrfs_service_image() {
 	unset -- DRIVE DEV RESTORE IMAGE_FILE IMAGE_OPT
 	# Variabeln# {{{
-	lv_Compress_Level=$(gettext 'Kompressionsstaerke')
+	lv_Compress_Level=$(gettext 'Kompressionsstärke')
 	lv_Image_File=$(gettext 'Abbilddatei')
 	lv_Multiple=$(gettext 'mehrere Laufwerke')
 	lv_Old_Methode=$(gettext 'alte Methode')
@@ -37,7 +37,7 @@ kwbtrfs_service_image() {
 				image_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Btrfs_Drive)
-				# Btrfs-Laufwerk auswaehlen# {{{
+				# Btrfs-Laufwerk auswählen# {{{
 				autoload -U kwbtrfs_service_check_btrfs_dev
 				kwbtrfs_service_check_btrfs_dev
 				## }}}
@@ -68,7 +68,7 @@ kwbtrfs_service_image() {
 						unset -- IMAGE_FILE
 					fi
 				else
-					# Verzeichnis fuer Image Datei waehlen
+					# Verzeichnis für Image Datei wählen
 					dselect "${IMAGE_FILE%/*}" 
 					if [[ -n $VERZ ]] ; then
 						# Wenn Verzeichnis nicht existiert anlegen
@@ -84,8 +84,8 @@ kwbtrfs_service_image() {
 				image_menu $lv_Image_File
 				;;
 			$lv_Compress_Level)
-				# Eingabe der Kompressionsstaerke (1-9)# {{{
-				COMPRESS_MSG=$(gettext 'Geben Sie bitte die Kompressionsstaerke, eine Zahl zwischen 1 und 9, ein.')
+				# Eingabe der Kompressionsstärke (1-9)# {{{
+				COMPRESS_MSG=$(gettext 'Geben Sie bitte die Kompressionsstärke, eine Zahl zwischen 1 und 9, ein.')
 				number_input "$SERVICE_IMAGE_TITLE" "$COMPRESS_MSG" "$COMPRESS_LEVEL"
 				if [[ -n $NUMBER ]] ; then
 					COMPRESS_LEVEL="$NUMBER"
@@ -113,7 +113,7 @@ kwbtrfs_service_image() {
 				image_menu $lv_Compress_Level
 				;;
 			$lv_Old_Methode)
-				# ueberpruefe die Checksumme der Datenbloecke (ja/nein).# {{{
+				# überprüfe die Checksumme der Datenblöcke (ja/nein).# {{{
 				MSG=$(gettext 'Soll die alte Methode zur Wiederherstellung benutzt werden (ja/nein)?')
 				yesno "$SERVICE_IMAGE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
@@ -149,8 +149,8 @@ kwbtrfs_service_image() {
 				image_menu $lv_Walk
 				;;
 			$lv_Multiple)
-				# Wiederherstellung fuer mehrere Laufwerke (ja/nein)# {{{
-				MSG=$(gettext 'Soll die Wiederherstellung fuer mehrere Laufwerke aktiviert werden (ja/nein)?')
+				# Wiederherstellung für mehrere Laufwerke (ja/nein)# {{{
+				MSG=$(gettext 'Soll die Wiederherstellung für mehrere Laufwerke aktiviert werden (ja/nein)?')
 				yesno "$SERVICE_IMAGE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					MULTIPLE=yes
@@ -161,9 +161,9 @@ kwbtrfs_service_image() {
 				image_menu $lv_Multiple
 				;;
 			$gv_Save)
-				# Ueberpruefung starten# {{{
+				# Überprüfung starten# {{{
 				if [[ -n $IMAGE_FILE ]] && [[ -n $DEV ]] ; then
-					# Optionen zusammen zaehlen
+					# Optionen zusammen zählen
 					if [[ $RESTORE == yes ]] ; then
 						IMAGE_OPT="$IMAGE_OPT -r"
 						unset -- COMPRESS_LEVEL SANITIZE WALK
@@ -188,23 +188,23 @@ kwbtrfs_service_image() {
 					if [[ -n $MULTIPLE ]] ; then
 						IMAGE_OPT="$IMAGE_OPT -m"
 					fi
-					# ausfuehren
+					# ausführen
 					if [[ $RESTORE == yes ]] ; then
 						btrfs-image ${=IMAGE_OPT} "$IMAGE_FILE" $DEV &>/dev/null
 					else
 						btrfs-image ${=IMAGE_OPT} $DEV "$IMAGE_FILE" &>/dev/null
 					fi
-					# Variabeln mit Laufwerken loeschen
+					# Variabeln mit Laufwerken löschen
 					unset -- DRIVE DEV IMAGE_FILE
 				else
-					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte \"$lv_Btrfs_Drive\" und \"$lv_Image_File\" mit werten belegen.')
+					MSG=$(gettext 'Sie müssen mindestens die Menuepunkte \"$lv_Btrfs_Drive\" und \"$lv_Image_File\" mit werten belegen.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
 				image_menu "$lv_Btrfs_Drive"
 				;;
 			$gv_Back|*)
-				# zurueck/abbrechen
+				# zurück/abbrechen
 				break
 				;;
 		esac

@@ -1,15 +1,15 @@
-# Funktion (kwbtrfs_raiddisk), fuer RAID-Partitionen{{{
+# Funktion (kwbtrfs_raiddisk), für RAID-Partitionen{{{
 #
 # usage: kwbtrfs_raiddisk [ raiddisks | cryptdisks ]
-# raiddisks  - unverschluesselte Laufwerke benutzen
-# cryptdisks - verschluesselte Laufwerke benutzen
+# raiddisks  - unverschlüsselte Laufwerke benutzen
+# cryptdisks - verschlüsselte Laufwerke benutzen
 #
 kwbtrfs_raiddisk() {
 	if [[ ${#argv} -eq 1 ]] ; then
 		unset -- RAIDDISKS
 		case "$1" in
 			cryptdisks)
-				# verschluesselte Laufwerke
+				# verschlüsselte Laufwerke
 				search_devices -c
 				;;
 			raiddisks)
@@ -25,7 +25,7 @@ kwbtrfs_raiddisk() {
 				unset -- Nr
 				local Nr
 				Nr="$1"
-				MSG=$(gettext 'Sie muessen mindestens "$Nr" Laufwerke auswaehlen.')
+				MSG=$(gettext 'Sie müssen mindestens "$Nr" Laufwerke auswählen.')
 				msgbox "$gv_Attention" "$MSG"
 			else
 				no_para_msg $0
@@ -37,7 +37,7 @@ kwbtrfs_raiddisk() {
 		raiddisk_menu() {
 			RAIDDISK_MENU=($NO_BTRFS_DEV_M)
 			RAIDDISK_TITLE="${lv_Devices}::${gv_Create}::${lv_Raid}::${lv_Raiddisks}"
-			RAIDDISK_MSG=$(gettext 'Waehlen Sie die Laufwerke fuer ihr RAID Array aus.')
+			RAIDDISK_MSG=$(gettext 'Wählen Sie die Laufwerke für ihr RAID Array aus.')
 			checklist "" "$RAIDDISK_TITLE" "$RAIDDISK_MSG" "$RAIDDISK_MENU"
 		}
 		## }}}

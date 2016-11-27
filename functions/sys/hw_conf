@@ -42,7 +42,7 @@ hw_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (char_device_anzeige), zur Anzeige der vefuegbaren Zeichengeraeten{{{
+	# Funktion (char_device_anzeige), zur Anzeige der vefügbaren Zeichengeräten{{{
 	#
 	# Zur Zeit nur Drucker und serielle Schnittstellen.
 	#
@@ -62,7 +62,7 @@ hw_conf() {
 		}
 	}
 	#}}}
-	# Funktion (check_crypt_map_dev), prueft beim Script# {{{
+	# Funktion (check_crypt_map_dev), prüft beim Script# {{{
 	# kwcryptsetup auf UUID und LABEL und belegt darauf
 	# hin die Variable MAP_DEV mit dem richtigen Pfad zum
 	# Device.
@@ -99,7 +99,7 @@ hw_conf() {
 		fi
 	}
 	## }}}
-	# Funktion (check_write_part), prueft ob ein Laufwerk read-write eingebunden ist.# {{{
+	# Funktion (check_write_part), prüft ob ein Laufwerk read-write eingebunden ist.# {{{
 	#
 	# usage: check_write_part MOUNTPOINT MOUNTPOINT ...
 	#
@@ -127,9 +127,9 @@ hw_conf() {
 	## }}}
 	# Funktion (disk), Hardware-Erkennung der Festplatten{{{
 	#
-	# sucht nach ide/scsi Festplatten und berechnet die Kapazitaet
+	# sucht nach ide/scsi Festplatten und berechnet die Kapazität
 	#
-	# benoetigt die Funktion kernel_release
+	# benötigt die Funktion kernel_release
 	#
 	# usage: disk
 	#
@@ -156,16 +156,16 @@ hw_conf() {
 							DISK_DEV_CAP_BYTE+=(0B)
 							DISK_DEV_CAP+=(0)
 						fi
-						# Kapazitaet in eine besser Form umrechnen
+						# Kapazität in eine besser Form umrechnen
 						convert_si_size -i "$Tmp"
 						Disk_Dev_Name=${Rest// /_}-${SIZE_B//.[0-9][0-9][0-9]/}
 						DISK_DEV_NAME+=($Disk_Dev_Name)
-						# Variablen fuer die dialogboxen belegen.
+						# Variablen für die dialogboxen belegen.
 						DISK_DEV+=($Dev)
 						DISK_DEV_E+=($Dev \"$Disk_Dev_Name\")
 						DISK_DEV_M+=($Dev \"$Disk_Dev_Name\" off)
 						FP_INFO+=("$Dev $Rest")
-						# Sector Groesse der Festplatte heraus bekommen.
+						# Sector Grösse der Festplatte heraus bekommen.
 						# Meist 512Byte <= 3TByte, 4096Byte >= 3 TByte.
 						HW_SECTOR_SIZE+=$(</sys/block/${Dev#/dev/}/queue/hw_sector_size)
 					fi
@@ -220,13 +220,13 @@ hw_conf() {
 		fi
 	}
 	#}}}
-		# Funktion (limit_size_conf), Limits der Blocks fuer quota einstellen# {{{
+		# Funktion (limit_size_conf), Limits der Blocks für quota einstellen# {{{
 		#
 		# usage: limit_size_conf [ -h | -s ] LIMIT
 		# -h - Hardlimit
 		# -s - softlimit
 		# LIMIT - Block_Hardlimit/Block_Softlimit mit einander vergleichen
-		#         muss mit uebergeben werden, wenn auch leer.
+		#         muss mit übergeben werden, wenn auch leer.
 		#
 		limit_size_conf() {
 			if [ $# = 2 ] ; then
@@ -234,12 +234,12 @@ hw_conf() {
 				local L_Opt
 				L_Opt="$1"
 				O_LIMIT="$2"
-				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Groesse fuer das Limit ein (1GiB = 1GibiByte = 1024 MebiByte).')
+				LIMIT_MSG=$(gettext 'Geben Sie bitte hier die Grösse für das Limit ein (1GiB = 1GibiByte = 1024 MebiByte).')
 				number_input -D "$LIMIT_TITLE" "$LIMIT_MSG" "$SIZE"
 				#
 				if [ -n "$NUMBER" ] ; then
 					if [ -n "$O_LIMIT" -a "${O_LIMIT%%[a-zA-Z]}" -gt 0 ] ; then
-						# Vorhandene Groesse in Byte umrechnen.
+						# Vorhandene Grösse in Byte umrechnen.
 						convert_drive_size "${O_LIMIT##*[0-9]}" "${O_LIMIT%%[a-zA-Z]}"
 						if [ -n "$SIZE_B" ] ; then
 							Old_Size_Tmp="$SIZE_B"
@@ -317,7 +317,7 @@ hw_conf() {
 		fi
 	}
 	#}}}
-# Funktion (lv_free_size), um die Groesse der LV zu berechnen{{{
+# Funktion (lv_free_size), um die Grösse der LV zu berechnen{{{
 #
 # usage: lv_free_size LV
 lv_free_size() {
@@ -333,13 +333,13 @@ lv_free_size() {
 	fi
 }
 #}}}
-	# Funktion (lv_resize), LVs vergroessern/verkleinern{{{
+	# Funktion (lv_resize), LVs vergrössern/verkleinern{{{
 		#
 		# usage: lv_resize [+|-]SIZE LV
-		# + - vergroessern
+		# + - vergrössern
 		# - - verkleinern
-		# SIZE - neue Groesse in MebiByte
-		# LV - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
+		# SIZE - neue Grösse in MebiByte
+		# LV - Laufwerk auf dem das Dateisystem vergrössert/verkleinert
 		#          werden soll
 		#
 		lv_resize() {
@@ -347,34 +347,34 @@ lv_free_size() {
 			local DEV New_Size
 			New_Size="$1"
 			DEV="$2"
-			# DEV auf UUID/LABEL pruefen
+			# DEV auf UUID/LABEL prüfen
 			check_crypt_map_dev "$DEV"
 			# Dateisystem ausbinden
 			mount_check -a "$MAP_DEV"
 			if [ "$U_MOUNT" = yes ] ; then
 				if [ "${New_Size%%[0-9]*}" = + ] ; then
-					# Falls dieses Laufwerk verschluesselt ist, stoppen.
+					# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 					resize_cryptdisk_stop $MAP_DEV
-					# LV vergroessern
+					# LV vergrössern
 					$(export LC_ALL=C ; lvextend -L${New_Size#+}M $DEV 2>&1) | \
 						progressbox $gv_Enlarge $MAP_DEV || prog_failure
-					# Falls dieses Laufwerk verschluesselt war, 
-					# starten und Groesse anpassen.
+					# Falls dieses Laufwerk verschlüsselt war, 
+					# starten und Grösse anpassen.
 					resize_cryptdisk $MAP_DEV
-					# Dateisystem ext* vergroessern
+					# Dateisystem ext* vergrössern
 					resize_fs $New_Size $MAP_DEV
 				else
 					# Dateisystem ext* reduzieren
 					# Wenn das Verkleinern eines FS nicht funktioniert
 					# abbrechen.
 					if resize_fs $New_Size $MAP_DEV ; then
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop $MAP_DEV
 						# LV reduzieren
 						$(export LC_ALL=C ; echo y | lvreduce -L${New_Size#-}M $DEV 2>&1) | \
 							progressbox $gv_Reduce $MAP_DEV || prog_failure
-						# Falls dieses Laufwerk verschluesselt war, 
-						# starten und Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, 
+						# starten und Grösse anpassen.
 						resize_cryptdisk $MAP_DEV
 					fi
 				fi
@@ -387,7 +387,7 @@ lv_free_size() {
 	# Funktion (lvm_version), um LVM Version herauszubekommen{{{
 	# Module laden und vorhandene VG's zu aktivieren.
 	#
-	# benoetigt die Funktion kernel_release und load_module
+	# benötigt die Funktion kernel_release und load_module
 	# kernel_release wird von der Funktion script_init geladen
 	#
 	# usage: lvm_version [ -q ]
@@ -451,21 +451,21 @@ lv_free_size() {
 				-q)	# keine Nachricht
 					NO_LVM=yes
 					;;
-				*)	# Nachricht fuer kwlvm+Abbruch
+				*)	# Nachricht für kwlvm+Abbruch
 					no_find_lvm_version
 					;;
 			esac
 		fi
 	}
 	#}}}
-	# Funktion (netcard), um Netzwerkkarten aufzuspueren und abgezaehlt bereit halten{{{
+	# Funktion (netcard), um Netzwerkkarten aufzuspueren und abgezählt bereit halten{{{
 	#
 	# usage: netcard
 	#
 	netcard() {
 		unset -- Anz Anz1 Net_Devices DEVICE_LIST Bus_Info Driver MAC
 		local Anz Anz1 Net_Devices Bus_Info
-		# fuehrende Nullen streichen (typeset -L)
+		# führende Nullen streichen (typeset -L)
 		typeset -L Net_Devices
 		typeset -i Anz Anz1
 		typeset -a Driver
@@ -550,14 +550,14 @@ lv_free_size() {
 		fi
 	}
 	## }}}
-	# Funktion (part_choice), um Partitionen auszuwaehlen{{{
+	# Funktion (part_choice), um Partitionen auszuwählen{{{
 	#
-	# benoetigt mindestens die Funktion disk und partdb. Diese muessen vorher
-	# ausgefuehrt werden.
+	# benötigt mindestens die Funktion disk und partdb. Diese müssen vorher
+	# ausgeführt werden.
 	#
 	# usage: part_choice [ -m | -s | nichts ] $DEVICE_LIST
 	# -m - mehrfache Auswahl
-	# -s - mehrfache Auswahl, aber nur nur eine Auswahl ist moeglich
+	# -s - mehrfache Auswahl, aber nur nur eine Auswahl ist möglich
 	# DEVICE_LIST muss dieses Format haben:
 	# "$DEV \"DESCRIPTION\" off"
 	# "$DEV \"\" off"
@@ -568,13 +568,13 @@ lv_free_size() {
 		# Funktion (get_title_msg), TITLE und MSG Variablen erneuern# {{{
 		get_title_msg() {
 			TITLE=$(gettext 'Konfiguration::Laufwerksauswahl')
-			MSG=$(gettext 'Waehlen Sie hier ein/mehrere Laufwerk(e) aus.')
+			MSG=$(gettext 'Wählen Sie hier ein/mehrere Laufwerk(e) aus.')
 		}
 		## }}}
 		if [ "$#" -ge 1 ] ; then
 			case $1 in
 			-s)
-				# mehrfache Auswahl, aber nur eine Partition wird ausgewaehlt{{{
+				# mehrfache Auswahl, aber nur eine Partition wird ausgewählt{{{
 				if [ -n "$2" ] ; then
 					get_title_msg
 					MENU=($2)
@@ -587,7 +587,7 @@ lv_free_size() {
 								get_title_msg
 								radiolist "${gv_Auswahl#HELP }" "$TITLE" "$MSG" "$MENU"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								WERT="$gv_Auswahl"
 								break
 								;;
@@ -612,7 +612,7 @@ lv_free_size() {
 								get_title_msg
 								checklist "${gv_Auswahl#HELP }" "$TITLE" "$MSG" "$MENU"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								WERT="$gv_Auswahl"
 								break
 								;;
@@ -637,7 +637,7 @@ lv_free_size() {
 								get_title_msg
 								menubox "${gv_Auswahl#HELP }" "$TITLE" "$MSG" "$MENU"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								WERT="$gv_Auswahl"
 								break
 								;;
@@ -656,7 +656,7 @@ lv_free_size() {
 	#}}}
 	# Funktion (part_md_lose), Herrausfiltern von schon vergebenen RAID Partitionen.# {{{
 	#
-	# benoetigt vorher die Funktionen partdb -i raid
+	# benötigt vorher die Funktionen partdb -i raid
 	#
 	# usage: part_md_lose
 	#
@@ -675,14 +675,14 @@ lv_free_size() {
 	# usage: partdb [ /dev.. | /dev.. 'Partitionstyp Partitionstyp ...']
 	#        partdb [ -i 'Partitionstyp Partitionstyp ...' ]
 	# -i - alle Partitionen nach Partitionstyp (raid, lvm, bios_grub, ...) suchen.
-	# /dev - eine Festplatte uebergeben, auf der nach linux, Linux swap
+	# /dev - eine Festplatte übergeben, auf der nach linux, Linux swap
 	#        oder nach Partitionstyp gesucht wird.
 	# nichts - alle Partitionen auf allen Festplatten suchen ausser RAID/LVM/crypto*
 	#
 	partdb() {
 		unset -- PART PART_E PART_M SWAP_DEV SWAP_DEV_E SWAP_DEV_M
 		local Fp_Tmp Disk Part_Ids Part_Desc Part_Label
-		# pruefen ob parted installiert ist
+		# prüfen ob parted installiert ist
 		prog_check parted blkid
 		if [[ -n $PROGS ]] ; then
 			for i in ${=DISK_DEV} ; {
@@ -817,15 +817,15 @@ lv_free_size() {
 		esac
 	}
 	#}}}
-	# Funktion (part_resize), eine Partition vergroessern/verkleinern{{{
+	# Funktion (part_resize), eine Partition vergrössern/verkleinern{{{
 	#
 	# usage: part_resize [+|-]SIZE ENDSIZE PARTITION
 	#
-	# + - vergroessern
+	# + - vergrössern
 	# - - verkleinern
-	# SIZE - neue Groesse der Partition in MiB
-	# ENDSIZE - Groesse am Ende der Partition in MiB
-	# PARTITION - Partition die vergroessert/verkleinert werden soll
+	# SIZE - neue Grösse der Partition in MiB
+	# ENDSIZE - Grösse am Ende der Partition in MiB
+	# PARTITION - Partition die vergrössert/verkleinert werden soll
 	#
 	part_resize() {
 		if [[ ${#argv} == 3 ]] ; then
@@ -833,30 +833,30 @@ lv_free_size() {
 			New_Size="$1"
 			End_Size="$2"
 			DEV="$3"
-			# DEV auf UUID/LABEL pruefen
+			# DEV auf UUID/LABEL prüfen
 			check_crypt_map_dev "$DEV"
 			if [ -n "$MAP_DEV" ] ; then
 				# Laufwerk umounten
 				mount_check -a "$MAP_DEV"
 				if [ "$U_MOUNT" = yes ] ; then
 					if [ "${New_Size%%[0-9]*}" = + ] ; then
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
-						# Partition vergroessern
+						# Partition vergrössern
 						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
 							${DEV##*[a-z]} $End_Size || prog_failure
 						# Dem Kernel die neue Partitionstabelle bekanntgeben
 						partprobe ${DEV%%[0-9]*}
 						sleep 3
-						# Falls dieses Laufwerk verschluesselt war, starten und
-						# Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, starten und
+						# Grösse anpassen.
 						resize_cryptdisk "$MAP_DEV"
-						# Dateisystem vergroessern
+						# Dateisystem vergrössern
 						resize_fs $New_Size $MAP_DEV
 					else
 						# Dateisystem verkleinern
 						resize_fs $New_Size $MAP_DEV
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop $MAP_DEV
 						# Partition verkleinern
 						parted -s ${DEV%%[0-9]*} unit MiB resizepart \
@@ -864,8 +864,8 @@ lv_free_size() {
 						# Dem Kernel die neue Partitionstabelle bekanntgeben
 						partprobe ${DEV%%[0-9]*}
 						sleep 3
-						# Falls dieses Laufwerk verschluesselt war, starten und
-						# Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, starten und
+						# Grösse anpassen.
 						resize_cryptdisk $MAP_DEV
 					fi
 				fi
@@ -931,7 +931,7 @@ lv_free_size() {
 		return 0
 	}
 	## }}}
-	# Funktion (raid_enlarge_dev), RAID vergoessern# {{{
+	# Funktion (raid_enlarge_dev), RAID vergössern# {{{
 	#
 	# usage: raid_enlarge_dev RAIDDEV
 	#
@@ -940,13 +940,13 @@ lv_free_size() {
 			unset -- RAID_ANZ RAID_USED_DEV_SIZE MINUS_RAID_ANZ NEW_ARRAY_SIZE
 			local Used_Dev_Size
 			RAIDDEV="$1"
-			# Erst das RAID Level herausfinden. vergroessern 
+			# Erst das RAID Level herausfinden. vergrössern 
 			# funktioniert nur bei
 			# RAID Level 1,4,5,6
 			RAIDLEVEL=$(raid_is_level $RAIDDEV)
 			case "$RAIDLEVEL" in
 				raid[1456])
-					# Raid Arrays 1/4/5/6 vergroessern# {{{
+					# Raid Arrays 1/4/5/6 vergrössern# {{{
 					# Anzahl der RAID-Laufwerke herrausfinden
 					RAID_ANZ=$(raid_anz $RAIDDEV)
 					if [ ! -z "$RAID_ANZ" ] ; then
@@ -981,7 +981,7 @@ lv_free_size() {
 									# Wenn, Freie RAID Partitionen zur Auswahl stellen.
 									RAID_ENLARGE_ADD_TITLE=$(gettext 'Raid-Arrays::${gv_Enlarge}')
 									RAID_PART_ADD_MENU=($Part_Md_Lose_E)
-									RAID_PART_ADD_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum hinzufuegen aus.')
+									RAID_PART_ADD_MSG=$(gettext 'Wählen Sie ein Laufwerk zum hinzufügen aus.')
 									menubox "" "$RAID_ENLARGE_ADD_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
 									while [ -n "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
@@ -991,12 +991,12 @@ lv_free_size() {
 												;;
 											/dev*)
 												HDDEV="$gv_Auswahl"
-												# Groesse eines Laufwerks des Arrays in KibiByte herausfinden.
+												# Grösse eines Laufwerks des Arrays in KibiByte herausfinden.
 												RAID_USED_DEV_SIZE=$(raid_used_dev_size $RAIDDEV)
-												# neue gesamt Groesse des werdenden
+												# neue gesamt Grösse des werdenden
 												# Arrays berechnen.
 												(( NEW_ARRAY_SIZE = RAID_USED_DEV_SIZE * RAID_ANZ ))
-												# Dateisystem des Arrays vergroessern
+												# Dateisystem des Arrays vergrössern
 												raid_resize +${NEW_ARRAY_SIZE} $RAIDDEV $HDDEV
 												# alle RAID Arrays neu heraussuchen
 												raid
@@ -1007,8 +1007,8 @@ lv_free_size() {
 										esac
 									done
 								else
-									# Meldung ueber keine freien RAID Partitionen
-									MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfuegung.')
+									# Meldung über keine freien RAID Partitionen
+									MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfügung.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								## }}}
@@ -1024,7 +1024,7 @@ lv_free_size() {
 					## }}}
 					;;
 				*)
-					MSG=$(gettext 'In diesem RAIDLEVEL ($RAIDLEVEL) kann diese Software kein Laufwerk hinzufuegen.')
+					MSG=$(gettext 'In diesem RAIDLEVEL ($RAIDLEVEL) kann diese Software kein Laufwerk hinzufügen.')
 					msgbox "$gv_Attention" "$MSG"
 					;;
 			esac
@@ -1077,7 +1077,7 @@ lv_free_size() {
 							fi
 						}
 						if [ -n "$R_Devs" ] ; then
-							# Wird LVM2 oder LVM1 benutzt? Benoetigt im Vorfeld die
+							# Wird LVM2 oder LVM1 benutzt? Benötigt im Vorfeld die
 							# Funktion lvm_version
 							unset -- Tmp
 							if [ "$LVM" = 2 ] ; then
@@ -1188,7 +1188,7 @@ lv_free_size() {
 					# RAID Partitionen zur Auswahl stellen.
 					raid_search_part_state $RAIDDEV
 					if [ ! -z "${PARTS_STATE[1]}" ] ; then
-						# Wenn mehr als benoetigte RAID Partitionen zur Verfuegung stehen
+						# Wenn mehr als benötigte RAID Partitionen zur Verfügung stehen
 						# zur Auswahl stellen.
 						RAID_ANZ=$(raid_anz $RAIDDEV)
 						if [ ! -z "$RAID_ANZ" ] ; then
@@ -1209,7 +1209,7 @@ lv_free_size() {
 								# FP/PART herausfinden
 								RAID_PART_REDUCE_TITLE=$(gettext 'Raid-Arrays::${gv_Reduce}')
 								RAID_PART_REDUCE_MENU=($PARTS_STATE)
-								RAID_PART_REDUCE_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum entfernen aus.')
+								RAID_PART_REDUCE_MSG=$(gettext 'Wählen Sie ein Laufwerk zum entfernen aus.')
 								menubox "" "$RAID_PART_REDUCE_TITLE" "$RAID_PART_REDUCE_MSG" "$RAID_PART_REDUCE_MENU"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
@@ -1219,14 +1219,14 @@ lv_free_size() {
 											;;
 										/dev*)
 											HDDEV="$gv_Auswahl"
-											# Groesse eines Laufwerks des Arrays in KibiByte herausfinden.
+											# Grösse eines Laufwerks des Arrays in KibiByte herausfinden.
 											RAID_USED_DEV_SIZE=$(raid_used_dev_size $RAIDDEV)
-											# reale Raidanzahl die zur Verfuegung steht.
+											# reale Raidanzahl die zur Verfügung steht.
 											(( RAID_ANZ = RAID_ANZ - MINUS_RAID_ANZ ))
 											# Raidanzahl um 1 reduzieren, da ja ein RAID
 											# Laufwerk entfernt wird.
 											(( RAID_ANZ-- ))
-											# neue gesamt Groesse des werdenden
+											# neue gesamt Grösse des werdenden
 											# Arrays berechnen.
 											(( NEW_ARRAY_SIZE = RAID_USED_DEV_SIZE * RAID_ANZ ))
 											# Dateisystem des Arrays verkleinern
@@ -1240,15 +1240,15 @@ lv_free_size() {
 									esac
 								done
 							else
-								MSG=$(gettext 'Die Anzahl ($RAID_ANZ) der zum Array gehoerigen Laufwerke ist zu klein. Das Array $RAIDDEV wurde nicht verkleinert.')
+								MSG=$(gettext 'Die Anzahl ($RAID_ANZ) der zum Array gehörigen Laufwerke ist zu klein. Das Array $RAIDDEV wurde nicht verkleinert.')
 								msgbox "$gv_Info" "$MSG"
 							fi
 						else
 							no_raid_anz_msg
 						fi
 					else
-						# Meldung ueber keine RAID Partitionen
-						MSG=$(gettext 'Es sind stehen keine RAID Partitionen zur Verfuegung.')
+						# Meldung über keine RAID Partitionen
+						MSG=$(gettext 'Es sind stehen keine RAID Partitionen zur Verfügung.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
 					#}}}
@@ -1263,13 +1263,13 @@ lv_free_size() {
 		fi
 	}
 	## }}}
-	# Funktion (raid_resize), RAID Laufwerke vergroessern/verkleinern{{{
+	# Funktion (raid_resize), RAID Laufwerke vergrössern/verkleinern{{{
 	#
 	# usage: raid_resize [+|-]SIZE DEVICE OTHER_DEVICE
 	#
-	# + - vergroessern
+	# + - vergrössern
 	# - - verkleinern
-	# SIZE - neue Groesse des RAID Array KiB
+	# SIZE - neue Grösse des RAID Array KiB
 	# DEVICE - RAID Array
 	# OTHER_DEVICE - Laufwerk das in/aus dem RAID Array soll
 	raid_resize() {
@@ -1279,22 +1279,22 @@ lv_free_size() {
 			DEV="$2"
 			O_DEV="$3"
 			typeset -F3 New_Size_MiB 
-			# DEV auf UUID/LABEL pruefen
+			# DEV auf UUID/LABEL prüfen
 			check_crypt_map_dev $DEV
-			# RAID Dateisystem vergroessern/verkleinern
-			# Funktion (raid_add), hinzufuegen eines Laufwerks# {{{
+			# RAID Dateisystem vergrössern/verkleinern
+			# Funktion (raid_add), hinzufügen eines Laufwerks# {{{
 			raid_add() {
 				if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-					# RAID ARRAY vergroessern
+					# RAID ARRAY vergrössern
 					# Laufwerk addieren
 					# -a - addieren
 					mdadm $DEV -a $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Laufwerksanzahl heraus finden
 					RAID_ANZ=$(raid_anz $DEV)
-					# um 1 hoeher zaehlen da das addierte device
+					# um 1 höher zählen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
-					# Array vergroessern
+					# Array vergrössern
 					# -G - grow
 					# -n - Laufwerksanzahl
 					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
@@ -1303,22 +1303,22 @@ lv_free_size() {
 					mdadm $DEV -G -n $RAID_ANZ --backup-file=/root/${${DEV//\//_}#_}.bak 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					sleep 1
-					# Array vergroessern (max)
+					# Array vergrössern (max)
 					mdadm $DEV -G --array-size=max 1>/dev/null || \
 						(BREAK=2 ; prog_failure)
 					# Fortschrittsbalken
 					raid_gauge "$DEV"
 				else
-					# RAID ARRAY vergroessern
+					# RAID ARRAY vergrössern
 					# Laufwerk addieren
 					# -a - addieren
 					mdadm $DEV -a $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
 					# Laufwerksanzahl heraus finden
 					RAID_ANZ=$(raid_anz $DEV)
-					# um 1 hoeher zaehlen da das addierte device
+					# um 1 höher zählen da das addierte device
 					# erstmal eine Sparedevice ist.
 					(( RAID_ANZ++ ))
-					# Array vergroessern
+					# Array vergrössern
 					# -G - grow
 					# -n - Laufwerksanzahl
 					# --backup-file muss auf einem anderen Laufwerk liegen als das ARRAY das neu
@@ -1340,7 +1340,7 @@ lv_free_size() {
 					# -f - als faulty markieren
 					# -r - entfernen
 					mdadm $DEV -f $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
-					# sleep wird benoetigt, da das faulty setzen
+					# sleep wird benötigt, da das faulty setzen
 					# an Zeit braucht.
 					sleep 1
 					# entfernen
@@ -1364,7 +1364,7 @@ lv_free_size() {
 				else
 					# RAID ARRAY reduzieren
 					mdadm $DEV -f $O_DEV 1>/dev/null || (BREAK=2 ; prog_failure)
-					# sleep wird benoetigt, da das faulty setzen
+					# sleep wird benötigt, da das faulty setzen
 					# an Zeit braucht.
 					sleep 1
 					# entfernen
@@ -1388,32 +1388,32 @@ lv_free_size() {
 			mount_check -a "$MAP_DEV"
 			if [ "$U_MOUNT" = yes ] ; then
 				if [ "${New_Size%%[0-9]*}" = + ] ; then
-					# Ist das Raidlevel >1 muss die Dateisystemgroesse
+					# Ist das Raidlevel >1 muss die Dateisystemgrösse
 					# eingestellt werden, bei Level 1 (Spiegel) ist sie
 					# immer gleich gross.
 					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
 						# RAID ARRAY vorbereiten/Laufwerk addieren.
 						raid_add
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, starten 
+						# und Grösse anpassen.
 						resize_cryptdisk $MAP_DEV
-						# Dateisystem vergroessern
+						# Dateisystem vergrössern
 						# Kibibyte in Mebibyte umrechnen
 						(( New_Size_MiB = ${New_Size#+} / 1024.0 )) 
 						resize_fs +${New_Size_MiB} $MAP_DEV
 					else
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
 						# Raid-Array vorbereiten/Laufwerk addieren.
 						raid_add
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, starten 
+						# und Grösse anpassen.
 						resize_cryptdisk $MAP_DEV
 					fi
 				else
-					# Ist das Raidlevel >1 muss die Dateisystemgroesse
+					# Ist das Raidlevel >1 muss die Dateisystemgrösse
 					# eingestellt werden, bei Level 1 (Spiegel) ist sie
 					# immer gleich gross.
 					if [ "${RAIDLEVEL##*[a-z]}" != 1 ] ; then
@@ -1423,21 +1423,21 @@ lv_free_size() {
 						# Wenn das Verkleinern eines FS nicht funktioniert
 						# abbrechen.
 						if resize_fs -${New_Size_MiB} $MAP_DEV ; then
-							# Falls dieses Laufwerk verschluesselt ist, stoppen.
+							# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 							resize_cryptdisk_stop "$MAP_DEV"
 							# Raid-Array vorbereiten/Laufwerk reduzieren.
 							raid_minus
-							# Falls dieses Laufwerk verschluesselt war, starten 
-							# und Groesse anpassen.
+							# Falls dieses Laufwerk verschlüsselt war, starten 
+							# und Grösse anpassen.
 							resize_cryptdisk $MAP_DEV
 						fi
 					else
-						# Falls dieses Laufwerk verschluesselt ist, stoppen.
+						# Falls dieses Laufwerk verschlüsselt ist, stoppen.
 						resize_cryptdisk_stop "$MAP_DEV"
 						# Raid-Array vorbereiten/Laufwerk reduzieren.
 						raid_minus
-						# Falls dieses Laufwerk verschluesselt war, starten 
-						# und Groesse anpassen.
+						# Falls dieses Laufwerk verschlüsselt war, starten 
+						# und Grösse anpassen.
 						resize_cryptdisk $MAP_DEV
 					fi
 				fi
@@ -1470,7 +1470,7 @@ lv_free_size() {
 		return 0
 	}
 	#}}}
-	# Funktion (raid_used_dev_size),Groesse eines Laufwerks von einem ARRAY herausfinden# {{{
+	# Funktion (raid_used_dev_size),Grösse eines Laufwerks von einem ARRAY herausfinden# {{{
 	#
 	# usage: raid_used_dev_size RAIDDEV
 	#
@@ -1495,7 +1495,7 @@ lv_free_size() {
 			local Dev
 			Dev="$1"
 			if [[ $gv_ScriptName == kwcryptsetup ]] ; then
-				# Cryptdisk starten/verkleinern/vergroessern
+				# Cryptdisk starten/verkleinern/vergrössern
 				cryptdisk_start -r "${Dev##*/}"
 			fi
 		else
@@ -1532,7 +1532,7 @@ lv_free_size() {
 			while read a b c d rest ; do 
 				case $a in
 					Label:)
-						# Label und UUID uebernehmen
+						# Label und UUID übernehmen
 						(( Anz++ ))
 						label="${b//\'/}"
 						uuid="$d"
@@ -1559,7 +1559,7 @@ lv_free_size() {
 							while read a rest1 ; do
 								case $a in
 									devid)
-										# Device uebernehmen	
+										# Device übernehmen	
 										dev+=(${rest1##* })
 										dev_E+=(${rest1##* } \"\")
 										dev_M+=(${rest1##* } \"\" off)
@@ -1581,7 +1581,7 @@ lv_free_size() {
 		fi
 	}
 	## }}}
-	# Funktion (search_cryptdev), sucht nach verschluesselten Laufwerken# {{{
+	# Funktion (search_cryptdev), sucht nach verschlüsselten Laufwerken# {{{
 	#
 	# usage: search_cryptdev [ -a  | -s | -l ]
 	# -a - suche nach aktiven verschl�sselten Laufwerken, die nicht eingebunden sind
@@ -1725,7 +1725,7 @@ lv_free_size() {
 							NO_BTRFS_DEV+=($dev)
 							NO_BTRFS_DEV_E+=($dev \"$gv_Fs\")
 							NO_BTRFS_DEV_M+=($dev \"$gv_Fs\" off)
-							# wird benoetigt beim konvertieren fuer fsck
+							# wird benötigt beim konvertieren für fsck
 							FS+=($gv_Fs)
 							;;
 					esac
@@ -1757,7 +1757,7 @@ lv_free_size() {
 				fi
 				;;
 			-pc)
-				# nur Partitionen und verschluesselte Laufwerke suchen
+				# nur Partitionen und verschlüsselte Laufwerke suchen
 				#
 				# vorhandene BTRFS Laufwerke suchen zum herausfiltern
 				# von Laufwerken eines BTRFS RAID Arrays.
@@ -1811,7 +1811,7 @@ lv_free_size() {
 		fi
 	}
 	#}}}
-# Funktion (vg_free_size), um die noch frei verbleibende Groesse der VG zu berechnen{{{
+# Funktion (vg_free_size), um die noch frei verbleibende Grösse der VG zu berechnen{{{
 #
 # usage: vg_free_size VG
 #
@@ -1834,11 +1834,11 @@ vg_free_size() {
 	#
 	# usage: no_block_device_msg $DEVICE
 	#
-	# DEVICE - Device welches kein Block Geraet ist
+	# DEVICE - Device welches kein Block Gerät ist
 	#
 	no_block_device_msg() {
 		if [[ ${#argv} == 1 ]] ; then
-			MSG=$(gettext '$1 ist kein Block Geraet.')
+			MSG=$(gettext '$1 ist kein Block Gerät.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
@@ -1899,7 +1899,7 @@ vg_free_size() {
 	## }}}
 	# Funktion (no_part_choice_msg)# {{{
 	no_part_choice_msg() {
-		MSG=$(gettext 'Sie muessen erst eine Partition auswaehlen.')
+		MSG=$(gettext 'Sie müssen erst eine Partition auswählen.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	# }}}
@@ -1907,14 +1907,14 @@ vg_free_size() {
 	#
 	# usage: no_part_msg
 	no_part_msg() {
-		MSG=$(gettext 'Es sind keine Partitionen vorhanden. Sie muessen erst Ihre Festplatten partitionieren.')
+		MSG=$(gettext 'Es sind keine Partitionen vorhanden. Sie müssen erst Ihre Festplatten partitionieren.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
-	# Funktion (no_raid_anz_msg), Nachricht das die Anzahl der zugehoerigen# {{{
+	# Funktion (no_raid_anz_msg), Nachricht das die Anzahl der zugehörigen# {{{
 	# Partitionen nicht heraus gefunden werden kann
 	no_raid_anz_msg() {
-		MSG=$(gettext 'Es konnte nicht die Anzahl der zum Array dazu gehoerigen Laufwerke ermittelt werden.')
+		MSG=$(gettext 'Es konnte nicht die Anzahl der zum Array dazu gehörigen Laufwerke ermittelt werden.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
@@ -1939,14 +1939,14 @@ vg_free_size() {
 	#
 	# usage: no_vg_msg
 	no_vg_msg() {
-		MSG=$(gettext 'Es sind keine Volume Groups vorhanden. Sie muessen erst Volume Groups erzeugen und dann darauf, logische Volumes.')
+		MSG=$(gettext 'Es sind keine Volume Groups vorhanden. Sie müssen erst Volume Groups erzeugen und dann darauf, logische Volumes.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
 		# Funktion (over_limit_size_msg), Nachricht das ein SoftLimit# {{{
-		# nicht ein Hardlimit ueberschreiten darf, Quota.
+		# nicht ein Hardlimit überschreiten darf, Quota.
 		over_limit_size_msg() {
-			MSG=$(gettext 'Falsche Groessen Angabe. Das Softlimit muss immer gleich oder kleiner als das Hardlimit sein.')
+			MSG=$(gettext 'Falsche Grössen Angabe. Das Softlimit muss immer gleich oder kleiner als das Hardlimit sein.')
 			msgbox "$gv_Attention" "$MSG"
 		}
 		## }}}

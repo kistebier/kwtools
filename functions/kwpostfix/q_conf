@@ -18,7 +18,7 @@ rm -rf ${gv_WorkDir}/postfix$$ &>/dev/null
 # Funktion conf_queue_menue{{{
 conf_queue_menue() {
 	QUEUE_MENU=(qmgr_clog_warn_time \"\$qmgr_clog_warn_time\"
-	qmgr_daemon_timeout \"\$qmgr_daemon_timeout\"
+	qmgr_dämon_timeout \"\$qmgr_dämon_timeout\"
 	qmgr_fudge_factor \"\$qmgr_fudge_factor\"
 	qmgr_ipc_timeout \"\$qmgr_ipc_timeout\"
 	qmgr_message_active_limit \"\$qmgr_message_active_limit\"
@@ -54,19 +54,19 @@ while [ "$gv_Auswahl" ] ; do
 			#}}}
 			conf_queue_menue qmgr_clog_warn_time
 			;;
-		qmgr_daemon_timeout)
+		qmgr_dämon_timeout)
 			# Standard = 1000s{{{
-			QMGR_DAEMON_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout des Postfix Queue Manager Daemon zum behandeln einer Anforderung ein (Standard 1000s).')
-			number_input -a "$QUEUE_TITLE" "$QMGR_DAEMON_TIMEOUT_MSG" "$qmgr_daemon_timeout"
+			QMGR_DAEMON_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout des Postfix Queue Manager Dämon zum behandeln einer Anforderung ein (Standard 1000s).')
+			number_input -a "$QUEUE_TITLE" "$QMGR_DAEMON_TIMEOUT_MSG" "$qmgr_dämon_timeout"
 			if [[ -n $NUMBER ]] ; then
-				qmgr_daemon_timeout="$NUMBER"
-				postconf -e qmgr_daemon_timeout="$NUMBER"
+				qmgr_dämon_timeout="$NUMBER"
+				postconf -e qmgr_dämon_timeout="$NUMBER"
 			fi
 			#}}}
-			conf_queue_menue qmgr_daemon_timeout
+			conf_queue_menue qmgr_dämon_timeout
 			;;
 		qmgr_fudge_factor)
-			# Prozentsatz an Resourcen den postfix fuer ausgehende mails bekommt{{{
+			# Prozentsatz an Resourcen den postfix für ausgehende mails bekommt{{{
 			number_input -i "$qmgr_fudge_factor"
 			if [[ -n $NUMBER ]] ; then
 				qmgr_fudge_factor="$NUMBER"
@@ -77,7 +77,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		qmgr_ipc_timeout)
 			# Standard = 60s{{{
-			QMGR_IPC_TIMEOUT_MSG=$(gettext 'Geben Sie das Zeitlimit fuer den Queue-Manager beim erhalten oder senden bei Informationen ueber einen internen Kanal ein (Standard 60s).')
+			QMGR_IPC_TIMEOUT_MSG=$(gettext 'Geben Sie das Zeitlimit für den Queue-Manager beim erhalten oder senden bei Informationen über einen internen Kanal ein (Standard 60s).')
 			number_input -a "$QUEUE_TITLE" "$QMGR_IPC_TIMEOUT_MSG" "$qmgr_ipc_timeout"
 			if [[ -n $NUMBER ]] ; then
 				qmgr_ipc_timeout="$NUMBER"
@@ -97,7 +97,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_queue_menue qmgr_message_active_limit
 			;;
 		qmgr_message_recipient_limit)
-			# max. Groesse der Verwaltungsabelle des qmgr{{{
+			# max. Grösse der Verwaltungsabelle des qmgr{{{
 			number_input -i "$qmgr_message_recipient_limit"
 			if [[ -n $NUMBER ]] ; then
 				qmgr_message_recipient_limit="$NUMBER"
@@ -107,7 +107,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_queue_menue qmgr_message_recipient_limit
 			;;
 		qmgr_message_recipient_minimum)
-			# min. Groesse der Verwaltungsabelle des qmgr{{{
+			# min. Grösse der Verwaltungsabelle des qmgr{{{
 			number_input -i "$qmgr_message_recipient_minimum"
 			if [[ -n $NUMBER ]] ; then
 				qmgr_message_recipient_minimum="$NUMBER"
@@ -122,7 +122,7 @@ while [ "$gv_Auswahl" ] ; do
 			QMAIL_CLIENTS_MSG=$(gettext 'Geben Sie die Rechner oder IP-Adressen ein, die das Qmail-Protokoll (QMQP) nutzen duerfen.')
 			inputbox "$QUEUE_TITLE" "$QMAIL_CLIENTS_MSG" "$qmqpd_authorized_clients"
 			if [[ -n $gv_Auswahl ]] ; then
-				# Alle eingebenen IP's ueberpruefen
+				# Alle eingebenen IP's überprüfen
 				ip_analyse $gv_Auswahl
 				if [[ -n $gv_Ip_Adr ]] ; then
 					qmqpd_authorized_clients="$gv_Ip_Adr"

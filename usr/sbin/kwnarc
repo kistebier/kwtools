@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 18.03.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 27.11.2016
 #
 # Script: kwnarc, Firewall mittels iptables starten.
 # KWNARC - kwtools Netfilter Automatic Rule Configurator
@@ -8,13 +8,13 @@
 # NARC - Netfilter Automatic Rule Configurator v0.7
 # Copyright (c) 2001, Shane Chen (shane@knowplace.org).
 #
-# Version: 0.1.1
+# Version: 0.1.2
 #
 setopt extendedglob
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-# ZSH colors-Modul laden und ausfuehren
+# ZSH colors-Modul laden und ausführen
 autoload -U colors && colors
 
 # checken der Konfigurationsdatei.
@@ -22,7 +22,7 @@ if [ -f /etc/kwtools/kwnarc/kwnarc.conf ] ; then
 	MAIN_CONF=/etc/kwtools/main.cf
 	CONF_DIR=/etc/kwtools/kwnarc
 	CONFIG="${CONF_DIR}/kwnarc.conf"
-elif [ -f /usr/local/etc/kwtools/kwnarc.conf ] ; then
+elif [ -f /usr/local/etc/kwtools/kwnarc/kwnarc.conf ] ; then
 	MAIN_CONF=/usr/local/etc/kwtools/main.cf
 	CONF_DIR=/usr/local/etc/kwtools/kwnarc
 	CONFIG="${CONF_DIR}/kwnarc.conf"
@@ -417,7 +417,7 @@ echo $B_WHITE"Initializing firewall (ip(6)tables)$NORMAL"
 
 # Disable forwarding - should be already disabled, but just in case.
 if [ "$ALWAYS_FORWARD" != 'yes' ] ; then
-	echo -n "Turning off IP forwarding (will automatically re-enable if you turned on masquerading): "
+	echo -n "Turning off IP forwarding (will automatically re-enable if you turned on masqürading): "
 	echo "0" >/proc/sys/net/ipv4/ip_forward && \
 	echo "0" >/proc/sys/net/ipv6/conf/all/forwarding && \
 	echo "0" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
@@ -430,10 +430,10 @@ if [ "$SYNCOOKIES" != 'no' ] ; then
 	echo "1" >/proc/sys/net/ipv4/tcp_syncookies && echo $RCOK || echo $RCFAIL
 fi
 
-# Disable ICMP echo-request to broadcast addresses (smurf amplifier)
+# Disable ICMP echo-reqüst to broadcast addresses (smurf amplifier)
 # only IPv4
 if [ "$ANTI_SMURF" != 'no' ] ; then
-	echo -n "Disable ICMP echo-request to broadcast addresses (anti-smurf): "
+	echo -n "Disable ICMP echo-reqüst to broadcast addresses (anti-smurf): "
 	echo "1" >/proc/sys/net/ipv4/icmp_echo_ignore_broadcasts && echo $RCOK || echo $RCFAIL
 	echo -n "Ignore bogus ICMP errors: "
 	echo "1" >/proc/sys/net/ipv4/icmp_ignore_bogus_error_responses && \
@@ -1175,7 +1175,7 @@ $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reply -s fe80::/10 -j ACCEPT
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 141 -m hl --hl-eq 255 -j ACCEPT || abortexit
 # IND advertisement
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 142 -m hl --hl-eq 255 -j ACCEPT || abortexit
-# MLD query
+# MLD qüry
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 130 -s fe80::/10 -j ACCEPT || abortexit
 # MLD report
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 131 -s fe80::/10 -j ACCEPT || abortexit
@@ -1195,7 +1195,7 @@ $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 152 -s fe80::/10 -m hl --hl-eq 1 
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 153 -s fe80::/10 -m hl --hl-eq 1 -j ACCEPT || abortexit
 
 # ok icmp codes for FORWARD (rfc4890, 4.3.2)
-# Home Agent Address Discovery Reques
+# Home Agent Address Discovery Reqüs
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 144 -j ACCEPT
 # Home Agent Address Discovery Reply
 $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 145 -j ACCEPT
@@ -1208,10 +1208,10 @@ $IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type 147 -j ACCEPT
 if [ "$ANSWER_PING" = 'yes' ] ; then
 	echo "Firewall will answer pings"
 	# IPv4
-	$IPTABLES -A ICMP_CHK -p icmp --icmp-type echo-request -m limit --limit $PING_RATE \
+	$IPTABLES -A ICMP_CHK -p icmp --icmp-type echo-reqüst -m limit --limit $PING_RATE \
 		--limit-burst $BURST_MAX -j ACCEPT || abortexit
 	# IPv6
-	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-request -m limit --limit $PING_RATE \
+	$IP6TABLES -A ICMP_CHK -p icmpv6 --icmpv6-type echo-reqüst -m limit --limit $PING_RATE \
 		--limit-burst $BURST_MAX -j ACCEPT || abortexit
 fi
 
@@ -1676,7 +1676,7 @@ $IP6TABLES -A OUTPUT -p icmpv6 -j ICMP_CHK || abortexit
 
 # Accept loopback traffic
 # #######################
-# TODO: normal pruefen (::1/64)
+# TODO: normal prüfen (::1/64)
 # #######################
 if [ "$LOOPBACK_ACCEPT" = 'yes' ] ; then
 	case "$LOOPBACK_MODE" in
@@ -1710,7 +1710,7 @@ if [ "$LOOPBACK_ACCEPT" = 'yes' ] ; then
 fi
 
 ##
-## Masquerade networks
+## Masqürade networks
 ##
 
 # NAT section
@@ -1720,7 +1720,7 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 	echo "1" >/proc/sys/net/ipv6/conf/all/forwarding && \
 	echo "1" >/proc/sys/net/ipv6/conf/default/forwarding && echo $RCOK || echo $RCFAIL
 	if [ "$LOAD_MODULES" = 'yes' ] ; then
-		echo -n "Enabling network masquerading: "
+		echo -n "Enabling network masqürading: "
 		for module in ${=NAT_MODULES} ; {
 			if ! grep $module ${TMPDIR}/kwnarc.tmp > /dev/null 2>&1 ; then
 				/sbin/modprobe $module && echo -n "[ ${B_WHITE}${module}${NORMAL} - $RCOK ] " || echo -n \
@@ -1729,7 +1729,7 @@ if [ "$MASQUERADE" = 'yes' ] ; then
 		}
 		echo
 	else
-		echo "Enabling network masquerading"
+		echo "Enabling network masqürading"
 	fi
 	# IPv4
 	$IPTABLES -t nat -F POSTROUTING || abortexit

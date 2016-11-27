@@ -3,7 +3,7 @@
 # nur fuer das erstellen der Programm-Pakete geeignet,
 # nicht fuer den Source-Code.
 #
-# Last-Modified: Thu Oct 11 15:41:32 2012
+# Last-Modified: Sat Nov 27 18:33:32 2016
 
 setopt shwordsplit extendedglob
 setopt no_nomatch
@@ -23,16 +23,16 @@ for i in $PACKAGES ; {
 	if grep script_help ${DIR}/${i}(.) >/dev/null ; then
 		if [ -d "${FUNC_DIR}/${i##*/}" -a -d "${HELP_DIR}/${i##*/}" ] ; then
 			print $i
-			xgettext -L Shell -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${FUNC_DIR}/${i##*/}/* ${HELP_DIR}/${i##*/}/*
+			xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${FUNC_DIR}/${i##*/}/* ${HELP_DIR}/${i##*/}/*
 		elif [ -d "${FUNC_DIR}/${i##*/}" ] ; then
 			print $i
-			xgettext -L Shell -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${FUNC_DIR}/${i##*/}/*
+			xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${FUNC_DIR}/${i##*/}/*
 		elif [ -d "${HELP_DIR}/${i##*/}" ] ; then
 			print $i
-			xgettext -L Shell -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${HELP_DIR}/${i##*/}/*
+			xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot ${DIR}/${i} ${HELP_DIR}/${i##*/}/*
 		else
 			print $i
-			xgettext -L Shell -o ${i}/${i}.pot ${DIR}/${i}
+			xgettext -L Shell --from-code=UTF-8 -o ${i}/${i}.pot ${DIR}/${i}
 		fi
 		cp ${i}/${i}.pot ${i}/templates.pot
 	fi
@@ -42,11 +42,11 @@ for i in $PACKAGES ; {
 if grep script_help ${DIR}/kwadmin >/dev/null ; then
 	if [ -d "${FUNC_DIR}/kwadmin" -a -d "${HELP_DIR}/kwadmin" ] ; then
 		print kwadmin
-		xgettext -L Shell -o kwadmin/kwadmin.pot ${DIR}/kwadmin ${FUNC_DIR}/kwadmin/* ${HELP_DIR}/kwadmin/*
+		xgettext -L Shell --from-code=UTF-8 -o kwadmin/kwadmin.pot ${DIR}/kwadmin ${FUNC_DIR}/kwadmin/* ${HELP_DIR}/kwadmin/*
 		cp kwadmin/kwadmin.pot kwadmin/templates.pot
 	else
 		print kwadmin
-		xgettext -L Shell -o kwadmin/kwadmin.pot ${DIR}/kwadmin ${FUNC_DIR}/kwadmin/*
+		xgettext -L Shell --from-code=UTF-8 -o kwadmin/kwadmin.pot ${DIR}/kwadmin ${FUNC_DIR}/kwadmin/*
 		cp kwadmin/kwadmin.pot kwadmin/templates.pot
 	fi
 fi
@@ -58,11 +58,11 @@ fi
 #
 if [ -d "${FUNC_DIR}/sys" -a -d "${HELP_DIR}/share" ] ; then
 	print kwtools-common
-	xgettext -L Shell -d kwtools-common -o kwtools-common/kwtools-common.pot ${FUNC_DIR}/sys/*~*check_special_character ${HELP_DIR}/share/*
+	xgettext -L Shell --from-code=UTF-8 -d kwtools-common -o kwtools-common/kwtools-common.pot ${FUNC_DIR}/sys/*~*check_special_character ${HELP_DIR}/share/*
 	cp kwtools-common/kwtools-common.pot kwtools-common/templates.pot
 else
 	print kwtools-common
-	xgettext -L Shell -d kwtools-common -o kwtools-common/kwtools-common.pot ${FUNC_DIR}/sys/*~*check_special_character
+	xgettext -L Shell --from-code=UTF-8 -d kwtools-common -o kwtools-common/kwtools-common.pot ${FUNC_DIR}/sys/*~*check_special_character
 	cp kwtools-common/kwtools-common.pot kwtools-common/templates.pot
 fi
 
@@ -72,16 +72,16 @@ for p in $PACKAGES_DIR ; {
 		if grep script_help $i >/dev/null ; then
 			if [ -d "${FUNC_DIR}/${i##*/}" -a -d "${HELP_DIR}/${i##*/}" ] ; then
 				print ${i##*/}
-				xgettext -L Shell -o ${i##*/}/${i##*/}.pot $i ${FUNC_DIR}/${i##*/}/* ${HELP_DIR}/${i##*/}/*
+				xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot $i ${FUNC_DIR}/${i##*/}/* ${HELP_DIR}/${i##*/}/*
 			elif [ -d "${FUNC_DIR}/${i##*/}" ] ; then
 				print ${i##*/}
-				xgettext -L Shell -o ${i##*/}/${i##*/}.pot $i ${FUNC_DIR}/${i##*/}/*
+				xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot $i ${FUNC_DIR}/${i##*/}/*
 			elif [ -d "${HELP_DIR}/${i##*/}" ] ; then
 				print ${i##*/}
-				xgettext -L Shell -o ${i##*/}/${i##*/}.pot $i ${HELP_DIR}/${i##*/}/*
+				xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot $i ${HELP_DIR}/${i##*/}/*
 			else
 				print ${i##*/}
-				xgettext -L Shell -o ${i##*/}/${i##*/}.pot $i
+				xgettext -L Shell --from-code=UTF-8 -o ${i##*/}/${i##*/}.pot $i
 			fi
 			cp ${i##*/}/${i##*/}.pot ${i##*/}/templates.pot
 		fi

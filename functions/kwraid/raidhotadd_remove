@@ -1,23 +1,23 @@
-# Funktion um Partitionen im laufenden Betrieb zu entfernen oder hinzufuegen{{{
+# Funktion um Partitionen im laufenden Betrieb zu entfernen oder hinzufügen{{{
 #
-# benoetigt die Funktion search_fdisks
+# benötigt die Funktion search_fdisks
 #
 # usage: raidhotadd_remove
 #
 raidhotadd_remove() {
 	# Warning Nachricht{{{
-	MSG=$(gettext 'Hoffentlich wissen Sie was Sie hier tun. Wenn Ihre Hardware nicht Hotplugfaehig ist, kann dies Ihre Geraete zerstoeren.')
+	MSG=$(gettext 'Hoffentlich wissen Sie was Sie hier tun. Wenn Ihre Hardware nicht Hotplugfähig ist, kann dies Ihre Geräte zerstören.')
 	msgbox "$gv_Attention" "$MSG"
 	# }}}
 	# Funktion (hotadd_remove_menu)# {{{
 	hotadd_remove_menu() {
 		RAID_CHANGE_DISK_MENU=($MD_ARRAY_STATE_E)
 		RAID_CHANGE_DISK_TITLE=$(gettext '${lv_Raid_Hot_Ar}::raiddev')
-		RAID_CHANGE_DISK_MSG=$(gettext 'Waehlen Sie ein RAID Array aus, in welchem Laufwerke gewechselt werden sollen.')
+		RAID_CHANGE_DISK_MSG=$(gettext 'Wählen Sie ein RAID Array aus, in welchem Laufwerke gewechselt werden sollen.')
 		menubox "$1" "$RAID_CHANGE_DISK_TITLE" "$RAID_CHANGE_DISK_MSG" "$RAID_CHANGE_DISK_MENU"
 	}
 	## }}}
-	# ARRAY auswaehlen
+	# ARRAY auswählen
 	search_md_state
 	hotadd_remove_menu "$RAIDDEV"
 	while [ "$gv_Auswahl" ] ; do
@@ -39,10 +39,10 @@ raidhotadd_remove() {
 					# TODO:
 					# klonen fehlt
 					######################################
-					# Menue entfernen, partitionieren, hinzufuegen
+					# Menue entfernen, partitionieren, hinzufügen
 					lv_Part_Remove=$(gettext 'Laufwerk_entfernen')
 					lv_Partition=$(gettext 'Partitionierung')
-					lv_Part_Add=$(gettext 'Laufwerk_hinzufuegen')
+					lv_Part_Add=$(gettext 'Laufwerk_hinzufügen')
 					#
 					RAID_CHANGE_PART_TITLE=$(gettext '${lv_Raid_Hot_Ar}::Laufwerksauswahl')
 					RAIDHOTADD_REMOVE_MENU=($lv_Part_Remove \"\"
@@ -62,7 +62,7 @@ raidhotadd_remove() {
 								;;
 							$lv_Part_Remove)
 								# Partitionen/Festplatten aus dem Array entfernen.{{{
-								RAID_PART_REM_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum entfernen aus.')
+								RAID_PART_REM_MSG=$(gettext 'Wählen Sie ein Laufwerk zum entfernen aus.')
 								# Funktion (remove_part_menu)# {{{
 								remove_part_menu() {
 									RAID_PART_REM_MENU=($PARTS_STATE)
@@ -77,7 +77,7 @@ raidhotadd_remove() {
 											remove_part_menu "${gv_Auswahl#HELP }"
 											;;
 										/dev*)
-											# Partition auswaehlen
+											# Partition auswählen
 											#
 											HDDEV="$gv_Auswahl"
 											PART_RAID_DEL_MSG=$(gettext 'Soll die Partition "$HDDEV" aus dem RAID Array "$RAIDDEV" entfernt werden (ja/nein)?')
@@ -89,7 +89,7 @@ raidhotadd_remove() {
 												(( Part_State_Nr-- ))
 												if [[ ${PARTS_STATE[$Part_State_Nr]} != faulty ]] ; then
 													mdadm $RAIDDEV -f $HDDEV 1>/dev/null || prog_failure
-													# sleep wird benoetigt, da das faulty setzen
+													# sleep wird benötigt, da das faulty setzen
 													# an Zeit braucht.
 													sleep 1
 												fi
@@ -97,7 +97,7 @@ raidhotadd_remove() {
 												raid_search_part_state $RAIDDEV
 												# Info das die Festplatte/Partition nun getauscht
 												# oder repariert werden kann.
-												MSG=$(gettext 'Sie koennen jetzt die Festplatte wechseln. Achten Sie darauf das beim Festplattenwechsel, alle dazugehoerigen Partitionen aus den Arrays entfernt wurden.')
+												MSG=$(gettext 'Sie können jetzt die Festplatte wechseln. Achten Sie darauf das beim Festplattenwechsel, alle dazugehörigen Partitionen aus den Arrays entfernt wurden.')
 												infobox "$gv_Info" "$MSG" 3
 												# Fortschrittsbalken
 												raid_gauge "$RAIDDEV"
@@ -110,7 +110,7 @@ raidhotadd_remove() {
 								raidhotadd_remove_menu $lv_Part_Remove
 								;;
 							$lv_Part_Add)
-								# Partition wieder hinzufuegen{{{
+								# Partition wieder hinzufügen{{{
 								# Festplatten herrausfinden
 								disk
 								if [ ! -z "${DISK_DEV[1]}" ] ; then
@@ -120,13 +120,13 @@ raidhotadd_remove() {
 										part_md_lose
 										# freie RAID Partitionen zur Auswahl stellen.# {{{
 										if [ -z "${Part_Md_Lose_E[1]}" ] ; then
-											# Meldung ueber keine freien RAID Partitionen
-											MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfuegung.')
+											# Meldung über keine freien RAID Partitionen
+											MSG=$(gettext 'Es sind stehen keine freien RAID Partitionen zur Verfügung.')
 											msgbox "$gv_Attention" "$MSG"
 										else
 											# Wenn, Freie RAID Partitionen zur Auswahl stellen.
 											RAID_PART_ADD_MENU=($Part_Md_Lose_E)
-											RAID_PART_ADD_MSG=$(gettext 'Waehlen Sie ein Laufwerk zum hinzufuegen aus.')
+											RAID_PART_ADD_MSG=$(gettext 'Wählen Sie ein Laufwerk zum hinzufügen aus.')
 											menubox "$HDDEV" "$RAID_CHANGE_PART_TITLE" "$RAID_PART_ADD_MSG" "$RAID_PART_ADD_MENU"
 											while [ "$gv_Auswahl" ] ; do
 												case "$gv_Auswahl" in

@@ -1,5 +1,5 @@
 # Funktion um LV's anzuzeigen, erstellen, umbennen, {{{
-# verkleinern, vergroessern und loeschen.
+# verkleinern, vergrössern und löschen.
 #
 # usage: lv_volumes
 lv_volumes() {
@@ -7,11 +7,11 @@ lv_volumes() {
 	vg_display
 	if [ -n "${VG[1]}" ] ; then
 		# Variablen
-		lv_Enlarge=$(gettext 'vergroessern')
+		lv_Enlarge=$(gettext 'vergrössern')
 		lv_Reduce=$(gettext 'verkleinern')
 		lv_Vol_Group=$(gettext 'Volume_Group')
 		lv_LV_Name=$(gettext 'LV_Name')
-		lv_Size=$(gettext 'Groesse')
+		lv_Size=$(gettext 'Grösse')
 		lv_Snapshot=$(gettext 'Schnappschuss')
 		lv_Name=$(gettext 'Name')
 		#
@@ -47,7 +47,7 @@ lv_volumes() {
 						# Funktion lv_anzeige_menue{{{
 						LV_DISPLAY_MENU=($LV_M)
 						LV_DISPLAY_TITLE=(${lv_Logical_Vol}::${gv_Display})
-						LV_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere LVs zur Anzeige aus.')
+						LV_DISPLAY_MSG=$(gettext 'Wählen Sie ein oder mehrere LVs zur Anzeige aus.')
 						lv_anzeige_menue() {
 							checklist "$1" "$LV_DISPLAY_TITLE" "$LV_DISPLAY_MSG" "$LV_DISPLAY_MENU"
 						}
@@ -108,10 +108,10 @@ lv_volumes() {
 											lv_create_menue "${gv_Auswahl#HELP }"
 											;;
 										$lv_Vol_Group)
-											# VG auswaehlen{{{
+											# VG auswählen{{{
 											LV_VG_MENU=($VG_M)
 											LV_VG_TITLE=(${lv_Logical_Vol}::${lv_Vol_Group})
-											LV_VG_MSG=$(gettext 'Waehlen Sie eine VG aus, auf der ein LV erzeugt werden soll.')
+											LV_VG_MSG=$(gettext 'Wählen Sie eine VG aus, auf der ein LV erzeugt werden soll.')
 											radiolist "" "$LV_VG_TITLE" "$LV_VG_MSG" "$LV_VG_MENU"
 											while [ "$gv_Auswahl" ] ; do
 												case "$gv_Auswahl" in
@@ -136,7 +136,7 @@ lv_volumes() {
 												if ! lvdisplay /dev/${VG_AUSWAHL:-**}/${gv_Auswahl} &>/dev/null ; then
 													LV_NAME="$gv_Auswahl"
 												else
-													MSG=$(gettext 'Der Name fuer dieses $lv_LV existiert schon.')
+													MSG=$(gettext 'Der Name für dieses $lv_LV existiert schon.')
 													msgbox "$gv_Info" "$MSG"
 												fi
 											else
@@ -146,12 +146,12 @@ lv_volumes() {
 											lv_create_menue $lv_LV_Name
 											;;
 										$lv_Size)
-											# Groesse des LV angeben{{{
+											# Grösse des LV angeben{{{
 											if [ -n "$VG_AUSWAHL" ] ; then
 												vg_free_size "$VG_AUSWAHL"
 												#
 												LV_SIZE_TITLE=(${lv_Logical_Vol}::${lv_Size})
-												LV_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ihres neuen LV ein (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+												LV_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Grösse ihres neuen LV ein (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 												#
 												number_input -D "$LV_SIZE_TITLE" "$LV_SIZE_MSG" "$SIZE"
 												if [ -n "$NUMBER" ] ; then
@@ -183,7 +183,7 @@ lv_volumes() {
 												format "/dev/${VG_AUSWAHL}/${LV_NAME}"
 												break
 											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Vol_Group, $lv_LV_Name und $lv_Size einstellen.')
+												MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Vol_Group, $lv_LV_Name und $lv_Size einstellen.')
 												msgbox "$gv_Attention" "$MSG"
 												lv_create_menue
 											fi
@@ -220,7 +220,7 @@ lv_volumes() {
 											if [ -n "${LV[1]}" ] ; then
 												LV_SNAPSHOT_TITLE=(${lv_Snapshot}::${lv_LV})
 												LV_SNAPSHOT_MENU=($LV_M)
-												LV_SNAPSHOT_MSG=$(gettext 'Waehlen Sie ein $lv_LV fuer den $lv_Snapshot aus.')
+												LV_SNAPSHOT_MSG=$(gettext 'Wählen Sie ein $lv_LV für den $lv_Snapshot aus.')
 												radiolist "$LV_AUSWAHL" "$LV_CREATE_TITLE" "$LV_SNAPSHOT_MSG" "$LV_SNAPSHOT_MENU"
 												#
 												while [ "$gv_Auswahl" ] ; do
@@ -251,7 +251,7 @@ lv_volumes() {
 													if ! lvdisplay /dev/${VG_AUSWAHL:-**}/${gv_Auswahl} &>/dev/null ; then
 														SNAP_NAME="$gv_Auswahl"
 													else
-														MSG=$(gettext 'Der Name fuer dieses $lv_Snapshot existiert schon.')
+														MSG=$(gettext 'Der Name für dieses $lv_Snapshot existiert schon.')
 														msgbox "$gv_Info" "$MSG"
 													fi
 												else
@@ -264,12 +264,12 @@ lv_volumes() {
 											lv_snapshot_menu $lv_Name
 											;;
 										$lv_Size)
-											# Groesse des Snapshot angeben{{{
+											# Grösse des Snapshot angeben{{{
 											if [ -n "$VG_AUSWAHL" ] ; then
 												vg_free_size "$VG_AUSWAHL"
 												#
 												LV_SIZE_TITLE=(${lv_Snapshot}::${lv_Size})
-												LV_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ihres $lv_Snapshot ein (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+												LV_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Grösse ihres $lv_Snapshot ein (1GiB = 1GigaByte = 1024 Megabyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 												#
 												number_input -D "$LV_SIZE_TITLE" "$LV_SIZE_MSG" "$SIZE"
 												if [ -n "$NUMBER" ] ; then
@@ -297,7 +297,7 @@ lv_volumes() {
 													prog_failure
 												break
 											else
-												MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Logical_Vol, $lv_Name, und $lv_Size einstellen.')
+												MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Logical_Vol, $lv_Name, und $lv_Size einstellen.')
 												msgbox "$gv_Attention" "$MSG"
 												lv_snapshot_menu
 											fi
@@ -320,12 +320,12 @@ lv_volumes() {
 					lv_menue $gv_Create
 					;;
 				$lv_Enlarge)
-					# LV vergroessern{{{
+					# LV vergrössern{{{
 					lv -a
 					if [ -n "${LV[1]}" ] ; then
 						LV_ENLARGE_MENU=($LV_M)
 						LV_ENLARGE_TITLE=(${lv_Logical_Vol}::${lv_Enlarge})
-						LV_ENLARGE_MSG=$(gettext 'Waehlen Sie ein $lv_LV zum vergroessern aus.')
+						LV_ENLARGE_MSG=$(gettext 'Wählen Sie ein $lv_LV zum vergrössern aus.')
 						radiolist "$LV_DEV" "$LV_ENLARGE_TITLE" "$LV_ENLARGE_MSG" "$LV_ENLARGE_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
@@ -337,14 +337,14 @@ lv_volumes() {
 									LV_DEV="$gv_Auswahl"
 									VG_NAME="${${LV_DEV%/*}##*/}"
 									#
-									# vorhandene LV Groesse heraus finden.
+									# vorhandene LV Grösse heraus finden.
 									lv_free_size "$LV_DEV"
 									# Nach noch freien Platz auf der VG suchen.
 									vg_free_size "$VG_NAME"
 									# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
 									# werden von der Funktion vg_free_size belegt.
 									if [ "$VG_FREE_SIZE" != 0 ] ; then
-										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein um die das $lv_LV vergroessert werden soll (1GiB = 1GibiByte = 1024 Mebibyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie die Grösse ein um die das $lv_LV vergrössert werden soll (1GiB = 1GibiByte = 1024 Mebibyte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 										number_input -D "$LV_ENLARGE_TITLE" "$LV_ENLARGE_SIZE_MSG"
 										#
 										while [ -n "$NUMBER" ] ; do
@@ -355,7 +355,7 @@ lv_volumes() {
 												# Die Variable LV_SIZE wird von der
 												# Funktion lv_free_size belegt.
 												(( LV_NEW_SIZE = LV_SIZE + LV_SIZE_MIB ))
-												# Dateisystem checken und vergroessern.
+												# Dateisystem checken und vergrössern.
 												lv_resize +${LV_NEW_SIZE} "$LV_DEV"
 												break
 											else
@@ -383,7 +383,7 @@ lv_volumes() {
 					if [ "${LV[1]}" ] ; then
 						LV_REDUCE_MENU=($LV_M)
 						LV_REDUCE_TITLE=(${lv_Logical_Vol}::${lv_Reduce})
-						LV_REDUCE_MSG=$(gettext 'Waehlen Sie eine $lv_LV zum verkleinern aus.')
+						LV_REDUCE_MSG=$(gettext 'Wählen Sie eine $lv_LV zum verkleinern aus.')
 						radiolist "$LV_DEV" "$LV_REDUCE_TITLE" "$LV_REDUCE_MSG" "$LV_REDUCE_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
@@ -397,7 +397,7 @@ lv_volumes() {
 									# Die Variablen LV_SIZE, LV_SIZE_ME
 									# wird von der Funktion lv_free_size belegt.
 									#
-									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die ihr $lv_LV verkleinert werden soll (100MiB = 100MebiByte = 102400 KiloByte). Diese $lv_LV besitzt insgesamt "$LV_SIZE_ME".')
+									LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Grösse ein, um die ihr $lv_LV verkleinert werden soll (100MiB = 100MebiByte = 102400 KiloByte). Diese $lv_LV besitzt insgesamt "$LV_SIZE_ME".')
 									number_input -D "$LV_REDUCE_TITLE" "$LV_REDUCE_SIZE_MSG"
 									#
 									while [ -n "$NUMBER" ] ; do
@@ -433,7 +433,7 @@ lv_volumes() {
 					if [ "${LV[1]}" ] ; then
 						local O_Lv
 						LV_RENAME_TITLE=(${lv_Logical_Vol}::${lv_Rename})
-						LV_RENAME_MSG=$(gettext 'Waehlen Sie eine LV zum umbenennen aus.')
+						LV_RENAME_MSG=$(gettext 'Wählen Sie eine LV zum umbenennen aus.')
 						# Funktion (lv_rename_menu)
 						lv_rename_menu() {
 							LV_RENAME_MENU=($LV_E)
@@ -447,12 +447,12 @@ lv_volumes() {
 									lv_rename_menu "${gv_Auswahl#HELP }"
 									;;
 								*)
-									# neuen Namen fuer die LV eingeben
+									# neuen Namen für die LV eingeben
 									O_Lv=$gv_Auswahl
 									# LV umounten
 									mount_check -u "$O_Lv"
 									U_OPT="-"
-									LV_NEW_NAME=$(gettext 'Geben Sie einen neuen Namen fuer das $lv_LV $O_Lv, ohne Leerzeichen, ein.')
+									LV_NEW_NAME=$(gettext 'Geben Sie einen neuen Namen für das $lv_LV $O_Lv, ohne Leerzeichen, ein.')
 									inputbox "$LV_RENAME_TITLE" "$LV_NEW_NAME"
 									#
 									if [ "$gv_Auswahl" ] ; then
@@ -472,13 +472,13 @@ lv_volumes() {
 					lv_menue $lv_Rename
 					;;
 				$gv_Delete)
-					# Loeschen von LVs{{{
+					# Löschen von LVs{{{
 					lv -a
 					# Sind LVs vorhanden, werden sie zur Auswahl gestellt.
 					if [ "${LV[1]}" ] ; then
 						LV_DEL_MENU=($LV_M)
 						LV_DEL_TITLE=(${lv_Logical_Vol}::${gv_Delete})
-						LV_DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere ${lv_LV}s zum loeschen aus.')
+						LV_DEL_MSG=$(gettext 'Wählen Sie ein oder mehrere ${lv_LV}s zum löschen aus.')
 						checklist "" "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
@@ -487,11 +487,11 @@ lv_volumes() {
 									checklist "${gv_Auswahl#HELP }" "$LV_DEL_TITLE" "$LV_DEL_MSG" "$LV_DEL_MENU"
 									;;
 								*)
-									# loeschen der LVs
+									# löschen der LVs
 									Anz=${(w)#gv_Auswahl}
 									DEVS="$gv_Auswahl"
 									Devs=${gv_Auswahl//\ /\\n}
-									MSG=$(gettext 'Jetzt werden alle ausgewaehlten logischen Volumes geloescht.\n$Devs\n\nFortfahren (ja/nein)?')
+									MSG=$(gettext 'Jetzt werden alle ausgewählten logischen Volumes gelöscht.\n$Devs\n\nFortfahren (ja/nein)?')
 									yesno "$gv_Attention" "$MSG" "" "$Anz"
 									if [ "$gv_Auswahl" = yes ] ; then
 										for i in ${=DEVS} ; {
@@ -500,7 +500,7 @@ lv_volumes() {
 										}
 										# LVs beenden
 										lvchange -a n ${=DEVS} &>/dev/null || prog_failure
-										# LVs loeschen
+										# LVs löschen
 										lvremove -v -f ${=DEVS} 2>&1 | progressbox $gv_Delete "${=DEVS}" || prog_failure
 									fi
 									break

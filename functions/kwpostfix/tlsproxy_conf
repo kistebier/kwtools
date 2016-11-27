@@ -75,7 +75,7 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_CApath)
 				# Standard = $smtpd_tls_CApath# {{{
-				# Verzeichnis in dem die Zertifikate liegen, fuer
+				# Verzeichnis in dem die Zertifikate liegen, für
 				# ausgehende Mails. Diese werden dann mit den Rechten des Mail 
 				# Servers gelesen. 
 				dselect "$tlsproxy_tls_CApath"
@@ -118,7 +118,7 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_ccert_verifydepth)
 				# Standard = $smtpd_tls_ccert_verifydepth (9)# {{{
-				# Ueberpruefungstiefe von Client Zertifikaten.
+				# Überprüfungstiefe von Client Zertifikaten.
 				number_input -i "$smtpd_tls_ccert_verifydepth"
 				if [[ -n $NUMBER ]] ; then
 					smtpd_tls_ccert_verifydepth="$NUMBER"
@@ -137,8 +137,8 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_ciphers)
 				# Standard = $smtpd_tls_ciphers# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
-				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
+				# Postfix Server mit der geeigneten TLS Verschlüsselung benutzen soll.
 				default_or_input tlsproxy_tls_ciphers tls_ciphers "" "$tlsproxy_tls_ciphers"
 				if [[ -n $Value ]] ; then
 					tlsproxy_tls_ciphers="$Value"
@@ -197,7 +197,7 @@ tlsproxy_conf() {
 			tlsproxy_tls_eckey_file)
 				# Standard = $smtpd_tls_eckey_file# {{{
 				# Datei mit dem Postfix SMTP Server ECDSA
-				# privaten Schluessel im PEM Format.
+				# privaten Schlüssel im PEM Format.
 				default_or_input tlsproxy_tls_eckey_file tls_file_choice 
 				tlsproxy_tls_eckey_file="$Value"
 				postconf -e tlsproxy_tls_eckey_file="$Value"
@@ -206,8 +206,8 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_eecdh_grade)
 				# Standard ist = $smtpd_tls_eecdh_grade; Parameter sind none strong ultra# {{{
-				# Auswahl der Sicherheit des Postfix SMTP Server fuer den
-				# ephemeral elliptic-curve Diffie-Hellman (EECDH) Schluessel
+				# Auswahl der Sicherheit des Postfix SMTP Server für den
+				# ephemeral elliptic-curve Diffie-Hellman (EECDH) Schlüssel
 				# Austausch.
 				default_or_input tlsproxy_tls_eecdh_grade tls_eecdh_grade "" "$tlsproxy_tls_eecdh_grade"
 				if [[ -n $Value ]] ; then
@@ -219,8 +219,8 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_exclude_ciphers)
 				# Standard = $smtpd_tls_exclude_ciphers# {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix SMTP Server Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix SMTP Server Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				default_or_input tlsproxy_tls_exclude_ciphers tls_exclude_ciphers "" "$tlsproxy_tls_exclude_ciphers"
 				if [[ -n $Value ]] ; then
@@ -246,7 +246,7 @@ tlsproxy_conf() {
 			tlsproxy_tls_key_file)
 				# Standard ist = $smtpd_tls_key_file#{{{
 				# Datei mit dem Postfix SMTP Server RSA
-				# privaten Schluessel im PEM Format.
+				# privaten Schlüssel im PEM Format.
 				default_or_input tlsproxy_tls_key_file tls_file_choice 
 				tlsproxy_tls_key_file="$Value"
 				postconf -e tlsproxy_tls_key_file="$Value"
@@ -265,8 +265,8 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_mandatory_ciphers)
 				# Standard = $smtpd_tls_mandatory_ciphers# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
-				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
+				# Postfix Server mit der geeigneten TLS Verschlüsselung benutzen soll.
 				default_or_input tlsproxy_tls_mandatory_ciphers tls_ciphers "" "$tlsproxy_tls_mandatory_ciphers"
 				if [[ -n $Value ]] ; then
 					tlsproxy_tls_mandatory_ciphers="$Value"
@@ -280,8 +280,8 @@ tlsproxy_conf() {
 				;;
 			tlsproxy_tls_mandatory_exclude_ciphers)
 				# Standard = $smtpd_tls_mandatory_exclude_ciphers# {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix SMTP Server Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix SMTP Server Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				default_or_input tlsproxy_tls_mandatory_exclude_ciphers tls_exclude_ciphers "" "$tlsproxy_tls_mandatory_exclude_ciphers"
 				if [[ -n $Value ]] ; then
@@ -373,7 +373,7 @@ tlsproxy_conf() {
 			tlsproxy_watchdog_timeout)
 				# Standard ist = 10s, gehen aber auch Integer Zahlen mit dem Suffix d(days),# {{{
 				# s(seconds), m(minutes), h(hours), w(weeks) .
-				TLSPROXY_WATCHDOG_TIMEOUT_MSG=$(gettext 'Welche Zeit soll sich der tlsproxy Prozess nehmen um lokale oder entfernte I/O Prozesse durch eine built-in Watchdog Uhr beenden soll. Sie koennen eine Integer Zahl in Sekunden, Minuten, Stunden, Tagen oder Wochen eingeben. Benutzen Sie die einzelnen Suffixe \"smhdw\".')
+				TLSPROXY_WATCHDOG_TIMEOUT_MSG=$(gettext 'Welche Zeit soll sich der tlsproxy Prozess nehmen um lokale oder entfernte I/O Prozesse durch eine built-in Watchdog Uhr beenden soll. Sie können eine Integer Zahl in Sekunden, Minuten, Stunden, Tagen oder Wochen eingeben. Benutzen Sie die einzelnen Suffixe \"smhdw\".')
 				number_input -a "$TLSPROXY_TITLE" "$TLSPROXY_WATCHDOG_TIMEOUT_MSG" $tlsproxy_watchdog_timeout
 				if [[ -n $NUMBER ]] ; then
 					tlsproxy_watchdog_timeout="$NUMBER"

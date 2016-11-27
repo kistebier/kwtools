@@ -14,8 +14,8 @@ virtual_mailbox_table() {
 			menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_MB_MENU"
 		}
 		#}}}
-		# Funktion virtual_mailbox_aendern{{{
-		virtual_mailbox_aendern() {
+		# Funktion virtual_mailbox_ändern{{{
+		virtual_mailbox_ändern() {
 		virtual_mailbox_menue
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
@@ -23,7 +23,7 @@ virtual_mailbox_table() {
 					virtual_mailbox_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Address)
-					# Adresse waehlen{{{
+					# Adresse wählen{{{
 					inputbox "$TABLE_TITLE" "$TABLE_MAILADDRESS_OR_DOMAIN_INPUT_MSG" "$ADR"
 					if [ "$gv_Auswahl" ] ; then
 						case "$gv_Auswahl" in
@@ -70,14 +70,14 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 							no_input_msg
 						fi
 					else
-						MSG=(gettext 'Sie muessen erst den Menuepunkt \"virtual_mailbox_base\" in der Kofiguration von virtual aendern.')
+						MSG=(gettext 'Sie müssen erst den Menuepunkt \"virtual_mailbox_base\" in der Kofiguration von virtual ändern.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					#}}}
 					virtual_mailbox_menue $lv_Recipient
 					;;
 				$gv_Save)
-					# Eintraege speichern{{{
+					# Einträge speichern{{{
 					#
 					if [ "$ADR" -a "$E_ADR" ] ; then
 						if [ "$AENDERN_ADR" ] ; then
@@ -108,24 +108,24 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 					tabellen_menue "${gv_Auswahl#HELP }"
 					;;
 				$gv_Display)
-					# Ansicht der Eintraege
+					# Ansicht der Einträge
 					tab_ansicht
 					tabellen_menue $gv_Display
 					;;
 				$gv_Create)
 					# Werte anlegen
 					unset -- ADR E_ADR AENDERN_ADR AENDERN_ADR1
-					virtual_mailbox_aendern
+					virtual_mailbox_ändern
 					tabellen_menue $gv_Create
 					;;
 				$gv_Edit)
-					# Eintraege bearbeiten# {{{
+					# Einträge bearbeiten# {{{
 					edit_file "$TABLE_TITLE" "$FILE"
 					## }}}
 					tabellen_menue $gv_Edit
 					;;
 				$gv_Change)
-					# Eintraege aendern{{{
+					# Einträge ändern{{{
 					key_value "$FILE"
 					if [[ -n ${AUSWAHL[1]} ]] ; then
 						CHANGE_MENU=($AUSWAHL)
@@ -136,14 +136,14 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 									menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 									;;
 								*)
-									# Auswahl aendern
+									# Auswahl ändern
 									C_CHOICE="$gv_Auswahl"
 									ADR="${${=gv_Auswahl}[1]}"
 									E_ADR="${${=gv_Auswahl}[2]}"
 									AENDERN_ADR="$ADR"
 									AENDERN_ADR1="$E_ADR"
 									#
-									virtual_mailbox_aendern
+									virtual_mailbox_ändern
 									break
 									;;
 							esac
@@ -155,7 +155,7 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 					tabellen_menue $gv_Change
 					;;
 				$gv_Delete)
-					# Eintraege loeschen{{{
+					# Einträge löschen{{{
 					key_value "$FILE"
 					if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 						DEL_MENU=($AUSWAHL_MULTI)
@@ -165,7 +165,7 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 								HELP*)	script_help kwpostfix_del_help
 									checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 									;;	
-								*)	# loeschen
+								*)	# löschen
 									while read ADRESS REST ; do
 										grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 										mv $FILE$$ $FILE
@@ -192,7 +192,7 @@ Der Parameter "virtual_mailbox_base" besitzt den Wert: $Ist_Wert')
 		done
 	else
 		unset -- E_ADR
-		MSG=$(gettext 'Sie muessen erst in der VIRTUAL-Konfiguration den Parameter \"virtual_mailbox_base\" belegen.')
+		MSG=$(gettext 'Sie müssen erst in der VIRTUAL-Konfiguration den Parameter \"virtual_mailbox_base\" belegen.')
 		msgbox "$gv_Attention" "$MSG"
 	fi
 }

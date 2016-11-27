@@ -20,7 +20,7 @@ manage_export_pkcs12() {
 		lv_ExportPass=$(gettext 'Export Passwort')
 		lv_Display_Name=$(gettext 'Anzeigename')
 		lv_PKCS_Structure=$(gettext 'PKCS#12 Struktur')
-		# fuer das jeweilige Exportmenue einige Variablen
+		# für das jeweilige Exportmenue einige Variablen
 		# vorbelegen.
 		case "$Opt" in
 			-keys)
@@ -67,7 +67,7 @@ manage_export_pkcs12() {
 					export_pkcs12_menu "${gv_Auswahl#HELP }"
 					;;
 				"$lv_ExportFilename")
-					# Dateiname fuer den Export eingaben# {{{
+					# Dateiname für den Export eingaben# {{{
 					export_filename $Suffix
 					## }}}
 					export_pkcs12_menu $lv_ExportFilename
@@ -79,7 +79,7 @@ manage_export_pkcs12() {
 					export_pkcs12_menu $lv_PassAdd
 					;;
 				"$lv_Ssl_Key_Password")
-					# privater Schluessel Password Eingabe
+					# privater Schlüssel Password Eingabe
 					ca_passwd_input -keys
 					export_pkcs12_menu $lv_Ssl_Key_Password
 					;;
@@ -87,7 +87,7 @@ manage_export_pkcs12() {
 					# Export Password Eingabe# {{{
 					EXPORTKEYPASS_MSG=$(gettext 'Geben Sie das Export Passwort ein.')
 					password "$lv_ExportPass" "$EXPORTKEYPASS_MSG" "$PASSWD_LENGTH"
-					# Passworteingabe pruefen
+					# Passworteingabe prüfen
 					if [ -n "$PASSPHRASE" ] ; then
 						password_display "$PASSPHRASE"
 						if [ -n "$gv_Star_Passphrase" ] ; then
@@ -116,8 +116,8 @@ manage_export_pkcs12() {
 					export_pkcs12_menu $lv_Display_Name
 					;;
 				"$lv_PKCS_Structure")
-					# CA in die PKCS#12 Struktur hinzufuegen .# {{{
-					MSG=$(gettext 'Soll die CA in die PKCS#12 Struktur hinzugefuegt werden (ja/nein)?')
+					# CA in die PKCS#12 Struktur hinzufügen .# {{{
+					MSG=$(gettext 'Soll die CA in die PKCS#12 Struktur hinzugefügt werden (ja/nein)?')
 					yesno "$gv_Info" "$MSG" "$PKCS_VALUE"
 					if [ "$gv_Auswahl" != no ] ; then
 						PKCS_VALUE=yes
@@ -158,7 +158,7 @@ manage_export_pkcs12() {
 							## }}}
 							;;
 						-keys)
-							# Schluessel exportieren# {{{
+							# Schlüssel exportieren# {{{
 							# Datei Variablen belegen
 							CAKEY="$In_File"
 							CACERT="${In_File/\/keys\///certs/}"
@@ -176,17 +176,17 @@ manage_export_pkcs12() {
 							-passin env:CA_CAPASSWD -passout env:EXPORT_PASSWD)
 							# Anzeigename belegen falls nicht erfolgt.
 							check_displayname
-							# pkcs12 Struktur mit hinzufuegen
+							# pkcs12 Struktur mit hinzufügen
 							check_pkcs12_structure
-							# Pefehl ausfuehren
+							# Pefehl ausführen
 							openssl $PROG_OPT || prog_failure
-							# fertig, Variablen loeschen
+							# fertig, Variablen löschen
 							unset -- $UNSET_EXPORT
 							break
 						else
-							MSG=$(gettext 'Sie muessen auch die Menuepunkte $lv_Ssl_Key_Password und $lv_ExportPass mit Werten belegen.')
+							MSG=$(gettext 'Sie müssen auch die Menuepunkte $lv_Ssl_Key_Password und $lv_ExportPass mit Werten belegen.')
 							msgbox "$gv_Info" "$MSG"
-							# Menue noch mal ausfuehren
+							# Menue noch mal ausführen
 							export_pkcs12_menu
 						fi
 						## }}}
@@ -200,17 +200,17 @@ manage_export_pkcs12() {
 							-passin env:CA_CAPASSWD -passout pass: -nodes)
 							# Anzeigename belegen falls nicht erfolgt.
 							check_displayname
-							# pkcs12 Struktur mit hinzufuegen
+							# pkcs12 Struktur mit hinzufügen
 							check_pkcs12_structure
-							# Pefehl ausfuehren
+							# Pefehl ausführen
 							openssl $PROG_OPT || prog_failure
-							# fertig, Variablen loeschen
+							# fertig, Variablen löschen
 							unset -- $UNSET_EXPORT
 							break
 						else
-							MSG=$(gettext 'Sie muessen auch den Menuepunkt $lv_Ssl_Key_Password mit einem Wert belegen.')
+							MSG=$(gettext 'Sie müssen auch den Menuepunkt $lv_Ssl_Key_Password mit einem Wert belegen.')
 							msgbox "$gv_Info" "$MSG"
-							# Menue noch mal ausfuehren
+							# Menue noch mal ausführen
 							export_pkcs12_menu
 						fi
 						## }}}

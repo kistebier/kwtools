@@ -60,8 +60,8 @@ access_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$ACCESS_MENU"
 	}
 	#}}}
-	# Funktion access_aendern{{{
-	access_aendern() {
+	# Funktion access_ändern{{{
+	access_ändern() {
 		access_menue
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
@@ -76,7 +76,7 @@ access_table() {
 						if [ "$CIDR" = Yes ] ; then
 							case "$gv_Auswahl" in
 								[0-9]*.[0-9]*.[0-9]*.[0-9]*/[0-9]*)
-									# Netzmaske uebernehmen
+									# Netzmaske übernehmen
 									ADR="$gv_Auswahl"
 									;;
 								*)	no_input_msg
@@ -86,19 +86,19 @@ access_table() {
 						else
 							case "$gv_Auswahl" in
 								[a-zA-Z0-9]*[@]*|.[a-zA-Z0-9-_]*.*|[0-9]*.|@[a-zA-Z0-9]*.*)
-									# Usernamen/subdomains/alle so beginnenden IP's uebernehmen
+									# Usernamen/subdomains/alle so beginnenden IP's übernehmen
 									ADR="$gv_Auswahl"
 									;;
 								[a-zA-Z0-9]*@)
-									# user@ uebernehmen
+									# user@ übernehmen
 									ADR="$gv_Auswahl"
 									;;
 								[0-9]*.[0-9]*.*)
-									# IP Adresse uebernehmen
+									# IP Adresse übernehmen
 									ADR="$gv_Auswahl"
 									;;
 								[a-zA-Z0-9]*[a-zA-Z0-9-_.]*.*)
-									# Host, Domainnamen uebernehmen
+									# Host, Domainnamen übernehmen
 									ADR="$gv_Auswahl"
 									;;
 								*)	no_input_msg
@@ -138,7 +138,7 @@ access_table() {
 					access_menue $lv_Header
 					;;
 				$gv_Host)
-					# Ziel fuer Transport eingeben# {{{
+					# Ziel für Transport eingeben# {{{
 					regexp_pcre_access_host
 					if [ -n "$HOST" ] ; then
 						unset -- HEADER MAIL TEXT
@@ -237,7 +237,7 @@ access_table() {
 										;;
 									*)
 										# Nachricht das man eine Mailadresse mit angeben muss.
-										MSG=$(gettext 'Sie muessen die Menuepunkte Zeichenkette, Aktion und Mail mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen die Menuepunkte Zeichenkette, Aktion und Mail mit Werten belegen.')
 										msgbox "$gv_Attention" "$MSG"
 										regexp_pcre_menue
 										;;
@@ -304,7 +304,7 @@ access_table() {
 								else
 									# Nachricht das man mind. Text (Headerzeile)
 									# angegeben werden muss.
-									MSG=$(gettext 'Sie muessen die Menuepunkte Zeichenkette, Aktion, Header und Text (Headerzeile) mit Werten belegen.')
+									MSG=$(gettext 'Sie müssen die Menuepunkte Zeichenkette, Aktion, Header und Text (Headerzeile) mit Werten belegen.')
 									msgbox "$gv_Attention" "$MSG"
 									regexp_pcre_menue
 								fi
@@ -338,7 +338,7 @@ access_table() {
 								;;
 						esac
 					else
-						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Adresse und Aktion Werten belegen.')
+						MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Adresse und Aktion Werten belegen.')
 						msgbox "$gv_Attention" "$MSG"
 						regexp_pcre_menue
 					fi
@@ -365,17 +365,17 @@ access_table() {
 				# Werte anlegen
 				unset -- ADR ACTION TEXT MAIL TRANS HOST HEADER AENDERN_ADR \
 					OldHeader OldHost OldMail OldPort OldText OldTrans
-				access_aendern
+				access_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				unset -- ADR ACTION TEXT MAIL TRANS HOST HEADER AENDERN_ADR \
 					OldHeader OldHost OldMail OldPort OldText OldTrans
 				key_value "$FILE"
@@ -461,7 +461,7 @@ access_table() {
 									esac
 								done
 								AENDERN_ADR="$ADR"
-								access_aendern
+								access_ändern
 								break
 								;;
 						esac

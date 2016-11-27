@@ -9,9 +9,9 @@ mailbox_command_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$MAILBOX_COMMAND_MENU"
 	}
 	#}}}
-	# Funktion mailbox_command_aendern{{{
+	# Funktion mailbox_command_ändern{{{
 	#
-	mailbox_command_aendern() {
+	mailbox_command_ändern() {
 	mailbox_command_menu
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -33,7 +33,7 @@ mailbox_command_table() {
 				;;
 			$lv_Cmd)
 				# Befehl eingeben{{{
-				CMD_MSG=$(gettext 'Geben Sie einen Befehl fuer den jeweiligen Benutzer ein (Bsp.: /usr/bin/procmail -t -a "$EXTENSION" "$USER").')
+				CMD_MSG=$(gettext 'Geben Sie einen Befehl für den jeweiligen Benutzer ein (Bsp.: /usr/bin/procmail -t -a "$EXTENSION" "$USER").')
 				inputbox "$TABLE_TITLE" "$CMD_MSG" "$CMD"
 				if [ "$gv_Auswahl" ] ; then
 					CMD="${${gv_Auswahl//\$/\\\$}//\"/\\\"}"
@@ -55,7 +55,7 @@ mailbox_command_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst einen Benutzer und den dazugehoerigen Befehl eingeben.')
+					MSG=$(gettext 'Sie müssen erst einen Benutzer und den dazugehörigen Befehl eingeben.')
 					msgbox "$gv_Attention" "$MSG"
 					mailbox_command_menu
 				fi
@@ -82,11 +82,11 @@ mailbox_command_table() {
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR AENDERN_ADR AENDERN_ADR1 CMD
-				mailbox_command_aendern
+				mailbox_command_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
@@ -103,13 +103,13 @@ mailbox_command_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${=gv_Auswahl}[1]}"
 								CMD="${${${${=gv_Auswahl}[2,$]}//\$/\\\$}//\"/\\\"}"
 								AENDERN_ADR="$ADR"
 								AENDERN_ADR1="$CMD"
-								mailbox_command_aendern
+								mailbox_command_ändern
 								break
 								;;
 						esac
@@ -121,7 +121,7 @@ mailbox_command_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					# Variable U_OPT=regexp_file nachschauen in der

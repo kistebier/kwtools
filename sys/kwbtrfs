@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 03.10.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 27.11.2016
 #
 # Script: kwbtrfs, bearbeitet Btrfs-Dateisysteme.
-# Version: 0.0.1
+# Version: 0.0.2
 #
-# Ausfuehren von Befehlen auf bestimmte Signale.
+# Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
@@ -29,7 +29,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -37,34 +37,34 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Kernel Version pruefen
+# Kernel Version prüfen
 kernel_release
 if [[ ${gv_K_Release%%-*} < 4.6.0 ]] ; then
-	MSG=$(gettext 'Sie benoetigen eine Kernel Version >=4.6.0.')
+	MSG=$(gettext 'Sie benötigen eine Kernel Version >=4.6.0.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
 fi
 
-# Pruefen, ob btrfs installiert ist.
+# Prüfen, ob btrfs installiert ist.
 prog_check btrfs mkfs.btrfs
 if [[ -n $NO_PROGS ]] ; then
 	exit 0
 fi
 
-# Pruefen, ob die Version von btrfs die richtige ist.
+# Prüfen, ob die Version von btrfs die richtige ist.
 Version=${${(M)$(btrfs --version)##*v*}#v}
 if [[ $Version < 4.5.2 ]] ; then
-	MSG=$(gettext 'Sie benoetigen eine btrfs ($Version) Version >=4.5.2.')
+	MSG=$(gettext 'Sie benötigen eine btrfs ($Version) Version >=4.5.2.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
 fi
 
-# Pruefen, ob man der Benutzer root ist.
+# Prüfen, ob man der Benutzer root ist.
 root_check
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
-# benoetigten Funktionen laden. Die Funktion sys_conf wird bereits
-# von der Funktion script_init ausgefuehrt.
+# benötigten Funktionen laden. Die Funktion sys_conf wird bereits
+# von der Funktion script_init ausgeführt.
 # autoload -U ...
 
 # Variablen# {{{
@@ -84,10 +84,10 @@ lv_Service=$(gettext 'Wartung')
 lv_Single=$(gettext 'single')
 lv_Subvolumes=$(gettext 'Subvolumes')
 lv_Superblock=$(gettext 'Superblock')
-BTRFS_MSG=$(gettext 'Waehlen Sie ein $lv_Btrfs_Drive aus.')
+BTRFS_MSG=$(gettext 'Wählen Sie ein $lv_Btrfs_Drive aus.')
 CONF="/etc/kwtools/kwbtrfs.cf"
-DRIVE_MSG=$(gettext 'Waehlen Sie ein $lv_Drive aus.')
-SEVERAL_DRIVE_MSG=$(gettext 'Waehlen Sie ein oder mehrere $lv_Devices aus.')
+DRIVE_MSG=$(gettext 'Wählen Sie ein $lv_Drive aus.')
+SEVERAL_DRIVE_MSG=$(gettext 'Wählen Sie ein oder mehrere $lv_Devices aus.')
 ## }}}
 
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
@@ -101,7 +101,7 @@ main_menu() {
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$MAIN_MENU"
 }
 ## }}}
-# Funktion (btrfs_choice_menu), btrfs Laufwerk auswaehlen# {{{
+# Funktion (btrfs_choice_menu), btrfs Laufwerk auswählen# {{{
 btrfs_choice_menu() {
 	if [[ ${#argv} == 3 ]] ; then
 		BTRFS_MENU=($3 $gv_Back \"\")
@@ -119,7 +119,7 @@ btrfs_dev_checklist() {
 	if [[ ${#argv} -ge 1 ]] ; then
 		TITLE="$1"
 		MENU=($BTRFS_PATH_M)
-		MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs Laufwerke aus.')
+		MSG=$(gettext 'Wählen Sie ein oder mehrere btrfs Laufwerke aus.')
 		checklist "$2" "$TITLE" "$MSG" "$MENU"
 	else
 		no_para_msg $0
@@ -161,7 +161,7 @@ mount_btrfs_dev_check() {
 	unset -- BTRFS_PATH BTRFS_PATH_E BTRFS_PATH_M
 	for i in ${=BTRFS_DEV} ; {
 		if [[ ${#BTRFS_MD[*]} -gt 0 ]] ; then
-			# Index wird fuer die Variable Uuid benoetigt.
+			# Index wird für die Variable Uuid benötigt.
 			Index=$BTRFS_DEV[(i)$i]
 			if [[ -z ${(M)${=BTRFS_MD[Index]}[(fr)*$i*]} ]] ; then
 				mount_check -c $i
@@ -236,20 +236,23 @@ no_btrfs_md_dev_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (no_btrfs_choice_msg), Nachricht das man erst ein $lv_Btrfs_Drive auswaehlen muss# {{{
+# Funktion (no_btrfs_choice_msg), Nachricht das man erst ein $lv_Btrfs_Drive auswählen muss# {{{
 #
 # usage no_btrfs_choice_msg
 #
 no_btrfs_choice_msg() {
-	MSG=$(gettext 'Sie muessen mindestens ein $lv_Btrfs_Drive auswaehlen.')
+	MSG=$(gettext 'Sie müssen mindestens ein $lv_Btrfs_Drive auswählen.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
 # Funktion (umount_dev), bindet alle Laufwerke aus die ins tmp-Verzeichnis# {{{
-# eingebunden wurden und loescht die Mountpoints.
+# eingebunden wurden und löscht die Mountpoints.
 #
 umount_dev() {
 	if [[ -n ${MOUNT_DEVS[1]} ]] || [[ -n ${SUBVOL_MOUNT_DEVS[1]} ]] ; then
+		for i in ${=SUBVOL_MOUNT_DEVS}/*(N/) ; {
+			mount_check -a $i
+		}
 		for i in ${=SUBVOL_MOUNT_DEVS} ${=MOUNT_DEVS} ; {
 			mount_check -a $i
 		}
@@ -327,7 +330,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Dateisystem # {{{
 			lv_Df=$(gettext 'Blockbelegung')
 			lv_Label=$(gettext 'Label')
-			lv_Size=$(gettext 'Groesse')
+			lv_Size=$(gettext 'Grösse')
 			# Funktion (filesystem_menu)# {{{
 			#
 			filesystem_menu() {
@@ -347,21 +350,21 @@ while [ "$gv_Auswahl" ] ; do
 							filesystem_menu "${gv_Auswahl#HELP }"
 							;;
 						$gv_Display)
-							# Ansicht ueber die btrfs Laufwerke# {{{
+							# Ansicht über die btrfs Laufwerke# {{{
 							autoload -U kwbtrfs_filesystem_show
 							kwbtrfs_filesystem_show
 							## }}}
 							filesystem_menu $gv_Display
 							;;
 						$lv_Detail)
-							# detailierte Ansicht ueber die btrfs Laufwerke# {{{
+							# detailierte Ansicht über die btrfs Laufwerke# {{{
 							autoload -U kwbtrfs_filesystem_usage
 							kwbtrfs_filesystem_usage
 							## }}}
 							filesystem_menu $gv_Detail
 							;;
 						$lv_Df)
-							# Ansicht ueber die belegten Bloecke von btrfs Laufwerken# {{{
+							# Ansicht über die belegten Blöcke von btrfs Laufwerken# {{{
 							autoload -U kwbtrfs_filesystem_df
 							kwbtrfs_filesystem_df
 							## }}}
@@ -375,14 +378,14 @@ while [ "$gv_Auswahl" ] ; do
 							filesystem_menu $lv_Defrag
 							;;
 						$lv_Label)
-							# Label aendern, einfuegen# {{{
+							# Label ändern, einfügen# {{{
 							autoload -U kwbtrfs_filesystem_label
 							kwbtrfs_filesystem_label
 							## }}}
 							filesystem_menu $lv_Label
 							;;
 						$gv_Enlarge)
-							# Dateisystem vergroessern# {{{
+							# Dateisystem vergrössern# {{{
 							autoload -U kwbtrfs_filesystem_enlarge
 							kwbtrfs_filesystem_enlarge
 							## }}}
@@ -404,7 +407,7 @@ while [ "$gv_Auswahl" ] ; do
 							filesystem_menu $lv_Sync
 							;;
 						$gv_Back|*)
-							# zurueck
+							# zurück
 							break
 							;;
 					esac
@@ -496,7 +499,7 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			subvol_checklist() {
 				MENU=($SUBVOL_DEV_M)
-				MSG=$(gettext 'Waehlen Sie ein oder mehrere btrfs $lv_Subvolumes aus.')
+				MSG=$(gettext 'Wählen Sie ein oder mehrere btrfs $lv_Subvolumes aus.')
 				checklist "$1" "$lv_Subvolumes" "$MSG" "$MENU"
 			}
 			## }}}
@@ -504,7 +507,7 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			subvol_snapshot_choice_menu() {
 				MENU=($SUBVOL_DEV_E $gv_Back \"\")
-				MSG=$(gettext 'Waehlen Sie ein btrfs $lv_Subvolume aus.')
+				MSG=$(gettext 'Wählen Sie ein btrfs $lv_Subvolume aus.')
 				menubox "$1" "${lv_Subvolumes}::${lv_Snapshot}::${lv_Subvolume}" "$MSG" "$MENU"
 			}
 			## }}}
@@ -534,7 +537,7 @@ while [ "$gv_Auswahl" ] ; do
 							subvolumes_menu "$gv_Create"
 							;;
 						$gv_Delete)
-							# Subvolumes loeschen# {{{
+							# Subvolumes löschen# {{{
 							autoload -U kwbtrfs_subvolumes_delete
 							kwbtrfs_subvolumes_delete
 							## }}}
@@ -555,14 +558,14 @@ while [ "$gv_Auswahl" ] ; do
 							subvolumes_menu "$lv_Findnew"
 							;;
 						$lv_DefaultId)
-							# Ids fuer die Subvolumes setzen.# {{{
+							# Ids für die Subvolumes setzen.# {{{
 							autoload -U kwbtrfs_subvolumes_id
 							kwbtrfs_subvolumes_id
 							## }}}
 							subvolumes_menu "$lv_DefaultId"
 							;;
 						$gv_Back)
-							# zurueck
+							# zurück
 							break
 							;;
 					esac
@@ -574,14 +577,14 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Subvolumes
 			;;
 		$lv_Devices)
-			# Management fuer (multiple) Devices, wie z.B. RAID# {{{
+			# Management für (multiple) Devices, wie z.B. RAID# {{{
 			# Variablen# {{{
 			lv_Options=$(gettext 'Optionen')
 			lv_Raid=$(gettext 'RAID')
 			lv_Is_Drive="$lv_Btrfs_Drive"
-			lv_Encrypt_Raid=$(gettext 'verschluesseltes RAID')
+			lv_Encrypt_Raid=$(gettext 'verschlüsseltes RAID')
 			lv_Device_Convert=$(gettext 'Laufwerk konvertieren')
-			lv_Device_Add=$(gettext 'Laufwerke hinzufuegen')
+			lv_Device_Add=$(gettext 'Laufwerke hinzufügen')
 			lv_Device_Remove=$(gettext 'Laufwerke entfernen')
 			lv_Device_Replace=$(gettext 'Laufwerk tauschen')
 			lv_Src_Device=$(gettext 'Quell-Laufwerk')
@@ -612,7 +615,7 @@ while [ "$gv_Auswahl" ] ; do
 						device_menu "${gv_Auswahl#HELP }"
 						;;
 					$gv_Display)
-						# Detaillierte Informationen ueber btrfs Laufwerke,#{{{
+						# Detaillierte Informationen über btrfs Laufwerke,#{{{
 						# anzeigen
 						search_btrfs_filesystem
 						if [[ -n ${BTRFS_DEV[1]} ]] ; then
@@ -626,7 +629,7 @@ while [ "$gv_Auswahl" ] ; do
 										btrfs_dev_checklist "${lv_Devices}::${gv_Display}" "${gv_Auswahl#HELP }"
 										;;
 									/*)
-										# Information ueber die ausgewaehlten Laufwerke# {{{
+										# Information über die ausgewählten Laufwerke# {{{
 										# anzeigen
 										rm -rf ${gv_WorkDir}/btrfs_usage &>/dev/null
 										for i in ${=gv_Auswahl} ; {
@@ -640,7 +643,7 @@ while [ "$gv_Auswahl" ] ; do
 										btrfs_dev_checklist "${lv_Devices}::${gv_Display}" "${gv_Auswahl[1]}"
 										;;
 									*)
-										# zurueck
+										# zurück
 										break
 										;;
 								esac
@@ -675,14 +678,14 @@ while [ "$gv_Auswahl" ] ; do
 									create_menu $lv_Raid
 									;;
 								$lv_Encrypt_Raid)
-									# verschluesseltes RAID erstellen# {{{
+									# verschlüsseltes RAID erstellen# {{{
 									autoload -U kwbtrfs_raid_create_conf
 									kwbtrfs_raid_create_conf -c
 									## }}}
 									create_menu $lv_Encrypt_Raid
 									;;
 								$gv_Back)
-									# zuruecck
+									# zurücck
 									break
 									;;
 							esac
@@ -698,7 +701,7 @@ while [ "$gv_Auswahl" ] ; do
 						device_menu "$lv_Device_Convert"
 						;;
 					$lv_Device_Add)
-						# Laufwerk hinzufuegen# {{{
+						# Laufwerk hinzufügen# {{{
 						autoload -U kwbtrfs_device_add
 						kwbtrfs_device_add
 						## }}}
@@ -719,7 +722,7 @@ while [ "$gv_Auswahl" ] ; do
 						device_menu "$lv_Device_Replace"
 						;;
 					$gv_Back)
-						# zurueck
+						# zurück
 						break
 						;;
 				esac

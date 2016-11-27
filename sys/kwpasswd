@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 05.07.2015
 #
-# Script: kwpasswd, ein Script zum Passwort aendern,
+# Script: kwpasswd, ein Script zum Passwort ändern,
 # passwd und yppasswd.
 #
 # Version: 0.0.5
@@ -48,7 +48,7 @@ else
 	PASSWD="passwd"
 fi
 
-# Pruefen ob Passwort Programm ausfuehrbar ist.
+# Prüfen ob Passwort Programm ausführbar ist.
 prog_check expect $PASSWD
 if [ ! -z "$NO_PROGS" ] ; then
 	exit 1
@@ -56,18 +56,18 @@ fi
 
 # Variablen
 lv_User=$(gettext 'Benutzer		:')
-OK_MSG=$(gettext 'Passwort wurde erfolgreich geaendert. Sie koennen sich jetzt mit Ihrem neuen Passwort anmelden.')
-NOOK_MSG=$(gettext 'Das Passwort konnte nicht geaendert werden. Wiederholen (ja/nein)?')
+OK_MSG=$(gettext 'Passwort wurde erfolgreich geändert. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.')
+NOOK_MSG=$(gettext 'Das Passwort konnte nicht geändert werden. Wiederholen (ja/nein)?')
 # passwd Meldungen
-SHORT_MSG=$(gettext 'Das Passwort ist zu kurz. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
-SIMILAR_MSG=$(gettext 'Das Passwort ist zu aehnlich dem alten. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
-DICT_MSG=$(gettext 'Das Passwort basiert auf einem Woerterbucheintrag. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+SHORT_MSG=$(gettext 'Das Passwort ist zu kurz. Es wurde nicht geändert. Wiederholen (ja/nein)?')
+SIMILAR_MSG=$(gettext 'Das Passwort ist zu ähnlich dem alten. Es wurde nicht geändert. Wiederholen (ja/nein)?')
+DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag. Es wurde nicht geändert. Wiederholen (ja/nein)?')
 # yppasswd Meldungen
-NIS_PW_MSG=$(gettext 'Das Passwort ist zu aehnlich dem Benutzernamen. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
-NIS_DICT_MSG=$(gettext 'Das Passwort muss grosse und kleine Buchstaben, bzw. nicht nur Buchstaben enthalten. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
-NIS_CHAR_MSG=$(gettext 'Das Passwort muss mindestens 8 Zeichen lang sein. Es wurde nicht geaendert. Wiederholen (ja/nein)?')
+NIS_PW_MSG=$(gettext 'Das Passwort ist zu ähnlich dem Benutzernamen. Es wurde nicht geändert. Wiederholen (ja/nein)?')
+NIS_DICT_MSG=$(gettext 'Das Passwort muss grosse und kleine Buchstaben, bzw. nicht nur Buchstaben enthalten. Es wurde nicht geändert. Wiederholen (ja/nein)?')
+NIS_CHAR_MSG=$(gettext 'Das Passwort muss mindestens 8 Zeichen lang sein. Es wurde nicht geändert. Wiederholen (ja/nein)?')
 
-# Funktion (del_expect), loescht die temporaere Datei expect# {{{
+# Funktion (del_expect), löscht die temporäre Datei expect# {{{
 #
 del_expect() {
 	shred -uz ${gv_WorkDir}/expect &>/dev/null
@@ -77,7 +77,7 @@ del_expect() {
 #
 main_menu() {
 	MAIN_MSG=$(gettext 'Geben Sie hier zuerst Ihr aktuelles Passwort und dann das neue Passwort ein.')
-	MAIN_TITLE=$(gettext 'Passwortaenderung')
+	MAIN_TITLE=$(gettext 'Passwortänderung')
 	MAIN_MENU=(\"$lv_User\" "1 1 \"$LOGNAME\" 1 20 20 0 2"
 	\"$gv_Old_Passwd\" "2 1 \"\" 2 20 20 0 1"
 	\"$gv_New_Passwd\" "3 1 \"\" 3 20 20 0 1"
@@ -116,7 +116,7 @@ set oldpass \"$OPW\"
 set newpass \"$NPW\"
 set timeout 1
 stty -echo"
-					# Pruefen welches Passwort Programm zu Einsatz kommt.
+					# Prüfen welches Passwort Programm zu Einsatz kommt.
 					if [ "$PASSWD" = passwd ] ; then
 						# passwd
 						>> ${gv_WorkDir}/expect <<<"spawn passwd
@@ -159,7 +159,7 @@ expect eof"
 					(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect 1>/dev/null)
 					## }}}
 	
-					# EXIT Wert uerberpruefen# {{{
+					# EXIT Wert uerberprüfen# {{{
 					case "$?" in
 						9)
 							yesno "$gv_Attention" "$SHORT_MSG" ""
@@ -216,9 +216,9 @@ expect eof"
 							fi
 							;;
 						0)
-							# Passwort geaendert
+							# Passwort geändert
 							msgbox "$gv_Info" "$OK_MSG"
-							# loeschen der Datei fuer den first Login.
+							# löschen der Datei für den first Login.
 							rm -f ~/.firstlogin &>/dev/null
 							rm -f ~/.kde/Autostart/firstlogin.desktop &>/dev/null
 							rm -f ~/.config/autostart/firstlogin.desktop &>/dev/null

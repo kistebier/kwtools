@@ -21,7 +21,7 @@ kwbtrfs_drive_convert() {
 		convert_menu() {
 			CONVERT_DRIVE_MENU=($NO_BTRFS_DEV_E)
 			CONVERT_DRIVE_TITLE="${lv_Devices}::${lv_Device_Convert}"
-			CONVERT_DRIVE_MSG=$(gettext 'Waehlen Sie ein Laufwerk aus das nach btrfs konvertiert werden soll.')
+			CONVERT_DRIVE_MSG=$(gettext 'Wählen Sie ein Laufwerk aus das nach btrfs konvertiert werden soll.')
 			menubox "$1" "$CONVERT_DRIVE_TITLE" "$CONVERT_DRIVE_MSG" "$CONVERT_DRIVE_MENU"
 		}
 		## }}}
@@ -33,17 +33,17 @@ kwbtrfs_drive_convert() {
 			menubox "$1" "$CONVERT_C_TITLE" "$gv_Menupoint" "$CONVERT_C_MENU"
 		}
 		## }}}
-		# Funktion (remove_original_metadata), loescht die Metadaten# {{{
+		# Funktion (remove_original_metadata), löscht die Metadaten# {{{
 		# des original Dateisystems
 		#
 		# usage: remove_original_metadata
 		#
 		remove_original_metadata() {
-			# Einhaegeverzeichnis erstellen
+			# Einhägeverzeichnis erstellen
 			mkdir ${gv_WorkDir}/mnt &>/dev/null
-			# Dateisystem einhaengen
+			# Dateisystem einhängen
 			mount -t btrfs $CONVERT_DEV ${gv_WorkDir}/mnt &>/dev/null
-			# Metadaten vom original Daeisystem loeschen
+			# Metadaten vom original Däisystem löschen
 			btrfs subvolume delete ${gv_WorkDir}/mnt/ext2_saved &>/dev/null
 			# Dateisystem defragmentieren
 			btrfs filesystem defrag -v  -c ${COMPRESS:-zlib} -r -f -t 32M ${gv_WorkDir}/mnt | \
@@ -63,7 +63,7 @@ kwbtrfs_drive_convert() {
 					convert_menu "${gv_Auswahl#HELP }"
 					;;
 				/dev/*)
-					# Auswahl uebernehmen# {{{
+					# Auswahl übernehmen# {{{
 					CONVERT_DEV="$gv_Auswahl"
 					convert_create_menu
 					while [[ -n $gv_Auswahl ]] ; do
@@ -73,7 +73,7 @@ kwbtrfs_drive_convert() {
 								convert_create_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Options)
-								# Optionen fuer das konvertieren des Laufwerks# {{{
+								# Optionen für das konvertieren des Laufwerks# {{{
 								autoload -U kwbtrfs_create_options
 								kwbtrfs_create_options -c btrfs-convert
 								## }}}
@@ -87,14 +87,14 @@ kwbtrfs_drive_convert() {
 								# Formatieren (ja/nein)?
 								yesno "$CONVERT_TITLE" "$CONVERT_MSG" no
 								if [[ $gv_Auswahl == yes ]] ; then
-									# Pruefen ob das Laufwerk
+									# Prüfen ob das Laufwerk
 									# eingebunden ist und ausbinden.
 									mount_check -a $CONVERT_DEV
 									if [[ $U_MOUNT == yes ]] ; then
-										# Ueber den Index das Dateisystem herausbekommen
+										# Über den Index das Dateisystem herausbekommen
 										Index=$NO_BTRFS_DEV[(i)$CONVERT_DEV]
 										Fs="${FS[Index]}"
-										# fsck auf das zu konvertierende Laufwerk ausfuehren.
+										# fsck auf das zu konvertierende Laufwerk ausführen.
 										# fsck.ext[234] -f -y device
 										fsck.${Fs} -f -y $CONVERT_DEV &>/dev/null
 										# Die Variable CREATE_OPT wurde in der Funktionsdatei
@@ -102,7 +102,7 @@ kwbtrfs_drive_convert() {
 										btrfs-convert ${=CREATE_OPT} $CONVERT_DEV | \
 											progressbox "$CONVERT_TITLE" "$CONVERT_P_MSG" || \
 											(prog_failure ; return 1)
-										# original Metadaten loeschen?
+										# original Metadaten löschen?
 										if [[ $RMOMETA == $gv_Yes ]] ; then
 											remove_original_metadata
 										fi
@@ -115,7 +115,7 @@ kwbtrfs_drive_convert() {
 								break
 								;;
 							*|$gv_Back)
-								# zurueck
+								# zurück
 								break
 								;;
 						esac
@@ -123,7 +123,7 @@ kwbtrfs_drive_convert() {
 					## }}}
 					;;
 				*|$gv_Back)
-					# zurueck
+					# zurück
 					break
 					;;
 			esac

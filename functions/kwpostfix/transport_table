@@ -21,8 +21,8 @@ transport_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$TRANSPORT_MENU"
 	}
 	#}}}
-	# Funktion transport_aendern{{{
-	transport_aendern() {
+	# Funktion transport_ändern{{{
+	transport_ändern() {
 		transport_menue
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
@@ -30,8 +30,8 @@ transport_table() {
 					transport_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Address)
-					# Adresse waehlen{{{
-					ADRESS_MSG=$(gettext 'Geben Sie entweder eine Mailadresse, Domain, oder Subdomain ein fuer die Postfix Mail annehmen soll (Bsp. domain.de | .subdomain.de).')
+					# Adresse wählen{{{
+					ADRESS_MSG=$(gettext 'Geben Sie entweder eine Mailadresse, Domain, oder Subdomain ein für die Postfix Mail annehmen soll (Bsp. domain.de | .subdomain.de).')
 					inputbox "$TABLE_TITLE" "$ADRESS_MSG" "$ADR"
 					if [ "$gv_Auswahl" ] ; then
 						case "$gv_Auswahl" in
@@ -53,7 +53,7 @@ transport_table() {
 					transport_menue $lv_Address
 					;;
 				$lv_Transport)
-					# Transport Methode waehlen{{{
+					# Transport Methode wählen{{{
 					transport_methode "${TRANS##:*}" "${TRANS##*:}"
 					if [ "$WERT" = error ] ; then
 						TRANS="$WERT"
@@ -71,7 +71,7 @@ transport_table() {
 					transport_menue $lv_Transport
 					;;
 				$gv_Host)
-					# Zielrechner fuer Transport eingeben# {{{
+					# Zielrechner für Transport eingeben# {{{
 					regexp_pcre_access_host
 					if [ -n "$HOST" ] ; then
 						unset -- TEXT
@@ -103,7 +103,7 @@ transport_table() {
 					transport_menue $lv_Text
 					;;
 				$gv_Save)
-					# Eintraege speichern{{{
+					# Einträge speichern{{{
 					if [ -n "$ADR" ] ; then
 						if [ "$AENDERN_ADR" ] ; then
 							if [ "$TRANS" != error ] ; then
@@ -149,7 +149,7 @@ transport_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
@@ -157,17 +157,17 @@ transport_table() {
 				# Werte anlegen
 				unset -- ADR HOST PORT TEXT TRANS AENDERN_ADR AENDERN_ADR1 OldHost \
 					OldPort OldText
-				transport_aendern
+				transport_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				unset -- ADR HOST PORT TEXT TRANS AENDERN_ADR AENDERN_ADR1 OldHost \
 					OldPort OldText
 				key_value "$FILE"
@@ -180,7 +180,7 @@ transport_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								print "${(s.:.)${gv_Auswahl}}" | \
 								while read ADRESSE TRANSP MXHOST REST ; do
@@ -195,7 +195,7 @@ transport_table() {
 										unset -- HOST PORT
 									fi
 									AENDERN_ADR="$ADR"
-									# Diese Variablen werden veraendert.
+									# Diese Variablen werden verändert.
 									if [ "$TRANS" != error ] ; then
 										if [ -n "$HOST" -a -n "$PORT" ] ; then
 											AENDERN_ADR1="${TRANS}:${HOST}:${PORT}"
@@ -212,7 +212,7 @@ transport_table() {
 										fi
 									fi
 								done
-								transport_aendern
+								transport_ändern
 								break
 								;;
 						esac
@@ -224,7 +224,7 @@ transport_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)	
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n  ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -234,7 +234,7 @@ transport_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# Loeschen
+							*)	# Löschen
 								while read ADRESS ; do
 									grep -v "^${${${ADRESS// /.*}//\]/\\]}//\[/\\[}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

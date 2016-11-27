@@ -3,7 +3,7 @@
 # Autor: Kai Wilke <kiste@netzworkk.de> 07.06.2016
 #
 # Script: kwauth, stellt PAM und andere Authentifizierungs-
-# Methoden fuer ihr System ein.
+# Methoden für ihr System ein.
 #
 # Version: 0.0.4
 
@@ -28,7 +28,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -36,7 +36,7 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # extra Funktionen laden
@@ -45,7 +45,7 @@ autoload -U net_conf kwauth_nis_conf kwauth_nis_config
 # Variablen
 lv_Auth=$(gettext 'Authentifizierung')
 
-# Funktionen (check_auth), pruefen welches Authentifizierung gerade aktuell ist.# {{{
+# Funktionen (check_auth), prüfen welches Authentifizierung gerade aktuell ist.# {{{
 #
 check_auth() {
 	unset -- AUTH_IS
@@ -81,7 +81,7 @@ case "$OS" in
 esac
 ## }}}
 
-# Pruefen ob libpam-runtime (>=1.0.1-6) schon das Programm
+# Prüfen ob libpam-runtime (>=1.0.1-6) schon das Programm
 # pam-auth-update besitzt.
 prog_check pam-auth-update
 if [[ -n $NO_PROGS ]] ; then
@@ -103,18 +103,18 @@ while [ "$gv_Auswahl" ] ; do
 			# PAM Modul Konfiguration# {{{
 			pam-auth-update --force
 			if [ $? = 0 ] ; then
-				# NIS loeschen
+				# NIS löschen
 				kwauth_nis_config -r
 			fi
 			## }}}
 			main_menu PAM
 			;;
 		LDAP)
-			# Konfiguration fuer LDAP# {{{
+			# Konfiguration für LDAP# {{{
 			# mit anschliessender PAM Konfiguration.
 			if_conf_prog "$OS" ldap-client
 			if [ $? = 0 ] ; then
-				# NIS loeschen
+				# NIS löschen
 				kwauth_nis_config -r
 			fi
 			#}}}

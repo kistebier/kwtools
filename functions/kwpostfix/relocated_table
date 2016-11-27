@@ -11,8 +11,8 @@ relocated_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$RELOCATED_MENU"
 	}
 	#}}}
-	# Funktion relocated_aendern{{{
-	relocated_aendern() {
+	# Funktion relocated_ändern{{{
+	relocated_ändern() {
 	relocated_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -20,7 +20,7 @@ relocated_table() {
 				relocated_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Address)
-				# Adresse waehlen
+				# Adresse wählen
 				general_first_address
 				relocated_menue $lv_Address
 				;;
@@ -36,7 +36,7 @@ relocated_table() {
 				relocated_menue $lv_Recipient
 				;;
 			$gv_Save)
-				# Eintraege speichern{{{
+				# Einträge speichern{{{
 				if [ "$ADR" -a "$E_ADR" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
 						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE >$FILE$$
@@ -66,24 +66,24 @@ relocated_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR E_ADR AENDERN_ADR AENDERN_ADR1
-				relocated_aendern
+				relocated_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -94,14 +94,14 @@ relocated_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl veraendern
+								# Auswahl verändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${=gv_Auswahl}[1]}"
 								E_ADR="${${=gv_Auswahl}[2]}"
 								AENDERN_ADR="$ADR"
 								AENDERN_ADR1="$E_ADR"
 								#
-								relocated_aendern
+								relocated_ändern
 								break
 								;;
 						esac
@@ -113,7 +113,7 @@ relocated_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -123,7 +123,7 @@ relocated_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

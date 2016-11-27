@@ -1,7 +1,7 @@
 # Funktion f�r die Restrictions{{{
 #
 # allen smtpd_*_restriction stehen unterschiedliche und gleiche Restrictions
-# zur Verfuegung.
+# zur Verfügung.
 #
 # usage: restrictions smtpd_*_restrictions.
 #
@@ -10,12 +10,12 @@ restrictions() {
 	local Anz Anz1 Nr Nr1
 	integer Anz Anz1 Nr Nr1
 	RESTRICT="$1"
-	# Variable fuer die Hilfe
+	# Variable für die Hilfe
 	lv_Restrictions=$(gettext 'Restriktionen')
 	#
 	# Verf�gbare Restrictions{{{
 	#
-	# Verfuegbare Werte in der dementsprechenden Reihenfolge
+	# Verfügbare Werte in der dementsprechenden Reihenfolge
 	#
 	# 1. smtpd_client_restrictions: generic, smtpd_helo_restrictions,
 	# 		smtpd_recipient_restrictions, smtpd_sender_restrictions
@@ -264,7 +264,7 @@ restrictions() {
 		local OldVar
 		OldVar="$1"
 		RESTRICT_TITLE="${gv_Configuration}::${lv_Restrictions}"
-		RESTRICT_MSG=$(gettext 'Waehlen Sie Ihre Restrictions aus.')
+		RESTRICT_MSG=$(gettext 'Wählen Sie Ihre Restrictions aus.')
 		checklist "${DEFAULT_VALUE[1]}" "$RESTRICT_TITLE" "$RESTRICT_MSG" "$VALUE_ARRAY" "$OldVar"
 		#
 		while [ -n "$gv_Auswahl" ] ; do
@@ -287,14 +287,14 @@ restrictions() {
 		done
 	}
 	#}}}
-	# Funktion (extra_conf_restrictions), Bei manchen Restrictions muessen extra Einstellungen{{{
+	# Funktion (extra_conf_restrictions), Bei manchen Restrictions müssen extra Einstellungen{{{
 	# gemacht werden.
 	#
 	extra_conf_restrictions() {
 	while read a ; do
 		case $a in
 			check_*_access)
-				# Angabe der Tabelle und Tabellentyp fuer bestimmte Restrictions.# {{{
+				# Angabe der Tabelle und Tabellentyp für bestimmte Restrictions.# {{{
 				# Tabellen:
 				# check_ccert_access, check_client_access, check_client_mx_access,
 				# check_client_ns_access, check_helo_access, check_helo_mx_access,
@@ -426,7 +426,7 @@ restrictions() {
 		if [ "$Anz" -lt "$Anz1" ] ; then
 			# Wert der 1. Zeile herausfinden
 			WERT="$(sed -n -e "${Anz}p" ${gv_WorkDir}/restrictions)"
-			# 1. Zeile loeschen und den Wert in den Restrictions einfuegen
+			# 1. Zeile löschen und den Wert in den Restrictions einfügen
 			sed -e "${Anz}d" ${gv_WorkDir}/restrictions >${gv_WorkDir}/restrictions1
 			check_extra_restriction "$WERT"
 			postconf -e $RESTRICT="${VALUE},"
@@ -434,10 +434,10 @@ restrictions() {
 			LINE=${${(s,:,)$(grep -n "^$RESTRICT" $MAIN_CF)}[1]}
 			(( LINE=LINE+1 ))
 			# Alle Zeilen ab der Restrictions, in der main.cf kopieren und
-			# dann loeschen.
+			# dann löschen.
 			sed -n -e "${LINE},\$p"  $MAIN_CF >${gv_WorkDir}/maincf$$
 			sed -e "${LINE},\$d"  $MAIN_CF >$MAIN_CF$$
-			# Die restlichen Restrictions, mit Komma, einfuegen, ausser
+			# Die restlichen Restrictions, mit Komma, einfügen, ausser
 			# die letzte.
 			while read a ; do
 				check_extra_restriction "$a"

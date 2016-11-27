@@ -1,4 +1,4 @@
-# Funktion (kwmutt_conf), Konfiguration fuer "mutt"{{{
+# Funktion (kwmutt_conf), Konfiguration für "mutt"{{{
 #
 kwmutt_conf() {
 	# Hook-Optionen# {{{
@@ -38,7 +38,7 @@ kwmutt_conf() {
 	#
 	# usage: is_auth_methode PROTOCOL_AUTH AUTH_METHODEN
 	# PROTOCOL_AUTH - Protokoll, wie smtp-, pop- oder imap_authenticators
-	# AUTH_METHODEN - auf welche Auth-Methoden soll geprueft werden
+	# AUTH_METHODEN - auf welche Auth-Methoden soll geprüft werden
 	#
 	is_auth_methode() {
 		if [ "$#" = 2 ] ; then
@@ -51,7 +51,7 @@ kwmutt_conf() {
 				unset -- M_TMP
 				integer Anz
 				Anz=0
-				# Die Ueberpruefung in der for-Schleife muss den gleichen
+				# Die Überprüfung in der for-Schleife muss den gleichen
 				# Inhalt haben und Reihenfolge wie in der normalen
 				# Auswahl (CHOICE_MENU) in der Funktion kwmutt_smtp_serv_conf.
 				for i in ${(ws: :)Auth_Methode} ; {
@@ -112,7 +112,7 @@ kwmutt_conf() {
 				conf_menu $lv_Format
 				;;
 			$lv_Imap_Cf)
-				# Konfiguration fuer IMAP# {{{
+				# Konfiguration für IMAP# {{{
 				autoload -U kwmutt_imap_conf kwmutt_imap_config
 				kwmutt_imap_conf
 				read_mutt_files
@@ -141,7 +141,7 @@ kwmutt_conf() {
 				conf_menu $lv_Pager
 				;;
 			$lv_Pop_Cf)
-				# Konfiguration fuer POP# {{{
+				# Konfiguration für POP# {{{
 				autoload -U kwmutt_pop_conf kwmutt_pop_config
 				kwmutt_pop_conf
 				read_mutt_files
@@ -178,7 +178,7 @@ kwmutt_conf() {
 				if [ -f "$MUTTCONF" ] ; then
 					M_SIGN=${${${(ws:=:)${(M)${(f)"$(< $MUTTCONF)"}##(#s)set[[:space:]]signature*}}[2]}//\"/}
 				fi
-				# Die Signatur Datei schreiben/aendern etc..
+				# Die Signatur Datei schreiben/ändern etc..
 				if [ ! -z "$M_SIGN" ] ; then
 					# Falls diese nicht existiert erstellen,
 					# da editbox sonst meckert.
@@ -189,7 +189,7 @@ kwmutt_conf() {
 						"$EDITOR" "$M_SIGN"
 					fi
 				else
-					MSG=$(gettext 'Sie muessen erst die Variable "signature" mit einem Wert belegen ($lv_Main).')
+					MSG=$(gettext 'Sie müssen erst die Variable "signature" mit einem Wert belegen ($lv_Main).')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				read_mutt_files

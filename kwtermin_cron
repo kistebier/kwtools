@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 16.10.2012
 #
-# Script: kwtermin_cron, um Termine zu ueberwachen.
+# Script: kwtermin_cron, um Termine zu überwachen.
 # Version: 0.1.4
 
 trap 'rm -rf $gv_WorkDir &>/dev/null ; lock -r $gv_ScriptName' EXIT INT
@@ -60,7 +60,7 @@ Terminwarnung() {
 	esac
 }
 #}}}
-# Funktion check_date_time, Uhrzeit und Datum ueberpruefen und evtl. umrechnen{{{
+# Funktion check_date_time, Uhrzeit und Datum überprüfen und evtl. umrechnen{{{
 check_date_time() {
 	# Startzeit in Minute umrechnen
 	START_DATE="$1"
@@ -92,7 +92,7 @@ MONTH="${Date[5,6]}"
 YEAR="${Date[1,4]}"
 Error=$(gettext 'Fehler:')
 TerminMsg=$(gettext 'Termin am')
-NoTerminList=$(gettext 'Kann Termin-Liste nicht oeffnen ($TerminFile).')
+NoTerminList=$(gettext 'Kann Termin-Liste nicht öffnen ($TerminFile).')
 
 if [ -z "$MAIL_ADR" ] ; then
 	MAIL_ADR="$USER@localhost"
@@ -114,7 +114,7 @@ while [ "${TerminListe[Anz]}" != "" ] ; do
 	# extra Einstellungen, Wiederholung/Geburtstag/Ferien
 	case $6 in
 		t)
-			# taegliche Wiederholungen anzeigen# {{{
+			# tägliche Wiederholungen anzeigen# {{{
 			check_date_time "$1" "$2" "$3"
 			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
 				Update_Termin="${YEAR}${MONTH}${DAY}"
@@ -125,7 +125,7 @@ while [ "${TerminListe[Anz]}" != "" ] ; do
 			## }}}
 			;;
 		w)
-			# woechentliche Wiederholungen anzeigen# {{{
+			# wöchentliche Wiederholungen anzeigen# {{{
 			check_date_time "$1" "$2" "$3"
 			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
 				Act_Termin_Day="${START_DATE[7,8]}"
@@ -155,7 +155,7 @@ while [ "${TerminListe[Anz]}" != "" ] ; do
 			## }}}
 			;;
 		[by])
-			# Geburtstage/jaehrliche Wiederholungen anzeigen# {{{
+			# Geburtstage/jährliche Wiederholungen anzeigen# {{{
 			check_date_time "$1" "$2" "$3"
 			if [ "$WARN_TIME" -eq "$ACT_TIME" ] ; then
 				Act_Termin_Year="${START_DATE[1,4]}"
@@ -182,7 +182,7 @@ while [ "${TerminListe[Anz]}" != "" ] ; do
 	(( Anz++ ))
 done
 
-# Lockfile loeschen
+# Lockfile löschen
 lock -r $gv_ScriptName
 
 exit 0

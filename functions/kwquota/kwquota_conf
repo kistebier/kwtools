@@ -12,7 +12,7 @@ kwquota_conf() {
 	## }}}
 	# Funktion (read_choice_data), Quota Daten einlesen und# {{{
 	# bei mehr als einem quota diese dementsprechend zur
-	# Verfuegung stellen.
+	# Verfügung stellen.
 	#
 	# usage: read_choice_data [ -c ]
 	# -c - create quota, kein einlesen der bestehenden Quotas,
@@ -31,7 +31,7 @@ kwquota_conf() {
 							menubox "$WHAT_QUOTA" "$UG_WHAT_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
 						;;
 					$gv_User)
-						# uebernehmen
+						# übernehmen
 						C_TITLE=(${UG_WHAT_TITLE}::${gv_User})
 						WHAT_QUOTA=User
 						QU_OPT=-u
@@ -46,7 +46,7 @@ kwquota_conf() {
 						return 0
 						;;
 					$gv_Group)
-						# uebernehmen
+						# übernehmen
 						C_TITLE=(${UG_WHAT_TITLE}::${gv_Group})
 						WHAT_QUOTA=Group
 						QU_OPT=-g
@@ -124,7 +124,7 @@ kwquota_conf() {
 				conf_menu $gv_Create
 				;;
 			$gv_Change)
-				# aendern# {{{
+				# ändern# {{{
 				unset -- QUOTA_PART QFS BH_LIMIT BS_LIMIT RTBH_LIMIT RTBS_LIMIT \
 					IH_LIMIT IS_LIMIT RT_BL_GR_TIME BL_GR_TIME I_GR_TIME RESET USER_ID \
 					GROUP_ID PROJECT_ID
@@ -133,7 +133,7 @@ kwquota_conf() {
 				conf_menu $gv_Change
 				;;
 			$gv_Delete)
-				# quota auf device loeschen, heist auf null setzen# {{{
+				# quota auf device löschen, heist auf null setzen# {{{
 				read_fstab_quota
 				if [ -n "$Mountpoint" ] ; then
 					DEL_MP_MENU=($Mountpoint)
@@ -144,12 +144,12 @@ kwquota_conf() {
 								menubox "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Menupoint" "$DEL_MP_MENU"
 								;;
 							*)
-								# Auswahl uebernehmen
+								# Auswahl übernehmen
 								quota_check_fs $gv_Auswahl
 								case "$QFS" in
 									xfs)
 										# XFS Dateisystem# {{{
-										# pruefen, ob xfs_quota ausfuehrbar ist.
+										# prüfen, ob xfs_quota ausführbar ist.
 										prog_check_xfs_quota
 										#
 										ext_ug_quota_check -d
@@ -157,7 +157,7 @@ kwquota_conf() {
 										read_choice_data
 										# Gibt es einen User oder eine Gruppe dann wird sie
 										# zur Auswahl angeboten.
-										# Quota loeschen
+										# Quota löschen
 										if [ -n "${User_Qu_M[1]}" ] ; then
 											DEL_MENU=($User_Qu_M)
 											checklist "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
@@ -167,15 +167,15 @@ kwquota_conf() {
 														checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 														;;
 													*)
-														# Auswahl loeschen
+														# Auswahl löschen
 														# User/gruppen/Projekte auf Null setzen
 														for i in $gv_Auswahl ; {
 															(export LC_ALL=C ; xfs_quota -x -c "limit bhard=0 bsoft=0 ihard=0 isoft=0 rtbhard=0 rtbsoft=0 $i" "$QUOTA_PART" || prog_failure)
-															# Projekte loeschen
+															# Projekte löschen
 															case "$WHAT_QUOTA" in
 																Proj*)
-																	# Eintraege in /etc{projects,projid
-																	# loeschen}
+																	# Einträge in /etc{projects,projid
+																	# löschen}
 																	if [ -s "$XFS_PROJID" ] ; then
 																		local Ist_Project_Id
 																		unset -- Ist_Project_Id
@@ -187,13 +187,13 @@ kwquota_conf() {
 																	fi
 																	#
 																	if [ -n "$Ist_Project_Id" -a -n "$Ist_Project_Nr" -a -n "$Ist_Projects_Nr" ] ; then
-																		# loeschen
+																		# löschen
 																		print -l ${(R)${(f)"$(< $XFS_PROJID)"}##(#s)${Ist_Project_Id}:${Ist_Project_Nr}} >${gv_WorkDir}/projid || prog_failure
 																		mv ${gv_WorkDir}/projid $XFS_PROJID || prog_failure
 																		print -l ${(R)${(f)"$(< ${XFS_PROJECTS})"}##(#s)${Ist_Projects_Nr}:*} >${gv_WorkDir}/projects || prog_failure
 																		mv ${gv_WorkDir}/projects $XFS_PROJECTS || prog_failure
 																	else
-																		MSG=$(gettext 'Kann keine vernuenfigen Eintraege in $XFS_PROJECTS und $XFS_PROJID zum loeschen finden.')
+																		MSG=$(gettext 'Kann keine vernuenfigen Einträge in $XFS_PROJECTS und $XFS_PROJID zum löschen finden.')
 																		msgbox "$gv_Attention" "$MSG"
 																	fi
 																	;;
@@ -217,7 +217,7 @@ kwquota_conf() {
 										# Gibt es einen User oder eine Gruppe dann wird sie
 										# zur Auswahl angeboten.
 										if [ -n "${User_Qu_M[1]}" ] ; then
-											# loeschen
+											# löschen
 											DEL_MENU=($User_Qu_M)
 											checklist "" "$C_TITLE" "$gv_Menupoint" "$DEL_MENU"
 											while [ -n "$gv_Auswahl" ] ; do
@@ -226,7 +226,7 @@ kwquota_conf() {
 														checklist "${gv_Auswahl#HELP }" "$C_TITLE" "$gv_Menupoint" "$DEL_MENU"
 														;;
 													*)
-														# Auswahl loeschen
+														# Auswahl löschen
 														for i in ${=gv_Auswahl} ; {
 															edquota -p root $QU_OPT $QUOTA_FM -f $QUOTA_PART $i || prog_failure
 														}

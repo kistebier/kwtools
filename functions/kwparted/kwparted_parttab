@@ -2,7 +2,7 @@
 # sichern und die des MBR
 #
 kwparted_parttab() {
-	# pruefen, ob folgende Programme installiert sind.
+	# prüfen, ob folgende Programme installiert sind.
 	prog_check sfdisk sgdisk
 	if [ -n "$NO_PROGS" ] ; then
 		return 1
@@ -17,10 +17,10 @@ kwparted_parttab() {
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
-	# Funktion (no_backup_back_msg), Zuruecksichern des Backups fehlgeschlagen.# {{{
+	# Funktion (no_backup_back_msg), Zurücksichern des Backups fehlgeschlagen.# {{{
 	#
 	no_backup_back_msg() {
-		MSG=$(gettext 'Das Zurueckspielen der Sicherung ($PT) auf die Festplatte von $FP ist fehlgeschlagen.')
+		MSG=$(gettext 'Das Zurückspielen der Sicherung ($PT) auf die Festplatte von $FP ist fehlgeschlagen.')
 		msgbox "$gv_Attention" "$MSG"
 
 	}
@@ -54,7 +54,7 @@ kwparted_parttab() {
 						fi	
 					}
 					#
-					# Gibt es keine Partitionstabelle wird eine Information darueber angezeigt
+					# Gibt es keine Partitionstabelle wird eine Information darüber angezeigt
 					# und abgebrochen.
 					if [ -z "${Disk_Part_Cr[1]}" ] ; then
 						MSG=$(gettext 'Alle Festplatten haben schon eine Partitionstabelle.')
@@ -174,11 +174,11 @@ kwparted_parttab() {
 				parttab_menue "$lv_Backup $gv_Create"
 				;;
 			"$lv_Backup $gv_Back")
-				# Sicherung zurueck spielen - einzeln# {{{
+				# Sicherung zurück spielen - einzeln# {{{
 				#######################################
 				# 1. Datei Auswahl
 				# 2. Festplatte Auswahl
-				# 3. speichern ausfuehren
+				# 3. speichern ausführen
 				# 4. Status
 				unset -- PT FP
 				# Funktion backup_back_menu# {{{
@@ -196,7 +196,7 @@ kwparted_parttab() {
 							backup_back_menu "${gv_Auswahl#HELP }"
 							;;
 						$PART_TAB)
-							# Sicherungsdatei auswaehlen# {{{
+							# Sicherungsdatei auswählen# {{{
 							SUFFIX=".mpt .gpt"
 							FORMAT=""
 							file_choice /boot only
@@ -207,7 +207,7 @@ kwparted_parttab() {
 							backup_back_menu $PART_TAB
 							;; 
 						$lv_Fp)
-							# Festplatte auswaehlen# {{{
+							# Festplatte auswählen# {{{
 							if [[ -n ${DISK_DEV_E[1]} ]] ; then
 								# Funktion backup_back_fp_menu# {{{
 								backup_back_fp_menu() {
@@ -234,7 +234,7 @@ kwparted_parttab() {
 							backup_back_menu $lv_Fp
 							;; 
 						$gv_Save)
-							# Sicherung zurueckspielen.# {{{
+							# Sicherung zurückspielen.# {{{
 							if [ -n "$PT" -a -n "$FP" ] ; then
 								disklabel "$FP"
 								case "$FPDISKLABEL" in
@@ -252,7 +252,7 @@ kwparted_parttab() {
 										;;
 								esac
 							else
-								MSG=$(gettext 'Sie muessen beide Menuepunkte mit Werten belegen.')
+								MSG=$(gettext 'Sie müssen beide Menuepunkte mit Werten belegen.')
 								msgbox "$gv_Info" "$MSG"
 								backup_back_menu
 							fi

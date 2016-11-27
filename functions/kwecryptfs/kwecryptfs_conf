@@ -1,15 +1,15 @@
 # Funktion kwecryptfs_conf# {{{
 #
-# benoetigt die Funktion kwecryptfs_config
+# benötigt die Funktion kwecryptfs_config
 #
 # usage: kwecryptfs_conf
 #
 kwecryptfs_conf() {
 	lv_Cipher=$(gettext 'Chiffrierungstyp')
 	lv_Version=$(gettext 'Versionsanzeige')
-	lv_Passthrough=$(gettext 'unverschluesselte_Dateien')
-	lv_Keysize=$(gettext 'Schluesselgroesse')
-	lv_Keytyp=$(gettext 'Schluesseltyp')
+	lv_Passthrough=$(gettext 'unverschlüsselte_Dateien')
+	lv_Keysize=$(gettext 'Schlüsselgrösse')
+	lv_Keytyp=$(gettext 'Schlüsseltyp')
 	lv_Mountp=$(gettext 'Mountpunkt')
 	lv_Mountverz=$(gettext 'Mountverz')
 	lv_Noauto=$(gettext 'Noauto')
@@ -24,14 +24,14 @@ kwecryptfs_conf() {
 	# Funktion conf_menu# {{{
 	conf_menu() {
 		if [ "$KONF" = yes ] ; then
-			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
+			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-äs}\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
 			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
 			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
 		else
 			KONF_MENU=($gv_Directory \"$O_DIR\" $lv_Mountp \"$M_POINT\"
-			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
+			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-äs}\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
 			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
@@ -48,7 +48,7 @@ kwecryptfs_conf() {
 				;;
 			$lv_Xattr)
 				# Metadaten in den erweiterten Attributen des Dateisystems speichern?.# {{{
-				XATTR_MSG=$(gettext 'Sollen die Metadaten der verschluesselten Dateien in dem erweiterten Attributen des Dateisystems gespeichert werden (ja/nein)?')
+				XATTR_MSG=$(gettext 'Sollen die Metadaten der verschlüsselten Dateien in dem erweiterten Attributen des Dateisystems gespeichert werden (ja/nein)?')
 				yesno "$gv_Configuration" "$XATTR_MSG" "$XATTR"
 				if [ "$gv_Auswahl" = yes ] ; then
 					XATTR=yes
@@ -60,9 +60,9 @@ kwecryptfs_conf() {
 				;;
 			$lv_Cipher)
 				# Welcher Chiffrierungstyp soll verwendet werden?# {{{
-				CIPHER_MSG=$(gettext 'Waehlen Sie einen Chiffrierungstyp aus. Standard ist aes.')
-				CIPHER_MENU=(aes \"\" arc4 \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
-				menubox "${CIPHER:-aes}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
+				CIPHER_MSG=$(gettext 'Wählen Sie einen Chiffrierungstyp aus. Standard ist äs.')
+				CIPHER_MENU=(äs \"\" arc4 \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
+				menubox "${CIPHER:-äs}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 				# Auswahl anbieten
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
@@ -70,7 +70,7 @@ kwecryptfs_conf() {
 							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 							;;
 						*)
-							# Auswahl uebernehmen
+							# Auswahl übernehmen
 							CIPHER="$gv_Auswahl"
 							break
 							;;
@@ -80,8 +80,8 @@ kwecryptfs_conf() {
 				conf_menu $lv_Cipher
 				;;
 			$lv_Mountp) 
-				# Mountpunkt fuer das verschluesselte Verzeichnis auswaehlen.{{{
-				#Auswahl des Verzeichnis das verschluesselt werden soll.
+				# Mountpunkt für das verschlüsselte Verzeichnis auswählen.{{{
+				#Auswahl des Verzeichnis das verschlüsselt werden soll.
 				dselect "$M_POINT"
 				if [ "$VERZ" ] ; then
 					dselect_check -c "$VERZ"
@@ -100,8 +100,8 @@ kwecryptfs_conf() {
 				conf_menu $lv_Mountverz
 				;;
 			$lv_Keysize)
-				# Schluesselgroesse auswaehlen# {{{
-				KEY_SIZE_MSG=$(gettext 'Waehlen Sie bitte die Groesse des Schluessels aus. Standard ist 16.')
+				# Schlüsselgrösse auswählen# {{{
+				KEY_SIZE_MSG=$(gettext 'Wählen Sie bitte die Grösse des Schlüssels aus. Standard ist 16.')
 				KEY_SIZE_MENU=(16 \"\" 24 \"\" 32 \"\")
 				menubox "${KEY_SIZE:-16}" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
 				while [ "$gv_Auswahl" ] ; do
@@ -109,7 +109,7 @@ kwecryptfs_conf() {
 						HELP*)	script_help conf_help
 							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
 							;;
-						*)	# Wert uebernehmen
+						*)	# Wert übernehmen
 							KEY_SIZE="$gv_Auswahl"
 							break
 							;;
@@ -119,15 +119,15 @@ kwecryptfs_conf() {
 				conf_menu $lv_Keysize
 				;;
 			$lv_Keytyp)
-				# Welcher Schluessel Typ soll verwendet werden?# {{{
+				# Welcher Schlüssel Typ soll verwendet werden?# {{{
 				####################################################
 				# TODO:
-				# Weitere Schluesseltypen hinzufuegen, wie gpg
+				# Weitere Schlüsseltypen hinzufügen, wie gpg
 				# pkcs11-helper, tspi
 				#
-				KEY_TYPE_OPT_MSG=$(gettext 'Waehlen Sie die Option fuer den Schluesseltyp aus.')
+				KEY_TYPE_OPT_MSG=$(gettext 'Wählen Sie die Option für den Schlüsseltyp aus.')
 				lv_Manual=$(gettext 'manuell')
-				# Funktion (keyfile), Password Datei auswaehlen# {{{
+				# Funktion (keyfile), Password Datei auswählen# {{{
 				keyfile() {
 					unset -- KEY_FILE
 					file_choice "${KEY_FILE%/*}" only
@@ -136,7 +136,7 @@ kwecryptfs_conf() {
 					fi
 				}
 				## }}}
-				# Funktion (key_pass_input), Schluesseleingabe# {{{
+				# Funktion (key_pass_input), Schlüsseleingabe# {{{
 				#
 				key_pass_input() {
 					PASSWD_MSG=$(gettext 'Geben Sie ein openssl Passwort ein.')
@@ -157,7 +157,7 @@ kwecryptfs_conf() {
 				}
 				## }}}
 				# Funktion (key_typ_menu)# {{{
-				KEY_TYPE_MSG=$(gettext 'Waehlen Sie den Schluesseltyp aus. Standard ist passphrase.')
+				KEY_TYPE_MSG=$(gettext 'Wählen Sie den Schlüsseltyp aus. Standard ist passphrase.')
 				KEY_TYPE_MENU=(gpg \"\" openssl \"\" passphrase \"\"
 				pkcs11-helper \"\" tspi \"\" $gv_Back \"\")
 				key_typ_menu() {
@@ -172,7 +172,7 @@ kwecryptfs_conf() {
 							key_typ_menu "${gv_Auswahl#HELP }"
 							;;
 						*)
-							# Auswahl uebernehmen# {{{
+							# Auswahl übernehmen# {{{
 							OLD_KEY_TYPE="$gv_Auswahl"
 							KEY_TYPE="$OLD_KEY_TYPE"
 							case "$KEY_TYPE" in
@@ -181,7 +181,7 @@ kwecryptfs_conf() {
 									#KEY_OPT="$gv_Auswahl"
 									;;
 								openssl)
-									# Schluesseltyp openssl# {{{
+									# Schlüsseltyp openssl# {{{
 									KEY_TYPE_OPT_MENU=(openssl_keyfile \"\" openssl_passwd \"\" openssl_passwd_file \"\" $gv_Back \"\")
 									menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
 									while [ -n "$gv_Auswahl" ] ; do
@@ -191,7 +191,7 @@ kwecryptfs_conf() {
 												menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
 												;;
 											openssl_keyfile)
-												# openssl private RSA SSL Schluessel Datei auswaehlen# {{{
+												# openssl private RSA SSL Schlüssel Datei auswählen# {{{
 												KEY_OPT="$gv_Auswahl"
 												unset -- Tmp
 												#
@@ -207,7 +207,7 @@ kwecryptfs_conf() {
 																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_OPT_MENU"
 																;;
 															$lv_Manual)
-																# uebernehmen, interactive Eingabe der Passphrase.
+																# übernehmen, interactive Eingabe der Passphrase.
 																KEY_TYPE="$Tmp"
 																break
 																;;
@@ -224,7 +224,7 @@ kwecryptfs_conf() {
 																break
 																;;
 															openssl_passwd_file)
-																# openssl_passwd_file Datei auswaehlen# {{{
+																# openssl_passwd_file Datei auswählen# {{{
 																keyfile
 																if [ -n "$KEY_FILE" ] ; then
 																	KEY_TYPE="${Tmp}:openssl_passwd_file=${KEY_FILE}"
@@ -262,7 +262,7 @@ kwecryptfs_conf() {
 												break
 												;;
 											openssl_passwd_file)
-												# openssl Passwort Datei auswaehlen# {{{
+												# openssl Passwort Datei auswählen# {{{
 												KEY_OPT="$gv_Auswahl"
 												unset -- Tmp
 												#
@@ -278,7 +278,7 @@ kwecryptfs_conf() {
 																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$KEY_OPT_MENU"
 																;;
 															$lv_Manual)
-																# uebernehmen, interactive Eingabe der Passphrase.
+																# übernehmen, interactive Eingabe der Passphrase.
 																KEY_TYPE="$Tmp"
 																break
 																;;
@@ -295,7 +295,7 @@ kwecryptfs_conf() {
 																break
 																;;
 															openssl_keyfile)
-																# openssl private RSA SSL Schluessel Datei auswaehlen# {{{
+																# openssl private RSA SSL Schlüssel Datei auswählen# {{{
 																keyfile
 																if [ -n "$KEY_FILE" ] ; then
 																	KEY_TYPE="${Tmp}:openssl_keyfile=${KEY_FILE}"
@@ -324,7 +324,7 @@ kwecryptfs_conf() {
 									## }}}
 									;;
 								passphrase)
-									# Schluesseltyp passphrase# {{{
+									# Schlüsseltyp passphrase# {{{
 									KEY_TYPE_OPT_MENU=(passphrase_passwd \"\"
 									passphrase_passwd_file \"\"
 									passphrase_salt \"\" $gv_Back \"\")
@@ -349,7 +349,7 @@ kwecryptfs_conf() {
 												break
 												;;
 											passphrase_passwd_file)
-												# Schluesseldatei auswaehlen# {{{
+												# Schlüsseldatei auswählen# {{{
 												KEY_OPT="$gv_Auswahl"
 												keyfile
 												if [ -n "$KEY_FILE" ] ; then
@@ -381,7 +381,7 @@ kwecryptfs_conf() {
 									#KEY_OPT="$gv_Auswahl"
 									;;
 							esac
-							# nochmal simple pruefen ob KEY_TYPE korrekt belegt ist.
+							# nochmal simple prüfen ob KEY_TYPE korrekt belegt ist.
 							if [ "$KEY_TYPE" = "$OLD_KEY_TYPE" ] ; then
 								unset -- OLD_KEY_TYPE KEY_TYPE
 							fi
@@ -397,8 +397,8 @@ kwecryptfs_conf() {
 				;;
 			$lv_Noauto)
 				# Auswahl ob beim Bootprozess das Laufwerk gemappt werden soll,# {{{
-				# oder erst spaeter manuell (Ja/Nein).
-				NOAUTO_MSG=$(gettext 'Soll das verschluesselte Verzeichnis beim Start des Rechners manuell erstellt werden (ja/nein)?')
+				# oder erst später manuell (Ja/Nein).
+				NOAUTO_MSG=$(gettext 'Soll das verschlüsselte Verzeichnis beim Start des Rechners manuell erstellt werden (ja/nein)?')
 				yesno "$gv_Configuration" "$NOAUTO_MSG" "$NOAUTO"
 				if [ "$gv_Auswahl" = yes ] ; then
 					NOAUTO=yes
@@ -409,10 +409,10 @@ kwecryptfs_conf() {
 				conf_menu $lv_Noauto
 				;;
 			$lv_Nosigcache)
-				# Soll die Signatur des Schluessels mit# {{{
+				# Soll die Signatur des Schlüssels mit# {{{
 				# ~/.ecryptfs/sig-cache.txt verglichen werden? No ist gut
-				# fuer nicht interactive Setup Scripts.
-				NO_SIG_CACHE_MSG=$(gettext 'Soll die gemountete Schluessel Signatur mit dem Wert in ~/.ecryptfs/sig-cache.txt verglichen werden (ja/nein)?')
+				# für nicht interactive Setup Scripts.
+				NO_SIG_CACHE_MSG=$(gettext 'Soll die gemountete Schlüssel Signatur mit dem Wert in ~/.ecryptfs/sig-cache.txt verglichen werden (ja/nein)?')
 				yesno "$gv_Configuration" "$NO_SIG_CACHE_MSG" "$NO_SIG_CACHE"
 				if [ "$gv_Auswahl" = yes ] ; then
 					NO_SIG_CACHE=yes
@@ -423,10 +423,10 @@ kwecryptfs_conf() {
 				conf_menu $lv_Nosigcache
 				;;
 			$lv_Passthrough)
-				# Sollen nicht verschluesselte Dateien# {{{
+				# Sollen nicht verschlüsselte Dateien# {{{
 				# ins ecryptfs durch gereicht werden? Ist gut
-				# um auch unverschluesselte Dateien zu bearbeiten.
-				PASSTHROUGH_MSG=$(gettext 'Sollen nicht verschluesselte Dateien ins verschluesselte Dateisystem durch gereicht werden (ja/nein)?')
+				# um auch unverschlüsselte Dateien zu bearbeiten.
+				PASSTHROUGH_MSG=$(gettext 'Sollen nicht verschlüsselte Dateien ins verschlüsselte Dateisystem durch gereicht werden (ja/nein)?')
 				yesno "$gv_Configuration" "$PASSTHROUGH_MSG" "$PASSTHROUGH"
 				if [ "$gv_Auswahl" = yes ] ; then
 					PASSTHROUGH=yes
@@ -437,10 +437,10 @@ kwecryptfs_conf() {
 				conf_menu $lv_Passthrough
 				;;
 			$lv_Version)
-				# Soll die Version der verschluesselten Dateien angezeigt# {{{
-				# werden (ja/nein)? Ist gut fuer Backups Tools die erweiterte
-				# Attribute des Dateisystems unterstuetzen.
-				VERSION_MSG=$(gettext 'Soll die Version der verschluesselten Dateien angezeigt werden (ja/nein)? Ist gut fuer Backups Tools die erweiterte Attribute des Dateisystems unterstuetzen, wie ext2/3.')
+				# Soll die Version der verschlüsselten Dateien angezeigt# {{{
+				# werden (ja/nein)? Ist gut für Backups Tools die erweiterte
+				# Attribute des Dateisystems unterstützen.
+				VERSION_MSG=$(gettext 'Soll die Version der verschlüsselten Dateien angezeigt werden (ja/nein)? Ist gut für Backups Tools die erweiterte Attribute des Dateisystems unterstützen, wie ext2/3.')
 				yesno "$gv_Configuration" "$VERSION_MSG" "$VERSION"
 				if [ "$gv_Auswahl" = yes ] ; then
 					VERSION=yes
@@ -451,7 +451,7 @@ kwecryptfs_conf() {
 				conf_menu $lv_Version
 				;;
 			$gv_Directory)
-				#Auswahl des Verzeichnis das verschluesselt werden soll.{{{
+				#Auswahl des Verzeichnis das verschlüsselt werden soll.{{{
 				dselect "$O_DIR"
 				if [ "$VERZ" ] ; then
 					dselect_check -c "$VERZ"
@@ -470,11 +470,11 @@ kwecryptfs_conf() {
 					autoload -U kwecryptfs_config
 					kwecryptfs_config
 				else
-					# Einstellungen fuer das veraendern von Verzeichnissen.# {{{
-					# Schluesseltype
+					# Einstellungen für das verändern von Verzeichnissen.# {{{
+					# Schlüsseltype
 					if [ -n "$KEY_TYPE" -a -n "$O_DIR" -a -n "$M_POINT" ] ; then
 						OPT="${REST_OPTION},key=${KEY_TYPE}"
-						OPT="${OPT},ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
+						OPT="${OPT},ecryptfs_cipher=${CIPHER:-äs},ecryptfs_key_bytes=${KEY_SIZE:-16}"
 						if [ "$XATTR" = yes ] ; then
 							OPT="${OPT},ecryptfs_xattr"
 						fi
@@ -488,7 +488,7 @@ kwecryptfs_conf() {
 							OPT="${OPT},ecryptfs_encrcrypted_view"
 						fi
 					else
-						MSG=$(gettext'Sie muessen erst ein Verzeichnis das chiffriert werden soll und dessen Mountpunkt angeben und natuerlich einen Schluesseltyp und dessen Optionen.')
+						MSG=$(gettext'Sie müssen erst ein Verzeichnis das chiffriert werden soll und dessen Mountpunkt angeben und natürlich einen Schlüsseltyp und dessen Optionen.')
 						msgbox "$gv_Attention" "$MSG"
 						return 1
 					fi

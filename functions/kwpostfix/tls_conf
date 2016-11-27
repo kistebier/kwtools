@@ -21,7 +21,7 @@ tls_conf() {
 	tls_level_ciphers() {
 		unset -- WERT OldVar
 		OldVar="$1"
-		TLS_LEVEL_CIPHERS_MSG=$(gettext 'Tragen Sie hier die Sicherheitsanforderung fuer diese Stufe der Verschluesselung ein (Bsp.: ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH).')
+		TLS_LEVEL_CIPHERS_MSG=$(gettext 'Tragen Sie hier die Sicherheitsanforderung für diese Stufe der Verschlüsselung ein (Bsp.: ALL:!EXPORT:!LOW:!MEDIUM:+RC4:@STRENGTH).')
 		inputbox "$TITLE" "$TLS_LEVEL_CIPHERS_MSG" "$OldVar"
 		if [[ -n $gv_Auswahl ]] ; then
 			WERT="$gv_Auswahl"
@@ -32,7 +32,7 @@ tls_conf() {
 	openssl_curves() {
 		unset -- WERT Curves_Value
 		local OPENSSL_CURVES_MSG OPENSSL_CURVES_MENU
-		OPENSSL_CURVES_MSG=$(gettext 'Waehlen Sie eine elliptische Kurve fuer den sensible fluechtigen ECDH Schluesselaustausch aus.')
+		OPENSSL_CURVES_MSG=$(gettext 'Wählen Sie eine elliptische Kurve für den sensible fluechtigen ECDH Schlüsselaustausch aus.')
 		OPENSSL_CURVES_MENU=($LIST_CURVES)
 		Curves_Value="$1"
 		# Funktion (openssl_curves_menu)# {{{
@@ -66,7 +66,7 @@ tls_conf() {
 	# Funktion conf_tls_menue{{{
 	conf_tls_menue() {
 		TLS_MENU=(tls_append_default_CA \"\$tls_append_default_CA\"
-		tls_daemon_random_bytes \"\$tls_daemon_random_bytes\"
+		tls_dämon_random_bytes \"\$tls_dämon_random_bytes\"
 		tls_disable_workarounds \"\$tls_disable_workarounds\"
 		tls_eecdh_strong_curve \"\$tls_eecdh_strong_curve\"
 		tls_eecdh_ultra_curve \"\$tls_eecdh_ultra_curve\"
@@ -95,7 +95,7 @@ tls_conf() {
 				;;
 			tls_append_default_CA)
 				# Standard = no# {{{
-				TLS_APPEND_DEFAULT_CA_MSG=$(gettext 'Sollen die Standard Zertifikate des Servers mit angehaengt werden? Standard ist nein.')
+				TLS_APPEND_DEFAULT_CA_MSG=$(gettext 'Sollen die Standard Zertifikate des Servers mit angehängt werden? Standard ist nein.')
 				ja_nein_tausch "$TLS_TITLE" "$TLS_APPEND_DEFAULT_CA_MSG"
 				if [[ -n $WERT ]] ; then
 					tls_append_default_CA="$WERT"
@@ -104,16 +104,16 @@ tls_conf() {
 				## }}}
 				conf_tls_menue tls_append_default_CA
 				;;
-			tls_daemon_random_bytes)
+			tls_dämon_random_bytes)
 				# Wieviel Bytes sollen jedesmal eingelesen werden?# {{{
 				# Standard = 32
-				number_input -b "$tls_daemon_random_bytes"
+				number_input -b "$tls_dämon_random_bytes"
 				if [[ -n $NUMBER ]] ; then
-					tls_daemon_random_bytes="$NUMBER"
-					postconf -e tls_daemon_random_bytes="$NUMBER"
+					tls_dämon_random_bytes="$NUMBER"
+					postconf -e tls_dämon_random_bytes="$NUMBER"
 				fi
 				## }}}
-				conf_tls_menue tls_daemon_random_bytes
+				conf_tls_menue tls_dämon_random_bytes
 				;;
 			tls_disable_workarounds)
 				# Schaltet Bug Workarounds aus.# {{{
@@ -121,7 +121,7 @@ tls_conf() {
 				is_value "DONT_INSERT_EMPTY_FRAGMENTS CRYPTOPRO_TLSEXT_BUG MICROSOFT_BIG_SSLV3_BUFFER MICROSOFT_SESS_ID_BUG MSIE_SSLV2_RSA_PADDING NETSCAPE_CHALLENGE_BUG NETSCAPE_REUSE_CIPHER_CHANGE_BUG LEGACY_SERVER_CONNECT SSLEAY_080_CLIENT_DH_BUG SSLREF2_REUSE_CERT_TYPE_BUG TLS_BLOCK_PADDING_BUG TLS_D5_BUG TLS_ROLLBACK_BUG"
 				#
 				U_OPT=k
-				TLS_DISABLE_WORKAROUND_MSG=$(gettext 'Waehlen Sie ein oder mehrere OpenSSL Bug Workarounds aus die abgeschaltet werden sollen (Siehe man 3 SSL_CTX_set_options.')
+				TLS_DISABLE_WORKAROUND_MSG=$(gettext 'Wählen Sie ein oder mehrere OpenSSL Bug Workarounds aus die abgeschaltet werden sollen (Siehe man 3 SSL_CTX_set_options.')
 				checklist "${DEFAULT_VALUE[1]}" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
 				#
 				while [ "$gv_Auswahl" ] ; do
@@ -130,7 +130,7 @@ tls_conf() {
 							U_OPT=k
 							checklist "${gv_Auswahl#HELP }" "$TLS_TITLE" "$TLS_DISABLE_WORKAROUND_MSG" "$VALUE_ARRAY" "$tls_disable_workarounds"
 							;;
-						*)	# uebernehmen
+						*)	# übernehmen
 							tls_disable_workarounds="$gv_Auswahl"
 							postconf -e tls_disable_workarounds="$gv_Auswahl"
 							break
@@ -229,7 +229,7 @@ tls_conf() {
 				;;
 			tls_preempt_cipherlist)
 				# Standard = no# {{{
-				TLS_PREEMPT_CIPHERLIST_MSG=$(gettext 'Soll das Verschluesselungverfahren des Postfix SMTP Servers benutzt werden oder das des Clients? Standard ist nein.')
+				TLS_PREEMPT_CIPHERLIST_MSG=$(gettext 'Soll das Verschlüsselungverfahren des Postfix SMTP Servers benutzt werden oder das des Clients? Standard ist nein.')
 				ja_nein_tausch "$TLS_TITLE" "$TLS_PREEMPT_CIPHERLIST_MSG"
 				if [[ -n $WERT ]] ; then
 					tls_preempt_cipherlist="$WERT"
@@ -250,7 +250,7 @@ tls_conf() {
 				conf_tls_menue tls_random_bytes
 				;;
 			tls_random_exchange_name)
-				# Soll prng_exch fuer tlsmgr aktiviert werden, eine Datei welche {{{
+				# Soll prng_exch für tlsmgr aktiviert werden, eine Datei welche {{{
 				# er von Zeit zu Zeit neu schreibt.
 				# Standard = ${data_directory}/prng_exch
 				yesno_option "$tls_random_exchange_name" "\${data_directory}/prng_exch"
@@ -292,7 +292,7 @@ tls_conf() {
 				# Device um Zufallszahlen zu generieren{{{
 				# Standard = dev:/dev/urandom
 				RANDOM_DEV_MENU=(dev:/dev/random \"\" dev:/dev/urandom \"\")
-				RANDOM_DEV_MSG=$(gettext 'Waehlen Sie ein Device aus.')
+				RANDOM_DEV_MSG=$(gettext 'Wählen Sie ein Device aus.')
 				# Funktion (tls_random_source_menu)# {{{
 				tls_random_source_menu() {
 					menubox "$1" "$TLS_TITLE" "$RANDOM_DEV_MSG" "$RANDOM_DEV_MENU"
@@ -305,7 +305,7 @@ tls_conf() {
 							HELP*)	script_help tls_help
 								tls_random_source_menu "${gv_Auswahl#HELP }"
 								;;
-							*)	# Wert uebernehmen
+							*)	# Wert übernehmen
 								tls_random_source="$gv_Auswahl"
 								postconf -e tls_random_source="$gv_Auswahl"
 								break
@@ -313,8 +313,8 @@ tls_conf() {
 						esac
 					done
 				else
-					tls_daemon_random_source=""
-					postconf -e tls_daemon_random_source=""
+					tls_dämon_random_source=""
+					postconf -e tls_dämon_random_source=""
 				fi
 				#}}}
 				conf_tls_menue tls_random_source

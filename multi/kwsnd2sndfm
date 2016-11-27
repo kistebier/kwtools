@@ -26,7 +26,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -34,10 +34,10 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+# Soll die alte Konfiguration übernommen werden (ja/nein)?
 if [ -f "${gv_HomePath}/.kwtools/snd2sndfmrc" -a ! -f "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" ] ; then
-	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/snd2sndfmrc nach ${gv_HomePath}/.kwtools/kwsnd2sndfmrc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/snd2sndfmrc nach ${gv_HomePath}/.kwtools/kwsnd2sndfmrc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/snd2sndfmrc" "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" &>/dev/null
@@ -52,9 +52,9 @@ read_file kwsnd2sndfmrc
 Lame_Prog="${commands[lame]}"
 Ogg_Prog="${commands[oggenc]}"
 
-# Optionen und Moeglichkeiten ausloten{{{
+# Optionen und Möglichkeiten ausloten{{{
 if [ -x "$Lame_Prog" -a -x "$Ogg_Prog" ] ; then
-	# Auswahl fuer die De-/Encodierung.
+	# Auswahl für die De-/Encodierung.
 	ENC_AUSWAHL=(raw-mp3 \"\" raw-ogg \"\" wav-mp3 \"\" wav-ogg \"\" $gv_Back \"\")
 	DEC_AUSWAHL=(mp3-raw \"\" mp3-wav \"\" ogg-raw \"\" ogg-wav \"\" $gv_Back \"\")
 elif [ -x "$Lame_Prog" ] ; then
@@ -68,7 +68,7 @@ fi
 #
 # lame Optionen von wav -> mp3, umgekehrt und ogg -> wav
 if [ -z "$LAME_ENC_OPT" ] ; then
-	# Beispiel fuer raw -> mp3: Optionen="-r -m s -b 24 -s 44.1"
+	# Beispiel für raw -> mp3: Optionen="-r -m s -b 24 -s 44.1"
 	# -r = inputfile ist eine raw PCM Datei
 	# -m s = Modus Stereo
 	# -b = Bitrate in kbps
@@ -151,17 +151,17 @@ while [ "$gv_Auswahl" ] ; do
 						snd_conf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Mountdir)
-						# Mount Verzeichnis auswaehlen
+						# Mount Verzeichnis auswählen
 						mount_path "$MOUNT_PATH"
 						snd_conf_menue $lv_Mountdir
 						;;
 					$gv_Directory)
-						# Standard Audio Verzeichnis auswaehlen# {{{
+						# Standard Audio Verzeichnis auswählen# {{{
 						dselect "$SND_DIR"
 						if [ "$VERZ" ] ; then
 							dselect_check "$VERZ"
 							if [ "$VERZ" ] ; then
-								# Verzeichnis auf Rechte pruefen
+								# Verzeichnis auf Rechte prüfen
 								if user_device_check "$VERZ" AIE ; then
 									SND_DIR="$VERZ"
 								else
@@ -245,7 +245,7 @@ while [ "$gv_Auswahl" ] ; do
 						# mp3 --> wav{{{
 						FORMAT="MP3"
 						SUFFIX=".mp3 .Mp3 .MP3"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ -n "$WERT" ] ; then
@@ -262,7 +262,7 @@ while [ "$gv_Auswahl" ] ; do
 						# ogg --> wav{{{
 						FORMAT="OGG"
 						SUFFIX=".ogg .Ogg .OGG"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -286,7 +286,7 @@ while [ "$gv_Auswahl" ] ; do
 						# mp3 --> raw{{{
 						FORMAT="MP3"
 						SUFFIX=".mp3 .Mp3 .MP3"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -303,7 +303,7 @@ while [ "$gv_Auswahl" ] ; do
 						# ogg --> raw{{{
 						FORMAT="OGG"
 						SUFFIX=".ogg .Ogg .OGG"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -348,7 +348,7 @@ while [ "$gv_Auswahl" ] ; do
 						# raw --> mp3{{{
 						FORMAT="WAVE"
 						SUFFIX=".raw .Raw .RAW"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -365,7 +365,7 @@ while [ "$gv_Auswahl" ] ; do
 						# raw --> ogg{{{
 						FORMAT="WAVE"
 						SUFFIX=".raw .Raw .RAW"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then
@@ -382,7 +382,7 @@ while [ "$gv_Auswahl" ] ; do
 						# wav --> mp3{{{
 						FORMAT="WAVE"
 						SUFFIX=".wav .Wav .WAV"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						if [ "$WERT" ] ; then
 							while read FILE ; do
@@ -398,7 +398,7 @@ while [ "$gv_Auswahl" ] ; do
 						# wav --> ogg{{{
 						FORMAT="WAVE"
 						SUFFIX=".wav .Wav .WAV"
-						# Dateien auswaehlen
+						# Dateien auswählen
 						file_choice "$SND_DIR" multi
 						#
 						if [ "$WERT" ] ; then

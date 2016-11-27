@@ -1,12 +1,12 @@
-# Funktion um ausgewaehlte Dateien und Verzeichnisse zu signieren, verschluesselln{{{
-# entschluesseln, etc
+# Funktion um ausgewählte Dateien und Verzeichnisse zu signieren, verschlüsselln{{{
+# entschlüsseln, etc
 #
-# benoetigt die Funktion passwort_eingabe
+# benötigt die Funktion passwort_eingabe
 #
 # usage: gpgcrypt
 #
 gpgcrypt() {
-# Funktion zum verschluesseln und entschluesseln ...{{{
+# Funktion zum verschlüsseln und entschlüsseln ...{{{
 #
 # usage: gpgcrypt_action
 #
@@ -19,7 +19,7 @@ gpgcrypt_action() {
 		if [ "${DF_DIR_ARRAY[1]}" ] ; then
 			DIR_MENU=($DF_DIR_ARRAY)
 			DIR_TITLE=$(gettext 'Verzeichnisauswahl')
-			DIR_MSG=$(gettext 'Waehlen Sie ein oder mehrere Verzeichnisse aus.')
+			DIR_MSG=$(gettext 'Wählen Sie ein oder mehrere Verzeichnisse aus.')
 			radiolist "" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
@@ -27,7 +27,7 @@ gpgcrypt_action() {
 						radiolist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 						;;
 					*)	#
-						# In allen ausgewaehlten Verzeichnissen nach Dateien
+						# In allen ausgewählten Verzeichnissen nach Dateien
 						# bearbeiten suchen, die nicht schon mit gpg bearbeitet
 						# wurden.
 						#
@@ -35,7 +35,7 @@ gpgcrypt_action() {
 							pushd $d
 							file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
 							#
-							# Nur wenn Dateien zum verschluesseln da 
+							# Nur wenn Dateien zum verschlüsseln da 
 							# sind gehts weiter
 							#
 							if [ "${DF_ARRAY_NULL[1]}" ] ; then
@@ -49,7 +49,7 @@ gpgcrypt_action() {
 									eval $PROG "${=PROG_OPT}"
 								}
 								#
-								# Ursruengliche Dateien loeschen?
+								# Ursrüngliche Dateien löschen?
 								#
 								del_file -A "$DF_ARRAY_NULL"
 							else
@@ -59,7 +59,7 @@ gpgcrypt_action() {
 							popd
 						}
 						#
-						# Passphrase loeschen
+						# Passphrase löschen
 						#
 						unset -- PASSPHRASE
 						break
@@ -80,7 +80,7 @@ gpgcrypt_action() {
 		if [ "${DF_ARRAY[1]}" ] ; then
 			FILE_MENU=($DF_ARRAY)
 			FILE_TITLE=$(gettext 'Dateiauswahl')
-			FILE_MSG=$(gettext 'Waehlen Sie eine oder mehrere Dateien zur weiteren Bearbeitung aus.')
+			FILE_MSG=$(gettext 'Wählen Sie eine oder mehrere Dateien zur weiteren Bearbeitung aus.')
 			radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
@@ -98,7 +98,7 @@ gpgcrypt_action() {
 							eval $PROG "${=PROG_OPT}"
 						}
 						#
-						# Passphrase loeschen
+						# Passphrase löschen
 						#
 						unset -- PASSPHRASE
 						#
@@ -110,7 +110,7 @@ gpgcrypt_action() {
 			#
 			unset -- PASSPHRASE
 		else
-			MSG=$(gettext 'Es sind keine un/verschluesselten Dateien vorhanden.')
+			MSG=$(gettext 'Es sind keine un/verschlüsselten Dateien vorhanden.')
 			msgbox "$gv_Attention" "$MSG"
 		fi
 		#}}}
@@ -122,7 +122,7 @@ gpgcrypt_action() {
 	if [ "$VERZ" ] ; then
 		dselect_check "$VERZ"
 		if [ -n "$VERZ" ] ; then
-			# Verzeichnisse auf Rechte pruefen.
+			# Verzeichnisse auf Rechte prüfen.
 			if !  user_device_check "$VERZ" AIE ; then
 				return 1
 			fi
@@ -130,14 +130,14 @@ gpgcrypt_action() {
 			PROG=gpg
 			case $ACTION in
 				both|crypt|sign)
-					# signieren oder verschluesseln oder beides
+					# signieren oder verschlüsseln oder beides
 					#
 					# Ausschluss alle Dateien die auf *.gpg enden.
 					A_SUFFIX="gpg"
 					gpgcrypt_action
 					;;
 				decr*)
-					# entschluesseln
+					# entschlüsseln
 					SUFFIX=".gpg"
 					FORMAT=""
 					A_SUFFIX=""

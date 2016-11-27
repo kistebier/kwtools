@@ -147,7 +147,7 @@ lmtp_conf() {
 						HELP*) script_help lmtp_help
 							conf_address_pref "${gv_Auswahl#HELP }"
 							;;
-						*)	# Auswahl uebernehmen
+						*)	# Auswahl übernehmen
 							lmtp_address_preference="$gv_Auswahl"
 							postconf -e lmtp_address_preference="$gv_Auswahl"
 							break
@@ -168,9 +168,9 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_assume_final
 				;;
 			lmtp_bind_address)
-				# Welche IPv4 Adresse soll fuer ausgehende{{{
+				# Welche IPv4 Adresse soll für ausgehende{{{
 				# Verbindungen genutzt werden
-				LMTP_BIND_ADDRESS_MSG=$(gettext 'Geben Sie die IPv4 Adresse ein, die fuer ausgehende Verbindungen via LMTP genutzt werden soll (Bsp. 192.168.0.1).')
+				LMTP_BIND_ADDRESS_MSG=$(gettext 'Geben Sie die IPv4 Adresse ein, die für ausgehende Verbindungen via LMTP genutzt werden soll (Bsp. 192.168.0.1).')
 				inputbox "$LMTP_TITLE" "$LMTP_BIND_ADDRESS_MSG" "$lmtp_bind_address"
 				if [ "$gv_Auswahl" ] ; then
 					ip_analyse $gv_Auswahl
@@ -189,9 +189,9 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_bind_address
 				;;
 			lmtp_bind_address6)
-				# Welche IPv6 Adresse soll fuer ausgehende{{{
+				# Welche IPv6 Adresse soll für ausgehende{{{
 				# Verbindungen genutzt werden
-				LMTP_BIND_ADDRESS6_MSG=$(gettext 'Geben Sie die IPv6 Adresse ein, die fuer ausgehende Verbindungen via LMTP genutzt werden soll (Bsp. 2001:240:5c7:0:250:56ff:fe89:1).')
+				LMTP_BIND_ADDRESS6_MSG=$(gettext 'Geben Sie die IPv6 Adresse ein, die für ausgehende Verbindungen via LMTP genutzt werden soll (Bsp. 2001:240:5c7:0:250:56ff:fe89:1).')
 				inputbox "$LMTP_TITLE" "$LMTP_BIND_ADDRESS6_MSG" "$lmtp_bind_address6"
 				if [ "$gv_Auswahl" ] ; then
 					ip_analyse $gv_Auswahl
@@ -218,9 +218,9 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_body_checks
 				;;
 			lmtp_cname_overrides_servername)
-				# Ueberschreiben von Servernamen bei CNAME records erlauben{{{
+				# Überschreiben von Servernamen bei CNAME records erlauben{{{
 				# Standard = no
-				LMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das ueberschreiben der Servernamen, die der LMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
+				LMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das überschreiben der Servernamen, die der LMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_CNAME_OVERRIDES_SERVERNAME_MSG"
 				lmtp_cname_overrides_servername="$WERT"
 				postconf -e lmtp_cname_overrides_servername="$WERT"
@@ -228,7 +228,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_cname_overrides_servername
 				;;
 			lmtp_connect_timeout)
-				# Timeout fuer den Aufbau der Verbindung{{{
+				# Timeout für den Aufbau der Verbindung{{{
 				default_or_input lmtp_connect_timeout number_input '-a "$LMTP_TITLE" "$SMTP_CONNECT_TIMEOUT_MSG"' "$lmtp_connect_timeout"
 				if [[ -n $NUMBER ]] ; then
 					lmtp_connect_timeout="$NUMBER"
@@ -299,7 +299,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_data_init_timeout
 				;;
 			lmtp_data_xfer_timeout)
-				# Timeout waehrend der �bertragung zu einem LMTP Server{{{
+				# Timeout während der �bertragung zu einem LMTP Server{{{
 				default_or_input lmtp_data_xfer_timeout number_input '-a "$LMTP_TITLE" "$SMTP_DATA_XFER_TIMEOUT_MSG"' "$lmtp_data_xfer_timeout"
 				if [[ -n $NUMBER ]] ; then
 					lmtp_data_xfer_timeout="$NUMBER"
@@ -309,7 +309,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_data_xfer_timeout
 				;;
 			lmtp_defer_if_no_mx_address_found)
-				# Zurueckstellung von mails wenn ein MX record nicht aufgeloest werden kann# {{{
+				# Zurückstellung von mails wenn ein MX record nicht aufgelöst werden kann# {{{
 				# Standard = no
 				ja_nein_tausch "$LMTP_TITLE" "$DEFER_IF_NO_MX_ADDRESS_FOUND_MSG"
 				lmtp_defer_if_no_mx_address_found="$WERT"
@@ -398,7 +398,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_destination_rate_delay
 				;;
 			lmtp_destination_recipient_limit)
-				# max. Anzahl der Empfaenger in einer mail{{{
+				# max. Anzahl der Empfänger in einer mail{{{
 				# Standard = $default_destination_recipient_limit
 				default_or_input lmtp_destination_recipient_limit number_input -i $lmtp_destination_recipient_limit
 				if [[ -n $Value ]] ; then
@@ -409,7 +409,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_destination_recipient_limit
 				;;
 			lmtp_discard_lhlo_keyword_address_maps)
-				# Tabelle mit LHLO Schluesselwoertern die ignoriert werden sollen{{{
+				# Tabelle mit LHLO Schlüsselwörtern die ignoriert werden sollen{{{
 				tab_support_choice "$gv_Auswahl"
 				lmtp_discard_lhlo_keyword_address_maps="$MAPS"
 				postconf -e lmtp_discard_lhlo_keyword_address_maps="$MAPS"
@@ -417,8 +417,8 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_discard_lhlo_keyword_address_maps
 				;;
 			lmtp_discard_lhlo_keywords)
-				# EHLO Schluesselwoertern{{{
-				LMTP_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schluesselwoertern (starttls, auth, ...) die der LMTP Client ignorieren soll, bei einer EHLO Antwort von einem entfernten LMTP Server.')
+				# EHLO Schlüsselwörtern{{{
+				LMTP_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schlüsselwörtern (starttls, auth, ...) die der LMTP Client ignorieren soll, bei einer EHLO Antwort von einem entfernten LMTP Server.')
 				inputbox "$LMTP_TITLE" "$LMTP_DISCARD_EHLO_KEYWORDS_MSG" "$lmtp_discard_ehlo_keywords"
 				if [ "$gv_Auswahl" ] ; then
 					lmtp_discard_ehlo_keywords="$gv_Auswahl"
@@ -444,7 +444,7 @@ lmtp_conf() {
 								U_OPT=k
 								checklist "${gv_Auswahl#HELP }" "$LMTP_TITLE" "$LMTP_DNS_RESOLVER_OPTIONS_MSG" "$VALUE_ARRAY"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								lmtp_dns_resolver_options="$gv_Auswahl"
 								postconf -e lmtp_dns_resolver_options="$gv_Auswahl"
 								break
@@ -458,7 +458,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_dns_resolver_options
 				;;
 			lmtp_enforce_tls)
-				# SSL/TLS fuer den Versand erzwingen{{{
+				# SSL/TLS für den Versand erzwingen{{{
 				ja_nein_tausch "$LMTP_TITLE" "$ENFORCE_TLS_MSG"
 				lmtp_enforce_tls="$WERT"
 				postconf -e lmtp_enforce_tls="$WERT"
@@ -518,7 +518,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_lhlo_timeout
 				;;
 			lmtp_line_length_limit)
-				# LMTP Line Laenge einstellen{{{
+				# LMTP Line Länge einstellen{{{
 				# Standard = 998
 				number_input -i "$lmtp_line_length_limit"
 				if [ "$NUMBER" ] ; then
@@ -539,7 +539,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_mail_timeout
 				;;
 			lmtp_mime_header_checks)
-				# Tabelle mit Filtermustern fuer den Mime Header beim versenden einer mail# {{{
+				# Tabelle mit Filtermustern für den Mime Header beim versenden einer mail# {{{
 				default_or_input lmtp_mime_header_checks tab_support_choice "$gv_Auswahl" $lmtp_mime_header_checks
 				lmtp_mime_header_checks="$Value"
 				postconf -e lmtp_mime_header_checks="$Value"
@@ -577,7 +577,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_mx_session_limit
 				;;
 			lmtp_nested_header_checks)
-				# Tabelle mit Filtermustern der Mailanhaenge Header, beim versenden einer mail# {{{
+				# Tabelle mit Filtermustern der Mailanhänge Header, beim versenden einer mail# {{{
 				default_or_input lmtp_nested_header_checks tab_support_choice "$gv_Auswahl" $lmtp_nested_header_checks
 				lmtp_nested_header_checks="$Value"
 				postconf -e lmtp_nested_header_checks="$Value"
@@ -586,7 +586,7 @@ lmtp_conf() {
 				;;
 			lmtp_per_record_deadline)
 				# Standard = no# {{{
-				LMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie koennen das Verhalten der lmtp_*_timeout Limits veraendern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
+				LMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie können das Verhalten der lmtp_*_timeout Limits verändern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_PER_RECORD_DEADLINE_MSG"
 				lmtp_per_record_deadline="$WERT"
 				postconf -e lmtp_per_record_deadline="$WERT"
@@ -594,7 +594,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_per_record_deadline
 				;;
 			lmtp_pix_workaround_delay_time)
-				# Wartezeit fuer einen Fehler in CISCO PIX Firewalls{{{
+				# Wartezeit für einen Fehler in CISCO PIX Firewalls{{{
 				number_input -s "${lmtp_pix_workaround_delay_time%?}"
 				if [ "$NUMBER" ] ; then
 					lmtp_pix_workaround_delay_time="$NUMBER"
@@ -604,7 +604,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_pix_workaround_delay_time
 				;;
 			lmtp_pix_workaround_maps)
-				# Standard ist leer. Tabelle fuer die PIX Workarounds# {{{
+				# Standard ist leer. Tabelle für die PIX Workarounds# {{{
 				# ((CISCO) PIX Firewall Bugs).
 				tab_support_choice "$gv_Auswahl"
 				lmtp_pix_workaround_maps="$MAPS"
@@ -737,8 +737,8 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sasl_auth_cache_name
 				;;
 			lmtp_sasl_auth_cache_time)
-				# Maximale Alter der lmtp_sasl_auth_cache_name Eintraegen# {{{
-				# bis sie geloescht werden. Standard = 90d.
+				# Maximale Alter der lmtp_sasl_auth_cache_name Einträgen# {{{
+				# bis sie gelöscht werden. Standard = 90d.
 				number_input -d "${lmtp_sasl_auth_cache_time%?}"
 				if [ "$NUMBER" ] ; then
 					lmtp_sasl_auth_cache_time="$NUMBER"
@@ -748,8 +748,8 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sasl_auth_cache_time
 				;;
 			lmtp_sasl_auth_enable)
-				# LMTP-AUTH beim Versand ueber LMTP aktivieren?{{{
-				LMTP_SASL_AUTH_MSG=$(gettext 'LMTP-AUTH beim Versand ueber LMTP aktivieren (ja/nein)?')
+				# LMTP-AUTH beim Versand über LMTP aktivieren?{{{
+				LMTP_SASL_AUTH_MSG=$(gettext 'LMTP-AUTH beim Versand über LMTP aktivieren (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SASL_AUTH_MSG"
 				lmtp_sasl_auth_enable="$WERT"
 				postconf -e lmtp_sasl_auth_enable="$WERT"
@@ -766,7 +766,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sasl_auth_soft_bounce
 				;;
 			lmtp_sasl_mechanism_filter)
-				# Auswahl der zu beruecksichtigen SASL Mechanismen# {{{
+				# Auswahl der zu berücksichtigen SASL Mechanismen# {{{
 				generate_is_file "${lmtp_sasl_mechanism_filter//,/}"
 				is_value "anonymous plain login cram-md5 digest-md5 ntlm"
 				#
@@ -791,8 +791,8 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sasl_mechanism_filter
 				;;
 			lmtp_sasl_password_maps)
-				# Tabelle fuer Kennungen/Passwoertern{{{
-				# fuer authentifiezierte LMTP Verbindungen.
+				# Tabelle für Kennungen/Passwörtern{{{
+				# für authentifiezierte LMTP Verbindungen.
 				tab_support_choice "$gv_Auswahl"
 				lmtp_sasl_password_maps="$MAPS"
 				postconf -e lmtp_sasl_password_maps="$MAPS"
@@ -805,7 +805,7 @@ lmtp_conf() {
 				# INFO:
 				# Konfigurationsdatei oder Treffpunkt
 				#############################
-				LMTPD_SASL_PATH_MSG=$(gettext 'Geben Sie den Pfad zum SASL-Socket fuer bestimmete SASL-Implementationen wie Dovecot ein. Siehe auch dem Punkt lmtp_sasl_type.')
+				LMTPD_SASL_PATH_MSG=$(gettext 'Geben Sie den Pfad zum SASL-Socket für bestimmete SASL-Implementationen wie Dovecot ein. Siehe auch dem Punkt lmtp_sasl_type.')
 				inputbox "$LMTPD_TITLE" "$LMTPD_SASL_PATH_MSG" "$lmtp_sasl_path"
 				if [ -n "$gv_Auswahl" ] ; then
 					lmtp_sasl_path="$gv_Auswahl"
@@ -828,7 +828,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sasl_security_options
 				;;
 			lmtp_sasl_tls_security_options)
-				# zulaessige LMTP-AUTH Identifierzierungsmethoden,{{{
+				# zulässige LMTP-AUTH Identifierzierungsmethoden,{{{
 				# bei TLS.
 				# Standard = $lmtp_sasl_security_options
 				mail_mechanism "$lmtp_sasl_tls_security_options"
@@ -857,7 +857,7 @@ lmtp_conf() {
 				;;
 			lmtp_sasl_type)
 				# Standard = cyrus, siehe postconf -A# {{{
-				LMTP_SASL_TYPE_MSG=$(gettext 'Waehlen Sie ein SASL Plugin mit der sich der Postfix LMTP Client authentifizieren soll aus.')
+				LMTP_SASL_TYPE_MSG=$(gettext 'Wählen Sie ein SASL Plugin mit der sich der Postfix LMTP Client authentifizieren soll aus.')
 				sasl_types -A "$LMTP_TITLE" "$LMTP_SASL_TYPE_MSG" "$lmtp_sasl_type"
 				if [[ -n $WERT ]] ; then
 					lmtp_sasl_type="$WERT"
@@ -871,7 +871,7 @@ lmtp_conf() {
 				;;
 			lmtp_send_dummy_mail_auth)
 				# Standard = no# {{{
-				LMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der LMTP-AUTH Identifierzierung die AUTH=<> Optionen anhaengen.\n\nSoll dies geschehen(ja/nein)?')
+				LMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der LMTP-AUTH Identifierzierung die AUTH=<> Optionen anhängen.\n\nSoll dies geschehen(ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SEND_DUMMY_MAIL_AUTH_MSG"
 				lmtp_send_dummy_mail_auth="$WERT"
 				postconf -e lmtp_send_dummy_mail_auth="$WERT"
@@ -888,7 +888,7 @@ lmtp_conf() {
 				;;
 			lmtp_sender_dependent_authentication)
 				# Standard ist = no.# {{{
-				LMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier koennen Sie die Authentifizierung des Postfix Clients mittels LMTP_AUTH aktivieren. Dabei wird der LMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
+				LMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier können Sie die Authentifizierung des Postfix Clients mittels LMTP_AUTH aktivieren. Dabei wird der LMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SENDER_DEP_AUTH_MSG"
 				lmtp_sender_dependent_authentication="$WERT"
 				postconf -e lmtp_sender_dependent_authentication="$WERT"
@@ -896,9 +896,9 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_sender_dependent_authentication
 				;;
 			lmtp_skip_5xx_greeting)
-				# Begruessungstext bei LMTP_Code 5xx{{{
+				# Begrüssungstext bei LMTP_Code 5xx{{{
 				# (dauerhafter Fehler) ignorieren?
-				LMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begruessungstext bei LMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
+				LMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begrüssungstext bei LMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SKIP_5XX_GREETING_MSG"
 				lmtp_skip_5xx_greeting="$WERT"
 				postconf -e lmtp_skip_5xx_greeting="$WERT"
@@ -926,7 +926,7 @@ lmtp_conf() {
 				;;
 			lmtp_tcp_port)
 				# lmtp TCP Port vergeben{{{
-				LMTP_PORT_MSG=$(gettext 'Geben Sie den Port fuer das Protokoll LMTP ein. Standard ist 24.')
+				LMTP_PORT_MSG=$(gettext 'Geben Sie den Port für das Protokoll LMTP ein. Standard ist 24.')
 				number_input "$LMTP_TITLE" "$LMTP_PORT_MSG" "$lmtp_tcp_port"
 				if [[ -n $NUMBER ]] ; then
 					lmtp_tcp_port="$NUMBER"
@@ -945,7 +945,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_CAfile
 				;;
 			lmtp_tls_CApath)
-				# Verzeichnis in dem die Zertifikate liegen, fuer#{{{
+				# Verzeichnis in dem die Zertifikate liegen, für#{{{
 				# eingehende Mails. Diese werden dann mit den Rechten des Mail 
 				# Servers gelesen. 
 				dselect "$lmtp_tls_CApath"
@@ -972,7 +972,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_block_early_mail_reply
 				;;
 			lmtp_tls_cert_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				tls_file_choice 
 				lmtp_tls_cert_file="$WERT"
 				postconf -e lmtp_tls_cert_file="$WERT"
@@ -981,8 +981,8 @@ lmtp_conf() {
 				;;
 			lmtp_tls_ciphers)
 				# Standard = export# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
-				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
+				# Postfix Server mit der geeigneten TLS Verschlüsselung benutzen soll.
 				tls_ciphers "$lmtp_tls_ciphers"
 				if [[ -n $WERT ]] ; then
 					lmtp_tls_ciphers="$WERT"
@@ -995,7 +995,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_ciphers
 				;;
 			lmtp_tls_dcert_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				tls_file_choice 
 				lmtp_tls_dcert_file="$WERT"
 				postconf -e lmtp_tls_dcert_file="$WERT"
@@ -1003,7 +1003,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_dcert_file
 				;;
 			lmtp_tls_dkey_file)
-				# Auswahl der TLS Schluessel Dateien{{{
+				# Auswahl der TLS Schlüssel Dateien{{{
 				default_or_input lmtp_tls_dkey_file tls_file_choice 
 				lmtp_tls_dkey_file="$WERT"
 				postconf -e lmtp_tls_dkey_file="$WERT"
@@ -1012,7 +1012,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_eccert_file)
 				# Datei mit dem Postfix LMTP client ECDSA Zertifikat im PEM Format.# {{{
-				# Diese Datei beinhaltet den Postfix LMTP Client ECDSA privaten Schluessel.
+				# Diese Datei beinhaltet den Postfix LMTP Client ECDSA privaten Schlüssel.
 				# Bsp.: /etc/postfix/ecdsa-ccert.pem
 				tls_file_choice 
 				lmtp_tls_eccert_file="$WERT"
@@ -1030,7 +1030,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_enforce_peername)
 				# lmtp_tls_enforce_peername aktivieren{{{
-				LMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte LMTP Server die Informationen, fuer Rechnernamen im Zertifikat suchen (ja/nein)?')
+				LMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte LMTP Server die Informationen, für Rechnernamen im Zertifikat suchen (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_TLS_ENFORCE_PEERNAME_MSG"
 				lmtp_tls_enforce_peername="$WERT"
 				postconf -e lmtp_tls_enforce_peername="$WERT"
@@ -1039,8 +1039,8 @@ lmtp_conf() {
 				;;
 			lmtp_tls_exclude_ciphers)
 				# Standard = # {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix LMTP Client Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix LMTP Client Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				tls_exclude_ciphers "$lmtp_tls_exclude_ciphers"
 				if [[ -n $WERT ]] ; then
@@ -1066,12 +1066,12 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_fingerprint_cert_match
 				;;
 			lmtp_tls_fingerprint_digest)
-				# Client Fingerprint auswaehlen (md5)# {{{
-				# Die Nachricht ueber den Algorithmus zum einrichten eines
+				# Client Fingerprint auswählen (md5)# {{{
+				# Die Nachricht über den Algorithmus zum einrichten eines
 				# entfernten Client-Zertifikates Fingerprints oder den Fingerprint
-				# des oeffentlichen Schluessel fuer die Parameter
+				# des öffentlichen Schlüssel für die Parameter
 				# check_ccert_access and permit_tls_clientcerts. Der Standard Algorithmus
-				# \"md5\" ist fuer die Rueckwaertskompalitaet mit Postfix Release <=2.5.
+				# \"md5\" ist für die Rueckwärtskompalität mit Postfix Release <=2.5.
 				tls_fingerprint_digest lmtp_help $lmtp_tls_fingerprint_digest
 				lmtp_tls_fingerprint_digest="$WERT"
 				postconf -e lmtp_tls_fingerprint_digest="$WERT"
@@ -1087,7 +1087,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_key_file
 				;;
 			lmtp_tls_loglevel)
-				# Loglevel auswaehlen{{{
+				# Loglevel auswählen{{{
 				# Standard = 0
 				loglevel $lmtp_tls_loglevel
 				lmtp_tls_loglevel="$WERT"
@@ -1097,8 +1097,8 @@ lmtp_conf() {
 				;;
 			lmtp_tls_mandatory_ciphers)
 				# Standard = medium# {{{
-				# Auswahl des minimum der Qualitaet der TLS Verschluesselung die der
-				# Postfix Server mit der geeigneten TLS Verschluesselung benutzen soll.
+				# Auswahl des minimum der Qualität der TLS Verschlüsselung die der
+				# Postfix Server mit der geeigneten TLS Verschlüsselung benutzen soll.
 				tls_ciphers "$lmtp_tls_mandatory_ciphers"
 				if [[ -n $WERT ]] ; then
 					lmtp_tls_mandatory_ciphers="$WERT"
@@ -1112,8 +1112,8 @@ lmtp_conf() {
 				;;
 			lmtp_tls_mandatory_exclude_ciphers)
 				# Standard = # {{{
-				# Liste der Verschluesselung oder Verschluesselungstypen
-				# die von der Postfix LMTP Server Verschluesselungliste
+				# Liste der Verschlüsselung oder Verschlüsselungstypen
+				# die von der Postfix LMTP Server Verschlüsselungliste
 				# aller TLS Sicherheitslevel ausgeschlossen werden.
 				tls_exclude_ciphers "$lmtp_tls_mandatory_exclude_ciphers"
 				if [[ -n $WERT ]] ; then
@@ -1144,7 +1144,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_note_starttls_offer)
 				# lmtp_tls_note_starttls_offer aktivieren{{{
-				LMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten LMTP Server geloggt werden, falls TLS nicht fuer diesen Server aktiviert ist (ja/nein)?')
+				LMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten LMTP Server geloggt werden, falls TLS nicht für diesen Server aktiviert ist (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_TLS_NOTE_STARTTLS_OFFER_MSG"
 				lmtp_tls_note_starttls_offer="$WERT"
 				postconf -e lmtp_tls_note_starttls_offer="$WERT"
@@ -1152,7 +1152,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_note_starttls_offer
 				;;
 			lmtp_tls_per_site)
-				# Tabelle fuer die Regeln der TLS Benutzung{{{
+				# Tabelle für die Regeln der TLS Benutzung{{{
 				##############################
 				# INFO: ist schwer von abzuraten.
 				tab_support_choice "$gv_Auswahl"
@@ -1162,7 +1162,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_per_site
 				;;
 			lmtp_tls_policy_maps)
-				# Tabelle mit den Policies fuer das Versenden von mails# {{{
+				# Tabelle mit den Policies für das Versenden von mails# {{{
 				# (LMTP_AUTH)
 				tab_support_choice "$gv_Auswahl"
 				lmtp_tls_policy_maps="$MAPS"
@@ -1257,7 +1257,7 @@ lmtp_conf() {
 				conf_lmtp_menu lmtp_tls_verify_cert_match
 				;;
 			lmtp_use_tls)
-				# tls fuer eingehende Verbindungen aktivieren{{{
+				# tls für eingehende Verbindungen aktivieren{{{
 				LMTP_USE_TLS_MSG=$(gettext 'Soll TLS benutzt werden, falls ein entfernter LMTP Server STARTTLS anbietet (ja/nein)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_USE_TLS_MSG"
 				lmtp_use_tls="$WERT"

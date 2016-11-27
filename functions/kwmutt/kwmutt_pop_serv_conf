@@ -1,4 +1,4 @@
-# Funktion (kwmutt_pop_serv_conf), konfiguriert POP fuer mutt# {{{
+# Funktion (kwmutt_pop_serv_conf), konfiguriert POP für mutt# {{{
 #
 # usage: kwmutt_pop_serv_conf
 kwmutt_pop_serv_conf() {
@@ -27,7 +27,7 @@ kwmutt_pop_serv_conf() {
 		menubox "$1" "$POP_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
 	}
 	## }}}
-	# Funktion (pop_conf_serv_menu), menu fuer die Imap Konfiguration# {{{
+	# Funktion (pop_conf_serv_menu), menu für die Imap Konfiguration# {{{
 	POP_TITLE="$lv_Pop"
 	pop_conf_serv_menu() {
 		POP_CONF_SERV_MENU=(\"$lv_Default_Mailbox\" \"$DEFAULT_SERVER\"
@@ -56,7 +56,7 @@ kwmutt_pop_serv_conf() {
 					pop_conf_serv_menu
 					;;
 				$lv_Default_Mailbox)
-					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
+					# Soll dieses Postfach als Standard Eröffnungsfach deklariert werden (ja/nein)?# {{{
 					yesno "$POP_TITLE" "$DEFAULT_MB_MSG" "$DEFAULT_SERVER"
 					if [ "$gv_Auswahl" = yes ] ; then
 						DEFAULT_SERVER="yes"
@@ -77,7 +77,7 @@ kwmutt_pop_serv_conf() {
 						Pop_Host="$gv_Auswahl"
 						check_mail_server "$gv_Auswahl"
 					fi
-					# Falls ein Wert vorhanden ist uebernehmen.
+					# Falls ein Wert vorhanden ist übernehmen.
 					if [ -n "$Mailserver" ] ; then
 						pop_host="$Pop_Host"
 					else
@@ -91,7 +91,7 @@ kwmutt_pop_serv_conf() {
 					pop_conf_serv_menu pop_host
 					;;
 				pop_user)
-					# Eingabe des Benutzers fuer den POP-Server.# {{{
+					# Eingabe des Benutzers für den POP-Server.# {{{
 					MSG=$(gettext 'Geben Sie den Benutzernamen zur Authentifizierung am POP Server ein.')
 					inputbox "$POP_TITLE" "$MSG" "$pop_user"
 					if [ -n "$gv_Auswahl" ] ; then
@@ -104,7 +104,7 @@ kwmutt_pop_serv_conf() {
 					;;
 				pop_pass)
 					# Passwort des POP-Users# {{{
-					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort fuer Ihr POP Postfach ein.')
+					PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort für Ihr POP Postfach ein.')
 					inputbox "$POP_TITLE" "$PASSWD_MSG" "$pop_pass"
 					if [ -n "$gv_Auswahl" ] ; then
 						pop_pass="$gv_Auswahl"
@@ -116,7 +116,7 @@ kwmutt_pop_serv_conf() {
 					pop_conf_serv_menu pop_pass
 					;;
 				folder)
-					# Standard Verzeichnis fuer die mailboxen auswaehlen.# {{{
+					# Standard Verzeichnis für die mailboxen auswählen.# {{{
 					dselect $folder
 					if [[ -n $VERZ ]] ; then
 						folder="$VERZ"
@@ -144,7 +144,7 @@ kwmutt_pop_serv_conf() {
 										checklist "${DEFAULT_VALUE[1]}" "$POP_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
 										;;
 									*)
-										# Auswahl uebernehmen
+										# Auswahl übernehmen
 										integer Anz
 										local Anz Tmp_Mailbox
 										Anz=0
@@ -204,7 +204,7 @@ kwmutt_pop_serv_conf() {
 											checklist "${gv_Auswahl#HELP }" "$POP_TITLE" "$gv_Menupoint" "$CHOICE_MENU"
 											;;
 										*)
-											# Werte uebernehmen
+											# Werte übernehmen
 											pop_authenticators="${gv_Auswahl// /:}"
 											break
 											;;
@@ -214,14 +214,14 @@ kwmutt_pop_serv_conf() {
 								pop_auth_conf $lv_Choice
 								;;
 							$lv_Serv_Test)
-								# Auth Faehigkeiten des Servers testen# {{{
+								# Auth Fähigkeiten des Servers testen# {{{
 								if [ -n "$pop_host" ] ; then
 									check_mail_server -a "$pop_host"
 									if [ -n "$AUTHENTICATORS" ] ; then
 										pop_authenticators="$AUTHENTICATORS"
 									fi
 								else
-									MSG=$(gettext 'Sie muessen erst einen POP-Server im Menuepunkt pop_host einstellen.')
+									MSG=$(gettext 'Sie müssen erst einen POP-Server im Menuepunkt pop_host einstellen.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								# # }}}
@@ -294,7 +294,7 @@ kwmutt_pop_serv_conf() {
 				$gv_Save)
 					# Konfiguration speichern# {{{
 					if [ -n "$pop_host" ] ; then
-						# pop_host aufsplitten fuer den Rechnernamen.
+						# pop_host aufsplitten für den Rechnernamen.
 						# rechnername.pop wird die Konfigurationsdatei
 						# genannt.
 						parse_mail_host "$pop_host"
@@ -307,7 +307,7 @@ kwmutt_pop_serv_conf() {
 							no_input_msg
 						fi
 					else
-						MSG=$(gettext 'Sie muessen mindestens den Menuepunkt pop_host mit einem Wert belegen.')
+						MSG=$(gettext 'Sie müssen mindestens den Menuepunkt pop_host mit einem Wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					unset -- $Unset
@@ -335,7 +335,7 @@ kwmutt_pop_serv_conf() {
 				read_accounts pop
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					mail_account_choice "$gv_Display" "$DISPLAY_MB_MSG"
-					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					# Wenn es die ausgewählte Konfigurationsdatei gibt anzeigen.
 					if [ -f "$VALUE" ] ; then
 						view_file "$VALUE"
 					fi
@@ -346,9 +346,9 @@ kwmutt_pop_serv_conf() {
 				pop_serv_conf_menu $gv_Display
 				;;
 			$gv_Create)
-				# POP Konfigurations Eintraege erstellen{{{
+				# POP Konfigurations Einträge erstellen{{{
 				unset -- $Unset
-				# Mit Standard Variablen belegen, falls noetig.
+				# Mit Standard Variablen belegen, falls nötig.
 				pop_empty_var_fill
 				# POP Konfiguration
 				pop_conf_serv
@@ -356,7 +356,7 @@ kwmutt_pop_serv_conf() {
 				pop_serv_conf_menu $gv_Create
 				;;
 			$gv_Change)
-				# POP Konfigurations Eintraege veraendern.# {{{
+				# POP Konfigurations Einträge verändern.# {{{
 				read_accounts pop
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					CHANGE_MENU=($ACCOUNT_TMP)
@@ -366,12 +366,12 @@ kwmutt_pop_serv_conf() {
 							HELP*)	script_help share/conf_change_help
 								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
 								;;
-							*)	# Uebernahme/aendern 
+							*)	# Übernahme/ändern 
 								unset -- Old_Value
 								Old_Value="$gv_Auswahl"
 								# alte Konfiguration einlesen.
 								read_conf pop "$Old_Value"
-								# Mit Standard Variablen belegen, falls noetig.
+								# Mit Standard Variablen belegen, falls nötig.
 								pop_empty_var_fill
 								# Konfiguration bearbeiten.
 								pop_conf_serv
@@ -388,7 +388,7 @@ kwmutt_pop_serv_conf() {
 				pop_serv_conf_menu $gv_Change
 				;;
 			$gv_Delete)
-				# POP Kontos loeschen.# {{{
+				# POP Kontos löschen.# {{{
 				read_accounts pop
 				if [ -n "$ACCOUNT_TMP_M" ] ; then
 					DEL_MENU=($ACCOUNT_TMP_M)
@@ -398,7 +398,7 @@ kwmutt_pop_serv_conf() {
 							HELP*)	script_help share/conf_del_help
 								checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
-							*)	# Uebernahme (Konfigurationsdateien) loeschen
+							*)	# Übernahme (Konfigurationsdateien) löschen
 								for i in ${=gv_Auswahl} ; {
 									rm "$i" &>/dev/null
 								}

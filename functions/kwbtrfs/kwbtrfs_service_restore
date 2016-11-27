@@ -10,7 +10,7 @@ kwbtrfs_service_restore() {
 	lv_List_Roots=$(gettext 'Subvolumes auflisten')
 	lv_Symlinks=$(gettext 'symbolische Links')
 	lv_Ignore=$(gettext 'Fehler ignorieren')
-	lv_Overwrite=$(gettext 'ueberschreiben')
+	lv_Overwrite=$(gettext 'überschreiben')
 	lv_Root_Id=$(gettext 'Root ID')
 	lv_Rpath=$(gettext 'Wiederherstellungs Verz.')
 	lv_Snapshots=$(gettext 'Snapshots')
@@ -39,14 +39,14 @@ kwbtrfs_service_restore() {
 				restore_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Btrfs_Drive)
-				# Btrfs-Laufwerk auswaehlen# {{{
+				# Btrfs-Laufwerk auswählen# {{{
 				autoload -U kwbtrfs_service_check_btrfs_dev
 				kwbtrfs_service_check_btrfs_dev
 				## }}}
 				restore_menu $lv_Btrfs_Drive
 				;;
 			$lv_Rpath)
-				# Verzeichnis auswaehlen in dem die Daten wiederhergestellt# {{{
+				# Verzeichnis auswählen in dem die Daten wiederhergestellt# {{{
 				# werden sollen.
 				dselect "$RPATH"
 				if [[ -d $VERZ ]] ; then
@@ -86,7 +86,7 @@ kwbtrfs_service_restore() {
 				;;
 			$lv_Meta)
 				# Metadaten wiederherstellen (ja/nein).# {{{
-				MSG=$(gettext 'Sollen die $lv_Meta fuer Dateien und Verzeichnisse wiederhergestellt werden (ja/nein)?')
+				MSG=$(gettext 'Sollen die $lv_Meta für Dateien und Verzeichnisse wiederhergestellt werden (ja/nein)?')
 				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					META=yes
@@ -121,8 +121,8 @@ kwbtrfs_service_restore() {
 				restore_menu $lv_Ignore
 				;;
 			$lv_Overwrite)
-				# Dateien/Verzeichnisse beim erneuten Versuch ueberschreiben (ja/nein).# {{{
-				MSG=$(gettext 'Sollen Dateien und Verzeichnisse beim erneuten wiederherstellen ueberschrieben werden (ja/nein)?')
+				# Dateien/Verzeichnisse beim erneuten Versuch überschreiben (ja/nein).# {{{
+				MSG=$(gettext 'Sollen Dateien und Verzeichnisse beim erneuten wiederherstellen überschrieben werden (ja/nein)?')
 				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					OVERWRITE=yes
@@ -172,7 +172,7 @@ kwbtrfs_service_restore() {
 							superblock_menu "${gv_Auswahl#HELP }"
 							;;
 						[0-2])
-							# uebernehmen
+							# übernehmen
 							SUPER="$gv_Auswahl"
 							break
 							;;
@@ -202,7 +202,7 @@ kwbtrfs_service_restore() {
 				;;
 			$lv_Dry_Run)
 				# Probelauf (ja/nein).# {{{
-				MSG=$(gettext 'Soll ein $lv_Dry_Run durchgefuehrt werden (ja/nein)?')
+				MSG=$(gettext 'Soll ein $lv_Dry_Run durchgeführt werden (ja/nein)?')
 				yesno "$SERVICE_RESTORE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					DRY_RUN=yes
@@ -213,7 +213,7 @@ kwbtrfs_service_restore() {
 				restore_menu $lv_List_Roots
 				;;
 			$gv_Save)
-				# Ueberpruefung starten# {{{
+				# Überprüfung starten# {{{
 				# #########################
 				# TODO: -t und -f fehlen noch
 				if [[ -n $DRIVE ]] && [[ -n $DEV ]] ; then
@@ -261,7 +261,7 @@ kwbtrfs_service_restore() {
 								RESTORE_OPT="$RESTORE_OPT -D"
 							fi
 						fi
-						# ausfuehren
+						# ausführen
 						rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
 						echo "$DEV" >>${gv_WorkDir}/btrfs_check
 						echo "---------------------------" \
@@ -269,10 +269,10 @@ kwbtrfs_service_restore() {
 						btrfs check ${=RESTORE_OPT} $DEV 2>&1 \
 							>> ${gv_WorkDir}/btrfs_check
 						view_file ${gv_WorkDir}/btrfs_check
-						# Variabeln mit Laufwerken loeschen
+						# Variabeln mit Laufwerken löschen
 						unset -- DRIVE DEV
 					else
-						# Variabeln mit Laufwerken loeschen
+						# Variabeln mit Laufwerken löschen
 						unset -- DRIVE DEV
 					fi
 				else
@@ -282,7 +282,7 @@ kwbtrfs_service_restore() {
 				restore_menu "$lv_Btrfs_Drive"
 				;;
 			$gv_Back|*)
-				# zurueck/abbrechen
+				# zurück/abbrechen
 				break
 				;;
 		esac

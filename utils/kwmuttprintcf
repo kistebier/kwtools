@@ -39,7 +39,7 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Pruefen ob muttprint installiert ist.
+# Prüfen ob muttprint installiert ist.
 prog_check muttprint
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
@@ -66,8 +66,8 @@ lv_Sign_Regexp=$(gettext 'Signaturerkennung')
 lv_Remove_Quote=$(gettext 'keine Zitate')
 lv_Print_Header=$(gettext 'Header')
 lv_Debug=$(gettext 'Fehlermeldung')
-lv_Fontsize=$(gettext 'Schriftgroesse')
-lv_Wrapmargin=$(gettext 'Zeilenlaenge')
+lv_Fontsize=$(gettext 'Schriftgrösse')
+lv_Wrapmargin=$(gettext 'Zeilenlänge')
 lv_Topmargin=$(gettext 'Rand oben')
 lv_Bottommargin=$(gettext 'Rand unten')
 lv_Leftmargin=$(gettext 'Rand links')
@@ -83,7 +83,7 @@ lv_Latex=$(gettext 'Latex_Code')
 # Konfigurationsdateien einlesen wenn vorhanden
 read_file -f $MUTTPRINTRC $LOCAL_MUTTPRINTRC
 
-	# Funktion (main_menu), menu fuer die Drucker Konfiguration# {{{
+	# Funktion (main_menu), menu für die Drucker Konfiguration# {{{
 	main_menu() {
 		MAIN_MENU=($lv_Printer \"$PRINTER\"
 		$lv_Print_Cmd \"$PRINT_COMMAND\"
@@ -152,7 +152,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$PRINTER_MENU"
 						;;
 					$lv_Print_Choice)	
-						# Drucker auswaehlen/eingeben# {{{
+						# Drucker auswählen/eingeben# {{{
 						unset -- Found_Printer
 						Found_Printer=${${(ws: :)${(M)"$(LC_MESSAGES=us ; lpq -E)"[(f)ready]}}[1]}
 						if [ -n "$Found_Printer" ] ; then
@@ -168,7 +168,7 @@ while [ -n "$gv_Auswahl" ] ; do
 										menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FOUND_PRINTER_MENU"
 										;;
 									*)
-										# Auswahl uebernehmen
+										# Auswahl übernehmen
 										PRINTER="$gv_Auswahl"
 										break
 										;;
@@ -212,7 +212,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						break
 						;;
 					$gv_Back)
-						# zurueck
+						# zurück
 						break
 						;;
 				esac
@@ -233,7 +233,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Print_Cmd
 			;;
 		$lv_Penguin)
-			# Datei als Grafik (oben rechts) zum drucken auswaehlen# {{{
+			# Datei als Grafik (oben rechts) zum drucken auswählen# {{{
 			FORMAT="ALL_IMAGE"
 			if [ -f "$PENGUIN" ] ; then
 				file_choice "$PENGUIN" only
@@ -286,9 +286,9 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Papersave
 			;;
 		$lv_Speed)
-			# Druckgeschwindigkeit fuer 1 Seite eingeben.# {{{
+			# Druckgeschwindigkeit für 1 Seite eingeben.# {{{
 			# Voreinstellung ist 30 Sekunden
-			MSG=$(gettext 'Geben Sie die Druckgeschwindigkeit in Sekunden fuer 1 Seite ein (z.B. 30)')
+			MSG=$(gettext 'Geben Sie die Druckgeschwindigkeit in Sekunden für 1 Seite ein (z.B. 30)')
 			number_input "$gv_Mainmenu" "$MSG" "$SPEED"
 			if [ -n "$NUMBER" ] ; then
 				SPEED="$NUMBER"
@@ -312,7 +312,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Wait
 			;;
 		$lv_Font)
-			# Schriftfamilie auswaehlen# {{{
+			# Schriftfamilie auswählen# {{{
 			FONT_MENU=(Latex \"\" Latex-bright \"\" Latin-Modern \"\"
 			Times \"\" Utopia \"\" Palatino \"\" Charter \"\" Bookman \"\"
 			CentSchool \"\" Chancery \"\" Helvetica \"\" AvantGarde \"\")
@@ -322,7 +322,7 @@ while [ -n "$gv_Auswahl" ] ; do
 					HELP*)	script_help help
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FONT_MENU"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						FONT="$gv_Auswahl"
 						break
 						;;
@@ -332,7 +332,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Font
 			;;
 		$lv_Frontstyle)
-			# Frontstyle auswaehlen# {{{
+			# Frontstyle auswählen# {{{
 			FRONT_MENU=(plain \"\" border \"\" Border \"\"
 			fbox \"\" shadowbox \"\" ovalbox \"\" Ovalbox \"\"
 			doublebox \"\" grey \"\" greybox \"\")
@@ -342,7 +342,7 @@ while [ -n "$gv_Auswahl" ] ; do
 					HELP*)	script_help help
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FRONT_MENU"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						FRONTSTYLE="$gv_Auswahl"
 						break
 						;;
@@ -385,7 +385,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$PF_MENU"
 						;;
 					*)
-						# Wert uebernehmen
+						# Wert übernehmen
 						PAPER="$gv_Auswahl"
 						break
 						;;
@@ -408,7 +408,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			;;
 		$lv_Sign_Regexp)
 			# Signaturerkennung eingeben.# {{{
-			MSG=$(gettext 'Geben Sie einen regulaeren Ausdruck (perl-Syntax) zur Signaturerkennung ein.')
+			MSG=$(gettext 'Geben Sie einen regulären Ausdruck (perl-Syntax) zur Signaturerkennung ein.')
 			inputbox "$gv_Mainmenu" "$MSG" "$SIG_REGEXP"
 			if [ -n "$gv_Auswahl" ] ; then
 				SIG_REGEXP="$gv_Auswahl"
@@ -419,8 +419,8 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Sign_Regexp
 			;;
 		$lv_Remove_Quote)
-			# Sollen zitierte Absaetze nicht mit gedruckt werden?# {{{
-			MSG=$(gettext 'Sollen zitierte Absaetze nicht mit gedruckt werden (ja/nein)?')
+			# Sollen zitierte Absätze nicht mit gedruckt werden?# {{{
+			MSG=$(gettext 'Sollen zitierte Absätze nicht mit gedruckt werden (ja/nein)?')
 			yesno "$gv_Mainmenu" "$MSG" "$REM_QUOTE"
 			if [ "$gv_Auswahl" != no ] ; then
 				REM_QUOTE="on"
@@ -455,7 +455,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Debug
 			;;
 		$lv_Fontsize)
-			# Schriftgroesse einstellen# {{{
+			# Schriftgrösse einstellen# {{{
 			FS_MENU=(10pt \"\" 11pt \"\" 12pt \"\")
 			menubox "$FONTSIZE" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
 			while [ -n "$gv_Auswahl" ] ; do
@@ -464,7 +464,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$FS_MENU"
 						;;
 					*)
-						# Wert uebernehmen
+						# Wert übernehmen
 						FONTSIZE="$gv_Auswahl"
 						break
 						;;
@@ -474,8 +474,8 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu $lv_Fontsize
 			;;
 		$lv_Wrapmargin)
-			# max. Zeilenlaenge eingeben# {{{
-			MSG=$(gettext 'Geben Sie die maximale Zeilenlaenge ein (z.B. 72).')
+			# max. Zeilenlänge eingeben# {{{
+			MSG=$(gettext 'Geben Sie die maximale Zeilenlänge ein (z.B. 72).')
 			number_input "$gv_Mainmenu" "$MSG" "$WRAPMARGIN"
 			if [ -n "$NUMBER" ] ; then
 				WRAPMARGIN="$NUMBER"
@@ -543,7 +543,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$gv_Menupoint" "$DATE_MENU"
 						;;
 					*)
-						# Wert uebernehmen
+						# Wert übernehmen
 						DATE="$gv_Auswahl"
 						break
 						;;
@@ -554,7 +554,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			;;
 		$lv_Dateformat)
 			# Datumsformat eingeben.# {{{
-			MSG=$(gettext 'Geben Sie das Format fuer die Datumsanzeige ein.')
+			MSG=$(gettext 'Geben Sie das Format für die Datumsanzeige ein.')
 			inputbox "$gv_Mainmenu" "$MSG" "$DATE_FORMAT"
 			if [ -n "$gv_Auswahl" ] ; then
 				DATE_FORMAT="$gv_Auswahl"
@@ -566,7 +566,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			;;
 		$lv_Verbatim_Normal)
 			# Verbatim-Umgebung Textformatierung (normaler mailtext) eingeben.# {{{
-			MSG=$(gettext 'Geben Sie die Formatierung(en) fuer den normalen Mailtext ein (z.B. fontshape=it.')
+			MSG=$(gettext 'Geben Sie die Formatierung(en) für den normalen Mailtext ein (z.B. fontshape=it.')
 			inputbox "$gv_Mainmenu" "$MSG" "$VERBATIMNORMAL"
 			if [ -n "$gv_Auswahl" ] ; then
 				VERBATIMNORMAL="$gv_Auswahl"
@@ -578,7 +578,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			;;
 		$lv_Verbatim_Sig)
 			# Verbatim-Umgebung Textformatierung (Signatur) eingeben.# {{{
-			MSG=$(gettext 'Geben Sie die Formatierung(en) fuer den Signatur Text ein (z.B. fontshape=it.')
+			MSG=$(gettext 'Geben Sie die Formatierung(en) für den Signatur Text ein (z.B. fontshape=it.')
 			inputbox "$gv_Mainmenu" "$MSG" "$VERBATIMSIG"
 			if [ -n "$gv_Auswahl" ] ; then
 				VERBATIMSIG="$gv_Auswahl"

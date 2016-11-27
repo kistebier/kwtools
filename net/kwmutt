@@ -10,7 +10,7 @@
 # TODO:
 # Profile anlegen, al'a ~/.kwtools/kwmutt/profile.name/.
 # Jedes Profil kann verschiedene Server und Einstellungen haben,
-# das die globalen Einstellungen ueberschreibt.
+# das die globalen Einstellungen überschreibt.
 ###################################################################
 
 # Ausf�hren von Befehlen auf bestimmte Signale.
@@ -45,13 +45,13 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Pruefen ob mutt installiert ist.
+# Prüfen ob mutt installiert ist.
 prog_check mutt
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
 fi
 
-# Mutt Release ueberpruefen
+# Mutt Release überprüfen
 Tmp=${(M)${(f)"$(mutt -vv)"}##Mutt*}
 if [[ -n $Tmp ]] ; then
 	Release=${${(ws: :)${(M)${(f)"$(mutt -vv)"}##Mutt*}}[2]}
@@ -70,7 +70,7 @@ case "$Release" in
 esac
 
 if [[ $Release < 1.7.0 ]] ; then
-	MSG=$(gettext '$gv_ScriptName benoetigt eine Mutt Release >=1.7.0.')
+	MSG=$(gettext '$gv_ScriptName benötigt eine Mutt Release >=1.7.0.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
 fi
@@ -86,7 +86,7 @@ MUTT="${gv_HomePath}/.kwtools/kwmutt"
 L_DEFAULT_SERVER="default_server"
 L_DEFAULT_SMTP="default_smtp"
 
-# Pruefen ob, abook installiert und ausfuehrbar ist.
+# Prüfen ob, abook installiert und ausführbar ist.
 if [[ -x ${commands[abook]} ]] ; then
 	ABOOK_CMD="${commands[abook]}"
 else
@@ -125,8 +125,8 @@ M_SMIME="${MUTT}/smime"
 M_SSL="${MUTT}/ssl"
 M_UNIGNORE="${MUTT}/unignore_headers"
 M_URI="${MUTT}/urlview"
-CHECKINTERVAL_MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die ausgewaehlten Mailboxen nach neuen Mails geprueft werden sollen.')
-DISPLAY_MB_MSG=$(gettext 'Waehlen Sie ein Postfach aus um seine Einstellungen anzusehen.')
+CHECKINTERVAL_MSG=$(gettext 'Geben Sie an nach wievielen Sekunden die ausgewählten Mailboxen nach neuen Mails geprüft werden sollen.')
+DISPLAY_MB_MSG=$(gettext 'Wählen Sie ein Postfach aus um seine Einstellungen anzusehen.')
 #
 Muttrc_LogFile="${gv_WorkDir}/Muttrc"
 #
@@ -169,7 +169,7 @@ first_var_muttrc() {
 	abort_unmodified="${abort_unmodified:-yes}"
 	#alias_file="${alias_file:-$M_ABOOK}"
 	allow_8bit="${allow_8bit:-yes}"
-	autoedit="${autoedit:-no}"
+	autödit="${autödit:-no}"
 	beep="${beep:-yes}"
 	beep_new="${beep_new:-no}"
 	charset="${charset:-iso-8859-1}"
@@ -211,7 +211,7 @@ first_var_muttrc() {
 	write_bcc="${write_bcc:-yes}"
 }
 ## }}}
-# Funktion (read_mutt_files), prueft welche Dateien unter ~/.kwtools/kwmutt# {{{
+# Funktion (read_mutt_files), prüft welche Dateien unter ~/.kwtools/kwmutt# {{{
 # vorhanden und in muttrc konfiguriert sind. Dementsprechend 
 # wird die muttrc upgedatet.
 #
@@ -225,7 +225,7 @@ read_mutt_files() {
 		$M_SORT $M_SSL $M_UNIGNORE $M_URI ; {
 		if [[ -f $MUTTCONF ]] ; then
 			# Wenn man muttrc konfiguriert hat sind alle
-			# Dateien die kwmutt benutzt standardmaessig aktiviert.
+			# Dateien die kwmutt benutzt standardmässig aktiviert.
 			if [[ -f $i ]] ; then
 				# Ist $M_ABOOK vorhanden aber die Variable alias_file
 				# nicht belegt, wird auch source $ABOOK deaktiviert.
@@ -288,15 +288,15 @@ MUTT_MSG=$(gettext 'Sie haben eine normale mutt-Konfiguration. Soll diese nach $
 
 MUTT_MSG1=$(gettext 'Der Link $ORIG_MUTT ist falsch und kann neu korrekt gesetzt werden.\n\nSoll dies jetzt geschehen?')
 
-EXIT_MSG=$(gettext 'Da kwmutt seine eigene Struktur benoetigt bricht es jetzt ab.')
+EXIT_MSG=$(gettext 'Da kwmutt seine eigene Struktur benötigt bricht es jetzt ab.')
 
-# auf ~/.muttrc pruefen.
+# auf ~/.muttrc prüfen.
 if [[ -L $ORIG_MUTTCONF ]] ; then
 	Link="`readlink -f $ORIG_MUTTCONF`"
-	# pruefen ob der Link korrekt ist.
+	# prüfen ob der Link korrekt ist.
 	if [[ "$Link" != "$MUTTCONF" ]] ; then
 		msgbox "$gv_Info" "$MUTTRC_MSG1"
-		# Link loeschen
+		# Link löschen
 		rm -f "$ORIG_MUTTCONF" &>/dev/null
 		# Link von ~/.kwtools/kwmuttrc --> ~/.muttrc anlegen.
 		ln -sf "$MUTTCONF" "$ORIG_MUTTCONF" &>/dev/null
@@ -323,13 +323,13 @@ else
 	msgbox "$gv_Attention" "$EXIT_MSG"
 	exit 0
 fi
-# auf ~/.mutt pruefen.
+# auf ~/.mutt prüfen.
 if [[ -L $ORIG_MUTT ]] ; then
 	Link="`readlink -f $ORIG_MUTT`"
-	# pruefen ob der Link korrekt ist.
+	# prüfen ob der Link korrekt ist.
 	if [[ "$Link" != "$MUTT" ]] ; then
 		msgbox "$gv_Info" "$MUTT_MSG1"
-		# Link loeschen
+		# Link löschen
 		rm -f "$ORIG_MUTT" &>/dev/null
 		create_file -d "$MUTT"
 		# Link von ~/.kwtools/kwmutt --> ~/.mutt anlegen.
@@ -360,8 +360,8 @@ read_mutt_files
 
 #}}}
 
-# Funktion (create_tmp_conf), erzeugt ein temporaere Datei (Muttrc) zum einlesen# {{{
-# simple Ueberpruefung was wie ausgefuehrt wird.
+# Funktion (create_tmp_conf), erzeugt ein temporäre Datei (Muttrc) zum einlesen# {{{
+# simple Überprüfung was wie ausgeführt wird.
 #
 # usage: create_tmp_conf [ CHAR ] FILE
 # CHAR - irgendein Zeichen
@@ -379,7 +379,7 @@ create_tmp_conf() {
 	#
 }
 ## }}}
-# Funktion (yesno_select), Auswahl fuer mutts quad-options# {{{
+# Funktion (yesno_select), Auswahl für mutts quad-options# {{{
 #
 # usage: yesno_select TITLE MSG [ OLD_VALUE ]
 #
@@ -407,7 +407,7 @@ yesno_select() {
 					radiolist "${gv_Auswahl#HELP }" "$YN_TITLE" "$YN_MSG" "$YN_MENU"
 					;;
 				*)
-					# Auswahl uebernehmen
+					# Auswahl übernehmen
 					VALUE="$gv_Auswahl"
 					break
 			esac
@@ -438,7 +438,7 @@ read_accounts() {
 	Opt="$1"
 	case "$Opt" in
 		pop|imap|lmb)
-			# ausgewaehlte mailboxen
+			# ausgewählte mailboxen
 			for i in ${MUTT}/*.${Opt}(.N) ; {
 				(( Anz++ ))
 				ACCOUNT_TMP[Anz]="$i \"\""
@@ -466,12 +466,12 @@ read_accounts() {
 ## }}}
 # Funktion (mail_account_choice), Menue Anzeige# {{{
 #
-# benoetigt vorher die Funktion read_accounts.
+# benötigt vorher die Funktion read_accounts.
 #
 # usage: mail_account_choice TITLE MSG
 #
-# TITLE - Titel der an diese Funktion uebergeben werden muss.
-# MSG - Nachricht die an diese Funktion uebergeben werden muss.
+# TITLE - Titel der an diese Funktion übergeben werden muss.
+# MSG - Nachricht die an diese Funktion übergeben werden muss.
 #
 mail_account_choice() {
 	if [ "$#" = 2 ] ; then
@@ -485,7 +485,7 @@ mail_account_choice() {
 				HELP*)	script_help kwmutt_serv_ips_help
 					menubox "${gv_Auswahl#HELP }" "$MAIL_TITLE" "$MAIL_MSG" "$MAIL_MENU"
 					;;
-				*)	# Auswahl uebernehmen
+				*)	# Auswahl übernehmen
 					VALUE="$gv_Auswahl"
 					break
 					;;
@@ -500,7 +500,7 @@ mail_account_choice() {
 	# beziehungsweise es ist kein Adressbuch Programm vorhanden
 	no_abook_conf_msg() {
 MSG=$(gettext 'Entweder ist kein Adressbuch-Programm, keine Adressdatenbank vorhanden
-oder Sie muessen erst den Menuepunkt alias_file in der Standard Konfiguration mit
+oder Sie müssen erst den Menuepunkt alias_file in der Standard Konfiguration mit
 einem Wert belegen.')
 		msgbox "$gv_Info" "$MSG"
 	}
@@ -523,7 +523,7 @@ read_conf() {
 		if [ -n "$M_SERV" ] ; then
 			create_tmp_conf "$M_SERV"
 			read_file -f $gv_LogFile
-			# Pruefen ob der default Link nicht leer ist und
+			# Prüfen ob der default Link nicht leer ist und
 			# mailboxen herausfinden..
 			case "$Protocol" in
 				pop|imap|lmb)
@@ -640,21 +640,21 @@ unsubscribe *
 			read_accounts
 			if [ -n "$ACCOUNT_TMP" ] ; then
 				MUTT_POST_ACCOUNT_MENU=($ACCOUNT_TMP)
-				MUTT_POST_ACCOUNT_MSG=$(gettext 'Waehlen Sie ein Post-Konto aus das Sie einsehen moechten.')
+				MUTT_POST_ACCOUNT_MSG=$(gettext 'Wählen Sie ein Post-Konto aus das Sie einsehen möchten.')
 				menubox "${ACCOUNT_TMP[1]}" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help help
 							menubox "${gv_Auswahl#HELP }" "$lv_Mutt_Start" "$MUTT_POST_ACCOUNT_MSG" "$MUTT_POST_ACCOUNT_MENU"
 							;;
-						*)	# Auswahl uebernehmen
+						*)	# Auswahl übernehmen
 							Conf_File_Tmp="$gv_Auswahl"
-							# allgemeine muttrc Variablen in eine temporaere Datei
-							# zum einlesen uebernehmen.
+							# allgemeine muttrc Variablen in eine temporäre Datei
+							# zum einlesen übernehmen.
 							if [ -f "$MUTTCONF" ] ; then
 								 < "$MUTTCONF" > "${gv_WorkDir}/all_muttrc"
 							fi
-							# ausgewaehlte Postfach Variablen in die temporaere muttrc Datei
+							# ausgewählte Postfach Variablen in die temporäre muttrc Datei
 							# zum sourcen addieren.
 							>> "${gv_WorkDir}/all_muttrc" <<< "source $Conf_File_Tmp"
 							# Ist ein xterm am laufen wird es auch benutzt.
@@ -662,7 +662,7 @@ unsubscribe *
 								prog_check xterm
 								if [ -z "$NO_PROGS" ] ; then
 									# xterm im augenblicklichen $DISPLAY
-									# ausfuehren.
+									# ausführen.
 									xterm -T "$gv_ScriptName" -geometry ${COLUMNS}x${LINES} -e "mutt -F ${gv_WorkDir}/all_muttrc" &
 								else
 									mutt -F ${gv_WorkDir}/all_muttrc

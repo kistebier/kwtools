@@ -14,7 +14,7 @@ print -l ${(M)${(f)"$(postconf -c $MAIL_CONFIG)"}##(#s)(mail_|mailbox_)*} | \
 read_file -f ${gv_WorkDir}/postfix$$
 rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
 ## }}}
-# Funktion (conf_mail_menue), Parameter fuer alles was mit mail anfaengt{{{
+# Funktion (conf_mail_menue), Parameter für alles was mit mail anfängt{{{
 conf_mail_menue() {
 	MAIL_MENU=(mail_name \"\$mail_name\"
 	mail_owner \"\$mail_owner\"
@@ -37,8 +37,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_mail_menue "${gv_Auswahl#HELP }"
 			;;
 		mail_name)
-			# Mail Name fuer Begruessungs Banner{{{
-			MAIL_NAME_MSG=$(gettext 'Geben Sie den Namen des Mailservers, fuer das Begruessungs Banner ein (Bsp. Postfix).')
+			# Mail Name für Begrüssungs Banner{{{
+			MAIL_NAME_MSG=$(gettext 'Geben Sie den Namen des Mailservers, für das Begrüssungs Banner ein (Bsp. Postfix).')
 			inputbox "$MAIL_TITLE" "$MAIL_NAME_MSG"
 			if [ "$gv_Auswahl" ] ; then
 				mail_name="$gv_Auswahl"
@@ -51,7 +51,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_mail_menue mail_name
 			;;
 		mail_owner)
-			# Mail user auswaehlen{{{
+			# Mail user auswählen{{{
 			user_auswahl
 			mail_owner="$WERT"
 			postconf -e mail_owner="$WERT"
@@ -73,10 +73,10 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		mailbox_command)
 			# Mailbox Kommando{{{
-			# U_OPT wird benoetigt von der Funktion return_check.
+			# U_OPT wird benötigt von der Funktion return_check.
 			U_OPT=hk
 			#
-			MAILBOX_CMD_MSG=$(gettext 'Geben Sie ein Kommando ein, dass fuer die Einlieferung in die lokalen Mailboxen zustaendig ist (Bsp. /usr/bin/procmail -t -a \"\$EXTENSION\").')
+			MAILBOX_CMD_MSG=$(gettext 'Geben Sie ein Kommando ein, dass für die Einlieferung in die lokalen Mailboxen zuständig ist (Bsp. /usr/bin/procmail -t -a \"\$EXTENSION\").')
 			inputbox "$MAIL_TITLE" "$MAILBOX_CMD_MSG" "${${mailbox_command//\"/\\\"}//\$/\\\$}"
 			if [[ -n $gv_Auswahl ]] ; then
 				mailbox_command="$gv_Auswahl"
@@ -89,7 +89,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_mail_menue mailbox_command
 			;;
 		mailbox_command_maps)
-			# Tabelle fuer Mailbox Befehle# {{{
+			# Tabelle für Mailbox Befehle# {{{
 			tab_support_choice "$gv_Auswahl"
 			mailbox_command_maps="$MAPS"
 			postconf -e mailbox_command_maps="$MAPS"
@@ -105,7 +105,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_mail_menue mailbox_delivery_lock
 			;;
 		mailbox_size_limit)
-			# Mailbox Groesse einstellen{{{
+			# Mailbox Grösse einstellen{{{
 			number_input -b "$mailbox_size_limit"
 			if [ "$NUMBER" ] ; then
 				mailbox_size_limit="$NUMBER"

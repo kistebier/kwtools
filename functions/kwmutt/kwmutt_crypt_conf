@@ -1,18 +1,18 @@
-# Funktion (kwmutt_crypt_conf), konfiguriert die gnupg Einstellungen fuer mutt# {{{
+# Funktion (kwmutt_crypt_conf), konfiguriert die gnupg Einstellungen für mutt# {{{
 #
 # usage: kwmutt_crypt_conf
 #
 kwmutt_crypt_conf() {
-	Unset=(crypt_autosign crypt_autoencrypt crypt_autopgp crypt_autosmime
+	Unset=(crypt_autosign crypt_autöncrypt crypt_autopgp crypt_autosmime
 		crypt_replyencrypt crypt_replysign crypt_replysignencrypted
 		crypt_timestamp crypt_verify_sig fcc_clear)
 	unset -- $Unset
-	# Funktion (crypt_conf_menu), menu fuer die CRYPT Konfiguration# {{{
+	# Funktion (crypt_conf_menu), menu für die CRYPT Konfiguration# {{{
 	CRYPT_TITLE="$lv_Crypt"
 	crypt_conf_menu() {
 		CRYPT_CONF_MENU=(fcc_clear \"$fcc_clear\"
 		crypt_autosign \"$crypt_autosign\"
-		crypt_autoencrypt \"$crypt_autoencrypt\"
+		crypt_autöncrypt \"$crypt_autöncrypt\"
 		crypt_autopgp \"$crypt_autopgp\"
 		crypt_autosmime \"$crypt_autosmime\"
 		crypt_replyencrypt \"$crypt_replyencrypt\"
@@ -34,7 +34,7 @@ kwmutt_crypt_conf() {
 	# leere Variable mit Standardwerten fuellen.# {{{
 	fcc_clear="${fcc_clear:-no}"
 	crypt_autosign="${crypt_autosign:-no}"
-	crypt_autoencrypt="${crypt_autoencrypt:-no}"
+	crypt_autöncrypt="${crypt_autöncrypt:-no}"
 	crypt_autopgp="${crypt_autopgp:-yes}"
 	crypt_autosmime="${crypt_autosmime:-yes}"
 	crypt_replyencrypt="${crypt_replyencrypt:-yes}"
@@ -50,8 +50,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			fcc_clear)
-				# Soll Mutt FCCs Nachrichten unverschluesselt speichern# {{{
-				MSG=$(gettext 'Soll Mutt FCCs Nachrichten unverschluesselt speichern, wenn sie verschluesselt/signiert sind (ja/nein)?')
+				# Soll Mutt FCCs Nachrichten unverschlüsselt speichern# {{{
+				MSG=$(gettext 'Soll Mutt FCCs Nachrichten unverschlüsselt speichern, wenn sie verschlüsselt/signiert sind (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$fcc_clear"
 				if [ "$gv_Auswahl" = yes ] ; then
 					fcc_clear=yes
@@ -73,21 +73,21 @@ kwmutt_crypt_conf() {
 				#}}}
 				crypt_conf_menu crypt_autosign
 				;;
-			crypt_autoencrypt)
-				# automatisch verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu verschluesseln (ja/nein)?')
-				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autoencrypt"
+			crypt_autöncrypt)
+				# automatisch verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten zu verschlüsseln (ja/nein)?')
+				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autöncrypt"
 				if [ "$gv_Auswahl" = yes ] ; then
-					crypt_autoencrypt=yes
+					crypt_autöncrypt=yes
 				else
-					crypt_autoencrypt=no
+					crypt_autöncrypt=no
 				fi
 				#}}}
-				crypt_conf_menu crypt_autoencrypt
+				crypt_conf_menu crypt_autöncrypt
 				;;
 			crypt_autopgp)
-				# automatisch mit PGP verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit PGP zu verschluesseln (ja/nein)?')
+				# automatisch mit PGP verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit PGP zu verschlüsseln (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autopgp"
 				if [ "$gv_Auswahl" = yes ] ; then
 					crypt_autopgp=yes
@@ -98,8 +98,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu crypt_autopgp
 				;;
 			crypt_autosmime)
-				# automatisch mit S/MIME verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit S/MIME zu verschluesseln (ja/nein)?')
+				# automatisch mit S/MIME verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen ausgehende Nachrichten mit S/MIME zu verschlüsseln (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$crypt_autosmime"
 				if [ "$gv_Auswahl" = yes ] ; then
 					crypt_autosmime=yes
@@ -110,8 +110,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu crypt_autosmime
 				;;
 			crypt_replyencrypt)
-				# automatisch mit PGP oder OpenSSL verschluesselt antworten# {{{
-				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschluesselte Nachricht mit PGP oder OpenSSL verschluesseln (ja/nein)?')
+				# automatisch mit PGP oder OpenSSL verschlüsselt antworten# {{{
+				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschlüsselte Nachricht mit PGP oder OpenSSL verschlüsseln (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$crypt_replyencrypt"
 				if [ "$gv_Auswahl" = yes ] ; then
 					crypt_replyencrypt=yes
@@ -134,8 +134,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu crypt_replysign
 				;;
 			crypt_replysignencrypted)
-				# automatisch mit PGP oder OpenSSL verschluesselte Nachrichten signieren# {{{
-				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschluesselte Nachricht mit PGP oder OpenSSL signieren (ja/nein)?')
+				# automatisch mit PGP oder OpenSSL verschlüsselte Nachrichten signieren# {{{
+				MSG=$(gettext 'Soll Mutt automatisch die Antwort auf eine verschlüsselte Nachricht mit PGP oder OpenSSL signieren (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$crypt_replysignencrypted"
 				if [ "$gv_Auswahl" = yes ] ; then
 					crypt_replysignencrypted=yes
@@ -146,8 +146,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu crypt_replysignencrypted
 				;;
 			crypt_timestamp)
-				# automatisch verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt einen Zeitstempel in die Ausgabe von PGP oder S/MIME einfuegen (ja/nein)?')
+				# automatisch verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt einen Zeitstempel in die Ausgabe von PGP oder S/MIME einfügen (ja/nein)?')
 				yesno "$CRYPT_TITLE" "$MSG" "$crypt_timestamp"
 				if [ "$gv_Auswahl" = yes ] ; then
 					crypt_timestamp=yes
@@ -158,8 +158,8 @@ kwmutt_crypt_conf() {
 				crypt_conf_menu crypt_timestamp
 				;;
 			crypt_verify_sig)
-				# automatisch verschluesseln# {{{
-				MSG=$(gettext 'Soll Mutt immer versuchen PGP oder S/MIME Signaturen zu ueberpruefen (ja/nein)?')
+				# automatisch verschlüsseln# {{{
+				MSG=$(gettext 'Soll Mutt immer versuchen PGP oder S/MIME Signaturen zu überprüfen (ja/nein)?')
 				yesno_select "$CRYPT_TITLE" "$MSG" "$crypt_verify_sig"
 				if [ -n "$VALUE" ] ; then
 					crypt_verify_sig="$VALUE"

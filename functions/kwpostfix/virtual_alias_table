@@ -12,8 +12,8 @@ virtual_alias_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_ALIAS_MENU"
 	}
 	#}}}
-	# Funktion virtual_alias_aendern{{{
-	virtual_alias_aendern() {
+	# Funktion virtual_alias_ändern{{{
+	virtual_alias_ändern() {
 	virtual_alias_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -43,25 +43,25 @@ virtual_alias_table() {
 				virtual_alias_menue $lv_Domain
 				;;
 			$lv_Address)
-				# Adresse waehlen{{{
+				# Adresse wählen{{{
 				#
 				# Funktion check_virtual_domain_msg# {{{
 				check_virtual_domain_msg() {
-					MSG=$(gettext 'Pruefen Sie, ob schon eine virtuelle Domain angelegt wurde, fuer die Postfix Mails annimmt.')
+					MSG=$(gettext 'Prüfen Sie, ob schon eine virtuelle Domain angelegt wurde, für die Postfix Mails annimmt.')
 					msgbox "$gv_Info" "$MSG"
 				}
 				## }}}
 				# Funktion, check_virtual_domain{{{
 				#
 				# checken, ob es eine virtual_alias_domain Tabelle gibt,
-				# und wenn ja pruefen ob die Domain schon eingetragen ist.
-				# Ansonsten wird diese Tabelle geprueft, ob die Domain schon
+				# und wenn ja prüfen ob die Domain schon eingetragen ist.
+				# Ansonsten wird diese Tabelle geprüft, ob die Domain schon
 				# eingetragen wurde.
 				#
 				check_virtual_domain() {
 					# Funktion no_virtual_domain_msg# {{{
 					no_virtual_domain_msg() {
-						MSG=$(gettext 'Sie muessen erst eine virtuelle Domain, fuer diese Adresse ($ADR) eingeben.')
+						MSG=$(gettext 'Sie müssen erst eine virtuelle Domain, für diese Adresse ($ADR) eingeben.')
 						msgbox "$gv_Attention" "$MSG"
 						unset -- ADR
 					}
@@ -132,13 +132,13 @@ virtual_alias_table() {
 				virtual_alias_menue $lv_Address
 				;;
 			$lv_Recipient)
-				# Wohin soll die Mail umgeleitet werden? Es koennen{{{
-				# auch mehrere Empfaenger angegeben werden.
+				# Wohin soll die Mail umgeleitet werden? Es können{{{
+				# auch mehrere Empfänger angegeben werden.
 				#
 				RECIPIENT_ADR_MSG=$(gettext 'Geben Sie hier 1 oder mehrere Mailadressen, durch 1 Komma getrennt, ein (Bsp. user1@domain.de, user2@domain.de).')
 				inputbox "$TABLE_TITLE" "$RECIPIENT_ADR_MSG" "$E_ADR"
 				#
-				# Pruefen, ob alle Adressen getrennt durch ein Komma
+				# Prüfen, ob alle Adressen getrennt durch ein Komma
 				# sind.
 				#
 				if [ "$gv_Auswahl" ] ; then
@@ -179,7 +179,7 @@ virtual_alias_table() {
 				virtual_alias_menue $lv_Recipient
 				;;
 			$gv_Save)
-				# Eintraege speichern{{{
+				# Einträge speichern{{{
 				#
 				if [ "$DOMAIN" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
@@ -203,7 +203,7 @@ virtual_alias_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst eine virtuelle Domain oder eine Adresse und eine Empfaengeradresse eingeben, bevor Sie was speichern koennen.')
+					MSG=$(gettext 'Sie müssen erst eine virtuelle Domain oder eine Adresse und eine Empfängeradresse eingeben, bevor Sie was speichern können.')
 					msgbox "$gv_Attention" "$MSG"
 					virtual_alias_menue
 				fi
@@ -222,24 +222,24 @@ virtual_alias_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- DOMAIN ADR E_ADR AENDERN_ADR AENDERN_ADR1
-				virtual_alias_aendern
+				virtual_alias_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege veraendern{{{
+				# Einträge verändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -250,7 +250,7 @@ virtual_alias_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								print "$gv_Auswahl" | \
 								while read ADRESSE REST ; do
@@ -272,7 +272,7 @@ virtual_alias_table() {
 									AENDERN_ADR="$ADR"
 									AENDERN_ADR1="$E_ADR"
 								fi
-								virtual_alias_aendern
+								virtual_alias_ändern
 								break
 								;;
 						esac
@@ -284,7 +284,7 @@ virtual_alias_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -294,7 +294,7 @@ virtual_alias_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

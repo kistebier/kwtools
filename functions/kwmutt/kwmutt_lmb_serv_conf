@@ -1,4 +1,4 @@
-# Funktion (kwmutt_lmb_serv_conf), konfiguriert lokale Mailbox fuer mutt# {{{
+# Funktion (kwmutt_lmb_serv_conf), konfiguriert lokale Mailbox für mutt# {{{
 #
 # usage: kwmutt_lmb_serv_conf
 kwmutt_lmb_serv_conf() {
@@ -26,7 +26,7 @@ kwmutt_lmb_serv_conf() {
 		menubox "$1" "$LMB_TITLE" "$gv_Menupoint" "$SERV_DCCDB_MENU"
 	}
 	## }}}
-	# Funktion (lmb_conf_serv_menu), menu fuer die Imap Konfiguration# {{{
+	# Funktion (lmb_conf_serv_menu), menu für die Imap Konfiguration# {{{
 	LMB_TITLE="$lv_Local_Mailbox"
 	lmb_conf_serv_menu() {
 		if [[ $mbox_type == Maildir ]] ; then
@@ -68,7 +68,7 @@ kwmutt_lmb_serv_conf() {
 					lmb_conf_serv_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Default_Mailbox)
-					# Soll dieses Postfach als Standard Eroeffnungsfach deklariert werden (ja/nein)?# {{{
+					# Soll dieses Postfach als Standard Eröffnungsfach deklariert werden (ja/nein)?# {{{
 					yesno "$LMB_TITLE" "$DEFAULT_MB_MSG" "$DEFAULT_SERVER"
 					if [ "$gv_Auswahl" = yes ] ; then
 						DEFAULT_SERVER="yes"
@@ -79,8 +79,8 @@ kwmutt_lmb_serv_conf() {
 					lmb_conf_serv_menu $lv_Default_Mailbox
 					;;
 				$lv_Conf_Name)
-					# Eingabe eines Namens fuer die Konfigurationsdatei# {{{
-					MSG=$(gettext 'Geben Sie einen Namen, ohne Leerzeichen, fuer die Konfigurationsdatei ein (Bsp.: lokalmailbox).')
+					# Eingabe eines Namens für die Konfigurationsdatei# {{{
+					MSG=$(gettext 'Geben Sie einen Namen, ohne Leerzeichen, für die Konfigurationsdatei ein (Bsp.: lokalmailbox).')
 					inputbox "$LMB_TITLE" "$MSG" "$DEFAULT_NAME"
 					if [ -n "$gv_Auswahl" ] ; then
 						DEFAULT_NAME="$gv_Auswahl"
@@ -112,7 +112,7 @@ kwmutt_lmb_serv_conf() {
 							HELP*)	script_help kwmutt_lmb_serv_help
 								menubox "$mbox_type" "$MUTTRC_TITLE" "$gv_Menupoint" "$MBOX_MENU"
 								;;
-							*)	# Auswahl uebernehmen
+							*)	# Auswahl übernehmen
 								mbox_type="$gv_Auswahl"
 								break
 								;;
@@ -123,7 +123,7 @@ kwmutt_lmb_serv_conf() {
 					;;
 				dotlock_program)
 					# Eingabe/Auswahl der Sperrdatei.# {{{
-					MSG=$(gettext 'Geben Sie das Programm fuer die Sperrdatei ein (Bsp.: /usr/bin/mutt_dotlock).')
+					MSG=$(gettext 'Geben Sie das Programm für die Sperrdatei ein (Bsp.: /usr/bin/mutt_dotlock).')
 					inputbox "$LMB_TITLE" "$MSG" "$dotlock_program"
 					if [ -n "$gv_Auswahl" ] ; then
 						dotlock_program="$gv_Auswahl"
@@ -134,7 +134,7 @@ kwmutt_lmb_serv_conf() {
 					lmb_conf_serv_menu dotlock_program
 					;;
 				folder)
-					# Standard Verzeichnis fuer die mailboxen auswaehlen.# {{{
+					# Standard Verzeichnis für die mailboxen auswählen.# {{{
 					dselect $folder
 					if [[ -n $VERZ ]] ; then
 						folder="$VERZ"
@@ -162,7 +162,7 @@ kwmutt_lmb_serv_conf() {
 										checklist "${DEFAULT_VALUE[1]}" "$LMB_TITLE" "$gv_Menupoint" "$MAILBOX_MENU"
 										;;
 									*)
-										# Auswahl uebernehmen
+										# Auswahl übernehmen
 										mailboxes="$gv_Auswahl"
 										break
 										;;
@@ -222,7 +222,7 @@ kwmutt_lmb_serv_conf() {
 				$gv_Save)
 					# Konfiguration speichern# {{{
 					if [[ -n $spoolfile && -n $DEFAULT_NAME ]] ; then
-						# Pruefen, ob vorhanden Konfiguration geaendert
+						# Prüfen, ob vorhanden Konfiguration geändert
 						# werden soll oder eine neue angelegt werden
 						# soll.
 						if [[ -n $Old_Value ]] ; then
@@ -247,7 +247,7 @@ kwmutt_lmb_serv_conf() {
 						fi
 						#
 					else
-						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte spoolfile und $lv_Conf_Name mit einem Wert belegen.')
+						MSG=$(gettext 'Sie müssen mindestens die Menuepunkte spoolfile und $lv_Conf_Name mit einem Wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 						lmb_conf_serv_menu
 					fi
@@ -275,7 +275,7 @@ kwmutt_lmb_serv_conf() {
 				read_accounts lmb
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					mail_account_choice "$gv_Display" "$DISPLAY_MB_MSG"
-					# Wenn es die ausgewaehlte Konfigurationsdatei gibt anzeigen.
+					# Wenn es die ausgewählte Konfigurationsdatei gibt anzeigen.
 					if [ -f "$VALUE" ] ; then
 						view_file "$VALUE"
 					fi
@@ -286,9 +286,9 @@ kwmutt_lmb_serv_conf() {
 				lmb_serv_conf_menu $gv_Display
 				;;
 			$gv_Create)
-				# LMB Konfigurations Eintraege erstellen{{{
+				# LMB Konfigurations Einträge erstellen{{{
 				unset -- $Unset
-				# Mit Standard Variablen belegen, falls noetig.
+				# Mit Standard Variablen belegen, falls nötig.
 				lmb_empty_var_fill
 				# LMB Konfiguration
 				lmb_conf_serv
@@ -296,7 +296,7 @@ kwmutt_lmb_serv_conf() {
 				lmb_serv_conf_menu $gv_Create
 				;;
 			$gv_Change)
-				# LMB Konfigurations Eintraege veraendern.# {{{
+				# LMB Konfigurations Einträge verändern.# {{{
 				read_accounts lmb
 				if [ -n "$ACCOUNT_TMP" ] ; then
 					CHANGE_MENU=($ACCOUNT_TMP)
@@ -306,12 +306,12 @@ kwmutt_lmb_serv_conf() {
 							HELP*)	script_help share/conf_change_help
 								menubox "$Old_Value" "$gv_Change" "$gv_Menupoint" "$CHANGE_MENU"
 								;;
-							*)	# Uebernahme/aendern 
+							*)	# Übernahme/ändern 
 								unset -- Old_Value
 								Old_Value="$gv_Auswahl"
 								# alte Konfiguration einlesen.
 								read_conf lmb "$Old_Value"
-								# Mit Standard Variablen belegen, falls noetig.
+								# Mit Standard Variablen belegen, falls nötig.
 								lmb_empty_var_fill
 								# Konfiguration bearbeiten.
 								lmb_conf_serv
@@ -328,7 +328,7 @@ kwmutt_lmb_serv_conf() {
 				lmb_serv_conf_menu $gv_Change
 				;;
 			$gv_Delete)
-				# LMB Kontos loeschen.# {{{
+				# LMB Kontos löschen.# {{{
 				read_accounts lmb
 				if [ -n "$ACCOUNT_TMP_M" ] ; then
 					DEL_MENU=($ACCOUNT_TMP_M)
@@ -338,7 +338,7 @@ kwmutt_lmb_serv_conf() {
 							HELP*)	script_help share/conf_del_help
 								checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
-							*)	# Uebernahme (Konfigurationsdateien) loeschen
+							*)	# Übernahme (Konfigurationsdateien) löschen
 								for i in ${=gv_Auswahl} ; {
 									rm "$i" &>/dev/null
 								}

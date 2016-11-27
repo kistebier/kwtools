@@ -28,7 +28,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -42,7 +42,7 @@ read_file cd_dvdrc
 # Exportiert die Variable DIR, beinhaltet das letzte Verzeichnis
 typeset -x DIR=""
 
-# erste Variablen fuer das Hauptmenue einlesen.
+# erste Variablen für das Hauptmenue einlesen.
 multi_conf
 
 # Funktion main_menu{{{
@@ -203,18 +203,18 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Video_Dvd
 			;;
 		$gv_Del_Cd)
-			# CD-RW loeschen{{{
+			# CD-RW löschen{{{
 			if [ -n "$CD_PROG" ] ; then
-				# Funktion (del_cd), loescht die CDRWs# {{{
+				# Funktion (del_cd), löscht die CDRWs# {{{
 				#
 				del_cd() {
 					# Funktion device_convert erzeugt die Variable CDROM
 					lv_Minimal=$(gettext 'minimal')
 					lv_All=$(gettext 'ganz')
-					DEL_TITLE=$(gettext 'CD+-RW::loeschen')
-					DEL_MSG=$(gettext 'Loesche CD+-RW.')
+					DEL_TITLE=$(gettext 'CD+-RW::löschen')
+					DEL_MSG=$(gettext 'Lösche CD+-RW.')
 					DEL_MENU=($lv_Minimal \"\" $lv_All \"\")
-					CDRW_DEL_MSG=$(gettext 'Soll die CD-+R(W) wirklich geloescht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+					CDRW_DEL_MSG=$(gettext 'Soll die CD-+R(W) wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
 					#
 					menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 					while [ $gv_Auswahl ] ; do
@@ -223,7 +223,7 @@ while [ "$gv_Auswahl" ] ; do
 								menubox "${gv_Auswahl#HELP }" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 								;;
 							$lv_Minimal)
-								# CDRW minimal loeschen
+								# CDRW minimal löschen
 								yesno "$gv_Attention" "$CDRW_DEL_MSG" "yes"
 								if [ "$gv_Auswahl" = yes ] ; then
 									eject -t $CDROM &>/dev/null && sleep 1
@@ -233,7 +233,7 @@ while [ "$gv_Auswahl" ] ; do
 								break
 								;;
 							$lv_All)
-								# CDRW ganz loeschen
+								# CDRW ganz löschen
 								yesno "$gv_Attention" "$CDRW_DEL_MSG" "yes"
 								if [ "$gv_Auswahl" = yes ] ; then
 									eject -t $CDROM &>/dev/null && sleep 1
@@ -261,7 +261,7 @@ while [ "$gv_Auswahl" ] ; do
 						del_cd
 					fi
 				else
-					MSG=$(gettext 'Sie muessen erst eine CD+-RW ins Brenner Laufwerk einlegen.')
+					MSG=$(gettext 'Sie müssen erst eine CD+-RW ins Brenner Laufwerk einlegen.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 			else
@@ -291,7 +291,7 @@ while [ "$gv_Auswahl" ] ; do
 				cd_dvd_conf -W
 				device_convert -i "$WRITE_DEVICE"
 				eject -t $CDROM &>/dev/null && sleep 1
-				# Staus der DVD pruefen
+				# Staus der DVD prüfen
 				check_dvd_state "$CDROM"
 				case "$DVD_MEDIUM" in
 					DVD?RW | DVDRAM)
@@ -302,7 +302,7 @@ while [ "$gv_Auswahl" ] ; do
 								del_dvd
 							fi
 						else
-							MSG=$(gettext 'Soll die DVD-+RW/RAM wirklich geloescht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+							MSG=$(gettext 'Soll die DVD-+RW/RAM wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
 							yesno "$gv_Attention" "$MSG" ""
 							if [ "$gv_Auswahl" = yes ] ; then
 								del_dvd
@@ -310,7 +310,7 @@ while [ "$gv_Auswahl" ] ; do
 						fi
 						;;
 					*)	
-						MSG=$(gettext 'Sie muessen erst eine DVD+-RW/RAM ins DVD Brenner Laufwerk einlegen.')
+						MSG=$(gettext 'Sie müssen erst eine DVD+-RW/RAM ins DVD Brenner Laufwerk einlegen.')
 						msgbox "$gv_Attention" "$MSG"
 						;;
 				esac

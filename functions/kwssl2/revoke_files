@@ -1,6 +1,6 @@
 # Funktion (revoke_files), widerruft CA- und Zertifikats-Dateien
 #
-# benoetigt die Variablen CERT_REVOKE_TITLE und Revoke_File
+# benötigt die Variablen CERT_REVOKE_TITLE und Revoke_File
 #
 # usage: revoke_files FILE
 # FILE - CA/Zertifikat Datei (voller Pfad)
@@ -39,8 +39,8 @@ revoke_files() {
 					conf_revoke_menu "${gv_Auswahl#HELP }"
 					;;
 				"$lv_Ssl_Password")
-					# Passwort fuer das Zertifikat eingeben# {{{
-					CERT_REVOKE_MSG=$(gettext 'Geben Sie bitte das Password fuer dieses Zertifikat ein.')
+					# Passwort für das Zertifikat eingeben# {{{
+					CERT_REVOKE_MSG=$(gettext 'Geben Sie bitte das Password für dieses Zertifikat ein.')
 					password "$CERT_REVOKE_TITLE" "$CERT_REVOKE_MSG"
 					if [ -n "$PASSPHRASE" ] ; then
 						password_display "$PASSPHRASE"
@@ -58,7 +58,7 @@ revoke_files() {
 					conf_revoke_menu $lv_Ssl_Password
 					;;
 				$lv_Ground)
-					# Grund angeben/auswaehlen# {{{
+					# Grund angeben/auswählen# {{{
 					ground_revoke_menu
 					while [ -n "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
@@ -68,7 +68,7 @@ revoke_files() {
 								ground_revoke_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
-								# Auswahl uebernehmen
+								# Auswahl übernehmen
 								GROUND="$gv_Auswahl"
 								break
 								;;
@@ -89,18 +89,18 @@ revoke_files() {
 						if [ "$RET" != 1 ] ; then
 							create_crl "$CA_OPEN_NAME"
 						fi
-						# Passwoerter loeschen
+						# Passwörter löschen
 						unset -- CAPASSWORD CAPASSWD
 						break
 					else
-						MSG=$(gettext 'Sie muessen ein Passwort eingeben.')
+						MSG=$(gettext 'Sie müssen ein Passwort eingeben.')
 						msgbox "$gv_Info" "$MSG"
 						conf_revoke_menu $lv_Ssl_Password
 					fi
 					## }}}
 					;;
 				$gv_Back)
-					# Passwoerter loeschen
+					# Passwörter löschen
 					unset -- CAPASSWORD CAPASSWD
 					break
 					;;

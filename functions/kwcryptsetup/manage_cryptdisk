@@ -1,4 +1,4 @@
-# Funktion manage_cryptdisk; verschluesselte Laufwerke managen.# {{{
+# Funktion manage_cryptdisk; verschlüsselte Laufwerke managen.# {{{
 #
 # usage: manage_cryptdisk
 #
@@ -13,14 +13,14 @@ manage_cryptdisk() {
 			mv ${gv_WorkDir}/crypttab $TABFILE
 		}
 		## }}}
-	# Funktion (luks_resize), vergroessern/verkleinern# {{{
+	# Funktion (luks_resize), vergrössern/verkleinern# {{{
 	############################################
 	# TODO: Partitionen vergr�ssern/verkleinern geht noch nicht.
 	#
 	luks_resize() {
 		Resize_Opt="$1"
 		RESIZE_MENU=($2)
-		RESIZE_TITLE=$(gettext 'vergroessern/verkleinern')
+		RESIZE_TITLE=$(gettext 'vergrössern/verkleinern')
 		# Die Variable RESIZE_TITLE wird von der Funktion script_init belegt.
 		menubox "" "$RESIZE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$RESIZE_MENU"
 		while [ -n "$gv_Auswahl" ] ; do
@@ -28,12 +28,12 @@ manage_cryptdisk() {
 				HELP*)	script_help resize_help
 					menubox "${gv_Auswahl#HELP }" "$RESIZE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$RESIZE_MENU"
 					;;
-				*)	# Auswahl uebernehmen
+				*)	# Auswahl übernehmen
 					CRYPT_DEV="$gv_Auswahl"
 					if [ -b "$CRYPT_DEV" ] ; then
 						case "$Resize_Opt" in
 							-e)
-								# vergroessern/extend# {{{
+								# vergrössern/extend# {{{
 								case "$CRYPT_DEV" in
 									/dev/[sh]d[a-z][0-9]|/dev/[sh]d[a-z][0-9][0-9]|/dev/[sh]d[a-z]/[0-9]*)
 										# normale Partitionen
@@ -41,7 +41,7 @@ manage_cryptdisk() {
 										menubox "" "$RESIZE_TITLE" "$SINGLE_BLOCK_DEVICE_MSG" "$RESIZE_MENU"
 										;;
 									/dev/md[0-9]|/dev/md[0-9][0-9]|/dev/md/[0-9]*)
-										# RAID Laufwerke vergroessern# {{{
+										# RAID Laufwerke vergrössern# {{{
 										prog_check mdadm
 										if [ ! -z "$PROGS" ] ; then
 											raid_enlarge_dev $CRYPT_DEV
@@ -50,13 +50,13 @@ manage_cryptdisk() {
 										break
 										;;
 									*)
-										# LVMs ; vorhandene LV Groesse heraus finden.# {{{
+										# LVMs ; vorhandene LV Grösse heraus finden.# {{{
 										lv_free_size "$CRYPT_DEV"
 										# Die Variablen VG_FREE_SIZE, VG_FREE_SIZE_ME
 										# werden von der Funktion vg_free_size belegt.
 										vg_free_size "${CRYPT_DEV%/*}"
 										#
-										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Groesse ein, um die ihr LV vergroessert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
+										LV_ENLARGE_SIZE_MSG=$(gettext 'Geben Sie bitte hier die Grösse ein, um die ihr LV vergrössert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Es sind noch "$VG_FREE_SIZE_ME" frei.')
 										number_input -D "$RESIZE_TITLE" "$LV_ENLARGE_SIZE_MSG"
 										#
 										while [ -n "$NUMBER" ] ; do
@@ -70,7 +70,7 @@ manage_cryptdisk() {
 												# Die Variable LV_SIZE wird von der
 												# Funktion lv_free_size belegt.
 												(( LV_NEW_SIZE = Size_Tmp + LV_SIZE ))
-												# Dateisystem checken und vergroessern
+												# Dateisystem checken und vergrössern
 												lv_resize +${LV_NEW_SIZE} "$CRYPT_DEV"
 												break
 											else
@@ -107,7 +107,7 @@ manage_cryptdisk() {
 											# LVMs ; LV_SIZE wird von der Funktion lv_free_size
 											# belegt.
 											lv_free_size "$CRYPT_DEV"
-											LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Groesse ein, um die das LV verkleinert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
+											LV_REDUCE_SIZE_MSG=$(gettext 'Geben Sie die Grösse ein, um die das LV verkleinert werden soll (1GiB = 1 GigaByte = 1024 MegaByte). Diese LV besitzt insgesamt "$LV_SIZE_ME".')
 											number_input -D "$RESIZE_TITLE" "$LV_REDUCE_SIZE_MSG"
 											while [ -n "$NUMBER" ] ; do
 												# Laufwerksangabe in Byte umrechnen
@@ -115,8 +115,8 @@ manage_cryptdisk() {
 												if [ -n "$SIZE_MIB" ] ; then
 													Size_Tmp="$SIZE_MIB"
 												fi
-												# ist die Groesse um die verkleinert werden soll
-												# kleiner als die ganze Groesse der LV dann wird
+												# ist die Grösse um die verkleinert werden soll
+												# kleiner als die ganze Grösse der LV dann wird
 												# verkleinert.
 												if [[ "$Size_Tmp" -lt "$LV_SIZE" ]] ; then
 													(( LV_NEW_SIZE = LV_SIZE - Size_Tmp ))
@@ -144,7 +144,7 @@ manage_cryptdisk() {
 		done
 	}
 	## }}}
-	# Funktion (init_device), initiiert das verschluesselte Laufwerk# {{{
+	# Funktion (init_device), initiiert das verschlüsselte Laufwerk# {{{
 	#
 	# usage: init_device
 	#
@@ -153,7 +153,7 @@ manage_cryptdisk() {
 		unset -- PROG_OPT PROG_OPT1 SRC
 		SRC="${CRYPT_PATH}/${CRYPT_FILE}"
 
-		# Schluessel Rechte pruefen
+		# Schlüssel Rechte prüfen
 		if ! check_key "$KEY_FILE" ; then
 			return 1
 		fi
@@ -163,7 +163,7 @@ manage_cryptdisk() {
 		export CRYPTTAB_SOURCE="$SRC"
 		export CRYPTTAB_KEY="$KEY_FILE"
 
-		# Schluessel Optionen belegen
+		# Schlüssel Optionen belegen
 		if ! check_key_opt "$KEY_FILE" ; then
 			return 1
 		fi
@@ -171,7 +171,7 @@ manage_cryptdisk() {
 		# Laufwerk erstellen/initiieren
 		########################################
 		# TODO:
-		# --keyfile muss irgendwie eingebunden/geaendert werden.
+		# --keyfile muss irgendwie eingebunden/geändert werden.
 		#
 		# Schl�sseldatei und Schl�sselscript benutzen
 		if [ -n "$KEYSCRIPT" ] ; then
@@ -189,7 +189,7 @@ manage_cryptdisk() {
 		# ohne Schl�sseldatei
 		elif [ -z "$key" -o "$key" = none ] ; then
 			# Passphrase eingeben
-			PASSWD_MSG=$(gettext 'Geben Sie die Passphrase fuer das Laufwerk ${CRYPT_PREFIX}-${CRYPT_FILE} ein und wiederholen es im Feld darunter. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+			PASSWD_MSG=$(gettext 'Geben Sie die Passphrase für das Laufwerk ${CRYPT_PREFIX}-${CRYPT_FILE} ein und wiederholen es im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
 			mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" 8 21
 			[[ -z "$gv_Pass" ]] && return 1
 			if [ "$USELUKS" = yes ] ; then
@@ -203,7 +203,7 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
 					open --type plain $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			fi
-		# mit Schluessel
+		# mit Schlüssel
 		elif [ -n "$key" ] ; then
 			if [ "$USELUKS" = yes ] ; then
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} $LUKSFORMAT luksFormat $SRC &>/dev/null || return=1
@@ -221,16 +221,16 @@ manage_cryptdisk() {
 	# Funktion (create_action) Laufwerk erstellen# {{{
 	#
 	# usage: create_action [ -p ]
-	# -p - ist fuer die Verschluesselung von Partitionen,
+	# -p - ist für die Verschlüsselung von Partitionen,
 	#      LVMs und RAID Laufwerken.
-	#      Der Rest fuer verschluesselte Container.
+	#      Der Rest für verschlüsselte Container.
 	create_action() {
 		local Part_Size Opt Sectors
 		Opt="$1"
-		DD_MSG=$(gettext 'Status beim ueberschreiben von Laufwerk ${CRYPT_PATH}/${CRYPT_FILE}.')
-		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufaelliger Werte uebershrieben werden (ja/nein)?
+		DD_MSG=$(gettext 'Status beim überschreiben von Laufwerk ${CRYPT_PATH}/${CRYPT_FILE}.')
+		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufälliger Werte übershrieben werden (ja/nein)?
 
-Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Groesse nicht stimmt.')
+Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Grösse nicht stimmt.')
 		# Gr�sse des Laufwerks berechnen
 		if [ "$Opt" = -p ] ; then
 			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
@@ -258,7 +258,7 @@ Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschr
 		elif [ "$Opt" != -p ] ; then
 			Real_Size=${$(LANG=C ; LC_NUMERIC=en ; ls -l ${CRYPT_PATH}/${CRYPT_FILE})[5]}
 			if [[ $Real_Size != $Part_Size ]] ; then
-				MSG=$(gettext 'Die Groesse der vorhandenen Container Datei stimmt nicht mit der geforderten Groesse ueberein. Es wird jetzt abgebrochen.')
+				MSG=$(gettext 'Die Grösse der vorhandenen Container Datei stimmt nicht mit der geforderten Grösse überein. Es wird jetzt abgebrochen.')
 				msgbox "$gv_Info" "$MSG"
 				return 1
 			fi
@@ -282,7 +282,7 @@ Bei der Erstellung eines verschluesselten Containers muss das Laufwerk ueberschr
 			cryptdisk_swap "${CRYPT_PREFIX}-${CRYPT_FILE}"
 			# /etc/crypttab �ndern
 			change_crypttab
-			MSG=$(gettext 'Sie koennen jetzt in die Datei /etc/fstab folgendes eintragen:
+			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	swap	swap	OPTIONEN	0	0')
 			msgbox "$gv_Info" "$MSG"
 		elif [[ -n $TMPFS ]] ; then
@@ -290,13 +290,13 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	swap	swap	OPTIONEN	0	0')
 			cryptdisk_tmp "${CRYPT_PREFIX}-${CRYPT_FILE}"
 			# /etc/crypttab �ndern
 			change_crypttab
-			MSG=$(gettext 'Sie koennen jetzt in die Datei /etc/fstab folgendes eintragen:
+			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 			msgbox "$gv_Info" "$MSG"
 		else
 			# Laufwerk mit dem dementsprechenden Dateisystem formatieren.
 			# Wenn die Formatierung verneint wird, wird trotzdem
-			# ein Eintrag in der /etc/crypttab getaetigt.
+			# ein Eintrag in der /etc/crypttab getätigt.
 			format "${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}"
 			if [ "$?" != 0 ] ; then
 				# /etc/crypttab �ndern
@@ -304,7 +304,7 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 			else
 				# /etc/crypttab �ndern
 				change_crypttab
-				MSG=$(gettext 'Sie koennen jetzt in die Datei /etc/fstab folgendes eintragen:
+				MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
 				msgbox "$gv_Info" "$MSG"
 			fi
@@ -340,8 +340,8 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
 				manage_menu $gv_Display
 				;;
 			$gv_Create)
-				# Verschluesseltes Device erstellen# {{{
-				OVERWRITE_MSG=$(gettext 'Das Laufwerk $CRYPT_FILE existiert schon. Soll es ueberschrieben werden (ja/nein)?
+				# Verschlüsseltes Device erstellen# {{{
+				OVERWRITE_MSG=$(gettext 'Das Laufwerk $CRYPT_FILE existiert schon. Soll es überschrieben werden (ja/nein)?
 
 Bei \"nein\" wird abgebrochen.')
 				#
@@ -360,24 +360,24 @@ Bei \"nein\" wird abgebrochen.')
 							create_menu "${gv_Auswahl#HELP }"
 							;;
 						$lv_Container)
-							# Verzeichnis auswaehlen und Dateinamen eingeben.# {{{
+							# Verzeichnis auswählen und Dateinamen eingeben.# {{{
 							dselect "$VERZ"
 							if [ -n "$VERZ" ] ; then
 								dselect_check -c "$VERZ"
 								if [ -n "$VERZ" ] ; then
 									CONT_TITLE=(${gv_Create}::${lv_Container})
-									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen fuer den Container ein.')
+									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen für den Container ein.')
 									inputbox "$CONT_TITLE" "$CONT_MSG"
 									if [ -n "$gv_Auswahl" ] ; then
-										# Variablen fuer create_action belegen
+										# Variablen für create_action belegen
 										CRYPT_PATH="$VERZ"
 										CRYPT_FILE="$gv_Auswahl"
 										Src=${${${(s: :)${(M)"${(f)$(< $TABFILE)}"##*${VERZ}/${CRYPT_FILE}[[:space:]]*}}[2]}%% *}
-										# existierendes Laufwerk ueberschreiben?
+										# existierendes Laufwerk überschreiben?
 										if [ -f "${VERZ}/${CRYPT_FILE}" -a -f "$Src" ] ; then
 											yesno "$CONT_TITLE" "$OVERWRITE_MSG" "no"
 											if [ "$gv_Auswahl" = yes ] ; then
-												# urspruengliche Groesse herrausbekommen.
+												# ursprüngliche Grösse herrausbekommen.
 												SIZE=${${$(LANG=C ; LC_NUMERIC=en ; ls -lh $Src)[5]}%.*}
 												CRYPT_FILE_OLD=${${(s: :)${(M)$(< $TABFILE)##*$CRYPT_FILE*}}[1]}
 												if ! cryptdisk_stop -c "$CRYPT_FILE_OLD" ; then
@@ -410,11 +410,11 @@ Bei \"nein\" wird abgebrochen.')
 							create_menu $lv_Container
 							;;
 						$lv_Partition)
-							# Partitionen/LVM/RAID verschluesseln# {{{
+							# Partitionen/LVM/RAID verschlüsseln# {{{
 							unset -- Parts
 							disk
 							partdb
-							# heraussuchen von unverschluesselten Partitionen
+							# heraussuchen von unverschlüsselten Partitionen
 							# die in keinem btrfs RAID Array vorkommen.
 							search_devices -p
 							if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
@@ -438,10 +438,10 @@ Bei \"nein\" wird abgebrochen.')
 								part_choice "$Parts"
 								#
 								if [ -n "$WERT" ] ; then
-									# Variablen fuer create_action belegen
+									# Variablen für create_action belegen
 									CRYPT_PATH="${WERT%/*}"
 									CRYPT_FILE="${WERT##*/}"
-									# existierendes Laufwerk ueberschreiben?
+									# existierendes Laufwerk überschreiben?
 									if [ -b "${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}" ] ; then
 										PART_TITLE=(${gv_Create}::${lv_Partition})
 										yesno "$PART_TITLE" "$OVERWRITE_MSG" "no"
@@ -489,20 +489,20 @@ Bei \"nein\" wird abgebrochen.')
 				manage_menu $gv_Create
 				;;
 			$gv_Change)
-				# Verschluesseltes Laufwerk veraendern# {{{
+				# Verschlüsseltes Laufwerk verändern# {{{
 				search_cryptdev
 				# zur Auswahl anbieten
 				if [ -n "${MAP_DEV[1]}" ] ; then
 					CHANGE_MENU=($MAP_DEV)
 					CHANGE_TITLE="$gv_Change"
-					CHANGE_MSG=$(gettext 'Waehlen Sie ein Laufwerk/Container zum veraendern aus.')
+					CHANGE_MSG=$(gettext 'Wählen Sie ein Laufwerk/Container zum verändern aus.')
 					menubox "$DEVICE" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help change_help
 								menubox "${gv_Auswahl#HELP }" "$CHANGE_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 								;;
-							*)	# Auswahl veraendern
+							*)	# Auswahl verändern
 								DEVICE="$gv_Auswahl"
 								# Laufwerks Optionen einlesen
 								if ! parse_opts "$DEVICE" ; then
@@ -519,7 +519,7 @@ Bei \"nein\" wird abgebrochen.')
 
 										Dst=${${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${DEVICE}[[:space:]]*}}[1]}%% *}
 										Src=${${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${DEVICE}[[:space:]]*}}[2]}%% *}
-										# Auswahl aus der /etc/crypttab loeschen.
+										# Auswahl aus der /etc/crypttab löschen.
 										print -l ${(R)"${(f)$(< $TABFILE)}"##${DEVICE}[[:space:]]*} >${gv_WorkDir}/crypttab
 										# neue Auswahl in die /etc/crypttab eintragen.
 										if [ -n "$KEY_FILE" ] ; then
@@ -543,7 +543,7 @@ Bei \"nein\" wird abgebrochen.')
 				manage_menu $gv_Change
 				;;
 			$gv_Enlarge)
-				# LUKS Partition vergroessern# {{{
+				# LUKS Partition vergrössern# {{{
 				search_cryptdev -l
 				if [ -n "${MAP_DEV[1]}" ] ; then
 					luks_resize -e "$MAP_DEV"
@@ -565,25 +565,25 @@ Bei \"nein\" wird abgebrochen.')
 				manage_menu $gv_Reduce
 				;;
 			$gv_Delete)
-				# Verschluesselte Laufwerke loeschen# {{{
+				# Verschlüsselte Laufwerke löschen# {{{
 				search_cryptdev
 				# zur Auswahl anbieten
 				if [ -n "${MAP_DEV_M[1]}" ] ; then
 					DEL_MENU=($MAP_DEV_M)
 					DEL_TITLE="$gv_Delete"
-					DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke/Container zum loeschen aus.')
+					DEL_MSG=$(gettext 'Wählen Sie ein oder mehrere Laufwerke/Container zum löschen aus.')
 					checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help del_help
 								checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 								;;
-							*)	# Auswahl loeschen
+							*)	# Auswahl löschen
 								for L in ${=gv_Auswahl} ; {
 									if ! cryptdisk_stop -c "$L" ; then
 										break
 									fi
-									# Auswahl aus der /etc/crypttab loeschen.
+									# Auswahl aus der /etc/crypttab löschen.
 									if [ ! -z "`print ${(M)"${(f)$(< $TABFILE)}"##${L}[[:space:]]*}`" ] ; then
 										Src=${${(s: :)${(M)"${(f)$(< $TABFILE)}"##${L}[[:space:]]*}}[2]}
 										print -l ${(R)"${(f)$(< $TABFILE)}"##${L}[[:space:]]*} >${gv_WorkDir}/crypttab

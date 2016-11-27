@@ -9,8 +9,8 @@ recipient_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$RECIPIENT_MENU"
 	}
 	#}}}
-	# Funktion recipient_aendern{{{
-	recipient_aendern() {
+	# Funktion recipient_ändern{{{
+	recipient_ändern() {
 	recipient_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -18,7 +18,7 @@ recipient_table() {
 				recipient_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Address)
-				# Adresse waehlen{{{
+				# Adresse wählen{{{
 				inputbox "$TABLE_TITLE" "$TABLE_MAILADDRESS_OR_DOMAIN_INPUT_MSG" "$ADR"
 				if [ "$gv_Auswahl" ] ; then
 					case "$gv_Auswahl" in
@@ -37,7 +37,7 @@ recipient_table() {
 				recipient_menue
 				;;
 			$gv_Save)
-				# Eintraege speichern{{{
+				# Einträge speichern{{{
 				# ":" in der 2. Spalte wird nicht ausgewertet
 				# und dient nur zur Einhaltung der Syntax von
 				# lookup Tabellen.
@@ -70,24 +70,24 @@ recipient_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR AENDERN_ADR
-				recipient_aendern
+				recipient_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -98,11 +98,11 @@ recipient_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl aendern
+								# Auswahl ändern
 								C_CHOICE="$gv_Auswahl"
 								ADR=${${=gv_Auswahl}[1]}
 								AENDERN_ADR="$ADR"
-								recipient_aendern
+								recipient_ändern
 								break
 								;;
 						esac
@@ -114,7 +114,7 @@ recipient_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -124,7 +124,7 @@ recipient_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

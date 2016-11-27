@@ -1,4 +1,4 @@
-# Funktion (kwmutt_ssl_conf), konfiguriert die ssl/tls Einstellungen fuer mutt# {{{
+# Funktion (kwmutt_ssl_conf), konfiguriert die ssl/tls Einstellungen für mutt# {{{
 #
 # usage: kwmutt_ssl_conf
 #
@@ -6,7 +6,7 @@ kwmutt_ssl_conf() {
 	Unset=(ssl_starttls ssl_force_tls ssl_min_dh_prime_bits ssl_use_tlsv1 ssl_use_sslv3
 		certificate_file ssl_ca_certificates_file)
 	unset -- $Unset
-	# Funktion (ssl_conf_menu), menu fuer die SSL/TLS Konfiguration# {{{
+	# Funktion (ssl_conf_menu), menu für die SSL/TLS Konfiguration# {{{
 	SSL_TITLE="$lv_Ssl"
 	ssl_conf_menu() {
 		SSL_CONF_MENU=(ssl_starttls \"$ssl_starttls\"
@@ -44,7 +44,7 @@ kwmutt_ssl_conf() {
 				;;
 			ssl_starttls)
 				# SSL/TLS aktivieren# {{{
-				MSG=$(gettext 'Soll die Verschluesselung aktiviert werden?')
+				MSG=$(gettext 'Soll die Verschlüsselung aktiviert werden?')
 				yesno_select "$SSL_TITLE" "$MSG" "$ssl_starttls"
 				if [ -n "$VALUE" ] ; then
 					ssl_starttls="$VALUE"
@@ -56,7 +56,7 @@ kwmutt_ssl_conf() {
 				;;
 			ssl_force_tls)
 				# SSL/TLS unbedingt aktivieren# {{{
-				MSG=$(gettext 'Soll die Verschluesselung auf jeden Fall aktiviert werden (ja/nein)?')
+				MSG=$(gettext 'Soll die Verschlüsselung auf jeden Fall aktiviert werden (ja/nein)?')
 				yesno "$SSL_TITLE" "$MSG" "$ssl_force_tls"
 				if [ "$gv_Auswahl" = yes ] ; then
 					ssl_force_tls=yes
@@ -68,7 +68,7 @@ kwmutt_ssl_conf() {
 				;;
 			ssl_min_dh_prime_bits)
 				# Zahl in Bits zur Autorisierung auf Mailservern.# {{{
-				MSG=$(gettext 'Geben Sie eine Zahl in Bits an zur Autorisierung auf Mailservern. "0" benutzt standardmaessig die GNUTLS Bibliothek.')
+				MSG=$(gettext 'Geben Sie eine Zahl in Bits an zur Autorisierung auf Mailservern. "0" benutzt standardmässig die GNUTLS Bibliothek.')
 				number_input -i "$ssl_min_dh_prime_bits"
 				if [ -n "$NUMBER" ] ; then
 					ssl_min_dh_prime_bits="$NUMBER"
@@ -80,7 +80,7 @@ kwmutt_ssl_conf() {
 				;;
 			ssl_use_tlsv1)
 				# Soll TLS Version 1 benutzt werden# {{{
-				MSG=$(gettext 'Soll die TLS Version 1 fuer die verschluesselte Verbundung zum Mail Server benutzt werden (ja/nein)?')
+				MSG=$(gettext 'Soll die TLS Version 1 für die verschlüsselte Verbundung zum Mail Server benutzt werden (ja/nein)?')
 				yesno "$SSL_TITLE" "$MSG" "$ssl_use_tlsv1"
 				if [ "$gv_Auswahl" = yes ] ; then
 					ssl_use_tlsv1=yes
@@ -92,7 +92,7 @@ kwmutt_ssl_conf() {
 				;;
 			ssl_use_sslv3)
 				# Soll SSL Version 3 benutzt werden# {{{
-				MSG=$(gettext 'Soll die SSL Version 3 fuer die verschluesselte Verbundung zum Mail Server benutzt werden (ja/nein)?')
+				MSG=$(gettext 'Soll die SSL Version 3 für die verschlüsselte Verbundung zum Mail Server benutzt werden (ja/nein)?')
 				yesno "$SSL_TITLE" "$MSG" "$ssl_use_sslv3"
 				if [ "$gv_Auswahl" = yes ] ; then
 					ssl_use_sslv3=yes

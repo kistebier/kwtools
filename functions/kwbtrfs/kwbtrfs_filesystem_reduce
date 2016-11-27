@@ -3,10 +3,10 @@
 # usage: kwbtrfs_filesystem_reduce
 #
 kwbtrfs_filesystem_reduce() {
-	# alte Variablen loeschen
+	# alte Variablen löschen
 	unset -- DRIVE SIZE
 	# Variablen
-	INFO_MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
+	INFO_MSG=$(gettext 'Sie müssen erst den Menuepunkt \"$lv_Btrfs_Drive\" mit einem Wert belegen.')
 	REDUCE_TITLE="${lv_Filesystem}::${gv_Reduce}"
 	# Funktion (btrfs_reduce_menu)# {{{
 	btrfs_reduce_menu() {
@@ -33,7 +33,7 @@ kwbtrfs_filesystem_reduce() {
 					btrfs_reduce_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Btrfs_Drive)
-					# Laufwerk auswaehlen# {{{
+					# Laufwerk auswählen# {{{
 					btrfs_drive_menu "" "$BTRFS_PATH_E"
 					while [[-n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -43,12 +43,12 @@ kwbtrfs_filesystem_reduce() {
 								btrfs_drive_menu "${gv_Auswahl#HELP }" "$BTRFS_PATH_E"
 								;;
 							/*)
-								# Laufwerk uebernehmen
+								# Laufwerk übernehmen
 								DRIVE="$gv_Auswahl"
 								break
 								;;
 							*)
-								# zurueck
+								# zurück
 								break
 								;;
 						esac
@@ -57,9 +57,9 @@ kwbtrfs_filesystem_reduce() {
 					btrfs_reduce_menu "$lv_Btrfs_Drive"
 					;;
 				$lv_Size)
-					# Groesse eingeben# {{{
+					# Grösse eingeben# {{{
 					if [[ -n $DRIVE ]] ; then
-						REDUCE_SIZE_MSG=$(gettext 'Geben Sie bitte die Groesse, um die das Btrfs-Laufwerk verkleinert werden soll, ein (1GiB = 1024 MiB)')
+						REDUCE_SIZE_MSG=$(gettext 'Geben Sie bitte die Grösse, um die das Btrfs-Laufwerk verkleinert werden soll, ein (1GiB = 1024 MiB)')
 						number_input -D "$REDUCE_TITLE" "$REDUCE_SIZE_MSG" "$SIZE"
 						if [[ -n $NUMBER ]] ; then
 							# nach MiB umrechnen
@@ -76,7 +76,7 @@ kwbtrfs_filesystem_reduce() {
 					btrfs_reduce_menu "$lv_Size"
 					;;
 				$gv_Reduce)
-					# verkleinern des ausgewaehlten Laufwerk# {{{
+					# verkleinern des ausgewählten Laufwerk# {{{
 					if [[ -n $DRIVE ]] && [[ -n $SIZE ]] ; then
 #						ENLARGE_MSG="${gv_Reduce}: ${DRIVE}..."
 #						btrfs filesystem resize -${SIZE}M "$DRIVE" | \
@@ -89,14 +89,14 @@ kwbtrfs_filesystem_reduce() {
 							return 1
 						fi
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Btrfs_Drive\" und \"$SIZE\" mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte \"$lv_Btrfs_Drive\" und \"$SIZE\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
 						btrfs_reduce_menu "$lv_Btrfs_Drive"
 					fi
 					## }}}
 					;;
 				*)
-					# zurueck
+					# zurück
 					break
 					;;
 			esac

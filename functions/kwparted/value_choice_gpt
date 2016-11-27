@@ -25,7 +25,7 @@ value_choice_gpt() {
 			Max_Part_End=${END_NR[Choice_Nr]}
 		fi
 		# ist Max_Part_End gleich DISK_CAP wird 1(MiB) abgezogen,
-		# da DISK_CAP die komplette Festplattengroesse ist.
+		# da DISK_CAP die komplette Festplattengrösse ist.
 		if [[ $Max_Part_End == $DISK_CAP ]] ; then
 			(( Max_Part_End = DISK_CAP -1 ))
 		fi
@@ -40,19 +40,19 @@ value_choice_gpt() {
 			Flag="${${FLAG[Choice_Nr]}%%,*} on"
 		fi
 		# MAX_SIZE Variable belegen und in Max_Size
-		# die moegliche Groesse speichern.
-		# Die Variable MAX_SIZE dient fuer die MSG
-		# beim vergroessern der Partition.
+		# die mögliche Grösse speichern.
+		# Die Variable MAX_SIZE dient für die MSG
+		# beim vergrössern der Partition.
 		(( Max_Size = Max_Part_End-Max_Part_Start ))
 		MAX_SIZE="${Max_Size}MiB"
-		# vorhandene Groesse speichern
+		# vorhandene Grösse speichern
 		Size=${${PART_ANZ_SIZE_NR[Choice_Nr]}%MiB}
 		if [[ $Size -gt $Max_Size ]] ; then
 			SIZE="$MAX_SIZE"
 		else
 			SIZE="${Size}MiB"
 		fi
-		# Die Variable SIZE_OLD dient fuer die MSG
+		# Die Variable SIZE_OLD dient für die MSG
 		# beim anlegen/verkleinern der Partition.
 		SIZE_OLD="$SIZE"
 	else

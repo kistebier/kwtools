@@ -9,9 +9,9 @@ smtpd_sender_login_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$SMTPD_SENDER_LOGIN_MENU"
 	}
 	#}}}
-	# Funktion smtpd_sender_login_aendern{{{
+	# Funktion smtpd_sender_login_ändern{{{
 	#
-	smtpd_sender_login_aendern() {
+	smtpd_sender_login_ändern() {
 	smtpd_sender_login_menu
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
@@ -20,11 +20,11 @@ smtpd_sender_login_table() {
 				;;
 			$lv_Address)
 				# Sender Mail Adresse eingeben# {{{
-				SENDER_MSG=$(gettext 'Geben Sie bitte eine Mail Adresse ein die einem oder mehreren Empfaenger zugeordnet werden soll (user@domain.de).')
+				SENDER_MSG=$(gettext 'Geben Sie bitte eine Mail Adresse ein die einem oder mehreren Empfänger zugeordnet werden soll (user@domain.de).')
 				inputbox "$TABLE_TITLE" "$SENDER_MSG" "$ADR"
 				case "$gv_Auswahl" in
 					[a-zA-Z0-9][-._]*@[a-zA-Z0-9]*)
-						# uebernehmen
+						# übernehmen
 						ADR="$gv_Auswahl"
 						;;
 					*)
@@ -36,8 +36,8 @@ smtpd_sender_login_table() {
 				smtpd_sender_login_menu $lv_Address
 				;;
 			$lv_Recipient)
-				# gueltige Empfaenger zur Senderadresse eingeben.# {{{
-				USER_INPUT_MSG=$(gettext 'Geben Sie einen oder mehrere lokale Benutzer ein zu denen die Mailadresse gehoert, getrennt durch ein Komma (Bsp.: user1, user2).')
+				# gueltige Empfänger zur Senderadresse eingeben.# {{{
+				USER_INPUT_MSG=$(gettext 'Geben Sie einen oder mehrere lokale Benutzer ein zu denen die Mailadresse gehört, getrennt durch ein Komma (Bsp.: user1, user2).')
 				inputbox "$TABLE_TITLE" "$USER_INPUT_MSG" "$LOCAL_USER"
 				if [[ -n $gv_Auswahl ]] ; then
 					LOCAL_USER="${gv_Auswahl%,}"
@@ -60,7 +60,7 @@ smtpd_sender_login_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst eine Sender Adresse (MAIL FROM) und einen oder mehrere dazugehoerige Empfaenger eingeben.')
+					MSG=$(gettext 'Sie müssen erst eine Sender Adresse (MAIL FROM) und einen oder mehrere dazugehörige Empfänger eingeben.')
 					msgbox "$gv_Attention" "$MSG"
 					smtpd_sender_login_menu
 				fi
@@ -79,24 +79,24 @@ smtpd_sender_login_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR LOCAL_USER AENDERN_ADR AENDERN_ADR1
-				smtpd_sender_login_aendern
+				smtpd_sender_login_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -107,14 +107,14 @@ smtpd_sender_login_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl veraendern
+								# Auswahl verändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${=gv_Auswahl}[1]}"
 								LOCAL_USER="${${=gv_Auswahl}[2,$]}"
 								AENDERN_ADR="$ADR"
 								AENDERN_ADR1="$LOCAL_USER"
 								#
-								smtpd_sender_login_aendern
+								smtpd_sender_login_ändern
 								break
 								;;
 						esac
@@ -126,7 +126,7 @@ smtpd_sender_login_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -136,7 +136,7 @@ smtpd_sender_login_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" ${FILE} >$FILE$$
 									mv $FILE$$ $FILE

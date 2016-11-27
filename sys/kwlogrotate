@@ -33,13 +33,13 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check logrotate
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # Nachdem das Script initialiiert wurde, kann man die anderen
@@ -48,13 +48,13 @@ autoload -U kwlogrotate_config
 
 # Variablen
 CREATE_TITLE=$(gettext 'Konfiguration::Name')
-CREATE_MSG=$(gettext 'Geben Sie hier bitte den Namen fuer die Konfigurationsdatei ein. Am besten den Namen des Service.')
+CREATE_MSG=$(gettext 'Geben Sie hier bitte den Namen für die Konfigurationsdatei ein. Am besten den Namen des Service.')
 IST_FILE=${gv_WorkDir}/logfiles
 LOGFILE_MENUE=${gv_WorkDir}/logfile_menue
-DAILY=$(gettext 'taeglich')
-WEEKLY=$(gettext 'woechentlich')
+DAILY=$(gettext 'täglich')
+WEEKLY=$(gettext 'wöchentlich')
 MONTHLY=$(gettext 'monatlich')
-Add_Entry=$(gettext 'Eintrag hinzufuegen')
+Add_Entry=$(gettext 'Eintrag hinzufügen')
 Access=$(gettext 'Rechte')
 Compress=$(gettext 'Kompression')
 Count=$(gettext 'Anzahl')
@@ -64,7 +64,7 @@ Name=$(gettext 'Name')
 Programm=$(gettext 'Programm')
 Rotatetime=$(gettext 'Rotierzeit')
 Script=$(gettext 'Script')
-Size=$(gettext 'Groesse')
+Size=$(gettext 'Grösse')
 
 # Funktion Hauptmenue{{{
 #
@@ -73,10 +73,10 @@ main_menu() {
 	menubox  "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
-# Funktion log_aendern_menue{{{
+# Funktion log_ändern_menue{{{
 #
 LOGFILE_TITLE=$(gettext 'Logdatei')
-log_aendern_menue() {
+log_ändern_menue() {
 	unset -- LOGFILE_MENU LogFiles
 	local LogFiles
 	while read A B ; do
@@ -173,21 +173,21 @@ $gv_Back \"\""
 #}}}
 # Funktionen no_logfile_select_msg# {{{
 no_logfile_select_msg() {
-	MSG=$(gettext 'Sie muessen erst mindestens eine Logdatei auswaehlen.')
+	MSG=$(gettext 'Sie müssen erst mindestens eine Logdatei auswählen.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion log_aendern{{{
+# Funktion log_ändern{{{
 #
-log_aendern() {
-	log_aendern_menue
+log_ändern() {
+	log_ändern_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help conf_help
-				log_aendern_menue "${gv_Auswahl#HELP }"
+				log_ändern_menue "${gv_Auswahl#HELP }"
 				;;
 			"$Add_Entry")
-				# Einen Eintrag fuer Logdateien hinzufuegen# {{{
+				# Einen Eintrag für Logdateien hinzufügen# {{{
 				if [ ! -z "$LOGDATEI" ] ; then
 					Anz="${#LOGDATEI[@]}"
 					L_Anz=0
@@ -222,11 +222,11 @@ ${Script}${L_Anz} \"\""
 					>> "$LOGFILE_MENUE" <<< "$gv_Save \"\"
 $gv_Back \"\""
 				else
-					MSG=$(gettext 'Sie muessen erst mindestens eine Logdatei auswaehlen um einen neuen Eintrag fuer Logdateien hinzufuegen zu koennen.')
+					MSG=$(gettext 'Sie müssen erst mindestens eine Logdatei auswählen um einen neuen Eintrag für Logdateien hinzufügen zu können.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
-				log_aendern_menue "$Add_Entry"
+				log_ändern_menue "$Add_Entry"
 				;;
 			$Name)
 				# Name der Logdatei Konfiguration eingeben{{{
@@ -246,7 +246,7 @@ $gv_Back \"\""
 					fi
 				fi
 				#}}}
-				log_aendern_menue $Name
+				log_ändern_menue $Name
 				;;
 			$LogDatei*)
 				# Logdateien ausw�hlen{{{
@@ -299,7 +299,7 @@ $gv_Back \"\""
 					no_input_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Count*)
 				# Anzahl der Rotierung eingeben{{{
@@ -325,7 +325,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Rotatetime*)
 				# Wann soll rotiert werden?{{{
@@ -335,7 +335,7 @@ $gv_Back \"\""
 				if [ "$LOGDATEI" ] ; then
 					MP_ANZ=${gv_Auswahl##*[a-z,A-Z]}
 					ROTATE_TIME_TITLE=(${gv_Configuration}::${Rotatetime})
-					ROTATE_TIME_MSG=$(gettext 'Waehlen Sie die Rotierzeit aus.')
+					ROTATE_TIME_MSG=$(gettext 'Wählen Sie die Rotierzeit aus.')
 					ROTATE_TIME_MENU=($DAILY \"\" $WEEKLY \"\" $MONTHLY \"\")
 					#
 					# Funktionen (rotatetime_menu)# {{{
@@ -370,7 +370,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Mail*)
 				# Wem soll gemailt werden?{{{
@@ -392,7 +392,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Size*)
 				# Gr�sse einstellen ab wann rotiert werden soll{{{
@@ -402,7 +402,7 @@ $gv_Back \"\""
 				if [ "$LOGDATEI" ] ; then
 					MP_ANZ=${gv_Auswahl##*[a-z,A-Z]}
 					SIZE_TITLE=(${gv_Configuration}::${Size})
-					SIZE_MSG=$(gettext 'Waehlen Sie die Groesse aus, ab wann rotiert werden soll.')
+					SIZE_MSG=$(gettext 'Wählen Sie die Grösse aus, ab wann rotiert werden soll.')
 					SIZE_MENU=(100k \"\" 250k \"\" 500k \"\" 1M \"\" 2M \"\" 4M \"\" 10M \"\" 25M \"\")
 					menubox "${SIZE[MP_ANZ]}" "$SIZE_TITLE" "$SIZE_MSG" "$SIZE_MENU"
 					if [ "$gv_Auswahl" ] ; then
@@ -430,7 +430,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Compress*)
 				# Welches Kompressionsprogramm einstellen{{{
@@ -454,7 +454,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Access*)
 				# Rechte, user und Gruppenrechte einstellen{{{
@@ -479,7 +479,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$Script*)
 				# Script, ein Befehl der nach der Rotierung ausgef�hrt werden soll{{{
@@ -490,7 +490,7 @@ $gv_Back \"\""
 					MP_ANZ=${gv_Auswahl##*[a-z,A-Z]}
 					KILL_ART="`which killall` -HUP"
 					SCRIPT_TITLE=(${gv_Configuration}::${Script})
-					SCRIPT_MSG=$(gettext 'Geben Sie hier bitte einen Befehl ein, der den Daemon (Server) veranlasst seine Einstellungen neu zu laden. Oder vielleicht hat der daemon auch einen eigenen rotate Befehl, wie squid (Proxy). Bsp: $KILL_ART syslogd.')
+					SCRIPT_MSG=$(gettext 'Geben Sie hier bitte einen Befehl ein, der den Dämon (Server) veranlasst seine Einstellungen neu zu laden. Oder vielleicht hat der dämon auch einen eigenen rotate Befehl, wie squid (Proxy). Bsp: $KILL_ART syslogd.')
 					inputbox "$SCRIPT_TITLE" "$SCRIPT_MSG" "${SCRIPT[MP_ANZ]}"
 					#
 					if [ "$gv_Auswahl" ] ; then
@@ -506,7 +506,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_aendern_menue $CHOICE
+				log_ändern_menue $CHOICE
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -515,9 +515,9 @@ $gv_Back \"\""
 					unset -- NAME COMPRESSART LOGDATEI ROTATE M_ADDR SIZE COMPRESS CREATE ANZAHL SCRIPT
 					break
 				else
-					MSG=$(gettext 'Sie muessen die Menuepunkte Name und fuer alle Logdateien, Anzahl und Rotierzeit mit Werten belegen. Alle anderen Menuepunkte sind optional.')
+					MSG=$(gettext 'Sie müssen die Menuepunkte Name und für alle Logdateien, Anzahl und Rotierzeit mit Werten belegen. Alle anderen Menuepunkte sind optional.')
 					msgbox "$gv_Attention" "$MSG"
-					log_aendern_menue
+					log_ändern_menue
 				fi
 				#}}}
 				;;
@@ -576,7 +576,7 @@ ${Access}${L_Anz} \"\"
 ${Script}${L_Anz} \"\"
 $gv_Save \"\"
 $gv_Back \"\""
-						log_aendern
+						log_ändern
 					else
 						no_input_msg
 					fi
@@ -589,13 +589,13 @@ $gv_Back \"\""
 			# Log-Konf.-datei �ndern{{{
 			log_file_wert
 			if [ "$NAME" ] ; then
-				log_aendern
+				log_ändern
 			fi
 			#}}}
 			main_menu $gv_Change
 			;;
 		$gv_Delete)
-			# Log-Konf.-Dateien loeschen{{{
+			# Log-Konf.-Dateien löschen{{{
 			unset -- DF_ARRAY
 			rm -f $IST_FILE &>/dev/null
 			FORMAT="ASCII"

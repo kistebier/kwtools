@@ -57,9 +57,9 @@ regexp_pcre_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$REGEXP_PCRE_MENU"
 	}
 	#}}}
-	# Funktion regexp_pcre_aendern{{{
+	# Funktion regexp_pcre_ändern{{{
 	#
-	regexp_pcre_aendern() {
+	regexp_pcre_ändern() {
 		regexp_pcre_menue
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl"  in
@@ -111,7 +111,7 @@ regexp_pcre_table() {
 					regexp_pcre_menue $lv_Action
 					;;
 				$gv_Host)
-					# Zielrechner fuer Transport eingeben# {{{
+					# Zielrechner für Transport eingeben# {{{
 					regexp_pcre_access_host
 					if [ -n "$HOST" ] ; then
 						unset -- MAIL TEXT
@@ -210,7 +210,7 @@ regexp_pcre_table() {
 										;;
 									*)
 										# Nachricht das man eine Mailadresse mit angeben muss.
-										MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette, Aktion und Mail mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Zeichenkette, Aktion und Mail mit Werten belegen.')
 										msgbox "$gv_Attention" "$MSG"
 										regexp_pcre_menue
 										;;
@@ -262,7 +262,7 @@ regexp_pcre_table() {
 								## }}}
 								;;
 							PREPEND|REPLACE)
-								# Mit Text, Tausch oder hinzufuegen von Headerzeilen# {{{
+								# Mit Text, Tausch oder hinzufügen von Headerzeilen# {{{
 								if [ -n "$TEXT" ] ; then
 									if [ "$AENDERN_ADR" ] ; then
 										grep -Fv "$AENDERN_ADR" $FILE >$FILE$$
@@ -277,7 +277,7 @@ regexp_pcre_table() {
 								else
 									# Nachricht das man mind. Text (Headerzeile)
 									# angegeben werden muss.
-									MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette, Aktion und Text (Headerzeile) mit Werten belegen.')
+									MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Zeichenkette, Aktion und Text (Headerzeile) mit Werten belegen.')
 									msgbox "$gv_Attention" "$MSG"
 									regexp_pcre_menue
 								fi
@@ -323,12 +323,12 @@ regexp_pcre_table() {
 								mv $FILE$$ $FILE
 							fi
 						else
-							MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette und Text mit Werten belegen.')
+							MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Zeichenkette und Text mit Werten belegen.')
 							msgbox "$gv_Attention" "$MSG"
 						fi
 						break
 					else
-						MSG=$(gettext 'Sie muessen mindestens die Menuepunkte Zeichenkette und Aktion oder Zeichenkette und Text mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen mindestens die Menuepunkte Zeichenkette und Aktion oder Zeichenkette und Text mit Werten belegen.')
 						msgbox "$gv_Attention" "$MSG"
 						regexp_pcre_menue
 					fi
@@ -355,11 +355,11 @@ regexp_pcre_table() {
 				# Werte anlegen
 				unset -- STRING FLAGS ACTION MAIL TRANS HOST TEXT AENDERN_ADR \
 					OldHost OldMail OldPort OldText OldTrans
-				regexp_pcre_aendern
+				regexp_pcre_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
@@ -463,7 +463,7 @@ regexp_pcre_table() {
 									esac
 								done
 								AENDERN_ADR="${STRING}${FLAGS}"
-								regexp_pcre_aendern
+								regexp_pcre_ändern
 								break
 								;;
 						esac

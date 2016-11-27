@@ -20,7 +20,7 @@ termin_input() {
 	}
 	#}}}
 	#
-	if [ "$Termin_aendern" = no ] ; then
+	if [ "$Termin_ändern" = no ] ; then
 		DATE="`date +%Y%m%d`"
 		START_TIME="`date +%H%M`"
 		VW_TIME=15
@@ -79,7 +79,7 @@ termin_input() {
 				#
 				U_OPT=hk
 				TITLE=(${lv_Termin}::${gv_Create}::${lv_Subject})
-				MSG=$(gettext 'Geben Sie bitte einen Betreff fuer diesen Termin ein.')
+				MSG=$(gettext 'Geben Sie bitte einen Betreff für diesen Termin ein.')
 				inputbox "$TITLE" "$MSG" "$SUBJECT"
 				if [ "$gv_Auswahl" ] ; then
 					SUBJECT="$gv_Auswahl"
@@ -105,7 +105,7 @@ termin_input() {
 				termin_input_menu $lv_Text
 				;;
 			$lv_Repeat)
-				# Wiederholung auswaehlen.{{{
+				# Wiederholung auswählen.{{{
 				#
 				REPEAT_TITLE=(${lv_Termine}::${gv_Create}::${lv_Repeat})
 				REPEAT_MSG="$gv_Menupoint"
@@ -129,10 +129,10 @@ termin_input() {
 				termin_input_menu $lv_Repeat
 				;;
 			CC:)
-				# Weitere Empfaenger eingeben.{{{
+				# Weitere Empfänger eingeben.{{{
 				# durch Komma getrennt.
 				TITLE=(${lv_Termin}::${gv_Create}::CC)
-				MSG=$(gettext 'Geben Sie hier weitere Empfaenger der Terminwarnung, durch ein Komma getrennt, an.')
+				MSG=$(gettext 'Geben Sie hier weitere Empfänger der Terminwarnung, durch ein Komma getrennt, an.')
 				inputbox "$TITLE" "$MSG" "$CC"
 				if [ "$gv_Auswahl" ] ; then
 					CC="$gv_Auswahl"
@@ -148,11 +148,11 @@ termin_input() {
 				if [ "$TEXT" -a "$SUBJECT" -a "$START_TIME" -a "$VW_TIME" ] ; then
 					#
 					if [ -n "$TERMIN_OLD" ] ; then
-						# erstmal alten Termin loeschen
+						# erstmal alten Termin löschen
 						print -l ${(R)${(R)${(f)"$(< $TerminFile)"}##(s#)(\#)*}##${TERMIN_OLD}*} > ${TerminFile}$$
 						mv ${TerminFile}$$ $TerminFile
 					else
-						# erstmal etwas vergleichbares loeschen
+						# erstmal etwas vergleichbares löschen
 						if [ "`wc -l < $TerminFile`" -gt 0 ] ; then
 							print -l ${(R)${(R)${(f)"$(< $TerminFile)"}##(s#)(\#)*}##(${DATE}*${START_TIME}*${SUBJECT})*} > ${TerminFile}$$ 
 							mv ${TerminFile}$$ $TerminFile
@@ -194,7 +194,7 @@ termin_input() {
 					unsetopt shwordsplit
 					# sortieren
 					sort_termin
-					if [ "$Termin_aendern" = yes ] ; then
+					if [ "$Termin_ändern" = yes ] ; then
 						break
 					else
 						unset -- SUBJECT TEXT CC
@@ -204,7 +204,7 @@ termin_input() {
 						REPEAT=-
 					fi
 				else
-					MSG=$(gettext 'Sie muessen erst die Punkte $lv_Warn, $lv_Start, $lv_Subject und $lv_Text mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen erst die Punkte $lv_Warn, $lv_Start, $lv_Subject und $lv_Text mit Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}

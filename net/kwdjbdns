@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 25.11.2016
 #
-# Script: kwdjbdns, konfiguriert, loescht Dan Bernsteins DNS server
+# Script: kwdjbdns, konfiguriert, löscht Dan Bernsteins DNS server
 # Version: 0.5.1
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -26,24 +26,24 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt diese automatisch.
+# script_init enthält die globalen Scripteinstellungen und lädt diese automatisch.
 #
 autoload -U script_init
 
 # Scriptinitialisierung
 script_init
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
-# Installation der daemontools pruefen.
+# Installation der dämontools prüfen.
 prog_check svc axfrdns-conf dnscache-conf pickdns-conf rbldns-conf tinydns-conf walldns-conf
 if [[ -n $NO_PROGS ]] ; then
 	exit 0
 fi
 
 # Nachdem das Script initialiiert wurde, kann man die anderen
-# benoetigten Funktionen laden.
+# benötigten Funktionen laden.
 autoload -U dns_check axfrdns_management pickdns_management rbldns_management \
 	tinydns_management dns_status no_dns_msg
 
@@ -62,7 +62,7 @@ lv_Axfrdns=$(gettext 'axfrdns')
 lv_Rbldns=$(gettext 'rbldns')
 lv_Walldns=$(gettext 'walldns')
 
-# Funktion (check_dns_user), prueft ob die dns Programm Benutzer# {{{
+# Funktion (check_dns_user), prüft ob die dns Programm Benutzer# {{{
 # in der /etc/passwd stehen
 #
 check_dns_user() {
@@ -90,7 +90,7 @@ is_existed_msg() {
 # Funktion (no_valid_menupoints_msg)# {{{
 #
 no_valid_menupoints_msg() {
-	MSG=$(gettext 'Sie muessen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
+	MSG=$(gettext 'Sie müssen erst die Punkte $gv_Host und $lv_Ip mit Werten belegen.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
@@ -114,12 +114,12 @@ if [ -d /etc/service ] ; then
 elif [ -d /service ] ; then
 	SERVICE_DIR=/service
 else
-	MSG=$(gettext 'Kann das Service Verzeichnis (/service oder /etc/service) der daemontools nicht finden. Pruefen Sie ob die daemontools installiert sind.')
+	MSG=$(gettext 'Kann das Service Verzeichnis (/service oder /etc/service) der dämontools nicht finden. Prüfen Sie ob die dämontools installiert sind.')
 	msgbox "$gv_Attention" "$MSG"
 	exit 0
 fi
 
-# Variablen deklarieren/pruefen/erstellen
+# Variablen deklarieren/prüfen/erstellen
 SV_DIR=/etc/sv
 SUPERVISE_DIR=/var/lib/supervise
 if [ ! -d "$SV_DIR" ] ; then
@@ -141,7 +141,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Configuration)
-			# Konfiguration fuer dnscache, tinydns, axfrdns, rbldns, pickdns oder{{{
+			# Konfiguration für dnscache, tinydns, axfrdns, rbldns, pickdns oder{{{
 			# dnswall.
 			autoload -U dnscache_conf
 			IP_LOCAL_MSG=$(gettext 'Geben Sie bitte die IP-Adresse von ihrem Recher ein (z.B. 192.168.0.1).')
@@ -162,7 +162,7 @@ while [ "$gv_Auswahl" ] ; do
 						konf_menue "${gv_Auswahl#HELP }"
 						;;
 					$lv_Dnscache)
-						# Verschiedene DNS Caches einrichten koennen.{{{
+						# Verschiedene DNS Caches einrichten können.{{{
 						DNS=$gv_Auswahl
 						check_dns_user
 						if [[ $RETURN == 0 ]] ; then
@@ -298,7 +298,7 @@ while [ "$gv_Auswahl" ] ; do
 						konf_menue $lv_Walldns
 						;;
 					$lv_Server)
-						# Ein oder mehrere Server loeschen{{{
+						# Ein oder mehrere Server löschen{{{
 						unset -- S_Menue
 						for i in ${SERVICE_DIR}/*(N@) ; {
 							if [ -h $i ] ; then
@@ -307,10 +307,10 @@ while [ "$gv_Auswahl" ] ; do
 						}
 						#
 						if [ -n "${S_Menue[1]}" ] ; then
-							# gefundene Server zum loeschen bereit stellen.
+							# gefundene Server zum löschen bereit stellen.
 							DEL_MENU=($S_Menue)
 							DEL_TITLE=(${gv_Configuration}::${gv_Delete})
-							DEL_MSG=$(gettext 'Waehlen Sie einen oder mehrere Server zum loeschen aus.')
+							DEL_MSG=$(gettext 'Wählen Sie einen oder mehrere Server zum löschen aus.')
 							checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -319,7 +319,7 @@ while [ "$gv_Auswahl" ] ; do
 										checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 										;;
 									*)
-										# loeschen
+										# löschen
 										for i in ${=gv_Auswahl} ; {
 											Dir=$(readlink -f ${SERVICE_DIR}/${i})
 											svc -dx $Dir &>/dev/null
@@ -383,7 +383,7 @@ while [ "$gv_Auswahl" ] ; do
 						no_input_msg
 					fi
 				else
-					MSG=$(gettext 'Dieser Rechner ist kein external-Cache und kann deswegen auch fuer kein Netz freigegeben werden.')
+					MSG=$(gettext 'Dieser Rechner ist kein external-Cache und kann deswegen auch für kein Netz freigegeben werden.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 			else

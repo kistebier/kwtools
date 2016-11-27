@@ -38,7 +38,7 @@ kwmutt_abook() {
 	# Funktion (kwmutt_abook_conf), konfiguriert das Adressbuch# {{{
 	#
 	kwmutt_abook_conf() {
-		# Funktion (kwmutt_abook_create_menu), Menue fuer das Adressbuch# {{{
+		# Funktion (kwmutt_abook_create_menu), Menue für das Adressbuch# {{{
 		#
 		kwmutt_abook_create_menu() {
 			ABOOK_MENU=($lv_Alias \"$MAIL_ALIAS\" $lv_Mailadr \"$MAIL_ADR\"
@@ -54,7 +54,7 @@ kwmutt_abook() {
 					;;
 				$lv_Alias)
 					# Alias Namen vergeben# {{{
-					ALIAS_MSG=$(gettext 'Geben Sie einen Alias Namen fuer die Mailadresse ein.')
+					ALIAS_MSG=$(gettext 'Geben Sie einen Alias Namen für die Mailadresse ein.')
 					inputbox "$lv_Alias" "$ALIAS_MSG" "$MAIL_ALIAS"
 					if [ -n "$gv_Auswahl" ] ; then
 						MAIL_ALIAS="$gv_Auswahl"
@@ -78,7 +78,7 @@ kwmutt_abook() {
 					;;
 				$gv_Save)
 					# Einstellungen speichern# {{{
-					# speichern - Erst alte Einstellungen loeschen, dann speichern
+					# speichern - Erst alte Einstellungen löschen, dann speichern
 					# oder nur neu speichern.
 					if [ -f "$alias_file" ] ; then
 						if [ -n "$ABOOK_VALUE_OLD" ] ; then
@@ -115,7 +115,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 		done
 	}
 	## }}}
-	# Funktion (kwmutt_abook_menu), Menue fuer das Adressbuch# {{{
+	# Funktion (kwmutt_abook_menu), Menue für das Adressbuch# {{{
 	#
 	kwmutt_abook_menu() {
 		ABOOK_MENU=($gv_Display \"\" $gv_Create \"\"
@@ -123,7 +123,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 		menubox "$1" "$lv_Addressbook" "$gv_Menupoint" "$ABOOK_MENU"
 	}
 	#}}}
-	# Funktion (kwmutt_abook_sort), sortiert die Adressbuch Eintraege.# {{{
+	# Funktion (kwmutt_abook_sort), sortiert die Adressbuch Einträge.# {{{
 	kwmutt_abook_sort() {
 		print -l ${(M)${(f)"$(< $alias_file)"}##(\#)*} >${alias_file}.bak
 		print -l ${(M)${(f)"$(< $alias_file)"}##(s#)alias*} | sort >>${alias_file}.bak
@@ -143,7 +143,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 				kwmutt_abook_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Adressbuch Eintraege anschauen# {{{
+				# Adressbuch Einträge anschauen# {{{
 				if [ -f "$alias_file" ] ; then
 					if [ -s "$alias_file" ] ; then
 						view_file "$alias_file"
@@ -163,7 +163,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 				kwmutt_abook_menu $gv_Create
 				;;
 			$gv_Change)
-				# Adressbuch Eintraege aendern# {{{
+				# Adressbuch Einträge ändern# {{{
 				if [ -f "$alias_file" ] ; then
 					# Adressbuch einlesen
 					read_address_file
@@ -179,7 +179,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 									break
 									;;
 								*)
-									# Auswahl uebernehmen
+									# Auswahl übernehmen
 									ABOOK_VALUE_OLD="$gv_Auswahl"
 									read_address_value $gv_Auswahl
 									kwmutt_abook_conf
@@ -197,7 +197,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 				kwmutt_abook_menu $gv_Change
 				;;
 			$gv_Delete)
-				# Adressbuch Eintraege loeschen{{{
+				# Adressbuch Einträge löschen{{{
 				if [ -f "$alias_file" ] ; then
 					# Adressbuch einlesen
 					read_address_file
@@ -210,7 +210,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 									checklist "${gv_Auswahl#HELP }" "$gv_Delete" "$gv_Delete_MSG" "$DEL_MENU"
 									;;
 								*)
-									# Auswahl loeschen
+									# Auswahl löschen
 									# erst einmal in einer Datei speichern.
 									while read i ; do
 										if [ -f "${gv_WorkDir}/del_abook" ] ; then
@@ -219,7 +219,7 @@ alias $MAIL_ALIAS $MAIL_ADR"
 											print "$i" > "${gv_WorkDir}/del_abook"
 										fi
 									done < ${gv_LogFile}$$
-									# Datei auslesen und Eintraege loeschen.
+									# Datei auslesen und Einträge löschen.
 									if [ -f "${gv_WorkDir}/del_abook" ] ; then
 										while read A ; do
 											print -l ${(R)${(f)"$(< $alias_file)"}##alias[[:space:]]${A}*} >${gv_WorkDir}/abook

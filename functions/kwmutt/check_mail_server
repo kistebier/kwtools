@@ -1,4 +1,4 @@
-# Funktion (check_mail_server), Faehigkeiten des Servers testen# {{{
+# Funktion (check_mail_server), Fähigkeiten des Servers testen# {{{
 #
 # usage: check_mail_server [ -a ] SERVER
 # -a - Authentifizierung testen
@@ -8,7 +8,7 @@ check_mail_server() {
 	# Funktion (check_auth_server)# {{{
 	#
 	check_auth_server() {
-		# Was soll an netcat uebergeben werden.
+		# Was soll an netcat übergeben werden.
 		case "$PROT" in
 			pop*) Auth="" ;;
 			imap*)	Auth="A001 CAPABILITY" ;;
@@ -45,7 +45,7 @@ check_mail_server() {
 	if [ "$#" -ge 1 ] ; then
 		case "$1" in
 			-a)
-				# AUTH Faehigkeiten des Servers testen
+				# AUTH Fähigkeiten des Servers testen
 				parse_mail_host "$2"
 				check_auth_server
 				# Sind die Zeilen in $gv_LogFile > 0 - einlesen der AUTH-Informationen.
@@ -56,14 +56,14 @@ check_mail_server() {
 							ssl)
 								###########################################
 								# TODO:
-								# Es muessen noch einige Auths aussortiert werden
+								# Es müssen noch einige Auths aussortiert werden
 								# je nach Server (pop,imap,..)
-								# 1 = "verfuegbare AUTH-Methoden"
+								# 1 = "verfügbare AUTH-Methoden"
 								# (L) - (Flag) Gross- in Kleinschreibung umwandeln.
 								###########################################
 								case "$b" in
 									NTLM|PLAIN)	;;
-									*)	# uebernehmen
+									*)	# übernehmen
 										if [ -n "$AUTHENTICATORS" ] ; then
 											AUTHENTICATORS="${AUTHENTICATORS}:${(L)b}"
 										else
@@ -75,7 +75,7 @@ check_mail_server() {
 							plain)
 								case "$b" in
 									NTLM|PLAIN)	;;
-									*)	# uebernehmen
+									*)	# übernehmen
 										if [ -n "$AUTHENTICATORS" ] ; then
 											AUTHENTICATORS="${AUTHENTICATORS}:${(L)b}"
 										else
@@ -87,7 +87,7 @@ check_mail_server() {
 							AUTH*)
 								case "$a" in
 									*=NTLM|*=PLAIN)	;;
-									*)	# uebernehmen
+									*)	# übernehmen
 										if [ -n "$AUTHENTICATORS" ] ; then
 											AUTHENTICATORS="${AUTHENTICATORS}:${(L)a#*=}"
 										else

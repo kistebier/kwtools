@@ -2,12 +2,12 @@
 kwgrub2_security() {
 	#########################################
 	# Einfacher Password Schutz
-	# Eintrag einfuegen
+	# Eintrag einfügen
 	# sed -i -e '/^menuentry /s/ {/ --users user1 {/' /etc/grub.d/30_os-prober ...
-	# Eintrag loeschen
+	# Eintrag löschen
 	# sed -i -e '/^menuentry /s/ --users user1 {/ {/' /etc/grub.d/30_os-prober...
 	#
-	# Verschluesselter Password Schutz
+	# Verschlüsselter Password Schutz
 	# grub-mkpasswd-pbkdf2 ...
 	# set superusers="drs305"
 	# password_pbkdf2 drs305 <some really long alphanumeric entry ...>
@@ -22,19 +22,19 @@ kwgrub2_security() {
 	lv_Grub_Passwd=$(gettext 'Passwort')
 	lv_Grub_Passwd_pbkdf2=$(gettext 'Passwort_pbkdf2')
 	
-	# Funktion (incorrect_8pass_length), falsche Passwortlaenge# {{{
+	# Funktion (incorrect_8pass_length), falsche Passwortlänge# {{{
 	incorrect_8pass_length() {
-		MSG=$(gettext 'Die Laenge des Passworts muss mindestens 8 Zeichen sein.')
+		MSG=$(gettext 'Die Länge des Passworts muss mindestens 8 Zeichen sein.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
-	# Funktion (del_expect), schreddert die temporaere Datei expect# {{{
+	# Funktion (del_expect), schreddert die temporäre Datei expect# {{{
 	#
 	del_expect() {
 		shred -uz ${gv_WorkDir}/expect &>/dev/null
 	}
 	## }}}
-	# Funktion (create_exec_expect) expect mit der Einstellungsdatei ausfuehren# {{{
+	# Funktion (create_exec_expect) expect mit der Einstellungsdatei ausführen# {{{
 	create_exec_expect() {
 		> ${gv_WorkDir}/expect <<<"#!/usr/bin/expect -f
 
@@ -63,7 +63,7 @@ expect eof"
 		(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >${gv_WorkDir}/hash) || (del_expect ; unset -- PBKDF2_PASSWD ; prog_failure)
 		# schnell die Erstellungsdatei schreddern
 		del_expect
-		# Variable loeschen
+		# Variable löschen
 		unset -- PBKDF2_PASSWD
 		#
 		GRUB_PASSWD_PBKDF2=${${(M)${(f)"$(< ${gv_WorkDir}/hash)"}##*PBKDF2*}##* }
@@ -87,9 +87,9 @@ expect eof"
 				security_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Grub_Pass_User)
-				# User fuer Passwort eingeben# {{{
+				# User für Passwort eingeben# {{{
 				GRUB_PASSWD_USER_TITLE=(${lv_Security}::${lv_Grub_Pass_User})
-				GRUB_PASSWD_USER_MSG=$(gettext 'Geben Sie bitte einen oder mehrere Benutzernamen getrennnt durch ein Leerzeichen ein, welche das Bootmenue mit Passwort aendern duerfen. (z.B.. user1 user2).')
+				GRUB_PASSWD_USER_MSG=$(gettext 'Geben Sie bitte einen oder mehrere Benutzernamen getrennnt durch ein Leerzeichen ein, welche das Bootmenue mit Passwort ändern duerfen. (z.B.. user1 user2).')
 				inputbox "$GRUB_PASSWD_USER_TITLE" "$GRUB_PASSWD_USER_MSG" "$GRUB_PASSWD_USER"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_PASSWD_USER="$gv_Auswahl"
@@ -100,7 +100,7 @@ expect eof"
 				security_menu "$lv_Grub_Pass_User"
 				;;
 			$lv_Grub_Passwd)
-				# Klartext Passwort fuer User eingeben# {{{
+				# Klartext Passwort für User eingeben# {{{
 				GRUB_PASSWD_TITLE=(${lv_Security}::${lv_Grub_Passwd})
 				GRUB_PASSWD_MSG=$(gettext 'Geben Sie bitte ein Passwort ein. Nehmen Sie am besten unterschiedliche Zeichen in Gross- und Kleinschreibung.')
 				inputbox "$GRUB_PASSWD_TITLE" "$GRUB_PASSWD_MSG" "$GRUB_PASSWD"
@@ -118,7 +118,7 @@ expect eof"
 				# Funktion (passwd_pbkdf2_menu)# {{{
 				passwd_pbkdf2_menu() {
 					GRUB_PASSWD_PBKDF2_TITLE=(${lv_Security}::${lv_Grub_Passwd_pbkdf2})
-					GRUB_PASSWD_PBKDF2_MSG=$(gettext 'Geben Sie ein Passwort ein. Nehmen Sie am besten unterschiedliche Zeichen in Gross- und Kleinschreibung. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+					GRUB_PASSWD_PBKDF2_MSG=$(gettext 'Geben Sie ein Passwort ein. Nehmen Sie am besten unterschiedliche Zeichen in Gross- und Kleinschreibung. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
 					GRUB_PASSWD_PBKDF2_MENU=(\"$gv_New_Passwd\" "1 1 \"\" 1 20 20 0 1"
 					\"$gv_New_Passwd\" "2 1 \"\" 2 20 20 0 1")
 					mixedform -i "$GRUB_PASSWD_PBKDF2_TITLE" "$GRUB_PASSWD_PBKDF2_MSG" "$GRUB_PASSWD_PBKDF2_MENU"
@@ -132,7 +132,7 @@ expect eof"
 							passwd_pbkdf2_menu
 							;;
 						*)
-							# Passwoerter pruefen und evtl. uebernehmen.# {{{
+							# Passwörter prüfen und evtl. übernehmen.# {{{
 							Anz="${(w)#gv_Auswahl}"
 							NPW="${${(ws: :)${=gv_Auswahl}}[1]}"
 							NNPW="${${(ws: :)${=gv_Auswahl}}[2]}"
@@ -148,7 +148,7 @@ expect eof"
 										create_exec_expect
 										break
 									else
-										# falsche Password Laenge
+										# falsche Password Länge
 										incorrect_8pass_length
 										passwd_pbkdf2_menu
 									fi
@@ -173,7 +173,7 @@ expect eof"
 				break
 				;;
 			$gv_Back)
-				# back und Var loeschen# {{{
+				# back und Var löschen# {{{
 				unset -- GRUB_PASSWD_USER GRUB_PASSWD GRUB_PASSWD_PBKDF2
 				## }}}
 				break

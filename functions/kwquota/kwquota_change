@@ -1,4 +1,4 @@
-# Funktion (kwquota_change), Quotas aendern# {{{
+# Funktion (kwquota_change), Quotas ändern# {{{
 #
 # usage: kwquota_change [ -c ]
 # -c - quota erstellen
@@ -9,7 +9,7 @@ kwquota_change() {
 		Opt="$1"
 	fi
 	#
-	# Funktion (check_exist_ug), pruefen ob User schon Quota hat# {{{
+	# Funktion (check_exist_ug), prüfen ob User schon Quota hat# {{{
 	check_exist_ug() {
 		if [ -f "$1" ] ; then
 			unset -- UG_ARRAY
@@ -33,12 +33,12 @@ kwquota_change() {
 					menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$MPT_MENU"
 					;;
 				*)
-					# Auswahl uebernehmen
+					# Auswahl übernehmen
 					quota_check_fs $gv_Auswahl
 					case "$QFS" in
 						xfs)
 							# XFS Dateisystem# {{{
-							# pruefen, ob xfs_quota ausfuehrbar ist.
+							# prüfen, ob xfs_quota ausführbar ist.
 							prog_check_xfs_quota
 							unset -- User_Qu
 							if [ "$Opt" = -c ] ; then
@@ -54,7 +54,7 @@ kwquota_change() {
 									kwquota_config "$QFS" "$QUOTA_PART"
 									break 2
 								elif [ -n "${User_Qu[1]}" ] ; then
-									# aendern# {{{
+									# ändern# {{{
 									C_MENU=($User_Qu)
 									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
 									while [ -n "$gv_Auswahl" ] ; do
@@ -88,7 +88,7 @@ kwquota_change() {
 												Tmp="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Realtime Blocks grace time*}}[5]}#\[}`"
 												Tmp1="`print ${${${(ws: :)${(M)${(f)"$(< ${gv_WorkDir}/state)"}##(#s)Realtime Blocks grace time*}}[6]}[1]}`"
 												RT_BL_GR_TIME="${Tmp}${Tmp1}"
-												# Konfiguration aendern
+												# Konfiguration ändern
 												kwquota_config "$QFS" "$QUOTA_PART"
 												break 3
 												## }}}
@@ -119,7 +119,7 @@ kwquota_change() {
 							# zur Auswahl angeboten.
 							if [ ! -z "$WHAT_QUOTA" ] ; then
 								if [ -n "${User_Qu[1]}" ] ; then
-									# aendern# {{{
+									# ändern# {{{
 									C_MENU=($User_Qu)
 									menubox "" "$C_TITLE" "$gv_Menupoint" "$C_MENU"
 									while [ -n "$gv_Auswahl" ] ; do
@@ -148,7 +148,7 @@ kwquota_change() {
 												Tmp="`print ${${(ws,: ,)${(M)${(f)"$(< $Logfile)"}##*Inode grace time:*}}[3]}`"
 												Tmp1="${${Tmp##*[0-9]}[1]}"
 												I_GR_TIME="${Tmp%%[a-z]*}${Tmp1}"
-												# Konfiguration aendern
+												# Konfiguration ändern
 												kwquota_config "$QFS" "$QUOTA_PART"
 												break 3
 												;;
@@ -160,11 +160,11 @@ kwquota_change() {
 									if [ "$WHAT_QUOTA" = User ] ; then
 										user_group_check -p "$UID_MIN"
 										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
-											#  Pruefen ob User schon Quota hat
+											#  Prüfen ob User schon Quota hat
 											check_exist_ug "$USER_LOGFILE"
-											# User auswaehlen
+											# User auswählen
 											U_MENU=($UG_ARRAY)
-											U_MSG=$(gettext 'Waehlen Sie einen Benutzer aus.')
+											U_MSG=$(gettext 'Wählen Sie einen Benutzer aus.')
 											# Funktion (user_menu) Userauswahl# {{{
 											user_menu() {
 												menubox "$1" "$C_TITLE" "$C_MSG" "$U_MENU"
@@ -191,11 +191,11 @@ kwquota_change() {
 										# Gruppe anlegen# {{{
 										user_group_check -g "$GID_MIN"
 										if [[ -n ${U_G_ARRAY_S[1]} ]] ; then
-											#  Pruefen ob Gruppe schon Quota hat
+											#  Prüfen ob Gruppe schon Quota hat
 											check_exist_ug "$GROUP_LOGFILE"
-											# Gruppe auswaehlen
+											# Gruppe auswählen
 											G_MENU=($UG_ARRAY)
-											G_MSG=$(gettext 'Waehlen Sie eine Gruppe aus.')
+											G_MSG=$(gettext 'Wählen Sie eine Gruppe aus.')
 											# Funktion (group_menu) Groupauswahl# {{{
 											group_menu() {
 												menubox "$1" "$C_TITLE" "$G_MSG" "$G_MENU"

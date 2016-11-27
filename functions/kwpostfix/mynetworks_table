@@ -2,7 +2,7 @@
 #
 mynetworks_table() {
 	FILE="$1"
-	# Variable fuer das Menue
+	# Variable für das Menue
 	lv_Host_Net=$(gettext 'Rechner/Netz')
 
 	# Funktion mynetworks_menue{{{
@@ -11,9 +11,9 @@ mynetworks_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$MYNETWORK_MENU"
 	}
 	#}}}
-	# Funktion mynetworks_aendern{{{
+	# Funktion mynetworks_ändern{{{
 	#
-	mynetworks_aendern() {
+	mynetworks_ändern() {
 	mynetworks_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
@@ -25,7 +25,7 @@ mynetworks_table() {
 				IP_NET_MSG=$(gettext 'Geben Sie hier bitte die IP eines Rechners oder eines Netzes ein (Bsp. 192.168.0.1 | 192.168.0.0/24).')
 				inputbox "$TABLE_TITLE" "$IP_NET_MSG" "$ADR"
 				if [ "$gv_Auswahl" ] ; then
-					# Pruefen ob die EIngabe richtig war.
+					# Prüfen ob die EIngabe richtig war.
 					ip_analyse "$gv_Auswahl"
 					if [ "$gv_Ip_Adr" ] ; then
 						ADR="$gv_Ip_Adr"
@@ -51,7 +51,7 @@ mynetworks_table() {
 					fi
 					break
 				else
-					MSG=$(gettext 'Sie muessen erst eine IP Adresse oder eine IP fuer das Netz eingeben.')
+					MSG=$(gettext 'Sie müssen erst eine IP Adresse oder eine IP für das Netz eingeben.')
 					msgbox "$gv_Attention" "$MSG"
 					mynetworks_menue
 				fi
@@ -78,11 +78,11 @@ mynetworks_table() {
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR AENDERN_ADR
-				mynetworks_aendern
+				mynetworks_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
@@ -103,7 +103,7 @@ mynetworks_table() {
 								C_CHOICE="$gv_Auswahl"
 								ADR=${${=gv_Auswahl}[1]}
 								AENDERN_ADR="$ADR"
-								mynetworks_aendern
+								mynetworks_ändern
 								break
 								;;
 						esac

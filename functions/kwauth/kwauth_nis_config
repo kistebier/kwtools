@@ -5,7 +5,7 @@
 #
 kwauth_nis_config() {
 	OPT="$1"
-	# Funktion (change_passwd_files), Password Dateien fuer/ohne nis einstellen# {{{
+	# Funktion (change_passwd_files), Password Dateien für/ohne nis einstellen# {{{
 	#
 	# usage: change_passwd_files [ -r ]
 	# -r - remove NIS entrys
@@ -42,7 +42,7 @@ kwauth_nis_config() {
 		fi
 	}
 	## }}}
-	# Funktion (change_defaultdomain), default nis domain einstellen/loeschen# {{{
+	# Funktion (change_defaultdomain), default nis domain einstellen/löschen# {{{
 	#
 	# usage: change_defaultdomain
 	change_defaultdomain() {
@@ -51,7 +51,7 @@ kwauth_nis_config() {
 		fi
 	}
 	## }}}
-	# Funktion (change_nsswitch), /etc/nsswitch.conf fuer/ohne nis einstellen# {{{
+	# Funktion (change_nsswitch), /etc/nsswitch.conf für/ohne nis einstellen# {{{
 	#
 	# usage: change_nsswitch [ -r ]
 	# -r - remove NIS entrys
@@ -62,32 +62,32 @@ kwauth_nis_config() {
 			while read line ; do
 				case ${line%% *} in
 					passwd:|group:|shadow:)
-						# NIS Eintraege entfernen
+						# NIS Einträge entfernen
 						>> ${gv_WorkDir}/nsswitch <<< "`print ${(R)${=line}##(compat|nis)} compat`"
 						;;
 					*)
-						# nicht zu aendernde Werte normal zurueck schreiben
+						# nicht zu ändernde Werte normal zurück schreiben
 						>> ${gv_WorkDir}/nsswitch <<< "$line"
 						;;
 				esac
 			done </etc/nsswitch.conf
-			# veraenderte Datei zurueck verschieben
+			# veränderte Datei zurück verschieben
 			mv ${gv_WorkDir}/nsswitch /etc/nsswitch.conf
 			chmod 644 /etc/nsswitch.conf
 		else
 			while read line ; do
 				case ${line%% *} in
 					passwd:|group:|shadow:)
-						# NIS Eintraege hinzufuegen
+						# NIS Einträge hinzufügen
 						>> ${gv_WorkDir}/nsswitch <<< "`print ${(R)${=line}##(compat|nis)} compat nis`"
 						;;
 					*)
-						# nicht zu aendernde Werte normal zurueck schreiben
+						# nicht zu ändernde Werte normal zurück schreiben
 						>> ${gv_WorkDir}/nsswitch <<< "$line"
 						;;
 				esac
 			done </etc/nsswitch.conf
-			# veraenderte Datei zurueck verschieben
+			# veränderte Datei zurück verschieben
 			mv ${gv_WorkDir}/nsswitch /etc/nsswitch.conf
 			chmod 644 /etc/nsswitch.conf
 		fi
@@ -96,7 +96,7 @@ kwauth_nis_config() {
 	case "$OS" in
 		Debian)
 			if [ "$OPT" = -r ] ; then
-				# Netzwerk NIS Einstellungen loeschen# {{{
+				# Netzwerk NIS Einstellungen löschen# {{{
 				#
 				# NIS stoppen
 				/etc/init.d/nis stop &>/dev/null
@@ -105,7 +105,7 @@ kwauth_nis_config() {
 					print -l ${(R)${(f)"$(< $NIS_YPCONF)"}##(#s)ypserver*} >${gv_WorkDir}/nis
 					mv ${gv_WorkDir}/nis $NIS_YPCONF
 				fi
-				# Password Dateien fuer ohne NIS einstellen
+				# Password Dateien für ohne NIS einstellen
 				change_passwd_files $OPT
 				
 				# /etc/nsswitch.conf ohne NIS einstellen
@@ -134,7 +134,7 @@ kwauth_nis_config() {
 				else
 					> $DEFAULT_NIS_CONF <<< "NISSERVER=false"
 				fi
-				# Password Dateien fuer NIS einstellen
+				# Password Dateien für NIS einstellen
 				change_passwd_files
 				
 				# /etc/nsswitch.conf einstellen

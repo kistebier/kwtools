@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
 #
-# Script: kwpwsafe, Frontend zur Verwaltung der Passwoerter mit dem Programm
+# Script: kwpwsafe, Frontend zur Verwaltung der Passwörter mit dem Programm
 #         pwsafe.
 #
 # Version: 0.1.2
@@ -39,7 +39,7 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Pruefen ob pwsafe und expect installiert sind.
+# Prüfen ob pwsafe und expect installiert sind.
 prog_check pwsafe expect
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
@@ -61,14 +61,14 @@ create_file -d "$LOCAL_PWSAFE_PATH"
 #
 lv_Db=$(gettext 'Datenbank')
 lv_Create_Db=$(gettext 'Datenbank erstellen')
-lv_Change_Pw_Db=$(gettext 'Passwort aendern')
+lv_Change_Pw_Db=$(gettext 'Passwort ändern')
 lv_Data_Db=$(gettext 'Daten verwalten')
-lv_Open_Db=$(gettext 'Datenbank oeffnen')
+lv_Open_Db=$(gettext 'Datenbank öffnen')
 lv_Manage_Db=$(gettext 'Datenbank verwalten')
-DB_MSG=$(gettext 'Waehlen Sie eine Datenbank aus.')
+DB_MSG=$(gettext 'Wählen Sie eine Datenbank aus.')
 INCORRECT_PW_MSG=$(gettext 'Sie haben das falsche Passwort eingegeben.')
 
-# Funktion (del_expect), schreddert die temporaere Datei expect# {{{
+# Funktion (del_expect), schreddert die temporäre Datei expect# {{{
 #
 del_expect() {
 	shred -uz ${gv_WorkDir}/expect &>/dev/null
@@ -91,11 +91,11 @@ list_db() {
 ## }}}
 # Funktion (no_db_msg), Nachricht das keine DAtenbank vorhanden ist.# {{{
 no_db_msg() {
-	MSG=$(gettext 'Es sind keine Datenbanken vorhanden. Sie muessen erst eine erstellen.')
+	MSG=$(gettext 'Es sind keine Datenbanken vorhanden. Sie müssen erst eine erstellen.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (pass_input), Passwort Eingabe fuer die pwsafe Datenbank# {{{
+# Funktion (pass_input), Passwort Eingabe für die pwsafe Datenbank# {{{
 #
 # usage: pass_input DB_FILE
 # DB_FILE - Datenbank Datei
@@ -103,12 +103,12 @@ no_db_msg() {
 pass_input() {
 	if [ "$#" = 1 ] ; then
 		DB_FILE="$1"
-		PASSWD_MSG=$(gettext 'Geben Sie das Passwort fuer die Datenbank $DB_FILE ein.')
-		# Passwortlaenge min. 1 Zeichen, da pwsafe, auf der Konsole,
-		# keine Laenge vorschreibt.
+		PASSWD_MSG=$(gettext 'Geben Sie das Passwort für die Datenbank $DB_FILE ein.')
+		# Passwortlänge min. 1 Zeichen, da pwsafe, auf der Konsole,
+		# keine Länge vorschreibt.
 		password "$gv_Passwd_TITLE" "$PASSWD_MSG" 1
 		if [ -n "$PASSPHRASE" ] ; then
-			# Passwort pruefen
+			# Passwort prüfen
 			if print "$PASSPHRASE" | pwsafe -q -f $DB_FILE &>/dev/null ; then
 				DB_PASS="$PASSPHRASE"
 				unset -- PASSPHRASE
@@ -126,7 +126,7 @@ pass_input() {
 #
 # usage: read_pwsafe_data DB_FILE LIST
 # DB_FILE - Datenbank Datei
-# LIST - Ein Eintrag der ausgewaehlt werden soll
+# LIST - Ein Eintrag der ausgewählt werden soll
 #
 read_pwsafe_data() {
 	rm -f $gv_LogFile &>/dev/null
@@ -196,9 +196,9 @@ read_pwsafe_entry() {
 	create_db() {
 		CREATE_TITLE="$lv_Create_Db"
 		lv_Db_Name=$(gettext 'Datenbank-Name')
-		# Funktion (incorrect_6pass_length), falsche Passwortlaenge# {{{
+		# Funktion (incorrect_6pass_length), falsche Passwortlänge# {{{
 		incorrect_6pass_length() {
-			MSG=$(gettext 'Die Laenge des/der Passworts/Passphrase muss mindestens 6 Zeichen sein.')
+			MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens 6 Zeichen sein.')
 			msgbox "$gv_Attention" "$MSG"
 		}
 		## }}}
@@ -220,7 +220,7 @@ read_pwsafe_entry() {
 					MSG=$(gettext 'Geben Sie den Datenbank-Namen ohne Endung (.dat) ein.')
 					inputbox "$lv_Db_Name" "$MSG" "${CR_PWSAFE%.dat}"
 					if [ -n "$gv_Auswahl" ] ; then
-						# pruefen ob diese DB schon vorhanden ist.
+						# prüfen ob diese DB schon vorhanden ist.
 						if [ ! -f "${LOCAL_PWSAFE_PATH}/${gv_Auswahl}.dat" ] ; then
 							CR_PWSAFE="${gv_Auswahl}.dat"
 						else
@@ -238,7 +238,7 @@ read_pwsafe_entry() {
 					# Passwort eingeben# {{{
 					# Funktion (passwd_db_menu)# {{{
 					passwd_db_menu() {
-						PASSWD_DB_MSG=$(gettext 'Geben Sie ein Passwort ein. Nehmen Sie am besten unterschiedliche Zeichen in Gross- und Kleinschreibung. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+						PASSWD_DB_MSG=$(gettext 'Geben Sie ein Passwort ein. Nehmen Sie am besten unterschiedliche Zeichen in Gross- und Kleinschreibung. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
 						PASSWD_DB_MENU=(\"$gv_New_Passwd\" "1 1 \"\" 1 20 20 0 1"
 						\"$gv_New_Passwd\" "2 1 \"\" 2 20 20 0 1")
 						mixedform -i "$CREATE_TITLE" "$PASSWD_DB_MSG" "$PASSWD_DB_MENU"
@@ -251,7 +251,7 @@ read_pwsafe_entry() {
 								passwd_db_menu
 								;;
 							*)
-								# Passwoerter pruefen und evtl. uebernehmen.# {{{
+								# Passwörter prüfen und evtl. übernehmen.# {{{
 								Anz="${(w)#gv_Auswahl}"
 								NPW="${${(ws: :)${=gv_Auswahl}}[1]}"
 								NNPW="${${(ws: :)${=gv_Auswahl}}[2]}"
@@ -265,7 +265,7 @@ read_pwsafe_entry() {
 											DB_PASSWD="$NPW" 
 											break
 										else
-											# falsche Password Laenge
+											# falsche Password Länge
 											incorrect_6pass_length
 											passwd_db_menu
 										fi
@@ -285,9 +285,9 @@ read_pwsafe_entry() {
 					create_db_menu $gv_Passwd
 					;;
 				$gv_Save)
-					# Pruefen ob Datenbank-Name und Passwort eingegeben sind# {{{
+					# Prüfen ob Datenbank-Name und Passwort eingegeben sind# {{{
 					if [ -n "$CR_PWSAFE" -a -n "$DB_PASSWD" ] ; then
-						# expect mit der Einstellungsdatei ausfuehren
+						# expect mit der Einstellungsdatei ausführen
 						> ${gv_WorkDir}/expect <<<"#!/usr/bin/expect -f
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
@@ -313,11 +313,11 @@ send -- \"\$db_pass\r\"
 stty echo
 expect eof"
 						(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null) || (del_expect ; prog_failure)
-						# schnell die Erstellungsdatei loeschen
+						# schnell die Erstellungsdatei löschen
 						del_expect
 						break
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte $lv_Db_Name und $gv_Passwd mit einem Wert belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Db_Name und $gv_Passwd mit einem Wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 						create_db_menu
 					fi
@@ -327,7 +327,7 @@ expect eof"
 		done
 	}
 	## }}}
-# Funktion (select_db), Datenbank auswaehlen# {{{
+# Funktion (select_db), Datenbank auswählen# {{{
 #
 select_db() {
 	list_db
@@ -339,7 +339,7 @@ select_db() {
 				HELP*)	script_help kwpwsafe_list_db_help
 					radiolist "${gv_Auswahl#HELP }" "$gv_Mainmenu" "$DB_MSG" "$DB_MENU"
 					;;
-				*)	# Auswahl uebernehmen
+				*)	# Auswahl übernehmen
 					DB_FILE="$gv_Auswahl"
 					pass_input "$DB_FILE"
 					break
@@ -358,7 +358,7 @@ first_check() {
 	if [[ -z ${DB_FILES[1]} ]] ; then
 		# DB erstellen
 		create_db
-		# Pruefen ob DB erstellt wurde
+		# Prüfen ob DB erstellt wurde
 		if [ -n "$DB_PASSWD" -a -n "$CR_PWSAFE" ] ; then
 			DB_FILE="$CR_PWSAFE"
 			DB_PASS="$DB_PASSWD"
@@ -366,9 +366,9 @@ first_check() {
 			exit 0
 		fi
 	elif [[ -f ${DB_FILES[1]} ]] ; then
-		# DB oeffnen
+		# DB öffnen
 		select_db
-		# Pruefen ob DB geoeffnet wurde
+		# Prüfen ob DB geöffnet wurde
 		if [[ -z $DB_PASS ]] ; then exit 0 ; fi
 	fi
 }
@@ -405,7 +405,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Data_Db
 			;;
 		$lv_Open_Db)
-			# Datenbank oeffnen# {{{
+			# Datenbank öffnen# {{{
 			select_db
 			## }}}
 			main_menu $lv_Open_Db

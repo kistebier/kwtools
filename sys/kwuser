@@ -2,13 +2,13 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 02.07.2015
 #
-# Script: kwuser, legt an, aendert und loescht User
+# Script: kwuser, legt an, ändert und löscht User
 # Version: 1.0.5
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
 
-# Optionen pruefen
+# Optionen prüfen
 case "$1" in
 	-m|--multi)	gv_Opt="-m"	;;
 	*)	unset -- gv_Opt ;;
@@ -32,7 +32,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -40,13 +40,13 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check useradd userdel usermod openssl
 if [ ! -z "$NO_PROGS" ] ; then
 	exit 0
 fi
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # Wenn es eine Konf.-Datei gibt einlesen.
@@ -55,7 +55,7 @@ read_file kwuserrc
 # extra Funktionen laden
 autoload -U check_special_character
 
-# zsh module datetime fuer strftime laden
+# zsh module datetime für strftime laden
 zsh_modload -i datetime
 
 # Variablen# {{{
@@ -130,10 +130,10 @@ read_passwd() {
 	#
 	# /etc/shadow:
 	# l - loginname
-	# p - verschluesseltes Passwort
+	# p - verschlüsseltes Passwort
 	# c_pw - Tage seit 01.01.1970, wann das Passwort kreiert wurde.
-	# d_b_pw - Tage bevor Passwort veraendert wurde
-	# d_a_pw_c - Tage nach dem das Passwort geaendert werden muss.
+	# d_b_pw - Tage bevor Passwort verändert wurde
+	# d_a_pw_c - Tage nach dem das Passwort geändert werden muss.
 	# d_b_pw_e - Tage der Vorwarnung, bevor Passwort ungueltig ist.
 	# d_a_pw_e - Tage nach dem das Passwort ungueltig ist, den Account sperren.
 	# d_s_1970_d - Tage seit 01.01.1970, ab wann der Account gesperrt werden soll.
@@ -209,7 +209,7 @@ $P_USER			$P_PASS"
 		if [ "${#argv}" = 1 ] ; then
 			if [[ ${BH_LIMIT%%[a-zA-Z]*} > 0 ]] ; then
 				if [ -x "${commands[repquota]}" -a -x "${commands[setquota]}" ] ; then
-					# Pruefen ob das HOME Verzeichnis Support fuer Quota hat.
+					# Prüfen ob das HOME Verzeichnis Support für Quota hat.
 					# Geht nur wenn das Home Verz. eine eigene Partition ist,
 					# ansonsten das Script kwquota benutzen.
 					KW_HOME="$1"
@@ -249,7 +249,7 @@ create_quota() {
 	fi
 }
 ## }}}
-# Funktion (del_firstlogin), firstlogin Dateien loeschen# {{{
+# Funktion (del_firstlogin), firstlogin Dateien löschen# {{{
 #
 del_firstlogin() {
 	rm -f ${HOME_V}/.firstlogin &>/dev/null
@@ -269,7 +269,7 @@ add_change_user() {
 	if [ -n "$DAYS_OF_EXPIRE" ] ; then
 		PROG_OPT="$PROG_OPT -e $DAYS_OF_EXPIRE"
 	fi
-	# ${USERPASS_FILE}-${P_PREFIX}.txt loeschen
+	# ${USERPASS_FILE}-${P_PREFIX}.txt löschen
 	rm -f "${USERPASS_FILE}-${P_PREFIX}.txt" &>/dev/null
 	# Die Variable NUSER_ID wird immer belegt, egal ob mit
 	# der Start Option $gv_Opt oder nicht (Funktion user_var).
@@ -277,13 +277,13 @@ add_change_user() {
 		# Mit shadow suite arbeiten# {{{
 		if [ ! -z "$gv_Opt" ] ; then
 			# Massen Benutzer anlegen# {{{
-			# quota pruefen
+			# quota prüfen
 			check_quota "$P_HOME"
 			# Leerzeichen werden mit einem Komma getauscht.
 			NGROUPS_KORRECT="${NGROUPS// /,}"
 			PROG_OPT_ALL="${=PROG_OPT} -g $NGROUP -G${NGROUPS_KORRECT:-users}"
 			for n in {1..$P_COUNT} ; {
-				# Gibt es die NUSER_ID wird sie um eins hoeher gezaehlt.
+				# Gibt es die NUSER_ID wird sie um eins höher gezählt.
 				while [ ${(s: :)${(s,:,)${"$(< /etc/passwd)"[(fr)*:${NUSER_ID}:*]}}[3]} ] ; do
 					(( NUSER_ID++ ))
 				done
@@ -309,7 +309,7 @@ add_change_user() {
 			## }}}
 		else
 			# nur einen Benutzer anlegen.# {{{
-			# quota pruefen
+			# quota prüfen
 			check_quota "${HOME_V%/*}"
 			> $PASS_FILE <<< "${NUSER}:${gv_Pass}:${NUSER_ID}:${NGROUP}:${COMMENT}:${HOME_V}:${U_SHELL}"
 			newusers $PASS_FILE || prog_failure
@@ -333,11 +333,11 @@ add_change_user() {
 		NGROUPS_KORRECT="${NGROUPS// /,}"
 		if [ ! -z "$gv_Opt" ] ; then
 			# Massen Benutzer anlegen# {{{
-			# quota pruefen
+			# quota prüfen
 			check_quota "$P_HOME"
 			PROG_OPT_ALL="${=PROG_OPT} -g $NGROUP -G${NGROUPS_KORRECT:-users} -c \"$COMMENT\" -s "$U_SHELL""
 			for n in {1..$P_COUNT} ; {
-				# Gibt es die NUSER_ID wird sie um eins hoeher gezaehlt.
+				# Gibt es die NUSER_ID wird sie um eins höher gezählt.
 				while [ ${(s: :)${(s,:,)${"$(< /etc/passwd)"[(fr)*:${NUSER_ID}:*]}}[3]} ] ; do
 					(( NUSER_ID++ ))
 				done
@@ -350,7 +350,7 @@ add_change_user() {
 				if [ "$CP_SKEL" = yes -a "$U_SHELL" != /bin/false ] ; then
 					cp -au /etc/skel/.* ${P_HOME}/${P_USER} &>/dev/null
 					cp -au /etc/skel/* ${P_HOME}/${P_USER} &>/dev/null
-					# Bei SuSE koennen die pwdutils das Passwort per pipe uebergeben werden
+					# Bei SuSE können die pwdutils das Passwort per pipe übergeben werden
 					print "$P_PASS" | passwd --stdin "$P_USER" >/dev/null || prog_failure
 					chown -R ${P_USER}:${NGROUP} ${P_HOME}/${P_USER} || prog_failure
 				fi
@@ -361,15 +361,15 @@ add_change_user() {
 			passwd_txt_file_msg
 			## }}}
 		else
-			# einen Benutzer hinzufuegen# {{{
-			# quota pruefen
+			# einen Benutzer hinzufügen# {{{
+			# quota prüfen
 			check_quota "${HOME_V%/*}"
 			useradd ${=PROG_OPT} -u "$NUSER_ID" -g "$NGROUP" -G${NGROUPS_KORRECT:-users} -m -d $HOME_V -c \"$COMMENT\" -s "$U_SHELL" $NUSER || prog_failure
 			# Home Verzeichnis erstellen
 			if [ "$CP_SKEL" = yes -a "$U_SHELL" != /bin/false ] ; then
 				cp -au /etc/skel/.* "$HOME_V" &>/dev/null
 				cp -au /etc/skel/* "$HOME_V" &>/dev/null
-				# Bei SuSE koennen die pwdutils das Passwort per pipe uebergeben werden
+				# Bei SuSE können die pwdutils das Passwort per pipe übergeben werden
 				print "$gv_Pass" | passwd --stdin "$NUSER" >/dev/null || prog_failure
 				chown -R ${NUSER}:${NGROUP} ${HOME_V} || prog_failure
 			fi
@@ -381,7 +381,7 @@ add_change_user() {
 	fi
 	# NIS Database updaten
 	update_nis
-	# 1. Login Dateien loeschen oder nicht.
+	# 1. Login Dateien löschen oder nicht.
 	if [ "$FIRSTLOGIN" != yes ] ; then
 		del_firstlogin
 	fi
@@ -391,7 +391,7 @@ add_change_user() {
 		HOME_V U_SHELL
 }
 #}}}
-# Funktion (change_user), nur Benutzer aendern.{{{
+# Funktion (change_user), nur Benutzer ändern.{{{
 #
 change_user() {
 	unset -- PROG_OPT
@@ -403,11 +403,11 @@ change_user() {
 	if [ -n "$DAYS_OF_EXPIRE" ] ; then
 		PROG_OPT="$PROG_OPT -e $DAYS_OF_EXPIRE"
 	fi
-	# User ID aendern?
+	# User ID ändern?
 	if [ "$NUSER_ID_OLD" != "$NUSER_ID" ] ; then
 		PROG_OPT="$PROG_OPT -u "$NUSER_ID""
 	fi
-	# Gruppen aendern?
+	# Gruppen ändern?
 	if [ "$NGROUPS_OLD" != "$NGROUPS" ] ; then
 		PROG_OPT="$PROG_OPT -G "${NGROUPS// /,}""
 	fi
@@ -423,12 +423,12 @@ change_user() {
 	unset -- NUSER NUSER_ID gv_Star_Passphrase gv_Pass NGROUP NGROUPS COMMENT HOME_V U_SHELL
 }
 #}}}
-# Funktion (check_user), pruefen ob Benutzer schon existiert.# {{{
+# Funktion (check_user), prüfen ob Benutzer schon existiert.# {{{
 check_user() {
 	IS_USER=${(M)$(< /etc/passwd)[(fr)${1}:*]}
 }
 ## }}}
-# Funktion (check_prefix), Benutzer Prefix auf Existenz pruefen# {{{
+# Funktion (check_prefix), Benutzer Prefix auf Existenz prüfen# {{{
 #
 # usage check_prefix [ -m ] PREFIX
 # -m - mehrere Benutzer anhand des Prefixes heraus finden.
@@ -523,12 +523,12 @@ user_konf() {
 				user_konf_menue "${gv_Auswahl#HELP }"	
 				;;
 			$gv_User)
-				# vorhandene Usernamen aendern{{{
+				# vorhandene Usernamen ändern{{{
 				inputbox "$CONF_USER_TITLE" "$CREATE_MSG" "$NUSER_OLD"
 				if [ "$gv_Auswahl" ] ; then
 					check_user "$gv_Auswahl"
 					if [ -z "$IS_USER" ] ; then
-						# auf Sonderzeichen pruefen
+						# auf Sonderzeichen prüfen
 						check_special_character "$gv_Auswahl"
 						if [ -n "$VALUE" ] ; then
 							NUSER="$VALUE"
@@ -544,15 +544,15 @@ user_konf() {
 				user_konf_menue	$gv_User
 				;;
 			$lv_User_Id)
-				# User ID aendern{{{
+				# User ID ändern{{{
 				#
 				if [ "$NUSER" ] ; then
 					USER_ID_TITLE=(${gv_Configuration}::${lv_User_Id})
-					USER_ID_MSG=$(gettext 'Geben Sie hier bitte die Benutzer ID an. Das kann eine Zahl von 1 bis 65535 sein. Es wird geprueft ob, diese schon vergeben ist.')
+					USER_ID_MSG=$(gettext 'Geben Sie hier bitte die Benutzer ID an. Das kann eine Zahl von 1 bis 65535 sein. Es wird geprüft ob, diese schon vergeben ist.')
 					number_input "$USER_ID_TITLE" "$USER_ID_MSG"
 					if [ "$NUMBER" ] ; then
 						if [ "$NUMBER" -le 65534 ] ; then
-							# pruefen ob, diese User ID schon vergeben ist.
+							# prüfen ob, diese User ID schon vergeben ist.
 							if [ ${(s: :)${(s,:,)${"$(< /etc/passwd)"[(fr)*:${gv_Auswahl}:*]}}[3]} ] ; then
 								no_id_range_msg "$NUMBER"
 							else
@@ -570,13 +570,13 @@ user_konf() {
 				user_konf_menue	$lv_User_Id
 				;;
 			$gv_Group)
-				# Gruppe aendern, bestimmen{{{
+				# Gruppe ändern, bestimmen{{{
 				#
 				if [ -n "$NUSER" -o -n "$P_PREFIX" ] ; then
 					user_group_check -g
 					if [ "$?" = 0 ] ; then
 						GROUP_TITLE=(${gv_Configuration}::${gv_Group})
-						GROUP_MSG=$(gettext 'Waehlen Sie hier Ihre Hauptgruppe aus.')
+						GROUP_MSG=$(gettext 'Wählen Sie hier Ihre Hauptgruppe aus.')
 						menubox "$NGROUP" "$GROUP_TITLE" "$GROUP_MSG" "$U_G_ARRAY"
 						#
 						while [ "$gv_Auswahl" ] ; do
@@ -585,12 +585,12 @@ user_konf() {
 									menubox "$NGROUP" "$GROUP_TITLE" "$GROUP_MSG" "$U_G_ARRAY"
 									;;
 								*)
-									# Gruppe uebernehmen
+									# Gruppe übernehmen
 									NGROUP_OLD=$NGROUP
 									NGROUP="$gv_Auswahl"
 									#
-									# Pruefen, ob der User dieser Hauptgruppe schon angehoert, 
-									# wenn nicht einfuegen, oder bei nur einer Hauptgruppe
+									# Prüfen, ob der User dieser Hauptgruppe schon angehört, 
+									# wenn nicht einfügen, oder bei nur einer Hauptgruppe
 									# auswechseln, oder bei mehreren Gruppen vorherige
 									# auswechseln.
 									#
@@ -615,13 +615,13 @@ user_konf() {
 				user_konf_menue	$gv_Group
 				;;
 			$lv_Groups)
-				# Gruppen Zugehoerigkeit auswaehlen{{{
+				# Gruppen Zugehörigkeit auswählen{{{
 				#
 				if [ -n "$NUSER" -o -n "$P_PREFIX" ] ; then
 					user_group_check -g
 					if [ "$?" = 0 ] ; then
 						#
-						# Filtern, ob die Gruppe schon ausgewaehlt wurde, wenn ja
+						# Filtern, ob die Gruppe schon ausgewählt wurde, wenn ja
 						# als on markieren.
 						#
 						generate_is_file "$NGROUPS $NGROUP"
@@ -630,7 +630,7 @@ user_konf() {
 						# Gibt es Werte werden sie zur Auswahl angeboten
 						if [ -n "$VALUE_ARRAY" ] ; then
 							GROUPS_TITLE=(${gv_Configuration}::${lv_Groups})
-							GROUPS_MSG=$(gettext 'Waehlen Sie hier die Gruppen aus zu denen Sie gehoeren moechten.')
+							GROUPS_MSG=$(gettext 'Wählen Sie hier die Gruppen aus zu denen Sie gehören möchten.')
 							checklist "${DEFAULT_VALUE[1]}" "$GROUPS_TITLE" "$GROUPS_MSG" "$VALUE_ARRAY" "$NGROUPS"
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
@@ -638,7 +638,7 @@ user_konf() {
 										checklist "${gv_Auswahl#HELP }" "$GROUPS_TITLE" "$GROUPS_MSG" "$VALUE_ARRAY" "$NGROUPS"
 										;;
 									*)
-										# Gruppen uebernehmen
+										# Gruppen übernehmen
 										NGROUPS="$gv_Auswahl_Display"
 										break
 										;;
@@ -668,12 +668,12 @@ user_konf() {
 				;;
 			$lv_Prefix)
 				# Benutzer Prefix eingeben{{{
-	            P_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen, ohne Sonderzeichen, fuer die Benutzer an. Dieser wird dann mit der Anzahl der zu erstellenden Benutzer kombiniert.')
+	            P_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen, ohne Sonderzeichen, für die Benutzer an. Dieser wird dann mit der Anzahl der zu erstellenden Benutzer kombiniert.')
 				inputbox "$P_PREFIX_TITLE" "$P_PREFIX_MSG" "$P_PREFIX"
 				if [ "$gv_Auswahl" ] ; then
 					check_prefix "$gv_Auswahl"
 					if [ -z "$IS_USER" ] ; then
-						# auf Sonderzeichen pruefen
+						# auf Sonderzeichen prüfen
 						check_special_character "$gv_Auswahl"
 						if [ -n "$VALUE" ] ; then
 							P_PREFIX="$VALUE"
@@ -686,7 +686,7 @@ user_konf() {
 				user_konf_menue	$lv_Prefix
 				;;
 			$lv_Prefix_Home)
-				# Prefix fuer Home Verzeichnis auswaehlen{{{
+				# Prefix für Home Verzeichnis auswählen{{{
 				dselect "${P_HOME:-/home}"
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
@@ -712,7 +712,7 @@ user_konf() {
 				user_konf_menue	$lv_Count
 				;;
 			$lv_Shell)
-				# Shell auswaehlen#{{{
+				# Shell auswählen#{{{
 				list_shell "$U_SHELL"
 				if [ -n "$gv_Shell" ] ; then
 					U_SHELL="$gv_Shell"
@@ -723,7 +723,7 @@ user_konf() {
 				user_konf_menue	$lv_Shell
 				;;
 			$lv_Home)
-				# Home Verzeichniss auswaehlen{{{
+				# Home Verzeichniss auswählen{{{
 				if [ -n "$NUSER" ] ; then
 					dselect "$HOME_V"
 					if [ "$VERZ" ] ; then
@@ -740,8 +740,8 @@ user_konf() {
 				;;
 			$gv_Passwd)
 				# Passwort eingeben #{{{
-				# Sicherheit ueber alles:)
-				PASSWD_MSG=$(gettext 'Geben Sie hier bitte ein Passwort fuer den Benutzer ($NUSER) ein und wiederholen es anschliessend.')
+				# Sicherheit über alles:)
+				PASSWD_MSG=$(gettext 'Geben Sie hier bitte ein Passwort für den Benutzer ($NUSER) ein und wiederholen es anschliessend.')
 
 				if [ -n "$NUSER" ] ; then
 					user_group_passwd -u "$PASSWD_MSG"
@@ -770,11 +770,11 @@ user_konf() {
 					Year=${${(s,/,)${gv_Auswahl}}[3]}
 					DAYS_OF_EXPIRE="${Year}-${Mon}-${Day}"
 					#
-					# aktuelles/faelliges Datum in Sekunden
+					# aktuelles/fälliges Datum in Sekunden
 					Today_Date_Sec="`date +%s`"
 					Expire_Date_Sec="`date -d $DAYS_OF_EXPIRE +%s`"
 					#
-					# pruefen ob das ausgewaehlte Datum das gleiche ist wie das aktuelle.
+					# prüfen ob das ausgewählte Datum das gleiche ist wie das aktuelle.
 					if [ "$Today_Date_Sec" -lt "$Expire_Date_Sec" ] ; then
 						# 86400s = 24h = 1 Tag
 						(( Expire_Date_Days = Expire_Date_Sec / 86400 ))
@@ -797,7 +797,7 @@ user_konf() {
 				# Sperrung des Accounts.
 				# inaktive Zeit nach Verfallsdatum des Benutzer Accounts (expire,...)
 				INACTIVE_TITLE=(${gv_Configuration}::${lv_Inactive})
-				INACTIVE_MSG=$(gettext 'Geben Sie die Anzahl der Tage ein die dieses Benutzerfach, ohne Passwort Aenderung, bestehen soll (z.B. 60).')
+				INACTIVE_MSG=$(gettext 'Geben Sie die Anzahl der Tage ein die dieses Benutzerfach, ohne Passwort Änderung, bestehen soll (z.B. 60).')
 				number_input "$INACTIVE_TITLE" "$INACTIVE_MSG" "$INACTIVE" 
 				if [ -n "$NUMBER" ] ; then
 					INACTIVE="$NUMBER"
@@ -809,8 +809,8 @@ user_konf() {
 				;;
 			$gv_Save)
 				# User anlegen/speichern{{{
-				# User Einstellungen aendern oder anlegen. Bei keiner Shell
-				# benoetigt man auch kein Passwort.
+				# User Einstellungen ändern oder anlegen. Bei keiner Shell
+				# benötigt man auch kein Passwort.
 				#
 				if [ "$CHANGE_USER" = no ] ; then
 					if [ "$U_SHELL" = /bin/false -a "$NUSER" ] ; then
@@ -830,9 +830,9 @@ user_konf() {
 						break
 					else
 						if [ -n "$gv_Opt" ] ; then
-							MSG=$(gettext 'Sie muessen mindestens einen Prefix fuer die Benutzer, das Homeverzeichnis und die Anzahl fuer die Benutzer eingeben.')
+							MSG=$(gettext 'Sie müssen mindestens einen Prefix für die Benutzer, das Homeverzeichnis und die Anzahl für die Benutzer eingeben.')
 						else
-							MSG=$(gettext 'Sie muessen mindestens einen Benutzer Namen und ein Passwort eingeben.')
+							MSG=$(gettext 'Sie müssen mindestens einen Benutzer Namen und ein Passwort eingeben.')
 						fi
 						msgbox "$gv_Attention" "$MSG"
 						user_konf_menue	
@@ -856,12 +856,12 @@ user_konf() {
 	done
 }
 #}}}
-# Funktion (no_del_user_msg), konnte die User nicht loeschen# {{{
+# Funktion (no_del_user_msg), konnte die User nicht löschen# {{{
 no_del_user_msg() {
 	if [[ ${#argv} == 1 ]] ; then
 		local User
 		User="$1"
-		MSG=$(gettext 'Konnte den Benutzer "$User" nicht loeschen.')
+		MSG=$(gettext 'Konnte den Benutzer "$User" nicht löschen.')
 		msgbox "$gv_Attention" "$MSG"
 	else
 		no_para_msg $0
@@ -877,16 +877,16 @@ no_prefix_existed_msg() {
 # Funktion (no_user_choice_msg){{{
 #
 no_user_choice_msg() {
-	MSG=$(gettext 'Sie muessen erst einen Benutzer Namen eingeben/auswaehlen, bevor Sie hier etwas aendern koennen.')
+	MSG=$(gettext 'Sie müssen erst einen Benutzer Namen eingeben/auswählen, bevor Sie hier etwas ändern können.')
 	msgbox "$gv_Attention" "$MSG"
 }
 #}}}
-# Funktion (passwd_txt_file_msg), Nachricht ueber die User Password Datei.# {{{
+# Funktion (passwd_txt_file_msg), Nachricht über die User Password Datei.# {{{
 #
 passwd_txt_file_msg() {
 	if [ -e "${USERPASS_FILE}-${P_PREFIX}.txt" -a "${(c)#$(< ${USERPASS_FILE}-${P_PREFIX}.txt)}" -gt 0 ] ; then
 		chmod 600 ${USERPASS_FILE}-${P_PREFIX}.txt &>/dev/null || prog_failure
-		MSG=$(gettext 'Es wurde die Datei ${USERPASS_FILE}-${P_PREFIX}.txt angelegt, die alle Benutzer und deren Passwoerter enthaelt. Speichern Sie diese an einem sicheren Ort!')
+		MSG=$(gettext 'Es wurde die Datei ${USERPASS_FILE}-${P_PREFIX}.txt angelegt, die alle Benutzer und deren Passwörter enthält. Speichern Sie diese an einem sicheren Ort!')
 		msgbox "$gv_Info" "$MSG"
 	fi
 }
@@ -952,12 +952,12 @@ while [ "$gv_Auswahl" ] ; do
 			CHANGE_USER=no
 			unset -- NUSER P_PREFIX NUSER_ID NGROUP NGROUPS COMMENT HOME_V
 			if [ ! -z "$gv_Opt" ] ; then
-	            P_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen, ohne Sonderzeichen, fuer die Benutzer an. Dieser wird dann mit der Anzahl der zu erstellenden Benutzer kombiniert.')
+	            P_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen, ohne Sonderzeichen, für die Benutzer an. Dieser wird dann mit der Anzahl der zu erstellenden Benutzer kombiniert.')
 				inputbox "$CONF_USER_TITLE" "$P_PREFIX_MSG"
 				if [ "$gv_Auswahl" ] ; then
 					check_prefix "$gv_Auswahl"
 					if [ -z "$IS_USER" ] ; then
-						# auf Sonderzeichen pruefen
+						# auf Sonderzeichen prüfen
 						check_special_character "$gv_Auswahl"
 						if [ -n "$VALUE" ] ; then
 							P_PREFIX="$VALUE"
@@ -973,7 +973,7 @@ while [ "$gv_Auswahl" ] ; do
 				if [ "$gv_Auswahl" ] ; then
 					check_user "$gv_Auswahl"
 					if [ -z "$IS_USER" ] ; then
-						# auf Sonderzeichen pruefen
+						# auf Sonderzeichen prüfen
 						check_special_character "$gv_Auswahl"
 						if [ -n "$VALUE" ] ; then
 							NUSER="$VALUE"
@@ -992,14 +992,14 @@ while [ "$gv_Auswahl" ] ; do
 			haupt_menue $gv_Create
 			;;
 		$gv_Change)
-			# vorhandene User auswaehlen{{{
+			# vorhandene User auswählen{{{
 			#
 			CHANGE_USER=yes
 			unset -- NUSER NUSER_ID NGROUP NGROUPS COMMENT HOME_V U_SHELL
 			user_group_check -p
 			if [ "$?" = 0 ] ; then
-				CHANGE_TITLE=$(gettext 'Benutzer::aendern')
-				CHANGE_MSG=$(gettext 'Waehlen Sie einen Benutzer zum aendern aus.')
+				CHANGE_TITLE=$(gettext 'Benutzer::ändern')
+				CHANGE_MSG=$(gettext 'Wählen Sie einen Benutzer zum ändern aus.')
 				menubox "$NUSER" "$CHANGE_TITLE" "$CHANGE_MSG" "$U_G_ARRAY"
 				#
 				while [ "$gv_Auswahl" ] ; do
@@ -1021,9 +1021,9 @@ while [ "$gv_Auswahl" ] ; do
 			haupt_menue $gv_Change
 			;;
 		$gv_Delete)
-			# User loeschen{{{
+			# User löschen{{{
 			# Funktion (del_choice_menu). Auswahl ob nach Prefix oder Benutzer# {{{
-			# geloescht werden soll.
+			# gelöscht werden soll.
 			#
 			DEL_TITLE=(${gv_User}::${gv_Delete})
 			DEL_CHOICE_MENU=(\"$lv_Per_Prefix\" \"\" \"$lv_Per_Name\" \"\" $gv_Back \"\")
@@ -1040,19 +1040,19 @@ while [ "$gv_Auswahl" ] ; do
 						del_choice_menu "${gv_Auswahl#HELP }"
 						;;
 					"$lv_Per_Prefix")
-						# per Prefix Benutzer loeschen{{{
+						# per Prefix Benutzer löschen{{{
 						#
 						# Benutzer Prefix eingeben
-			            DEL_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen fuer die zu loeschenden Benutzer ein.')
+			            DEL_PREFIX_MSG=$(gettext 'Geben Sie einen Prefix Namen für die zu löschenden Benutzer ein.')
 						inputbox "$DEL_TITLE" "$DEL_PREFIX_MSG"
 						if [ -n "$gv_Auswahl" ] ; then
 							check_prefix -m "$gv_Auswahl"
 							if [ -n "$P_IS_USER" ] ; then
-								DEL_ASK_MSG=$(gettext 'Sollen die Benutzer mit dem Prefix \"$gv_Auswahl\" wirklich geloescht werden (ja/nein)?')
+								DEL_ASK_MSG=$(gettext 'Sollen die Benutzer mit dem Prefix \"$gv_Auswahl\" wirklich gelöscht werden (ja/nein)?')
 								yesno "$gv_Info" "$DEL_ASK_MSG" ""
 								if [[ $gv_Auswahl == yes ]] ; then
 									# Gibts es einen Prefix+Nr werden alle Benutzer
-									# mit diesem geloescht.
+									# mit diesem gelöscht.
 									for i in ${=P_IS_USER} ; {
 										userdel -r "$i" &>/dev/null || \
 										no_del_user_msg "$1"
@@ -1067,11 +1067,11 @@ while [ "$gv_Auswahl" ] ; do
 						break
 						;;
 					"$lv_Per_Name")
-						# Benutzer per Name loeschen# {{{
+						# Benutzer per Name löschen# {{{
 						user_group_check -p
 						if [ "$?" = 0 ] ; then
 							DEL_MENU=($U_G_ARRAY_M)
-							DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Benutzer zum loeschen aus.')
+							DEL_MSG=$(gettext 'Wählen Sie ein oder mehrere Benutzer zum löschen aus.')
 							checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -1080,7 +1080,7 @@ while [ "$gv_Auswahl" ] ; do
 										checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 										;;
 									*)
-										# User loeschen
+										# User löschen
 										for i in ${=gv_Auswahl} ; do
 											userdel -r $i &>/dev/null || \
 												no_del_user_msg "$i"

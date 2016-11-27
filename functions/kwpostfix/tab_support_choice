@@ -9,7 +9,7 @@ tab_support_choice() {
 	Choice="$1"
 	autoload -U password_display different_passwd
 	
-	lv_NameAdapt=$(gettext 'Namensuebernahme')
+	lv_NameAdapt=$(gettext 'Namensübernahme')
 
 	TAB_VALUE_TITLE="${lv_TableTyp}::${lv_Choice}"
 	
@@ -37,13 +37,13 @@ tab_support_choice() {
 					tab_support_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_None)
-					# nichts, Parameter Werte loeschen
+					# nichts, Parameter Werte löschen
 					MAPS=""
 					break
 					;;
 				$gv_Input)
 					# Datei/Variablen Eingabe# {{{
-					INPUT_MSG=$(gettext 'Hier koennen Sie Variablen und/oder Dateien eingeben (Bsp. \$alias_maps \$virtual_mailbox_maps unix:passwd.byname).')
+					INPUT_MSG=$(gettext 'Hier können Sie Variablen und/oder Dateien eingeben (Bsp. \$alias_maps \$virtual_mailbox_maps unix:passwd.byname).')
 					inputbox "$TAB_VALUE_TITLE" "$INPUT_MSG" "${OldVar//\$/\\\$}"
 					if [ "$gv_Auswahl" ] ; then
 						MAPS="${gv_Auswahl//\$/\\\$}"
@@ -54,7 +54,7 @@ tab_support_choice() {
 					## }}}
 					;;
 				$lv_NameAdapt)
-					# Namensuebernahme{{{
+					# Namensübernahme{{{
 					# Funktion format_menue{{{
 					# TABS_A - ohne die Tabellenformate pcre und regexp
 					# TABS_D - Tabellenformate, Tabellen die im Verzeichnis /var/lib/postfix
@@ -63,11 +63,11 @@ tab_support_choice() {
 					# TABS_M - alle Tabellenformate
 					# TABS_R - nur die Tabellenformate pcre und regexp
 					#
-					# Die Variable TABS_WAHL wird fuer die Auswahl des Tabelleformats "proxy"
-					# benoetigt.
+					# Die Variable TABS_WAHL wird für die Auswahl des Tabelleformats "proxy"
+					# benötigt.
 					#
 					# }
-					TABFORMAT_MSG=$(gettext 'Waehlen Sie das Tabellenformat aus.')
+					TABFORMAT_MSG=$(gettext 'Wählen Sie das Tabellenformat aus.')
 					format_menue() {
 						case "$Choice" in
 							*checks|*_reply_filter|smtpd_command_filter)
@@ -185,7 +185,7 @@ tab_support_choice() {
 								unset -- Proxy_Map TAB_Proxy_S
 								Tabwahl="$gv_Auswahl"
 								TAB_Proxy_S=${TABS_WAHL//proxy \"\"/}
-								# Tabellentype Auswahl fuer proxy
+								# Tabellentype Auswahl für proxy
 								TAB_VALUE_PROXY_TITLE="${gv_Configuration}::${lv_TableTyp}::${lv_Proxy}"
 								menubox "$Proxy_Map" "$TAB_VALUE_PROXY_TITLE" "$gv_Menupoint" "$TAB_Proxy_S"
 								while [ "$gv_Auswahl" ] ; do
@@ -255,7 +255,7 @@ tab_support_choice() {
 											if [ "$Choice" = alias_database ] ; then
 												Choice=alias_maps
 											fi
-											# Einige Tabellen sollten standardmaessig in
+											# Einige Tabellen sollten standardmässig in
 											# den Verzeichnissen /var/lib/postfix oder
 											# /etc/postfix/sasl liegen.
 											case "$Choice" in
@@ -369,7 +369,7 @@ tab_support_choice() {
 									MAPS="${gv_Auswahl}:/etc/aliases"
 									create_file ${MAPS#*:}
 								fi
-								# Einige Tabellen sollten standardmaessig in den Verzeichnissen
+								# Einige Tabellen sollten standardmässig in den Verzeichnissen
 								# /var/lib/postfix oder /etc/postfix/sasl liegen.
 								case "$Choice" in
 									address_verify_map|postscreen_cache_map|*_sasl_auth_cache_name|*_tls_session_cache_database)

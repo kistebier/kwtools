@@ -32,16 +32,16 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen
+# auf Programme prüfen
 prog_check vcdimager
 if [ -n "${NO_PROGS[1]}" ] ; then
 	exit 0
 fi
 
-# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+# Soll die alte Konfiguration übernommen werden (ja/nein)?
 if [ -f "${gv_HomePath}/.kwtools/vcdburnrc" -a ! -f "${gv_HomePath}/.kwtools/kwvcdburnrc" ] ; then
-	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/vcdburnrc" "${gv_HomePath}/.kwtools/kwvcdburnrc" &>/dev/null
@@ -61,7 +61,7 @@ if [ -z "$VCD_TYPE" ] ; then
 	VCD_TYPE="svcd"
 fi
 
-CREATE_NAME_MSG=$(gettext 'Vergeben Sie einen Namen fuer die Video-CD ohne .cue Endung, ansonsten heisst sie videocd.cue.')
+CREATE_NAME_MSG=$(gettext 'Vergeben Sie einen Namen für die Video-CD ohne .cue Endung, ansonsten heisst sie videocd.cue.')
 
 # Funktion main_menu{{{
 lv_Video_Cd=$(gettext 'Video-CD')
@@ -100,23 +100,23 @@ while [ "$gv_Auswahl" ] ; do
 			# VCD Image erstellen{{{
 			#
 			# Entweder mehrere Filme zusammenpacken film1 film2 ...
-			# oder einzeln. Groesse zusammenrechnen.
+			# oder einzeln. Grösse zusammenrechnen.
 			PROG=vcdimager
 			FORMAT="MPEG sequence"
 			SUFFIX=".mpg .mpeg .MPG .MPEG"
-			# Dateien auswaehlen
+			# Dateien auswählen
 			file_choice "$FILM_DIR" multi
 			#
 			VIDEO_TITLE=($lv_Video_Cd)
 			#
-			# Programm vcdimager ausfuehren.
+			# Programm vcdimager ausführen.
 			#
 			typeset -L V_Anz
 			V_Anz=`wc -l <${gv_LogFile}$$`
 			mv ${gv_LogFile}$$ ${gv_WorkDir}/files
 			CREATE_MSG=$(gettext 'Erzeuge Video-CD: $file.')
 			#
-			# Soll eine VCD Struktur fuer alle Dateien erstellt werden,
+			# Soll eine VCD Struktur für alle Dateien erstellt werden,
 			# wenn es mehr als eine Datei gibt (ja/nein)?
 			if [ "$V_Anz" -gt 1 ] ; then
 				CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (Ja/nein)?')
@@ -126,7 +126,7 @@ while [ "$gv_Auswahl" ] ; do
 					inputbox "$VIDEO_TITLE" "$CREATE_NAME_MSG"
 					FILE_NAME="${gv_Auswahl:-videocd}"
 					CREATE_MULTI_MSG=$(gettext 'Erzeuge Video-CD ${FILE_NAME}.cue aus den Dateien.')
-					# zusammenfuegen
+					# zusammenfügen
 					while read file ; do
 						FILES+=( $file )
 					done <${gv_WorkDir}/files

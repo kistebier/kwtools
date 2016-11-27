@@ -1,27 +1,27 @@
-# raidlevel_help fuer kwraid{{{
+# raidlevel_help für kwraid{{{
 TITLE="${gv_Create}::${lv_Raid_Level}::${gv_Help}"
 MSG=$(gettext 'Hier kann man zwischen den RAID Levels linear, 0, 1, 4, 5, 6 und
-10 auswaehlen. Die Level 6 und 10 stehen nur zur Auswahl ab Kernel
+10 auswählen. Die Level 6 und 10 stehen nur zur Auswahl ab Kernel
 >2.5.
 
 linear: Der Linear Modus verbindet mehrere Partitionen 
-\tunterschiedlicher Groesse zu einem Gesamtverbund, der 
+\tunterschiedlicher Grösse zu einem Gesamtverbund, der 
 \tallerdings nicht parallel, sondern nacheinander beschrieben
-\twird. Ist die erste Partition voll, wird auf der naechsten 
+\twird. Ist die erste Partition voll, wird auf der nächsten 
 \tweitergeschrieben. Dadurch sind weder Performancevorteile
 \tzu erwarten noch eine gesteigerte Sicherheit. Im Gegenteil.
 \tIst eine Partition des Linear-Verbundes defekt, ist meist 
-\tauch der gesamte Verbund hinueber.
+\tauch der gesamte Verbund hinüber.
 \tZu beachten ist das dieser Level keine Ersatzpartitionen
 \terlaubt.
 
 0: Wie bei Linear werden die FP zu einer logischen Einheit zusammen
 \tgefasst, mit dem Unterschied, dass die Schreib/Lesezugriffe 
 \tparallel auf die einzelnen FP verteilt werden. Da der
-\tZugriff parallel ausgefuehrt wird, sind die FP immer gleich
-\tbelegt, d.h. es muessen immer gleich grosse Partitionen
+\tZugriff parallel ausgeführt wird, sind die FP immer gleich
+\tbelegt, d.h. es müssen immer gleich grosse Partitionen
 \tangelegt werden. Auch hier werden keine Redundanz-Daten
-\tgespeichert, d.h. faellt eine FP aus sind alle Daten ver-
+\tgespeichert, d.h. fällt eine FP aus sind alle Daten ver-
 \tloren. Zu beachten ist das dieser Level keine Ersatzparti-
 \ttionen erlaubt.
 
@@ -29,32 +29,32 @@ linear: Der Linear Modus verbindet mehrere Partitionen
 \thier der gesamte Inhalt einer Partition auf eine oder
 \tmehrere andere gespiegelt und damit eins zu eins dupliziert
 \twird. Wir haben hier also den ersten Fall von Redundanz.
-\tDesweiteren koennen hier, falls es erwuenscht ist, zum
+\tDesweiteren können hier, falls es erwuenscht ist, zum
 \tersten mal Spare-Disks zum Einsatz kommen. Diese liegen
 \tpauschal erstmal brach im System und werden erst um Ihre
 \tMitarbeit bemueht, wenn eine Partition des RAID-1 Verbundes
-\tausgefallen ist. Spare-Disks bieten also einen zusaetz-
-\tlichen Ausfallschutz, um nach einem Ausfall moeglichst 
+\tausgefallen ist. Spare-Disks bieten also einen zusätz-
+\tlichen Ausfallschutz, um nach einem Ausfall möglichst 
 \tschnell wieder ein redundantes System zu bekommen. 
 
-4: Sie moechten mehrere, aber mindestens drei etwa gleich grosse 
+4: Sie möchten mehrere, aber mindestens drei etwa gleich grosse 
 \tPartitionen zusammenfassen, die sowohl einen Geschindig-
-\tkeitsvorteil als auch erhoehte Sicherheit bieten sollen.
+\tkeitsvorteil als auch erhöhte Sicherheit bieten sollen.
 \tDas Verfahren der Datenverteilung beim Schreibzugriff ist
 \thierbei genauso wie beim RAID-0 Verbund, allerdings kommt
-\thier eine zusaetzliche Partition mit Paritaetsinformationen
-\thinzu. Faellt eine Partition aus, so kann diese, falls eine
+\thier eine zusätzliche Partition mit Paritätsinformationen
+\thinzu. Fällt eine Partition aus, so kann diese, falls eine
 \tSpare-Disk vorhanden ist, sofort wieder rekonstruiert
 \twerden; fallen zwei Partitionen aus, ist aber auch hier
 \tSchluss und die Daten sind verloren.
 
-5: Ein RAID-5 Verbund loest nun das klassische RAID-4 Problem
-\telegant, indem es die Paritaetsinformationen gleichmaessig
-\tueber alle im RAID-5 Verbund laufenden Partitionen verteilt.
-\tHierdurch wird der Flaschenhals einer einzelnen Paritaets-
+5: Ein RAID-5 Verbund löst nun das klassische RAID-4 Problem
+\telegant, indem es die Paritätsinformationen gleichmässig
+\tüber alle im RAID-5 Verbund laufenden Partitionen verteilt.
+\tHierdurch wird der Flaschenhals einer einzelnen Paritäts-
 \tPartition wirksam umgangen, weshalb sich RAID-5 als Sicher-
 \theit und Geschwindigkeit bietender RAID-Verbund grosser
-\tBeliebtheit erfreut. Faellt eine Partition aus, beginnt das
+\tBeliebtheit erfreut. Fällt eine Partition aus, beginnt das
 \tRAID-5, falls Spare-Disks vorhanden sind, sofort mit der
 \tRekonstruktion der Daten, allerdings kann RAID-5 auch nur
 \tden Verlust einer Partition verkraften. Genauso wie beim 
@@ -64,16 +64,16 @@ linear: Der Linear Modus verbindet mehrere Partitionen
 6: Ein RAID-6 ist gleich dem RAID-5, bloss das hier 2 Parity-
 \tbereiche genutzt werden.
 
-10: RAID-10 ist eine Kombination von RAID-0 und RAID-1. Man benoetigt
+10: RAID-10 ist eine Kombination von RAID-0 und RAID-1. Man benötigt
 \tmindestens 4 FP, wobei 2 RAID-1 Verbunde zu 1 RAID-0
-\tVerbund zusammengefuegt werden. Es sind aber auch andere
-\tAnordnungen moeglich. Auch hier besteht die Moeglichkeit
-\tSpare-Disks mit einzubinden. Faellt eine FP aus sind die
+\tVerbund zusammengefügt werden. Es sind aber auch andere
+\tAnordnungen möglich. Auch hier besteht die Möglichkeit
+\tSpare-Disks mit einzubinden. Fällt eine FP aus sind die
 \tDaten, dank der redundanten Speicherung noch vorhanden oder
 \tbei Spare-Disks beginnt die Rekonstruktion. Fallen mehr als
 \t1 FP gleichzeitig aus , so kommt es drauf an das die RAID-1
 \tVerbunde funktionstuechtig bleiben. Ist eines der Verbunde
-\tbeschaedigt sind die Daten verloren. Da keine Parity-Daten
+\tbeschädigt sind die Daten verloren. Da keine Parity-Daten
 \tgespeichert werden, ist der Lese/Schreibzugriff deutlich 
 \tschneller als bei einer einzelnen FP aus dem Array.')
 #}}}

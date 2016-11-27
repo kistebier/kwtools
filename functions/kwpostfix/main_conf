@@ -16,7 +16,7 @@ rm -rf  ${gv_WorkDir}/postfix$$ &>/dev/null
 
 two_bounce_notice_recipient="`postconf -h -c $MAIL_CONFIG 2bounce_notice_recipient`"
 #########################################################
-# TODO: Hilfe ergaenzen fehlt und ne Menge Einstellungen
+# TODO: Hilfe ergänzen fehlt und ne Menge Einstellungen
 #########################################################
 # 2bounce_notice_recipient = postmaster
 # alias_database = hash:/etc/aliases
@@ -163,7 +163,7 @@ two_bounce_notice_recipient="`postconf -h -c $MAIL_CONFIG 2bounce_notice_recipie
 # nested_header_checks =
 # newaliases_path = /usr/bin/newaliases
 # notify_classes = resource, software
-# owner_request_special = yes
+# owner_reqüst_special = yes
 # parent_domain_matches_subdomains = debug_peer_list, fast_flush_domains, mynetworks, relay_domains
 # permit_mx_backup_networks =
 # pickup_service_name = pickup
@@ -321,7 +321,7 @@ conf_main_menu() {
 	myorigin \"\$myorigin\"
 	nested_header_checks \"\$nested_header_checks\"
 	notify_classes \"\$notify_classes\"
-	owner_request_special \"\$owner_request_special\"
+	owner_reqüst_special \"\$owner_reqüst_special\"
 	parent_domain_matches_subdomains \"\$parent_domain_matches_subdomains\"
 	permit_mx_backup_networks \"\$permit_mx_backup_networks\"
 	prepend_delivered_header \"\$prepend_delivered_header\"
@@ -359,8 +359,8 @@ while [ "$gv_Auswahl" ] ; do
 		conf_main_menu "${gv_Auswahl#HELP }"
 			;;
 		2bounce_notice_recipient)
-			# Zieladresse fuer Double Bounces{{{
-			TWO_BOUNCE_NOTICE_RECIPIENT_MSG=$(gettext 'Geben Sie eine Zieladresse fuer Double Bounces ein (z.B. postmaster).')
+			# Zieladresse für Double Bounces{{{
+			TWO_BOUNCE_NOTICE_RECIPIENT_MSG=$(gettext 'Geben Sie eine Zieladresse für Double Bounces ein (z.B. postmaster).')
 			mail_address "$TWO_BOUNCE_NOTICE_RECIPIENT_MSG" "$two_bounce_notice_recipient"
 			if [[ -n $gv_Mail_Adr ]] ; then
 				two_bounce_notice_recipient="$gv_Mail_Adr"
@@ -373,7 +373,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu 2bounce_notice_recipient
 			;;
 		alias_maps)
-			# Tabellen fuer Mailaliase{{{
+			# Tabellen für Mailaliase{{{
 			tab_support_choice "$gv_Auswahl"
 			alias_maps="$MAPS"
 			postconf -e alias_maps="$MAPS"
@@ -406,7 +406,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_commands"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						allow_mail_to_commands="$gv_Auswahl"
 						postconf -e allow_mail_to_commands="$gv_Auswahl"
 						break
@@ -431,7 +431,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$gv_Menupoint" "$VALUE_ARRAY" "$allow_mail_to_files"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						allow_mail_to_files="$gv_Auswahl"
 						postconf -e allow_mail_to_files="$gv_Auswahl"
 						break
@@ -501,7 +501,7 @@ while [ "$gv_Auswahl" ] ; do
 		always_bcc)
 			# An diesen Account wird von jeder Mail eine Kopie geschickt.{{{
 			unset -- ALWAYS_BCC_MENU
-			ALWAYS_BCC_MSG=$(gettext 'Waehlen Sie einen Benutzer aus, an den immer eine geheime Kopie (BCC) geschickt werden soll.')
+			ALWAYS_BCC_MSG=$(gettext 'Wählen Sie einen Benutzer aus, an den immer eine geheime Kopie (BCC) geschickt werden soll.')
 			user_group_check -p
 			if (( $? == 0 )) ; then
 				ALWAYS_BCC_MENU=($gv_None \"\" $U_G_ARRAY)
@@ -517,7 +517,7 @@ while [ "$gv_Auswahl" ] ; do
 							postconf -e always_bcc=""
 							break
 							;;
-						*)	# uebernehmen
+						*)	# übernehmen
 							always_bcc="$gv_Auswahl"
 							postconf -e always_bcc="$gv_Auswahl"
 							break
@@ -548,7 +548,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		best_mx_transport)
 			# Weist einer Mail eine neue Transport Methode zu, wenn der Mailserver{{{
-			# der beste MX-Host fuer diese Domain ist.
+			# der beste MX-Host für diese Domain ist.
 			transport_methode ${best_mx_transport%%:*} ${best_mx_transport##*:}
 			best_mx_transport="$WERT"
 			postconf -e best_mx_transport="$WERT"
@@ -557,7 +557,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		biff)
 			# Soll die Zusammenarbeit mit biff aktiviert werden{{{
-			BIFF_MSG=$(gettext 'Soll die Zusammenarbeit mit biff aktiviert werden, einem Informationstool ueber neu hereingekommene Mails (ja/nein)?')
+			BIFF_MSG=$(gettext 'Soll die Zusammenarbeit mit biff aktiviert werden, einem Informationstool über neu hereingekommene Mails (ja/nein)?')
 			ja_nein_tausch "$MAINCF_TITLE" "$BIFF_MSG"
 			biff="$WERT"
 			postconf -e biff="$WERT"
@@ -573,7 +573,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu body_checks
 			;;
 		body_checks_size_limit)
-			# Wieviel Mail Text soll im Body, ueberprueft werden.{{{
+			# Wieviel Mail Text soll im Body, überprüft werden.{{{
 			number_input -b "$body_checks_size_limit"
 			if [ "$NUMBER" ] ; then
 				body_checks_size_limit="$NUMBER"
@@ -583,7 +583,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu body_checks_size_limit
 			;;
 		bounce_notice_recipient)
-			# Mailadresse fuer Benachrichtigung ueber Double Bounces{{{
+			# Mailadresse für Benachrichtigung über Double Bounces{{{
 			BOUNCE_NOTICE_RECIPIENT_MSG=$(gettext 'Geben Sie eine Mailadresse ein, an die Benachrichtigungen von Bounces gehen (postmaster).')
 			mail_address "$BOUNCE_NOTICE_RECIPIENT_MSG" "$bounce_notice_recipient"
 			if [[ -n $gv_Mail_Adr ]] ; then
@@ -597,7 +597,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu bounce_notice_recipient
 			;;
 		bounce_size_limit)
-			# Anzahl an Bytes die bei einem Bounce zurueckgeschickt werden.{{{
+			# Anzahl an Bytes die bei einem Bounce zurückgeschickt werden.{{{
 			#
 			number_input -b "$bounce_size_limit"
 			if [ "$NUMBER" ] ; then
@@ -608,9 +608,9 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu bounce_size_limit
 			;;
 		broken_sasl_auth_clients)
-			# Soll der Mailserver, einen anderen Begruessungs Text ausgeben.{{{
+			# Soll der Mailserver, einen anderen Begrüssungs Text ausgeben.{{{
 			# Umgeht einen MS Outlock Fehler.
-			BROKEN_SASL_AUTH_CLIENTS_MSG=$(gettext 'Soll dieser Server einen anderen Begruessungstext,  fuer SMTP-AUTH, ausgeben (ja/nein)?')
+			BROKEN_SASL_AUTH_CLIENTS_MSG=$(gettext 'Soll dieser Server einen anderen Begrüssungstext,  für SMTP-AUTH, ausgeben (ja/nein)?')
 			ja_nein_tausch "$MAINCF_TITLE" "$BROKEN_SASL_AUTH_CLIENTS_MSG"
 			broken_sasl_auth_clients="$WERT"
 			postconf -e broken_sasl_auth_clients="$WERT"
@@ -618,7 +618,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu broken_sasl_auth_clients
 			;;
 		canonical_maps)
-			# Tabelle fuer canonical{{{
+			# Tabelle für canonical{{{
 			tab_support_choice "$gv_Auswahl"
 			canonical_maps="$MAPS"
 			postconf -e canonical_maps="$MAPS"
@@ -716,7 +716,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		debug_peer_list)
 			# Welche Adressen sollen geloggt werden{{{
-			DEBUG_PEER_LIST_MSG=$(gettext 'Geben Sie eine Liste von IPs, Domains, Hostnamen oder Netzmasken ein die ausfuehrlicher geloggt werden sollen (Bsp.: 192.168.0.0/24 $myhostname).')
+			DEBUG_PEER_LIST_MSG=$(gettext 'Geben Sie eine Liste von IPs, Domains, Hostnamen oder Netzmasken ein die ausführlicher geloggt werden sollen (Bsp.: 192.168.0.0/24 $myhostname).')
 			inputbox "$MAINCF_TITLE" "$DEBUG_PEER_LIST_MSG" "$debug_peer_list"
 			if [ "$gv_Auswahl" ] ; then
 				debug_peer_list="$gv_Auswahl"
@@ -729,7 +729,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu debug_peer_list
 			;;
 		debug_peer_level)
-			# Debugging Level auswaehlen{{{
+			# Debugging Level auswählen{{{
 			loglevel
 			debug_peer_level="$WERT"
 			postconf -e debug_peer_level="$WERT"
@@ -745,8 +745,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu defer_transports
 			;;
 		delay_notice_recipient)
-			# Mailadresse, die bei Verspaetigungen benachrichtigt werden soll{{{
-			DELAY_NOTICE_RECIPIENT_MSG=$(gettext 'Geben Sie eine Mailadresse ein, die bei Mailverspaetigungen benachrichtigt wird (postmaster).')
+			# Mailadresse, die bei Verspätigungen benachrichtigt werden soll{{{
+			DELAY_NOTICE_RECIPIENT_MSG=$(gettext 'Geben Sie eine Mailadresse ein, die bei Mailverspätigungen benachrichtigt wird (postmaster).')
 			mail_address "$DELAY_NOTICE_RECIPIENT_MSG" "$delay_notice_recipient"
 			if [[ -n $gv_Mail_Adr ]] ; then
 				delay_notice_recipient="$gv_Mail_Adr"
@@ -770,7 +770,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu delay_warning_time
 			;;
 		deliver_lock_attempts)
-			# Maximal Anzahl fuer Datei-lock Versuche{{{
+			# Maximal Anzahl für Datei-lock Versuche{{{
 			#
 			number_input -i "$deliver_lock_attempts"
 			if [ "$NUMBER" ] ; then
@@ -781,7 +781,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu deliver_lock_attempts
 			;;
 		deliver_lock_delay)
-			# Wartezeit fuer erneutes zugreifen auf lock Datei{{{
+			# Wartezeit für erneutes zugreifen auf lock Datei{{{
 			#
 			number_input -s "${deliver_lock_delay%?}"
 			if [ "$NUMBER" ] ; then
@@ -819,8 +819,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu disable_vrfy_command
 			;;
 		double_bounce_sender)
-			# Absenderadresse fuer Double Bounces{{{
-			DOUBLE_BOUNCE_SENDER_MSG=$(gettext 'Geben Sie eine Absenderadresse fuer Double Bounces ein (double-bounce).')
+			# Absenderadresse für Double Bounces{{{
+			DOUBLE_BOUNCE_SENDER_MSG=$(gettext 'Geben Sie eine Absenderadresse für Double Bounces ein (double-bounce).')
 			inputbox "$MAINCF_TITLE" "$DOUBLE_BOUNCE_SENDER_MSG" "$double_bounce_sender"
 			if [ "$gv_Auswahl" ] ; then
 				double_bounce_sender="$gv_Auswahl"
@@ -833,7 +833,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu double_bounce_sender
 			;;
 		duplicate_filter_limit)
-			# Maximalzahl der gemerkten Empfaengern in der Adressliste von local und cleanup.{{{
+			# Maximalzahl der gemerkten Empfängern in der Adressliste von local und cleanup.{{{
 			#
 			number_input -i "$duplicate_filter_limit"
 			if [ "$NUMBER" ] ; then
@@ -844,7 +844,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu duplicate_filter_limit
 			;;
 		empty_address_recipient)
-			# Mailadresse fuer fehlende Angaben{{{
+			# Mailadresse für fehlende Angaben{{{
 			EMPTY_ADR_RECIPIENT_MSG=$(gettext 'Geben Sie eine Mailadresse ein, die bei fehlenden Angaben eingesetzt wird (MAILER-DAEMON).')
 			mail_address "$EMPTY_ADR_RECIPIENT_MSG" "$empty_address_recipient"
 			if [[ -n $gv_Mail_Adr ]] ; then
@@ -859,8 +859,8 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		expand_owner_alias)
 			# Soll bei ausgehenden ML-mails listenname-owner in die echte Mailadr.{{{
-			# aufgeloest werden?
-			EXPAND_OWNER_ALIAS_MSG=$(gettext 'Soll bei ausgehenden Mailinglistenmails der listenname-owner anhand der alias Tabelle direkt in die echte Mailadresse aufgeloest werden (ja/nein)?')
+			# aufgelöst werden?
+			EXPAND_OWNER_ALIAS_MSG=$(gettext 'Soll bei ausgehenden Mailinglistenmails der listenname-owner anhand der alias Tabelle direkt in die echte Mailadresse aufgelöst werden (ja/nein)?')
 			ja_nein_tausch "$MAINCF_TITLE" "$EXPAND_OWNER_ALIAS_MSG"
 			expand_owner_alias="$WERT"
 			postconf -e expand_owner_alias="$WERT"
@@ -869,7 +869,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		export_environment)
 			# export Variablen an externe Programme{{{
-			EXPORT_ENV_MSG=$(gettext 'Geben Sie die Variablen ein, die an externe Programme uebergeben werden sollen.')
+			EXPORT_ENV_MSG=$(gettext 'Geben Sie die Variablen ein, die an externe Programme übergeben werden sollen.')
 			inputbox "$MAINCF_TITLE" "$EXPORT_ENV_MSG" "$export_environment"
 			if [ "$gv_Auswahl" ] ; then
 				export_environment="$gv_Auswahl"
@@ -882,7 +882,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu export_environment
 			;;
 		extract_recipient_limit)
-			# Maximale Anzahl der Empfaenger, die Postfix aus dem Header liest.{{{
+			# Maximale Anzahl der Empfänger, die Postfix aus dem Header liest.{{{
 			#
 			number_input -i "$extract_recipient_limit"
 			if [ "$NUMBER" ] ; then
@@ -914,7 +914,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu fast_flush_domains
 			;;
 		fast_flush_purge_time)
-			# Maximale Haltezeit fuer eine leere fast-flush Logdatei{{{
+			# Maximale Haltezeit für eine leere fast-flush Logdatei{{{
 			#
 			number_input -d "${fast_flush_purge_time%?}"
 			if [ "$NUMBER" ] ; then
@@ -925,7 +925,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu fast_flush_purge_time
 			;;
 		fast_flush_refresh_time)
-			# Zeit, nach der die Logdatei fuer ein Ziel neu aufgebaut werden muss{{{
+			# Zeit, nach der die Logdatei für ein Ziel neu aufgebaut werden muss{{{
 			#
 			number_input -h "${fast_flush_refresh_time%?}"
 			if [ "$NUMBER" ] ; then
@@ -958,9 +958,9 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu fork_delay
 			;;
 		forward_path)
-			# Dateien/Variablen in denen nach persoehnlichen Weiterleitungen{{{
+			# Dateien/Variablen in denen nach persöhnlichen Weiterleitungen{{{
 			# eines Users gesucht wird.
-			FORWARD_PATH_MSG=$(gettext 'Geben Sie Dateien/Variablen ein, in denen nach persoehnlichen Weiterleitungen eines Nutzers gesucht wird (\$home/.forward).')
+			FORWARD_PATH_MSG=$(gettext 'Geben Sie Dateien/Variablen ein, in denen nach persöhnlichen Weiterleitungen eines Nutzers gesucht wird (\$home/.forward).')
 			inputbox "$MAINCF_TITLE" "$FORWARD_PATH_MSG" "$forward_path"
 			if [ "$gv_Auswahl" ] ; then
 				forward_path="`echo $gv_Auswahl | sed -e 's#\\$#\\\\$#g'`"
@@ -989,7 +989,7 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "active bounce defer deferred flush hold incoming trace"
 			#
 			U_OPT=k
-			QU_MSG=$(gettext 'Waehlen Sie die Warteschlangen aus, in denen ein Hashstruktur aufgebaut werden soll.')
+			QU_MSG=$(gettext 'Wählen Sie die Warteschlangen aus, in denen ein Hashstruktur aufgebaut werden soll.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
 			#
 			while [ "$gv_Auswahl" ] ; do
@@ -998,7 +998,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$QU_MSG" "$VALUE_ARRAY" "$hash_queue_names"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						if [ "`echo "$gv_Auswahl" | grep 'defer'`" ] ; then
 							hash_queue_names="$gv_Auswahl"
 							postconf -e hash_queue_names="$gv_Auswahl"
@@ -1021,7 +1021,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu hash_queue_names
 			;;
 		header_checks)
-			# Tabelle mit Filtermustern fuer den Header{{{
+			# Tabelle mit Filtermustern für den Header{{{
 			tab_support_choice "$gv_Auswahl"
 			header_checks="$MAPS"
 			postconf -e header_checks="$MAPS"
@@ -1029,7 +1029,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu header_checks
 			;;
 		header_size_limit)
-			# Maximale Laenge des Header.{{{
+			# Maximale Länge des Header.{{{
 			#
 			number_input -i "$header_size_limit"
 			if [ "$NUMBER" ] ; then
@@ -1089,7 +1089,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu import_environment
 			;;
 		in_flow_delay)
-			# Verzoegerung fuer einkommende Mails{{{
+			# Verzögerung für einkommende Mails{{{
 			#
 			number_input -s "${in_flow_delay%?}"
 			if [ "$NUMBER" ] ; then
@@ -1100,7 +1100,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu in_flow_delay
 			;;
 		inet_interfaces)
-			# Auf welchen Rechneradressen soll postfix einen Port oeffnen,{{{
+			# Auf welchen Rechneradressen soll postfix einen Port öffnen,{{{
 			# um Verbindungen anzunehmen.
 			INET_IFACE_MSG=$(gettext 'Geben Sie die IPs oder Rechnernamen ein auf denen Postfix auf Verbindungen entgegennimmt, getrennt durch ein Leerzeichen. Lesen Sie die Hilfe dazu.')
 			inputbox "$MAINCF_TITLE" "$INET_IFACE_MSG" "$inet_interfaces"
@@ -1121,7 +1121,7 @@ while [ "$gv_Auswahl" ] ; do
 				initial_destination_concurrency="$NUMBER"
 				postconf -e initial_destination_concurrency="$NUMBER"
 			else
-				MSG=$(gettext 'Der Wert von von \"initial_destination_concurrency\" darf nicht auf $NUMBER stehen, da sonst eine defekte Empfaengeradresse den gesamten Mailverkehr blockiert.')
+				MSG=$(gettext 'Der Wert von von \"initial_destination_concurrency\" darf nicht auf $NUMBER stehen, da sonst eine defekte Empfängeradresse den gesamten Mailverkehr blockiert.')
 				msgbox "$gv_Attention" "$MSG"
 			fi
 			#}}}
@@ -1139,7 +1139,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu ipc_idle
 			;;
 		ipc_timeout)
-			# genereller Timeout fuer die IPC{{{
+			# genereller Timeout für die IPC{{{
 			#
 			number_input -s "${ipc_timeout%?}"
 			if [ "$NUMBER" ] ; then
@@ -1150,7 +1150,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu ipc_timeout
 			;;
 		line_length_limit)
-			# Maximallaenge einer Zeile in Bytes, danach wird sie umgebrochen.{{{
+			# Maximallänge einer Zeile in Bytes, danach wird sie umgebrochen.{{{
 			#
 			number_input -b "$line_length_limit"
 			if [ "$NUMBER" ] ; then
@@ -1175,8 +1175,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu luser_relay
 			;;
 		maps_rbl_domains)
-			# Domaineingabe fuer RBL Pruefung{{{
-			MAPS_RBL_DOMAINS_MSG=$(gettext 'Geben Sie eine Liste von Domains an, getrennt durch Komma und Leerzeichen, die einer RBL Pruefung unterzogen werden sollen.')
+			# Domaineingabe für RBL Prüfung{{{
+			MAPS_RBL_DOMAINS_MSG=$(gettext 'Geben Sie eine Liste von Domains an, getrennt durch Komma und Leerzeichen, die einer RBL Prüfung unterzogen werden sollen.')
 			inputbox "$MAINCF_TITLE" "$MAPS_RBL_DOMAINS_MSG" "$maps_rbl_domains"
 			if [ "$gv_Auswahl" ] ; then
 				maps_rbl_domains="$gv_Auswahl"
@@ -1194,7 +1194,7 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "envelope_sender envelope_recipient header_sender header_recipient"
 			#
 			U_OPT=k
-			MASK_MSG=$(gettext 'Waehlen Sie ein oder mehrere Bereiche in denen Postfix Mailadressen maskieren soll.')
+			MASK_MSG=$(gettext 'Wählen Sie ein oder mehrere Bereiche in denen Postfix Mailadressen maskieren soll.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
 			#
 			while [ "$gv_Auswahl" ] ; do
@@ -1203,7 +1203,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$MASK_MSG" "$VALUE_ARRAY" "$masquerade_classes"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						masquerade_classes="$gv_Auswahl"
 						postconf -e masquerade_classes="$gv_Auswahl"
 						break
@@ -1217,7 +1217,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		masquerade_domains)
 			# Domains eingeben, die maskiert werden sollen{{{
-			MASQ_DOMAINS_MSG=$(gettext 'Geben Sie die Domains, getrennt durch ein Leerzeichen an, die Sie maskieren moechten. Lesen Sie bitte die Hilfe dazu.')
+			MASQ_DOMAINS_MSG=$(gettext 'Geben Sie die Domains, getrennt durch ein Leerzeichen an, die Sie maskieren möchten. Lesen Sie bitte die Hilfe dazu.')
 			inputbox "$MAINCF_TITLE" "$MASQ_DOMAINS_MSG" "$masquerade_domains"
 			if [ "$gv_Auswahl" ] ; then
 				masquerade_domains="$gv_Auswahl"
@@ -1230,7 +1230,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu masquerade_domains
 			;;
 		masquerade_exceptions)
-			# Mail Users auswaehlen, der vom masquerading ausgenommen wird{{{
+			# Mail Users auswählen, der vom masquerading ausgenommen wird{{{
 			user_auswahl
 			masquerade_exceptions="$WERT"
 			postconf -e masquerade_exceptions="$WERT"
@@ -1238,7 +1238,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu masquerade_exceptions
 			;;
 		max_idle)
-			# Idle Zeit fuer Postfix Module{{{
+			# Idle Zeit für Postfix Module{{{
 			number_input -s "${max_idle%?}"
 			if [ "$NUMBER" ] ; then
 				max_idle="$NUMBER"
@@ -1248,7 +1248,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu max_idle
 			;;
 		max_use)
-			# Anzahl der maximalen Jobs, fuer Module{{{
+			# Anzahl der maximalen Jobs, für Module{{{
 			number_input -i "$max_use"
 			if [ "$NUMBER" ] ; then
 				max_use="$NUMBER"
@@ -1278,7 +1278,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu maximal_queue_lifetime
 			;;
 		message_size_limit)
-			# Maximalgroesse einer Mail.{{{
+			# Maximalgrösse einer Mail.{{{
 			number_input -b "$message_size_limit"
 			if [ "$NUMBER" ] ; then
 				message_size_limit="$NUMBER"
@@ -1298,7 +1298,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu minimal_backoff_time
 			;;
 		mime_header_checks)
-			# Tabelle mit Filtermustern fuer den Mime Header{{{
+			# Tabelle mit Filtermustern für den Mime Header{{{
 			tab_support_choice "$gv_Auswahl"
 			mime_header_checks="$MAPS"
 			postconf -e mime_header_checks="$MAPS"
@@ -1306,9 +1306,9 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu mime_header_checks
 			;;
 		mydestination)
-			# Eine Liste von Domains fuer die Postfix der Final Destination.{{{
+			# Eine Liste von Domains für die Postfix der Final Destination.{{{
 			# ist und sie local zustellt.
-			MYDESTINATION_MSG=$(gettext 'Geben Sie eine Liste von Domains ein fuer die Postfix die Mails lokal zustellt, getrennt durch ein Komma und Leerzeichen (Bsp. \$myhostname, localhost.\$mydomain, \$mydomain).')
+			MYDESTINATION_MSG=$(gettext 'Geben Sie eine Liste von Domains ein für die Postfix die Mails lokal zustellt, getrennt durch ein Komma und Leerzeichen (Bsp. \$myhostname, localhost.\$mydomain, \$mydomain).')
 			inputbox "$MAINCF_TITLE" "$MYDESTINATION_MSG" "$mydestination"
 			if [ "$gv_Auswahl" ] ; then
 				mydestination="${gv_Auswahl//\$/\\$}"
@@ -1320,9 +1320,9 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu mydestination
 			;;
 		mydomain)
-			# Fuer welche domain ist dieser Mail Server zustaendig.{{{
+			# Fuer welche domain ist dieser Mail Server zuständig.{{{
 			# Standard ist der locale host.
-			MYDOMAIN_MSG=$(gettext 'Geben Sie den Domainnamen ein, fuer den dieser Mail Server zustaendig ist (Bsp. domain.de).')
+			MYDOMAIN_MSG=$(gettext 'Geben Sie den Domainnamen ein, für den dieser Mail Server zuständig ist (Bsp. domain.de).')
 			inputbox "$MAINCF_TITLE" "$MYDOMAIN_MSG" "$mydomain"
 			if [ "$gv_Auswahl" -a "${(w)#gv_Auswahl}" = 1 ] ; then
 				mydomain="$gv_Auswahl"
@@ -1347,7 +1347,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu myhostname
 			;;
 		mynetworks)
-			# Tabelle fuer IP-Nummern/Bereiche, die relayen duerfen{{{
+			# Tabelle für IP-Nummern/Bereiche, die relayen duerfen{{{
 			tab_support_choice "$gv_Auswahl"
 			mynetworks="$MAPS"
 			postconf -e mynetworks="$MAPS"
@@ -1356,7 +1356,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		mynetworks_style)
 			# wie mynetworks, ohne IP-Bereiche{{{
-			MYNET_MSG=$(gettext 'Waehlen Sie die Bereiche aus die ueber diesen SMTP Server relayen durfen.')
+			MYNET_MSG=$(gettext 'Wählen Sie die Bereiche aus die über diesen SMTP Server relayen durfen.')
 			MYNET_MENU=(class \"\" host \"\" subnet \"\")
 			menubox "$mynetworks_style" "$MAINCF_TITLE" "$MYNET_MSG" "$MYNET_MENU"
 			while [ "$gv_Auswahl" ] ; do
@@ -1365,7 +1365,7 @@ while [ "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$MYNET_MSG" "$MYNET_MENU"
 						;;
 					*)
-						# uebernehmen
+						# übernehmen
 						mynetworks_style="$gv_Auswahl"
 						postconf -e mynetworks_style="$gv_Auswahl"
 						break
@@ -1377,7 +1377,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		myorigin)
 			# Hostname der bei der Erzeugung neuer Mails benutzt wird{{{
-			H_MSG=$(gettext 'Waehlen Sie den Rechnernamen der bei der Erzeugung neuer Mails benutzt werden soll.')
+			H_MSG=$(gettext 'Wählen Sie den Rechnernamen der bei der Erzeugung neuer Mails benutzt werden soll.')
 			H_MENU=(localhost \"\" \"$myhostname\" \"\" \"$mydomain\" \"\")
 			menubox "$myorigin" "$MAINCF_TITLE" "$H_MSG" "$H_MENU"
 			#
@@ -1387,7 +1387,7 @@ while [ "$gv_Auswahl" ] ; do
 						menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$H_MSG" "$H_MENU"
 						;;
 					*)	#
-						# uebernehmen
+						# übernehmen
 						myorigin="$gv_Auswahl"
 						postconf -e myorigin="$gv_Auswahl"
 						break
@@ -1398,7 +1398,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu myorigin
 			;;
 		nested_header_checks)
-			# Tabelle mit Filtermustern der Mailanhaenge Header{{{
+			# Tabelle mit Filtermustern der Mailanhänge Header{{{
 			tab_support_choice "$gv_Auswahl"
 			nested_header_checks="$MAPS"
 			postconf -e nested_header_checks="$MAPS"
@@ -1411,7 +1411,7 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "2bounce bounce delay policy resource software"
 			#
 			U_OPT=k
-			N_MSG=$(gettext 'Waehlen Sie die Bereiche aus, bei denen der Postmaster informiert wird.')
+			N_MSG=$(gettext 'Wählen Sie die Bereiche aus, bei denen der Postmaster informiert wird.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
 			#
 			while [ "$gv_Auswahl" ] ; do
@@ -1420,7 +1420,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$N_MSG" "$VALUE_ARRAY" "$notify_classes"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						notify_classes="$gv_Auswahl"
 						postconf -e notify_classes="$gv_Auswahl"
 						break
@@ -1433,15 +1433,15 @@ while [ "$gv_Auswahl" ] ; do
 			#}}}
 			conf_main_menu notify_classes
 			;;
-		owner_request_special)
-			# Soll eine besondere Behandlung fuer die Adressen owner-listenname und{{{
-			# listenname-request aktiviert werden?
-			OWNER_REQUEST_SPECIAL_MSG=$(gettext 'Soll eine besondere Behandlung fuer die Adressen owner-listenname und listenname-request aktiviert werden (ja/nein)?')
+		owner_reqüst_special)
+			# Soll eine besondere Behandlung für die Adressen owner-listenname und{{{
+			# listenname-reqüst aktiviert werden?
+			OWNER_REQUEST_SPECIAL_MSG=$(gettext 'Soll eine besondere Behandlung für die Adressen owner-listenname und listenname-reqüst aktiviert werden (ja/nein)?')
 			ja_nein_tausch "$MAINCF_TITLE" "$OWNER_REQUEST_SPECIAL_MSG"
-			owner_request_special="$WERT"
-			postconf -e owner_request_special="$WERT"
+			owner_reqüst_special="$WERT"
+			postconf -e owner_reqüst_special="$WERT"
 			#}}}
-			conf_main_menu owner_request_special
+			conf_main_menu owner_reqüst_special
 			;;
 		parent_domain_matches_subdomains)
 			# Parameter, in denen eine Domainangabe automatisch{{{
@@ -1450,7 +1450,7 @@ while [ "$gv_Auswahl" ] ; do
 			is_value "debug_peer_list fast_flush_domains mynetworks permit_mx_backup_networks qmqpd_authorized_clients relay_domains smtpd_access_maps"
 			#
 			U_OPT=k
-			P_MSG=$(gettext 'Waehlen Sie die Paremeter aus in denen ein Domainangabe automatisch auch deren Subdomain miterfasst.')
+			P_MSG=$(gettext 'Wählen Sie die Paremeter aus in denen ein Domainangabe automatisch auch deren Subdomain miterfasst.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
 			#
 			while [ "$gv_Auswahl" ] ; do
@@ -1459,7 +1459,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$P_MSG" "$VALUE_ARRAY" "$parent_domain_matches_subdomains" 
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						parent_domain_matches_subdomains="$gv_Auswahl"
 						postconf -e parent_domain_matches_subdomains="$gv_Auswahl"
 						break
@@ -1473,16 +1473,16 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		permit_mx_backup_networks)
 			# Postfix wird hier angewiesen nur IP-Netze zu relayen,{{{
-			# wenn nur ein MX-Record auf diesen Server zeigt. Es muss der hoehste
+			# wenn nur ein MX-Record auf diesen Server zeigt. Es muss der höhste
 			# MX-Host aus dem hiergenannten Netz sein.
-			PERMIT_MX_BACKUP_NETWORKS_MSG=$(gettext 'Geben Sie die IP-Netze ein, fuer die Postfix Mails annimmt/relayed wenn ein MX-Record auf diese Server zeigt. Es muss der hoechste MX-Host sein, sonst verweigert Postfix die Annahme (Bsp.: 192.168.0.0/16 192.168.10.0/24).')
+			PERMIT_MX_BACKUP_NETWORKS_MSG=$(gettext 'Geben Sie die IP-Netze ein, für die Postfix Mails annimmt/relayed wenn ein MX-Record auf diese Server zeigt. Es muss der höchste MX-Host sein, sonst verweigert Postfix die Annahme (Bsp.: 192.168.0.0/16 192.168.10.0/24).')
 			inputbox "$MAINCF_TITLE" "$PERMIT_MX_BACKUP_NETWORKS_MSG" "$permit_mx_backup_networks"
 			if [ "$gv_Auswahl" ] ; then
-				# Alle eingebenen IP's ueberpruefen
+				# Alle eingebenen IP's überprüfen
 				unset -- permit_mx_backup_networks_auswahl
 				Anz=0
 				for i in $gv_Auswahl ; {
-					# Pruefen ob die Eingabe richtig war.
+					# Prüfen ob die Eingabe richtig war.
 					ip_analyse "$i"
 					if [ "$gv_Ip_Adr" ] ; then
 						(( Anz++ ))
@@ -1505,19 +1505,19 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu permit_mx_backup_networks
 			;;
 		prepend_delivered_header)
-			# In welchen Faellen soll ein "Delivered-To:" Header {{{
-			# in die Mail eingefuegt werden
+			# In welchen Fällen soll ein "Delivered-To:" Header {{{
+			# in die Mail eingefügt werden
 			generate_is_file "${prepend_delivered_header//,/}"
 			is_value "command file forward"
 			#
-			D_MSG=$(gettext 'Waehlen Sie die Faelle aus bei denen ein \"Delivered-To:\" Header eingefuegt werden soll.')
+			D_MSG=$(gettext 'Wählen Sie die Fälle aus bei denen ein \"Delivered-To:\" Header eingefügt werden soll.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help main_help
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$D_MSG" "$VALUE_ARRAY" "$prepend_delivered_header"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						prepend_delivered_header="$gv_Auswahl"
 						postconf -e prepend_delivered_header="$gv_Auswahl"
 						break
@@ -1530,7 +1530,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu prepend_delivered_header
 			;;
 		process_id_directory)
-			# Verzeichnis fuer Dateien mit Prozess ID's{{{
+			# Verzeichnis für Dateien mit Prozess ID's{{{
 			#
 			dselect "/var/spool/postfix"
 			if [ "$VERZ" ] ; then
@@ -1544,12 +1544,12 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu process_id_directory
 			;;
 		propagate_unmatched_extensions)
-			# In welchen Tabellen sollen auch Mailextensionen beruecksichtigt werden{{{
+			# In welchen Tabellen sollen auch Mailextensionen berücksichtigt werden{{{
 			generate_is_file "${propagate_unmatched_extensions//,/}"
 			is_value "alias canonical forward generic include virtual"
 			#
 			U_OPT=k
-			PR_MSG=$(gettext 'Waehlen Sie die Tabellen aus in denen auch Mailerweiterungen beruecksichtig werden sollen.')
+			PR_MSG=$(gettext 'Wählen Sie die Tabellen aus in denen auch Mailerweiterungen berücksichtig werden sollen.')
 			checklist "${DEFAULT_VALUE[1]}" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
 			#
 			while [ "$gv_Auswahl" ] ; do
@@ -1558,7 +1558,7 @@ while [ "$gv_Auswahl" ] ; do
 						U_OPT=k
 						checklist "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$PR_MSG" "$VALUE_ARRAY" "$propagate_unmatched_extensions"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						propagate_unmatched_extensions="$gv_Auswahl"
 						postconf -e propagate_unmatched_extensions="$gv_Auswahl"
 						break
@@ -1575,7 +1575,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		recipient_bcc_maps)
 			# Tabelle, an die "Blind Carbon-Copy" Mails geschickt werden, wenn{{{
-			# der dementsprechende Empfaenger erkannt wird.
+			# der dementsprechende Empfänger erkannt wird.
 			tab_support_choice "$gv_Auswahl"
 			recipient_bcc_maps="$MAPS"
 			postconf -e recipient_bcc_maps="$MAPS"
@@ -1583,7 +1583,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu recipient_bcc_maps
 			;;
 		recipient_canonical_maps)
-			# canonical Tabelle fuer Empfaenger Adressen{{{
+			# canonical Tabelle für Empfänger Adressen{{{
 			tab_support_choice "$gv_Auswahl"
 			recipient_canonical_maps="$MAPS"
 			postconf -e recipient_canonical_maps="$MAPS"
@@ -1593,7 +1593,7 @@ while [ "$gv_Auswahl" ] ; do
 		recipient_delimiter)
 			# Trennzeichen zwischen User und Adresserweiterung{{{
 			U_OPT=-
-			TR_MSG=$(gettext 'Waehlen Sie ein Trennzeichen aus mit der die Mailerweiterung abgetrennt wird.')
+			TR_MSG=$(gettext 'Wählen Sie ein Trennzeichen aus mit der die Mailerweiterung abgetrennt wird.')
 			# Werte mit on oder off belegen ($VERP_MENU).
 			verp_delimiter "$recipient_delimiter"
 			radiolist "" "$MAINCF_TITLE" "$TR_MSG" "$VERP_MENU" "$recipient_delimiter"
@@ -1614,7 +1614,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu recipient_delimiter
 			;;
 		relocated_maps)
-			# Tabelle mit relocated Eintraegen{{{
+			# Tabelle mit relocated Einträgen{{{
 			tab_support_choice "$gv_Auswahl"
 			relocated_maps="$MAPS"
 			postconf -e relocated_maps="$MAPS"
@@ -1623,7 +1623,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		require_home_directory)
 			# Soll die Existenz eines HOME-Verzeichniss erzwungen werden?{{{
-			REQUIRE_HOME_DIR_MSG=$(gettext 'Soll die Existenz eines Home Verzeichnisses, eines lokalen Empfaengers erzwungen werden (ja/nein)?')
+			REQUIRE_HOME_DIR_MSG=$(gettext 'Soll die Existenz eines Home Verzeichnisses, eines lokalen Empfängers erzwungen werden (ja/nein)?')
 			ja_nein_tausch "$MAINCF_TITLE" "$REQUIRE_HOME_DIR_MSG"
 			require_home_directory="$WERT"
 			postconf -e require_home_directory="$WERT"
@@ -1631,7 +1631,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu require_home_directory
 			;;
 		sender_canonical_maps)
-			# canonical Tabelle fuer Sender Adressen{{{
+			# canonical Tabelle für Sender Adressen{{{
 			tab_support_choice "$gv_Auswahl"
 			sender_canonical_maps="$MAPS"
 			postconf -e sender_canonical_maps="$MAPS"
@@ -1665,7 +1665,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu sendmail_path
 			;;
 		service_throttle_time)
-			# Wartezeit fuer ein abgestuerztes Modul bis zum Neustart{{{
+			# Wartezeit für ein abgestuerztes Modul bis zum Neustart{{{
 			#
 			number_input -s "${service_throttle_time%?}"
 			if [ "$NUMBER" ] ; then
@@ -1676,19 +1676,19 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu service_throttle_time
 			;;
 		setgid_group)
-			# GroupID fuer die maildrop Queue{{{
+			# GroupID für die maildrop Queue{{{
 			unset -- SETGID_GROUP_MENU
 			user_group_check -g
 			if (( $? == 0 )) ; then
 				SETGID_GROUP_MENU=($U_G_ARRAY)
-				SETGID_GROUP_MSG=$(gettext 'Waehlen Sie eine Gruppe aus, der die \"maildrop\" Warteschlange gehoert.')
+				SETGID_GROUP_MSG=$(gettext 'Wählen Sie eine Gruppe aus, der die \"maildrop\" Warteschlange gehört.')
 				menubox "$setgid_group" "$MAINCF_TITLE" "$SETGID_GROUP_MSG" "$SETGID_GROUP_MENU"
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help share/group_help
 							menubox "${gv_Auswahl#HELP }" "$MAINCF_TITLE" "$SETGID_GROUP_MSG" "$SETGID_GROUP_MENU"
 							;;
-						*)	# uebernehmen
+						*)	# übernehmen
 							setgid_group="$gv_Auswahl"
 							postconf -e setgid_group="$gv_Auswahl"
 							break
@@ -1709,7 +1709,7 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu soft_bounce
 			;;
 		stale_lock_time)
-			# Alter, nach denen liegendengebliebene Lockdateien geloescht werden{{{
+			# Alter, nach denen liegendengebliebene Lockdateien gelöscht werden{{{
 			#
 			number_input -s "${stale_lock_time%?}"
 			if [ "$NUMBER" ] ; then
@@ -1748,8 +1748,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu swap_bangpath
 			;;
 		syslog_facility)
-			# Ausgabekanal fuer Logmeldungen an syslogd{{{
-			SYSLOG_FACILITY_MSG=$(gettext 'Geben Sie den Ausgabekanal fuer Logmeldungen, an den Syslogd ein (mail,news,..., man 5 syslog.conf).')
+			# Ausgabekanal für Logmeldungen an syslogd{{{
+			SYSLOG_FACILITY_MSG=$(gettext 'Geben Sie den Ausgabekanal für Logmeldungen, an den Syslogd ein (mail,news,..., man 5 syslog.conf).')
 			inputbox "$MAINCF_TITLE" "$SYSLOG_FACILITY_MSG" "$syslog_facility"
 			if [ "$gv_Auswahl" ] ; then
 				syslog_facility="$gv_Auswahl"
@@ -1785,8 +1785,8 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu transport_maps
 			;;
 		undisclosed_recipients_header)
-			# Header, der eingefuegt wird bei keinem Header To{{{
-			UNDISCLOSED_RECIPIENTS_HEADER_MSG=$(gettext 'Geben Sie den Header ein der eingefuegt werden soll, wenn kein Header "To:" vorgefunden wird (To: undisclosed-recipients:;).')
+			# Header, der eingefügt wird bei keinem Header To{{{
+			UNDISCLOSED_RECIPIENTS_HEADER_MSG=$(gettext 'Geben Sie den Header ein der eingefügt werden soll, wenn kein Header "To:" vorgefunden wird (To: undisclosed-recipients:;).')
 			inputbox "$MAINCF_TITLE" "$UNDISCLOSED_RECIPIENTS_HEADER_MSG" "$undisclosed_recipients_header"
 			if [ "$gv_Auswahl" ] ; then
 				undisclosed_recipients_header="$gv_Auswahl"
@@ -1799,9 +1799,9 @@ while [ "$gv_Auswahl" ] ; do
 			conf_main_menu undisclosed_recipients_header
 			;;
 		verp_delimiter_filter)
-			# Zeichen, die fuer eine Kodierung der Mailadresse bei VERP genutzt{{{
-			# werden koennen
-			VERP_MSG=$(gettext 'Waehlen Sie die Zeichen die bei der Kodierung von Mail Adressen, bei VERP, genutzt werden sollen aus.')
+			# Zeichen, die für eine Kodierung der Mailadresse bei VERP genutzt{{{
+			# werden können
+			VERP_MSG=$(gettext 'Wählen Sie die Zeichen die bei der Kodierung von Mail Adressen, bei VERP, genutzt werden sollen aus.')
 			# Werte mit on oder off belegen ($VERP_MENU).
 			verp_delimiter "$verp_delimiter_filter"
 			#

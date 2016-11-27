@@ -38,12 +38,12 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Arbeitsverzeichnis erstellen. Alle sind zufallsmaessig erstellt.
+# Arbeitsverzeichnis erstellen. Alle sind zufallsmässig erstellt.
 
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
 # ben�tigten Funktionen laden. Die Funktion sys_conf wird bereits
-# von der Funktion script_init ausgefuehrt.
+# von der Funktion script_init ausgeführt.
 # autoload -U ...
 
 #
@@ -76,7 +76,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
 		${gv_Configuration}1)
-			# Selber weiter machen ;-), urspruenglicher Menuepunkt wird markiert
+			# Selber weiter machen ;-), ursprünglicher Menuepunkt wird markiert
             # und der Fokus steht auf diesem.
 			main_menu "${gv_Configuration}1"
 			;;

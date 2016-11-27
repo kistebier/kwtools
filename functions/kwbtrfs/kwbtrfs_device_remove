@@ -13,12 +13,12 @@ kwbtrfs_device_remove() {
 		menubox "$1" "$REMOVE_TITLE" "$gv_Menupoint" "$REMOVE_MENU"
 	}
 	## }}}
-		# Funktion (balance_remove_data), Daten gleichmaessig verteilen# {{{
+		# Funktion (balance_remove_data), Daten gleichmässig verteilen# {{{
 		#
 		# usage: balance_remove_data
 		#
 		balance_remove_data() {
-			# Daten gleichmaessig verteilen
+			# Daten gleichmässig verteilen
 			btrfs balance start -f -v -d -m -s "$IS_DRIVE" 2>&1 | \
 				progressbox "$REMOVE_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
@@ -36,7 +36,7 @@ kwbtrfs_device_remove() {
 					device_remove_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Is_Drive)
-					# bestehendes Btrfs-Laufwerk auswaehlen# {{{
+					# bestehendes Btrfs-Laufwerk auswählen# {{{
 					btrfs_choice_menu "" "$REMOVE_TITLE" "$BTRFS_PATH_E"
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -58,7 +58,7 @@ kwbtrfs_device_remove() {
 					device_remove_menu "$lv_Is_Drive"
 					;;
 				$lv_Devices)
-					# Laufwerke auswaehlen die entfernt werden sollen.# {{{
+					# Laufwerke auswählen die entfernt werden sollen.# {{{
 					if [[ -n $Index ]] ; then
 						MD_DEV_M=(${BTRFS_MD_M[Index]})
 						if [[ -n ${MD_DEV_M[1]} ]] ; then
@@ -83,7 +83,7 @@ kwbtrfs_device_remove() {
 							return 1
 						fi
 					else
-						MSG=$(gettext 'Sie muessen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
+						MSG=$(gettext 'Sie müssen erst den Menuepunkt \"$lv_Is_Drive\" mit einem wert belegen.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					## }}}
@@ -96,11 +96,11 @@ kwbtrfs_device_remove() {
 						btrfs device remove ${=DRIVE} "$IS_DRIVE" 2>&1 | \
 							progressbox "$REMOVE_TITLE" "$REMOVE_MSG" || \
 							(prog_failure ; return 1)
-						# Daten gleichmaessig verteilen
+						# Daten gleichmässig verteilen
 						balance_remove_data || return 1
 						return 0
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
 						device_remove_menu "$lv_Is_Drive"
 					fi

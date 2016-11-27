@@ -40,13 +40,13 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check wvdial
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
 
-# auf Root pruefen.
+# auf Root prüfen.
 root_check
 
 # Nachdem das Script initialiiert wurde, kann man die anderen
@@ -55,7 +55,7 @@ autoload -U wvdialconf_input wvdial_config
 
 # Variablen
 WVDIAL_CONF="/etc/wvdial.conf"
-CHANGE_MSG=$(gettext 'Waehlen Sie einen Konfigurationsabschnitt aus.')
+CHANGE_MSG=$(gettext 'Wählen Sie einen Konfigurationsabschnitt aus.')
 
 # Funktion main_menu# {{{
 #
@@ -213,16 +213,16 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Create)
 			# eine neue Konfiguration anlegen# {{{
-			# Standard Variablen belegen und loeschen.
+			# Standard Variablen belegen und löschen.
 			export CREATE=yes
 			SPEED=57600
 			INIT=ATZ
 			unset -- DIAL_CONF_CHAPTER USER_NAME INIT1 INIT2 INIT3 MODEM PASS PHONE
 			#
-			INPUT_DIAL_MSG=$(gettext 'Geben Sie einen Namen fuer diese Verbindung ein.')
+			INPUT_DIAL_MSG=$(gettext 'Geben Sie einen Namen für diese Verbindung ein.')
 			inputbox "$gv_Configuration" "$INPUT_DIAL_MSG"
 			if [ -n "$gv_Auswahl" ] ; then
-				# Pruefen ob dieser Verbindungsname schon existiert.
+				# Prüfen ob dieser Verbindungsname schon existiert.
 				if [ -z "`grep "\[Dialer.*${gv_Auswahl}\]" "$WVDIAL_CONF"`" ] ; then
 					DIAL_CONF_CHAPTER="$gv_Auswahl"
 					wvdialconf_input
@@ -239,7 +239,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Create
 			;;
 		$gv_Change)
-			# Eintraege veraendern# {{{
+			# Einträge verändern# {{{
 			if [ -f "$WVDIAL_CONF" ] ; then
 				export CREATE=no
 				autoload -U wvdialconf_change
@@ -251,7 +251,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Change
 			;;
 		$gv_Delete)
-			# Eintraege loeschen# {{{
+			# Einträge löschen# {{{
 			if [ -f "$WVDIAL_CONF" ] ; then
 				autoload -U wvdialconf_delete
 				wvdialconf_delete

@@ -1,12 +1,12 @@
 # Funktion gpgcrypt_conf{{{
 #
-# benoetigt die Funktion net_conf
+# benötigt die Funktion net_conf
 #
 # usage: gpgcrypt_conf
 gpgcrypt_conf() {
-	lv_Default_Keyid_Long=$(gettext 'Standard_Schluessel_ID_lang')
-	lv_Default_Keyid=$(gettext 'Standard_Schluessel_ID')
-	lv_Keyserv=$(gettext 'Schluessel_Server')
+	lv_Default_Keyid_Long=$(gettext 'Standard_Schlüssel_ID_lang')
+	lv_Default_Keyid=$(gettext 'Standard_Schlüssel_ID')
+	lv_Keyserv=$(gettext 'Schlüssel_Server')
 	#
 	# Falls die Datei $PGP_OPTIONS nicht vorhanden ist Skeleton Datei kopieren.
 	if [ ! -f $PGP_OPTIONS ] ; then
@@ -32,7 +32,7 @@ gpgcrypt_conf() {
 				konf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Keyserv)
-				# Schluessel Server angeben.{{{
+				# Schlüssel Server angeben.{{{
 				#
 				PROTOCOL=${${(s,:,)${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}}[1]}
 				KEY_SERV=${${${(s,:,)${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}}[2]}##*/}
@@ -61,9 +61,9 @@ gpgcrypt_conf() {
 							keyserv_menue "${gv_Auswahl#HELP }"
 							;;
 						$lv_Protocol)
-							# Protokoll auswaehlen{{{
+							# Protokoll auswählen{{{
 							Prot=(hkp \"\" hkps \"\" ldap \"\" mailto \"\")
-							PROT_MSG=$(gettext 'Waehlen Sie hier das Protokoll aus, welches benutzt werden soll.')
+							PROT_MSG=$(gettext 'Wählen Sie hier das Protokoll aus, welches benutzt werden soll.')
 							menubox "$PROTOCOL" "$KEY_TITLE" "$PROT_MSG" "$Prot"
 							while [ "$gv_Auswahl" ] ; do
 								case "$gv_Auswahl" in
@@ -79,8 +79,8 @@ gpgcrypt_conf() {
 							keyserv_menue $lv_Protocol
 							;;
 						$lv_Keyserv)
-							# Schluesselserver eingeben{{{
-							HOSTNAME_MSG=$(gettext 'Geben Sie hier bitte einen Schluesselserver ein (z. B. hkps.pool.sks-keyservers.net).')
+							# Schlüsselserver eingeben{{{
+							HOSTNAME_MSG=$(gettext 'Geben Sie hier bitte einen Schlüsselserver ein (z. B. hkps.pool.sks-keyservers.net).')
 							conf_hostname -a "$HOSTNAME_MSG" "$KEY_SERV"
 							if [ "$gv_Hostname" ] ; then
 								KEY_SERV="$gv_Hostname"
@@ -91,8 +91,8 @@ gpgcrypt_conf() {
 							keyserv_menue $lv_Keyserv
 							;;
 						$lv_Mail_Address)
-							# Schluesselserver eingeben{{{
-							MAIL_ADR_MSG=$(gettext 'Geben Sie hier bitte einen E-Mail Schluesselserver ein (z. B. pgp-public-keys@keys.pgp.net).')
+							# Schlüsselserver eingeben{{{
+							MAIL_ADR_MSG=$(gettext 'Geben Sie hier bitte einen E-Mail Schlüsselserver ein (z. B. pgp-public-keys@keys.pgp.net).')
 							mail_address "$MAIL_ADR_MSG" "$MAIL_ADR"
 							if [ "$gv_Mail_Adr" ] ; then
 								MAIL_ADR="$gv_Mail_Adr"
@@ -103,8 +103,8 @@ gpgcrypt_conf() {
 							keyserv_menue $lv_Mail_Address
 							;;
 						$lv_Port)
-							# Port fuer den Schluesselserver eingeben{{{
-							MSG=$(gettext 'Geben Sie bitte den Port fuer den Schluesselserver ein.')
+							# Port für den Schlüsselserver eingeben{{{
+							MSG=$(gettext 'Geben Sie bitte den Port für den Schlüsselserver ein.')
 							number_input "$KEY_TITLE" "$MSG" "$PORT"
 							if [ "$NUMBER" ] ; then
 								PORT="$NUMBER"
@@ -124,7 +124,7 @@ gpgcrypt_conf() {
 							elif [ "$KEY_SERV" ] ; then
 								KEY_SERV_ALL="$KEY_SERV"
 							else
-								MSG=$(gettext 'Sie muessen erst einen Schluesselserver angeben.')
+								MSG=$(gettext 'Sie müssen erst einen Schlüsselserver angeben.')
 								msgbox "$gv_Attention" "$MSG"
 							fi
 							break
@@ -137,7 +137,7 @@ gpgcrypt_conf() {
 				konf_menue $lv_Keyserv
 				;;
 			$lv_Default_Keyid)
-				# Standard_Schluessel_ID auswaehlen, mit der unterschrieben wird.# {{{
+				# Standard_Schlüssel_ID auswählen, mit der unterschrieben wird.# {{{
 				# belegt die Variablen TRUSTED_KEY und DEFAULT_KEY.
 				autoload -U gpg_getkeys_id
 				gpg_getkeys_id
@@ -153,7 +153,7 @@ gpgcrypt_conf() {
 				if [ -n "$DEFAULT_KEY" ] ; then
 					gpgcrypt_config
 				else
-					MSG=$(gettext 'Sie muessen mindestens den Menuepunkt Standard_Schluessel_ID mit einem Wert belegen.')
+					MSG=$(gettext 'Sie müssen mindestens den Menuepunkt Standard_Schlüssel_ID mit einem Wert belegen.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				break

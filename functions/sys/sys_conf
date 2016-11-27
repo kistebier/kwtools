@@ -1,7 +1,7 @@
 # Funktion sys_conf, verschiedenen Funktionen,# {{{
 # um das OS zu administrieren.
 #
-# usage: sys_conf ausfuehren und dann eine der folgenden Funktionen
+# usage: sys_conf ausführen und dann eine der folgenden Funktionen
 # Beispiele:
 # VAR=$(check_memory)
 # no_memory_msg
@@ -13,7 +13,7 @@
 #
 #######################################
 # TODO:
-# gerade bei Passwoertern
+# gerade bei Passwörtern
 #  >&3- bla?
 #######################################
 #
@@ -28,14 +28,14 @@ sys_conf() {
 		local Anz Date
 		unset -- Anz
 		TITLE=$(gettext 'Kalender')
-		MSG=$(gettext 'Stellen Sie bitte Ihr Datum ein und bestaetigen Sie dies.')
+		MSG=$(gettext 'Stellen Sie bitte Ihr Datum ein und bestätigen Sie dies.')
 		if [ "$#" -le 1 ] ; then
 			if [ "${(c)#1}" -eq 8 ] ; then
 				Date="`date -d $1 +%d.%m.%Y`"
 			fi
         fi
 
-		# Berechnung der Fenstergroesse (Zeilen).
+		# Berechnung der Fenstergrösse (Zeilen).
 		count_display_line -l 4 "$MSG"
 		
 		DialogTitle="--title \"${gv_ScriptName}::${TITLE}\" $DialogBackTitle"
@@ -47,7 +47,7 @@ sys_conf() {
 	#}}}
 	# Funktion (checklist), mehrfach Auswahl{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: checklist "DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY" [ VAR ]
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
@@ -56,9 +56,9 @@ sys_conf() {
 	#        MSG - Die MESSAGE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen,
 	#              oder aus der Funktion script_init.
-	#        ARRAY - Array mit Werten die man auswaehlen kann.
-	#        VAR - Variable die den vorherigen Wert enthaelt.
-	#              wird benoetigt, falls man schon Werte hat
+	#        ARRAY - Array mit Werten die man auswählen kann.
+	#        VAR - Variable die den vorherigen Wert enthält.
+	#              wird benötigt, falls man schon Werte hat
 	#              und diese erhalten will, z.B. beim Abbrechen.
 	#			   Ist optional
 	#
@@ -69,11 +69,11 @@ sys_conf() {
 			if [[ ${#argv} == 5 ]] ; then
 				V_WERT="$5"
 			fi
-			# Fenstergroesse (Zeilen) berechnen.
+			# Fenstergrösse (Zeilen) berechnen.
 			count_display_line -m 7 "$4"
-			# Fenstergroesse (Spalten) berechnen.
+			# Fenstergrösse (Spalten) berechnen.
             count_display_col "$4"
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
 			DialogLabel="--help-button --default-item \"$1\""
@@ -88,7 +88,7 @@ sys_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (dselect), Verzeichnis auswaehlen{{{
+	# Funktion (dselect), Verzeichnis auswählen{{{
 	#
 	# usage: dselect [ "$VERZ" | nichts ]
 	# Bei nichts wird das HOME verzeichnis genommen.
@@ -102,7 +102,7 @@ sys_conf() {
 			W_DIR="${(qq)HOME}"
 		fi
 		#
-		TITLE=$(gettext 'Waehlen Sie bitte das Verzeichnis aus.')
+		TITLE=$(gettext 'Wählen Sie bitte das Verzeichnis aus.')
 		DialogTitle="--title \"$TITLE\" $DialogBackTitle"
 		DialogPara="--clear --dselect "$W_DIR" $[$LINES-16] 48"
 		eval $Dialog $DialogTitle $DialogPara $DialogReDirect
@@ -120,7 +120,7 @@ sys_conf() {
 	#}}}
 	# Funktion (editbox), eine Eingabebox anzeigen{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: editbox "$TITLE" "$FILE"
 	#        TITLE - Der TITLE wird aus 
@@ -136,7 +136,7 @@ sys_conf() {
             create_file "$Old_File"
 			(( DisplayLines = LINES-7 ))
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -153,12 +153,12 @@ sys_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (fselect), Verzeichnis/Datei auswaehlen{{{
+	# Funktion (fselect), Verzeichnis/Datei auswählen{{{
 	#
 	# usage: fselect [ "/Pfad/Datei" | nichts ]
 	# Bei nichts wird das HOME verzeichnis genommen.
 	#
-	# Wird dieser Funktion eine /Pfad/Datei uebergeben
+	# Wird dieser Funktion eine /Pfad/Datei übergeben
 	# wird dieser Wert in der Variable V_WERT gespeichert.
 	# Diese Variable wird von der Funktion return_check
 	# ausgewertet (vorheriger Wert).
@@ -176,7 +176,7 @@ sys_conf() {
 			F_DIR="${(qq)HOME}"
 		fi
 		#
-		TITLE=$(gettext 'Waehlen Sie bitte das Verzeichnis und dann die Datei aus.')
+		TITLE=$(gettext 'Wählen Sie bitte das Verzeichnis und dann die Datei aus.')
 		DialogTitle="--title \"$TITLE\" $DialogBackTitle"
 		DialogPara="--clear --fselect "$F_DIR" $[$LINES-16] $[$COLUMNS-10]"
 		eval $Dialog $DialogTitle $DialogPara $DialogReDirect
@@ -188,11 +188,11 @@ sys_conf() {
 	#
 	# usage: echo $PERCENT |  gauge TITLE MSG
 	#
-	# Mit dieser funktion koennen Sie einen Prozessbalken erzeugen.
-	# Die Variable "PERCENT" muss der Funktion uebergeben werden!
+	# Mit dieser funktion können Sie einen Prozessbalken erzeugen.
+	# Die Variable "PERCENT" muss der Funktion übergeben werden!
 	# echo $PERCENT | gauge TITLE_NAME NACHRICHT
-	# TITLE - Variable die den Titel der Dialogbox enthaelt
-	# MSG - Variable die eine Nachricht/Datei oder so enthaelt. Dient zur 
+	# TITLE - Variable die den Titel der Dialogbox enthält
+	# MSG - Variable die eine Nachricht/Datei oder so enthält. Dient zur 
 	# 	Statusanzeige.
 	#
 	gauge() {
@@ -214,7 +214,7 @@ sys_conf() {
                 DisplayLines=7
             fi
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -245,8 +245,8 @@ sys_conf() {
 			UNIT1=$(gettext 'Sekunde')
 	
 			SEC=$3
-            # Berechnung der uebergebenen Zeichen der Nachricht und
-            # dementsprechend die Zeilengroesse einstellen.
+            # Berechnung der übergebenen Zeichen der Nachricht und
+            # dementsprechend die Zeilengrösse einstellen.
             count_char_to_line "$2"
 			Overhead=8
 			if [ "$[gv_LineAnz+Overhead]" -lt "$LINES" ]; then
@@ -255,7 +255,7 @@ sys_conf() {
 				(( DisplayLines = LINES-4 ))
 			fi
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 			DialogTitle="--sleep 1 --title \"$T_String\" $DialogBackTitle"
@@ -272,7 +272,7 @@ sys_conf() {
 	## }}}
 	# Funktion (inputbox), eine Eingabebox anzeigen{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: inputbox "$TITLE" "$MSG" ["$INIT"]
 	#        TITLE - Der TITLE wird aus 
@@ -280,7 +280,7 @@ sys_conf() {
 	#        MSG - Die MESSAGE wird aus
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen,
 	#              oder aus der Funktion script_init.
-	#        Wenn $INIT mit uebergeben wird, kann dieser Wert
+	#        Wenn $INIT mit übergeben wird, kann dieser Wert
 	#        bei einem Abbruch erhalten werden.
 	#
 	inputbox() {
@@ -290,8 +290,8 @@ sys_conf() {
 			if [[ ${#argv} == 3 ]] ; then
 				V_WERT="$3"
 			fi
-            # Berechnung der uebergebenen Zeichen der Nachricht und
-            # dementsprechend die Zeilengroesse einstellen.
+            # Berechnung der übergebenen Zeichen der Nachricht und
+            # dementsprechend die Zeilengrösse einstellen.
             count_char_to_line "$2"
 			Overhead=8
 			if [ "$[gv_LineAnz+Overhead]" -lt "$LINES" ]; then
@@ -300,7 +300,7 @@ sys_conf() {
 				(( DisplayLines = LINES-4 ))
 			fi
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 	
@@ -317,27 +317,27 @@ sys_conf() {
 	#}}}
 	# Funktion (inputmenu), eine Menubox mit Eingabe anzeigen{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: inputmenu "$DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY"
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
-	#                       Kann auch "" leer sein, es muessen aber die beiden Apostrophe
+	#                       Kann auch "" leer sein, es müssen aber die beiden Apostrophe
 	#                       mit/oder ohne Variable (Bsp.:$1) sein.
 	#        TITLE - Der TITLE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen
 	#        MSG - Die MESSAGE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen,
 	#              oder aus der Funktion script_init.
-	#        ARRAY - Array mit Werten die man auswaehlen kann.
+	#        ARRAY - Array mit Werten die man auswählen kann.
 	#
 	inputmenu() {
 		if [ "${#argv}" -ge 4 ] ; then
-			# Fenstergroesse (Zeilen) berechnen.
+			# Fenstergrösse (Zeilen) berechnen.
 			#count_display_line -o 7 "$4"
 			count_display_line -o 15 "$4"
-			# Fenstergroesse (Spalten) berechnen.
+			# Fenstergrösse (Spalten) berechnen.
             count_display_col "$4"
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
 			DialogLabel="--help-button --nook --cancel-label "$gv_Back" --default-item \"$1\""
@@ -353,20 +353,20 @@ sys_conf() {
 	#}}}
 	# Funktion (menubox), eine Menuebox anzeigen{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: menubox "DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY" [ $VAR ]
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
-	#                       Kann auch "" leer sein, es muessen aber die beiden Apostrophe
+	#                       Kann auch "" leer sein, es müssen aber die beiden Apostrophe
 	#                       mit/oder ohne Variable (Bsp.:$1) sein.
 	#        TITLE - Der TITLE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen
 	#        MSG - Die MESSAGE wird aus der 
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen,
 	#              oder aus der Funktion script_init.
-	#        ARRAY - Array mit Werten die man auswaehlen kann.
-	#        VAR - Variable die den vorherigen Wert enthaelt.
-	#              wird benoetigt, falls man schon Werte hat
+	#        ARRAY - Array mit Werten die man auswählen kann.
+	#        VAR - Variable die den vorherigen Wert enthält.
+	#              wird benötigt, falls man schon Werte hat
 	#              und diese erhalten will, z.B. beim Abbrechen.
 	#			   Ist optional.
 	#
@@ -380,11 +380,11 @@ sys_conf() {
 			if [[ ${#argv} == 5 ]] ; then
 				V_WERT="$5"
 			fi
-			# Fenstergroesse (Zeilen) berechnen.
+			# Fenstergrösse (Zeilen) berechnen.
 			count_display_line -o 7 "$4"
-			# Fenstergroesse (Spalten) berechnen.
+			# Fenstergrösse (Spalten) berechnen.
             count_display_col "$4"
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
 			DialogLabel="--help-button --default-item \"$1\""
@@ -401,7 +401,7 @@ sys_conf() {
 	#}}}
 	# Funktion (mixedform), ein mixedform Box anzeigen{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: mixedform [ -i ] "$TITLE" "$MSG" "$ARRAY"
 	# -i - insecure
@@ -409,22 +409,22 @@ sys_conf() {
 	mixedform() {
 		if [ "$#" -ge 3 ] ; then
 			if [ "$1" = -i ] ; then
-				# Fenstergroesse (Zeilen) berechnen.
+				# Fenstergrösse (Zeilen) berechnen.
 				count_display_line -f 12 "$4"
-				# Fenstergroesse (Spalten) berechnen.
+				# Fenstergrösse (Spalten) berechnen.
 	            count_display_col "$4"
-				# Laenge des Titel berechnen
+				# Länge des Titel berechnen
 				count_title_string "$2" "$DisplayColumns"
 
 				DialogTitle="--title \"$T_String\" $DialogBackTitle"
 				DialogLabel="--help-button"
 				DialogPara="--clear --insecure --mixedform \"$3\" $DisplayLines $DisplayColumns $Elemente $4"
 			else
-				# Fenstergroesse (Zeilen) berechnen.
+				# Fenstergrösse (Zeilen) berechnen.
 				count_display_line -f 12 "$3"
-				# Fenstergroesse (Spalten) berechnen.
+				# Fenstergrösse (Spalten) berechnen.
 	            count_display_col "$3"
-				# Laenge des Titel berechnen
+				# Länge des Titel berechnen
 				count_title_string "$1" "$DisplayColumns"
 
 				DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -446,7 +446,7 @@ sys_conf() {
     #        TITLE - Titel der Nachricht
     #        MSG - Nachricht die angezeigt werden soll
 	#        MIN_ZAHL - Wieviel Zeichen soll das Passwort mindestens haben.
-	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort hoechstens haben.
+	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort höchstens haben.
 	#
 	mixed_password() {
 		unset -- MinChar MaxChar Opt_Anz gv_Pass gv_Old_Pass
@@ -515,7 +515,7 @@ sys_conf() {
 					HELP*)	script_help share/password_help
 						mixed_password_menu
 						;;
-					*)	# Auswahl uebernehmen
+					*)	# Auswahl übernehmen
 						Anz="${(w)#gv_Auswahl}"
 						if [ "$Anz" -eq "$Opt_Anz" ] ; then
 							if [ "$Opt_Anz" = 3 ] ; then
@@ -530,8 +530,8 @@ sys_conf() {
 								Char="${(c)#NPW}"
 								if [ -n "$MaxChar" ] ; then
 									if [ "$Char" -lt "$MinChar" -o "$Char" -gt "$MaxChar" ] ; then
-										# falsche Password Laenge
-										MSG=$(gettext 'Die Laenge des/der Passworts/Passphrase muss mindestens $MinChar und hoechstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
+										# falsche Password Länge
+										MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
 										yesno "$gv_Attention" "$MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											mixed_password_menu
@@ -540,15 +540,15 @@ sys_conf() {
 				    						break
 										fi
 									else
-										# richtige Password Laenge
+										# richtige Password Länge
 										gv_Old_Pass="$OPW"
 										gv_Pass="$NPW"
 										unset -- OPW NPW NNPW
 										break
 									fi	
 								elif [ "$Char" -lt "$MinChar" ] ; then
-									# falsche Password Laenge
-							        MSG=$(gettext 'Die Laenge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
+									# falsche Password Länge
+							        MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
 									yesno "$gv_Attention" "$MSG" ""
 									if [ "$gv_Auswahl" = yes ] ; then
 										mixed_password_menu
@@ -557,19 +557,19 @@ sys_conf() {
 			    						break
 									fi
 								else
-									# richtige Password Laenge
+									# richtige Password Länge
 									gv_Old_Pass="$OPW"
 									gv_Pass="$NPW"
 				                    unset -- OPW NPW NNPW
 			    					break
 								fi
 							else
-								# Passwoerter sind verschieden.
+								# Passwörter sind verschieden.
 								different_passwd
 								mixed_password_menu
 							fi
 						else
-							# Nachricht das alle Felder belegt sein muessen.
+							# Nachricht das alle Felder belegt sein müssen.
 							input_all_field_msg
 							mixed_password_menu
 						fi
@@ -592,8 +592,8 @@ sys_conf() {
 	#
 	msgbox() {
 		if [ "$#" -eq 2 ] ; then
-            # Berechnung der uebergebenen Zeichen der Nachricht und
-            # dementsprechend die Zeilengroesse einstellen.
+            # Berechnung der übergebenen Zeichen der Nachricht und
+            # dementsprechend die Zeilengrösse einstellen.
             count_char_to_line "$2"
 			count_display_col "$2"
 			Overhead=8
@@ -602,7 +602,7 @@ sys_conf() {
 			else
 				(( DisplayLines = LINES-4 ))
 			fi
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -615,7 +615,7 @@ sys_conf() {
 	#}}}
 	# Funktion (number_input), verschiedene Zahleneingaben (Tage, Byte, ...){{{
 	#
-	# benoetigt die Funktionen check_integer, check_number und no_input_msg
+	# benötigt die Funktionen check_integer, check_number und no_input_msg
 	#
 	# usage: number_input [ -b | -d | -h | -i | -m | -s | -w ] ${VAR%?}
 	#        number_input $1 $2 $3
@@ -626,14 +626,14 @@ sys_conf() {
 	# -a - alle Zeiten, Sekunde, Minute, Stunde, Tag, Woche + eig. Nachricht
 	# -b - Byte
 	# -d - Tag
-	# -D - Laufwerks Groessen (K|k|M|m|G|g|T|t.... beachten.
+	# -D - Laufwerks Grössen (K|k|M|m|G|g|T|t.... beachten.
 	# -h - Stunde
 	# -i - integer Zahl
 	# -m - Minute
 	# -s - Sekunde
 	# -w - Woche
 	# -z - dezimal
-	# nichts - fuer Eingaben die selber TITLE und MSG uebergeben
+	# nichts - für Eingaben die selber TITLE und MSG übergeben
 	# $VAR - vorheriger Wert
 	#
 	number_input() {
@@ -723,7 +723,7 @@ sys_conf() {
 				fi
 				;;
 			-D)
-				# Laufwerkes Groessen beachten# {{{
+				# Laufwerkes Grössen beachten# {{{
 				inputbox "$2" "$3" "$4"
 				if [[ -n $gv_Auswahl ]] ; then
 					case "$gv_Auswahl" in
@@ -769,13 +769,13 @@ sys_conf() {
 	#}}}
 	# Funktion (password), Passwordeingabe{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: password TITLE MSG [ MIN_ZAHL ] [ MAX_ZAHL ]
     #        TITLE - Titel der Nachricht
     #        MSG - Nachricht die angezeigt werden soll
 	#        MIN_ZAHL - Wieviel Zeichen soll das Passwort mindestens haben.
-	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort hoechstens haben.
+	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort höchstens haben.
 	#
 	# Das Passwort muss mindestens 6 Zeichen lang sein.
 	#
@@ -791,8 +791,8 @@ sys_conf() {
 			else
 				MinChar=6
 			fi
-            # Berechnung der uebergebenen Zeichen der Nachricht und
-            # dementsprechend die Zeilengroesse einstellen.
+            # Berechnung der übergebenen Zeichen der Nachricht und
+            # dementsprechend die Zeilengrösse einstellen.
             count_char_to_line "$2"
             Overhead=8
 			if [ "$[gv_LineAnz+Overhead]" -lt "$LINES" ]; then
@@ -801,7 +801,7 @@ sys_conf() {
 				(( DisplayLines = LINES-4 ))
 			fi
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -815,8 +815,8 @@ sys_conf() {
 				if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" -a "$Char" -le "$MaxChar" ] ; then
 					PASSPHRASE="$gv_Auswahl"
 				else
-					# falsche Password Laenge
-					MSG=$(gettext 'Die Laenge des/der Passworts/Passphrase muss mindestens $MinChar und hoechstens $MaxChar Zeichen sein.')
+					# falsche Password Länge
+					MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.')
 					msgbox "$gv_Attention" "$MSG"
 					unset -- gv_Auswahl PASSPHRASE
 				fi	
@@ -824,8 +824,8 @@ sys_conf() {
 				if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" ] ; then
 					PASSPHRASE="$gv_Auswahl"
 				else
-					# falsche Password Laenge
-					MSG=$(gettext 'Die Laenge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.')
+					# falsche Password Länge
+					MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.')
 					msgbox "$gv_Attention" "$MSG"
 					unset -- gv_Auswahl PASSPHRASE
 				fi	
@@ -839,7 +839,7 @@ sys_conf() {
 	# Funktion (progressbox)# {{{
 	#
 	# Man kann die Funktion prog_exec benutzen - untersucht ob PROG_NAME
-	# existiert bzw. ausfuehrbar ist. Siehe Header der Funktion prog_exec
+	# existiert bzw. ausführbar ist. Siehe Header der Funktion prog_exec
 	#
 	# usage: prog_exec PROG_NAME PROG_OPT | progressbox TITLE [MSG]
 	#        MSG ist optional.
@@ -849,7 +849,7 @@ sys_conf() {
             Overhead=7
 			(( DisplayLines = LINES-Overhead ))
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 			
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -862,7 +862,7 @@ sys_conf() {
 	## }}}
 	# Funktion (radiolist), einfache Auswahl{{{
 	#
-	# benoetigt die Funktion return_check
+	# benötigt die Funktion return_check
 	#
 	# usage: radiolist "DEFAULT-ITEM" "$TITLE" "$MSG" "$ARRAY" [ VAR ]
 	#        DEFAULT-ITEM - Item auf welches bei der Anzeige gesprungen werden soll.
@@ -871,9 +871,9 @@ sys_conf() {
 	#        MSG - Die MESSAGE wird aus der
 	#        	*/locale/${LANGUAGE}/LC_MESSAGES/gv_ScriptName.mo gelesen,
 	#              oder aus der Funktion script_init.
-	#        ARRAY - Array mit Werten die man auswaehlen kann.
-	#        VAR - Variable die den vorherigen Wert enthaelt.
-	#              wird benoetigt, falls man schon Werte hat
+	#        ARRAY - Array mit Werten die man auswählen kann.
+	#        VAR - Variable die den vorherigen Wert enthält.
+	#              wird benötigt, falls man schon Werte hat
 	#              und diese erhalten will, z.B. beim Abbrechen.
 	#			   Ist optional
 	#
@@ -884,11 +884,11 @@ sys_conf() {
 			if [[ ${#argv} == 5 ]] ; then
 				V_WERT="$5"
 			fi
-			# Fenstergroesse (Zeilen) berechnen.
+			# Fenstergrösse (Zeilen) berechnen.
 			count_display_line -m 7 "$4"
-			# Fenstergroesse (Spalten) berechnen.
+			# Fenstergrösse (Spalten) berechnen.
             count_display_col "$4"
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$2" "$DisplayColumns"
 
 			DialogLabel="--help-button --default-item \"$1\""
@@ -928,7 +928,7 @@ sys_conf() {
 	script_help() {
 		if [ "$#" -eq 1 ] ; then
 			unset -- Elemente
-			# Hilfe fuer kwadmin
+			# Hilfe für kwadmin
 			if [ $gv_ScriptName = kwadmin -a $1 = help ] ; then
 				if [ -f ${HELP_PATH}/${gv_ScriptName}/${1} ] ; then
 					. ${HELP_PATH}/${gv_ScriptName}/${1}
@@ -953,7 +953,7 @@ sys_conf() {
 				else
 					no_help_msg
 				fi
-				# Hilfe die von mehreren Scripts genutzt werden koennen.
+				# Hilfe die von mehreren Scripts genutzt werden können.
 			elif [ ${1%/*} = share ] ; then
 				if [ -f ${HELP_PATH}/${1} ] ; then
 					. ${HELP_PATH}/${1}
@@ -989,10 +989,10 @@ sys_conf() {
 	#
 	textbox() {
 		if [ "$#" -eq 2 ] ; then
-			# Berechnung der Fenstergroesse (Zeilen).
+			# Berechnung der Fenstergrösse (Zeilen).
 			count_display_line 7 "`wc -l < "$2"`"
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 	
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -1012,14 +1012,14 @@ sys_conf() {
 		local Anz Time
 		unset -- Anz
 		TITLE=$(gettext 'Uhrzeit')
-		MSG=$(gettext 'Stellen Sie bitte Ihre Zeit ein und bestaetigen Sie diese.')
+		MSG=$(gettext 'Stellen Sie bitte Ihre Zeit ein und bestätigen Sie diese.')
 		if [ "$#" -eq 1 ] ; then
 			if [ "${(c)#1}" -ge 3 -a "${(c)#1}" -le 4 ] ; then
 				Time="`date -d $1 +%H:%M`"
 			fi
 		fi
 
-		# Berechnung der Fenstergroesse (Zeilen)
+		# Berechnung der Fenstergrösse (Zeilen)
 		count_display_line -l 4 "$MSG"
 		
 		DialogTitle="--title \"${gv_ScriptName}::${TITLE}\" $DialogBackTitle"
@@ -1029,9 +1029,9 @@ sys_conf() {
 		return_check
 	}
 	#}}}
-	# Funktion (view_file), fuer die Anzeige einer Datei{{{
+	# Funktion (view_file), für die Anzeige einer Datei{{{
 	#
-	# benoetigt die Funktion textbox
+	# benötigt die Funktion textbox
 	# usage: view_file FILE [ TITLE ]
 	# FILE - Datei die angezeigt werden soll.
 	# TITLE - (optional) Titel der angezeigt werden soll.
@@ -1088,11 +1088,11 @@ sys_conf() {
 					DialogLabel="--default-button YES"
 					;;
 			esac
-			# Berechnung der Fenstergroesse (Zeilen).
+			# Berechnung der Fenstergrösse (Zeilen).
 			(( Extra_Overhead = 7 + $E_Lines ))
 			count_display_line -l "$Extra_Overhead" "$2"
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -1130,14 +1130,14 @@ sys_conf() {
 	# Funktion (yesno_exchange), um eine Variable mit unterschiedlichen Werten zu belegen.{{{
 	#
 	# usage: yesno_exchange TITLE MSG VARIABLE WERT1 WERT2
-	#        VARIABLE - Variable die veraendert werden soll
+	#        VARIABLE - Variable die verändert werden soll
 	#        WERT* - meist yes & no, kann aber auch was anderes sein.
 	#
 	yesno_exchange() {
 		if [ "$#" = 5 ] ; then
 			VAR=$3
 			(( DisplayColumns = COLUMNS-8 ))
-			# Laenge des Titel berechnen
+			# Länge des Titel berechnen
 			count_title_string "$1" "$DisplayColumns"
 
 			DialogTitle="--title \"$T_String\" $DialogBackTitle"
@@ -1155,7 +1155,7 @@ sys_conf() {
 	#}}}
 	## }}}
 	###### System ###### {{{
-	# Funktion (access), fuer Zugriffsrechte{{{
+	# Funktion (access), für Zugriffsrechte{{{
 	#
 	# findet die Zugriffsrechte, den Besitzer und die Gruppe der Datei
 	#
@@ -1402,8 +1402,8 @@ sys_conf() {
 	#}}}
 	# Funktion (check_gv_Auswahl){{{
 	#
-	# loescht Variable $1, falls $gv_Auswahl leer ist und
-	# fuehrt wenn angegeben eine Action aus.
+	# löscht Variable $1, falls $gv_Auswahl leer ist und
+	# führt wenn angegeben eine Action aus.
 	#
 	# usage: check_gv_Auswahl [ VAR | VAR ACTION ]
 	#
@@ -1436,13 +1436,13 @@ sys_conf() {
 		fi
 	}
 	## }}}
-	# Funktion (check_integer), pruefen auf Integer# {{{
-	# und wenn dann uebernehmen.
+	# Funktion (check_integer), prüfen auf Integer# {{{
+	# und wenn dann übernehmen.
 	# Ansonsten kommt eine Fehlermeldung.
 	#
 	# usage: check_integer NUMBER [ Masseinheit ]
-	# NUMBER - Integer Nummer die geprueft werden soll
-	# Masseinheit - die eventuell an die Nummer wieder angehaengt werden soll
+	# NUMBER - Integer Nummer die geprüft werden soll
+	# Masseinheit - die eventuell an die Nummer wieder angehängt werden soll
 	#
 	check_integer() {
 		if [ "$#" -ge 1 ] ; then
@@ -1450,7 +1450,7 @@ sys_conf() {
 			#integer Nr
 			Nr="$1"
 			Me="$2"
-			# auf Integer pruefen
+			# auf Integer prüfen
 			if [[ $Nr = <-> ]] ; then
 				NUMBER="${Nr}${Me}"
 			else
@@ -1464,7 +1464,7 @@ sys_conf() {
 	## }}}
 	# Funktion (check_mask)# {{{
 	#
-	# prueft die Anzahl der Zahlen und ob es die richtigen Access Zahlen sind.
+	# prüft die Anzahl der Zahlen und ob es die richtigen Access Zahlen sind.
 	#
 	# usage: check_mask
 	check_mask() {
@@ -1478,7 +1478,7 @@ sys_conf() {
 					;;
 			esac
 		else
-			MSG=$(gettext 'Sie haben eine falsche Anzahl an Zeichen eingegeben. Sie muessen 4 oder 3 Integer Zahlen in Reihenfolge eingeben die die Rechte definieren (man 1 chmod).')
+			MSG=$(gettext 'Sie haben eine falsche Anzahl an Zeichen eingegeben. Sie müssen 4 oder 3 Integer Zahlen in Reihenfolge eingeben die die Rechte definieren (man 1 chmod).')
 			msgbox "$gv_Attention" "$MSG"
 		fi
 	}
@@ -1513,20 +1513,20 @@ sys_conf() {
 		esac
 	}
 	## }}}
-	# Funktion (check_number), ueberpruft Zahleneingaben{{{
+	# Funktion (check_number), überpruft Zahleneingaben{{{
 	#
-	# benoetigt die Funktion no_dezimal_msg und check_integer
+	# benötigt die Funktion no_dezimal_msg und check_integer
 	#
 	# usage: check_number [ -z ] "$NUMBER" [ Anhang ]
-	# -z - Dezimalzahlen ueberpruefen
-	# Anhang kann h (Stunde) oder so aehnlich sein.
+	# -z - Dezimalzahlen überprüfen
+	# Anhang kann h (Stunde) oder so ähnlich sein.
 	#
 	check_number() {
 		if [ "$#" -ge 1 ] ; then
 			case "$1" in
 				-z)	# Dezimalzahlen sind erlaubt (Bsp. 0.234)
 					case "$2" in
-						[0-9]*[.,]*[0-9]*)	# uebernehmen
+						[0-9]*[.,]*[0-9]*)	# übernehmen
 							NUMBER="${2}${3}"
 							;;
 						[0-9]*)
@@ -1538,7 +1538,7 @@ sys_conf() {
 							;;
 					esac
 					;;
-				*)	# pruefen auf Integer und wenn dann uebernehmen.
+				*)	# prüfen auf Integer und wenn dann übernehmen.
 					check_integer $1 $2
 					;;
 			esac
@@ -1554,7 +1554,7 @@ sys_conf() {
 	#
 	check_fs() {
 		if [[ ${#argv} == 1 ]] ; then
-			# Pruefen, ob blkid vorhanden und ausf�hrbar ist, ansonsten
+			# Prüfen, ob blkid vorhanden und ausf�hrbar ist, ansonsten
 			# wird abgebrochen.
 			if [[ ! -x ${commands[blkid]} ]] ; then
 				no_prog_exec_msg blkid
@@ -1601,7 +1601,7 @@ sys_conf() {
 		return 0
 	}
 	## }}}
-	# Funktion (check_size), prueft den vorhandenen Platz im jeweiligen Verzeichnis# {{{
+	# Funktion (check_size), prüft den vorhandenen Platz im jeweiligen Verzeichnis# {{{
 	# wird in Bytes ausgegeben
 	#
 	# usage: check_size DIR
@@ -1640,7 +1640,7 @@ sys_conf() {
 			#
 			# Funktion compress_choice_menue{{{
 			TITLE=$(gettext 'Kompression')
-			MSG=$(gettext 'Waehlen Sie ein Kompressionsprogramm aus.')
+			MSG=$(gettext 'Wählen Sie ein Kompressionsprogramm aus.')
 			compress_choice_menue() {
 				menubox "$1" "$TITLE" "$MSG" "$K_Menue"
 			}
@@ -1652,7 +1652,7 @@ sys_conf() {
 						compress_choice_menue "${gv_Auswahl#HELP }"
 						;;
 					b* | g* |co*)
-						# Kompressionsart auswaehlen (gzip/bzip2/compress)
+						# Kompressionsart auswählen (gzip/bzip2/compress)
 						#
 						COMPRESS="${commands[$gv_Auswahl]}"
 						if [ "${COMPRESS##*/}" = gzip ] ; then
@@ -1675,7 +1675,7 @@ sys_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (convert_drive_size), Laufwerks Groesse umrechnen.# {{{
+	# Funktion (convert_drive_size), Laufwerks Grösse umrechnen.# {{{
 	#
 	# usage: convert_drive_size -i SIZE
 	# usage: convert_drive_size [ kib|KiB|Kib | mib|MiB|Mib | gib|GiB|Gib | tib|TiB|Tib ] SIZE
@@ -1911,7 +1911,7 @@ convert_mib_size() {
 	return 0
 }
 #}}}
-	# Funktion (convert_si_size), Laufwerks Groesse nach SI System (Dezimal) umrechnen.# {{{
+	# Funktion (convert_si_size), Laufwerks Grösse nach SI System (Dezimal) umrechnen.# {{{
 	#
 	# usage: convert_si_size -i SIZE
 	# usage: convert_si_size [ kb|KB|Kb | mb|MB|Mb | gb|GB|Gb | tb|TB|Tb ] SIZE
@@ -1932,11 +1932,11 @@ convert_mib_size() {
 	convert_si_size() {
 		unset -- Size_B_Tmp
 		typeset -F3 Size_B_Tmp
-		# Funktion (check_calc_suffix), ueberprueft ob nach# {{{
-		# dem Komma der Wert zur Anzeige benoetigt wird und welche
+		# Funktion (check_calc_suffix), überprüft ob nach# {{{
+		# dem Komma der Wert zur Anzeige benötigt wird und welche
 		# Masseinheit angezeigt wird.
 		# Ist die Zahl vor dem Komma/Punkt zweistellig und mehr wird
-		# die uebergebene Masseinheit benutzt ansonsten die mit der
+		# die übergebene Masseinheit benutzt ansonsten die mit der
 		# diese getauscht werden soll. So wird aus 4.252MB
 		# 4252 MB und 23.008GB bleibt so erhalten
 		#
@@ -1953,11 +1953,11 @@ convert_mib_size() {
 				Dst_Unit="$2"
 				Size_B_Pre=$Size_B_Tmp:r
 				Size_B_Suf=$Size_B_Tmp:e
-				# Ist die Groesse vor dem Punkt/Komma >= 2
-				# wird die Groesse nach dem Punkt/komma ueberprueft
+				# Ist die Grösse vor dem Punkt/Komma >= 2
+				# wird die Grösse nach dem Punkt/komma überprüft
 				# ob sie ungleich 000 ist oder nicht.
 				# Wenn sie gleich 000 ist wird keine Zahl nach dem Koma/Punkt
-				# benoetigt.
+				# benötigt.
 				if [ "${#Size_B_Pre[@]}" -ge 2 ] ; then
 					if [ "$Size_B_Suf" != 000 ] ; then
 						SIZE_B="${Size_B_Tmp}${Src_Unit}"
@@ -1965,7 +1965,7 @@ convert_mib_size() {
 						SIZE_B="${Size_B_Pre}${Src_Unit}"
 					fi
 				else
-					# andere Masseinheit uebergeben und Punkt/Komma entfernen.
+					# andere Masseinheit übergeben und Punkt/Komma entfernen.
 					SIZE_B="${Size_B_Tmp//./}${Dst_Unit}"
 				fi
 			else
@@ -2091,11 +2091,11 @@ convert_mib_size() {
 		fi
 	}
 	## }}}
-	# Funktion (convert_over_size), Groessen in eine lesbarere Form umrechnen{{{
+	# Funktion (convert_over_size), Grössen in eine lesbarere Form umrechnen{{{
 	#
 	# usage: convert_over_size BIG_SIZE IS_SIZE
-	# BIG_SIZE - Groesse die IS_SIZE ueberschreitet
-	# IS_SIZE - Groesse die nicht ueberschritten werden darf
+	# BIG_SIZE - Grösse die IS_SIZE überschreitet
+	# IS_SIZE - Grösse die nicht überschritten werden darf
 	#
 	convert_over_size() {
 		if [[ ${#argv} == 2 ]] ; then
@@ -2109,11 +2109,11 @@ convert_mib_size() {
 		fi
 	}
 	#}}}
-	# Funktion (count_char_to_line), zum zaehlen der Zeichen damit die# {{{
-	# Groesse des dialog fensters (z.B) angepasst werden kann.
+	# Funktion (count_char_to_line), zum zählen der Zeichen damit die# {{{
+	# Grösse des dialog fensters (z.B) angepasst werden kann.
 	#
 	# usage: count_char_to_line TEXT
-	# TEXT - Text der in Zeilen zur Spaltengroesse umgerechnet werden sollen
+	# TEXT - Text der in Zeilen zur Spaltengrösse umgerechnet werden sollen
 	#
 	count_char_to_line() {
 		unset -- gv_LineAnz
@@ -2126,7 +2126,7 @@ convert_mib_size() {
 		fi
 	}
 	## }}}
-	# Funktion (count_display_col), Berechnung der Fenstergroesse, Spalten# {{{
+	# Funktion (count_display_col), Berechnung der Fenstergrösse, Spalten# {{{
 	#
 	# usage: count_display_col "$ANZEIGEWERTE"
 	#
@@ -2167,21 +2167,21 @@ convert_mib_size() {
 		IFS="$IFSBAK"
 	}
 	## }}}
- 	# Funktion (count_display_line), Berechnung der Fenstergroesse, Zeilen# {{{
+ 	# Funktion (count_display_line), Berechnung der Fenstergrösse, Zeilen# {{{
 	#
 	# usage: count_display_line [ -f | -l | -m | -o ] OVERHEAD VAR
 	# -f - Form Dialogboxen (form, mixedform)
-	# -l - list, Dialogboxen, die den uebergebenen Text in Zeilen umrechnet
+	# -l - list, Dialogboxen, die den übergebenen Text in Zeilen umrechnet
 	# -m - Dialogboxen, die eine Auswahl bieten (radiolist, checklist)
-	# -o - fuer die Dialogbox menubox
+	# -o - für die Dialogbox menubox
 	# - - alle anderen Dialogboxen.
-	# OVERHEAD - Zeilengroesse die zur normalen Groesse dazu addiert wird.
-	# VAR -  Variable die die uebergebenen Darstellungswerte zur Berechnung beinhaltet.
+	# OVERHEAD - Zeilengrösse die zur normalen Grösse dazu addiert wird.
+	# VAR -  Variable die die übergebenen Darstellungswerte zur Berechnung beinhaltet.
 	#
 	count_display_line() {
 		unset -- Elemente Overhead
 		if [ "$#" -ge 2 ] ; then
-			# Groesse des Fensters berechnen.
+			# Grösse des Fensters berechnen.
 			case "$1" in
 				-f)
 					Overhead="$2"
@@ -2217,8 +2217,8 @@ convert_mib_size() {
 					fi
 					;;
 				-l)
-			        # Berechnung der uebergebenen Zeichen der Nachricht und
-			        # dementsprechend die Zeilengroesse einstellen.
+			        # Berechnung der übergebenen Zeichen der Nachricht und
+			        # dementsprechend die Zeilengrösse einstellen.
 					Overhead="$2"
 			        count_char_to_line "$3"
 					if [ "$[gv_LineAnz+Overhead]" -lt "$[LINES-4]" ]; then
@@ -2242,8 +2242,8 @@ convert_mib_size() {
 		fi
 	}
 	## }}}
-	# Funktion (count_title_string), berechnet die Laenge des Titel# {{{
-	# der angezeigt werden kann und ersetzt bei Ueberlaenge einen
+	# Funktion (count_title_string), berechnet die Länge des Titel# {{{
+	# der angezeigt werden kann und ersetzt bei Überlänge einen
 	# Teil durch 3 Punkte
 	#
 	count_title_string() {
@@ -2297,8 +2297,8 @@ convert_mib_size() {
 	# Funktion (crontbconf), zur Einstellung der crontab Tabelle der User{{{
 	#
 	# usage: crontbconf [ -s $USER ] $CRONTAB_SCRIPT
-	# -s $USER - Sudo Einstellungen fuer $USER taetigen.
-	# CRONTAB_SCRIPT - Srciptname welches ausgefuehrt werden soll.
+	# -s $USER - Sudo Einstellungen für $USER tätigen.
+	# CRONTAB_SCRIPT - Srciptname welches ausgeführt werden soll.
 	crontbconf() {
 		if [[ ${#argv} -ge 1 ]] ; then
 			#
@@ -2311,14 +2311,14 @@ convert_mib_size() {
 			lv_Mon=$(gettext 'Monat')
 			lv_Dow=$(gettext 'Wochentag')
 			#
-			# Die ersten 5 Zeichen, fuers loeschen
+			# Die ersten 5 Zeichen, fürs löschen
 			CRONTAB_CHARS=(MIN STD DOM MON DOW)
 			#
 			# Funktion cron_main_menu{{{
 			#
 			cron_main_menu() {
-				TITLE=$(gettext 'crontab::Ausfuehrungszeit')
-				MSG=$(gettext 'Veraendern Sie hier die Ausfuehrungszeit.')
+				TITLE=$(gettext 'crontab::Ausführungszeit')
+				MSG=$(gettext 'Verändern Sie hier die Ausführungszeit.')
 				MENU=($lv_Program \"$Prog_Wahl\" ------------ \"\"
 					$lv_Extra_Char \"$EXTRA_CHAR\" $lv_Minute \"$MIN\" $lv_Hour \"$STD\"
 					$lv_Dom \"$DOM\" $lv_Mon \"$MON\" $lv_Dow \"$DOW\"
@@ -2326,7 +2326,7 @@ convert_mib_size() {
 				menubox "$1" "$TITLE" "$MSG" "$MENU"
 			}
 			#}}}
-			# Funktion, bestehende Ausfuehrungszeit herausfinden{{{
+			# Funktion, bestehende Ausführungszeit herausfinden{{{
 			check_time() {
 				unset -- MIN STD DOM MON DOW
 				crontab -u $USER -l > $Cron_File
@@ -2388,7 +2388,7 @@ convert_mib_size() {
 									## }}}
 									;;
 								*,*)
-									# Minuten Aufzaehlungen zusammenzaehlen# {{{
+									# Minuten Aufzählungen zusammenzählen# {{{
 									Anz=0
 									for i in ${Min//,/ } ; {
 										(( Anz++ ))
@@ -2434,7 +2434,7 @@ convert_mib_size() {
 									## }}}
 									;;
 								*,*)
-									# Stunden Aufzaehlungen zusammenzaehlen# {{{
+									# Stunden Aufzählungen zusammenzählen# {{{
 									Anz=0
 									for i in ${Std//,/ } ; {
 										(( Anz++ ))
@@ -2480,7 +2480,7 @@ convert_mib_size() {
 									## }}}
 									;;
 								*,*)
-									# Monatstag Aufzaehlungen zusammenzaehlen# {{{
+									# Monatstag Aufzählungen zusammenzählen# {{{
 									Anz=0
 									for i in ${DoM//,/ } ; {
 										(( Anz++ ))
@@ -2526,7 +2526,7 @@ convert_mib_size() {
 									## }}}
 									;;
 								*,*)
-									# Monats Aufzaehlungen zusammenzaehlen# {{{
+									# Monats Aufzählungen zusammenzählen# {{{
 									Anz=0
 									for i in ${Mon//,/ } ; {
 										(( Anz++ ))
@@ -2572,7 +2572,7 @@ convert_mib_size() {
 									## }}}
 									;;
 								[0-7],[0-7]*)
-									# Tage der Woche - Aufzaehlungen zusammenzaehlen# {{{
+									# Tage der Woche - Aufzählungen zusammenzählen# {{{
 									Anz=0
 									for i in ${DoW//,/ } ; {
 										(( Anz++ ))
@@ -2601,7 +2601,7 @@ convert_mib_size() {
 						cron_main_menu "${gv_Auswahl#HELP }"
 						;;
 					$lv_Program|-*)
-						# Programmauswahl kann man nicht aendern
+						# Programmauswahl kann man nicht ändern
 						cron_main_menu "$gv_Auswahl"
 						;;
 					$lv_Extra_Char)
@@ -2628,8 +2628,8 @@ convert_mib_size() {
 						;;
 					$lv_Minute)
 						# Minutenauswahl# {{{
-						CRON_MIN_MSG=$(gettext 'Waehlen Sie bitte die Minuten aus.')
-						# vorherige Werte mit "on" belegen, fuer die Funktion checklist.
+						CRON_MIN_MSG=$(gettext 'Wählen Sie bitte die Minuten aus.')
+						# vorherige Werte mit "on" belegen, für die Funktion checklist.
 						generate_is_file "${MIN//,/ }"
 						is_value "`print {0..59}`"
 						#
@@ -2648,15 +2648,15 @@ convert_mib_size() {
 									;;
 							esac
 						done
-						# check von $gv_Auswahl, falls leer wird Variable auch geloescht.
+						# check von $gv_Auswahl, falls leer wird Variable auch gelöscht.
 						check_gv_Auswahl MIN
 						## }}}
 						cron_main_menu $lv_Minute
 						;;
 					$lv_Hour)
 						# Stundenauswahl# {{{
-						CRON_STD_MSG=$(gettext 'Waehlen Sie bitte die Stunden aus.')
-						# vorherige Werte mit "on" belegen, fuer die Funktion checklist.
+						CRON_STD_MSG=$(gettext 'Wählen Sie bitte die Stunden aus.')
+						# vorherige Werte mit "on" belegen, für die Funktion checklist.
 						generate_is_file "${STD//,/ }"
 						is_value "`print {0..23}`"
 						#
@@ -2675,15 +2675,15 @@ convert_mib_size() {
 									;;
 							esac
 						done
-						# check von $gv_Auswahl, falls leer wird Variable auch geloescht.
+						# check von $gv_Auswahl, falls leer wird Variable auch gelöscht.
 						check_gv_Auswahl STD
 						## }}}
 						cron_main_menu $lv_Hour
 						;;
 					$lv_Dom)
 						# Monatstagsauswahl# {{{
-						CRON_DOM_MSG=$(gettext 'Waehlen Sie bitte die Monatstage aus.')
-						# vorherige Werte mit "on" belegen, fuer die Funktion checklist.
+						CRON_DOM_MSG=$(gettext 'Wählen Sie bitte die Monatstage aus.')
+						# vorherige Werte mit "on" belegen, für die Funktion checklist.
 						generate_is_file "${DOM//,/ }"
 						is_value "`print {1..31}`"
 						#
@@ -2702,15 +2702,15 @@ convert_mib_size() {
 									;;
 							esac
 						done
-						# check von $gv_Auswahl, falls leer wird Variable auch geloescht.
+						# check von $gv_Auswahl, falls leer wird Variable auch gelöscht.
 						check_gv_Auswahl DOM
 						## }}}
 						cron_main_menu $lv_Dom
 						;;
 					$lv_Mon)
 						# Monatsauswahl# {{{
-						CRON_MON_MSG=$(gettext 'Waehlen Sie bitte die Monate aus.')
-						# vorherige Werte mit "on" belegen, fuer die Funktion checklist.
+						CRON_MON_MSG=$(gettext 'Wählen Sie bitte die Monate aus.')
+						# vorherige Werte mit "on" belegen, für die Funktion checklist.
 						generate_is_file "${MON//,/ }"
 						is_value "`print {1..12}`"
 						#
@@ -2729,15 +2729,15 @@ convert_mib_size() {
 									;;
 							esac
 						done
-						# check von $gv_Auswahl, falls leer wird Variable auch geloescht.
+						# check von $gv_Auswahl, falls leer wird Variable auch gelöscht.
 						check_gv_Auswahl MON
 						## }}}
 						cron_main_menu $lv_Mon
 						;;
 					$lv_Dow)
 						# Tag der Woche - Auswahl# {{{
-						CRON_DOW_MSG=$(gettext 'Waehlen Sie bitte die Wochentage aus.')
-						# vorherige Werte mit "on" belegen, fuer die Funktion checklist.
+						CRON_DOW_MSG=$(gettext 'Wählen Sie bitte die Wochentage aus.')
+						# vorherige Werte mit "on" belegen, für die Funktion checklist.
 						generate_is_file "${DOW//,/ }"
 						is_value "`print {0..7}`"
 						#
@@ -2756,7 +2756,7 @@ convert_mib_size() {
 									;;
 							esac
 						done
-						# check von $gv_Auswahl, falls leer wird Variable auch geloescht.
+						# check von $gv_Auswahl, falls leer wird Variable auch gelöscht.
 						check_gv_Auswahl DOW
 						## }}}
 						cron_main_menu $lv_Dow
@@ -2821,7 +2821,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 						#}}}
 						;;
 					$gv_Delete)	
-						# loeschen von Eintraegen# {{{
+						# löschen von Einträgen# {{{
 						if [ -f "$Cron_File" ] ; then
 							print -l ${${(R)"${(qf)$(< $Cron_File)}"##*${Prog_Wahl}*}//\'\'/ } >${Cron_File}$$
 							crontab -u $USER ${Cron_File}$$
@@ -2845,7 +2845,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 			Cron_File="${gv_WorkDir}/crontab"
 			case "$1" in
 				-s)	Sudo=sudo
-					# User veraendern
+					# User verändern
 					if [ -n "$3" ] ; then
 						if [[ -x ${commands[$3]} ]] ; then
 							Prog_Wahl="$3"
@@ -2876,13 +2876,13 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 		fi
 	}
 	#}}}
-	# Funktion (dd_gauge), Fortschrittsanzeige fuer das Programm dd# {{{
+	# Funktion (dd_gauge), Fortschrittsanzeige für das Programm dd# {{{
 	#
 	# usage: dd_gauge DD_CMD DST_SIZE GAUGE_MSG
 	# 
-	# DD_CMD - Kompletter dd Befehl, koennen ja nebenbai noch andere dd
+	# DD_CMD - Kompletter dd Befehl, können ja nebenbai noch andere dd
 	#          Prozesse laufen.
-	# DST_SIZE - gesamte Groesse des Laufwerks
+	# DST_SIZE - gesamte Grösse des Laufwerks
 	# GAUGE_MSG - Nachricht die angezeigt werden soll.
 	#
 	dd_gauge() {
@@ -2914,7 +2914,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	#
 	# usage: device_convert [ -i ] DEVICE
 	# -i - umgekehrtes konvertieren.
-	# DEVICE - Variable mit dem Geraet 0,1,0 (SCSI).
+	# DEVICE - Variable mit dem Gerät 0,1,0 (SCSI).
 	# bei keiner Option muss DEVICE volgendes enthalten:
 	# DEVICE - kann /dev/scd* (SCSI) /dev/hd[a-z] (IDE) sein.
 	#
@@ -2963,7 +2963,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 				-i)
 					if [ -n "$2" ] ; then
 						DEVICE="$2"
-						# Das bus,target,lun Geraet wird in dem Array CD_DEV herraus gesucht.
+						# Das bus,target,lun Gerät wird in dem Array CD_DEV herraus gesucht.
 						Anz=0
 						for n in $STL_CD_DEV ; {
 							(( Anz++ ))
@@ -3067,18 +3067,18 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	dialog_version() {
 		Dialog_Version=${${(s: :)$($Dialog --version)}[2]}
 		if [[ "$Dialog_Version" < 1.1-20070227 ]] ; then
-            MSG=$(gettext 'Sie benoetigen die dialog Version 1.1-20070227 oder groesser, um mit diesem Script arbeiten zu koennen.')
+            MSG=$(gettext 'Sie benötigen die dialog Version 1.1-20070227 oder grösser, um mit diesem Script arbeiten zu können.')
             msgbox "$gv_Attention" "$MSG"
             exit 0
 		fi
 	}
 	#}}}
 	# Function (dir_file_choice, veraltet), ganzes Verzeichnis oder{{{
-	# nur einzelne Dateien auswaehlen
+	# nur einzelne Dateien auswählen
 	#
 	# usage: dir_file_choice Function
 	# Wird nur noch vom Script kwgpgcrypt benutzt. Es werden dann entweder nur Verzeichnisse
-	# oder nur Dateien angezeigt. Es muss eine Funktion uebergeben werden, die dann gestartet 
+	# oder nur Dateien angezeigt. Es muss eine Funktion übergeben werden, die dann gestartet 
 	# wird.
 	#
 	dir_file_choice() {
@@ -3094,14 +3094,14 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 						menubox "${gv_Auswahl#HELP }" "$DIR_CHOICE_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MSG"
 						;;
 					$lv_Directories)
-						# ganze Verzeichnisse auswaehlen
+						# ganze Verzeichnisse auswählen
 						#
 						F_OPT="/"
 						$1
 						break
 						;;
 					$lv_Files)
-						# Nur Dateien auswaehlen
+						# Nur Dateien auswählen
 						#
 						F_OPT="."
 						$1
@@ -3116,7 +3116,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	#}}}
 	# Funktion (dselect_check){{{
 	#
-	# benoetigt die Funktion yesno
+	# benötigt die Funktion yesno
 	# usage: dselect_check [ -c | -v ] "$VERZ"
 	# -c = create
 	# -v = verify
@@ -3151,7 +3151,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 						VERZ="$DIR"
 					fi
 					;;
-				-v) # pruefen ob das Verzeichnis schon existiert. Wird benoetigt falls man Verzeichnisse
+				-v) # prüfen ob das Verzeichnis schon existiert. Wird benötigt falls man Verzeichnisse
 					# nicht mehrfach vergeben kann, wie zum Beispiel das Verzeichnis /home.
 					#
 					DIR="$2"
@@ -3169,7 +3169,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 						msgbox "$gv_Attention" "$MSG"
 						unset -- VERZ
 					elif [ ! -r "$DIR" ] ; then
-						MSG=$(gettext 'Sie haben keine Leserechte fuer das Verzeichnis $DIR.')
+						MSG=$(gettext 'Sie haben keine Leserechte für das Verzeichnis $DIR.')
 						msgbox "$gv_Attention" "$MSG"
 						unset -- VERZ
 					else
@@ -3186,7 +3186,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	#
 	# usage: edit_file [ TITLE ] FILE
 	# TITLE - Titelname der Dialogbox editbox
-	# FILE - Datei die zur bearbeitung geoeffnet werden soll
+	# FILE - Datei die zur bearbeitung geöffnet werden soll
 	#
 	# Die Variable EDITOR kann man mit "kwadmin" konfigurieren
 	# Sie beinhaltet - einen Editor oder es wird die Dialogbox
@@ -3220,16 +3220,16 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 		fi
 	}
 	## }}}
-	# Funktion (file_chmod), fuer die Dateirechte{{{
+	# Funktion (file_chmod), für die Dateirechte{{{
 	#
-	# benoetigt die Funktionen mask und user_group_check
+	# benötigt die Funktionen mask und user_group_check
 	#
 	# usage: file_chmod
 	#
 	file_chmod() {
 		CHMOD_TITLE=$(gettext 'Rechteverwaltung')
 		lv_Mode=$(gettext 'Mode')
-		# Funktion fuer das Menue der Rechte Einstellung{{{
+		# Funktion für das Menue der Rechte Einstellung{{{
 		#
 		# usage: mode_menue
 		#
@@ -3248,7 +3248,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					mode_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Mode)
-					# Datei Rechte auswaehlen{{{
+					# Datei Rechte auswählen{{{
 					#
 					mask "$MOD"
 					if [ -n "$MASK" ] ; then
@@ -3260,9 +3260,9 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					mode_menue $lv_Mode
 					;;
 				$gv_User)
-					# Datei Besitzer auswaehlen{{{
+					# Datei Besitzer auswählen{{{
 					user_group_check -p
-					MSG=$(gettext 'Waehlen Sie einen Benutzer aus.')
+					MSG=$(gettext 'Wählen Sie einen Benutzer aus.')
 					menubox "$U" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
 					#
 					while [ "$gv_Auswahl" ] ; do
@@ -3280,10 +3280,10 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					mode_menue $gv_User
 					;;
 				$gv_Group)
-					# Gruppe auswaehlen{{{
+					# Gruppe auswählen{{{
 					#
 					user_group_check -g
-					MSG=$(gettext 'Waehlen Sie eine Gruppe aus.')
+					MSG=$(gettext 'Wählen Sie eine Gruppe aus.')
 					menubox "$G" "$CHMOD_TITLE" "$MSG" "$U_G_ARRAY"
 					#
 					while [ "$gv_Auswahl" ] ; do 
@@ -3303,13 +3303,13 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 					mode_menue $gv_Group
 					;;
 				$gv_Save)
-					# nur wenn alle Variablen belegt sind wird die Konfiguration uebernommen.{{{
+					# nur wenn alle Variablen belegt sind wird die Konfiguration übernommen.{{{
 					#
 					if [ "$MOD" -a "$U" -a "$G" ] ; then
 						CHMOD=($MOD $U $G)
 						break
 					else
-						MSG=$(gettext 'Sie muessen erst alle Menuepunkte auswaehlen und mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst alle Menuepunkte auswählen und mit Werten belegen.')
 						msgbox "$gv_Attention" "$MSG"
 						mode_menue
 					fi
@@ -3322,15 +3322,15 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	}
 	#}}}
 # Funktion (file_choice) um mittels file_filter{{{
-# Dateien auszuwaehlen oder anzulegen.
+# Dateien auszuwählen oder anzulegen.
 #
-# benoetigt die Variablen FORMAT (Dateiformat)
+# benötigt die Variablen FORMAT (Dateiformat)
 # und SUFFIX (Dateiendung, kann auch leer sein) und/oder AUSSCHLUSS.
 #
 # usage: file_choice VERZEICHNIS [ multi | create | only ] $VAR
 #        multi - Mehrfachauswahl von Dateien.
 #        create - Dateiname anlegen
-#        only - Eine Datei auswaehlen
+#        only - Eine Datei auswählen
 #        $VAR - vorheriger Wert
 #
 file_choice() {
@@ -3349,7 +3349,7 @@ file_choice() {
 					case "$2" in 
 						multi)
 							FILE_MENU=($DF_ARRAY)
-							FILE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Dateien aus.')
+							FILE_MSG=$(gettext 'Wählen Sie ein oder mehrere Dateien aus.')
 							checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -3357,7 +3357,7 @@ file_choice() {
 									HELP*)	script_help share/file_help
 										checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
-									*)	# alles andere wird uebernommen und im neuen Array WERT
+									*)	# alles andere wird übernommen und im neuen Array WERT
 										# gespeichert
 										set -A WERT $gv_LogFile$$
 										break
@@ -3367,10 +3367,10 @@ file_choice() {
 							;;
 						create)
 							#
-							# Datei anlegen oder auswaehlen
+							# Datei anlegen oder auswählen
 							#
 							FILE_MENU=($gv_Create \"\" on $DF_ARRAY)
-							FILE_MSG=$(gettext 'Waehlen Sie eine Datei aus oder legen eine neue an.')
+							FILE_MSG=$(gettext 'Wählen Sie eine Datei aus oder legen eine neue an.')
 							radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -3380,7 +3380,7 @@ file_choice() {
 										;;
 									$gv_Create)
 										# Dateinamen vergeben
-										MSG=$(gettext 'Geben Sie hier bitte einen neuen Namen fuer die Datei ein.')
+										MSG=$(gettext 'Geben Sie hier bitte einen neuen Namen für die Datei ein.')
 										inputbox "$FILE_TITLE" "$MSG"
 										#
 										if [ "$gv_Auswahl" ] ; then
@@ -3391,7 +3391,7 @@ file_choice() {
 										fi
 										break
 										;;
-									*)	# alles andere wird uebernommen und im neuen Array WERT
+									*)	# alles andere wird übernommen und im neuen Array WERT
 										# gespeichert
 										set -A WERT $gv_Auswahl
 										break
@@ -3401,7 +3401,7 @@ file_choice() {
 							;;
 						only)
 							FILE_MENU=($DF_ARRAY)
-							FILE_MSG=$(gettext 'Waehlen Sie eine Datei aus.')
+							FILE_MSG=$(gettext 'Wählen Sie eine Datei aus.')
 							radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -3409,7 +3409,7 @@ file_choice() {
 									HELP*)	script_help share/file_help
 										radiolist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU" "$VAR"
 										;;
-									*)	# alles andere wird uebernommen und im neuen Array WERT
+									*)	# alles andere wird übernommen und im neuen Array WERT
 										# gespeichert
 										set -A WERT $gv_Auswahl
 										break
@@ -3439,7 +3439,7 @@ file_choice() {
 	# Funktion (file_filter){{{
 	#
 	# usage: file_filter OPTION "$FORMAT" "$SUFFIX" "$AUSCHLUSS"
-	# AUSSCHLUSS ist optional, FORMAT und SUFFIX muessen belegt sein, ob leer oder
+	# AUSSCHLUSS ist optional, FORMAT und SUFFIX müssen belegt sein, ob leer oder
 	# mit Werten.
 	#
 	# OPTION: -r = rekursiv, -d nur Verzeichnisse.
@@ -3458,7 +3458,7 @@ file_choice() {
 		unset -- FUND DF_ARRAY DF_DIR_ARRAY DF_ARRAY_NULL DF_ARRAY_M
 		if [ $# -ge 2 -o "$1" = -d ] ; then
 			# Funktion (filetype), stellt die Dateitypen zur# {{{
-			# Auswahl zur Verfuegung (assoziatives Array).
+			# Auswahl zur Verfügung (assoziatives Array).
 			#
 			# usage: filetype
 			#
@@ -3498,7 +3498,7 @@ file_choice() {
 			}
 			## }}}
 			# Funktion (set_filetype), stellt den Dateityp ein zur# {{{
-			# Auswahl fuer die Funktion file_filter.
+			# Auswahl für die Funktion file_filter.
 			#
 			# usage: set_filetype [ FILE_TYP ]
 			#
@@ -3520,11 +3520,11 @@ file_choice() {
 							Filetype=(data)
 							;;
 						ELF)
-							# ELF binaere Dateien
+							# ELF binäre Dateien
 							Filetype=(elf)
 							;;
 						GPG)
-							# gpg verschluessellte Dateien
+							# gpg verschlüssellte Dateien
 							Filetype=(gpg)
 							;;
 						GPGPUB)
@@ -3548,7 +3548,7 @@ file_choice() {
 							Filetype=(iso udf)
 							;;
 						LUKS)
-							# LUKS verschluesselte Dateien
+							# LUKS verschlüsselte Dateien
 							Filetype=(luks)
 							;;
 						MP3)
@@ -3575,7 +3575,7 @@ file_choice() {
 							Filetype=(sslcacert)
 							;;
 						SSLPRIVKEY)
-							# openssl erzeugter privater Schluessel
+							# openssl erzeugter privater Schlüssel
 							Filetype=(sslprivkey)
 							;;
 						TAR)
@@ -3651,7 +3651,7 @@ file_choice() {
 									case "$4" in
 										LOG)
 											# Ist eine Zahl vorhanden so wird diese 
-											# Datei nicht genommen, nur fuer Logdateien
+											# Datei nicht genommen, nur für Logdateien
 											case "$file" in
 												*[0-9]*)
 													;;
@@ -3721,7 +3721,7 @@ file_choice() {
 									case "$3" in
 										LOG)
 											# Ist eine Zahl vorhanden so wird diese 
-											# Datei nicht genommen, nur fuer Logdateien
+											# Datei nicht genommen, nur für Logdateien
 											case "$file" in
 												*[0-9]*)
 													;;
@@ -3764,7 +3764,7 @@ file_choice() {
 	#}}}
 	# Funktion (fselect_check){{{
 	#
-	# benoetigt die Funktion yesno
+	# benötigt die Funktion yesno
 	# usage: fselect_check [ -c ] "$DATEI"
 	# -c = create
 	#
@@ -3806,13 +3806,13 @@ file_choice() {
 						is_dir_msg "$File"
 					fi
 					;;
-				*)	# hier kann man auch mehrere Dateien ueber regulaere
-                    # Ausdruecke ueberpruefen
+				*)	# hier kann man auch mehrere Dateien über reguläre
+                    # Ausdrücke überprüfen
 					File="$1"
                     setopt globsubst
                     Anz=0
                     for i in $File ; {
-                        # erst pruefen ob es ein Verzeichniss ist und wenn dann auslassen
+                        # erst prüfen ob es ein Verzeichniss ist und wenn dann auslassen
                         if [ -d "$i" ] ; then
                             continue
 						elif [ ! -f "$i" ] ; then
@@ -3821,7 +3821,7 @@ file_choice() {
 							MSG=$(gettext 'Die Datei $i ist nicht vorhanden.')
 							msgbox "$gv_Attention" "$MSG"
 						else
-                            # Dateien aufzaehlen
+                            # Dateien aufzählen
                             (( Anz++ ))
 							FILE[Anz]="$i"
 						fi
@@ -3834,8 +3834,8 @@ file_choice() {
 	}
 	#}}}
 	# Funktion (generate_is_file){{{
-	# gv_IsValue_File wird von der Funktion file_filter benoetigt.
-	# Dient zum Vergleich was schon vorher ausgewaehlt wurde
+	# gv_IsValue_File wird von der Funktion file_filter benötigt.
+	# Dient zum Vergleich was schon vorher ausgewählt wurde
 	# und dann mit "on" gekennzeichnet wird.
 	#
 	# usage: generate_is_file WERT [SUFFIX]
@@ -3854,7 +3854,7 @@ file_choice() {
 		fi
 	}
 	#}}}
-	# Funktion (gen_keys), generiert Passwoerter/Passphrasen{{{
+	# Funktion (gen_keys), generiert Passwörter/Passphrasen{{{
 	#
 	# usage: gen_keys
 	#
@@ -3864,7 +3864,7 @@ file_choice() {
 		CHAR="8"
 		# Funktion (gen_key_menu){{{
 		#
-		lv_Charlength=$(gettext 'Zeichenlaenge')
+		lv_Charlength=$(gettext 'Zeichenlänge')
 		gen_key_menu() {
 			GEN_KEY_MENU=($gv_Input \"$INPUT\" $lv_Charlength \"$CHAR\"
 			$gv_Create \"\" $gv_Back \"\")
@@ -3889,8 +3889,8 @@ file_choice() {
 					gen_key_menu "$gv_Input"
 					;;
 				$lv_Charlength)
-					# Zeichenlaenge zur Erstellung eines Passworts eingeben{{{
-					CHAR_MSG=$(gettext 'Geben Sie bitte die Laenge des zu erstellenden Passwortes an.')
+					# Zeichenlänge zur Erstellung eines Passworts eingeben{{{
+					CHAR_MSG=$(gettext 'Geben Sie bitte die Länge des zu erstellenden Passwortes an.')
 					number_input "$lv_Charlength" "$PASSWD_MSG" "${CHAR:-8}"
 					if [ -n "$NUMBER" ] ; then
 						CHAR="$NUMBER"
@@ -3901,14 +3901,14 @@ file_choice() {
 					gen_key_menu "$lv_Charlength"
 					;;
 				$gv_Create)
-					# Schluessel erstellen{{{
+					# Schlüssel erstellen{{{
 					unset -- P_PASS
 					if [ -n "$CHAR" -a -n "$INPUT" ] ; then
 						P_PASS="${$(openssl passwd $INPUT)[0,CHAR]}"
 						unset -- INPUT
 						break
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte $gv_Input und $lv_Charlength mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte $gv_Input und $lv_Charlength mit Werten belegen.')
 						msgbox "$gv_Attention" "$MSG"
 						gen_key_menu
 					fi
@@ -3920,8 +3920,8 @@ file_choice() {
 		done
 	}
 	#}}}
-	# Funktion (gpg_getkeys_id), holt die User Schluessel-ID# {{{
-	# Standard_Schluessel_ID auswaehlen, mit der unterschrieben wird.# {{{
+	# Funktion (gpg_getkeys_id), holt die User Schlüssel-ID# {{{
+	# Standard_Schlüssel_ID auswählen, mit der unterschrieben wird.# {{{
 	# und stellt sie zur Auswahl
 	#
 	# usage: gpg_getkeys_id [ USER ]
@@ -3945,10 +3945,10 @@ file_choice() {
 				(( Anz++ ))
 			fi
 		done
-		# Wurden Schluessel gefunden, werden sie zur Auswahl angeboten.
+		# Wurden Schlüssel gefunden, werden sie zur Auswahl angeboten.
 		if [ ! -z "$ID" ] ; then
 			KEY_ID_TITLE=(${gv_Configuration}::${lv_Default_Keyid})
-			KEY_ID_MSG=$(gettext 'Waehlen Sie die Standard Schluessel ID aus.')
+			KEY_ID_MSG=$(gettext 'Wählen Sie die Standard Schlüssel ID aus.')
 			menubox "$DEFAULT_KEY" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
@@ -3956,7 +3956,7 @@ file_choice() {
 						menubox "${gv_Auswahl#HELP }" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
 						;;
 					*)	#
-						# Schluessel ID uebernehmen
+						# Schlüssel ID übernehmen
 						#
 						DEFAULT_KEY="$gv_Auswahl"
 						TRUSTED_KEY=${${(s.:.)${(u)${(M)${(f)"$(gpg --homedir $Gpg_Home --list-keys --with-colons "$User")"}##*${DEFAULT_KEY}}}}[5]}
@@ -3965,16 +3965,16 @@ file_choice() {
 				esac
 			done
 		else
-			MSG=$(gettext 'Es wurde kein oeffentlicher Schluessel fuer den User "$User" gefunden. Vielleicht eine falsche Konfiguration des eigenen Schluessels. Lesen Sie Bitte die Hilfe.')
+			MSG=$(gettext 'Es wurde kein öffentlicher Schlüssel für den User "$User" gefunden. Vielleicht eine falsche Konfiguration des eigenen Schlüssels. Lesen Sie Bitte die Hilfe.')
 			msgbox "$gv_Attention" "$MSG"
 		fi
 	}
 	#}}}
-	# Funktion (if_conf_file) um zu pruefen fuer welches OS {{{
+	# Funktion (if_conf_file) um zu prüfen für welches OS {{{
 	# die jeweilige Datei existiert,
 	# und wennn ja dann einlesen
 	#
-	# benoetigt die Function os_check
+	# benötigt die Function os_check
 	#
 	# usage: if_conf_file "$OS" (dhcp|grub2|init|initrc|net|nisclient|ntp|proxy|raid)
 	#
@@ -3982,7 +3982,7 @@ file_choice() {
 		if [ "$#" -ge 2 ] ; then
 			IF_OPT="$2"
 			#
-	# RPM Init Sym Links erstellen/loeschen{{{
+	# RPM Init Sym Links erstellen/löschen{{{
 	#
 	# usage: initrc_config
 	initrc_config() {
@@ -3994,7 +3994,7 @@ file_choice() {
 			while read Init_Script RunLevel ; do
 				INIT_SCRIPT="$Init_Script"
 				RUN_LEVEL="$RunLevel"
-				# vorherige Links loeschen
+				# vorherige Links löschen
 				if [ "$Anz" = 1 ] ; then
 					rm ${ETC_PATH}/rc[0-6].d/???${Init_Script} &>/dev/null
 					rm -f /usr/sbin/rc${INIT_SCRIPT} &>/dev/null
@@ -4026,7 +4026,7 @@ file_choice() {
 					stop)
 						# Runlevel Prefix K (stop)
 						RL_Prefix=K
-						# Links loeschen falls nur Stop ausgewaehlt wurde.
+						# Links löschen falls nur Stop ausgewählt wurde.
 						if [ -L /usr/sbin/rc${INIT_SCRIPT} -a -z "$Start_RC" ] ; then
 							rm -f /usr/sbin/rc${INIT_SCRIPT} &>/dev/null
 							break
@@ -4047,7 +4047,7 @@ file_choice() {
 				local Nr RunLevelNr Start_Stop
 				# Runlevel Nummer herrausfinden
 				RunLevelNr=${=$(runlevel)[2]}
-				# Wurde fur dieses Runlevel etwas ausgewaehlt wird das
+				# Wurde fur dieses Runlevel etwas ausgewählt wird das
 				# Init Script gestartet oder gestopt
 				Nr=${${(M)${(ws: :)${RUN_LEVEL}}##${RunLevelNr}}// /}
 				#Nr=${${(M)${${(s:.:)${RUN_LEVEL}}[1]}##${RunLevelNr}}[1]}
@@ -4111,7 +4111,7 @@ file_choice() {
 							## }}}
 							;;
 						dhcp)
-							# Leases Verzeichnis fuer dhcp.# {{{
+							# Leases Verzeichnis für dhcp.# {{{
 							DHCLIENT_LEASES_DIR=/var/lib/dhcp
 							if [ ! -d "$DHCLIENT_LEASES_DIR" ] ; then
 								create_file -d "$DHCLIENT_LEASES_DIR"
@@ -4120,19 +4120,19 @@ file_choice() {
 							## }}}
 							;;
 						init)
-							# Pfade fuer das Initsystem{{{
+							# Pfade für das Initsystem{{{
 							RCD_PATH=/etc
 							ETC_PATH=/etc
 							INITD_PATH="/etc/init.d"
 							#}}}
 							;;
 						initrc)
-							# Init Sym Links erstellen/loeschen{{{
+							# Init Sym Links erstellen/löschen{{{
 							if [ -f "${gv_WorkDir}/runlevconf_startstop" ] ; then
 								while read Init_Script RunLevel ; do
 									INIT_SCRIPT="$Init_Script"
 									RUN_LEVEL="$RunLevel"
-									# alle vorherigen Links loeschen
+									# alle vorherigen Links löschen
 									################################
 									# INFO: sysv-rc >=2.88dsf-42
 									################################
@@ -4168,7 +4168,7 @@ file_choice() {
 							;;
 						net)
 							# Netzwerk Datei einlesen, falls sie existiert{{{
-							# und vorhandene Variablen loeschen
+							# und vorhandene Variablen löschen
 							unset -- gv_Ip gv_Netmask gv_Broadcast gv_Gateway gv_Nameserver gv_Boot
 							NET_CONF_PATH=/etc/network
 							NET_CONF_FILE=${NET_CONF_PATH}/interfaces
@@ -4199,7 +4199,7 @@ file_choice() {
 							;;
 						nisclient)
 							# Netzwerk NIS Einstellungen einlesen, falls sie existieren{{{
-							# und vorhandene Variablen loeschen
+							# und vorhandene Variablen löschen
 							unset -- NIS_CLIENT_SERVER
 							NIS_YPCONF=/etc/yp.conf
 							DEFAULTDOMAIN_CONF=/etc/defaultdomain
@@ -4288,7 +4288,7 @@ file_choice() {
 							## }}}
 							;;
 						init)
-							# Pfade fuer das Initsystem.{{{
+							# Pfade für das Initsystem.{{{
 							ETC_PATH=/etc/rc.d
 							RCD_PATH="$ETC_PATH"
 							INITD_PATH="/etc/init.d"
@@ -4296,7 +4296,7 @@ file_choice() {
 							#}}}
 							;;
 						initrc)
-							# Init Sym Links erstellen/loeschen
+							# Init Sym Links erstellen/löschen
 							initrc_config
 							;;
 						ntp)
@@ -4327,7 +4327,7 @@ file_choice() {
 							## }}}
 							;;
 						init)
-							# Pfade fuer das Initsystem.{{{
+							# Pfade für das Initsystem.{{{
 							ETC_PATH=/etc/rc.d
 							RCD_PATH="$ETC_PATH"
 							INITD_PATH="/etc/init.d"
@@ -4335,7 +4335,7 @@ file_choice() {
 							#}}}
 							;;
 						initrc)
-							# Init Sym Links erstellen/loeschen
+							# Init Sym Links erstellen/löschen
 							initrc_config
 							;;
 						ntp)
@@ -4360,8 +4360,8 @@ file_choice() {
 		fi
 	}
 	#}}}
-	# Funktion (if_conf_prog), um zu pruefen fuer welches OS,{{{
-	# welches Konfiguration Programm zustaendig 
+	# Funktion (if_conf_prog), um zu prüfen für welches OS,{{{
+	# welches Konfiguration Programm zuständig 
 	# ist und dann starten. Ist keines vorhanden wird der kwtools Code benutzt.
 	#
 	# usage: if_conf_prog "$OS" PARAMETER
@@ -4371,20 +4371,20 @@ file_choice() {
 	if_conf_prog() {
 		local If_Opt Os
 		# Funktion (mdmonitor_rh_msg), Nachricht das CentOS, Fedora das Startscript# {{{
-		# mdmonitor aktivieren muessen.
+		# mdmonitor aktivieren müssen.
 		# usage: mdmonitor_rh_msg
 		#
 		mdmonitor_rh_msg() {
-			MSG=$(gettext 'Bei "$Os" muessen Sie nur das Startscript (mdmonitor) aktivieren.')
+			MSG=$(gettext 'Bei "$Os" müssen Sie nur das Startscript (mdmonitor) aktivieren.')
 			msgbox "$gv_Attention" "$MSG"
 		}
 		## }}}
 		# Funktion (no_quickly_mailconf_msg), Nachricht das CentOS, Fedora# {{{
-		# kein Konfigurationstool fuer postfix haben.
+		# kein Konfigurationstool für postfix haben.
 		# usage: no_quickly_mailconf_msg
 		#
 		no_quickly_mailconf_msg() {
-			MSG=$(gettext 'Es gibt kein Quickly-Konfigurationstool fuer das Paket "postfix" unter "$Os".')
+			MSG=$(gettext 'Es gibt kein Quickly-Konfigurationstool für das Paket "postfix" unter "$Os".')
 			msgbox "$gv_Attention" "$MSG"
 		}
 		## }}}
@@ -4451,12 +4451,12 @@ file_choice() {
 							# Mail Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules mail
 								if [[ -n $MODUL ]] ; then
 									yast2 mail
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-mail\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-mail\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4466,12 +4466,12 @@ file_choice() {
 							# Netzwerk Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules lan
 								if [[ -n $MODUL ]] ; then
 									yast2 lan
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-network\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-network\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4481,12 +4481,12 @@ file_choice() {
 							# NTP Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules ntp-client
 								if [[ -n $MODUL ]] ; then
 									yast2 ntp-client
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-ntp-client\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-ntp-client\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4496,12 +4496,12 @@ file_choice() {
 							# Proxy Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules proxy
 								if [[ -n $MODUL ]] ; then
 									yast2 proxy
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-network\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-network\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4511,12 +4511,12 @@ file_choice() {
 							# Raid/mdadm Monitor Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules sysconfig
 								if [[ -n $MODUL ]] ; then
 									yast2 sysconfig
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-sysconfig\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-sysconfig\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4526,12 +4526,12 @@ file_choice() {
 							# runlevel Konfiguration# {{{
 							prog_check yast2
 							if [ -n "$PROGS" ] ; then
-								# Module suchen ob verfuegbar.
+								# Module suchen ob verfügbar.
 								if_yast2_modules runlevel
 								if [[ -n $MODUL ]] ; then
 									yast2 runlevel
 								else
-									MSG=$(gettext 'Sie muessen erst das Paket \"yast2-runlevel\" installieren.')
+									MSG=$(gettext 'Sie müssen erst das Paket \"yast2-runlevel\" installieren.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 							fi
@@ -4603,9 +4603,9 @@ file_choice() {
 is_value() {
 	unset -- VALUE_ARRAY DEFAULT_VALUE
 	if [ "$#" -eq 1 ] ; then
-		Values="$1"
+		Valüs="$1"
 		local Is
-		for i in ${=Values} ; {
+		for i in ${=Valüs} ; {
 			if [ -f "$gv_IsValue_File" ] ; then
 				Is="`print ${(u)${(M)${(f)"$(< $gv_IsValue_File)"}##$i *}}`"
 				if [[ ${Is%% *} == $i ]] ; then
@@ -4623,7 +4623,7 @@ is_value() {
 	fi
 }
 #}}}
-	# Funktion (kernel_release), Infos ueber den laufenden kernel{{{
+	# Funktion (kernel_release), Infos über den laufenden kernel{{{
 	#
 	# usage: kernel_release
 	# globale Variablen sind
@@ -4662,7 +4662,7 @@ is_value() {
 		done
 	}
 	#}}}
-	# Funktion (list_shell), verfuegbare shells auflisten{{{
+	# Funktion (list_shell), verfügbare shells auflisten{{{
 	# und zur Auswahl anbieten.
 	#
 	# usage: list_shell [ Shell ]
@@ -4686,7 +4686,7 @@ is_value() {
 			unset -- LOCAL_SHELL_MENU
 			LOCAL_SHELL_MENU="$Shell"
 			LOCAL_SHELL_TITLE=$(gettext 'Shell-Auswahl')
-			LOCAL_SHELL_MSG=$(gettext 'Waehlen Sie eine der installierten Shells aus.')
+			LOCAL_SHELL_MSG=$(gettext 'Wählen Sie eine der installierten Shells aus.')
 			# Funktion (list_shell_menu)# {{{
 			#
 			list_shell_menu() {
@@ -4699,7 +4699,7 @@ is_value() {
 					HELP*)	script_help share/shell_help
 						list_shell_menu "${gv_Auswahl#HELP }"
 						;;
-					*)	# uebernehmen
+					*)	# übernehmen
 						gv_Shell="$gv_Auswahl"
 						break
 						;;
@@ -4742,10 +4742,10 @@ is_value() {
 	#}}}
 	# Funktion (lock){{{
 	#
-	# Sperrt Devices (locken), benoetigt die Funktion create_file.
+	# Sperrt Devices (locken), benötigt die Funktion create_file.
 	#
 	# usage: lock [ -r ][ -s | nichts ] "$DEVICES"
-	# -r - lockfile loeschen
+	# -r - lockfile löschen
 	# -s - Scriptname locken
 	# nichts - Device locken
 	#
@@ -4754,20 +4754,20 @@ is_value() {
 			local Opt
 			Opt="$1"
 			case $Opt in
-				-r)	# lock loeschen
+				-r)	# lock löschen
 					for f in $2 ; {
 						rm -f /var/tmp/${f##*/}.lock &>/dev/null
 					}
 					;;
 				-s)	# Script lock anlegen
 					# Wird das Script schon benutzt kommt eine Nachricht das das Script
-					# gerade benutzt wird und 2 Ebenen hoeher gesprungen, ohne Terminal
+					# gerade benutzt wird und 2 Ebenen höher gesprungen, ohne Terminal
 					# wird das Script beendet.
 					for f in $2 ; {
 						if [ -e /var/tmp/${f##*/}.lock ] ; then
 							# Nachricht nur wenn ein Terminal offen ist anzeigen.
 							if [[ -n $gv_Terminal ]] ; then
-								MSG=$(gettext '$f wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
+								MSG=$(gettext '$f wird gerade benutzt. Versuchen Sie es später nochmal.')
 								msgbox "$gv_Attention" "$MSG"
 								break 2
 							else
@@ -4781,10 +4781,10 @@ is_value() {
 					;;
 				*)	# Device lock anlegen
 					# Wird das Device schon benutzt kommt eine Nachricht das das Device
-					# gerade benutzt wird und 2 Ebenen hoeher gesprungen.
+					# gerade benutzt wird und 2 Ebenen höher gesprungen.
 					for f in $1 ; {
 						if [ -e /var/tmp/${f##*/}.lock ] ; then
-							MSG=$(gettext 'Das Device ($f) wird gerade benutzt. Versuchen Sie es spaeter nochmal.')
+							MSG=$(gettext 'Das Device ($f) wird gerade benutzt. Versuchen Sie es später nochmal.')
 							# Nachricht nur wenn ein Terminal offen ist anzeigen.
 							if [[ -n $gv_Terminal ]] ; then
 								msgbox "$gv_Attention" "$MSG"
@@ -4807,8 +4807,8 @@ is_value() {
 	# bzw. ein loop Device entfernen.
 	#
 	# usage: lo_setup [ -r ] [ LOOPDEVICE ]
-	# -r - entferne das uebergebene Loop Device
-	# LOOPDEVICE - Variable die das zu entfernende Loop Device enthaelt
+	# -r - entferne das übergebene Loop Device
+	# LOOPDEVICE - Variable die das zu entfernende Loop Device enthält
 	#
 	lo_setup() {
 		unset -- gv_Loop_Dev
@@ -4817,7 +4817,7 @@ is_value() {
 			if [[ -b $2 ]] && [[ $2 == /dev/loop* ]] ; then
 				gv_Loop_Dev="$2"
 				if ! losetup -d $gv_Loop_Dev ; then
-					MSG=$(gettext 'Das loopback Geraet ($gv_Loop_Dev) konnte nicht ausgebunden werden.')
+					MSG=$(gettext 'Das loopback Gerät ($gv_Loop_Dev) konnte nicht ausgebunden werden.')
 					msgbox "$gv_Attention" "$MSG"
 					return 1
 				fi
@@ -4837,16 +4837,16 @@ is_value() {
 	## }}}
 	# Funktion (mask)# {{{
 	#
-	# benoetigt die Funktion number_input, check_mask
+	# benötigt die Funktion number_input, check_mask
 	#
 	# usage: mask [ -u ] [ VAR ]
 	# VAR - vorheriger Wert
 	#
 	mask() {
-		# Uebersetzung mittels gettext
+		# Übersetzung mittels gettext
 		MASK_TITLE=$(gettext 'Zugriffsrechte')
-		MASK_MSG=$(gettext 'Geben Sie bitte die Zugriffsrechte ein. (1=ausfuehren , 2=schreiben, 4=lesen) Man kann diese Zahlen unterschiedlich zusammenrechnen (Bsp. 0640, man 1 chmod).')
-		UMASK_MSG=$(gettext 'Geben Sie hier bitte die 3 oder 4 Oktalzifern fuer die Zugriffsrechte ein (Bsp. 0022 oder 022, man 2 umask).')
+		MASK_MSG=$(gettext 'Geben Sie bitte die Zugriffsrechte ein. (1=ausführen , 2=schreiben, 4=lesen) Man kann diese Zahlen unterschiedlich zusammenrechnen (Bsp. 0640, man 1 chmod).')
+		UMASK_MSG=$(gettext 'Geben Sie hier bitte die 3 oder 4 Oktalzifern für die Zugriffsrechte ein (Bsp. 0022 oder 022, man 2 umask).')
 		#
 		if [ -z "$1" ] ; then
 			number_input "$MASK_TITLE" "$MASK_MSG"
@@ -4892,7 +4892,7 @@ is_value() {
 			setopt extendedglob
 			# Funktion no_umount_os_msg# {{{
 			no_umount_os_msg() {
-				MSG=$(gettext '$MOUNTPOINT wird nicht aus dem Verzeichnisbaum ausgebunden, da es vom Betriebssystem benoetigt wird.')
+				MSG=$(gettext '$MOUNTPOINT wird nicht aus dem Verzeichnisbaum ausgebunden, da es vom Betriebssystem benötigt wird.')
 				msgbox "$gv_Attention" "$MSG"
 			}
 			## }}}
@@ -4912,7 +4912,7 @@ is_value() {
 			unset -- MOUNTPOINT MOUNT U_MOUNT PART_DEV PART_DEV1
 			export MOUNTPOINT
 			PART_DEV="$2"
-			# Pruefen ob es ein LVM Device ist und dementsprechend
+			# Prüfen ob es ein LVM Device ist und dementsprechend
 			# die Variable PART_DEV1 belegen.
             if [ "${#${(ws:/:)$(print ${PART_DEV})}}" = 3 ] && \
 				[ "/${${(ws:/:)$(print ${PART_DEV})}[1]}" = /dev ] ; then
@@ -4970,7 +4970,7 @@ is_value() {
 					## }}}
 					;;
 				-c)
-					# Pruefen, ob Verzeichnis/Partition/... eingebunden ist# {{{
+					# Prüfen, ob Verzeichnis/Partition/... eingebunden ist# {{{
 					unset -- MOUNT MOUNTPOINT
 					MOUNTPOINT="`print ${${(s: :)${(M)${(f)"$(mount)"}##*${PART_DEV1}[[:space:]]*}}[3]}`"
 					if [ -z "$MOUNTPOINT" ] ; then
@@ -4986,7 +4986,7 @@ is_value() {
 					if [ -z "`print ${${(s: :)${(M)${(f)"$(mount)"}##(#s)*${PART_DEV1}[[:space:]]*}}[3]}`" ] ; then
 						mount "$PART_DEV" &>/dev/null
 						if [ $? != 0 ] ; then
-							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestoepselt sein.')
+							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestöpselt sein.')
 							msgbox "$gv_Attention" "$MSG"
 							MOUNT=no
 						fi
@@ -5001,7 +5001,7 @@ is_value() {
 					if [[ -z $SW_DEV ]] ; then
 						swapon "$PART_DEV1" &>/dev/null
 						if [ $? != 0 ] ; then
-							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestoepselt sein.')
+							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestöpselt sein.')
 							msgbox "$gv_Attention" "$MSG"
 							MOUNT=no
 						fi
@@ -5074,7 +5074,7 @@ is_value() {
 	# Funktion (mount_path), um ein MountVerzeichnis einzustellen# {{{
 	# Dieses muss in der /etc/fstab bereits angelegt worden sein.
 	#
-	# benoetigt die Funktion mount_check, dselect und dselect_check.
+	# benötigt die Funktion mount_check, dselect und dselect_check.
 	#
 	# usage: mount_path MOUNT_PATH
 	#
@@ -5110,7 +5110,7 @@ is_value() {
 	#
 	os_check() {
 		# Diese Distris werden unterstuetzt. Bei Debian gibt es noch die
-		# Unterstutzung fuer die Live-CD grml.
+		# Unterstutzung für die Live-CD grml.
 		for i in centos Debian fedora SUSE ; {
 			if [ ! -z "`print ${(M)${(f)"$(< /proc/version)"}##*${i}}`" ] ; then
 				OS="$i"
@@ -5128,7 +5128,7 @@ is_value() {
 								# CentOS
 								VERSION=${$(< /etc/redhat-release)[3]}
 								if [[ $VERSION -lt 7.0 ]] ; then	
-									MSG=$(gettext 'Sie benoetigen eine CentOS 5.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+									MSG=$(gettext 'Sie benötigen eine CentOS 5.0 oder höher um mit diesem Modul arbeiten zu können.')
 									msgbox "$gv_Info" "$MSG"
 								fi
 								;;
@@ -5142,12 +5142,12 @@ is_value() {
 					if [ -e /etc/debian_version -a -e /etc/grml_version ] ; then
 						VERSION=${${(ws: :)$(< /etc/grml_version)}[2]}
 						if [[ $VERSION -lt 2014.11 ]] ; then
-							MSG=$(gettext 'Sie benoetigen ein grml 2014.11 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+							MSG=$(gettext 'Sie benötigen ein grml 2014.11 oder höher um mit diesem Modul arbeiten zu können.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 					# Debian normal checken
 					elif [ -e /etc/debian_version ] ; then
-						MSG=$(gettext 'Sie benoetigen ein Debian 8.0 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+						MSG=$(gettext 'Sie benötigen ein Debian 8.0 oder höher um mit diesem Modul arbeiten zu können.')
 						VERSION=${${(M)$(< /etc/debian_version)[(fr)(#s)[0-9]*]}%%.*}
 						if [ ! -z $VERSION ] ; then
 							if [[ $VERSION -lt 8 ]] ; then
@@ -5168,7 +5168,7 @@ is_value() {
 						# Fedora8
 						VERSION=${$(< /etc/fedora-release)[3]}
 						if [[ $VERSION -lt 21 ]] ; then	
-							MSG=$(gettext 'Sie benoetigen eine Fedora 21 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+							MSG=$(gettext 'Sie benötigen eine Fedora 21 oder höher um mit diesem Modul arbeiten zu können.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 					else
@@ -5179,7 +5179,7 @@ is_value() {
 					if [ -e /etc/SuSE-release ] ; then
 						VERSION=${${(s: :)${(M)${(f)"$(< /etc/SuSE-release)"}##VERSION*}}[3]}
 						if [[ $VERSION -lt 13.2 ]] ; then	
-							MSG=$(gettext 'Sie benoetigen eine SuSE 13.2 oder hoeher um mit diesem Modul arbeiten zu koennen.')
+							MSG=$(gettext 'Sie benötigen eine SuSE 13.2 oder höher um mit diesem Modul arbeiten zu können.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 					else
@@ -5217,7 +5217,7 @@ is_value() {
 	#}}}
 	# Funktion (print_file), Datei Drucken ja/nein{{{
 	#
-	# benoetigt die Funktion yesno
+	# benötigt die Funktion yesno
 	# usage: print_file File
 	# Es wird bisher nur der Standard-Drucker benutzt.
 	#
@@ -5240,11 +5240,11 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (prog_check), Programm auf Rechte und vorhanden/ausfuehrbar pruefen{{{
+	# Funktion (prog_check), Programm auf Rechte und vorhanden/ausführbar prüfen{{{
 	#
 	# usage: prog_check [ -p PERM ] "Programm Programm ..."
 	# -p - zur Zeit geht nur:
-	# PERM=s - setuid Eigentuemer ausfuehrbar (Bsp. cdrdao)
+	# PERM=s - setuid Eigentuemer ausführbar (Bsp. cdrdao)
 	#
 	prog_check() {
 		unset -- PROGS PROGS_E NO_PROGS
@@ -5252,11 +5252,11 @@ is_value() {
 		if [ "$#" -ge 1 ] ; then
 			case $1 in
 				-p)
-					# Pruefen der Rechte, ob Programm ausfuehrbar ist.{{{
+					# Prüfen der Rechte, ob Programm ausführbar ist.{{{
 					if [ "$2" -a "$3" ] ; then
 						case $2 in
 							s)
-								# Rechte des ausfuehrbaren Programs checken.
+								# Rechte des ausführbaren Programs checken.
 								Perm=$2
 								for i in $3 ; {
 									P="${commands[$i]}"
@@ -5288,7 +5288,7 @@ is_value() {
 					#}}}
 					;;
 				*)
-					# Pruefen ob Programm ausfuehrbar ist.{{{
+					# Prüfen ob Programm ausführbar ist.{{{
 					for i in $@ ; {
 						if [[ -x ${commands[$i]} ]] ; then
 							PROGS+=($i)
@@ -5313,7 +5313,7 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (prog_exec), Programm ausfuehren{{{
+	# Funktion (prog_exec), Programm ausführen{{{
 	#
 	# usage: prog_exec [ -i | -p ] "$PROG" "$PROG_OPT"
 	# -i - inverse Darstellung
@@ -5326,7 +5326,7 @@ is_value() {
 				-i)
 					# inverse Darstellung im Terminal.
 					Prog="$2"
-					# pruefen, ob Programm ausfuehrbar ist.
+					# prüfen, ob Programm ausführbar ist.
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
 							setterm --clear all
@@ -5351,7 +5351,7 @@ is_value() {
 				-p)
 					# Darstellung mit progressbox
 					Prog="$2"
-					# pruefen, ob Programm ausfuehrbar ist.
+					# prüfen, ob Programm ausführbar ist.
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
 							setterm --clear all
@@ -5365,7 +5365,7 @@ is_value() {
 					fi
 					;;
 				*)
-					# pruefen, ob Programm ausfuehrbar ist.
+					# prüfen, ob Programm ausführbar ist.
 					Prog="$1"
 					if [[ -x ${commands[$Prog]} ]] ; then
 						if [[ -n $gv_Terminal ]] ; then
@@ -5391,17 +5391,17 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (prog_exec_only), um Programme nur auszufuehren{{{
+	# Funktion (prog_exec_only), um Programme nur auszuführen{{{
 	#
 	# usage: prog_exec_only "$PROGRAMM" (meistens $gv_Auswahl)
 	# prog_exec_only "$PROGRAMM" "$OPT"
-	# Ist aehnlich der Funktion prog_exec bloss dass hier alles
+	# Ist ähnlich der Funktion prog_exec bloss dass hier alles
 	# im Hintergrund laufen sollte.
 	#
 	prog_exec_only() {
 		RET=0
 		if [ ${#argv} -ge 1 ] ; then
-			# pruefen, ob Programm ausfuehrbar ist.
+			# prüfen, ob Programm ausführbar ist.
 			Prog="$1"
 			if [ -x "${commands[$Prog]}" ] ; then
 				eval "$Prog" "$2"
@@ -5458,10 +5458,10 @@ is_value() {
 	#        read_file [ -n ] DATEI
 	#        read_file [ -s Splitzeichen Ersatzzeichen ] DATEI
 	#        -f individuelle Konf.-Dateien
-	#        -n Konf.-Dateien die nicht mittels "source" eingelesen werden koennen,
+	#        -n Konf.-Dateien die nicht mittels "source" eingelesen werden können,
 	#           sondern reine Daten sind.
 	#
-	# read ohne Option, dann wird versucht, die uebergebenden "$Konfigurationsdateien"
+	# read ohne Option, dann wird versucht, die übergebenden "$Konfigurationsdateien"
 	# im Verzeichnis ~/.kwtools zu finden und einzulesen.
 	# Ist die Variable MOUNT_PATH, nach dem einlesen der K.-Datei, belegt wird diese Partition
 	# ins Dateisystem eingebunden, falls sie es nicht schon ist. Sie muss in der /etc/fstab
@@ -5489,7 +5489,7 @@ is_value() {
 					;;
 				-n)
 					# keine Variablen einlesen, sondern nur reine Daten.# {{{
-					# Es geht nur eine Dateiuebergabe.
+					# Es geht nur eine Dateiübergabe.
 					#
 					if [ -r "$2" ] ; then
 						VAR="`print $(egrep -v "^[[:space:]]*(#|$)" $2)`"
@@ -5502,7 +5502,7 @@ is_value() {
 					# $3 - Datei
 					# Variablen einlesen, durch Konvertierung der Daten
 					# (Bsp.: VAR = Value - VAR=Value).
-					# Es geht nur eine Dateiuebergabe.
+					# Es geht nur eine Dateiübergabe.
 					#
 					if [ "$#" = 3 ] ; then
 						local Split_Char Subst_Char Work_File
@@ -5580,20 +5580,20 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (return_check) um den Rueckgabewert zu pruefen{{{
+	# Funktion (return_check) um den Rueckgabewert zu prüfen{{{
 	#
 	# usage: return_check mit der Variable U_OPT
-	# U_OPT=- Apostrophe werden zwischen den Woertern geloescht, Leerzeichen
+	# U_OPT=- Apostrophe werden zwischen den Wörtern gelöscht, Leerzeichen
 	#          bleiben nicht erhalten
-	# U_OPT=hk Hochkommata werden zwischen den Werten geloescht.
-	# U_OPT=k Bis auf das letzte Wort bekommt jedes Wort 1 Komma und 1 Leerzeichen angehaengt.
-	# U_OPT=ok Bis auf das letzte Wort bekommt jedes Wort 1 Komma angehaengt, keine Leerzeichen.
+	# U_OPT=hk Hochkommata werden zwischen den Werten gelöscht.
+	# U_OPT=k Bis auf das letzte Wort bekommt jedes Wort 1 Komma und 1 Leerzeichen angehängt.
+	# U_OPT=ok Bis auf das letzte Wort bekommt jedes Wort 1 Komma angehängt, keine Leerzeichen.
 	# U_OPT=regexp_file Alles wird so eingelesen wie gespeichert und etwas anders
 	#          in eine Datei geschrieben. Heisst mit Apostrophe ausser
 	#          Apostroph+Leerzeichen+Apostroph wird ersetzt durch nur ein EOL-Zeichen.
 	# nichts - Alles wird in die Variable gv_Auswahl mit jedem Wert in eine Zeile geschhrieben plus
 	#          in der Datei $gv_LogFile$$ gespeichert. Desweiteren gibt es die Variable gv_Auswahl_Display
-	#          die die Werte ohne Steuerzeichen (neue Zeile) enthaelt.
+	#          die die Werte ohne Steuerzeichen (neue Zeile) enthält.
 	#
 	return_check() {
 		case $? in
@@ -5650,7 +5650,7 @@ is_value() {
 				;;
 			3)	
 				# dialog Extra
-				# alle Tags muessen mit einem : enden.
+				# alle Tags müssen mit einem : enden.
 				Tmp=$(< ${DialogReDirect##*>})
 				gv_Auswahl="${Tmp##RENAMED }"
 				if [ "$BREAK" ] ; then
@@ -5672,13 +5672,13 @@ is_value() {
 	#
 	# Die Variable gv_Opt muss vorher im Script erstellt
 	# werden (Bsp.: gv_Opt="$1"). Je nach dem welche Optionen
-	# das Script benoetigt oder uebergeben werden kann.
+	# das Script benötigt oder übergeben werden kann.
 	#
 	# usage: root_check
 	#
 	root_check() {
 		if [ "`id -u`" != 0 ] ; then
-			MSG=$(gettext 'Fuer diese Aktion benoetigen Sie root Rechte. In den Administrator Modus wechseln (ja/nein)?')
+			MSG=$(gettext 'Fuer diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln (ja/nein)?')
 			yesno "$gv_Attention" "$MSG" ""
 			#
 			if [ "$gv_Auswahl" = yes ] ; then
@@ -5727,9 +5727,9 @@ is_value() {
 search_fdisks() {
 	local Disk
 	PART_DISK_TITLE=$(gettext 'Partitionierung')
-	PART_DISK_MSG=$(gettext 'Waehlen Sie eine Festplatte zum partitionieren aus.')
+	PART_DISK_MSG=$(gettext 'Wählen Sie eine Festplatte zum partitionieren aus.')
 	#
-	# Funktion (exec_part_cmd), Partitionierungstool ausfuehren# {{{
+	# Funktion (exec_part_cmd), Partitionierungstool ausführen# {{{
 	exec_part_cmd() {
 		if [ -n "${DISK_DEV_E[1]}" ] ; then
 			menubox "$Disk" "$PART_DISK_TITLE" "$PART_DISK_MSG" "$DISK_DEV_E $gv_Back \"\""
@@ -5773,7 +5773,7 @@ search_fdisks() {
 	fi
 }
 #}}}
-	# Funktion (sys_logger), um syslog Eintraege zu erstellen# {{{
+	# Funktion (sys_logger), um syslog Einträge zu erstellen# {{{
 	#
 	# usage: sys_logger [ -a | -c | -d | -e | -i | -n | -r | -w ] FACILITY PROG MESSAGE
 	# -a - alert
@@ -5784,7 +5784,7 @@ search_fdisks() {
 	# -n - notice
 	# -r - err
 	# -w - warning
-	# FACILITY - auth, authpriv, cron, daemon, ftp, kern, lpr,
+	# FACILITY - auth, authpriv, cron, dämon, ftp, kern, lpr,
 	#            mail, mark, news, syslog, user, uucp und local0 bis local7.
 	#            see man 5 syslog.conf
 	# PROG - Programmname
@@ -5840,13 +5840,13 @@ search_fdisks() {
 		fi
 	}
 	## }}}
-	# Funktion (terminal) terminal-Aufloesung ueberpruefen {{{
+	# Funktion (terminal) terminal-Auflösung überprüfen {{{
 	terminal() {
-	# Bildschirmaufloesung testen. Kleiner als 55x20 funktioniert nicht gut.
+	# Bildschirmauflösung testen. Kleiner als 55x20 funktioniert nicht gut.
 	# Da bekommt dialog kein Fenster hin oder es ist ziehmlich gequetscht.
 	# 
 	if [ $COLUMNS -le 79 -o $LINES -le 20 ] ; then
-		MSG=$(gettext "${B_ERROR}Ihre Bildschirmaufloesung ist zu klein (${GREEN}${COLUMNS}x${LINES}${B_ERROR}). Um vernuenftig arbeiten zu koennen, benoetigen Sie mindestens ${GREEN}80x20${B_ERROR}, besser ${GREEN}80x40${B_ERROR}. Druecken Sie jetzt ENTER.${NORMAL}")
+		MSG=$(gettext "${B_ERROR}Ihre Bildschirmauflösung ist zu klein (${GREEN}${COLUMNS}x${LINES}${B_ERROR}). Um vernuenftig arbeiten zu können, benötigen Sie mindestens ${GREEN}80x20${B_ERROR}, besser ${GREEN}80x40${B_ERROR}. Drücken Sie jetzt ENTER.${NORMAL}")
 		print
 		print "${B_ERROR}${gv_Attention}!"
 		print "$MSG"
@@ -5857,7 +5857,7 @@ search_fdisks() {
 	}
 	#}}}
 	# Funktion (update_initrd), updatet die Linux Kernel initrd.img's# {{{
-	# benoetigt die Funktion check_write_part aus der Funktionsdatei
+	# benötigt die Funktion check_write_part aus der Funktionsdatei
 	# hw_conf
 	#
 	# usage: update_initrd
@@ -5873,25 +5873,25 @@ search_fdisks() {
 		return 0
 	}
 	## }}}
-	# Funktion (user_device_check), um Rechte des Devices/Datei, fuer User zu pruefen{{{
+	# Funktion (user_device_check), um Rechte des Devices/Datei, für User zu prüfen{{{
 	#
 	# usage: user_device_check "$DEVICE" RECHTE
-	# DEVICE - Device das ueberpruef werden soll.
-	# Rechte: r = Leserechte der Eigentuemer pruefen
-	#         w = Schreibrechte der Eigentuemer pruefen
-	#         x = Ausfuehrrechte der Eigentuemer pruefen
-	#         A = Leserechte der Eigentuemergruppe pruefen
-	#         I = Schreibrechte der Eigentuemergruppe pruefen
-	#         E = Ausfuehrrechte der Eigentuemergruppe pruefen
-	#         R = Leserechte fuer alle anderen pruefen
-	#         W = Schreibrechte fuer alle anderen pruefen
-	#         X = Ausfuehrrechte fuer alle anderen pruefen
+	# DEVICE - Device das überprüf werden soll.
+	# Rechte: r = Leserechte der Eigentuemer prüfen
+	#         w = Schreibrechte der Eigentuemer prüfen
+	#         x = Ausführrechte der Eigentuemer prüfen
+	#         A = Leserechte der Eigentuemergruppe prüfen
+	#         I = Schreibrechte der Eigentuemergruppe prüfen
+	#         E = Ausführrechte der Eigentuemergruppe prüfen
+	#         R = Leserechte für alle anderen prüfen
+	#         W = Schreibrechte für alle anderen prüfen
+	#         X = Ausführrechte für alle anderen prüfen
 	#
 	user_device_check() {
 		if [ "$#" = 2 ] ; then
 			SYS_DEV="$1"
 			PERM="$2"
-			MSG=$(gettext 'Sie duerfen auf dem Device/Datei ($SYS_DEV) nicht lesen/schreiben. Sie muessen die Rechte auf Lesen/Schreiben setzen, beziehungsweise der richtigen Gruppe angehoeren.')
+			MSG=$(gettext 'Sie duerfen auf dem Device/Datei ($SYS_DEV) nicht lesen/schreiben. Sie müssen die Rechte auf Lesen/Schreiben setzen, beziehungsweise der richtigen Gruppe angehören.')
 			#
 			# Rechte checken
 			# Funktion user_check{{{
@@ -5932,7 +5932,7 @@ search_fdisks() {
 						Group=${$(ls -dl "$SYS_DEV"($PERM) 2>/dev/null)[4]}
 						if [ -z "$Group" ] ; then
 							#
-							# Hat die eigene Gruppe keine angegebenen Rechte, wird geprueft
+							# Hat die eigene Gruppe keine angegebenen Rechte, wird geprüft
 							# ob der eingeloggte User diese hat
 							#
 							if ! user_check ; then
@@ -5977,7 +5977,7 @@ search_fdisks() {
 	# usage: user_group_check [ -p | -g ] Minimum_id
 	# -p - Datei User einlesen
 	# -g - Datei Groups einlesen
-	# Minimum_id - minimale Uer/Group ID ab der Werte in den Arrays
+	# Minimum_id - minimale Ür/Group ID ab der Werte in den Arrays
 	# aufgenommen werden sollen
 	#
 	user_group_check() {
@@ -6026,7 +6026,7 @@ search_fdisks() {
 			*)	# nichts
 				;;
 		esac
-		# Pruefen, ob die Variable U_G_ARRAY belegt ist.
+		# Prüfen, ob die Variable U_G_ARRAY belegt ist.
 		if [ -z "${U_G_ARRAY[1]}" ] ; then
 			MSG=$(gettext 'Es ist kein(e) Benutzer/Gruppe vorhanden.')
 			msgbox "$gv_Attention" "$MSG"
@@ -6035,7 +6035,7 @@ search_fdisks() {
 		return 0
 	}
 	#}}}
-	# Funktion (user_group_passwd), user und group Passwoerter eingeben# {{{
+	# Funktion (user_group_passwd), user und group Passwörter eingeben# {{{
 	#
 	# usage: user_group_passwd [ -u | -g ] PASSWD_MSG
 	# -u - User
@@ -6048,7 +6048,7 @@ search_fdisks() {
 			Opt="$1"
 			PASSWD_MSG="$2"
 			#
-			# Pruefen auf cracklib Programm
+			# Prüfen auf cracklib Programm
 			CRACKLIB_CHECK="${commands[cracklib-check]}"
 			#
 			# Funktion (passwd_conf_menu), Hauptmenue# {{{
@@ -6080,8 +6080,8 @@ search_fdisks() {
 						NNPW="${${(ws: :)${=gv_Auswahl}}[3]}"
 						if [ "$Anz" -eq 3 ] ; then
 							if [ "$NPW" = "$NNPW" ] ; then
-								# Pruefen, ob cracklib installiert ist
-								# und das neue Passwort pruefen ob schon vorhanden
+								# Prüfen, ob cracklib installiert ist
+								# und das neue Passwort prüfen ob schon vorhanden
 								if [ -x "$CRACKLIB_CHECK" ] ; then
 									PW_OK="`print ${(M)$(export LC_ALL=C ; echo "$NPW" | $CRACKLIB_CHECK)##OK}`"
 									if [[ $PW_OK = OK ]] ; then
@@ -6094,8 +6094,8 @@ search_fdisks() {
 										unset -- NPW NNPW
 										break
 									else
-										# Passwort basiert auf einem Woerterbucheintrag.
-										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Woerterbucheintrag.\nPassworteingabe wiederholen (ja/nein)?')
+										# Passwort basiert auf einem Wörterbucheintrag.
+										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag.\nPassworteingabe wiederholen (ja/nein)?')
 										yesno "$gv_Attention" "$DICT_MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											passwd_conf_menu
@@ -6153,7 +6153,7 @@ search_fdisks() {
 		fi
 	}
 	## }}}
-	# Funktion (zsh_modload), laedt zsh Module# {{{
+	# Funktion (zsh_modload), lädt zsh Module# {{{
 	#
 	# usage: zsh_modload [ -OPTION MODUL MODUL | MODUL MODUL ...]
 	#
@@ -6186,15 +6186,15 @@ search_fdisks() {
 	## }}}
 	## }}}
 	###### allgemeine System Nachrichten ###### {{{
-	# Funktion (del_file_msg), Nachricht zum Dateien loeschen{{{
+	# Funktion (del_file_msg), Nachricht zum Dateien löschen{{{
 	#
-	# wird von del_file benoetigt.
+	# wird von del_file benötigt.
 	#
 	# usage: del_file_msg
 	#
 	del_file_msg() {
-		TITLE=$(gettext 'Dateien loeschen')
-		MSG=$(gettext 'Soll(en) die (Original) Datei(en) geloescht werden (ja/nein)? Dies kann ein soeben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
+		TITLE=$(gettext 'Dateien löschen')
+		MSG=$(gettext 'Soll(en) die (Original) Datei(en) gelöscht werden (ja/nein)? Dies kann ein söben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
 		yesno "$TITLE" "$MSG" ""
 	}
 	#}}}
@@ -6211,7 +6211,7 @@ search_fdisks() {
 	#
 	# usage: failed_entry_msg
 	failed_entry_msg() {
-		MSG=$(gettext 'Sie haben einige Menuepunkte vergessen zu belegen, die benoetigt werden. Lesen Sie bitte die Hilfe.')
+		MSG=$(gettext 'Sie haben einige Menuepunkte vergessen zu belegen, die benötigt werden. Lesen Sie bitte die Hilfe.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -6233,7 +6233,7 @@ search_fdisks() {
 		fi
 	}
 	#}}}
-	# Funktion (hier_ist_noch_nichts), Hier ist noch keine Einstellung moeglich{{{
+	# Funktion (hier_ist_noch_nichts), Hier ist noch keine Einstellung möglich{{{
 	#
 	# usage: hier_ist_noch_nichts "$WAS_IST_NOCH_NICHT"
 	#
@@ -6247,12 +6247,12 @@ search_fdisks() {
 		fi
 	}
 	#}}}
-	# Funktion (input_all_field_msg), alle Felder muessen# {{{
+	# Funktion (input_all_field_msg), alle Felder müssen# {{{
 	# belegt sein.
 	#
 	# usage: input_all_field_msg
 	input_all_field_msg() {
-		MSG=$(gettext 'Sie muessen alle Felder mit Werten belegen.')
+		MSG=$(gettext 'Sie müssen alle Felder mit Werten belegen.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
@@ -6295,7 +6295,7 @@ no_backup_path_msg() {
 		if [ "$#" = 1 ] ; then
 			local Block_Dev
 			Block_Dev="$1"
-			MSG=$(gettext '$Block_Dev ist kein blockorientiertes Geraet.')
+			MSG=$(gettext '$Block_Dev ist kein blockorientiertes Gerät.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg "$0"
@@ -6306,7 +6306,7 @@ no_backup_path_msg() {
 	#
 	# usage: no_dezimal_msg
 	no_dezimal_msg() {
-		MSG=$(gettext 'Sie muessen eine Dezimal Zahl eingeben (Bsp. 0.9 oder 0,9).')
+		MSG=$(gettext 'Sie müssen eine Dezimal Zahl eingeben (Bsp. 0.9 oder 0,9).')
 		msgbox "$gv_Attention" "$MSG"	
 	}
 	# }}}
@@ -6329,7 +6329,7 @@ no_backup_path_msg() {
 	#
 	# usage: no_editor_msg
 	no_editor_msg() {
-		MSG=$(gettext 'Sie muessen die Variable EDITOR, mit einem Editor ihrer Wahl belegen (Bsp.: EDITOR=vim).')
+		MSG=$(gettext 'Sie müssen die Variable EDITOR, mit einem Editor ihrer Wahl belegen (Bsp.: EDITOR=vim).')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
@@ -6362,14 +6362,14 @@ no_backup_path_msg() {
 	# Funktion (no_fs_type_msg), konnte den Dateisystemtyp nicht feststellen# {{{
 	#
 	# usage: no_fs_type_msg DEVICE
-	# DEVICE - Variable die das Geraet enthaelt
+	# DEVICE - Variable die das Gerät enthält
 	#
 	no_fs_type_msg() {
 		if [ "$#" -eq 1 ] ; then
 			unset -- Lw
 			local Lw
 			Lw="$1"
-			MSG=$(gettext 'Es konnte kein Dateisystemtyp fuer das Laufwerk ($Lw) festgestellt werden. Lesen Sie bitte die Hilfe.')
+			MSG=$(gettext 'Es konnte kein Dateisystemtyp für das Laufwerk ($Lw) festgestellt werden. Lesen Sie bitte die Hilfe.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
@@ -6379,11 +6379,11 @@ no_backup_path_msg() {
 	# Funktion (no_help_msg), hier ist noch keine hilfe# {{{
 	#
 	no_help_msg() {
-		MSG=$(gettext 'Hier ist noch keine Hilfe verfuegbar.')
+		MSG=$(gettext 'Hier ist noch keine Hilfe verfügbar.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
-	# Funktion (no_id_range_msg), Nachricht ueber schon vergebene User ID.{{{
+	# Funktion (no_id_range_msg), Nachricht über schon vergebene User ID.{{{
 	#
 	# usage: no_id_range_msg ID
 	no_id_range_msg() {
@@ -6400,12 +6400,12 @@ no_backup_path_msg() {
 	#}}}
 	# Funktion (no_input_msg), Nachricht wenn etwas nicht eingegeben wurde{{{
 	#
-	# benoetigt die Funktion msgbox
+	# benötigt die Funktion msgbox
 	#
 	# usage: no_input_msg
 	#
 	no_input_msg() {
-		MSG=$(gettext 'Sie muessen auch etwas ordentliches eingeben oder auswaehlen, ausser Sie wollten den Vorgang abbrechen.')
+		MSG=$(gettext 'Sie müssen auch etwas ordentliches eingeben oder auswählen, ausser Sie wollten den Vorgang abbrechen.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
@@ -6413,7 +6413,7 @@ no_backup_path_msg() {
 	#
 	# usage: no_integer_msg
 	no_integer_msg() {
-		MSG=$(gettext 'Sie muessen eine Integer Zahl eingeben.')
+		MSG=$(gettext 'Sie müssen eine Integer Zahl eingeben.')
 		msgbox "$gv_Attention" "$MSG"	
 	}
 	# }}}
@@ -6428,7 +6428,7 @@ no_backup_path_msg() {
 	## }}}
 # Funktion (no_option_msg), Optionen die nicht zusammen funktionieren{{{
 # Gibt eine Fehlermeldung aus, wenn einige Optionen nicht
-# zusammen ausgefuehrt werden koennen.
+# zusammen ausgeführt werden können.
 #
 # usage: no_option_msg
 no_option_msg() {
@@ -6449,7 +6449,7 @@ no_option_msg() {
 	# usage: no_para_msg $0
 	no_para_msg() {
 		FUNC="$1"
-		MSG=$(gettext 'Sie haben falsche oder nicht genuegend Parameter der Funktion $FUNC uebergeben.')
+		MSG=$(gettext 'Sie haben falsche oder nicht genuegend Parameter der Funktion $FUNC übergeben.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
@@ -6459,7 +6459,7 @@ no_option_msg() {
 	no_perm_prog_msg() {
 		if [ "$#" = 1 ] ; then
 			Prog="$1"
-			MSG=$(gettext 'Sie duerfen das Script/Programm ($Prog) nicht ausfuehren. Lesen Sie die Hilfe zu $Prog.')
+			MSG=$(gettext 'Sie duerfen das Script/Programm ($Prog) nicht ausführen. Lesen Sie die Hilfe zu $Prog.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
@@ -6473,7 +6473,7 @@ no_option_msg() {
 	no_prog_exec_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			Prog="$1"
-			MSG=$(gettext 'Kann das/die Script(s)/Programm(e) ($Prog) nicht finden oder\nausfuehren. Stellen Sie sicher das es/sie installiert ist/sind.')
+			MSG=$(gettext 'Kann das/die Script(s)/Programm(e) ($Prog) nicht finden oder\nausführen. Stellen Sie sicher das es/sie installiert ist/sind.')
 			if [[ -n $gv_Terminal ]] ; then
 				msgbox "$gv_Attention" "$MSG"
 			else
@@ -6501,7 +6501,7 @@ no_option_msg() {
 # Funktion (no_use_dir_msg), Nachricht wenn das angegebene Verz.{{{
 # nicht doppelt vergeben werden darf.
 #
-# benoetigt die Funktion msgbox
+# benötigt die Funktion msgbox
 #
 # usage: no_use_dir_msg DIR
 #
@@ -6517,18 +6517,18 @@ no_use_dir_msg() {
     fi
 }
 #}}}
-	# Funktion (over_size_msg), Groesse wird ueberschritten{{{
+	# Funktion (over_size_msg), Grösse wird überschritten{{{
 	#
 	# usage: over_size_msg
 	over_size_msg() {
-		MSG=$(gettext 'Die angegebene Groesse ueberschreitet den verfuegbaren Platz. Geben Sie bitte eine andere Groesse an.')
+		MSG=$(gettext 'Die angegebene Grösse überschreitet den verfügbaren Platz. Geben Sie bitte eine andere Grösse an.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
-	# Funktion (prog_failure) fuer Fehlermeldungen bei der {{{
-	# Ausfuehrung eines Programms
+	# Funktion (prog_failure) für Fehlermeldungen bei der {{{
+	# Ausführung eines Programms
 	#
-	# Die Variable BREAK, falls benoetigt muss in den einzelnen Scripten
+	# Die Variable BREAK, falls benötigt muss in den einzelnen Scripten
 	# oder Funktionen gesetzt werden. Bsp.: BREAK=2
 	#
 	# usage: prog_failure
@@ -6539,7 +6539,7 @@ no_use_dir_msg() {
 			lock -r $DEVICES
 		fi
 		print ${ERROR_BG}${B_ERROR}
-		MSG=$(gettext 'Achtung Fehler:\nSchauen Sie sich bitte die letzten Meldungen an.\nMit shift+bild (hoch/runter) koennen Sie scrollen.\nDruecken sie ENTER danach.')
+		MSG=$(gettext 'Achtung Fehler:\nSchauen Sie sich bitte die letzten Meldungen an.\nMit shift+bild (hoch/runter) können Sie scrollen.\nDrücken sie ENTER danach.')
 		print "$MSG"
 		print $NORMAL
 		setterm --clear all
@@ -6557,7 +6557,7 @@ no_use_dir_msg() {
 	wrong_parameter_msg() {
 		if [ "$#" = 1 ] ; then
 			local Func="$1"
-			MSG=$(gettext 'Sie haben einen falschen Parameter der Funktion ($Func) uebergeben.')
+			MSG=$(gettext 'Sie haben einen falschen Parameter der Funktion ($Func) übergeben.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
@@ -6565,15 +6565,15 @@ no_use_dir_msg() {
 	}
 	#}}}
 	## }}}
-	###### allgemeine Funktionen die wegen xgettext ans Ende gehoeren ###### {{{
-	# Funktion (del_file), um die urspruenglichen Dateien zu loeschen{{{
+	###### allgemeine Funktionen die wegen xgettext ans Ende gehören ###### {{{
+	# Funktion (del_file), um die ursprünglichen Dateien zu löschen{{{
 	#
 	# usage: del_file [ -f | -r | -s | -A ] "$WERT" oder  del_file "$SUFFIX"
 	# -f = aus Datei einlesen
-	# -r = rekursiv loeschen auch Verzeichnisse und Unterverzeichnisse
-	# -s = Dateien einzeln loeschen
-	# -A = ein ARRAY loeschen
-	# nichts = alle Dateien auf die das Suffix passt loeschen
+	# -r = rekursiv löschen auch Verzeichnisse und Unterverzeichnisse
+	# -s = Dateien einzeln löschen
+	# -A = ein ARRAY löschen
+	# nichts = alle Dateien auf die das Suffix passt löschen
 	# WERT - kann Datei(en), Verzeichnis(se) oder Arrayname(n) sein.
 	# Suffix ist das Dateiende, z.B. .mp3, .ogg, .txt. Kann aber auch leer sein.
 	#
@@ -6591,7 +6591,7 @@ no_use_dir_msg() {
 					fi
 					;;
 				-r)	#
-					# rekursives loeschen
+					# rekursives löschen
 					#
 					del_file_msg
 					if [ "$gv_Auswahl" = yes ] ; then
@@ -6602,7 +6602,7 @@ no_use_dir_msg() {
 					fi
 					;;
 				-A)	#
-					# ARRAY Inhalt loeschen
+					# ARRAY Inhalt löschen
 					#
 					del_file_msg
 					if [ "$gv_Auswahl" = yes ] ; then
@@ -6610,7 +6610,7 @@ no_use_dir_msg() {
 					fi
 					;;
 				-s)	#
-					# Dateien/Verzeichnisse einzeln loeschen
+					# Dateien/Verzeichnisse einzeln löschen
 					#
 					del_file_msg
 					if [ "$gv_Auswahl" = yes ] ; then
@@ -6621,7 +6621,7 @@ no_use_dir_msg() {
 					fi
 					;;
 				*)	#
-					# alle Dateien, auf die das Suffix passt, loeschen
+					# alle Dateien, auf die das Suffix passt, löschen
 					#
 					del_file_msg
 					if [ "$gv_Auswahl" = yes ] ; then

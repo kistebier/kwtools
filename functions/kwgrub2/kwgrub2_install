@@ -4,7 +4,7 @@
 #
 kwgrub2_install() {
 	unset -- DEV_INSTALL GRUB_DISKS GRUB_PART
-	# Pruefen, ob die Konfigurationsdatei schon erstellt wurde.
+	# Prüfen, ob die Konfigurationsdatei schon erstellt wurde.
 	if [ -f "$GRUB_CONFFILE" ] ; then
 		if [ -n "${DISK_DEV[1]}" ] ; then
 #			if [ -n "${PART[1]}" ] ; then
@@ -20,7 +20,7 @@ kwgrub2_install() {
 			# Funktion install_grub_menue{{{
 			#
 			INSTALL_TITLE=($lv_Installation)
-			INSTALL_MSG=$(gettext 'Waehlen Sie den Ort der Installation aus.')
+			INSTALL_MSG=$(gettext 'Wählen Sie den Ort der Installation aus.')
 			#
 			install_grub_menue() {
 				INSTALL_MENU=($lv_Disk \"$GRUB_DISKS\" $lv_Part \"$GRUB_PART\"
@@ -58,7 +58,7 @@ kwgrub2_install() {
 						}
 						#
 						if [[ -n ${Grub_Disks_M[1]} ]] ; then
-							GRUB_DISK_MSG=$(gettext 'Waehlen Sie eine oder mehrere Festplatten aus in deren MBR grub2 installiert werden soll.')
+							GRUB_DISK_MSG=$(gettext 'Wählen Sie eine oder mehrere Festplatten aus in deren MBR grub2 installiert werden soll.')
 							checklist "" "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$Grub_Disks_M"
 							#
 							while [ "$gv_Auswahl" ] ; do
@@ -68,7 +68,7 @@ kwgrub2_install() {
 										script_help grub2_disk_help
 										checklist "$DEFAULT_VALUE" "$INSTALL_TITLE" "$GRUB_DISK_MSG" "$Grub_Disks_M"
 										;;
-									*)	# uebernehmen
+									*)	# übernehmen
 										GRUB_DISKS="$gv_Auswahl"
 										unset -- GRUB_PART
 										break
@@ -86,7 +86,7 @@ kwgrub2_install() {
 						# In den Bootsector einer Partition installieren#{{{
 						#
 						# Bei Festplatten mit dem Partitionstabellentyp gpt ohne (U)EFI
-						# benoetigt man den Partitionstyp ef02 (bios_grub) und mit (U)EFI
+						# benötigt man den Partitionstyp ef02 (bios_grub) und mit (U)EFI
 						# eine Partition mit dem Dateisystem fat32 (vfat).
 						for d in ${=DISK_DEV} ; {
 							Pttype=$(blkid -o value -s PTTYPE $d)
@@ -115,7 +115,7 @@ kwgrub2_install() {
 								unset -- GRUB_DISKS
 							fi
 						else
-							MSG=$(gettext 'Es sind keine Partitionen fuer grub2 vorhanden in die er installiert werden koennte.')
+							MSG=$(gettext 'Es sind keine Partitionen für grub2 vorhanden in die er installiert werden könnte.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 						#}}}
@@ -123,7 +123,7 @@ kwgrub2_install() {
 						;;
 					$lv_Install)
 						# grub installieren{{{
-						# Pruefen ob das Laufwerk read-write gemountet ist,
+						# Prüfen ob das Laufwerk read-write gemountet ist,
 						# da grub-install auch die *.mod Dateien nach /boot/grub
 						# kopiert.
 						check_write_part

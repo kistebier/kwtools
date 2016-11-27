@@ -20,7 +20,7 @@
 # gv_Dhcp - Interface per DHCP konfigurieren
 # gv_Gateway - Gateway Adresse
 # gv_Ip - IP Adresse
-# gv_Ip_Adr - ueberpruefte, korrekte, IP-Adressen
+# gv_Ip_Adr - überprüfte, korrekte, IP-Adressen
 # gv_Mail_Adr - Mail Adressen
 # gv_Nameserver - Nameserver Adresse
 # gv_Netmask - Netzmaske Adresse
@@ -34,13 +34,13 @@ net_conf() {
 	#
 	# usage: conf_hostname [ -a | -f ] RECHNERNAME[N]
 	#
-	# -a - mehrere Rechnernamen eingeben koennen.
+	# -a - mehrere Rechnernamen eingeben können.
 	# -f - voll qualifizierten Rechnernamen eingeben.
 	# nichts - einzelnen Rechnernamen eingeben.
 	#
 	#######################################
 	# NOTIZ:
-	# wird nicht auf Erreichbarkeit geprueft.
+	# wird nicht auf Erreichbarkeit geprüft.
 	#######################################
 	#
 	conf_hostname() {
@@ -175,7 +175,7 @@ net_conf() {
 					fi
 					;;
 				*)
-					# falsche Parameter uebergeben.
+					# falsche Parameter übergeben.
 					wrong_parameter_msg "$0"
 					;;
 			esac
@@ -231,9 +231,9 @@ net_conf() {
 	#
 	# usage: iface_gate
 	iface_gate() {
-		GATEWAY_MSG=$(gettext 'Geben Sie bitte die IP-Adresse fuer den Gateway ein.')
+		GATEWAY_MSG=$(gettext 'Geben Sie bitte die IP-Adresse für den Gateway ein.')
 		inputbox "$gv_Configuration" "$GATEWAY_MSG" "$1"
-		# Eingabe ueberpruefen.
+		# Eingabe überprüfen.
 		if [ -n "$gv_Auswahl" ] ; then
 			ip_analyse "$gv_Auswahl"
 			case $gv_Auswahl in
@@ -261,15 +261,15 @@ net_conf() {
 	# usage: iface_ip [ --prefix | -p ] [ OLD-IP-PREFIX ]
 	# -x, --xen - bei DomU's unter XEN kann man 3 IP-Adressen vergeben.
 	# -p - nur IP-Prefix eingeben
-	# OLD-IP - alte IP-Adresse[n] mit uebergeben.
-	# OLD-IP-PREFIX - alten IP-Prefix mit uebergeben.
+	# OLD-IP - alte IP-Adresse[n] mit übergeben.
+	# OLD-IP-PREFIX - alten IP-Prefix mit übergeben.
 	# nichts - normale IP-Adress Eingabe
 	#
 	iface_ip() {
 		unset -- gv_Ip
 		case "$1" in
 			--xen|-x)
-				# IP-Adressen fuer XEN Gast Betriebssysteme eingeben# {{{
+				# IP-Adressen für XEN Gast Betriebssysteme eingeben# {{{
 				IP_MSG=$(gettext 'Geben Sie bitte bis zu 3 IP Adressen ein.')
 				inputbox "$gv_Configuration" "$IP_MSG" "$2"
 				if [ -n "$gv_Auswahl" ] ; then
@@ -459,14 +459,14 @@ net_conf() {
 		fi
 	}
 	## }}}
-	# Funktion (ifconfig_check) um einzelne Netzwerkkarten zu pruefen{{{
+	# Funktion (ifconfig_check) um einzelne Netzwerkkarten zu prüfen{{{
 	#
 	# usage: ifconfig_check "$ETH"
 	#
 	ifconfig_check() {
 		if [ "$#" -ge 1 ] ; then
 			#
-			# Pruefen ob das Device in $ETH schon laeuft. Wenn ja wird es deaktiviert.
+			# Prüfen ob das Device in $ETH schon läuft. Wenn ja wird es deaktiviert.
 			#
 			unset -- Eth_Ist Dhclient
 			local Eth_Ist Dhclient
@@ -567,12 +567,12 @@ net_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (mail_address), fuer die mailadress Eingabe{{{
+	# Funktion (mail_address), für die mailadress Eingabe{{{
 	#
 	# usage: mail_address [ user@mail.de user1@... ]
 	#        mail_address [ MESSAGES ] [ user@mail.de user1@... ]
 	#
-	# MEASSAGE - eigene Nachricht der Funktion uebergeben.
+	# MEASSAGE - eigene Nachricht der Funktion übergeben.
 	#
 	mail_address() {
 		local TITLE MSG VALUE
@@ -614,7 +614,7 @@ net_conf() {
 	}
 	#}}}
 	# Funktion (route_check), um die Routen von einzelnen Netzwerkkarten einzustellen{{{
-	# und loeschen
+	# und löschen
 	#
 	# usage:
 	# route_check -d delete "$ETH"
@@ -634,7 +634,7 @@ net_conf() {
 					Act="$2"
 					case "$Act" in
 						delete)
-							# default route loeschen
+							# default route löschen
 							Eth="$3"
 							IFSOLD="$IFS"
 							IFS=$'\t'
@@ -666,11 +666,11 @@ net_conf() {
 					## }}}
 					;;
 				-o)
-					# other Gateway Routen loeschen# {{{
+					# other Gateway Routen löschen# {{{
 					Act="$2"
 					case "$Act" in
 						delete)
-							# route loeschen
+							# route löschen
 							if [ "$4" ] ; then
 								Eth="$3"
 								Ip="$4"
@@ -735,7 +735,7 @@ net_conf() {
 	#}}}
 	# Funktion (update_nis), NIS Datenbank updaten# {{{
 	update_nis() {
-		# prufen ob ypserv laeuft
+		# prufen ob ypserv läuft
 		if pidof ypserv >/dev/null ; then
 			make -C /var/yp >/dev/null || prog_failure
 		fi
@@ -747,7 +747,7 @@ net_conf() {
 	#
 	# usage: ip_gt_three_msg
 	ip_gt_three_msg() {
-		MSG=$(gettext 'Die Anzahl der IP-Adressen ist groesser als 3.')
+		MSG=$(gettext 'Die Anzahl der IP-Adressen ist grösser als 3.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -756,7 +756,7 @@ net_conf() {
 	# usage: no_ip_address_msg
 	#
 	no_ip_address_msg() {
-		MSG=$(gettext 'Sie muessen erst eine gueltige IP-Adresse eingeben.')
+		MSG=$(gettext 'Sie müssen erst eine gueltige IP-Adresse eingeben.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -772,7 +772,7 @@ net_conf() {
 	#
 	# usage: no_valid_ip_msg [ -i | -n | -p ] IP
     # -i - IP Fehlermeldung, weil die letzte Nr nicht zw. 1 und 254 liegt.
-    # -n - IP Fehlermeldung, weil die IP nicht zu einem Netzwerk gehoert.
+    # -n - IP Fehlermeldung, weil die IP nicht zu einem Netzwerk gehört.
     # -p - IP Prefix Fehlermeldung, weil der IP-Prefix nicht stimmt (nur ipv4).
 	# IP - IP-Adresse oder IP-Prefix der nicht vergeben werden darf/kann.)
 	#
@@ -787,7 +787,7 @@ net_conf() {
                     ;;
                 -n)
 		            Ip_Msg=$2
-					MSG=$(gettext 'Dies ist keine gueltige IP-Adresse ($Ip_Msg) fuer das Netzwerk.')
+					MSG=$(gettext 'Dies ist keine gueltige IP-Adresse ($Ip_Msg) für das Netzwerk.')
                     ;;
                 -p)
 		            Ip_Msg=$2

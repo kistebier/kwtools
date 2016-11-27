@@ -7,7 +7,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 	cd ${SV_DIR}/${DNS}
 	AXFR_MAIN_TITLE=(${lv_Administration}::${lv_Axfrdns})
 	#
-	# Funktion um die Adressen Angaben fuer axfrdns zu pruefen{{{
+	# Funktion um die Adressen Angaben für axfrdns zu prüfen{{{
 	#
 	# usage: axfrdns_input_check
 	#
@@ -15,7 +15,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 		if [ $ACCESS = allow ] ; then
 			if [ -z "$H_DNS_IP" ] ; then
 				if [ -z "$DNS_NET" ] ; then
-					MSG=$(gettext 'Wenn die IP, Rechner oder das Netzwerk nicht angegeben sind, ist dies ein Sicherheitsrisiko. Bitte aendern Sie dies!')
+					MSG=$(gettext 'Wenn die IP, Rechner oder das Netzwerk nicht angegeben sind, ist dies ein Sicherheitsrisiko. Bitte ändern Sie dies!')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 			fi
@@ -33,7 +33,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)
-				# Hilfetext fuer axfrdns# {{{
+				# Hilfetext für axfrdns# {{{
 				script_help axfrdns_help
 				## }}}
 				axfr_haupt_menue "${gv_Auswahl#HELP }"
@@ -93,7 +93,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 							axfr_input_menue $gv_Host
 							;;
 						$gv_Network)
-							# Netzwerk eingeben und ueberpruefen.{{{
+							# Netzwerk eingeben und überprüfen.{{{
 							N_TITLE=(${lv_Administration}::${lv_Axfrdns}::${gv_Network})
 							N_MSG=$(gettext 'Geben Sie bitte die IP-Adresse ihres Netzwerks an (z.B. 192.168.0).')
 							inputbox "$N_TITLE" "$N_MSG"
@@ -116,10 +116,10 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 								# allow oder deny
 								if [ "$H_DNS_IP" ] ; then
 									WERWAS="$H_DNS_IP"
-									ACCESS_MSG=$(gettext 'Soll der Zugriff fuer $H_DNS_IP erlaubt werden?')
+									ACCESS_MSG=$(gettext 'Soll der Zugriff für $H_DNS_IP erlaubt werden?')
 								elif [ "$DNS_NET" ] ; then
 									WERWAS="$DNS_NET"
-									ACCESS_MSG=$(gettext 'Soll der Zugriff fuer $DNS_NET erlaubt werden?')
+									ACCESS_MSG=$(gettext 'Soll der Zugriff für $DNS_NET erlaubt werden?')
 								else
 									WERWAS=global
 									ACCESS_MSG=$(gettext 'Soll der Zugriff global erlaubt werden?')
@@ -139,7 +139,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 						$lv_Axfr)
 							# Hier kann man die Variable AXFR belegen. {{{
 								if [ "$NET" ] ; then
-									MSG=$(gettext 'Fuer Netze koennen Sie nicht die Variable AXFR belegen.')
+									MSG=$(gettext 'Fuer Netze können Sie nicht die Variable AXFR belegen.')
 									msgbox "$gv_Attention" "$MSG"
 								else
 									if [ "$H_DNS_NAME" ] ; then
@@ -165,7 +165,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 								# Alle gemachten Eingaben speichern.{{{
 								#
 								# Die Variable PTR wird bei der Einstellung und
-								# Ueberpruefung der IP-Adresse belegt.
+								# Überprüfung der IP-Adresse belegt.
 								if [ "$ACCESS" ] ; then
 									axfrdns_input_check
 									if [ -n "$H_DNS_IP" -a -n "$H_DNS_NAME" ] ; then
@@ -188,7 +188,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 									#
 									if [ "$TCP_DATA" -a -f tcp ] ; then
 										# ein globales deny oder allow herausfiltern und sichern,
-										# wird am Schluss wieder angehaengt.
+										# wird am Schluss wieder angehängt.
 										if [ ${${(M)${(f)"$(< tcp)"}##(#s):*}[1]} ] ; then
 											print ${${(M)${(f)"$(< tcp)"}##(#s):*}[1]} >global
 										fi
@@ -209,7 +209,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 									unset -- H_DNS_IP H_DNS_NAME DNS_NET AXFR ACCESS WERWAS TCP_DATA
 									break
 								else
-									MSG=$(gettext 'Sie muessen erst die Rechte festlegen.')
+									MSG=$(gettext 'Sie müssen erst die Rechte festlegen.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								#}}}
@@ -224,7 +224,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				axfr_haupt_menue $gv_Create
 				;;
 			$gv_Delete)
-				# Daten loeschen{{{
+				# Daten löschen{{{
 				unset -- D_Menue
 				ANZ=1
 				while read DATA ; do
@@ -258,7 +258,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 					(( ANZ++ ))
 				done <tcp
 				#
-				# Eintraege loeschen
+				# Einträge löschen
 				#
 				if [ -n "${D_Menue[1]}" ] ; then
 					DEL_MENU=($D_Menue)
@@ -270,7 +270,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 								checklist "${gv_Auswahl#HELP }" "$AXFR_MAIN_TITLE" "$DEL_MSG" "$DEL_MENU"
 								;;
 							*)
-								# loeschen der ausgewaehlten Daten
+								# löschen der ausgewählten Daten
 								for i in ${=gv_Auswahl} ; {
 									grep -v "^$i" tcp >tcp$$
 									mv tcp$$ tcp

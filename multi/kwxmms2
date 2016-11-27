@@ -28,7 +28,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -36,7 +36,7 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Pruefen ob nyxmms2 installiert ist.
+# Prüfen ob nyxmms2 installiert ist.
 prog_check nyxmms2 xmms2
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
@@ -84,7 +84,7 @@ check_status() {
 	esac
 }
 #}}}
-# Funktion (del_listsongs), Songliste loeschen# {{{
+# Funktion (del_listsongs), Songliste löschen# {{{
 #
 del_listsongs (){
 	if [ -f ${gv_WorkDir}/listsongs ] ; then
@@ -115,7 +115,7 @@ list_songs() {
 	local Tmp Tmp1 Anz
 	unset -- Songs SONG_LIST_E SONG_LIST_E_M SONG_LIST_M DEFAULT_ITEM
 	SONG_FROM_PLS_MSG=$(gettext 'suche Lieder der Playliste $PLS_CURRENT:')
-	# Funktion (read_songlists), liest die Lieder der geoeffneten Playliste# {{{
+	# Funktion (read_songlists), liest die Lieder der geöffneten Playliste# {{{
 	# ein
 	#
 	# usage: read_songlists [ -r ]
@@ -167,7 +167,7 @@ list_songs() {
 					else
 						Tmp1="${Tmp//\`/}"
 					fi
-					# Anzeige fuer die die Funktion progressbox
+					# Anzeige für die die Funktion progressbox
 					print "$Anz $Tmp1"
 					#
 					if [ -f "${gv_WorkDir}/listsongs" ] ; then
@@ -184,7 +184,7 @@ list_songs() {
 					else
 						Tmp1="${Tmp//\`/}"
 					fi
-					# Anzeige fuer die die Funktion progressbox
+					# Anzeige für die die Funktion progressbox
 					print "$Anz $Tmp1"
 					#
 					if [ -f "${gv_WorkDir}/listsongs" ] ; then
@@ -221,17 +221,17 @@ no_connect_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (no_songs_msg), Nachricht das keine Songs in der Playliste verfuegbar sind.# {{{
+# Funktion (no_songs_msg), Nachricht das keine Songs in der Playliste verfügbar sind.# {{{
 #
 no_songs_msg() {
-	MSG=$(gettext 'Es sind keine Lieder verfuegbar.')
+	MSG=$(gettext 'Es sind keine Lieder verfügbar.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion (no_current_songs_msg), Nachricht das kein Song ausgewaehlt wurde.# {{{
+# Funktion (no_current_songs_msg), Nachricht das kein Song ausgewählt wurde.# {{{
 #
 no_current_songs_msg() {
-	MSG=$(gettext 'Es wurde kein Lieder ausgewaehlt.')
+	MSG=$(gettext 'Es wurde kein Lieder ausgewählt.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
@@ -363,7 +363,7 @@ no_current_songs_msg() {
 		done < ${gv_WorkDir}/plugins
 	}
 	## }}}
-	# Funktion (check_local_remote), pruefen ob der xmms2d Server lokal oder remote laeuft# {{{
+	# Funktion (check_local_remote), prüfen ob der xmms2d Server lokal oder remote läuft# {{{
 	#
 	check_local_remote() {
 		# -I alle Ip-Adressen
@@ -431,7 +431,7 @@ while [ "$gv_Auswahl" ] ; do
 				lv_Player_Start=$(gettext 'Start')
 				lv_Player_Pause=$(gettext 'Pause')
 				lv_Player_Stop=$(gettext 'Stop')
-				lv_Player_Next=$(gettext 'naechstes')
+				lv_Player_Next=$(gettext 'nächstes')
 				lv_Player_Prev=$(gettext 'vorheriges')
 				lv_Player_Equalizer=$(gettext 'Equalizer')
 				PLAYER_MENU=($lv_Act \"\" $lv_Player_Equalizer \"\" $lv_Player_Choice \"\"
@@ -452,7 +452,7 @@ while [ "$gv_Auswahl" ] ; do
 					fi
 				}
 				#}}}
-				# Funktion (change_default), aendert den default Wert# {{{
+				# Funktion (change_default), ändert den default Wert# {{{
 				# in einer evtl. Datei listsongs
 				change_default() {
 					if [ -f ${gv_WorkDir}/listsongs ] ; then
@@ -475,7 +475,7 @@ while [ "$gv_Auswahl" ] ; do
 							player_menu $lv_Act
 							;;
 						$lv_Player_Choice)
-							# Musik auswaehlen# {{{
+							# Musik auswählen# {{{
 							list_songs
 							if [ -n "${SONG_LIST_E[1]}" ] ; then
 								# Funktion (songs_menu), Songauswahl# {{{
@@ -520,7 +520,7 @@ while [ "$gv_Auswahl" ] ; do
 								#
 								# usage: player_equal_menu
 								EQUAL_TITLE="$lv_Player_Equalizer"
-								EQUAL_MSG=$(gettext 'Waehlen Sie einen Menuepunkt und geben Sie einen wert von -20 bis 20 ein.')
+								EQUAL_MSG=$(gettext 'Wählen Sie einen Menuepunkt und geben Sie einen wert von -20 bis 20 ein.')
 								player_equal_menu() {
 									inputmenu "$1" "$PLAYER_TITLE" "$EQUAL_MSG" "$EQUAL_MENU"
 								}
@@ -617,16 +617,16 @@ while [ "$gv_Auswahl" ] ; do
 							# Musik abspielen# {{{
 							if [ -n "$CURRENT_SONG" ] ; then
 								# Status checken und dementsprechend die einzelnen
-								# nyxmms2 Befehle ausfuehren.
+								# nyxmms2 Befehle ausführen.
 								case "$STATUS_SONG" in
 									Paused|Playing|Stopped)
 										if [ ! -z "$CURRENT_SONG_OLD" ] ; then
 											nyxmms2 jump "$CURRENT_SONG_NR" || prog_failure
 											nyxmms2 play "$CURRENT_SONG_NR" || prog_failure
-											# default in listsongs aendern
+											# default in listsongs ändern
 											change_default
-											# CURRENT_SONG_OLD wieder loeschen, wird nicht
-											# mehr benoetigt
+											# CURRENT_SONG_OLD wieder löschen, wird nicht
+											# mehr benötigt
 											unset -- CURRENT_SONG_OLD
 										else
 											nyxmms2 play || prog_failure
@@ -655,7 +655,7 @@ while [ "$gv_Auswahl" ] ; do
 							player_menu $lv_Player_Prev
 							;;
 						$lv_Player_Next)
-							# naechstes Lied
+							# nächstes Lied
 							nyxmms2 next || prog_failure
 							player_menu $lv_Player_Next
 							;;

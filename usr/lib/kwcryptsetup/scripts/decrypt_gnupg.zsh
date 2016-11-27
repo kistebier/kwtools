@@ -1,8 +1,8 @@
-#!/bin/zsh -x
+#!/bin/zsh
 #
-# Author: @AUTHOR@  <@EMAIL@> @DATE@
+# Author: Kai Wilke <kiste@netzworkk.de> 27.11.2016
 #
-# @FILE_EXT@: Description
+# decrypt_gnupg.zsh: gnupg verschlüsselte Schlüsseldatei entschlüsseln
 #
 # Version: 0.0.1
 

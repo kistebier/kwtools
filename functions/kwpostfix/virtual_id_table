@@ -11,8 +11,8 @@ virtual_id_table() {
 		menubox "$1" "$TABLE_TITLE" "$gv_Menupoint" "$VIRTUAL_ID_MENU"
 	}
 	#}}}
-	# Funktion virtual_id_aendern{{{
-	virtual_id_aendern() {
+	# Funktion virtual_id_ändern{{{
+	virtual_id_ändern() {
 	virtual_id_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
@@ -20,14 +20,14 @@ virtual_id_table() {
 				virtual_id_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Address)
-				# Empfaenger Adresse eingeben
+				# Empfänger Adresse eingeben
 				general_first_address
 				virtual_id_menue $lv_Address
 				;;
 			$lv_Id)
-				# Gruppen/User-ID waehlen{{{
+				# Gruppen/User-ID wählen{{{
 				# Je nachdem welche virtual_*_table konfiguriert
-				# werden soll; einmal fuer User und einmal fuer
+				# werden soll; einmal für User und einmal für
 				# Gruppen.
 				case "$TAB" in
 					*uid*)
@@ -53,7 +53,7 @@ virtual_id_table() {
 				virtual_id_menue $lv_Id
 				;;
 			$gv_Save)
-				# Eintraege speichern{{{
+				# Einträge speichern{{{
 				if [ "$ADR" -a "$ID" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
 						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${ID}#" $FILE >$FILE$$
@@ -83,24 +83,24 @@ virtual_id_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR E_ADR AENDERN_ADR AENDERN_ADR1
-				virtual_id_aendern
+				virtual_id_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege veraendern{{{
+				# Einträge verändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -111,14 +111,14 @@ virtual_id_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl veraendern
+								# Auswahl verändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${=gv_Auswahl}[1]}"
 								ID="${${=gv_Auswahl}[2]}"
 								AENDERN_ADR="$ADR"
 								AENDERN_ADR1="$ID"
 								#
-								virtual_id_aendern
+								virtual_id_ändern
 								break
 								;;
 						esac
@@ -130,7 +130,7 @@ virtual_id_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -140,7 +140,7 @@ virtual_id_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# loeschen
+							*)	# löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

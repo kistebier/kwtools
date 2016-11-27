@@ -1,4 +1,4 @@
-# Funktion (kwquota_config), konfiguriert Standard Werte fuer quota.# {{{
+# Funktion (kwquota_config), konfiguriert Standard Werte für quota.# {{{
 #
 # usage: kwquota_config FS MOUNTPOINT
 # FS - Dateisystem
@@ -26,7 +26,7 @@ kwquota_config() {
 		lv_Days=$(gettext 'Tage')
 		lv_Weeks=$(gettext 'Wochen')
 		lv_Months=$(gettext 'Monate')
-		lv_Grace_Time=$(gettext 'Ueberschreitungszeit')
+		lv_Grace_Time=$(gettext 'Überschreitungszeit')
 		lv_User_Id=$(gettext 'Benutzer_ID')
 		lv_Group_Id=$(gettext 'Gruppen_ID')
 		lv_Project_Id=$(gettext 'Projekt_ID')
@@ -171,9 +171,9 @@ kwquota_config() {
 					kwquota_conf_menu $lv_Group_Id
 					;;
 				$lv_Project_Id)
-					# Projekt ID (Namen) vergeben, ausser es wird nur das Projekt veraendert.# {{{
+					# Projekt ID (Namen) vergeben, ausser es wird nur das Projekt verändert.# {{{
 					if [ ! -z "$PROJ_CREATE" ] ; then
-						PROJ_MSG=$(gettext 'Geben Sie einen Namen fuer das Projekt ein.')
+						PROJ_MSG=$(gettext 'Geben Sie einen Namen für das Projekt ein.')
 						inputbox "$C_TITLE" "$PROJ_MSG"
 						if [ -n "$gv_Auswahl" ] ; then
 							if [ -s "$XFS_PROJID" ] ; then
@@ -197,8 +197,8 @@ kwquota_config() {
 					kwquota_conf_menu $lv_Project_Id
 					;;
 				$lv_Project_Nr)
-					# Project Nummer auswaehlen.# {{{
-					PROJ_Nr_MSG=$(gettext 'Waehlen Sie eine Nummer fuer das Projekt aus.')
+					# Project Nummer auswählen.# {{{
+					PROJ_Nr_MSG=$(gettext 'Wählen Sie eine Nummer für das Projekt aus.')
 					# Verschiedene Zahlen die schon vergeben sind herrausfinden.
 					if [ -s "$XFS_PROJECTS" ] ; then
 						unset -- PROJ_Nr_MENU Anz
@@ -226,26 +226,26 @@ kwquota_config() {
 									menubox "$PROJECT_NR" "$C_TITLE" "$PROJ_Nr_MSG" "$PROJ_NR_MENU"
 									;;
 								*)
-									# Auswahl uebernehmen
+									# Auswahl übernehmen
 									PROJECT_NR="$gv_Auswahl"
 									break
 								;;
 							esac
 						done
 					else
-						MSG=$(gettext 'Es ist keine Nummer fuer eine neues Projekt mehr uebrig.')
+						MSG=$(gettext 'Es ist keine Nummer für eine neüs Projekt mehr uebrig.')
 						msgbox "$gv_Info" "$MSG"
 					fi
 					## }}}
 					kwquota_conf_menu $lv_Project_Nr
 					;;
 				$lv_Project_Dir)
-					# Projekt Verzeichnis auswaehlen# {{{
+					# Projekt Verzeichnis auswählen# {{{
 					unset -- Ist_Exist
 					local Ist_Exist
 					dselect $QUOTA_DRIVE
 					if [ -n "$VERZ" -a -s "$XFS_PROJECTS" ] ; then
-						# ueberpruefen ob schon vergeben
+						# überprüfen ob schon vergeben
 						for i in `awk -F : '{print $2}' $XFS_PROJECTS` ; {
 							Ist_Exist="`print ${(M)${i}##(#s)${VERZ}}`"
 							if [ "$Ist_Exist" ] ; then
@@ -254,7 +254,7 @@ kwquota_config() {
 						}
 						#
 						if [ -n "$Ist_Exist" ] ; then
-							MSG=$(gettext 'Dieses Verzeichnis ($VERZ) wird schon von einem anderen Projekt ueberwacht.')
+							MSG=$(gettext 'Dieses Verzeichnis ($VERZ) wird schon von einem anderen Projekt überwacht.')
 							msgbox "$gv_Info" "$MSG"
 							unset -- PROJECT_DIR
 						else
@@ -269,7 +269,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_Project_Dir
 					;;
 				$lv_BH_Limit)
-					# Block Hardlimit Groesse einstellen# {{{
+					# Block Hardlimit Grösse einstellen# {{{
 					LIMIT_TITLE=(${gv_Configuration}::${lv_BH_Limit})
 					SIZE="$BH_LIMIT"
 					limit_size_conf -h "$BS_LIMIT"
@@ -282,7 +282,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_BH_Limit
 					;;
 				$lv_BS_Limit)
-					# Block Softlimit Groesse einstellen# {{{
+					# Block Softlimit Grösse einstellen# {{{
 					LIMIT_TITLE=(${gv_Configuration}::${lv_BS_Limit})
 					SIZE="$BS_LIMIT"
 					limit_size_conf -s "$BH_LIMIT"
@@ -295,7 +295,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_BS_Limit
 					;;
 				$lv_IH_Limit)
-					# Inode Hardlimit Groesse einstellen# {{{
+					# Inode Hardlimit Grösse einstellen# {{{
 					number_input -i "${IH_LIMIT:-100}"
 					if [ -n "$NUMBER" ] ; then
 						if [ -n "$IS_LIMIT" ] ; then
@@ -315,7 +315,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_IH_Limit
 					;;
 				$lv_IS_Limit)
-					# Inode Softlimit Groesse einstellen# {{{
+					# Inode Softlimit Grösse einstellen# {{{
 					number_input -i "${IS_LIMIT:-95}"
 					if [ -n "$NUMBER" ] ; then
 						if [ -n "$IH_LIMIT" ] ; then
@@ -335,7 +335,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_IS_Limit
 					;;
 				$lv_RT_BH_Limit)
-					# Realtime Block Hardlimit Groesse einstellen# {{{
+					# Realtime Block Hardlimit Grösse einstellen# {{{
 					LIMIT_TITLE=(${gv_Configuration}::${lv_RT_BH_Limit})
 					SIZE="$RTBH_LIMIT"
 					limit_size_conf -h "$RTBS_LIMIT"
@@ -348,7 +348,7 @@ kwquota_config() {
 					kwquota_conf_menu $lv_RT_BH_Limit
 					;;
 				$lv_RT_BS_Limit)
-					# Realtime Block Softlimit Groesse einstellen# {{{
+					# Realtime Block Softlimit Grösse einstellen# {{{
 					LIMIT_TITLE=(${gv_Configuration}::${lv_RT_BS_Limit})
 					SIZE="$RTBS_LIMIT"
 					limit_size_conf -s "$RTBH_LIMIT"
@@ -399,18 +399,18 @@ kwquota_config() {
 					# quota erstellen
 					# Funktion (no_choice_msg), nicht genuegend Menuepunkte belegt.# {{{
 					no_choice_msg() {
-						MSG=$(gettext 'Sie muessen mindestens einen Benutzer, und/oder eine Gruppe,
-oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
+						MSG=$(gettext 'Sie müssen mindestens einen Benutzer, und/oder eine Gruppe,
+oder ein Projekt und natürlich die Limits eingeben/auswählen.')
 						msgbox "$gv_Attention" "$MSG"
 					}
 					## }}}
 					# Funktion (quota_opt), Optionen sammeln und Masseinheiten # {{{
 					# umbenennen in die richtigen Werte
-					# Programmausfuehrung sammeln - bis PetaByte
+					# Programmausführung sammeln - bis PetaByte
 					#
 					# usage: quota_opt FS [ bhard | bsoft | ... ] VALUE [ UNIT ]
 					# FS - Dateisystem
-					# bhard, etc - quota Optionen fuers Limit
+					# bhard, etc - quota Optionen fürs Limit
 					# VALUE - Limit Wert
 					# UNIT - Masseinheit
 					#
@@ -431,7 +431,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 											RTB_TIMER_OPT=-r
 											;;
 										ihard|isoft)
-											# Wert uebernehmen
+											# Wert übernehmen
 											I_TIMER_OPT=-i
 											;;
 									esac
@@ -543,7 +543,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 					## }}}
 					case "$QUOTA_PROG" in
 						xfs_quota)
-							# Funktion (xfs_set_grace_period), Ueberschreitungszeit fuer Benutzer setzen# {{{
+							# Funktion (xfs_set_grace_period), Überschreitungszeit für Benutzer setzen# {{{
 							#
 							# usage: xfs_set_grace_period
 							xfs_set_grace_period() {
@@ -579,13 +579,13 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 							# -u/-g/-p
 							if [ -n "$USER_ID" ] ; then
 								(export LC_ALL=C ; xfs_quota -x -c "limit -u $PROG_OPT $USER_ID" $QUOTA_DRIVE || prog_failure)
-								# Ueberschreitungszeit fuer Benutzer setzen
+								# Überschreitungszeit für Benutzer setzen
 								xfs_set_grace_period -u
 							elif [ -n "$GROUP_ID" ] ; then
 								(export LC_ALL=C ; xfs_quota -x -c "limit -g $PROG_OPT $GROUP_ID" $QUOTA_DRIVE || prog_failure)
-								# Ueberschreitungszeit fuer Gruppe setzen
+								# Überschreitungszeit für Gruppe setzen
 								xfs_set_grace_period -g
-								# Projekt kreieren oder aendern?
+								# Projekt kreieren oder ändern?
 							elif [ -n "$PROJECT_ID" ] ; then
 								if [ "$PROJ_CREATE" = yes -a -n "$PROJECT_NR" -a -n "$PROJECT_DIR" ] ; then
 									# $XFS_PROJECTS und XFS_PROJID erstellen
@@ -605,7 +605,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 								else
 									(export LC_ALL=C ; xfs_quota -x -c "limit -p $PROG_OPT $PROJECT_ID" $QUOTA_DRIVE || prog_failure)
 								fi
-								# Ueberschreitungszeit fuer Project setzen
+								# Überschreitungszeit für Project setzen
 								xfs_set_grace_period -p
 							else
 								# nicht genuegend Prog Optionen
@@ -674,8 +674,8 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 							}
 							## }}}
 							# ansonsten wird "setquota" benutzt# {{{
-							# Funktion (quota_opt_exec) Optionen fuer setquota sammeln# {{{
-							# und ausfuehren
+							# Funktion (quota_opt_exec) Optionen für setquota sammeln# {{{
+							# und ausführen
 							#
 							# usage: quota_opt_exec
 							quota_opt_exec() {
@@ -693,7 +693,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 								else
 									no_choice_msg
 								fi
-								# Ueberschreitungszeiten
+								# Überschreitungszeiten
 								if [ -n "$BL_GR_TIME" -a -n "$I_GR_TIME" ] ; then
 									# Block und Inode
 									# Zeit Limits in Sekunden umrechnen
@@ -707,7 +707,7 @@ oder ein Projekt und natuerlich die Limits eingeben/auswaehlen.')
 									if [ -n "$GR_TIME" ] ; then
 										IS_GR_TIME="$GR_TIME"
 									fi
-									# ausfuehren
+									# ausführen
 									if [ -n "$BLS_GR_TIME" -a -n "$IS_GR_TIME" ] ; then
 										PROG_TIME_OPT="$QU_OPT -t $BLS_GR_TIME $IS_GR_TIME"
 										(export LC_ALL=C ; setquota $QUOTA_FM ${=PROG_TIME_OPT} $QUOTA_DRIVE || prog_failure)

@@ -1,4 +1,4 @@
-# Funktion (kwbtrfs_balance), fuer die Balance von Btrfs-Laufwerken.# {{{
+# Funktion (kwbtrfs_balance), für die Balance von Btrfs-Laufwerken.# {{{
 #
 # usage: kwbtrfs_balance
 #
@@ -14,10 +14,10 @@ kwbtrfs_balance() {
 	lv_System=$(gettext 'System')
 	BALANCE_TITLE="$lv_Balance"
 	BALANCE_FILTER_TITLE="${lv_Balance}::${lv_Filter}"
-	BALANCE_FILTER_MSG=$(gettext 'Waehlen Sie einen $lv_Filter aus.')
-	CONVERT_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein Raidlevel fuer den Filter \"convert\" aus.')
+	BALANCE_FILTER_MSG=$(gettext 'Wählen Sie einen $lv_Filter aus.')
+	CONVERT_FILTER_MSG=$(gettext 'Wählen Sie bitte ein Raidlevel für den Filter \"convert\" aus.')
 	PROFILES_VALUE="$lv_Single $lv_Dup raid0 raid1 raid5 raid6 raid10"
-	PROFILE_FILTER_MSG=$(gettext 'Waehlen Sie bitte ein oder mehrere Profile fuer den Filter \"profiles\" aus.')
+	PROFILE_FILTER_MSG=$(gettext 'Wählen Sie bitte ein oder mehrere Profile für den Filter \"profiles\" aus.')
 	DATA="${DATA:-yes}"
 	META="${META:-yes}"
 	SYSTEM="${SYSTEM:-yes}"
@@ -36,9 +36,9 @@ kwbtrfs_balance() {
 		menubox "$1" "$BALANCE_TITLE" "$gv_Menupoint" "$BALANCE_MENU"
 	}
 	## }}}
-	# Funktion (option_question_msg), Frage auf welche Optionen die Filter# {{{
+	# Funktion (option_qüstion_msg), Frage auf welche Optionen die Filter# {{{
 	# angewendet werden sollen.
-	option_question_msg() {
+	option_qüstion_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			local Opt
 			Opt="$1"
@@ -89,7 +89,7 @@ kwbtrfs_balance() {
 		fi
 	}
 	## }}}
-	# Funktion (profiles_checklist), Profile auswaehlen# {{{
+	# Funktion (profiles_checklist), Profile auswählen# {{{
 	profiles_checklist() {
 #		PROFILES_MENU=($lv_Single \"$lv_Redundanz -\" off $lv_Dup \"$lv_Redundanz -\" off
 #		raid0 \"$lv_Redundanz -\" off raid1 \"$lv_Redundanz +\" off
@@ -100,7 +100,7 @@ kwbtrfs_balance() {
 	## }}}
 	# Funktion (usage_menu), einstellen der Benutzung von# {{{
 	# Datenblockgruppen, Metadaten Chunks und System Chunks
-	# Groesse in Prozent des ausgewaehlten Btrfs-Laufwerks
+	# Grösse in Prozent des ausgewählten Btrfs-Laufwerks
 	usage_menu() {
 		USAGE_MENU=($lv_Data \"$DUSAGE\" $lv_Meta \"$MUSAGE\"
 		$lv_System \"$SUSAGE\" $gv_Back \"\")
@@ -116,7 +116,7 @@ kwbtrfs_balance() {
 	usage_msg() {
 		if [[ ${#argv} == 1 ]] ; then
 			Value="$1"
-			USAGE_MSG=$(gettext 'Geben Sie einen Wert in Prozent, unter dem die Blockgruppen ausgeglichen werden sollen, ein. Die jetzige Benutzung des laufwerks betraegt ${Value}%.')
+			USAGE_MSG=$(gettext 'Geben Sie einen Wert in Prozent, unter dem die Blockgruppen ausgeglichen werden sollen, ein. Die jetzige Benutzung des laufwerks beträgt ${Value}%.')
 		else
 			no_part_msg $0
 		fi
@@ -133,7 +133,7 @@ kwbtrfs_balance() {
 					balance_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Btrfs_Drive)
-					# bestehendes Btrfs-Laufwerk auswaehlen# {{{
+					# bestehendes Btrfs-Laufwerk auswählen# {{{
 					btrfs_choice_menu "" "$BALANCE_TITLE" "$BTRFS_PATH_E"
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -142,7 +142,7 @@ kwbtrfs_balance() {
 								btrfs_choice_menu "${gv_Auswahl#HELP }" "$BALANCE_TITLE" "$BTRFS_PATH_E"
 								;;
 							/*)
-								# Laufwerk uebernehmen und per Index die Laufwerksanzahl
+								# Laufwerk übernehmen und per Index die Laufwerksanzahl
 								# heraus bekommen.
 								DRIVE="$gv_Auswahl"
 								Index=$BTRFS_PATH[(i)$DRIVE]
@@ -159,7 +159,7 @@ kwbtrfs_balance() {
 					;;
 				$lv_Data)
 					# Frage, ob die Filter auf die Datenblockgruppen angewendet werden soll.# {{{
-					option_question_msg $lv_Data
+					option_qüstion_msg $lv_Data
 					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
 					if [[ $gv_Auswahl == yes ]] ; then
 						DATA="yes"
@@ -171,7 +171,7 @@ kwbtrfs_balance() {
 					;;
 				$lv_Meta)
 					# Frage, ob die Filter auf die Metadaten Chunks angewendet werden soll.# {{{
-					option_question_msg $lv_Meta
+					option_qüstion_msg $lv_Meta
 					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
 					if [[ $gv_Auswahl == yes ]] ; then
 						META="yes"
@@ -183,7 +183,7 @@ kwbtrfs_balance() {
 					;;
 				$lv_System)
 					# Frage, ob die Filter auf die System Chunks angewendet werden soll.# {{{
-					option_question_msg $lv_System
+					option_qüstion_msg $lv_System
 					yesno "$BALANCE_TITLE" "$OPT_MSG" yes
 					if [[ $gv_Auswahl == yes ]] ; then
 						SYSTEM="yes"
@@ -194,7 +194,7 @@ kwbtrfs_balance() {
 					balance_menu $lv_System
 					;;
 				$lv_Filter)
-					# Filter auswaehlen# {{{
+					# Filter auswählen# {{{
 					if [[ -n $DRIVE ]] ; then
 						balance_filter_menu
 						while [[ -n $gv_Auswahl ]] ; do
@@ -204,7 +204,7 @@ kwbtrfs_balance() {
 									balance_filter_menu "${gv_Auswahl#HELP }"
 									;;
 								$lv_Conversion)
-									# convert Filter auswaehlen# {{{
+									# convert Filter auswählen# {{{
 									conversion_menu "" "$CONVERT_FILTER_MSG"
 									while [[ -n $gv_Auswahl ]] ; do
 										case "$gv_Auswahl" in
@@ -213,7 +213,7 @@ kwbtrfs_balance() {
 												conversion_menu "${gv_Auswahl#HELP }" "$CONVERT_FILTER_MSG"
 												;;
 											*)
-												# Raidlevel uebernehmen oder auch nicht.
+												# Raidlevel übernehmen oder auch nicht.
 												if [[ $gv_Auswahl == $gv_None ]] ; then
 													unset -- CONVERT
 												else
@@ -227,7 +227,7 @@ kwbtrfs_balance() {
 									balance_filter_menu $lv_Conversion
 									;;
 								$lv_Profiles)
-									# Profil Filter auswaehlen# {{{
+									# Profil Filter auswählen# {{{
 									# vorherige Werte mit on belegen
 									generate_is_file "${${PROFILES//|/ }//\\/}"
 									is_value "${=PROFILES_VALUE}"
@@ -240,7 +240,7 @@ kwbtrfs_balance() {
 												profiles_checklist "${gv_Auswahl#HELP }"
 												;;
 											*)
-												# Raidlevel uebernehmen oder auch nicht.
+												# Raidlevel übernehmen oder auch nicht.
 												PROFILES="${gv_Auswahl_Display// /\|}"
 												break
 												;;
@@ -259,7 +259,7 @@ kwbtrfs_balance() {
 									while read opt profile size usage ; do
 										case "${opt%,}" in
 											Data)
-												# Groessen nach Byte umrechnen
+												# Grössen nach Byte umrechnen
 												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
 												Total="$SIZE_B"
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
@@ -274,7 +274,7 @@ kwbtrfs_balance() {
 												fi
 												;;
 											System)
-												# Groessen nach Byte umrechnen
+												# Grössen nach Byte umrechnen
 												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
 												Total="$SIZE_B"
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
@@ -289,7 +289,7 @@ kwbtrfs_balance() {
 												fi
 												;;
 											Metadata)
-												# Groessen nach Byte umrechnen
+												# Grössen nach Byte umrechnen
 												convert_drive_size "${${${size##*=}##*[0-9]}%,}" "${${size##*=}%%[a-zA-Z]*,}"
 												Total="$SIZE_B"
 												convert_drive_size "${${${usage##*=}##*[0-9]}%,}" "${${usage##*=}%%[a-zA-Z]*}"
@@ -367,7 +367,7 @@ kwbtrfs_balance() {
 									balance_filter_menu $lv_Soft
 									;;
 								$gv_Save)
-									# Filter zusammen zaehlen# {{{
+									# Filter zusammen zählen# {{{
 									if [[ $DATA == yes ]] ; then
 										if [[ -n $CONVERT ]] ; then
 											DFILTER+=(convert=${CONVERT})
@@ -435,7 +435,7 @@ kwbtrfs_balance() {
 					## }}}
 					;;
 				$gv_Save)
-					# Befehl btrfs balance ausfuehren# {{{
+					# Befehl btrfs balance ausführen# {{{
 					BALANCE_MSG="${lv_Balance}: ${DRIVE} ..."
 					if [[ -n $DRIVE ]] ; then
 						BALANCE_OPT="-f -v"

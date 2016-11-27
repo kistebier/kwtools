@@ -1,4 +1,4 @@
-# Funktion (kwbtrfs_service_check), Btrfs-Laufwerk ueberpruefen# {{{
+# Funktion (kwbtrfs_service_check), Btrfs-Laufwerk überprüfen# {{{
 #
 # usage: kwbtrfs_service_check
 #
@@ -10,7 +10,7 @@ kwbtrfs_service_check() {
 #	lv_Readonly=$(gettext 'nur lesbar')
 	lv_Repair=$(gettext 'reparieren')
 	lv_Subvolume_Id=$(gettext 'Subvolume ID')
-	lv_Verify_Csum=$(gettext 'pruefe Checksumme')
+	lv_Verify_Csum=$(gettext 'prüfe Checksumme')
 	SERVICE_CHECK_TITLE="${lv_Service}::${lv_Check}"
 	REPAIR="${REPAIR:-no}"
 	## }}}
@@ -23,7 +23,7 @@ kwbtrfs_service_check() {
 		menubox "$1" "$SERVICE_CHECK_TITLE" "$gv_Menupoint" "$MENU"
 	}
 	## }}}
-	# Funktion (check_subvolume_id), Subvolume ID auswaehlen# {{{
+	# Funktion (check_subvolume_id), Subvolume ID auswählen# {{{
 	#
 	# usage: check_subvolume_id
 	#
@@ -34,7 +34,7 @@ kwbtrfs_service_check() {
 				while read id nr rest ; do
 					ID+=(nr \"${rest##* }\")
 				done < ${gv_WorkDir}subvol_id
-				SV_ID_MSG=$(gettext 'Waehlen Sie bitte eine $lv_Subvolume_Id aus.')
+				SV_ID_MSG=$(gettext 'Wählen Sie bitte eine $lv_Subvolume_Id aus.')
 				# Funktion (check_subvolume_id_menu)# {{{
 				check_subvolume_id_menu() {
 					SV_ID_MENU=($gv_None \"\" $ID $gv_Back \"\")
@@ -51,7 +51,7 @@ kwbtrfs_service_check() {
 							break
 							;;
 						[0-9]*)
-							# ID uebernehmen
+							# ID übernehmen
 							SV_ID="$gv_Auswah"
 							break
 							;;
@@ -77,7 +77,7 @@ kwbtrfs_service_check() {
 				check_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Btrfs_Drive)
-				# Btrfs-Laufwerk auswaehlen# {{{
+				# Btrfs-Laufwerk auswählen# {{{
 				autoload -U kwbtrfs_service_check_btrfs_dev
 				kwbtrfs_service_check_btrfs_dev
 				## }}}
@@ -96,8 +96,8 @@ kwbtrfs_service_check() {
 				check_menu $lv_Backup
 				;;
 			$lv_Verify_Csum)
-				# ueberpruefe die Checksumme der Datenbloecke (ja/nein).# {{{
-				MSG=$(gettext 'Soll die Checksumme der Datenbloecke ueberprueft werden (ja/nein)?')
+				# überprüfe die Checksumme der Datenblöcke (ja/nein).# {{{
+				MSG=$(gettext 'Soll die Checksumme der Datenblöcke überprüft werden (ja/nein)?')
 				yesno "$SERVICE_CHECK_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					VCSUM=yes
@@ -108,9 +108,9 @@ kwbtrfs_service_check() {
 				check_menu $lv_Verify_Csum
 				;;
 			$lv_Qgroup)
-				# ueberpruefe Quota Gruppen Buchhaltung und vergleiche# {{{
+				# überprüfe Quota Gruppen Buchhaltung und vergleiche# {{{
 				# sie mit der Dateisystem Buchhaltung (ja/nein).
-				MSG=$(gettext 'Soll die Quota Gruppen Buchhaltung ueberprueft und mit der Dateisystem Buchhaltung verglichen werden (ja/nein)?')
+				MSG=$(gettext 'Soll die Quota Gruppen Buchhaltung überprüft und mit der Dateisystem Buchhaltung verglichen werden (ja/nein)?')
 				yesno "$SERVICE_CHECK_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					QGROUP=yes
@@ -121,7 +121,7 @@ kwbtrfs_service_check() {
 				check_menu $lv_Qgroup
 				;;
 			$lv_Subvolume_Id)
-				# erweiter die Ueberpruefung auf Subvolume ID# {{{
+				# erweiter die Überprüfung auf Subvolume ID# {{{
 				check_subvolume_id
 				## }}}
 				check_menu $lv_Subvolume_Id
@@ -142,7 +142,7 @@ kwbtrfs_service_check() {
 							superblock_menu "${gv_Auswahl#HELP }"
 							;;
 						[0-2])
-							# uebernehmen
+							# übernehmen
 							SUPER="$gv_Auswahl"
 							break
 							;;
@@ -171,7 +171,7 @@ kwbtrfs_service_check() {
 				check_menu $lv_Repair
 				;;
 			$gv_Save)
-				# Ueberpruefung starten# {{{
+				# Überprüfung starten# {{{
 				if [[ -n $DRIVE ]] && [[ -n $DEV ]] ; then
 					# Laufwerk ausbinden
 					mount_check -a $DRIVE
@@ -199,7 +199,7 @@ kwbtrfs_service_check() {
 									;;
 							esac
 						fi
-						# ausfuehren
+						# ausführen
 						rm -rf ${gv_WorkDir}/btrfs_check &>/dev/null
 						echo "$DEV" >>${gv_WorkDir}/btrfs_check
 						echo "---------------------------" \
@@ -207,10 +207,10 @@ kwbtrfs_service_check() {
 						btrfs check ${=CHECK_OPT} $DEV 2>&1 \
 							>> ${gv_WorkDir}/btrfs_check
 						view_file ${gv_WorkDir}/btrfs_check
-						# Variabeln mit Laufwerken loeschen
+						# Variabeln mit Laufwerken löschen
 						unset -- DRIVE DEV
 					else
-						# Variabeln mit Laufwerken loeschen
+						# Variabeln mit Laufwerken löschen
 						unset -- DRIVE DEV
 					fi
 				else
@@ -220,7 +220,7 @@ kwbtrfs_service_check() {
 				check_menu "$lv_Btrfs_Drive"
 				;;
 			$gv_Back|*)
-				# zurueck/abbrechen
+				# zurück/abbrechen
 				break
 				;;
 		esac

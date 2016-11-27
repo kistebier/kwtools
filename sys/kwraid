@@ -34,26 +34,26 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# pruefen, ob die SW-RAID-Treiber geladen sind und ob die richtige# {{{
+# prüfen, ob die SW-RAID-Treiber geladen sind und ob die richtige# {{{
 # Kernelversion installiert ist.
 # RAID Module laden.
 kernel_release
 if [[ "${gv_K_Release%%-*}" < 2.6.33 ]] ; then
-	MSG=$(gettext 'Sie benoetigen mindestens Kernel Version >=2.6.33. Das Script bricht jetzt ab.')
+	MSG=$(gettext 'Sie benötigen mindestens Kernel Version >=2.6.33. Das Script bricht jetzt ab.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
 else
 	load_module 'md xor linear raid0 raid1 raid5 raid6 raid10 multipath'
 fi
 ## }}}
-# Pruefen ob mdadm installiert ist# {{{
+# Prüfen ob mdadm installiert ist# {{{
 prog_check mdadm
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
 ## }}}
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
@@ -68,7 +68,7 @@ autoload -U drive_conf raiddisk raid_create_conf \
 #
 ##################################################################
 #
-# generelle Funktionen ausfuehren
+# generelle Funktionen ausführen
 hw_conf
 fs_conf
 #
@@ -113,16 +113,16 @@ lv_Auto=$(gettext 'Device Erstellung')
 lv_Metadata=$(gettext 'Metadaten')
 lv_Symlinks=$(gettext 'symbolische Links')
 ## }}}
-# Alle Arrays zusammenfuegen und starten{{{
+# Alle Arrays zusammenfügen und starten{{{
 #
-# -A --assemble = Arrays zusammenfuehren.
+# -A --assemble = Arrays zusammenführen.
 # -s --scan = scannt config Datei (/etc/mdadm/mdadm.conf) oder /proc/mdstat.
 # -a --auto-detect = md Devices anlegen falls nicht vorhanden.
 #
 # Alle Arrays in /etc/mdadm/mdadm.conf werden gestartet.
 RAIDTAB="${RAIDTAB:-/etc/mdadm/mdadm.conf}"
 if [ -f "$RAIDTAB" ] ; then
-	MSG=$(gettext 'Die Initialisierung der RAID Arrays kann etwas dauern. Pruefen Sie anschliessend, ob alle Arrays richtig initialisiert wurden (Status).')
+	MSG=$(gettext 'Die Initialisierung der RAID Arrays kann etwas dauern. Prüfen Sie anschliessend, ob alle Arrays richtig initialisiert wurden (Status).')
 	msgbox "$gv_Info" "$MSG"
 	mdadm -A -s -amd &>/dev/null
 fi
@@ -145,7 +145,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Configuration)
 			# Konfiguration der mdadm.conf.# {{{
-			# und fuers erstellen von 
+			# und fürs erstellen von 
 			# neuen RAID Devices.
 			autoload -U net_conf raid_conf
 			net_conf

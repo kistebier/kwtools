@@ -28,7 +28,7 @@ kwadmin_conf() {
 				conf_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Kwtoolsverz)
-				# kwtools Verzeichnis auswaehlen. Standard ist /usr/lib/kwtools.{{{
+				# kwtools Verzeichnis auswählen. Standard ist /usr/lib/kwtools.{{{
 				dselect "$KWTOOLS_PATH"
 				if [ "$VERZ" ] ; then
 					dselect_check "$VERZ"
@@ -40,10 +40,10 @@ kwadmin_conf() {
 				conf_menue $lv_Kwtoolsverz
 				;;
 			$lv_Language)
-				# Sprache auswaehlen{{{
+				# Sprache auswählen{{{
 				LANG_TITLE=(${gv_Configuration}::${lv_Language})
 				LANG_MENU=(de $gv_German en $gv_English)
-				LANG_MSG=$(gettext 'Waehlen Sie eine Sprache aus.')
+				LANG_MSG=$(gettext 'Wählen Sie eine Sprache aus.')
 				menubox "$LANGUAGE" "$LANG_TITLE" "$LANG_MSG" "$LANG_MENU"
 				while [ "$gv_Auswahl" ] ; do
 					case $gv_Auswahl in
@@ -71,7 +71,7 @@ kwadmin_conf() {
 							EDITOR="$gv_Auswahl"
 							;;
 						*)
-							# Pruefen ob das Programm ausfuehrbar/installiert ist
+							# Prüfen ob das Programm ausführbar/installiert ist
 							prog_check "$gv_Auswahl"
 							if [ -n "$PROGS" ] ; then
 								EDITOR="$PROGS"
@@ -81,7 +81,7 @@ kwadmin_conf() {
 							;;
 					esac
 				else
-					MSG=$(gettext 'Sie muessen schon was ordentliches eingeben ausser Sie wollten abbrechen. Dieser Menuepunkt wird mit "dialog" belegt.')
+					MSG=$(gettext 'Sie müssen schon was ordentliches eingeben ausser Sie wollten abbrechen. Dieser Menuepunkt wird mit "dialog" belegt.')
 					msgbox "$gv_Attention" "$MSG"
 					EDITOR=dialog
 				fi
@@ -90,7 +90,7 @@ kwadmin_conf() {
 				;;
 			$lv_Pager)
 				# Pager eingeben, ansonsten nach "more" suchen# {{{
-				# und uebernehmen.
+				# und übernehmen.
 				PAGER_TITLE=(${gv_Configuration}::${lv_Pager})
 				PAGER_MSG=$(gettext 'Geben Sie einen Pager ein (z.B. less, more).')
 				inputbox "$PAGER_TITLE" "$PAGER_MSG" "$PAGER"
@@ -113,9 +113,9 @@ kwadmin_conf() {
 				conf_menue $lv_Pager
 				;;
 			$lv_Tmp)
-				# Temporaeres Verzeichnis einstellen.{{{
-				TMP_TITLE=$(gettext '${gv_Configuration}::temporaeres Verzeichnis')
-				TMP_MSG=$(gettext 'Geben Sie hier ein temporaeres Verzeichnis ein indem alle Benutzer ausser root ihre temporaeren Dateien anlegen duerfen (\$HOME/tmp oder /var/tmp).')
+				# Temporäres Verzeichnis einstellen.{{{
+				TMP_TITLE=$(gettext '${gv_Configuration}::temporäres Verzeichnis')
+				TMP_MSG=$(gettext 'Geben Sie hier ein temporäres Verzeichnis ein indem alle Benutzer ausser root ihre temporären Dateien anlegen duerfen (\$HOME/tmp oder /var/tmp).')
 				inputbox "$TMP_TITLE" "$TMP_MSG" "${TMP_PATH//$/\$}"
 				if [ "$gv_Auswahl" ] ; then
 					TMP_PATH="${gv_Auswahl/$/\\$}"

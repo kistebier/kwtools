@@ -34,9 +34,9 @@ master_conf() {
 		done
 	}
 	#}}}
-	# Funktion master_aendern_menue{{{
+	# Funktion master_ändern_menue{{{
 	#
-	master_aendern_menue() {
+	master_ändern_menue() {
 		MASTER_CHANGE_MENU=($lv_Service \"$SERVICE\" $lv_Typ \"$TYPE\"
 		$lv_Privat \"$PRIVATE\" $lv_Unpriv \"$UNPRIV\" $lv_Chroot \"$CHROOT\"
 		$lv_Wakeup \"$WAKEUP\" \"$lv_Max_Process\" \"$MAXPROC\" $lv_Cmd \"$COMMAND\"
@@ -56,7 +56,7 @@ master_conf() {
 				HELP*)	script_help master_wert_help
 					menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$gv_Menupoint" "$MASTER_WERT" "$1"
 					;;
-				*)	# Wert uebernehmen
+				*)	# Wert übernehmen
 					WERT="$gv_Auswahl"
 					break
 					;;
@@ -67,7 +67,7 @@ master_conf() {
 	# Funktion mastercf_args{{{
 	#
 	mastercf_args() {
-		# Pruefen ob es Argumente zu Befehlen gibt, wenn ja einfuegen.
+		# Prüfen ob es Argumente zu Befehlen gibt, wenn ja einfügen.
 		if [ -n "$ARGS" ] ; then
 			# Bei mehr als 3 Optionen (-o) wird eine neue
 			# Zeile benutzt.
@@ -102,14 +102,14 @@ master_conf() {
 		PRIVATE=n
 	}
 	## }}}
-	# Funktion master_aendern{{{
+	# Funktion master_ändern{{{
 	#
-	master_aendern() {
-		master_aendern_menue
+	master_ändern() {
+		master_ändern_menue
 		while [ "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
-				HELP*)	script_help master_aendern_help
-					master_aendern_menue "${gv_Auswahl#HELP }"
+				HELP*)	script_help master_ändern_help
+					master_ändern_menue "${gv_Auswahl#HELP }"
 					;;
 				$lv_Service)
 					# Servicename einstellen{{{
@@ -125,11 +125,11 @@ master_conf() {
 						service_name
 					fi
 					#}}}
-					master_aendern_menue $lv_Service
+					master_ändern_menue $lv_Service
 					;;
 				$lv_Typ)
 					# Transport Type einstellen{{{
-					T_TYPE_MSG=$(gettext 'Waehlen Sie einen Transporttyp aus.')
+					T_TYPE_MSG=$(gettext 'Wählen Sie einen Transporttyp aus.')
 					T_MENU=(fifo \"\" inet \"\" unix \"\")
 					menubox "$TYPE" "$MASTER_CONF_TITLE" "$T_TYPE_MSG" "$T_MENU"
 					#
@@ -138,7 +138,7 @@ master_conf() {
 							HELP*)	script_help transport_type_help
 								menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$T_TYPE_MSG" "$T_MENU"
 								;;
-							*)	# Den Wert von private ueberpruefen
+							*)	# Den Wert von private überprüfen
 								TYPE="$gv_Auswahl"
 								# Bei inet muss der Wert von private auf
 								# n (no) stehen.
@@ -150,7 +150,7 @@ master_conf() {
 						esac
 					done
 					#}}}
-					master_aendern_menue $lv_Typ
+					master_ändern_menue $lv_Typ
 					;;
 				$lv_Privat)
 					# private einstellen{{{
@@ -164,10 +164,10 @@ master_conf() {
 						fi
 					fi
 					#}}}
-					master_aendern_menue $lv_Privat
+					master_ändern_menue $lv_Privat
 					;;
 				$lv_Unpriv)
-					# Welcher Service laeuft als root oder als Besitzer von Postfix{{{
+					# Welcher Service läuft als root oder als Besitzer von Postfix{{{
 					#
 					case ${SERVICE#*:} in
 						pipe|local|virtual)	
@@ -183,14 +183,14 @@ master_conf() {
 							;;
 					esac
 					#}}}
-					master_aendern_menue $lv_Unpriv
+					master_ändern_menue $lv_Unpriv
 					;;
 				$lv_Chroot)
-					# Welcher Service laeuft in einer chroot Umgebung{{{
+					# Welcher Service läuft in einer chroot Umgebung{{{
 					#
 					case ${SERVICE#*:} in
 						pipe|local|virtual)	
-							# Duese Service duerfen in keiner chroot Umgebeung laufen.
+							# Düse Service duerfen in keiner chroot Umgebeung laufen.
 							MSG=$(gettext 'Beim Service ($SERVICE) muss Unpriviligiert und Chroot auf n (no) stehen.')
 							msgbox "$gv_Info" "$MSG"
 							CHROOT=n
@@ -204,7 +204,7 @@ master_conf() {
 							;;
 					esac
 					#}}}
-					master_aendern_menue $lv_Chroot
+					master_ändern_menue $lv_Chroot
 					;;
 				$lv_Wakeup)
 					# Aufwachzeit einstellen{{{
@@ -221,9 +221,9 @@ master_conf() {
 					elif [ "${SERVICE#*:}" = flush ] ; then
 						WAKEUP="${NUMBER}?"
 					else
-						# Frage ob ein ? mit angehaegt werden soll
+						# Frage ob ein ? mit angehägt werden soll
 						yesno_option "$WAKEUP" "${NUMBER}?"
-						MSG=$(gettext 'Soll ein ? an die Zeit angehaengt werden (ja/nein)?')
+						MSG=$(gettext 'Soll ein ? an die Zeit angehängt werden (ja/nein)?')
 						yesno "$MASTER_CONF_TITLE" "$MSG" "$YN_OPT"
 						if [ "$gv_Auswahl" = yes ] ; then
 							WAKEUP="${NUMBER}?"
@@ -232,7 +232,7 @@ master_conf() {
 						fi	
 					fi
 					#}}}
-					master_aendern_menue $lv_Wakeup
+					master_ändern_menue $lv_Wakeup
 					;;
 				$lv_Max_Process)
 					# max. Prozesse die simultan laufen sollen einstellen{{{
@@ -241,24 +241,24 @@ master_conf() {
 					if [ "$NUMBER" ] ; then
 						case "${SERVICE#*:}" in
 							local|pipe|virtual)
-								# Ueberpruefen der Service Werte local, pipe und virtual
+								# Überprüfen der Service Werte local, pipe und virtual
 								#
 								MSG=$(gettext 'Beim Service ($SERVICE) darf der maximale Prozessstart keinen Wert besitzen.')
 								msgbox "$gv_Info" "$MSG"
 								MAXPROC=-
 								;;
-							*)	# Wert uebernehmen
+							*)	# Wert übernehmen
 								MAXPROC="$NUMBER"
 								;;
 						esac
 					fi
 					#}}}
-					master_aendern_menue $lv_Max_Process
+					master_ändern_menue $lv_Max_Process
 					;;
 				$lv_Cmd)
 					# Befehl angeben{{{
 					# vorhandene Befehle herrausfinden
-					B_MSG=$(gettext 'Waehlen Sie einen postfix daemon aus.')
+					B_MSG=$(gettext 'Wählen Sie einen postfix dämon aus.')
 					if [ -d /usr/lib/postfix ] ; then
 						pushd /usr/lib/postfix
 						for i in `print *~*post*~*.cf(.xN)` ; {
@@ -295,7 +295,7 @@ master_conf() {
 							HELP*)	script_help command_help
 								command_menu "${gv_Auswahl#HELP }"
 								;;
-							*)	# MAXPROC Wert ueberpruefen
+							*)	# MAXPROC Wert überprüfen
 								COMMAND="$gv_Auswahl"
 								case $COMMAND in
 									cleanup|bounce|defer)
@@ -314,14 +314,14 @@ master_conf() {
 						esac
 					done
 					#}}}
-					master_aendern_menue $lv_Cmd
+					master_ändern_menue $lv_Cmd
 					;;
 				$lv_Args)
 					# Argumente zum Befehl eingeben{{{
 					unset -- Option Tmp
-					# Erst den BackSlash (\) entfernen und spaeter wieder hinzufuegen,
-					# damit der BackSlash nicht immer wieder hinzu gefuegt wird.
-					ARGS_MSG=$(gettext 'Geben Sie hier die Argumente fuer den postfix daemon ein. Schauen Sie dazu in die jeweilige Dokumentation.')
+					# Erst den BackSlash (\) entfernen und später wieder hinzufügen,
+					# damit der BackSlash nicht immer wieder hinzu gefügt wird.
+					ARGS_MSG=$(gettext 'Geben Sie hier die Argumente für den postfix dämon ein. Schauen Sie dazu in die jeweilige Dokumentation.')
 					inputbox "$MASTER_CONF_TITLE" "$ARGS_MSG" "${${ARGS//\\/}//\$/\\$}"
 					if [ "$gv_Auswahl" ] ; then
 						unset -- ARGS
@@ -342,55 +342,55 @@ master_conf() {
 					#
 					ARGS="$Tmp"
 					#}}}
-					master_aendern_menue $lv_Args
+					master_ändern_menue $lv_Args
 					;;
 				$gv_Save)
 					# speichern{{{
-					# Pruefen ob ein Servis geaendert/geloescht oder angelegt werden soll.
+					# Prüfen ob ein Servis geändert/gelöscht oder angelegt werden soll.
 					if [ "$AENDERN" = yes ] ; then
-						# Pruefen ob die Variablen SERVICE und COMMAND belegt sind.{{{
+						# Prüfen ob die Variablen SERVICE und COMMAND belegt sind.{{{
 						# Die anderen sind immer belegt.
 						if [ "$SERVICE" -a "$COMMAND" ] ; then
-							# Mehrere Zeile loeschen und neu anlegen.
+							# Mehrere Zeile löschen und neu anlegen.
 							if [ "$DEL_END" ] ; then
-								# von DEL_BEGINN bis DEL_END loeschen
+								# von DEL_BEGINN bis DEL_END löschen
 								sed -e "${DEL_BEGINN},${DEL_END}d" $MASTER_CF >${gv_WorkDir}/mastercf
 								# Rest sichern
 								sed -n -e "${DEL_BEGINN},\$p" ${gv_WorkDir}/mastercf >${gv_WorkDir}/mastercf1
-								# Rest loeschen
+								# Rest löschen
 								sed -e "${DEL_BEGINN},\$d" ${gv_WorkDir}/mastercf >$MASTER_CF$$
 								mastercf_args
-								# Rest hinzufuegen
+								# Rest hinzufügen
 								< ${gv_WorkDir}/mastercf1 >>${MASTER_CF}$$ 
 								mv ${MASTER_CF}$$ $MASTER_CF
 								#
 							else
-								# Es gibt nur eine Zeile zum loeschen.
+								# Es gibt nur eine Zeile zum löschen.
 								sed -e "${AENDERN_NR}d" $MASTER_CF >${gv_WorkDir}/mastercf
 								# Rest sichern
 								sed -n -e "${AENDERN_NR},\$p" ${gv_WorkDir}/mastercf >${gv_WorkDir}/mastercf1
-								# Rest loeschen
+								# Rest löschen
 								sed -e "${AENDERN_NR},\$d" ${gv_WorkDir}/mastercf >$MASTER_CF$$
 								mastercf_args
-								# Rest hinzufuegen
+								# Rest hinzufügen
 								< ${gv_WorkDir}/mastercf1 >>${MASTER_CF}$$ 
 								mv ${MASTER_CF}$$ $MASTER_CF
 							fi
 						else
 							no_serv_cmd_msg
-							master_aendern_menue
+							master_ändern_menue
 						fi
 						#}}}
 					else
-						# vor dem anlegen des Services ueberpruefen, ob es diesen schon gibt{{{
+						# vor dem anlegen des Services überprüfen, ob es diesen schon gibt{{{
 						#
 						if [ "$SERVICE" -a "$COMMAND" ] ; then
 							Anz=${${(s,:,)$(grep -n "${SERVICE#*:}.*${TYPE}.*${PRIVATE}.*${UNPRIV}.*${CHROOT}.*${WAKEUP}.*${MAXPROC}.*${COMMAND}" $MASTER_CF)}[1]}
-							# ist der Service vorhanden, pruefen ob er auch Argumente zu 
+							# ist der Service vorhanden, prüfen ob er auch Argumente zu 
 							# seinen Befehlen hat.
 							if [ "$Anz" ] ; then
 								(( Anz1 = 1+Anz ))
-								# wenn die Auswahl naechste Zeilen hat, die mit Leerzeichen beginnen,
+								# wenn die Auswahl nächste Zeilen hat, die mit Leerzeichen beginnen,
 								# werden diese mit hinzugenommen.
 								IST="$(sed -n -e "${Anz1}p" $MASTER_CF| grep -n '^ ')"
 								while [ -n "$IST" ] ; do
@@ -400,25 +400,25 @@ master_conf() {
 								# Ist die Variable Anz kleiner als die Variable Anz1 wird
 								(( Anz1=Anz1-1 ))
 								if [ "$Anz" -lt "$Anz1" ] ; then
-									# von DEL_BEGINN bis DEL_END loeschen
+									# von DEL_BEGINN bis DEL_END löschen
 									sed -e "${Anz},${Anz1}d" $MASTER_CF >${gv_WorkDir}/mastercf
 									# Rest sichern
 									sed -n -e "${Anz},\$p" ${gv_WorkDir}/mastercf >${gv_WorkDir}/mastercf1
-									# Rest loeschen
+									# Rest löschen
 									sed -e "${Anz},\$d" ${gv_WorkDir}/mastercf >$MASTER_CF$$
 									mastercf_args
-									# Rest hinzufuegen
+									# Rest hinzufügen
 									< ${gv_WorkDir}/mastercf1 >>${MASTER_CF}$$ 
 									mv ${MASTER_CF}$$ $MASTER_CF
 								else
-									# Es gibt nur eine Zeile zum loeschen.
+									# Es gibt nur eine Zeile zum löschen.
 									sed -e "${Anz}d" $MASTER_CF >${gv_WorkDir}/mastercf
 									# Rest sichern
 									sed -n -e "${Anz},\$p" ${gv_WorkDir}/mastercf >${gv_WorkDir}/mastercf1
-									# Rest loeschen
+									# Rest löschen
 									sed -e "${Anz},\$d" ${gv_WorkDir}/mastercf >$MASTER_CF$$
 									mastercf_args
-									# Rest hinzufuegen
+									# Rest hinzufügen
 									< ${gv_WorkDir}/mastercf1 >>${MASTER_CF}$$ 
 									mv ${MASTER_CF}$$ $MASTER_CF
 								fi
@@ -429,7 +429,7 @@ master_conf() {
 							fi
 						else
 							no_serv_cmd_msg
-							master_aendern_menue
+							master_ändern_menue
 						fi
 						#}}}
 					fi
@@ -444,14 +444,14 @@ master_conf() {
 	#}}}
 	# Funktion no_serv_cmd_msg# {{{
 	no_serv_cmd_msg() {
-		MSG=$(gettext 'Sie muessen noch die Menuepunkte Service, Befehl und eventuell Argumente mit Werten belegen.')
+		MSG=$(gettext 'Sie müssen noch die Menuepunkte Service, Befehl und eventuell Argumente mit Werten belegen.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
 	# Funktion service_name{{{
 	#
 	service_name() {
-		SERVICE_NAME_MSG=$(gettext 'Geben Sie hier einen Namen fuer diesen Service ein.')
+		SERVICE_NAME_MSG=$(gettext 'Geben Sie hier einen Namen für diesen Service ein.')
 		inputbox "$MASTER_CONF_TITLE" "$SERVICE_NAME_MSG" "${SERVICE#*:}"
 		if [ "$gv_Auswahl" ] ; then
 			SERVICE="${HOME_HOST}${gv_Auswahl}"
@@ -464,7 +464,7 @@ master_conf() {
 					;;
 				flush)
 					# Bei diesen Services muss die Aufwachzeit ein ?
-					# ans Ende angehaengt werden.
+					# ans Ende angehängt werden.
 					if [[ ${WAKEUP##*[0-9]} != ? ]] ; then
 						WAKEUP="${WAKEUP}?"
 					fi
@@ -504,19 +504,19 @@ master_conf() {
 				CHROOT=-
 				WAKEUP=-
 				MAXPROC=-
-				master_aendern
+				master_ändern
 				#}}}
 				master_menue $gv_Create
 				;;
 			$gv_Change)
-				# Werte in der master.cf veraendern{{{
+				# Werte in der master.cf verändern{{{
 				#
 				unset -- DEL_BEGINN DEL_END Ist Anz ARGS rest ARG
 				AENDERN=yes
 				master_service
 				if [ "$AUSWAHL" ] ; then
 					SERVICE_MENU=($AUSWAHL)
-					SERVICE_MSG=$(gettext 'Waehlen Sie einen Service aus.')
+					SERVICE_MSG=$(gettext 'Wählen Sie einen Service aus.')
 					menubox "$OldVar" "$MASTER_CONF_TITLE" "$SERVICE_MSG" "$SERVICE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -524,12 +524,12 @@ master_conf() {
 								menubox "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$SERVICE_MSG" "$SERVICE_MENU"
 								;;
 							*)
-								# Auswahl aendern.
+								# Auswahl ändern.
 								OldVar="$gv_Auswahl"
 								# Zielennummer herausfinden
 								Anz=${${(s,:,)$(grep -n "^${gv_Auswahl// /.*}" $MASTER_CF)}[1]}
 								(( Anz1 = 1+Anz ))
-								# wenn die Auswahl naechste Zeilen hat, die mit Leerzeichen beginnen,
+								# wenn die Auswahl nächste Zeilen hat, die mit Leerzeichen beginnen,
 								# werden diese mit hinzugenommen.
 								Nr=0
 								Ist="$(sed -n -e "${Anz1}p" $MASTER_CF| grep '^ ')"
@@ -578,7 +578,7 @@ master_conf() {
 										fi
 									done
 								fi
-								master_aendern
+								master_ändern
 								break
 								;;
 						esac
@@ -590,7 +590,7 @@ master_conf() {
 				master_menue $gv_Change
 				;;
 			$gv_Delete)
-				# loeschen von Werten in der master.cf{{{
+				# löschen von Werten in der master.cf{{{
 				#
 				master_service
 				if [ "$AUSWAHL_MULTI" ] ; then
@@ -602,14 +602,14 @@ master_conf() {
 								radiolist "${gv_Auswahl#HELP }" "$MASTER_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
 							*)	#
-								# Auswahl loeschen
-								# Leerzeichen mit dem regulaeren Ausdruck ".*" tauschen.
+								# Auswahl löschen
+								# Leerzeichen mit dem regulären Ausdruck ".*" tauschen.
 								Anz=${${(s,:,)$(grep -n "^${gv_Auswahl// /.*}" $MASTER_CF)}[1]}
-								# ist der Service vorhanden, pruefen ob er auch Argumente zu 
+								# ist der Service vorhanden, prüfen ob er auch Argumente zu 
 								# seinen Befehlen hat.
 								if [ "$Anz" ] ; then
 									(( Anz1 = 1+Anz ))
-									# wenn die Auswahl naechste Zeilen hat, die mit Leerzeichen
+									# wenn die Auswahl nächste Zeilen hat, die mit Leerzeichen
 									# beginnen, werden diese mit hinzugenommen.
 									Ist="$(sed -n -e "${Anz1}p" $MASTER_CF| grep -n '^ ')"
 									while [ -n "$Ist" ] ; do
@@ -626,7 +626,7 @@ master_conf() {
 										mv ${MASTER_CF}$$ $MASTER_CF
 									fi
 								else
-									MSG=(gettext 'Konnte die Auswahl nicht loeschen. Bitte editieren Sie die Datei \${MAIL_CONFIG}/master.cf und loeschen den Eintrag manuell.')
+									MSG=(gettext 'Konnte die Auswahl nicht löschen. Bitte editieren Sie die Datei \${MAIL_CONFIG}/master.cf und löschen den Eintrag manuell.')
 									msgbox "$gv_Attention" "$MSG"
 								fi
 								break

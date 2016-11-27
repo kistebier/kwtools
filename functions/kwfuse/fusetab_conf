@@ -29,7 +29,7 @@ fusetab_conf() {
 		# Funktion no_input_msg# {{{
 		#
 		no_input_msg() {
-			MSG=$(gettext 'Sie muessen mindestens die Punkte Laufwerk, Mountpunkt und Dateisystem mit Werten belegen.')
+			MSG=$(gettext 'Sie müssen mindestens die Punkte Laufwerk, Mountpunkt und Dateisystem mit Werten belegen.')
 			msgbox "$gv_Attention" "$MSG"
 		}
 		## }}}
@@ -124,7 +124,7 @@ fusetab_conf() {
 						menubox "$1" "$FUSETAB_CONF_TITLE" "$gv_Menupoint" "$FUSETAB_MOUNT_OPT_MENUE"
 					}
 					#}}}
-					# Bei CREATE Variablen loeschen# {{{
+					# Bei CREATE Variablen löschen# {{{
 					if [ "$CREATE" = yes ] ; then
 						unset --  FUSE_AUTO FUSE_AUTO AO AR DEBUG DPERM D_IO \
 							DMASK FMASK FSNAME G_ID HREMOVE K_CACHE \
@@ -234,7 +234,7 @@ fusetab_conf() {
 							$lv_AO)
 								# all user file access (yes/no)?{{{
 								yesno_option "$AO" allow_other
-								FUSETAB_AO_MSG=$(gettext 'Dies Option ueberschreibt den Sichherheitsmechanismus fuer den Dateisystemzugriff des Benutzer, der das Dateisystem eingebunden hat.\n\nDuerfen alle Benutzer inclusive root Zugriff auf das Dateisystem haben (ja/nein)?')
+								FUSETAB_AO_MSG=$(gettext 'Dies Option überschreibt den Sichherheitsmechanismus für den Dateisystemzugriff des Benutzer, der das Dateisystem eingebunden hat.\n\nDuerfen alle Benutzer inclusive root Zugriff auf das Dateisystem haben (ja/nein)?')
 								yesno "$FUSETAB_CONF_TITLE" "$FUSETAB_AO_MSG" "$YN_OPT" 2
 								if [ "$gv_Auswahl" = yes ] ; then
 									AO=allow_other
@@ -248,7 +248,7 @@ fusetab_conf() {
 							$lv_AR)
 								# file access limited to the user mounting the filesystem and root (yes/no)?{{{
 								yesno_option "$AR" allow_root
-								FUSETAB_AR_MSG=$(gettext 'Ist aehnlich der Option allow_other, aber es limitiert den Dateisystemzugriff auf root und dem Benutzer der das Dateisystem eingebunden hat.\n\nSoll diese Option aktiviert werden (ja/nein)?')
+								FUSETAB_AR_MSG=$(gettext 'Ist ähnlich der Option allow_other, aber es limitiert den Dateisystemzugriff auf root und dem Benutzer der das Dateisystem eingebunden hat.\n\nSoll diese Option aktiviert werden (ja/nein)?')
 								yesno "$FUSETAB_CONF_TITLE" "$FUSETAB_AR_MSG" "$YN_OPT" 2
 								if [ "$gv_Auswahl" = yes ] ; then
 									AR=allow_root
@@ -286,9 +286,9 @@ fusetab_conf() {
 								mount_option_menue $lv_Default_Perm
 								;;
 							$lv_Direct_Io)
-								# Soll der Cache fuer den Dateiinhalt ausgeschaltet werden (yes/no)?{{{
+								# Soll der Cache für den Dateiinhalt ausgeschaltet werden (yes/no)?{{{
 								yesno_option "$D_IO" direct_io
-								FUSETAB_D_IO_MSG=$(gettext 'Soll der Cache fuer den Dateiinhalt ausgeschaltet werden (ja/nein)?')
+								FUSETAB_D_IO_MSG=$(gettext 'Soll der Cache für den Dateiinhalt ausgeschaltet werden (ja/nein)?')
 								yesno "$FUSETAB_CONF_TITLE" "$FUSETAB_D_IO_MSG" "$YN_OPT"
 								if [ "$gv_Auswahl" = yes ] ; then
 									D_IO=direct_io
@@ -299,7 +299,7 @@ fusetab_conf() {
 								mount_option_menue $lv_Direct_Io
 								;;
 							$lv_Dmask)
-								# Verzeichnisrechte ueberschreiben.{{{
+								# Verzeichnisrechte überschreiben.{{{
 								mask -u "${DMASK#*=}"
 								if [ -n "$MASK" ] ; then
 									DMASK="dmask=${MASK}"
@@ -310,7 +310,7 @@ fusetab_conf() {
 								mount_option_menue $lv_Dmask
 								;;
 							$lv_Fmask)
-								# Dateirechte ueberschreiben.{{{
+								# Dateirechte überschreiben.{{{
 								mask -u "${FMASK#*=}"
 								if [ -n "$MASK" ] ; then
 									FMASK="fmask=${MASK}"
@@ -322,7 +322,7 @@ fusetab_conf() {
 								;;
 							$lv_Fsname)
 								# Eingabe des Dateisystems{{{
-								FUSETAB_FSNAME_MSG=$(gettext 'Hier koennen Sie den Namen des Dateisystems eingeben. Standard ist der Programmname.')
+								FUSETAB_FSNAME_MSG=$(gettext 'Hier können Sie den Namen des Dateisystems eingeben. Standard ist der Programmname.')
 								inputbox "$FUSETAB_CONF_TITLE" "$FUSETAB_FSNAME_MSG" "$FSNAME"
 								if [ "$gv_Auswahl" ] ; then
 									FSNAME="fsname=${gv_Auswahl}"
@@ -336,7 +336,7 @@ fusetab_conf() {
 								# override the GroupID field set by the filesystem.{{{
 								user_group_check -g
 								if [ -n "$U_G_ID_ARRAY" ] ; then
-									FUSETAB_GID_MSG=$(gettext 'Waehlen Sie eine Gruppe aus.')
+									FUSETAB_GID_MSG=$(gettext 'Wählen Sie eine Gruppe aus.')
 									menubox "$G_ID" "$FUSETAB_CONF_TITLE" "$FUSETAB_GID_MSG" "$U_G_ID_ARRAY"
 									if [ -n "$gv_Auswahl" ] ; then
 										while [ "$gv_Auswahl" ] ; do
@@ -358,9 +358,9 @@ fusetab_conf() {
 								mount_option_menue $lv_Gid
 								;;
 							$lv_Hard_Remove)
-								# Sollen Dateien sofort komplett geloescht werden (yes/no)?{{{
+								# Sollen Dateien sofort komplett gelöscht werden (yes/no)?{{{
 								yesno_option "$HREMOVE" hard_remove
-								FUSETAB_HREMOVE_MSG=$(gettext 'Sollen Dateien sofort geloescht werden (ja/nein)?')
+								FUSETAB_HREMOVE_MSG=$(gettext 'Sollen Dateien sofort gelöscht werden (ja/nein)?')
 								yesno "$FUSETAB_CONF_TITLE" "$FUSETAB_HREMOVE_MSG" "$YN_OPT"
 								if [ "$gv_Auswahl" = yes ] ; then
 									HREMOVE=hard_remove
@@ -398,15 +398,15 @@ fusetab_conf() {
 								mount_option_menue $lv_Large_Read
 								;;
 							$lv_Max_Read)
-								# maximale Groesse der Pages die pro Operation gelesen werden.{{{
-								# Hoechstens 32 Pages = 128Kb auf i386.
-								FUSETAB_MAX_READ_MSG=$(gettext 'Geben Sie bitte die maximale Groesse der Speicherseiten an, die fuer Lese-Operationen genutzt werden sollen ein (0 - 32, 32=128Kb auf i386).')
+								# maximale Grösse der Pages die pro Operation gelesen werden.{{{
+								# Höchstens 32 Pages = 128Kb auf i386.
+								FUSETAB_MAX_READ_MSG=$(gettext 'Geben Sie bitte die maximale Grösse der Speicherseiten an, die für Lese-Operationen genutzt werden sollen ein (0 - 32, 32=128Kb auf i386).')
 								number_input "$FUSETAB_CONF_TITLE" "$FUSETAB_MAX_READ_MSG" "${MAX_READ#*=}"
 								if [ "$NUMBER" ] ; then
 									if [ "$NUMBER" -le 32 ] ; then
 										MAX_READ="max_read=$NUMBER"
 									else
-										MSG=$(gettext 'Die maximale Groesse der Speicherseiten ist 32 (Kb). Nehmen Sie bitte eine andere Zahl.')
+										MSG=$(gettext 'Die maximale Grösse der Speicherseiten ist 32 (Kb). Nehmen Sie bitte eine andere Zahl.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 								else
@@ -418,7 +418,7 @@ fusetab_conf() {
 							$lv_Nonempty)
 								# Allow mounts over a non-empty file or directory (yes/no)?{{{
 								yesno_option "$NO_EMPTY" nonempty
-								FUSETAB_NO_EMPTY_MSG=$(gettext 'Darf das Laufwerk ueber einer nicht leeren Datei oder Verzeichnis eingebunden werden (ja/nein)?')
+								FUSETAB_NO_EMPTY_MSG=$(gettext 'Darf das Laufwerk über einer nicht leeren Datei oder Verzeichnis eingebunden werden (ja/nein)?')
 								yesno "$FUSETAB_CONF_TITLE" "$FUSETAB_NO_EMPTY_MSG" "$YN_OPT"
 								if [ "$gv_Auswahl" = yes ] ; then
 									NO_EMPTY=nonempty
@@ -445,7 +445,7 @@ fusetab_conf() {
 								# override the UserID field set by the filesystem.{{{
 								user_group_check -p
 								if [ -n "$U_U_ID_ARRAY" ] ; then
-									FUSETAB_UID_MSG=$(gettext 'Waehlen Sie einen Benutzer aus.')
+									FUSETAB_UID_MSG=$(gettext 'Wählen Sie einen Benutzer aus.')
 									menubox "$U_ID" "$FUSETAB_CONF_TITLE" "$FUSETAB_UID_MSG" "$U_U_ID_ARRAY"
 									if [ -n "$gv_Auswahl" ] ; then
 										while [ "$gv_Auswahl" ] ; do
@@ -467,7 +467,7 @@ fusetab_conf() {
 								mount_option_menue $lv_Uid
 								;;
 							$lv_Umask)
-								# Allgemeine Rechte ueberschreiben.{{{
+								# Allgemeine Rechte überschreiben.{{{
 								mask -u "${UMASK#*=}"
 								if [ -n "$MASK" ] ; then
 									UMASK="u_mask=${MASK}"
@@ -531,8 +531,8 @@ fusetab_conf() {
 					fusetab_input_menue $lv_Dump
 					;;
 				$lv_Check)
-					# Filesystem Pruefung (yes/no)?{{{
-					FUSETAB_INPUT_CHECK_MSG=$(gettext 'Waehlen Sie die Checkoption aus (siehe man 5 fstab).')
+					# Filesystem Prüfung (yes/no)?{{{
+					FUSETAB_INPUT_CHECK_MSG=$(gettext 'Wählen Sie die Checkoption aus (siehe man 5 fstab).')
 					FUSETAB_INPUT_CHECK_MENU=(0 \"\" 1 \"\" 2 \"\")
 					menubox "${CHECK:-2}" "$FUSETAB_CONF_TITLE" "$FUSETAB_INPUT_CHECK_MSG" "$FUSETAB_INPUT_CHECK_MENU" "$CHECK"
 					while [ "$gv_Auswahl" ] ; do
@@ -586,7 +586,7 @@ fusetab_conf() {
 				fusetab_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Fuse Dateieintraege aus der /etc/fstab ansehen# {{{
+				# Fuse Dateieinträge aus der /etc/fstab ansehen# {{{
 				if [ -f "$FSTAB" ] ; then
 					read_fstab fuse
 					if [ -n "$FSTAB_VALUES" ] ; then
@@ -603,7 +603,7 @@ fusetab_conf() {
 				fusetab_conf_menu $gv_Display
 				;;
 			$gv_Create)
-				# Eintraege anlegen
+				# Einträge anlegen
 				# fstab Eintrag erzeugen{{{
 				unset -- FS_DRIVE MOUNT_POINT FILESYSTEM MOUNT_OPTION DUMP CHECK 
 				if [ ! -f "$FSTAB" ] ; then
@@ -621,12 +621,12 @@ fusetab_conf() {
 				fusetab_conf_menu $gv_Create
 				;;
 			$gv_Change)
-				# fusetab Eintrag veraendern{{{
+				# fusetab Eintrag verändern{{{
 				unset -- CREATE
 				read_fstab fuse
 				if [ -n "$FSTAB_VALUES_E" ] ; then
 					FUSETAB_CHANGE_MENU=($FSTAB_VALUES_E $gv_Back \"\")
-					FUSETAB_CHANGE_MSG=$(gettext 'Waehlen Sie einen Eintrag zum veraendern aus.')
+					FUSETAB_CHANGE_MSG=$(gettext 'Wählen Sie einen Eintrag zum verändern aus.')
 					menubox "$NR" "$FUSETAB_CONF_TITLE" "$FUSETAB_CHANGE_MSG" "$FUSETAB_CHANGE_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -636,7 +636,7 @@ fusetab_conf() {
 							$gv_Back)	break
 								;;
 							*)
-								# fusetab Eintrag aendern
+								# fusetab Eintrag ändern
 								NR="$gv_Auswahl"
 								print ${FSTAB_VALUES[gv_Auswahl]} | \
 									while read Fsd Mp Fs Mo D C ; do
@@ -668,7 +668,7 @@ fusetab_conf() {
 				fusetab_conf_menu $gv_Change
 				;;
 			$gv_Delete)
-				# fusetab Eintrag loeschen{{{
+				# fusetab Eintrag löschen{{{
 				integer Anz Anz1
 				local Line
 				typeset -a Line
@@ -681,7 +681,7 @@ fusetab_conf() {
 							HELP*) script_help fusetab_delete_help
 								checklist "${gv_Auswahl#HELP }" "$FUSETAB_CONF_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;
-							*)	# Nach Zeilennummer loeschen
+							*)	# Nach Zeilennummer löschen
 								Anz=0
 								for i in ${=gv_Auswahl} ; {
 									(( Anz++ ))

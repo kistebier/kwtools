@@ -2,8 +2,8 @@
 #
 # usage: kwpwsafe_db_conf
 kwpwsafe_db_conf() {
-	# Pruefen ob ein Eintrag erstellt oder# {{{
-	# geaendert werden soll.
+	# Prüfen ob ein Eintrag erstellt oder# {{{
+	# geändert werden soll.
 	if [ "$CHANGE" = yes ] ; then
 		PW_GROUP_OLD="$PW_GROUP"
 		PW_NAME_OLD="$PW_NAME"
@@ -28,7 +28,7 @@ kwpwsafe_db_conf() {
 				kwpwsafe_db_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Group)
-				# Gruppe auswaehlen/anlegen# {{{
+				# Gruppe auswählen/anlegen# {{{
 				read_pwsafe_entry "$DB_FILE"
 				# menu
 				GROUPS_MENU=(\"$lv_Group_Create\" \"\" $PW_GROUPS_E)
@@ -59,7 +59,7 @@ kwpwsafe_db_conf() {
 							break
 							;;
 						*)
-							# Auswahl uebernehmen bzw. pruefen# {{{
+							# Auswahl übernehmen bzw. prüfen# {{{
 							if [ -n "$gv_Auswahl" -a -n "$PW_NAME" ] ; then
 								# checken, ob Group schon vorhanden ist
 								if [ -z "`print ${(M)${=PW_GROUPS}##${gv_Auswahl}.${PW_NAME}*}`" ] ; then
@@ -157,16 +157,16 @@ kwpwsafe_db_conf() {
 				# werden soll.
 				# Und dann nat. damit die Datei bearbeiten
 				edit_file "$OPEN_DB_TITLE" ${gv_WorkDir}/notes
-				# Pruefen auf >0 Lines in der Datei sind.
+				# Prüfen auf >0 Lines in der Datei sind.
 				if [ "`wc -l < ${gv_WorkDir}/notes`" -gt 0 ] ; then
 					unset -- PW_NOTES
 					while read a ; do
 						if [ -z "$PW_NOTES" ] ; then
 							PW_NOTES="${a}"
 						else
-							# \\012 ist fuer die moegliche Anzeige in
+							# \\012 ist für die mögliche Anzeige in
 							# der dialogbox menubox und als Kennzeichnung
-							# fuer die Speicherung.
+							# für die Speicherung.
 							# \012 = Newline
 							PW_NOTES="${PW_NOTES}\\012${a}"
 						fi
@@ -179,7 +179,7 @@ kwpwsafe_db_conf() {
 				# speichern# {{{
 				OK=""
 				if [ -n "$PW_NAME" -a -n "$DB_PASS" -a -n "$DB_FILE" ] ; then
-					# expect mit der Einstellungsdatei ausfuehren
+					# expect mit der Einstellungsdatei ausführen
 					> ${gv_WorkDir}/expect <<<"#!/usr/bin/expect -f
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
@@ -194,7 +194,7 @@ if {\$force_conservative} {
 
 set mpass \"$DB_PASS\"
 set pw_group \"$PW_GROUP\""
-					# Datenbankeintrag aendern/erstellen
+					# Datenbankeintrag ändern/erstellen
 					# erstellen# {{{
 					if [ "$CHANGE" != yes ] ; then
 						# Username
@@ -217,7 +217,7 @@ set pw_enablepass \"\""
 						else
 							>> ${gv_WorkDir}/expect <<<"set pw_notes \"\""
 						fi
-						# Standard Ausfuehrungen speichern/erstellen
+						# Standard Ausführungen speichern/erstellen
 						>> ${gv_WorkDir}/expect <<<"set timeout 1
 match_max 100000
 stty -echo
@@ -242,15 +242,15 @@ send -- \"\$pw_notes\r\"
 stty echo
 expect eof"
 						(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null) || (del_expect ; prog_failure)
-						# schnell die Erstellungsdatei loeschen
+						# schnell die Erstellungsdatei löschen
 						del_expect
 						# Variablen loschen
 						unset -- PW_PASSWD PW_GROUP PW_NAME PW_NOTES PW_USER
 						break
 						## }}}
 					else
-						# aendern# {{{
-						# pruefen, ob was geaendert wurde
+						# ändern# {{{
+						# prüfen, ob was geändert wurde
 						if [ "$PW_USER_OLD" != "$PW_USER" ] ; then
 							OK=yes
 						fi
@@ -269,7 +269,7 @@ expect eof"
 						if [ "$PW_NOTES_OLD" != "$PW_NOTES" ] ; then
 							OK=yes
 						fi
-						# Wenn es Veraenderungen gab
+						# Wenn es Veränderungen gab
 						# diese anwenden, ansonsten
 						# gar nichts tun.
 						if [ "$OK" = yes ] ; then
@@ -289,7 +289,7 @@ set pw_enablepass \"$PW_PASSWD\""
 							else
 								>> ${gv_WorkDir}/expect <<<"set pw_notes \" \""
 							fi
-							# Standard Ausfuehrungen speichern/erstellen
+							# Standard Ausführungen speichern/erstellen
 							>> ${gv_WorkDir}/expect <<<"set pw_name \"$PW_NAME\"
 set timeout 1
 match_max 100000
@@ -319,19 +319,19 @@ send -- \"\r\"
 stty echo
 expect eof"
 							(export LC_ALL=C ; expect -f ${gv_WorkDir}/expect >/dev/null) || (del_expect ; prog_failure)
-							# schnell die Erstellungsdatei loeschen
+							# schnell die Erstellungsdatei löschen
 							del_expect
-							# Variablen loeschen
+							# Variablen löschen
 							unset -- PW_PASSWD PW_GROUP PW_NAME PW_NOTES PW_USER
 						else
-							MSG=$(gettext 'Es wurde nichts geaendert.')
+							MSG=$(gettext 'Es wurde nichts geändert.')
 							msgbox "$gv_Info" "$MSG"
 						fi
 						break
 					fi
 					## }}}
 				else
-					MSG=$(gettext 'Sie muessen mindestens einen $lv_Name eingeben.')
+					MSG=$(gettext 'Sie müssen mindestens einen $lv_Name eingeben.')
 					msgbox "$gv_Info" "$MSG"
 					kwpwsafe_db_conf_menu
 				fi

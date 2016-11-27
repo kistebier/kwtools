@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 05.06.2014
 #
-# Script: kwgroup, anlegen, aendern und loeschen von Gruppen.
+# Script: kwgroup, anlegen, ändern und löschen von Gruppen.
 # Version: 0.2.8
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -26,7 +26,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -34,13 +34,13 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check groupadd groupdel groupmod
 if [ ! -z "$NO_PROGS" ] ; then
 	exit 0
 fi
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # extra Funktionen laden
@@ -54,7 +54,7 @@ CREATE_MSG=$(gettext 'Geben Sie hier bitte einen Gruppen Namen, ohne Sonderzeich
 # Funktion no_group_choice_msg{{{
 #
 no_group_choice_msg() {
-	MSG=$(gettext 'Sie muessen erst eine Gruppe eingeben/auswaehlen, bevor Sie hier etwas aendern koennen.')
+	MSG=$(gettext 'Sie müssen erst eine Gruppe eingeben/auswählen, bevor Sie hier etwas ändern können.')
 	msgbox "$gv_Attention" "$MSG"
 }
 #}}}
@@ -72,7 +72,7 @@ group_konf_menue() {
 	menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 }
 #}}}
-# Funktion (group_var), die prueft ob eingabe korrekt und wenn die Gruppe{{{
+# Funktion (group_var), die prüft ob eingabe korrekt und wenn die Gruppe{{{
 # schon besteht, alle Variablen belegen.
 #
 # usage: group_var
@@ -81,14 +81,14 @@ group_var() {
 	local Anz
 	integer Anz
 	if [ "$NGROUP" ] ; then
-		# Group uebernehmen und nachschauen, ob diese schon existiert.
+		# Group übernehmen und nachschauen, ob diese schon existiert.
 		#
 		if [ "${(M)${(f)"$(< /etc/group)"}[(fr)(#s)${NGROUP}:*]}" ] ; then
 			if [ ${$(< /etc/group)[(fr)${NGROUP}:*]} ] ; then
 				NGROUP_ID=${(s: :)${(s,:,)${$(< /etc/group)[(fr)${NGROUP}:*]}}[3]}
 			fi
 		else
-			# eine Group_id vorwaehlen, also ab 100 hochzaehlen und ueberpruefen.
+			# eine Group_id vorwählen, also ab 100 hochzählen und überprüfen.
 			Anz=100
 			while [ ${(s: :)${(s,:,)${"$(< /etc/group)"[(fr)*:$Anz:*]}}[3]} ] ; do
 				(( Anz++ ))
@@ -110,7 +110,7 @@ group_konf() {
 				group_konf_menue "${gv_Auswahl#HELP }"	
 				;;
 			$gv_Group)
-				# Gruppe anlegen oder aendern.{{{
+				# Gruppe anlegen oder ändern.{{{
 				#
 				inputbox "$GROUP_TITLE" "$CREATE_MSG" "$NGROUP_OLD"
 				if [ "$gv_Auswahl" ] ; then
@@ -147,7 +147,7 @@ group_konf() {
 				;;
 			$gv_Passwd)
 				# Passwort eingeben {{{
-				PASSWD_MSG=$(gettext 'Geben Sie hier bitte ein Passwort fuer die Gruppe ($NGROUP) ein und wiederholen es anschliessend.')
+				PASSWD_MSG=$(gettext 'Geben Sie hier bitte ein Passwort für die Gruppe ($NGROUP) ein und wiederholen es anschliessend.')
 				if [ "$NGROUP" ] ; then
 					user_group_passwd -g "$PASSWD_MSG"
 				else 
@@ -157,14 +157,14 @@ group_konf() {
 				group_konf_menue $gv_Passwd
 				;;
 			$gv_Save)
-				# Gruppe anlegen oder veraendern{{{
+				# Gruppe anlegen oder verändern{{{
 				if [ "$NGROUP_ID" -a "$NGROUP" ] ; then
 					PROG_OPT="-g $NGROUP_ID"
 					# Passwort benutzen
 					if [ -n "$gv_Pass" ] ; then
 						PROG_OPT="$PROG_OPT -p $gv_Pass"
 					fi
-					# ausfuehren
+					# ausführen
 					if [ ${(M)$(< /etc/group)##$NGROUP} ] ; then
 						groupmod ${=PROG_OPT} $NGROUP || prog_failure
 						# NIS Database updaten
@@ -190,12 +190,12 @@ group_konf() {
 	done
 }
 #}}}
-# Funktion (no_del_group_msg), konnte die User nicht loeschen# {{{
+# Funktion (no_del_group_msg), konnte die User nicht löschen# {{{
 no_del_user_msg() {
 	if [[ ${#argv} == 1 ]] ; then
 		local Group
 		User="$1"
-		MSG=$(gettext 'Konnte die Gruppe "$Group" nicht loeschen.')
+		MSG=$(gettext 'Konnte die Gruppe "$Group" nicht löschen.')
 		msgbox "$gv_Attention" "$MSG"
 	else
 		no_para_msg $0
@@ -246,13 +246,13 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Create
 			;;
 		$gv_Change)
-			# Gruppen aendern{{{
+			# Gruppen ändern{{{
 			unset -- NGROUP NGROUP_ID
 			BREAK="2"
 			user_group_check -g
 			if [ "$?" = 0 ] ; then
 				CHANGE_MENU=($U_G_ARRAY)
-				CHANGE_MSG=$(gettext 'Waehlen Sie eine Gruppe aus, die Sie aendern moechten.')
+				CHANGE_MSG=$(gettext 'Wählen Sie eine Gruppe aus, die Sie ändern möchten.')
 				menubox "$NGROUP" "$GROUP_TITLE" "$CHANGE_MSG" "$CHANGE_MENU"
 				#
 				while [ "$gv_Auswahl" ] ; do
@@ -273,12 +273,12 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Change
 			;;
 		$gv_Delete)
-			# Gruppen loeschen{{{
+			# Gruppen löschen{{{
 			user_group_check -g
 			if [ "$?" = 0 ] ; then
 				DEL_MENU=($U_G_ARRAY_M)
 				DEL_TITLE=(${gv_Group}::${gv_Delete})
-				DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Gruppen zum loeschen aus.')
+				DEL_MSG=$(gettext 'Wählen Sie eine oder mehrere Gruppen zum löschen aus.')
 				checklist "" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 				#
 				while [ "$gv_Auswahl" ] ; do
@@ -287,7 +287,7 @@ while [ "$gv_Auswahl" ] ; do
 							checklist "${gv_Auswahl#HELP }" "$DEL_TITLE" "$DEL_MSG" "$DEL_MENU"
 							;;
 						*)
-							# Gruppen loeschen.
+							# Gruppen löschen.
 							for i in ${=gv_Auswahl} ; do
 								groupdel "$i" &>/dev/null || \
 								no_del_group_msg "$1"

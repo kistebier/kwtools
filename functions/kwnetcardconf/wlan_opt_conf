@@ -11,12 +11,12 @@ wlan_opt_conf() {
 	lv_Freq=$(gettext 'Frequenz')
 	lv_Sensity=$(gettext 'Empfindlichkeit')
 	lv_Bitrate=$(gettext 'Bitrate')
-	lv_Key=$(gettext 'Schluessel')
+	lv_Key=$(gettext 'Schlüssel')
 	lv_Rts=$(gettext 'RTS_Handshake')
-	lv_Fragment=$(gettext 'Fragment_Groesse')
+	lv_Fragment=$(gettext 'Fragment_Grösse')
 	lv_Iwspy=$(gettext 'iwspy_Optionen')
 	lv_Iwpriv=$(gettext 'iwpriv_Optionen')
-	# Funktion fuers manuelle Netzwerkkonfigurationsmenue{{{
+	# Funktion fürs manuelle Netzwerkkonfigurationsmenue{{{
 	#
 	# usage: wlan_opt_menue
 	wlan_opt_menu() {
@@ -36,7 +36,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Essid)
 				# ESSID eingeben.# {{{
-				MSG=$(gettext 'Geben Sie die ESSID fuer $ETH ein (Bsp. any, \"Mein Netzwerk\").')
+				MSG=$(gettext 'Geben Sie die ESSID für $ETH ein (Bsp. any, \"Mein Netzwerk\").')
 				inputbox "$WL_OPT_TITLE" "$MSG" "${ESSID:-any}"
 				if [ "$gv_Auswahl" ] ; then
 					ESSID="$gv_Auswahl"
@@ -48,7 +48,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Network_Id)
 				# Netzwerk ID eingeben# {{{
-				MSG=$(gettext 'Geben Sie die Netzwerk ID fuer $ETH ein (Zellenname).')
+				MSG=$(gettext 'Geben Sie die Netzwerk ID für $ETH ein (Zellenname).')
 				inputbox "$WL_OPT_TITLE" "$MSG" "$NWID"
 				if [ "$gv_Auswahl" ] ; then
 					NWID="$gv_Auswahl"
@@ -79,7 +79,7 @@ wlan_opt_conf() {
 						$gv_Back)	break
 							;;
 						*)
-							# Wert uebernehmen
+							# Wert übernehmen
 							MODE="$gv_Auswahl"
 							break
 							;;
@@ -94,7 +94,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Channel)
 				# Kanal von 0-16 eingeben.# {{{
-				MSG=$(gettext 'Geben Sie eine Kanal Nummer fuer $ETH ein (0-16).')
+				MSG=$(gettext 'Geben Sie eine Kanal Nummer für $ETH ein (0-16).')
 				number_input "$WL_OPT_TITLE" "$MSG" "$CHANNEL"
 				if [ "$NUMBER" -lt 17 ] ; then
 					CHANNEL="$gv_Auswahl"
@@ -107,7 +107,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Freq)
 				# Frequenz eingeben# {{{
-				MSG=$(gettext 'Geben Sie die Frequenz fuer $ETH ein (Bsp. 2.224G = 2.224GHz).')
+				MSG=$(gettext 'Geben Sie die Frequenz für $ETH ein (Bsp. 2.224G = 2.224GHz).')
 				number_input -D "$WL_OPT_TITLE" "$MSG" "$FREQ"
 				if [ -n "$NUMBER" ] ; then
 					FREQ="$NUMBER"
@@ -138,7 +138,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Bitrate)
 				# Bitrate einstellen (rate 5.5M)# {{{
-				MSG=$(gettext 'Geben Sie die Bitrate fuer $ETH ein (Bsp. 5.5M = 5.5 MByte).')
+				MSG=$(gettext 'Geben Sie die Bitrate für $ETH ein (Bsp. 5.5M = 5.5 MByte).')
 				number_input -D "$WL_OPT_TITLE" "$MSG" "$RATE"
 				if [ -n "$NUMBER" ] ; then
 					RATE="$NUMBER"
@@ -149,7 +149,7 @@ wlan_opt_conf() {
 				wlan_opt_menu $lv_Bitrate
 				;;
 			$lv_Key)
-				# Schluessel erstellen# {{{
+				# Schlüssel erstellen# {{{
 				case $IWDRIVER in
 					ath_pci)	WPA_DEV="madwifi"	;;
 					ipw2200|ipw2100|ipw3945)	WPA_DEV="wext"	;;
@@ -201,8 +201,8 @@ wlan_opt_conf() {
 							}
 						}
 						' /etc/network/interfaces)
-						# Passphrase fuer WPA eingeben 8-63 Zeichen
-						PASS_MSG=$(gettext 'Geben Sie die Passphrase fuer WPA ein. Die Passphrase muss 8-63 Zeichen besitzen.')
+						# Passphrase für WPA eingeben 8-63 Zeichen
+						PASS_MSG=$(gettext 'Geben Sie die Passphrase für WPA ein. Die Passphrase muss 8-63 Zeichen besitzen.')
 						#############################################
 						# WAPSECRET wird nicht angezeigt.
 						#############################################
@@ -224,13 +224,13 @@ wlan_opt_conf() {
 					else
 						WPASECRET=""
 						# No need for a wep key if we are using wpa
-						PASS_MSG=$(gettext 'Geben Sie einen Schluessel fuer die Verschluessellung von $ETH ein.')
+						PASS_MSG=$(gettext 'Geben Sie einen Schlüssel für die Verschlüssellung von $ETH ein.')
 						password "$WL_OPT_TITLE" "$PASS_MSG" 8 63
 						if [ -n "$PASSPHRASE" ] ; then
 							KEY="$PASSPHRASE"
 							unset -- PASSPHRASE
-							# Schluessel in eigenener Datei speichern?
-							SAVE_KEY_MSG=$(gettext 'Soll der Schluessel in einer eigenen Datei gespeichert werden ( $ETH )? Bei nein wird Ihr Schluessel in der Datei $NET_CONF_FILE gespeichert, welche fuer manche System Benutzer lesbar ist. Die Rechte werden auf 0600 gesetzt.')
+							# Schlüssel in eigenener Datei speichern?
+							SAVE_KEY_MSG=$(gettext 'Soll der Schlüssel in einer eigenen Datei gespeichert werden ( $ETH )? Bei nein wird Ihr Schlüssel in der Datei $NET_CONF_FILE gespeichert, welche für manche System Benutzer lesbar ist. Die Rechte werden auf 0600 gesetzt.')
 							yesno "$WL_OPT_TITLE" "$SAVE_KEY_MSG" ""
 							if [ "$gv_Auswahl" = yes ] ; then
 								PUBKEY=1
@@ -247,7 +247,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Rts)
 				# RTS einstellen (rts 512)# {{{
-				MSG=$(gettext 'Geben Sie die Groesse des kleinsten Pakets ein, fuer welches ein RTS Handshake gesendet wird (Bsp. 512).')
+				MSG=$(gettext 'Geben Sie die Grösse des kleinsten Pakets ein, für welches ein RTS Handshake gesendet wird (Bsp. 512).')
 				number_input "$WL_OPT_TITLE" "$MSG" "$RTS"
 				if [ -n "$NUMBER" ] ; then
 					RTS="$NUMBER"
@@ -258,8 +258,8 @@ wlan_opt_conf() {
 				wlan_opt_menu $lv_Rts
 				;;
 			$lv_Fragment)
-				# Fragment_Groesse einstellen (frag 512)# {{{
-				MSG=$(gettext 'Geben Sie die Fragment Groesse ein (Bsp. 512).')
+				# Fragment_Grösse einstellen (frag 512)# {{{
+				MSG=$(gettext 'Geben Sie die Fragment Grösse ein (Bsp. 512).')
 				number_input "$WL_OPT_TITLE" "$MSG" "$FRAG"
 				if [ -n "$NUMBER" ] ; then
 					FRAG="$NUMBER"
@@ -271,7 +271,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Iwspy)
 				# iwspy Paramter eingeben, zeigt Statistiken der WLAN Karte an.# {{{
-				MSG=$(gettext 'Geben Sie  die Parameter fuer "iwspy" ein.')
+				MSG=$(gettext 'Geben Sie  die Parameter für "iwspy" ein.')
 				inputbox "$WL_OPT_TITLE" "$MSG" "$IWSPY"
 				if [ "$gv_Auswahl" ] ; then
 					IWSPY="$gv_Auswahl"
@@ -283,7 +283,7 @@ wlan_opt_conf() {
 				;;
 			$lv_Iwpriv)
 				# iwpriv Paramter eingeben, stellt Treiber-speziefische Parameter ein.# {{{
-				MSG=$(gettext 'Geben Sie die Parameter fuer "iwpriv" ein.')
+				MSG=$(gettext 'Geben Sie die Parameter für "iwpriv" ein.')
 				inputbox "$WL_OPT_TITLE" "$MSG" "$IWPRIV"
 				if [ "$gv_Auswahl" ] ; then
 					IWPRIV="$gv_Auswahl"

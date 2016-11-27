@@ -11,8 +11,8 @@ fs_conf() {
 	# FS  - Dateisystem des Quell Laufwerks
 	# SRC - Quell Laufwerks
 	# DST - Ziel Laufwerks
-	# SRC_SIZE - Groesse des Quell Dateisystem in MebiByte
-	# SRC_SIZE wird fuer die Anzeige mittels "dd_gauge" benoetigt.
+	# SRC_SIZE - Grösse des Quell Dateisystem in MebiByte
+	# SRC_SIZE wird für die Anzeige mittels "dd_gauge" benötigt.
 	#
 	copy_fs() {
 		if [[ ${#argv} -eq 4 ]] ; then
@@ -32,7 +32,7 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von e2image pruefen.
+						# auf Ausführbarkeit von e2image prüfen.
 						prog_check e2image
 						if [ -n "$PROGS" ] ; then
 							e2image -ra -p "$Src" "$Dst" 2>1 | \
@@ -50,10 +50,10 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
-						# Src_Size wird fuer die Berechnung von dd_gauge
-						# benoetigt.
+						# Src_Size wird für die Berechnung von dd_gauge
+						# benötigt.
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
@@ -69,10 +69,10 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
-						# Src_Size wird fuer die Berechnung von dd_gauge
-						# benoetigt.
+						# Src_Size wird für die Berechnung von dd_gauge
+						# benötigt.
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
@@ -88,7 +88,7 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
@@ -105,7 +105,7 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von ntfsclone pruefen.
+						# auf Ausführbarkeit von ntfsclone prüfen.
 						prog_check ntfsclone
 						if [ -n "$PROGS" ] ; then
 							# -f - egal ob Fehler kopieren.
@@ -124,10 +124,10 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
-						# Src_Size wird fuer die Berechnung von dd_gauge
-						# benoetigt.
+						# Src_Size wird für die Berechnung von dd_gauge
+						# benötigt.
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
@@ -143,10 +143,10 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
-						# Src_Size wird fuer die Berechnung von dd_gauge
-						# benoetigt.
+						# Src_Size wird für die Berechnung von dd_gauge
+						# benötigt.
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
@@ -164,10 +164,10 @@ fs_conf() {
 						mount_check -a $Dst
 					fi
 					if [ "$U_MOUNT" = yes ] ; then
-						# auf Ausfuehrbarkeit von dd pruefen.
+						# auf Ausführbarkeit von dd prüfen.
 						prog_check dd
-						# Src_Size wird fuer die Berechnung von dd_gauge
-						# benoetigt.
+						# Src_Size wird für die Berechnung von dd_gauge
+						# benötigt.
 						if [ -n "$PROGS" ] ; then
 							dd if=${Src} of=${Dst} >/dev/null 2>$gv_LogFile &
 							dd_gauge "dd if=${Src} of=${Dst}" "$Src_Size" "$COPY_MSG"  
@@ -209,12 +209,12 @@ fs_conf() {
 					fi
 					# xfs Filesystem kopieren und umounten.
 					if [ -n "$Src_Mp" -a -n "$Dst_Mp" ] ; then
-						# auf Ausfuehrbarkeit von xfsdump und xfsrestore pruefen.
+						# auf Ausführbarkeit von xfsdump und xfsrestore prüfen.
 						# Diese werden anstelle von xfs_copy benutzt, falls
-						# die Groessenunterschiede beider Laufwerke zu gross
+						# die Grössenunterschiede beider Laufwerke zu gross
 						# sind (man 8 xfs_copy).
 						###############################
-						# TODO: 1>/dev/null pruefen
+						# TODO: 1>/dev/null prüfen
 						prog_check xfsdump xfsrestore
 						if [ -n "$PROGS" ] ; then
 							xfsdump -J - "$Src_Mp" &>/dev/null | \
@@ -246,13 +246,13 @@ fs_conf() {
 	## }}}
 	# Funktion (floppy_format), Floppy mit fdformat formatieren ###### {{{
 	#
-	# benoetigt die Funktionen yesno, format und formatprogs_check
+	# benötigt die Funktionen yesno, format und formatprogs_check
 	#
 	# usage: floppy_format "$FLOPPY"
 	#
 	floppy_format() {
 		if [ "$#" -eq 1 ] ; then
-			# pruefen, ob Programm ausfuehrbar ist.
+			# prüfen, ob Programm ausführbar ist.
 			FTITLE=$(gettext 'Formatierung')
 			prog_check fdformat
 			if [ -z "$NO_PROGS" ] ; then
@@ -283,7 +283,7 @@ fs_conf() {
 	# Funktion (format), Formatierung{{{
 	#
 	# usage: format DEVICE [ FS ]
-	# FS - optional das Filesystem mit uebergeben, wenn schon vorher bekannt
+	# FS - optional das Filesystem mit übergeben, wenn schon vorher bekannt
 	#      durch die Funktion formatprogs_check.
 	format() {
 		# Funktion (mkfs_fs), erstellt das Filesystem# {{{
@@ -298,7 +298,7 @@ fs_conf() {
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -310,7 +310,7 @@ fs_conf() {
 					# exfat Dateisystem erstellen.# {{{
 					PROG=mkfs.${FS}
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -319,11 +319,11 @@ fs_conf() {
 					## }}}
 					;;
 				fat16)
-					# fat16 benoetigt -F 16.# {{{
+					# fat16 benötigt -F 16.# {{{
 					PROG=mkfs.vfat
 					load_module vfat
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -F 16 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -332,11 +332,11 @@ fs_conf() {
 					## }}}
 					;;
 				fat32)
-					# fat32 benoetigt -F 32.# {{{
+					# fat32 benötigt -F 32.# {{{
 					PROG=mkfs.vfat
 					load_module vfat
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							mkfs.vfat -F 32 $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -345,7 +345,7 @@ fs_conf() {
 					## }}}
 					;;
 				ext2)
-					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# Ist der Gerätename ein RAID Gerät, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
 						# Stride Size Berechnung
@@ -361,7 +361,7 @@ fs_conf() {
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -370,7 +370,7 @@ fs_conf() {
 					## }}}
 					;;
 				ext[34])
-					# Ist der Geraetename ein RAID Geraet, kommt der Parameter "stride"# {{{
+					# Ist der Gerätename ein RAID Gerät, kommt der Parameter "stride"# {{{
 					# mit hinzu.
 					if [ "$gv_ScriptName" = kwraid ] ; then
 						# Stride Size Berechnung
@@ -386,7 +386,7 @@ fs_conf() {
 					PROG=mkfs.${FS}
 					load_module "jbd $FS"
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG ${=PROG_OPT} $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -395,12 +395,12 @@ fs_conf() {
 					## }}}
 					;;
 				hfs)
-					# hfs benoetigt die Option -h, sonst wird# {{{
+					# hfs benötigt die Option -h, sonst wird# {{{
 					# ein hfs+ FS erstellt.
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -h $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -413,7 +413,7 @@ fs_conf() {
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -423,12 +423,12 @@ fs_conf() {
 					;;
 				jfs)
 					# Bei jfs muss ein Y an mkfs.jfs# {{{
-					# uebergeben werden.
+					# übergeben werden.
 					#
 					PROG=mkfs.jfs
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							echo Y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -437,12 +437,12 @@ fs_conf() {
 					## }}}
 					;;
 				ntfs)
-					# ntfs benoetigt nichts weiter.# {{{
+					# ntfs benötigt nichts weiter.# {{{
 					# -f - fast
 					PROG=mk${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -452,12 +452,12 @@ fs_conf() {
 					;;
 				reiserfs)
 					# Bei reiserfs muss ein y an mkfs.reiser*# {{{
-					# uebergeben werden.
+					# übergeben werden.
 					#
 					PROG=mkfs.reiserfs
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							echo y | $PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -467,12 +467,12 @@ fs_conf() {
 					;;
 				reiser4)
 					# Bei reiser4 muss kein y an mkfs.reiser*# {{{
-					# uebergeben werden.
+					# übergeben werden.
 					#
 					PROG=mkfs.reiser4
 					load_module reiserfs
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -y $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -483,7 +483,7 @@ fs_conf() {
 				linux-swap|swap)
 					# Swap Partition erstellen# {{{
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							mkswap -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -496,7 +496,7 @@ fs_conf() {
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -505,11 +505,11 @@ fs_conf() {
 					## }}}
 					;;
 				xfs)
-					# -f fuer force, falls schon ein Dateisystem auf der Partition ist.# {{{
+					# -f für force, falls schon ein Dateisystem auf der Partition ist.# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG -f $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -518,11 +518,11 @@ fs_conf() {
 					## }}}
 					;;
 				*)
-					# alles andere benoetigt nichts weiter.# {{{
+					# alles andere benötigt nichts weiter.# {{{
 					PROG=mkfs.${FS}
 					load_module $FS
 					for i in ${=F_PART} ; {
-						# Geraet ausbinden
+						# Gerät ausbinden
 						mount_check -a $i
 						if [[ $U_MOUNT == yes ]] ; then
 							$PROG $i 2>&1 | progressbox $FTITLE "$i" || prog_failure
@@ -551,7 +551,7 @@ fs_conf() {
 				#
 				if [ -n "${FM_Menue[1]}" ] ; then
 					FTITLE=$(gettext 'Formatierung')
-					FMSG=$(gettext 'Waehlen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
+					FMSG=$(gettext 'Wählen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
 					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
 					#
 					while [ "$gv_Auswahl" ] ; do
@@ -580,7 +580,7 @@ fs_conf() {
 	# Funktion (formatprogs_check), checkt welche Formatierungs Werkzeuge installiert sind{{{
 	#
 	# usage: formatprogs_check [ -p (parted)| -s (swap) ]
-	# nichts - alle von den kwtools unterstuetzen FSs.
+	# nichts - alle von den kwtools unterstützen FSs.
 	#
 	formatprogs_check() {
 		unset -- FM_Menue Fs
@@ -612,7 +612,7 @@ fs_conf() {
 						FM_Menue[Anz]="$i \"\""
 					fi
 					;;
-				*swap) # Das * steht fuer Kompalitaet zu (kw)parted (linux-swap).
+				*swap) # Das * steht für Kompalität zu (kw)parted (linux-swap).
 					if [[ -x ${commands[mk${i##*-}]} ]] ; then
 						(( Anz++ ))
 						FM_Menue[Anz]="$i \"\""
@@ -632,7 +632,7 @@ fs_conf() {
 		fi
 	}
 	#}}}
-	# Funktion (raid_stride_calc), berechnet die Stride Groessen fuer das Dateisystem# {{{
+	# Funktion (raid_stride_calc), berechnet die Stride Grössen für das Dateisystem# {{{
 	#
 	# usage: Raidlevel Raidanz Chunksize
 	#
@@ -674,18 +674,18 @@ fs_conf() {
 		fi
 	}
 	## }}}
-	# Funktion (resize_fs), um Dateisysteme zu verkleinern/vergroessern# {{{
+	# Funktion (resize_fs), um Dateisysteme zu verkleinern/vergrössern# {{{
 	#
 	# usage: resize_fs [+|-]SIZE DEVICE
-	# + - vergroessern
+	# + - vergrössern
 	# - - verkleinern
-	# SIZE - neue Groesse in Byte
-	# DEVICE - Laufwerk auf dem das Dateisystem vergroessert/verkleinert
+	# SIZE - neue Grösse in Byte
+	# DEVICE - Laufwerk auf dem das Dateisystem vergrössert/verkleinert
 	#          werden soll
 	#
 	resize_fs() {
 		if [[ ${#argv} == 2 ]] ; then
-			# Wenn zum Beispiel das Vergroessern einer Partition
+			# Wenn zum Beispiel das Vergrössern einer Partition
 			# schief geht, wird hier abgebrochen.
 			if [[ $RET == 1 ]] ; then
 				unset -- RET
@@ -698,21 +698,21 @@ fs_conf() {
 			if [ -n "$gv_Fs" ] ; then
 				case "$gv_Fs" in
 					btrfs)
-						# BTRFS Dateisystem verkleinern/vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# BTRFS Dateisystem verkleinern/vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check btrfs
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
 						fi
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
-							# Laufwerk mit FS btrfs wenn noetig ins Arbeitsverzeichnis mounten.
+							# Laufwerk mit FS btrfs wenn nötig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
 								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
 							# Ist das DEV schon gemountet kann man das FS problemlos
-							# vergroessern.
+							# vergrössern.
 							if [ ! -z "$MOUNTPOINT" ] ; then
 								btrfs filesystem resize max $MOUNTPOINT 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
@@ -721,14 +721,14 @@ fs_conf() {
 							# umountet.
 							mount_check -a "$gv_WorkDir"
 						else
-							# Laufwerk mit FS btrfs wenn noetig ins Arbeitsverzeichnis mounten.
+							# Laufwerk mit FS btrfs wenn nötig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
 								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
 							# Ist das DEV schon gemountet kann man das FS problemlos
-							# vergroessern.
+							# vergrössern.
 							if [ ! -z "$MOUNTPOINT" ] ; then
 								$(export LC_ALL=C ; btrfs filesystem resize ${New_Size#-}m $MOUNTPOINT 2>&1) | \
 									progressbox $gv_Reduce $DEV || prog_failure
@@ -740,15 +740,15 @@ fs_conf() {
 						#}}}
 						;;
 					crypto*)
-						# Crypto-Laufwerke muessen extra bearbeitet werden# {{{
+						# Crypto-Laufwerke müssen extra bearbeitet werden# {{{
 						MSG=$(gettext 'Dieses Laufwerk ($DEV) besitzt ein Crypto-Dateisystem und muss extra bearbeitet werden. Starten Sie bitte das Script kwcryptsetup, um das Dateisystem anzupassen.')
 						msgbox "$gv_Info" "$MSG"
 						return 1
 						## }}}
 						;;
 					ext[234])
-						# EXT2/3/4 Dateisysteme verkleinern/vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# EXT2/3/4 Dateisysteme verkleinern/vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check e2fsck resize2fs
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -759,7 +759,7 @@ fs_conf() {
 								# Dateisystem checken
 								e2fsck -f -y $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
-								# Dateisystem ext2/3/4 vergroessern
+								# Dateisystem ext2/3/4 vergrössern
 								resize2fs -p $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
@@ -774,8 +774,8 @@ fs_conf() {
 						#}}}
 						;;
 					fat16|fat32|vfat)
-						# FAT16/FAT32 Dateisysteme verkleinern/vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# FAT16/FAT32 Dateisysteme verkleinern/vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check fatresize
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -783,7 +783,7 @@ fs_conf() {
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
-								# Dateisystem vergroessern
+								# Dateisystem vergrössern
 								$(export LC_ALL=C ; fatresize -s ${New_Size#+}Mi -p $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
@@ -795,15 +795,15 @@ fs_conf() {
 						#}}}
 						;;
 					jfs)
-						# JFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
+						# JFS Dateisystem kann man nicht verkleinern nur vergrössern{{{
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
-							# Laufwerk mit FS jfs wenn noetig ins Arbeitsverzeichnis mounten.
+							# Laufwerk mit FS jfs wenn nötig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
 								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
-							# Dateisystem jfs vergroessern
+							# Dateisystem jfs vergrössern
 							if [ ! -z "$MOUNTPOINT" ] ; then
 								mount -o remount,resize $DEV || prog_failure
 							fi
@@ -817,8 +817,8 @@ fs_conf() {
 						#}}}
 						;;
 					ntfs)
-						# NTFS Dateisystem vergroessern/verkleinern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# NTFS Dateisystem vergrössern/verkleinern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check ntfsresize
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -826,7 +826,7 @@ fs_conf() {
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
-								# Dateisystem ntfs vergroessern
+								# Dateisystem ntfs vergrössern
 								$(export LC_ALL=C ; echo y | ntfsresize -f -s ${New_Size#+} $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
                                 # NTFS Probleme checken und fixen
@@ -844,8 +844,8 @@ fs_conf() {
 						#}}}
 						;;
 					reiserfs)
-						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# REISERFS (nicht reiser4) Dateisysteme verkleinern/vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check resize_reiserfs
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -853,7 +853,7 @@ fs_conf() {
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
-								# Dateisystem reiserfs vergroessern
+								# Dateisystem reiserfs vergrössern
 								$(export LC_ALL=C ; resize_reiserfs -s ${New_Size#+}M $DEV 2>&1) | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 							else
@@ -865,8 +865,8 @@ fs_conf() {
 						#}}}
 						;;
 					*swap*)
-						# Swap verkleinern/vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# Swap verkleinern/vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check mkswap
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -874,7 +874,7 @@ fs_conf() {
 						mount_check -a "$DEV"
 						if [ "$U_MOUNT" = yes ] ; then
 							if [ "${New_Size%%[0-9]*}" = + ] ; then
-								# Dateisystem swap vergroessern
+								# Dateisystem swap vergrössern
 								mkswap -f $DEV 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
 								# Swap wieder einbinden
@@ -890,8 +890,8 @@ fs_conf() {
 						#}}}
 						;;
 					*ufs)
-						# UFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# UFS Dateisystem kann man nicht verkleinern nur vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check growfs.ufs
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
@@ -901,7 +901,7 @@ fs_conf() {
 							# Info: und bei Sectorsize 4096?
 							# New_Size (MiB) nach Sectoren umrechnen. 1Sector = 512Byte
 							#(( Resize_Size = ${New_Size#+} * 1048576 / 512 ))
-							# Dateisystem vergroessern.
+							# Dateisystem vergrössern.
 							#growfs.ufs -s $Resize_Size $DEV 2>&1 | \
 								$(export LC_ALL=C ; growfs.ufs -s ${New_Size#+}m $DEV 2>&1) | \
 								progressbox $gv_Enlarge $DEV || prog_failure
@@ -912,21 +912,21 @@ fs_conf() {
 						#}}}
 						;;
 					xfs*)
-						# XFS Dateisystem kann man nicht verkleinern nur vergroessern{{{
-						# Auf ausfuehrbares Programm pruefen
+						# XFS Dateisystem kann man nicht verkleinern nur vergrössern{{{
+						# Auf ausführbares Programm prüfen
 						prog_check xfs_growfs
 						if [ -n "$NO_PROGS" ] ; then
 							return 1
 						fi
 						if [ "${New_Size%%[0-9]*}" = + ] ; then
-							# Laufwerk mit FS xfs wenn noetig ins Arbeitsverzeichnis mounten.
+							# Laufwerk mit FS xfs wenn nötig ins Arbeitsverzeichnis mounten.
 							mount_check -c $DEV
 							if [[ $MOUNT == no ]] ; then
 								mount -t $gv_Fs $DEV $gv_WorkDir || prog_failure
 								MOUNTPOINT="$gv_WorkDir"
 							fi
 							# Ist das DEV schon gemountet kann man das FS problemlos
-							# vergroessern.
+							# vergrössern.
 							if [ ! -z "$MOUNTPOINT" ] ; then
 								xfs_growfs $MOUNTPOINT 2>&1 | \
 									progressbox $gv_Enlarge $DEV || prog_failure
@@ -973,7 +973,7 @@ fs_conf() {
 	###### Dateisystem Nachrichten ###### {{{
 	# Funktion no_copy_fs_msg# {{{
 	no_copy_fs_msg() {
-		MSG=$(gettext 'Dieses Dateisystem kann man nicht kopieren, da die Groesse des Ziel Laufwerks zu klein ist.')
+		MSG=$(gettext 'Dieses Dateisystem kann man nicht kopieren, da die Grösse des Ziel Laufwerks zu klein ist.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}

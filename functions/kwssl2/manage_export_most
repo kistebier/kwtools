@@ -38,7 +38,7 @@ manage_export_most() {
 					# 
 					###########################################
 					# Notiz:
-					# Das Format DER und TXT benoetigen keine
+					# Das Format DER und TXT benötigen keine
 					# weiteren Menuepunkte
 					###########################################
 					EXP_HELPFILE=export_ca_cert_most_help
@@ -47,7 +47,7 @@ manage_export_most() {
 					## }}}
 					;;
 				-keys)
-					# Schluessel exportieren# {{{
+					# Schlüssel exportieren# {{{
 					EXP_HELPFILE=export_key_most_help
 					case "$Suffix" in
 						der)
@@ -76,7 +76,7 @@ manage_export_most() {
 					export_most_menu "${gv_Auswahl#HELP }"
 					;;
 				"$lv_ExportFilename")
-					# Dateiname fuer den Export eingeben# {{{
+					# Dateiname für den Export eingeben# {{{
 					export_filename $Suffix
 					## }}}
 					export_most_menu $lv_ExportFilename
@@ -87,7 +87,7 @@ manage_export_most() {
 					export_most_menu $lv_Ssl_CA_Password
 					;;
 				$lv_Ssl_Key_Password)
-					# Schluessel Passwort eingeben
+					# Schlüssel Passwort eingeben
 					ca_passwd_input -keys
 					export_most_menu $lv_Ssl_Key_Password
 					;;
@@ -123,8 +123,8 @@ manage_export_most() {
 									openssl x509 -in "$In_File" -outform DER -out "$EXPORT_FILENAME" || prog_failure
 									;;
 								tar)
-									# TAR Export, mit Zertifikate, Schluessel, CA# {{{
-									# ertsmal ./tmp loeschen
+									# TAR Export, mit Zertifikate, Schlüssel, CA# {{{
+									# ertsmal ./tmp löschen
 									rm -rf tmp &>/dev/null
 									# ./tmp erstellen
 									create_file -d tmp
@@ -143,8 +143,8 @@ manage_export_most() {
 									openssl x509 -in "$In_File" -text > "$EXPORT_FILENAME" || prog_failure
 									;;
 								zip)
-									# ZIP Export, mit Zertifikat, Schluessel, CA# {{{
-									# ertsmal ./tmp loeschen
+									# ZIP Export, mit Zertifikat, Schlüssel, CA# {{{
+									# ertsmal ./tmp löschen
 									rm -rf tmp &>/dev/null
 									# ./tmp erstellen
 									create_file -d tmp
@@ -170,7 +170,7 @@ manage_export_most() {
 									if [[ -n $EXPORT_FILENAME ]] && \
 										[[ -n $CA_CAPASSWORD ]] && \
 										[[ -n $DEFAULT_REVOKE_DAYS ]] ; then
-										# ertsmal ./tmp loeschen
+										# ertsmal ./tmp löschen
 										rm -rf tmp &>/dev/null
 										# ./tmp erstellen
 										create_file -d tmp
@@ -184,7 +184,7 @@ manage_export_most() {
 												-outform DER -out "$EXPORT_FILENAME" || \
 												prog_failure
 										fi
-										# Passwoerter loeschen
+										# Passwörter löschen
 										unset -- CA_CAPASSWD CA_CAPASSWORD
 										break
 									else
@@ -198,7 +198,7 @@ manage_export_most() {
 									if [[ -n $EXPORT_FILENAME ]] && \
 										[[ -n $CA_CAPASSWORD ]] && \
 										[[ -n $DEFAULT_REVOKE_DAYS ]] ; then
-										# ertsmal ./tmp loeschen
+										# ertsmal ./tmp löschen
 										rm -rf tmp &>/dev/null
 										# ./tmp erstellen
 										create_file -d tmp
@@ -212,7 +212,7 @@ manage_export_most() {
 												-text -out "$EXPORT_FILENAME" || \
 												prog_failure
 										fi
-										# Passwoerter loeschen
+										# Passwörter löschen
 										unset -- CA_CAPASSWD CA_CAPASSWORD
 										break
 									else
@@ -225,7 +225,7 @@ manage_export_most() {
 							## }}}
 							;;
 						-keys)
-							# Schluessel exportieren# {{{
+							# Schlüssel exportieren# {{{
 							case "$Suffix" in
 								der)
 									# DER Export# {{{
@@ -238,10 +238,10 @@ manage_export_most() {
 										openssl "$ALGORITHM" -in "$In_File" \
 										-outform DER -out "$EXPORT_FILENAME" \
 										-passin env:CA_CAPASSWD || prog_failure
-										# Zertifikat hinzufuegen
+										# Zertifikat hinzufügen
 										echo "" >> "$EXPORT_FILENAME" &>/dev/null
 										< "$CACERT" >> "$EXPORT_FILENAME" &>/dev/null
-										# Passwoerter loeschen
+										# Passwörter löschen
 										unset -- CA_CAPASSWORD CA_CAPASSWD
 										break
 									# ohne Passwort, ohne Zertifikat
@@ -250,7 +250,7 @@ manage_export_most() {
 										openssl "$ALGORITHM" -in "$In_File" \
 										-outform DER -out "$EXPORT_FILENAME" \
 										-passin env:CA_CAPASSWD || prog_failure
-										# Passwoerter loeschen
+										# Passwörter löschen
 										unset -- CA_CAPASSWORD CA_CAPASSWD
 										break
 									else
@@ -260,8 +260,8 @@ manage_export_most() {
 									## }}}
 									;;
 								tar)
-									# TAR Export, mit Zertifikate, Schluessel, CA# {{{
-									# ertsmal ./tmp loeschen
+									# TAR Export, mit Zertifikate, Schlüssel, CA# {{{
+									# ertsmal ./tmp löschen
 									rm -rf tmp &>/dev/null
 									# ./tmp erstellen
 									create_file -d tmp
@@ -277,8 +277,8 @@ manage_export_most() {
 									## }}}
 									;;
 								zip)
-									# ZIP Export, mit Zertifikat, Schluessel, CA# {{{
-									# ertsmal ./tmp loeschen
+									# ZIP Export, mit Zertifikat, Schlüssel, CA# {{{
+									# ertsmal ./tmp löschen
 									rm -rf tmp &>/dev/null
 									# ./tmp erstellen
 									create_file -d tmp

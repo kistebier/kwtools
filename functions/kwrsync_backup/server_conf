@@ -142,7 +142,7 @@ server_conf() {
 		if [ -n "${BACKUP[1]}" ] ; then
 			backup_change_list_menu
 			# Funktion backup_change_menu{{{
-			CHANGE_MSG=$(gettext 'Waehlen Sie einen Eintrag zum aendern aus.')
+			CHANGE_MSG=$(gettext 'Wählen Sie einen Eintrag zum ändern aus.')
 			#
 			backup_change_menu() {
 				CHANGE_MENU=($Backup_Change_List $gv_Back \"\")
@@ -158,7 +158,7 @@ server_conf() {
 					$gv_Back)	break
 						;;
 					*)
-						# Eintrage aendern# {{{
+						# Eintrage ändern# {{{
 						NR="$gv_Auswahl"
 						if [[ ${BACKUP[gv_Auswahl]} == backup ]] ; then
 							if [ -n "${RLVM[gv_Auswahl]}" ] ; then
@@ -289,7 +289,7 @@ server_conf() {
 			menubox "$1" "$SERVER_CONF_TITLE" "$gv_Menupoint" "$SERVER_INPUT_MENU"
 		}
 		## }}}
-		# Konfiguration aendern yes/no und dadurch Variablen belegen# {{{
+		# Konfiguration ändern yes/no und dadurch Variablen belegen# {{{
 		# oder nicht.
 		if [[ $Backup_Change == no ]] ; then
 			if [ "`hostname`" = "$SERVER_SRC" -o "$SERVER_SRC" = localhost ] ; then
@@ -371,12 +371,12 @@ server_conf() {
 					if [ -n "$VERZ" ] ; then
 						dselect_check -c "$VERZ"
 						if [ -n "$VERZ" ] ; then
-							# Verzeichnis auf Rechte pruefen.
+							# Verzeichnis auf Rechte prüfen.
 							if ! user_device_check "$VERZ" AIE ; then
 								break
 							fi
 							DST="${VERZ#${BACKUP_PATH}/hourly.0/}/"
-							# Auf Dulplikate pruefen
+							# Auf Dulplikate prüfen
 							if [ -n "$SCRIPT" -a "$Backup_Change" = no ] ; then
 								awk -F '\t' '(/^backup_script*/){print $3}' ${KWRSYNC_CF_DIR}/*.conf \
 									> ${gv_WorkDir}/conftest
@@ -392,8 +392,8 @@ server_conf() {
 					server_input_menu $lv_Destination
 					;;
 				$gv_User)
-		    	    # Login Benutzer fuer den entfernten Rechner eingeben# {{{
-					MSG=$(gettext 'Geben Sie den Benutzer fuer die Verbindung zum entfernten Rechner ein.')
+		    	    # Login Benutzer für den entfernten Rechner eingeben# {{{
+					MSG=$(gettext 'Geben Sie den Benutzer für die Verbindung zum entfernten Rechner ein.')
 					inputbox "$SERVER_CONF_TITLE" "$MSG" "$REMOTE_USER"
 					if [ -n "$gv_Auswahl" ] ; then
 						REMOTE_USER="$gv_Auswahl"
@@ -404,8 +404,8 @@ server_conf() {
 					server_input_menu $gv_User
 					;;
 				$lv_Rsync_Args)
-		    	    # angeben von zusaetzlichen rsync Argumenten# {{{
-					MSG=$(gettext 'Geben Sie zusaetzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) fuer rsync ein.')
+		    	    # angeben von zusätzlichen rsync Argumenten# {{{
+					MSG=$(gettext 'Geben Sie zusätzliche Argumente zu den Standard Optionen ($DEFAULT_ARGS) für rsync ein.')
 					inputbox "$SERVER_CONF_TITLE" "$MSG" "$RSYNC_ARGS"
 					if [ -n "$gv_Auswahl" ] ; then
 						RSYNC_ARGS="$gv_Auswahl"
@@ -440,7 +440,7 @@ server_conf() {
 								script_input_menu "${gv_Auswahl#HELP }"
 								;;
 							$lv_Choice)
-								# Scriptauswahl (Format-executable [ausfuehrbar]
+								# Scriptauswahl (Format-executable [ausführbar]
 								FORMAT="executable"
 								file_choice "$KWRSYNC_EXEC_DIR" only "${SCRIPT##*/}"
 								if [ -x "${VERZ}/${WERT}" -a ! -d "${VERZ}/${WERT}" ] ; then
@@ -483,7 +483,7 @@ server_conf() {
 					if [ "${LV[1]}" ] ; then
 						# Funktion lvm_menu{{{
 						RLVM_MENU=($LV_E)
-						RLVM_MSG=$(gettext 'Waehlen Sie ein LV aus.')
+						RLVM_MSG=$(gettext 'Wählen Sie ein LV aus.')
 						lvm_menu() {
 							menubox "$1" "$SERVER_CONF_TITLE" "$RLVM_MSG" "$RLVM_MENU"
 						}
@@ -516,14 +516,14 @@ server_conf() {
 					fi
 					# IFS
 					IFS=$'\t'
-					# erstmal alten Eintrag loeschen
+					# erstmal alten Eintrag löschen
 					if [ -n "$SERVER_BACKUP_OLD" ] ; then
 						print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##${SERVER_BACKUP_OLD}*} > ${gv_WorkDir}/serverfile
 						mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
 					fi
-					# (R)LVM Konfiguration pruefen
+					# (R)LVM Konfiguration prüfen
 					if [[ -n $RLVM ]] && [[ -n $SRC ]] && [[ -n $DST ]] ; then
-						# erstmal etwas vergleichbares loeschen
+						# erstmal etwas vergleichbares löschen
 						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${RLVM}/${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -533,9 +533,9 @@ server_conf() {
 						else
 							>> "$SERVER_CONF_FILE" <<< "backup${IFS}${RLVM}/${SRC}${IFS}${DST}"
 						fi
-					# Script Konfiguration pruefen
+					# Script Konfiguration prüfen
 					elif [[ -n $SCRIPT ]] && [[ -n $DST ]]  ; then
-						# erstmal etwas vergleichbares loeschen
+						# erstmal etwas vergleichbares löschen
 						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup_script${IFS}${SCRIPT}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -543,11 +543,11 @@ server_conf() {
 						# speichern
 						>> "$SERVER_CONF_FILE" <<< "backup_script${IFS}${SCRIPT}${IFS}${DST}"
 
-					# mit Rsync Daemon pruefen
+					# mit Rsync Dämon prüfen
 					elif [[ $RSYNC_YESNO == yes ]] && \
 						[[ -n $SRC ]] && [[ -n $DST ]] && [[ -n $HOSTNAME ]] ; then
 						if [[ -n $REMOTE_USER ]] ; then
-							# erstmal etwas vergleichbares loeschen
+							# erstmal etwas vergleichbares löschen
 							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -558,7 +558,7 @@ server_conf() {
 								>> "$SERVER_CONF_FILE" <<< "backup${IFS}rsync://${REMOTE_USER}@${HOSTNAME}${SRC}${IFS}${DST}"
 							fi
 						else
-							# erstmal etwas vergleichbares loeschen
+							# erstmal etwas vergleichbares löschen
 							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}rsync://${HOSTNAME}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -570,10 +570,10 @@ server_conf() {
 							fi
 						fi
 
-					# Konfiguration mit remote Rechner pruefen
+					# Konfiguration mit remote Rechner prüfen
 					elif [[ -n $HOSTNAME ]] && [[ -n $SRC ]] && [[ -n $DST ]] ; then
 						if [[ -n $REMOTE_USER ]] ; then
-							# erstmal etwas vergleichbares loeschen
+							# erstmal etwas vergleichbares löschen
 							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -584,7 +584,7 @@ server_conf() {
 								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${REMOTE_USER}@${HOSTNAME}:${SRC}${IFS}${DST}"
 							fi
 						else
-							# erstmal etwas vergleichbares loeschen
+							# erstmal etwas vergleichbares löschen
 							if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 								print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 								mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -595,9 +595,9 @@ server_conf() {
 								>> "$SERVER_CONF_FILE" <<< "backup${IFS}${HOSTNAME}:${SRC}${IFS}${DST}"
 							fi
 						fi
-					# normale Konfiguration ohne remote Rechner pruefen
+					# normale Konfiguration ohne remote Rechner prüfen
 					elif [[ -n $SRC ]] && [[ -n $DST ]] ; then
-						# erstmal etwas vergleichbares loeschen
+						# erstmal etwas vergleichbares löschen
 						if [ "`wc -l < $SERVER_CONF_FILE`" -gt 0 ] ; then
 							print -l ${(R)${(R)${(f)"$(< $SERVER_CONF_FILE)"}##(s#)(\#)*}##(backup${IFS}${SRC}${IFS}${DST})*} > ${gv_WorkDir}/serverfile 
 							mv ${gv_WorkDir}/serverfile $SERVER_CONF_FILE
@@ -610,7 +610,7 @@ server_conf() {
 					else
 						MSG=$(gettext 'Sie haben vergessen einige Menuepunkte mit Werten zu belegen. Lesen Sie bitte die Hilfe.')
 						msgbox "$gv_Info" "$MSG"
-						# zurueck zum Menue
+						# zurück zum Menue
 						server_input_menu $gv_Save
 					fi
 					IFS="$IFSBAK"
@@ -626,7 +626,7 @@ server_conf() {
 		done
 	}
 	## }}}
-	# Funktion (server_delete), Eintrage loeschen# {{{
+	# Funktion (server_delete), Eintrage löschen# {{{
 	#
 	# usage: server_delete
 	#
@@ -635,7 +635,7 @@ server_conf() {
 		if [ -n "${BACKUP[1]}" ] ; then
 			backup_change_list_menu
 			# Funktion backup_change_menu{{{
-			DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere Eintraege zum loeschen aus.')
+			DEL_MSG=$(gettext 'Wählen Sie ein oder mehrere Einträge zum löschen aus.')
 			#
 			backup_del_menu() {
 				DEL_MENU=($Backup_Change_List_M)
@@ -649,7 +649,7 @@ server_conf() {
 						backup_del_menu "${gv_Auswahl#HELP }"
 						;;
 					*)
-						# Auswahl loeschen
+						# Auswahl löschen
 						Anz=0
 						for Nr in ${=gv_Auswahl} ; {
 							(( Anz++ ))
@@ -690,7 +690,7 @@ server_conf() {
 	## }}}
 	# Funktion (no_server_conf_msg)# {{{
 	no_server_conf_msg() {
-		MSG=$(gettext 'Es gibt keine Konfigurationsdatei (${SERVER_CONF_FILE##*/}). Sie muessen erst eine erstellen.')
+		MSG=$(gettext 'Es gibt keine Konfigurationsdatei (${SERVER_CONF_FILE##*/}). Sie müssen erst eine erstellen.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
@@ -704,7 +704,7 @@ server_conf() {
 				check_server_choice_menu "${gv_Auswahl#HELP }"
 				;;
 			*)
-				# Auswahl uebernehmen
+				# Auswahl übernehmen
 				if [[ $gv_Auswahl == rsync ]] ; then
 					RSYNC_YESNO=yes
 				else
@@ -778,7 +778,7 @@ server_conf() {
 							server_conf_menu $gv_Create
 							;;
 						$gv_Change)
-							# Konfigurationseintrag aendern# {{{
+							# Konfigurationseintrag ändern# {{{
 							if [ -f "$SERVER_CONF_FILE" ] ; then
 								Backup_Change=yes
 								server_change
@@ -789,7 +789,7 @@ server_conf() {
 							server_conf_menu $gv_Change
 							;;
 						$gv_Delete)
-							# Konfigurationseintraege loeschen# {{{
+							# Konfigurationseinträge löschen# {{{
 							if [ -f "$SERVER_CONF_FILE" ] ; then
 								server_delete
 							else

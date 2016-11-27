@@ -9,11 +9,11 @@ pv_volumes() {
 	lv_From=$(gettext 'von')
 	lv_To=$(gettext 'nach')
 	lv_Remove=$(gettext 'entfernen')
-	lv_Add=$(gettext 'hinzufuegen')
+	lv_Add=$(gettext 'hinzufügen')
 	lv_Move=$(gettext 'verschieben')
 	lv_Move_Lv_Data=$(gettext 'verschieben von LV Daten')
 	lv_Rm_Pv_Vg=$(gettext 'entfernen von PVs aus einer VG')
-	lv_Add_Pv_Vg=$(gettext 'hinzufuegen von PVs zu einer VG')
+	lv_Add_Pv_Vg=$(gettext 'hinzufügen von PVs zu einer VG')
 	#
 	# Funktion pv_menue{{{
 	PV_TITLE=($lv_Physic_Vol)
@@ -43,7 +43,7 @@ pv_volumes() {
 					# Funktion pv_anzeige_menue{{{
 					PV_DISPLAY_MENU=($PV_M)
 					PV_DISPLAY_TITLE=(${lv_Physic_Vol}::${gv_Display})
-					PV_DISPLAY_MSG=$(gettext 'Waehlen Sie ein oder mehrere PVs zur Anzeige aus.')
+					PV_DISPLAY_MSG=$(gettext 'Wählen Sie ein oder mehrere PVs zur Anzeige aus.')
 					pv_anzeige_menue() {
 						checklist "$1" "$PV_DISPLAY_TITLE" "$PV_DISPLAY_MSG" "$PV_DISPLAY_MENU"
 					}
@@ -76,7 +76,7 @@ pv_volumes() {
 				pv_vgi_auswahl
 				# PV_PARTS_NO_PV_M wird in der Funktion pv_vgi_auswahl belegt.
 				if [ "${PV_PARTS_NO_PV_M[1]}" ] ; then
-					# Bei LVM2 kann man den Metadatentype auswaehlen, 1 oder 2.
+					# Bei LVM2 kann man den Metadatentype auswählen, 1 oder 2.
 					if [ "$LVM" = 2 ] ; then
 						lvm_type
 					fi
@@ -84,7 +84,7 @@ pv_volumes() {
 					#
 					PV_CREATE_MENU=($PV_PARTS_NO_PV_M)
 					PV_CREATE_TITLE=(${lv_Physic_Vol}::${gv_Create})
-					PV_CREATE_MSG=$(gettext 'Waehlen Sie ein oder mehrere Laufwerke aus, auf denen PVs erstellt werden sollen.')
+					PV_CREATE_MSG=$(gettext 'Wählen Sie ein oder mehrere Laufwerke aus, auf denen PVs erstellt werden sollen.')
 					pv_create_menue() {
 						checklist "$1" "$PV_CREATE_TITLE" "$PV_CREATE_MSG" "$PV_PARTS_NO_PV_M"
 					}
@@ -99,7 +99,7 @@ pv_volumes() {
 								Anz=${(w)#gv_Auswahl}
 								DEVS="$gv_Auswahl"
 								Devs=${gv_Auswahl//\ /\\n}
-								MSG=$(gettext 'Jetzt wird auf allen ausgewaehlten Laufwerken Physikalische Volumes erzeugt.\n$Devs\n\nFortfahren (ja/nein)?')
+								MSG=$(gettext 'Jetzt wird auf allen ausgewählten Laufwerken Physikalische Volumes erzeugt.\n$Devs\n\nFortfahren (ja/nein)?')
 								yesno "$gv_Attention" "$MSG" "" "$Anz"
 								if [ "$gv_Auswahl" = yes ] ; then
 									# Auf Partitionen die gemountet sind, kann man keine
@@ -107,7 +107,7 @@ pv_volumes() {
 									for i in ${=DEVS} ; {
 										mount_check -u $i
 									}
-									# Optionen fuer LVM1/2 einstellen
+									# Optionen für LVM1/2 einstellen
 									if [ "$LVM" = 2 ] ; then
 										PROG_OPT="-v -M ${LVM_TYPE:-2} $DEVS"
 									else
@@ -120,7 +120,7 @@ pv_volumes() {
 						esac
 					done
 				else
-					MSG=$(gettext 'Es sind schon alle moeglichen Laufwerke zu PVs kreiert worden.')
+					MSG=$(gettext 'Es sind schon alle möglichen Laufwerke zu PVs kreiert worden.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}
@@ -135,7 +135,7 @@ pv_volumes() {
 					#
 					PV_MV_MENU=($VG_E)
 					PV_MV_TITLE=(${lv_Physic_Vol}::${lv_Move})
-					PV_MV_MSG=$(gettext 'Waehlen Sie die VG aus in der die PEs von PVs verschoben werden sollen.')
+					PV_MV_MSG=$(gettext 'Wählen Sie die VG aus in der die PEs von PVs verschoben werden sollen.')
 					pv_move_menue() {
 						menubox "$1" "$PV_MV_TITLE" "$PV_MV_MSG" "$PV_MV_MENU"
 					}
@@ -178,7 +178,7 @@ pv_volumes() {
 									#
 									move_select_pv() {
 										MOVE_MENU=($PV_IN_VG_SIZE)
-										MOVE_MSG=$(gettext 'Waehlen Sie eine PV aus. Daneben stehen die totalen, freien und benutzten PEs der PVs.')
+										MOVE_MSG=$(gettext 'Wählen Sie eine PV aus. Daneben stehen die totalen, freien und benutzten PEs der PVs.')
 										menubox "$ACT_PV" "$PV_MV_TITLE" "$MOVE_MSG" "$MOVE_MENU"
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
@@ -227,12 +227,12 @@ pv_volumes() {
 													count_menu "$PV_IN_VG"
 													unset -- FROM_PV TO_PV
 												else
-													MSG=$(gettext 'Sie muessen erst die beiden Punkte mit Werten belegen.')
+													MSG=$(gettext 'Sie müssen erst die beiden Punkte mit Werten belegen.')
 													msgbox "$gv_Attention" "$MSG"
 												fi
 												move_menu $gv_Save
 												;;
-											zurueck|break)	break
+											zurück|break)	break
 												move_menu
 												;;
 										esac
@@ -260,7 +260,7 @@ pv_volumes() {
 					# Funktion pv_delete_menue{{{
 					PV_REM_MENU=($VG_E)
 					PV_REM_TITLE=(${lv_Physic_Vol}::${lv_Remove})
-					PV_REM_MSG=$(gettext 'Waehlen Sie die VG aus aus der die PVs entfernt werden sollen.')
+					PV_REM_MSG=$(gettext 'Wählen Sie die VG aus aus der die PVs entfernt werden sollen.')
 					pv_delete_menue() {
 						menubox "$1" "$PV_REM_TITLE" "$PV_REM_MSG" "$PV_REM_MENU"
 					}
@@ -279,7 +279,7 @@ pv_volumes() {
 								if [ "$ANZ_PV" -gt 1 ] ; then
 									#
 									SELECT_PV_REM_MENU=($PV_IN_VG_M)
-									SELECT_PV_REM_MSG=$(gettext 'Waehle sie die PVs aus die entfernt werden sollen.')
+									SELECT_PV_REM_MSG=$(gettext 'Wähle sie die PVs aus die entfernt werden sollen.')
 									checklist "" "$PV_REM_TITLE" "$SELECT_PV_REM_MSG" "$SELECT_PV_REM_MENU"
 									while [ "$gv_Auswahl" ] ; do
 										case $gv_Auswahl in
@@ -297,7 +297,7 @@ pv_volumes() {
 														# Ist die PV belegt muss sie
 														# verschoben werden, also wird sie
 														# ignoriert.
-														MSG=$(gettext 'Dies PV ($i) ist belegt, Sie muessen erst die Daten auf eine andere freie PV dieser VG verschieben. Wird ignoriert.')
+														MSG=$(gettext 'Dies PV ($i) ist belegt, Sie müssen erst die Daten auf eine andere freie PV dieser VG verschieben. Wird ignoriert.')
 														msgbox "$gv_Attention" "$MSG"
 													else
 														(( Anz++ ))
@@ -307,14 +307,14 @@ pv_volumes() {
 												#
 												if [ -n "${SELECT_PV_DEV[1]}" ] ; then
 													if [ "$Anz" = "$ANZ_PV" ] ; then
-														MSG=$(gettext 'Sie koennen nicht alle Physikalischen Volumes einer Volume Group loeschen.')
+														MSG=$(gettext 'Sie können nicht alle Physikalischen Volumes einer Volume Group löschen.')
 														msgbox "$gv_Attention" "$MSG"
 														break 2
 													fi
 													#
 													Anz=${(w)#SELECT_PV_DEV}
 													Devs=${SELECT_PV_DEV//\ /\\n}
-													MSG=$(gettext 'Jetzt werden alle ausgewaehlten Physikalischen Volumes entfernt.\n$Devs\n\nFortfahren (ja/nein)?')
+													MSG=$(gettext 'Jetzt werden alle ausgewählten Physikalischen Volumes entfernt.\n$Devs\n\nFortfahren (ja/nein)?')
 													yesno "$gv_Attention" "$MSG" "" "$Anz"
 													#
 													# L�schen aller ausgew�hlten PV's
@@ -355,7 +355,7 @@ pv_volumes() {
 					if [ "${PV_PARTS_M[1]}" ] ; then
 						PV_ADD_MENU=($PV_PARTS_M)
 						PV_ADD_TITLE=(${lv_Physic_Vol}::${lv_Add})
-						PV_ADD_MSG=$(gettext 'Waehlen Sie ein oder mehrere PVs aus, die zur VG hinzugefuegt werden sollen.')
+						PV_ADD_MSG=$(gettext 'Wählen Sie ein oder mehrere PVs aus, die zur VG hinzugefügt werden sollen.')
 						checklist "" "$PV_ADD_TITLE" "$PV_ADD_MSG" "$PV_ADD_MENU"
 						#
 						while [ "$gv_Auswahl" ] ; do
@@ -368,7 +368,7 @@ pv_volumes() {
 									AUSWAHL="$gv_Auswahl"
 									#
 									VG_MENU=($VG_E)
-									SELECT_VG_ADD_MSG=$(gettext 'Waehlen Sie die VG aus zu der die ausgewaehlten PVs hinzugefuegt werden soll.')
+									SELECT_VG_ADD_MSG=$(gettext 'Wählen Sie die VG aus zu der die ausgewählten PVs hinzugefügt werden soll.')
 									menubox "" "$PV_ADD_TITLE" "$SELECT_VG_ADD_MSG" "$VG_MENU"
 									#
 									while [ "$gv_Auswahl" ] ; do
@@ -380,7 +380,7 @@ pv_volumes() {
 												Anz=${(w)#AUSWAHL}
 												DEV="$gv_Auswahl"
 												Devs=${AUSWAHL//\ /\\n}
-												MSG=$(gettext 'Jetzt werden alle ausgewaehlten Physikalischen Volumes zur VG $DEV hinzugefuegt.\n$AUSWAHL\n\nFortfahren (ja/nein)?')
+												MSG=$(gettext 'Jetzt werden alle ausgewählten Physikalischen Volumes zur VG $DEV hinzugefügt.\n$AUSWAHL\n\nFortfahren (ja/nein)?')
 												yesno "$gv_Attention" "$MSG" "" "$Anz"
 												#
 												# Hinzuf�gen aller ausgew�hlten PV's
@@ -407,14 +407,14 @@ pv_volumes() {
 				pv_menue $lv_Add_Pv_Vg
 				;;
 			$gv_Delete)
-				# PVs loeschen.{{{
+				# PVs löschen.{{{
 				pv_vgi_auswahl
 				# PV_PARTS_M wird in der Funktion pv_vgi_auswahl belegt.
-				# Es werden nur die noch freien PVs zum loeschen aufgelistet.
+				# Es werden nur die noch freien PVs zum löschen aufgelistet.
 				if [ "${PV_PARTS_M[1]}" ] ; then
 					PV_DEL_MENU=($PV_PARTS_M)
 					PV_DEL_TITLE=(${lv_Physic_Vol}::${gv_Delete})
-					PV_DEL_MSG=$(gettext 'Waehlen Sie ein oder mehrere PVs aus, die geloescht werden sollen.')
+					PV_DEL_MSG=$(gettext 'Wählen Sie ein oder mehrere PVs aus, die gelöscht werden sollen.')
 					checklist "" "$PV_DEL_TITLE" "$PV_DEL_MSG" "$PV_DEL_MENU"
 					#
 					while [ "$gv_Auswahl" ] ; do
@@ -423,12 +423,12 @@ pv_volumes() {
 								checklist "${gv_Auswahl#HELP }" "$PV_DEL_TITLE" "$PV_DEL_MSG" "$PV_DEL_MENU"
 								;;
 							*)	#
-								# loeschen aller ausgew�hlten PV's
+								# löschen aller ausgew�hlten PV's
 								Anz=${(w)#gv_Auswahl}
 								DEVS="$gv_Auswahl"
 								Devs=${gv_Auswahl//\ /\\n}
 								#
-								MSG=$(gettext 'Jetzt werden alle ausgewaehlten Physikalischen Volumes geloescht.\n$Devs\n\nFortfahren (ja/nein)?')
+								MSG=$(gettext 'Jetzt werden alle ausgewählten Physikalischen Volumes gelöscht.\n$Devs\n\nFortfahren (ja/nein)?')
 								yesno "$gv_Attention" "$MSG" "" "$Anz"
 								if [ "$gv_Auswahl" = yes ] ; then
 									pvremove -v $DEVS 2>&1 | progressbox $gv_Delete "$DEVS" || prog_failure

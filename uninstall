@@ -54,14 +54,14 @@ KW_MANPAGES="create.cal.pl.1.gz kwdjbdns.1.gz kwholiday.1.gz
 	kwuser.8.gz kwproxy.8.gz kwraid.8.gz
 	kwrunlevconf.8.gz kwclock.8.gz kwwvdialconf.8.gz"
 
-# kwtools Scripte in /usr/bin loeschen
+# kwtools Scripte in /usr/bin löschen
 for i in check-smtp-auth call-jpeg2ps.zsh \
 	mutt.vcard.filter mutt.octet.filter mailhops \
 	firstlogin ; {
 	rm -f /usr/bin/${i} /usr/local/bin/${i} &>/dev/null
 }
 
-# Links loesechen
+# Links lösechen
 for i in $KW_EXEC ; {
 	for P in ${i}/kwtools/**/*(Nx) ; {
 		LINK="`basename $P`"
@@ -70,7 +70,7 @@ for i in $KW_EXEC ; {
 	}
 }
 
-# loeschen der Pfade, in denen die kwtools Programm/Functions/Doc Dateien liegen.
+# löschen der Pfade, in denen die kwtools Programm/Functions/Doc Dateien liegen.
 for i in $KW_EXEC $KW_FILES ; {
 	if [ "${i}/kwtools(/)" ] ; then
 		rm -rf ${i}/kwtools &>/dev/null
@@ -80,13 +80,13 @@ for i in $KW_EXEC $KW_FILES ; {
 	fi
 }
 
-# Sollen die alten Konfigurationsdateien geloescht werden (?)
+# Sollen die alten Konfigurationsdateien gelöscht werden (?)
 print ""
-print -n "Sollen die Konfigurationsdateien geloescht werden (y/N): "
+print -n "Sollen die Konfigurationsdateien gelöscht werden (y/N): "
 read Answ
 case "$Answ" in
 	y|Y)
-		# Konfigurationsdateien loeschen
+		# Konfigurationsdateien löschen
 		for i in $KW_CONF_FILES ; {
 			if [ -d ${i}/kwtools ] ; then
 				rm -rf ${i}/kwtools &>/dev/null
@@ -97,7 +97,7 @@ case "$Answ" in
 		;;
 esac
 
-# /etc/skel Dateien/Verz. loeschen (KDE und GNOME).
+# /etc/skel Dateien/Verz. löschen (KDE und GNOME).
 rm -fv $KW_SKEL_FILES &>/dev/null
 for i in $KW_SKEL_KDE_DIR $KW_SKEL_GNOME_DIR ; {
 	rmdir ${i}/Autostart &>/dev/null
@@ -105,7 +105,7 @@ for i in $KW_SKEL_KDE_DIR $KW_SKEL_GNOME_DIR ; {
 	rmdir $i &>/dev/null
 }
 
-# Manpages loeschen.
+# Manpages löschen.
 for i in $MAN_DIRS ; {
 	for M in $MAN_SUBDIRS ; {
 		if [ -d ${i}/${M} ] ; then
@@ -116,41 +116,41 @@ for i in $MAN_DIRS ; {
 	}
 }
 
-# PPP Startdateien loeschen
+# PPP Startdateien löschen
 for i in $KW_PPP ; {
 	rm -f ${i}/*kwnarc &>/dev/null
 }
 
-# Init Scripts loeschen
+# Init Scripts löschen
 rm -f ${KW_INIT}/kwnarc &>/dev/null
 rm -f ${KW_INIT}/rc?.d/???kwnarc &>/dev/null
 rm -f /etc/rc?.d/init.d/???kwnarc &>/dev/null
 
-# Systemd Startdatei und Link loeschen
+# Systemd Startdatei und Link löschen
 rm -f ${KW_SYSTEMD}/kwnarc.service &>/dev/null
 rm -f /etc/systemd/system/multi-user.target.wants/kwnarc.service &>/dev/null
 
-# Cron Dateien loeschen
+# Cron Dateien löschen
 rm -f ${KW_CROND}/kwrsync_backup &>/dev/null
 
-# Logrotate Dateien loeschen
+# Logrotate Dateien löschen
 rm -f ${KW_LOGROTATED}/kwrsync_backup &>/dev/null
 
-# kwgrub2 Script loeschen
+# kwgrub2 Script löschen
 rm -f $KW_GRUB_FILES &>/dev/null
 
-# Rest von kwnarc loeschen
+# Rest von kwnarc löschen
 rm -f /usr/sbin/kwnarc /usr/local/sbin/kwnarc &>/dev/null
 
-# lintian Dateien loeschen
+# lintian Dateien löschen
 rm -f /usr/share/lintian/overrides/kwtools-* \
 	/usr/local/share/lintian/overrides/kwtools-* &>/dev/null
 
-# Menues bei Debian loeschen
+# Menüs bei Debian löschen
 rm -f /usr/lib/kwtools-* /usr/share/menu/kwtools-* \
 	/usr/local/lib/kwtools-* /usr/local/share/menu/kwtools-* &>/dev/null
 
-# Locale loeschen
+# Locale löschen
 if [ -d debian/po ] ; then
 	for i in debian/po/*~*old(N/) ; {
 		dir="${i##*/}"

@@ -1,4 +1,4 @@
-# Funktion (kwbtrfs_device_add), Festplatte/Partition hinzufuegen# {{{
+# Funktion (kwbtrfs_device_add), Festplatte/Partition hinzufügen# {{{
 #
 # usage: kwbtrfs_device_add
 #
@@ -14,7 +14,7 @@ kwbtrfs_device_add() {
 	}
 	## }}}
 		# Funktion (balance_add_data), Dateisystem Komponeneten zuordnen# {{{
-		# und Daten gleichmaessig verteilen
+		# und Daten gleichmässig verteilen
 		#
 		# usage: balance_add_data
 		#
@@ -23,7 +23,7 @@ kwbtrfs_device_add() {
 			btrfs device scan --all-devices 2>&1 | \
 				progressbox "$ADD_TITLE" "${lv_Scan}: ${lv_All_Devices}..." || \
 				(prog_failure ; return 1)
-			# Daten gleichmaessig verteilen
+			# Daten gleichmässig verteilen
 			btrfs balance start -f -v -d -m -s "$IS_DRIVE" 2>&1 | \
 				progressbox "$ADD_TITLE" "${lv_Balance}: ${IS_DRIVE}..." || \
 				(prog_failure ; return 1)
@@ -41,7 +41,7 @@ kwbtrfs_device_add() {
 					device_add_menu "${gv_Auswahl#HELP }"
 					;;
 				$lv_Is_Drive)
-					# bestehendes Btrfs-Laufwerk auswaehlen# {{{
+					# bestehendes Btrfs-Laufwerk auswählen# {{{
 					btrfs_choice_menu "" "$ADD_TITLE" "$BTRFS_PATH_E"
 					while [[ -n $gv_Auswahl ]] ; do
 						case "$gv_Auswahl" in
@@ -62,7 +62,7 @@ kwbtrfs_device_add() {
 					device_add_menu "$lv_Is_Drive"
 					;;
 				$lv_Devices)
-					# Laufwerk auswaehlen das addiert werden soll.# {{{
+					# Laufwerk auswählen das addiert werden soll.# {{{
 					search_devices -pc
 					if [[ -n ${NO_BTRFS_DEV[1]} ]] ; then
 						drive_choice_checklist "" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
@@ -73,8 +73,8 @@ kwbtrfs_device_add() {
 									drive_choice_checklist "${gv_Auswahl#HELP }" "$ADD_TITLE" "$NO_BTRFS_DEV_M"
 									;;
 								/*)
-									# Laufwerke uebernehmen und ausbinden.
-									# Pruefen ob die Laufwerke
+									# Laufwerke übernehmen und ausbinden.
+									# Prüfen ob die Laufwerke
 									# eingebunden sind und ausbinden.
 									for i in ${=gv_Auswahl_Display} ; {
 										mount_check -a $i
@@ -103,11 +103,11 @@ kwbtrfs_device_add() {
 						btrfs device add -f ${=DRIVE} "$IS_DRIVE" 2>&1 | \
 							progressbox "$ADD_TITLE" "$ADD_MSG" || \
 							(prog_failure ; return 1)
-						# Daten gleichmaessig verteilen
+						# Daten gleichmässig verteilen
 						balance_add_data || return 1
 						return 0
 					else
-						MSG=$(gettext 'Sie muessen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst die Menuepunkte \"$lv_Is_Drive\" und \"$lv_Devices\" mit Werten belegen.')
 						msgbox "$gv_Info" "$MSG"
 						device_add_menu "$lv_Is_Drive"
 					fi

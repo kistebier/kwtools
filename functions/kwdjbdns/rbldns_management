@@ -5,8 +5,8 @@
 rbldns_management() {
 if [ -d ${SV_DIR}/${DNS} ] ; then
 	cd ${SV_DIR}/${DNS}/root
-	# Programme pruefen und wenn nicht vorhanden beziehungsweise
-	# ausfuehrbar abbrechen.
+	# Programme prüfen und wenn nicht vorhanden beziehungsweise
+	# ausführbar abbrechen.
 	PATH="$PATH:${SV_DIR}/${DNS}/root"
 	prog_check rbldns-data
 	if [[ -n $NO_PROGS ]] ; then
@@ -25,7 +25,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)
-				# Hilfetext fuer rbldns
+				# Hilfetext für rbldns
 				script_help rbldns_help
 				rbldns_conf_menue "${gv_Auswahl#HELP }"
 				;;
@@ -41,11 +41,11 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				;;
 			$gv_Create)
 				# Dateneingabe{{{
-				MSG=$(gettext 'Geben Sie bitte einen Rechner, Netzwerk oder einen Text fuer A records an.')
+				MSG=$(gettext 'Geben Sie bitte einen Rechner, Netzwerk oder einen Text für A records an.')
 				inputbox "$RBL_ADMIN_TITLE" "$MSG"
 				if [ "$gv_Auswahl" ] ; then
 					H_IP="${${${gv_Auswahl/:/}%%:*}%\/*}"
-					# ip_analyse liefert die noetigen Variablen IP1, IP2,...
+					# ip_analyse liefert die nötigen Variablen IP1, IP2,...
 					ip_analyse "$H_IP"
 					case $gv_Auswahl in
 						${IP1}.${IP2}.${IP3}.${IP4}/[0-9]*)	
@@ -91,7 +91,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				rbldns_conf_menue $gv_Create
 				;;
 			$gv_Delete)
-				# Daten loeschen{{{
+				# Daten löschen{{{
 				unset -- D_Menue
 				ANZ=1
 				while read DATA ; do
@@ -112,7 +112,7 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				if [ -n "${D_Menue[1]}" ] ; then
 					DEL_MENU=($D_Menue)
 					checklist "" "$RBL_ADMIN_TITLE" "$DEL_MSG" "$DEL_MENU"
-					# Eintraege loeschen
+					# Einträge löschen
 					while [ "$gv_Auswahl" ] ; do
 						case $gv_Auswahl in
 							HELP*)	script_help share/conf_del_help

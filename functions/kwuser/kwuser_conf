@@ -13,9 +13,9 @@ kwuser_conf() {
 	KW_NGROUP=${KW_NGROUP:-users}
 	KW_NGROUPS=${KW_NGROUPS:-users}
 	lv_Umask=$(gettext 'umask')
-	lv_Pass_Length=$(gettext 'Passwortlaenge')
+	lv_Pass_Length=$(gettext 'Passwortlänge')
 	lv_Firstlogin=$(gettext 'Erstlogin')
-	lv_Encrypt=$(gettext 'Verschluesselung')
+	lv_Encrypt=$(gettext 'Verschlüsselung')
 	#
 	lv_Quota=$(gettext 'Quota')
 	lv_BH_Limit=$(gettext 'Block_Hardlimit')
@@ -50,7 +50,7 @@ kwuser_conf() {
 				user_group_check -g
 				if [ "$?" = 0 ] ; then
 					KW_GROUP_TITLE=(${gv_Configuration}::${gv_Group})
-					KW_GROUP_MSG=$(gettext 'Waehlen Sie die Hauptgruppe fuer die zu erstellenden Benutzer aus.')
+					KW_GROUP_MSG=$(gettext 'Wählen Sie die Hauptgruppe für die zu erstellenden Benutzer aus.')
 					menubox "$KW_NGROUP" "$KW_GROUP_TITLE" "$KW_GROUP_MSG" "$U_G_ARRAY"
 					#
 					while [ "$gv_Auswahl" ] ; do
@@ -59,7 +59,7 @@ kwuser_conf() {
 								menubox "$KW_NGROUP" "$KW_GROUP_TITLE" "$KW_GROUP_MSG" "$U_G_ARRAY"
 								;;
 							*)
-								# Gruppe uebernehmen
+								# Gruppe übernehmen
 								KW_NGROUP="$gv_Auswahl"
 								break
 								;;
@@ -70,17 +70,17 @@ kwuser_conf() {
 				kwuser_conf_menu $gv_Group
 				;;
 			$lv_Groups)
-				# Gruppen fuer Benutzer denen er angehoeren soll.# {{{
+				# Gruppen für Benutzer denen er angehören soll.# {{{
 				user_group_check -g
 				if [ "$?" = 0 ] ; then
-					# Filtern, ob die Gruppe schon ausgewaehlt wurde, wenn ja
+					# Filtern, ob die Gruppe schon ausgewählt wurde, wenn ja
 					# als on markieren.
 					generate_is_file "$KW_NGROUPS"
 					is_value "${(o)U_G_ARRAY_S}"
 					# Gibt es Werte werden sie zur Auswahl angeboten
 					if [ -n "$VALUE_ARRAY" ] ; then
 						KW_GROUPS_TITLE=(${gv_Configuration}::${lv_Groups})
-						KW_GROUPS_MSG=$(gettext 'Waehlen Sie hier die Gruppen aus zu denen die zu erstellenden Benutzer standardmaessig gehoeren sollen.')
+						KW_GROUPS_MSG=$(gettext 'Wählen Sie hier die Gruppen aus zu denen die zu erstellenden Benutzer standardmässig gehören sollen.')
 						checklist "${DEFAULT_VALUE[1]}" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
@@ -88,7 +88,7 @@ kwuser_conf() {
 									checklist "${gv_Auswahl#HELP }" "$KW_GROUPS_TITLE" "$KW_GROUPS_MSG" "$VALUE_ARRAY" "$KW_NGROUPS"
 									;;
 								*)
-									# Gruppen uebernehmen
+									# Gruppen übernehmen
 									KW_NGROUPS="$gv_Auswahl"
 									break
 									;;
@@ -101,7 +101,7 @@ kwuser_conf() {
 				kwuser_conf_menu $lv_Groups
 				;;
 			$lv_Shell)
-				# Shell auswaehlen# {{{
+				# Shell auswählen# {{{
 				list_shell $U_SHELL
 				if [ -n "$gv_Shell" ] ; then
 					U_SHELL="$gv_Shell"
@@ -112,11 +112,11 @@ kwuser_conf() {
 				kwuser_conf_menu $lv_Shell
 				;;
 			$lv_Encrypt)
-				# Verschluesselung auswaehlen# {{{
+				# Verschlüsselung auswählen# {{{
 				generate_is_file "$ENCRYPT_METHOD"
 				is_value "DES SHA256 SHA512 MD5"
 				# Menu
-				ENCRYPT_MSG=$(gettext 'Waehlen Sie eine Methode zur Verschluesselung Ihres Passwortes aus. Standard ist DES.')
+				ENCRYPT_MSG=$(gettext 'Wählen Sie eine Methode zur Verschlüsselung Ihres Passwortes aus. Standard ist DES.')
 				ENCRYPT_TITLE="${gv_Configuration}::${lv_Encrypt}"
 				ENCRYPT_MENU=($VALUE_ARRAY)
 				radiolist "${DEFAULT_VALUE[1]}" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
@@ -127,7 +127,7 @@ kwuser_conf() {
 							radiolist "${gv_Auswahl#HELP }" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
 							;;
 						*)
-							# Auswahl uebernehmen
+							# Auswahl übernehmen
 							ENCRYPT_METHOD="$gv_Auswahl" 
 							break
 							;;
@@ -139,7 +139,7 @@ kwuser_conf() {
 			$lv_Firstlogin)
 				# Zu Einstellungen beim 1. Login auffordern.# {{{
 				FIRSTLOGIN_TITLE="${gv_Configuration}::${lv_Firstlogin}"
-				FIRSTLOGIN_MSG=(gettext 'Soll beim 1. Login zu weiteren Einstellungen, wie Passwortaenderung aufgefordert werden (ja/nein)?')
+				FIRSTLOGIN_MSG=(gettext 'Soll beim 1. Login zu weiteren Einstellungen, wie Passwortänderung aufgefordert werden (ja/nein)?')
 				yesno "$FIRSTLOGIN_TITLE" "$FIRSTLOGIN_MSG" "${FIRSTLOGIN:-yes}"
 				if [ "$gv_Auswahl" != no ] ; then
 					FIRSTLOGIN="yes"
@@ -150,13 +150,13 @@ kwuser_conf() {
 				kwuser_conf_menu $lv_Firstlogin
 				;;
 			$lv_Pass_Length)
-				# Passwortlaenge eingeben# {{{
-				MSG=$(gettext 'Geben Sie die Laenge des Passworts ein, welches generiert werden soll (z.B. 8).')
+				# Passwortlänge eingeben# {{{
+				MSG=$(gettext 'Geben Sie die Länge des Passworts ein, welches generiert werden soll (z.B. 8).')
 				number_input "$gv_Configuration" "$MSG" "$PASSWD_LENGTH"
 				if [ -n "$NUMBER" -a "$NUMBER" -ge 5 ] ; then
 					PASSWD_LENGTH="$NUMBER" 
 				else
-					MSG=$(gettext 'Die Passwortlaenge ist zu kurz. Sie muss mindestens 5 Zeichen lang sein. Sie wird auf 8 Zeichen gesetzt.')
+					MSG=$(gettext 'Die Passwortlänge ist zu kurz. Sie muss mindestens 5 Zeichen lang sein. Sie wird auf 8 Zeichen gesetzt.')
 					PASSWD_LENGTH="8"
 				fi
 				## }}}
@@ -172,7 +172,7 @@ kwuser_conf() {
 				kwuser_conf_menu $lv_Umask
 				;;
 			$lv_BH_Limit)
-				# Block Hardlimit Groesse einstellen# {{{
+				# Block Hardlimit Grösse einstellen# {{{
 				LIMIT_TITLE=(${gv_Configuration}::${lv_BH_Limit})
 				SIZE="$BH_LIMIT"
 				limit_size_conf -h "$BS_LIMIT"
@@ -185,7 +185,7 @@ kwuser_conf() {
 				kwuser_conf_menu $lv_BH_Limit
 				;;
 			$lv_BS_Limit)
-				# Block Softlimit Groesse einstellen# {{{
+				# Block Softlimit Grösse einstellen# {{{
 				LIMIT_TITLE=(${gv_Configuration}::${lv_BS_Limit})
 				SIZE="$BS_LIMIT"
 				limit_size_conf -s "$BH_LIMIT"

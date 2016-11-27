@@ -5,7 +5,7 @@
 # Script: kwrsync_backup, erstellt remote Backups mittels dem Programm rsync
 # Version: 1.0.7
 
-# Ausfuehren von Befehlen auf bestimmte Signale.
+# Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
@@ -33,7 +33,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 fi
 
 #
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -41,17 +41,17 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme pruefen.
+# auf Programme prüfen.
 prog_check rsync
 if [ -z "$PROGS" ] ; then
 	exit 0
 fi
 
-# auf Root pruefen
+# auf Root prüfen
 root_check
 
 # Nachdem das Script initialiiert wurde, kann man die anderen
-# benoetigten Funktionen laden.
+# benötigten Funktionen laden.
 autoload -U kwrsync_backup_exec
 
 # Variablen
@@ -82,8 +82,8 @@ LOGFILE="${LOGFILE:-/var/log/${gv_ScriptName}.log}"
 
 # Variablen# {{{
 lv_Hourly=$(gettext 'stuendlich')
-lv_Daily=$(gettext 'taeglich')
-lv_Weekly=$(gettext 'woechentlich')
+lv_Daily=$(gettext 'täglich')
+lv_Weekly=$(gettext 'wöchentlich')
 lv_Mounthly=$(gettext 'monatlich')
 ## }}}
 # Funktion main_menu{{{
@@ -126,7 +126,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Host_Conf
 			;;
 		$gv_Display)
-			# Ansicht der belegten Groesse der Snapshots# {{{
+			# Ansicht der belegten Grösse der Snapshots# {{{
 			if [ -n "$BACKUP_PATH" ] ; then
 				# Rechner heraus finden# {{{
 				unset -- HOSTS_M
@@ -151,10 +151,10 @@ while [ "$gv_Auswahl" ] ; do
 					msgbox "$gv_Attention" "$MSG"
 				}
 				#}}}
-				# Funktion (snapshot_size), ermitteln der Snapshots Groessen# {{{
+				# Funktion (snapshot_size), ermitteln der Snapshots Grössen# {{{
 				#
 				snapshot_size() {
-					# Datei der Variable gv_LogFile erst einmal loeschen
+					# Datei der Variable gv_LogFile erst einmal löschen
 					rm -f $gv_LogFile &>/dev/null
 					pushd "$BACKUP_PATH"
 					# Das ermitteln des belegten Platzes der Snapshots kann
@@ -184,7 +184,7 @@ while [ "$gv_Auswahl" ] ; do
 								hosts_choice_menu "${gv_Auswahl#HELP }"
 								;;
 							*)
-								# Auswahl uebernehmen
+								# Auswahl übernehmen
 								snapshot_size "$gv_Auswahl"
 								if [ -s "$gv_LogFile" ] ; then
 									view_file $gv_LogFile
@@ -205,15 +205,15 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Display
 			;;
 		$lv_Backup)
-			# evtl. Backup ausfuehren# {{{
+			# evtl. Backup ausführen# {{{
 			if [ -n "$BACKUP_PATH" ] ; then
 				# Funktion (check_space_fp)# {{{
 				#
-				# Pruefen auf freien Plattenplatz. Ist die benutzte
+				# Prüfen auf freien Plattenplatz. Ist die benutzte
 				# Kilobyte oder Inode Prozentzahl kleiner als die angegebene
 				# minimale Prozentzahl an Plattenplatz ($HDMINFREE), wird ein
-				# ein Return Wert von 0 zurueckgegeben und das Backup kann
-				# ausgefuehrt werden.
+				# ein Return Wert von 0 zurückgegeben und das Backup kann
+				# ausgeführt werden.
 				check_space_fp() {
 					RET=0
 					if [ "$CHECK_HDMINFREE" = yes ] ; then

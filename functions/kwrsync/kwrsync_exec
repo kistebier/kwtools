@@ -32,7 +32,7 @@ kwrsync_exec() {
 		Nr=0
 		while [ "$Nr" -lt "$Anz1" ] ; do
 			(( Nr++ ))
-			# exclude Datei loeschen, falls schon eine angelegt wurde,
+			# exclude Datei löschen, falls schon eine angelegt wurde,
 			# in der while Schleife.
 			rm -f ${gv_WorkDir}/exclude &>/dev/null
 			if [ ! -z "${DIR_EXCLUDE[Nr]}" -a "${DIR_EXCLUDE[Nr]}" != - ] ; then
@@ -51,9 +51,9 @@ kwrsync_exec() {
 				unset -- RSYNC_OPT
 			fi
 			#
-			# fuer alle Rechner ausfuehren
+			# für alle Rechner ausführen
 			for h in ${REMOTE_HOST[Nr]} ; {
-				# Pruefen ob Rechner im Netz ist.
+				# Prüfen ob Rechner im Netz ist.
 				if ! ping -c1 $h &>/dev/null ; then
 					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($h) ist nicht erreichbar! Er wird ausgelassen.')
 					sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
@@ -82,10 +82,10 @@ kwrsync_exec() {
 					sync
 				else
 					rsync ${=PROG_OPT}
-					# Rueckgabewert pruefen.
+					# Rueckgabewert prüfen.
 					# 0 = fehlerfrei, 
-					# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
-					# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+					# 24 ist harmlos; tritt auf, wenn während der Laufzeit
+					# von rsync noch (/tmp?) Dateien verändert oder gelöscht wurden.
 					# Alles andere ist fatal -- siehe man (1) rsync
 					if ! [ $? = 24 -o $? = 0 ] ; then
 						sys_logger -r syslog "$gv_ScriptName" "$LOG_ERR_MSG"
@@ -98,11 +98,11 @@ kwrsync_exec() {
 					fi
 				fi
 			}
-			# exclude Datei loeschen
+			# exclude Datei löschen
 			rm -rf ${gv_WorkDir}/exclude &>/dev/null
 		done
 	else
-		MSG=$(gettext 'Es sind keine Eintrage fuer kwrsync vorhanden.')
+		MSG=$(gettext 'Es sind keine Eintrage für kwrsync vorhanden.')
 		if [[ -n $gv_Terminal ]] ; then
 			msgbox "$gv_Attention" "$MSG"
 		else

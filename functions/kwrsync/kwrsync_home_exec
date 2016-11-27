@@ -7,7 +7,7 @@ kwrsync_home_exec() {
 		NOT_NET=$(gettext 'kein Netz?')
 		for h in ${=R_HOST} ; {
 			if ! [ "$h" = localhost -o "$h" = "`hostname`" ] ; then
-				# Pruefen ob Rechner im Netz ist.
+				# Prüfen ob Rechner im Netz ist.
 				if ! ping -c1 $h &>/dev/null ; then
 					LOG_NO_PING_MSG=$(gettext 'INFO: Der Rechner ($h) ist nicht erreichbar! Er wird ausgelassen.')
 					sys_logger -i syslog "$gv_ScriptName" "$LOG_NO_PING_MSG"
@@ -40,10 +40,10 @@ kwrsync_home_exec() {
 				sync
 			else
 				rsync ${=PROG_OPT}
-				# Rueckgabewert pruefen.
+				# Rueckgabewert prüfen.
 				# 0 = fehlerfrei, 
-				# 24 ist harmlos; tritt auf, wenn waehrend der Laufzeit
-				# von rsync noch (/tmp?) Dateien veraendert oder geloescht wurden.
+				# 24 ist harmlos; tritt auf, wenn während der Laufzeit
+				# von rsync noch (/tmp?) Dateien verändert oder gelöscht wurden.
 				# Alles andere ist fatal -- siehe man (1) rsync
 				if ! [ $? = 24 -o $? = 0 ] ; then
 					sys_logger -r syslog "$gv_ScriptName" "$LOG_HOME_ERR_MSG"
@@ -57,7 +57,7 @@ kwrsync_home_exec() {
 			fi
 		}
 	else
-		MSG=$(gettext 'Sie muessen mindestens einen Zielrechner konfigurieren, um Ihr Homeverzeichnis syncronisieren zu koennen.')
+		MSG=$(gettext 'Sie müssen mindestens einen Zielrechner konfigurieren, um Ihr Homeverzeichnis syncronisieren zu können.')
 		if [[ -n $gv_Terminal ]] ; then
 			msgbox "$gv_Attention" "$MSG"
 		else

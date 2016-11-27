@@ -9,7 +9,7 @@ raid_create_conf() {
 	else
 		unset -- CREATE_OPT
 	fi
-	# Funktion (read_create_options), Optionen fuer das speichern# {{{
+	# Funktion (read_create_options), Optionen für das speichern# {{{
 	# von Default Werten und zum erstellen von Arrays.
 	#############################
 	# TODO:
@@ -57,12 +57,12 @@ raid_create_conf() {
 	# Funktion (create_menu)# {{{
 	create_menu() {
 		if [[ $CREATE_OPT == config ]] ; then
-			# Menue fuer die Konfiguration
+			# Menue für die Konfiguration
 			CREATE_MENU=($lv_Owner \"$CR_OWNER\" $gv_Group \"$CR_GROUP\"
 			$lv_Mode \"$CR_MODE\" \"$lv_Auto\" \"$CR_AUTO\" $lv_Metadata \"$CR_META\"
 			\"$lv_Symlinks\" \"$CR_SYM\" $gv_Save \"\" $gv_Back \"\")
 		else
-			# Menue fuer die Erstellung von Arrays
+			# Menue für die Erstellung von Arrays
 			CREATE_MENU=($lv_Raiddev \"$RAIDDEV\" $lv_Raid_Level \"$RAIDLEVEL\"
 			$lv_Nr_Raiddisk \"$NRRAIDDISK\" $lv_Chunk_Size \"$CHUNKSIZE\"
 			$lv_Persistent_Sb \"$PERSISTENTSUPERBLOCK\" $lv_Parity_Alg \"$PARITYALGORITHM\"
@@ -91,25 +91,25 @@ raid_create_conf() {
 			$lv_Raiddev)
 				# Auswahl eines freien RAID-Device{{{
 				######################################
-				# TODO: Raidnamen auswaehlen muss noch
+				# TODO: Raidnamen auswählen muss noch
 				# Was ist mit Containern?
 				######################################
 				unset -- No_Md_Dev_E
 				local Anz
 				integer Anz
 				Anz=0
-				# Pruefen welches RAID Array noch nicht benutzt wird.
+				# Prüfen welches RAID Array noch nicht benutzt wird.
 				until [ $Anz -eq 255 ] ; do
 					if [ -z "`print ${(M)${MD_DEV}##(/dev/md/${Anz}|/dev/md${Anz})}`" ] ; then 	
 						No_Md_Dev_E+=(/dev/md${Anz} \"\")
 					fi
 					(( Anz++ ))
 				done
-				# Auswahl der noch verfuegbaren RAID Arrays
+				# Auswahl der noch verfügbaren RAID Arrays
 				if [ -n "${No_Md_Dev_E[1]}" ] ; then
 					RAIDDEV_MENU=($No_Md_Dev_E)
 					RAIDDEV_TITLE="${gv_Create}::${lv_Raiddev}"
-					RAIDDEV_MSG=$(gettext 'Waehlen Sie ein RAID Laufwerk aus.')
+					RAIDDEV_MSG=$(gettext 'Wählen Sie ein RAID Laufwerk aus.')
 					menubox "$RAIDDEV" "$RAIDDEV_TITLE" "$RAIDDEV_MSG" "$RAIDDEV_MENU"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -136,7 +136,7 @@ raid_create_conf() {
 				lv_Linear=$(gettext 'linear')
 				lv_Redundanz=$(gettext 'Redundanzdaten')
 				RAIDLEVEL_TITLE=$(gettext '${gv_Create}::raid-level')
-				RAIDLEVEL_MSG=$(gettext 'Waehlen Sie ein RAID Level aus.')
+				RAIDLEVEL_MSG=$(gettext 'Wählen Sie ein RAID Level aus.')
 				RAIDLEVEL_MENUE=($lv_Linear \"$lv_Redundanz -\"
 				0 \"$lv_Redundanz -\" 1 \"$lv_Redundanz +\"	4 \"$lv_Redundanz +\"
 				5 \"$lv_Redundanz +\" 6 \"$lv_Redundanz +\" 10 \"$lv_Redundanz +\")
@@ -159,21 +159,21 @@ raid_create_conf() {
 							#
 							case "$RAIDLEVEL" in
 								linear|0|1)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									NRSPAREDISK="0"
 									PARITYALGORITHM="-"
 									;;
 								[45])
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 3 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 3 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								6)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 4 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 4 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								10)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Arrays groesser gleich 2 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Arrays grösser gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									PARITYALGORITHM="-"
 									;;
@@ -199,7 +199,7 @@ raid_create_conf() {
 					if [ "$RAIDLEVEL" = 4 -o "$RAIDLEVEL" = 5 ]; then 
 						if [ "$NRRAIDDISK" -lt 3 ]; then
 							NRRAIDDISK=3
-							MSG=$(gettext 'Beim RAID-Level "$RAIDLEVEL" muss die Partition-/Festplattenanzahl groesser oder gleich 3 sein.')
+							MSG=$(gettext 'Beim RAID-Level "$RAIDLEVEL" muss die Partition-/Festplattenanzahl grösser oder gleich 3 sein.')
 							msgbox "$gv_Attention" "$MSG"
 						fi
 					#
@@ -209,7 +209,7 @@ raid_create_conf() {
 					elif [ "$RAIDLEVEL" = 6 ]; then
 						if [ "$NRRAIDDISK" -lt 4 ]; then
 							NRRAIDDISK=4
-							MSG=$(gettext 'Beim RAID-Level "$RAIDLEVEL" muss die Partition-/Festplattenanzahl groesser oder gleich 4 sein.')
+							MSG=$(gettext 'Beim RAID-Level "$RAIDLEVEL" muss die Partition-/Festplattenanzahl grösser oder gleich 4 sein.')
 							msgbox "$gv_Attention" "$MSG"
 						fi
 					fi
@@ -219,7 +219,7 @@ raid_create_conf() {
 					# kommt auch eine Fehlermeldung.
 					#
 					NRRAIDDISK=3
-					MSG=$(gettext 'Bei RAID muss die Partition-/Festplattenanzahl allgemein groesser als 1 sein.')
+					MSG=$(gettext 'Bei RAID muss die Partition-/Festplattenanzahl allgemein grösser als 1 sein.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}
@@ -233,7 +233,7 @@ raid_create_conf() {
 				CHUNKSIZE_MSG=$(gettext 'Geben Sie bitte die Chunk-Size an (4-512).')
 				number_input "$CHUNKSIZE_TITLE" "$CHUNKSIZE_MSG" "$CHUNKSIZE"
 				#
-				# Jetzt wird durchgezaehlt, ob der Wert ein vielfaches von 4 ist.
+				# Jetzt wird durchgezählt, ob der Wert ein vielfaches von 4 ist.
 				#
 				if [ "$NUMBER" -ge 4 -a "$NUMBER" -le 512 ] ; then
 					CHUNKSIZE="$NUMBER"
@@ -260,7 +260,7 @@ raid_create_conf() {
 			$lv_Persistent_Sb)
 				# einstellen des Persistent-Superblocks{{{
 				PERSISTENTSUPERBLOCK_TITLE="${gv_Create}::${lv_Persistent_Sb}"
-				PERSISTENTSUPERBLOCK_MSG=$(gettext 'Waehlen Sie den Wert fuer den persistent-superblock aus.')
+				PERSISTENTSUPERBLOCK_MSG=$(gettext 'Wählen Sie den Wert für den persistent-superblock aus.')
 				PERSISTENTSUPERBLOCK_MENU=(0 \"\" 1 \"\")
 				menubox "$PERSISTENTSUPERBLOCK" "$PERSISTENTSUPERBLOCK_TITLE" "$PERSISTENTSUPERBLOCK_MSG" "$PERSISTENTSUPERBLOCK_MENU"
 				while [ "$gv_Auswahl" ] ; do
@@ -280,7 +280,7 @@ raid_create_conf() {
 			$lv_Parity_Alg)
 				# einstellen des Parity-Algorithmus{{{
 				# Nur im RAID-4/5/6 gibts es die Parity-Informationen.
-				# Funktion (parity_conf), Parity Auswahl und Wert uebernehmen# {{{
+				# Funktion (parity_conf), Parity Auswahl und Wert übernehmen# {{{
 				parity_conf() {
 					menubox "$PARITYALGORITHM" "$PARITYALGORITHM_TITLE" "$PARITYALGORITHM_MSG" "$PARITYALGORITHM_MENU"
 					while [ "$gv_Auswahl" ] ; do
@@ -297,7 +297,7 @@ raid_create_conf() {
 				}
 				## }}}
 				PARITYALGORITHM_TITLE=(${gv_Create}::${lv_Parity_Alg})
-				PARITYALGORITHM_MSG=$(gettext 'Waehlen Sie den Parity Algorithmus aus.')
+				PARITYALGORITHM_MSG=$(gettext 'Wählen Sie den Parity Algorithmus aus.')
 				#
 				case "$RAIDLEVEL" in
 					5)
@@ -328,7 +328,7 @@ raid_create_conf() {
 						;;
 					*)
 						# Bei allen anderen RAID-Level erscheint eine Fehlermeldung, da 
-						# es keine Parity, fuer diese gibt.
+						# es keine Parity, für diese gibt.
 						PARITYALGORITHM="-"
 						MSG=$(gettext 'Im RAID-Level "$RAIDLEVEL" gibts keine Parity-Infos.')
 						msgbox "$gv_Attention" "$MSG"
@@ -340,7 +340,7 @@ raid_create_conf() {
 			$lv_Nr_Sparedisk)
 				#einstellen der Ersatzfestplatte/Partition{{{
 				NRSPAREDISK_TITLE="${gv_Create}::${lv_Nr_Sparedisk}"
-				NRSPAREDISK_MSG=$(gettext 'Waehlen Sie die Anzahl der Ersatzpartitionen/-festplatten aus.')
+				NRSPAREDISK_MSG=$(gettext 'Wählen Sie die Anzahl der Ersatzpartitionen/-festplatten aus.')
 				NRSPAREDISK_MENU=(0 \"\" 1 \"\" 2 \"\" 3 \"\")
 				menubox "$NRSPAREDISK" "$NRSPAREDISK_TITLE" "$NRSPAREDISK_MSG" "$NRSPAREDISK_MENU"
 				while [ "$gv_Auswahl" ] ; do
@@ -368,7 +368,7 @@ raid_create_conf() {
 				# Besitzer des neu creierten ARRAY# {{{
 				user_group_check -p
 				if [ "$?" = 0 ] ; then
-					OWNER_MSG=$(gettext 'Waehlen Sie einen Benutzer aus der Eigentuemer des erstellten Device ist.')
+					OWNER_MSG=$(gettext 'Wählen Sie einen Benutzer aus der Eigentuemer des erstellten Device ist.')
 					menubox "$CR_OWNER" "$GROUP_TITLE" "$OWNER_MSG" "$U_G_ARRAY"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -376,7 +376,7 @@ raid_create_conf() {
 								menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$OWNER_MSG" "$U_G_ARRAY"
 								;;
 							*)
-								# Gruppe uebernehmen
+								# Gruppe übernehmen
 								CR_OWNER="$gv_Auswahl"
 								break
 								;;
@@ -390,7 +390,7 @@ raid_create_conf() {
 				# Gruppe des neu creierten ARRAY# {{{
 				user_group_check -g
 				if [ "$?" = 0 ] ; then
-					GROUP_MSG=$(gettext 'Waehlen Sie eine Gruppe aus zu der das erstellte Device behoert.')
+					GROUP_MSG=$(gettext 'Wählen Sie eine Gruppe aus zu der das erstellte Device behört.')
 					menubox "$CR_GROUP" "$gv_Configuration" "$GROUP_MSG" "$U_G_ARRAY"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -398,7 +398,7 @@ raid_create_conf() {
 								menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$GROUP_MSG" "$U_G_ARRAY"
 								;;
 							*)
-								# Gruppe uebernehmen
+								# Gruppe übernehmen
 								CR_GROUP="$gv_Auswahl"
 								break
 								;;
@@ -428,7 +428,7 @@ raid_create_conf() {
 							menubox "${gv_Auswahl#HELP }" "$AUTO_TITLE" "$gv_Menupoint" "$AUTO_MENU"
 							;;
 						part*)	
-							# Partionsanzahl eingeben, wenn man moechtet# {{{
+							# Partionsanzahl eingeben, wenn man möchtet# {{{
 							# alte Anzahl heraus finden, falls vorhanden.
 							if [[ ${CR_AUTO%-*} == part ]] ; then
 								Cr_Part="${CR_AUTO#*-}"
@@ -437,7 +437,7 @@ raid_create_conf() {
 							fi
 							#
 							A_PART="$gv_Auswahl"
-							A_PART_MSG=$(gettext 'Wenn Sie moechten koennen Sie noch die Anzahl eingeben bis zu viele Partitionen automatisch kreiert werden sollen.')
+							A_PART_MSG=$(gettext 'Wenn Sie möchten können Sie noch die Anzahl eingeben bis zu viele Partitionen automatisch kreiert werden sollen.')
 							number_input "$AUTO_TITLE" "$A_PART_MSG" "$Cr_Part"
 							if [ -n "$NUMBER" ] ; then
 								CR_AUTO="${A_PART}-${NUMBER}"
@@ -447,7 +447,7 @@ raid_create_conf() {
 							## }}}
 							break
 							;;
-						*)	# Wert uebernehmen
+						*)	# Wert übernehmen
 							CR_AUTO="$gv_Auswahl"
 							break
 							;;
@@ -466,7 +466,7 @@ raid_create_conf() {
 						HELP*)	script_help raid_conf_meta_help
 							menubox "${gv_Auswahl#HELP }" "$META_TITLE" "$gv_Menupoint" "$META_MENU"
 							;;
-						*)	# Wert uebernehmen
+						*)	# Wert übernehmen
 							CR_META="$gv_Auswahl"
 							break
 							;;
@@ -491,7 +491,7 @@ raid_create_conf() {
 			$gv_Save)
 				# Konfiguration speichern# {{{
 				read_create_options
-				# Alten Eintrag loeschen und neuen erstellen.
+				# Alten Eintrag löschen und neuen erstellen.
 				if [ -n "$CR_VALUE" ] ; then
 					if [ -f "$RAIDTAB" ] ; then
 						print -l ${(R)${(f)"$(< $RAIDTAB)"}##CREATE*} >${gv_WorkDir}/raidtab.bak
@@ -512,7 +512,7 @@ raid_create_conf() {
 					# Create Optionen einlesen
 					read_create_options
 					CREATE_RAID_MSG=$(gettext 'Jetzt wird das Array $RAIDDEV erzeugt. Alle Daten gehen auf diesem RAID Array verloren. Fortfahren (ja/nein)?')
-					# pruefen ob das Device existiert. Ist keine automatische
+					# prüfen ob das Device existiert. Ist keine automatische
 					# Erstellung aktiviert wird es erstellt.
 					if [[ -z $CR_AUTO ]] ; then
 						Minor_Nr="${RAIDDEV##*/md}"
@@ -522,7 +522,7 @@ raid_create_conf() {
 					fi
 					#
 					if [[ "$NRSPAREDISK" -gt 0 ]] ; then
-						# Pruefen ob NRSPAREDISK = Anzahl der ausgewaehlten Sparedisks ist
+						# Prüfen ob NRSPAREDISK = Anzahl der ausgewählten Sparedisks ist
 						if [ "$NRSPAREDISK" = "${#SPAREDISKS[@]}" ] ; then
 							# mit Spare Disks{{{
 							# Jetzt werden mittels mdadm --create
@@ -557,7 +557,7 @@ raid_create_conf() {
 							fi
 							#}}}
 						else
-							MSG=$(gettext 'Sie muessen erst den Menuepunkt sparedisks auswaehlen und mit den richtigen Werten belegen.')
+							MSG=$(gettext 'Sie müssen erst den Menuepunkt sparedisks auswählen und mit den richtigen Werten belegen.')
 							msgbox "$gv_Attention" "$MSG"
 						fi
 					else
@@ -586,7 +586,7 @@ raid_create_conf() {
 						#}}}
 					fi
 				else
-					MSG=$(gettext 'Sie muessen erst die Menuepunkte raiddev und raiddisks auswaehlen und mit Werten belegen.')
+					MSG=$(gettext 'Sie müssen erst die Menuepunkte raiddev und raiddisks auswählen und mit Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				create_menu

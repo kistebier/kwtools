@@ -59,7 +59,7 @@ Kwplaner_Path="${gv_HomePath}/.kwtools/kwplaner"
 TerminFile="${Kwplaner_Path}/termin"
 Holiday_File="${Kwplaner_Path}/holidays"
 
-# Pruefen ob Verzeichnis existiert, ansonsten anlegen.
+# Prüfen ob Verzeichnis existiert, ansonsten anlegen.
 create_file -d $Kwplaner_Path
 create_file "$Holiday_File"
 
@@ -72,7 +72,7 @@ main_menu() {
 ## }}}
 # Funktion (read_holiday), Geburtstage und Feiertage einlesen# {{{
 #
-# Pruefen ob es eine Termin Datei gibt. Wenn ja Geburtstage und Ferien
+# Prüfen ob es eine Termin Datei gibt. Wenn ja Geburtstage und Ferien
 # extrahieren.
 read_holiday() {
 	JAHR="`date +%Y`"
@@ -121,12 +121,12 @@ while [ -n "$gv_Auswahl" ] ; do
 			main_menu "${gv_Auswahl#HELP }"
 			;;
 		$lv_Extra)
-			# Geburtstage und Feiertage fuer den Kalender auswaehlen.# {{{
+			# Geburtstage und Feiertage für den Kalender auswählen.# {{{
 			read_holiday
 			if [ -n "${Extra_M[1]}" ] ; then
 				EXTRA_MENU=($Extra_M)
 				EXTRA_TITLE=($lv_Extra)
-				EXTRA_MSG=$(gettext 'Waehlen Sie ein oder mehrere Geburtstage/Feiertage fuer Ihren Kalender aus.')
+				EXTRA_MSG=$(gettext 'Wählen Sie ein oder mehrere Geburtstage/Feiertage für Ihren Kalender aus.')
 				checklist "" "$EXTRA_TITLE" "$EXTRA_MSG" "$EXTRA_MENU"
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl"  in
@@ -145,7 +145,7 @@ while [ -n "$gv_Auswahl" ] ; do
 				MSG=$(gettext 'Es sind keine Geburtstage oder Feiertage in Ihren Terminen vorhanden.')
 				msgbox "$gv_Info" "$MSG"
 				# Holiday Datei l�schen, da ja in $TerminFile keine
-				# Werte dafuer angelegt sind.
+				# Werte dafür angelegt sind.
 				rm $Holiday_File &>/dev/null
 			fi
 			## }}}
@@ -156,25 +156,25 @@ while [ -n "$gv_Auswahl" ] ; do
 			# Auswahl des Jahres
 			calendarbox 
 			#
-			# Wurde ein richtiges Jahr ausgewaehlt gehts weiter sonst gibts eine Nachricht.
+			# Wurde ein richtiges Jahr ausgewählt gehts weiter sonst gibts eine Nachricht.
 			#
 			if [ "$gv_Auswahl" ] ; then
 				JAHR="${${(s,/,)${gv_Auswahl}}[3]}"
 				cd $Kwplaner_Path
-				# Pruefen, ob der Link existiert und wenn ja, ob er nicht ins Leere zeigt.
+				# Prüfen, ob der Link existiert und wenn ja, ob er nicht ins Leere zeigt.
 				if [ ! -L calendar.tex -o -z `ls -L calendar.tex &>/dev/null` ] ; then
 					rm -f calendar.tex &>/dev/null
 					ln -sf ${PREFIX}/share/kwtools/data/calendar/calendar.tex calendar.tex
 				fi
-				# Soll das aktelle Jahr gedruckt werden, wird geprueft ob diese
+				# Soll das aktelle Jahr gedruckt werden, wird geprüft ob diese
 				# pdf Datei schon existiert. Ansonsten wird eine kreiert und
 				# gedruckt.
 				if [ -f calendar.pdf  ] ; then
 					if grep -n0 "Calendar $JAHR" calendar.pdf &>/dev/null ; then
 						# Jetzt wird nochmal gefragt, ob eine neue calendar.pdf
 						# kreiert werden soll, falls die alte das selbe Jahr
-						# besitzt. Manchmal hat man ja trotzdem was veraendert.
-						MSG=$(gettext 'Es ist schon ein Kalender fuer das Jahr $JAHR vorhanden. Soll der Kalender neu erstellt werden (ja/nein)?')
+						# besitzt. Manchmal hat man ja trotzdem was verändert.
+						MSG=$(gettext 'Es ist schon ein Kalender für das Jahr $JAHR vorhanden. Soll der Kalender neu erstellt werden (ja/nein)?')
 						yesno "$gv_Attention" "$MSG" "no"
 						if [ "$gv_Auswahl" != no ] ; then
 							create_calendar

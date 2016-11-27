@@ -1,5 +1,5 @@
-# Funktion (kwbtrfs_raid_create_conf), Erstellung von verschluesselten und #{{{
-# unverschluesselten btrfs RAID Arrays.
+# Funktion (kwbtrfs_raid_create_conf), Erstellung von verschlüsselten und #{{{
+# unverschlüsselten btrfs RAID Arrays.
 #
 # usage: kwbtrfs_raid_create_conf [-c ]
 # -c - encrypted RAID Arrays
@@ -24,7 +24,7 @@ kwbtrfs_raid_create_conf() {
 	## }}}
 	# Funktion (create_menu)# {{{
 	create_menu() {
-		# Menue fuer die Erstellung von Arrays
+		# Menue für die Erstellung von Arrays
 		CREATE_MENU=(\"$lv_Raid_Level\" \"$RAIDLEVEL\"
 		\"$lv_Raiddisks\" \"$RAIDDISKS\" $lv_Options \"\"
 		$gv_Create \"\" $gv_Back \"\")
@@ -42,7 +42,7 @@ kwbtrfs_raid_create_conf() {
 			$lv_Raid_Level)
 				# einstellen des RAID-Levels{{{
 				RAIDLEVEL_TITLE="${gv_Create}::${lv_Raid_Level}"
-				RAIDLEVEL_MSG=$(gettext 'Waehlen Sie ein RAID Level aus.')
+				RAIDLEVEL_MSG=$(gettext 'Wählen Sie ein RAID Level aus.')
 				RAIDLEVEL_MENU=($lv_Single \"$lv_Redundanz -\" $lv_Dup \"$lv_Redundanz -\"
 				raid0 \"$lv_Redundanz -\" raid1 \"$lv_Redundanz +\"	raid5 \"$lv_Redundanz +\"
 				raid6 \"$lv_Redundanz +\" raid10 \"$lv_Redundanz +\")
@@ -59,23 +59,23 @@ kwbtrfs_raid_create_conf() {
 							#
 							case "$RAIDLEVEL" in
 								$lv_Single|$lv_Dup)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 1 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 1 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid[01])
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid5)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 2 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 2 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid6)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 3 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 3 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 								raid10)
-									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl groesser oder gleich 4 sein muss.')
+									MSG=$(gettext 'Denken Sie daran das in diesem RAID Level ($RAIDLEVEL) die Anzahl der Festplatten-/Partitionenanzahl grösser oder gleich 4 sein muss.')
 									msgbox "$gv_Info" "$MSG"
 									;;
 							esac
@@ -92,19 +92,19 @@ kwbtrfs_raid_create_conf() {
 					autoload -U kwbtrfs_raiddisk
 					kwbtrfs_raiddisk "$OPT"
 				else
-					MSG=$(gettext 'Sie muessen erst ein $lv_Raid_Level auswaehlen.')
+					MSG=$(gettext 'Sie müssen erst ein $lv_Raid_Level auswählen.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
 				create_menu $lv_Raiddisks
 				;;
 			$lv_Options)
-				# Optionen fuer das Erstellen des Laufwerks# {{{
+				# Optionen für das Erstellen des Laufwerks# {{{
 				if [[ -n ${RAIDDISKS[1]} ]] ; then
 					autoload -U kwbtrfs_create_options
 					kwbtrfs_create_options -r mkfs.btrfs
 				else
-					MSG=$(gettext 'Sie muessen erst ein paar $lv_Raiddisks auswaehlen.')
+					MSG=$(gettext 'Sie müssen erst ein paar $lv_Raiddisks auswählen.')
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
@@ -132,7 +132,7 @@ kwbtrfs_raid_create_conf() {
 						return 0
 					fi
 				else
-					MSG=$(gettext 'Sie muessen mindestens die Menuepunkte $lv_Raid_Level und $lv_Raiddisks auswaehlen und mit den richtigen Werten belegen.')
+					MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_Raid_Level und $lv_Raiddisks auswählen und mit den richtigen Werten belegen.')
 					msgbox "$gv_Attention" "$MSG"
 					create_menu $lv_Raiddisks
 				fi

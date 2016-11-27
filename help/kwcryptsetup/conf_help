@@ -1,97 +1,97 @@
-# conf_help fuer kwcryptsetup{{{
+# conf_help für kwcryptsetup{{{
 TITLE="${gv_Configuration}::${gv_Help}"
-MSG=$(gettext 'In diesem Konfigurationsmenue koennen Sie Standard Einstellungen
-taetigen.
+MSG=$(gettext 'In diesem Konfigurationsmenue können Sie Standard Einstellungen
+tätigen.
 
 Ausrichtung: Geben Sie ein vielfaches von 512 Byte Sektoren ein
-\t(8 = 4096 Byte). Das dient fuer die "stripe" Option auf
+\t(8 = 4096 Byte). Das dient für die "stripe" Option auf
 \tRAID Laufwerken oder Logischen Volumes (LVM). Lesen Sie
 \tdazu man 8 mkfs.xfs.
 
-Groesse: Geben Sie die Groesse des Containers ein. Standard Block-
-\tgroesse ist 1 KiloByte. Die Groesse der zu
-\terstellenden verschluesselten Datei (Container) muss 
-\tgroesser als 2 MByte sein (LUKS-Header). Sie koennen als
+Grösse: Geben Sie die Grösse des Containers ein. Standard Block-
+\tgrösse ist 1 KiloByte. Die Grösse der zu
+\terstellenden verschlüsselten Datei (Container) muss 
+\tgrösser als 2 MByte sein (LUKS-Header). Sie können als
 \tMasseinheit folgende Zeichen benutzen, k|K-KiloByte,
 \tm|M-MegaByte,g|G-GigaByte, t|T-TerraByte oder p|P-Petabyte.
 
-Verschluesselung: Eingabe des Algorithmus fuer die Verschluesselung.
+Verschlüsselung: Eingabe des Algorithmus für die Verschlüsselung.
 \tSiehe cryptsetup --help und /proc/crypto.
 
-Hash: Auswahl des Hashwertes der fuer die Passphrase verwendet
+Hash: Auswahl des Hashwertes der für die Passphrase verwendet
 \twerden soll (Standard ist sha512)?
 
-LUKS: Soll standardmaessig die Luks Erweiterung, zur
-\tVerschluesselung des Laufwerks, benutzt werden (ja/nein)?
+LUKS: Soll standardmässig die Luks Erweiterung, zur
+\tVerschlüsselung des Laufwerks, benutzt werden (ja/nein)?
 
 LUKS-Header: Wenn der Luksheader auf ein extra Laufwerk oder eine
-\tDatei geschrieben werden soll kann man dies hier auswaehlen.
+\tDatei geschrieben werden soll kann man dies hier auswählen.
 
-Mountverz.: Mountverzeichnis auswaehlen. Dieses Verzeichnis muss
+Mountverz.: Mountverzeichnis auswählen. Dieses Verzeichnis muss
 \tschon verher existieren und sollte in der Datei /etc/fstab
 \tkonfiguriert sein. Dieses dient zum einbinden von externen
-\tLaufwerken, die die externe Schluesseldatei enthalten.
+\tLaufwerken, die die externe Schlüsseldatei enthalten.
 
 Offset: Geben Sie eine Zahl ein um wieviele Sektoren der 1. Sektor
 \tverschoben werden soll. Ab diesem Sektor wird das Laufwerk auf das
-\tverschluesselte Laufwerk abgebildet. Hat das original Laufwerk 10000
+\tverschlüsselte Laufwerk abgebildet. Hat das original Laufwerk 10000
 \tSektoren und \"Offset\" ist 300 wird das original Laufwerk ab Sektor
-\t300 bis zum Ende auf das verschluesselte Laufwerk abgebildet. Siehe
+\t300 bis zum Ende auf das verschlüsselte Laufwerk abgebildet. Siehe
 \tauch die Option \"Skip\".
 
 nur lesen: Soll das Laufwerk im Nur Lesemodus erstellt werden
-\t(ja/nein)? Kann man z.B. nutzen um eine verschluesselte
+\t(ja/nein)? Kann man z.B. nutzen um eine verschlüsselte
 \tCD/DVD zu erstellen.
 
 Discard: Soll die Benutzung von Discard bei Anforderung an ein
 \tDevice erlaubt werden (ja/nein)? Siehe man 8 cryptsetup.
 
-NOTIZ: Das Anschalten dieser Option sollte sorgfaeltig ueberlegt
+NOTIZ: Das Anschalten dieser Option sollte sorgfältig überlegt
 \tsein, da es ein Sicherheitsrisiko sein kann.
 
-Passwort ueberpruefen: Soll die Passwort-Eingabe nochmal ueberprueft
+Passwort überprüfen: Soll die Passwort-Eingabe nochmal überprüft
 \twerden (ja/nein)?
 
-Passwort-Zeit: Geben Sie die Zeit, in Mikrosekunden, fuer den
+Passwort-Zeit: Geben Sie die Zeit, in Mikrosekunden, für den
 \tPasswort Prozess, ein (Standard ist 1).
 
-Schluesseldatei: Waehlen Sie hier die Datei aus, die den Schluessel
-\tenthaelt. Wenn Sie keine Datei auswaehlen wird \"none\"
-\tgenommen und Sie muessen die Passphrase interactiv uebergeben.
+Schlüsseldatei: Wählen Sie hier die Datei aus, die den Schlüssel
+\tenthält. Wenn Sie keine Datei auswählen wird \"none\"
+\tgenommen und Sie müssen die Passphrase interactiv übergeben.
 
-NOTIZ: Bei Verwendung der LUKS Erweiterung koennen Sie bis zu 8 
-\tPassphrasen in der Schluesseldatei verwenden. Soll beim Login
+NOTIZ: Bei Verwendung der LUKS Erweiterung können Sie bis zu 8 
+\tPassphrasen in der Schlüsseldatei verwenden. Soll beim Login
 \tdas Laufwerk automatisch aktiviert werden, muss die
 \tPassphrase gleich dem Login Passwort des Benutzers sein, und
-\tSie benoetigen dazu pam-mount. Schauen Sie nach dem
+\tSie benötigen dazu pam-mount. Schauen Sie nach dem
 \trichtigen Paketnamen in Ihrer Distribution nach.
-\tWenn Sie bei diesem Szenario das Login Passwort aendern
-\tmuessen Sie auch die Passphrase des Laufwerks aendern.
+\tWenn Sie bei diesem Szenario das Login Passwort ändern
+\tmüssen Sie auch die Passphrase des Laufwerks ändern.
 
-Schluesselgroesse: Waehlen Sie bitte die Schluesselgroesse aus
+Schlüsselgrösse: Wählen Sie bitte die Schlüsselgrösse aus
 \t(Standard ist 256 Bit)!
 
-Vorpruefung: Auswahl eines Script das den Inhalt des Quell-
-\tLaufwerks ueberprueft. Ergibt die Pruefung Fehler wird das
+Vorprüfung: Auswahl eines Script das den Inhalt des Quell-
+\tLaufwerks überprüft. Ergibt die Prüfung Fehler wird das
 \tLaufwerk nicht erstellt. Wird das Script ohne Pfad angegeben,
 \twird es unter /lib/cryptsetup/checks gesucht. Unter Debian
 \tist dies das Script "un_blkid".
 
-Pruefung: Auswahl eines Script das den Inhalt des Ziel-Laufwerks
-\tueberprueft. Ergibt die Pruefung Fehler wird das Laufwerk
+Prüfung: Auswahl eines Script das den Inhalt des Ziel-Laufwerks
+\tüberprüft. Ergibt die Prüfung Fehler wird das Laufwerk
 \tentfernt. Wird das Script ohne Pfad angegeben, wird es unter
 \t/lib/cryptsetup/checks gesucht. Unter Debian ist dies das Script
 \t"blkid".
 
-Pruefungsargumente: Eingabe der Argumente fuer das Script der
-\tPruefung. Siehe auch man 5 crypttab.
+Prüfungsargumente: Eingabe der Argumente für das Script der
+\tPrüfung. Siehe auch man 5 crypttab.
 
-Schluessel Script: Auswahl eines Script das die Schluesseldatei als
-\tArgument benutzt und dessen Ausgabe der Schluessel fuer das
-\tLaufwerk ist. Folgende Variablen koennen vom Script benutzt werden:
+Schlüssel Script: Auswahl eines Script das die Schlüsseldatei als
+\tArgument benutzt und dessen Ausgabe der Schlüssel für das
+\tLaufwerk ist. Folgende Variablen können vom Script benutzt werden:
 \tCRYPTTAB_NAME - Name des Ziel-Laufwerks
 \tCRYPTTAB_SOURCE - Name des Quell-Laufwerks
-\tCRYPTTAB_KEY - Schluesseldatei
+\tCRYPTTAB_KEY - Schlüsseldatei
 \tCRYPTTAB_TRIED - Anzahl der Wiederholungen seit dem starten des
 \t\tLaufwerks.
 \tCRYPTTAB_OPTIONS - eine Liste der exportierten crypttab Variablen.
@@ -100,53 +100,53 @@ Schluessel Script: Auswahl eines Script das die Schluesseldatei als
 \t\tOption nur ein Flag ist.
 
 Skip: Geben Sie eine Zahl ein wieviele Sektoren am Anfang des
-\tverschluesselten Laufwerks zur Berechnung des
-\tInitialisierungsvektor (IV) uebersprungen werden sollen. Die
-\tBerechnung des IV behandelt Sektor 0 des verschluesselten
-\tLaufwerks als waere es Sektor Skip=n. Dadurch kann man aus der
-\tMitte eines verschluesselten Laufwerks ein Stueck rausschneiden
-\tund es mit dem Schluessel des original Laufwerks immer noch korrekt
-\tver- und vor allem entschluesseln, so dass dasselbe rauskommt, als
-\thaette man Sektor n+Skip vom original Laufwerk ver- bzw.
-\tentschluesselt.
+\tverschlüsselten Laufwerks zur Berechnung des
+\tInitialisierungsvektor (IV) übersprungen werden sollen. Die
+\tBerechnung des IV behandelt Sektor 0 des verschlüsselten
+\tLaufwerks als wäre es Sektor Skip=n. Dadurch kann man aus der
+\tMitte eines verschlüsselten Laufwerks ein Stueck rausschneiden
+\tund es mit dem Schlüssel des original Laufwerks immer noch korrekt
+\tver- und vor allem entschlüsseln, so dass dasselbe rauskommt, als
+\thätte man Sektor n+Skip vom original Laufwerk ver- bzw.
+\tentschlüsselt.
 
-Swap: Soll ein verschluesseltes Swap-laufwerk erstellt werden
+Swap: Soll ein verschlüsseltes Swap-laufwerk erstellt werden
 \t(ja/nein)?
 
 NOTIZ: Suspend-to-RAM und Suspend-to-Disk funtionieren mit einer
-\tverschluesselten SWAP-Partition noch nicht. Die Community
+\tverschlüsselten SWAP-Partition noch nicht. Die Community
 \tarbeitet jedoch an diesem Problem.
 
-Tmpfs: Waehlen Sie ein Dateisytem fuer das zu erzeugende
-\tverschluesselte Laufwerk aus. Dies kann zum Beispiel zum testen
+Tmpfs: Wählen Sie ein Dateisytem für das zu erzeugende
+\tverschlüsselte Laufwerk aus. Dies kann zum Beispiel zum testen
 \tgenutzt werden.
 
-Timeout: Geben Sie den Timeout, in Sekunden, fuer die Passwort-
+Timeout: Geben Sie den Timeout, in Sekunden, für die Passwort-
 \tAbfrage ein (Standard ist 5).
 
-Verzoegerung: Soll das verschluesselte Laufwerk beim Start des
-\tRechners verzoegert erstellt werden, zum Beispiel nach dem
+Verzögerung: Soll das verschlüsselte Laufwerk beim Start des
+\tRechners verzögert erstellt werden, zum Beispiel nach dem
 \terstellen von RAID Arrays (ja/nein)?
 
-Noauto: Soll das verschluesselte Laufwerk beim Start des Rechners
+Noauto: Soll das verschlüsselte Laufwerk beim Start des Rechners
 \tmanuell erstellt werden (ja/nein)? Also nicht automatisch.
 
 NOTIZ: Bei Benutzung von pam-mount sollten Sie immer \"nein\"
 \tbenutzen, da es sonst zu Fehlern beim mounten des Laufwerks kommt.
-\tDas verschluesselte Laufwerk darf noch nicht gestartet sein.
+\tDas verschlüsselte Laufwerk darf noch nicht gestartet sein.
 
-gespaechig: Soll beim starten des Laufwerks eine Warnung ausgegeben
+gespächig: Soll beim starten des Laufwerks eine Warnung ausgegeben
 \twerden, wenn dieses nicht existiert (ja/nein)? Uberschreibt die
 \tOption "still".
 
 still: Soll beim starten des Laufwerks keine Warnung ausgegeben
 \twerden, wenn dieses nicht existiert (ja/nein)? Uberschreibt die
-\tOption "gespaechig".
+\tOption "gespächig".
 
 Wiederholungen: Geben Sie ein, wie oft die Passphrasenabfrage
 \tversucht werden soll zu wiederholen (Standard ist 3).
 
-Schluessel Slot: Auswahl eines Slots dessen Schluessel benutzt
+Schlüssel Slot: Auswahl eines Slots dessen Schlüssel benutzt
 \twerden soll.
 ')
 #}}}

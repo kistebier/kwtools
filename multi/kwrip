@@ -26,17 +26,17 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthaelt die globalen Scripteinstellungen und laedt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 autoload -U script_init
 
 # Scriptinitialisierung und Arbeitsverzeichnis erstellen
 script_init
 
-# Soll die alte Konfiguration uebernommen werden (ja/nein)?
+# Soll die alte Konfiguration übernommen werden (ja/nein)?
 if [ -f "${gv_HomePath}/.kwtools/cdriprc" -a ! -f "${gv_HomePath}/.kwtools/kwriprc" ] ; then
-	CONVERT_TITLE=$(gettext 'Konfigurationsuebernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc uebernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur geloescht.')
+	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/cdriprc" "${gv_HomePath}/.kwtools/kwriprc" &>/dev/null
@@ -49,7 +49,7 @@ fi
 read_file kwriprc
 export PROXY
 
-# Pruefen ob Optionen zum rippen eingestellt worden sind
+# Prüfen ob Optionen zum rippen eingestellt worden sind
 # ansonsten wird "-w" genommen
 # -w - Output wav
 if [ -z "$AUDIO_OPTIONS" ] ; then
@@ -93,7 +93,7 @@ while [ "$gv_Auswahl" ] ; do
 		$lv_Audio)
 			# Audio CD rippen.{{{
 			if [ -n "$READ_DEVICE" ] ; then
-				prog_check cdparanoia cd-discid cddbget
+				prog_check cdparanoia cd-discid cddbget iconv
 				if [[ -n $NO_PROGS ]] ; then
 					break
 				else
@@ -110,7 +110,7 @@ while [ "$gv_Auswahl" ] ; do
 					}
 					## }}}
 					# Funktion audio_select_menu# {{{
-					AUDIO_SELECT_MSG=$(gettext 'Waehlen Sie bitte die Lieder aus die Sie rippen moechten.')
+					AUDIO_SELECT_MSG=$(gettext 'Wählen Sie bitte die Lieder aus die Sie rippen möchten.')
 					audio_select_menu() {
 						AUDIO_TRACK_MENU=($AUDIO_TRACK_M)
 						checklist $1"" "$AUDIO_RIP_TITLE" "$AUDIO_SELECT_MSG" "$AUDIO_TRACK_MENU"
@@ -131,7 +131,7 @@ while [ "$gv_Auswahl" ] ; do
 								T_Nr="${${T_File%%.*}#track}"
 								T_Suffix="${T_File##*.}"
 								# Die Titel in der Variablen $CD_INFO_FILE fangen bei 0
-								# an zu zaehlen und nicht bei 1.
+								# an zu zählen und nicht bei 1.
 								Int="${T_Nr#0}"
 								(( Int-- ))
 								Name=${(M)${(f)"$(< $CD_INFO_FILE)"}[(r)(TTITLE${Int})*]}
@@ -177,7 +177,9 @@ while [ "$gv_Auswahl" ] ; do
 							mkdir -p ~/.cddb/${CATEGORY}/${GENRE}
 							#CDDB Daten im XMCD Formtat speichern
 							cddbget -s ${=CDDB_OPT} -c $READ_DEVICE 1>/dev/null
-							cp -au /tmp/xmcd/${DISC_ID} ~/.cddb/${CATEGORY}/${GENRE}/
+							cat /tmp/xmcd/${DISC_ID} | \
+							   iconv -f ISO-8859-1 -t UTF-8 \
+							   -o ~/.cddb/${CATEGORY}/${GENRE}/${DISC_ID}
 						else
 							rm ${gv_WorkDir}/cddbget.txt &>/dev/null
 						fi
@@ -234,7 +236,7 @@ while [ "$gv_Auswahl" ] ; do
 									;;
 							esac
 						done
-						# Variablen pruefen und wenn sie leer sind
+						# Variablen prüfen und wenn sie leer sind
 						# trotzdem mit einem Wert belegen
 						if [ -z "$ALBUM" ] ; then
 							ALBUM="unknown"
@@ -275,7 +277,7 @@ while [ "$gv_Auswahl" ] ; do
 										# Artist/Album eingeben
 										unset -- ARTIST ALBUM
 										artist_album_input
-										# Lieder zusammenzaehlen in den Arrays
+										# Lieder zusammenzählen in den Arrays
 										# AUDIO_TRACK_M und AUDIO_TRACK
 										Anz=0
 										Anz1="`cdparanoia -Q -d $READ_DEVICE 2>&1 | egrep -v '^[ \t]*$|^TOTAL' | tail -1 | awk '{print $1 + 0}'`"
@@ -286,7 +288,7 @@ while [ "$gv_Auswahl" ] ; do
 										done
 										break
 										;;
-									*)	# Auswahl uebernehmen
+									*)	# Auswahl übernehmen
 										CD_INFO_FILE=${CD_INFO_FILE[gv_Auswahl]}
 										ARTIST="${${${ARTIST[gv_Auswahl]}##<-> }//\"/}"
 										ALBUM="${ALBUM[gv_Auswahl]}"
@@ -314,13 +316,13 @@ while [ "$gv_Auswahl" ] ; do
 								AUDIO_TRACK[Anz]="track${Anz}"
 							done
 							if [ "$CDDB" = yes ] ; then
-								MSG=$(gettext 'Fuer diese CD gibt es keine Information in der $CDDB_SRV CDDB-Datenbank. Alle Lieder werden im ausgewaehlten Verzeichnis ${AUDIO_DIR}/../${ARTIST}/${ALBUM} gespeichert.')
+								MSG=$(gettext 'Fuer diese CD gibt es keine Information in der $CDDB_SRV CDDB-Datenbank. Alle Lieder werden im ausgewählten Verzeichnis ${AUDIO_DIR}/../${ARTIST}/${ALBUM} gespeichert.')
 								msgbox "$gv_Info" "$MSG"
 							fi
 						fi
 					}
 					## }}}
-					# Funktion (audio_rip_exec), die das Audio CD rippen ausfuehrt# {{{
+					# Funktion (audio_rip_exec), die das Audio CD rippen ausführt# {{{
 					audio_rip_exec() {
 						dselect "$AUDIO_DIR"
 						if [ "$VERZ" ] ; then
@@ -435,12 +437,12 @@ while [ "$gv_Auswahl" ] ; do
 						fi
 					}
 					## }}}
-					# Funktion (encode_opt), fuer die Encodierungsoptionen# {{{
+					# Funktion (encode_opt), für die Encodierungsoptionen# {{{
 					#
 					# usage: encode_opt
 					#
 					encode_opt() {
-						# Pruefen ob es Encodierungsoptionen gibt.
+						# Prüfen ob es Encodierungsoptionen gibt.
 						if [ -n "$FM_PROG" -a "$FM_PROG" = lame ] ; then
 							ENC_SUFFIX=mp3
 							#ENC_SUFFIX_MSG="$ENC_MSG $ENC_SUFFIX"
@@ -468,11 +470,11 @@ while [ "$gv_Auswahl" ] ; do
 						fi
 					}
 					## }}}
-					# CD Device auf Leserechte pruefen
+					# CD Device auf Leserechte prüfen
 					if ! user_device_check $READ_DEVICE A ; then
 						break
 					fi
-					# Geraet fuer andere user sperren
+					# Gerät für andere user sperren
 					DEVICES="$READ_DEVICE"
 					lock $DEVICES
 					if cdparanoia -Q -d $READ_DEVICE 2>/dev/null ; then
@@ -499,7 +501,7 @@ while [ "$gv_Auswahl" ] ; do
 													audio_select_menu "${gv_Auswahl#HELP }"
 													;;
 												*)
-													# Liedauswahl uebernehmen
+													# Liedauswahl übernehmen
 													encode_opt
 													unset -- TRACK_NR
 													for n in ${=gv_Auswahl} ; {
@@ -528,7 +530,7 @@ while [ "$gv_Auswahl" ] ; do
 										encode_opt
 										audio_rip_exec
 									else
-										MSG=$(gettext 'Fuer diese CD gibt es keine Information ueber die Liedanzahl (kaputt?).')
+										MSG=$(gettext 'Fuer diese CD gibt es keine Information über die Liedanzahl (kaputt?).')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -539,7 +541,7 @@ while [ "$gv_Auswahl" ] ; do
 							esac
 						done
 					else
-						MSG=$(gettext 'Sie muessen erst eine Audio CD in ihr Laufwerk einlegen.')
+						MSG=$(gettext 'Sie müssen erst eine Audio CD in ihr Laufwerk einlegen.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
 					# entsperren
@@ -558,17 +560,17 @@ while [ "$gv_Auswahl" ] ; do
 			#
 			exec_vcdxrip () {
 				PROG=vcdxrip
-				# Device locken und Programm ausfuehren
+				# Device locken und Programm ausführen
 				DEVICES="$READ_DEVICE"
 				lock $DEVICES
-				# ausfuehren
+				# ausführen
 				VCD_MSG=$(gettext 'Rippe: Video-CD $VCD_NAME')
 				$PROG -p -o ${VCD_NAME}.xml --cdrom-device=${READ_DEVICE} | \
 					progressbox "$V_TITLE" "$VCD_MSG" || \
 					(print ; lock -r $DEVICE ; prog_failure)
 				lock -r $DEVICES
 				#
-				# Video umbenennen und die *xml Datei loeschen.
+				# Video umbenennen und die *xml Datei löschen.
 				#
 				for i in avseq*.mpg(:r) ; {
 					NR="${i#avseq}"
@@ -582,7 +584,7 @@ while [ "$gv_Auswahl" ] ; do
 			}
 			## }}}
 			if [ "$READ_DEVICE" ] ; then
-				# Laufwerk auf Leserechte pruefen.
+				# Laufwerk auf Leserechte prüfen.
 				if ! user_device_check $READ_DEVICE A ; then
 					break
 				fi
@@ -603,7 +605,7 @@ while [ "$gv_Auswahl" ] ; do
 								# (-e $gv_Auswahl wird noch nicht richtig ausgewertet)
 								if [ -n "$gv_Auswahl" ] ; then
 									if ls ${gv_Auswahl}-<->*.mpg(.) &>/dev/null ; then
-										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese ueberschrieben werden (ja/nein)?')
+										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese überschrieben werden (ja/nein)?')
 										yesno "$gv_Info" "$MSG" "no"
 										if [[ $gv_Auswahl == yes ]] ; then
 											VCD_NAME="$gv_Auswahl"
@@ -622,7 +624,7 @@ while [ "$gv_Auswahl" ] ; do
 							fi
 						fi
 					else
-						MSG=$(gettext 'Sie muessen erst eine Video CD in ihr Laufwerk einlegen.')
+						MSG=$(gettext 'Sie müssen erst eine Video CD in ihr Laufwerk einlegen.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
 				fi

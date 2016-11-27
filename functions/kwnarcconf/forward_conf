@@ -2,8 +2,8 @@
 #
 # usage: forward_conf [ -i | -c | -d ] [ FORWARD_NARC_CONF | FORWARD6_NARC_CONF ]
 # -i Forwarding Regeln anlegen.
-# -c Forwarding Regeln aendern.
-# -d - Forwarding Regeln loeschen.
+# -c Forwarding Regeln ändern.
+# -d - Forwarding Regeln löschen.
 #
 forward_conf() {
 	if [ "$#" -eq 2 ] ; then
@@ -56,12 +56,12 @@ forward_conf() {
 						forward_eingabe_menue $lv_Interface
 						;;
 					$lv_Protokoll)
-						# TCP/IP Protokoll auswaehlen{{{
+						# TCP/IP Protokoll auswählen{{{
 						$lv_Tcp=$(gettext 'tcp')
 						$lv_Udp=$(gettext 'udp')
 						PROTO_MENU=($lv_Tcp \"\" $lv_Udp \"\")
 						#
-						MSG=$(gettext 'Waehlen Sie das richtige TCP/IP Protokoll aus.')
+						MSG=$(gettext 'Wählen Sie das richtige TCP/IP Protokoll aus.')
 						menubox "$PROTOCOL" "$FORWARD_TITLE" "$MSG" "$PROTO_MENU"
 						while [ "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in
@@ -78,7 +78,7 @@ forward_conf() {
 						;;
 					$lv_Orig_IP)
 						# von welcher IP soll weitergeleitet werden{{{
-						MSG=$(gettext 'Geben Sie hier die IP Adresse an, an welche die Pakete urspruenglich gehen sollten (Bsp.: 192.168.0.1).')
+						MSG=$(gettext 'Geben Sie hier die IP Adresse an, an welche die Pakete ursprünglich gehen sollten (Bsp.: 192.168.0.1).')
 						inputbox "$FORWARD_TITLE" "$MSG" "$ORIG_IP"
 						if [ "$gv_Auswahl" ] ; then
 							ip_analyse "$gv_Auswahl"
@@ -94,8 +94,8 @@ forward_conf() {
 						forward_eingabe_menue $lv_Orig_IP
 						;;
 					$lv_Orig_Port)
-						# an welchen Port ging die urspruengliche Anfrage{{{
-						MSG=$(gettext 'Geben Sie hier den Port an, an welchen die Pakete urspruenglich gehen sollten (Bsp.: 81).')
+						# an welchen Port ging die ursprüngliche Anfrage{{{
+						MSG=$(gettext 'Geben Sie hier den Port an, an welchen die Pakete ursprünglich gehen sollten (Bsp.: 81).')
 						inputbox "$FORWARD_TITLE" "$MSG" "$ORIG_PORT"
 						if [ "$gv_Auswahl" ] ; then
 							ORIG_PORT="$gv_Auswahl"
@@ -135,18 +135,18 @@ forward_conf() {
 						forward_eingabe_menue $lv_New_Port
 						;;
 					$gv_Save)
-						# Einstellungen aendern/speichern{{{
+						# Einstellungen ändern/speichern{{{
 						if [ -n "$PROTOCOL" -a -n "$ORIG_IP" -a -n "$ORIG_PORT" -a -n "$NEW_IP" -a -n "$NEW_PORT" ] ; then
 							if [ -n "$FORWARD_LIST_OLD" ] ; then
-								# alten Eintrag loeschen
+								# alten Eintrag löschen
 								print -l ${(R)${(f)"$(< $CONF_FILE)"}##(s#)${FORWARD_LIST_OLD}*} > ${CONF_FILE}$$
 								mv "${CONF_FILE}$$" "$CONF_FILE"
 							else
-								# erstmal etwas vergleichbares loeschen
+								# erstmal etwas vergleichbares löschen
 								print -l ${(R)${(f)"$(< $CONF_FILE)"}##(s#)(INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\")} > ${CONF_FILE}$$ 
 								mv "${CONF_FILE}$$" "$CONF_FILE"
 							fi
-							# Regel einfuegen
+							# Regel einfügen
 							>> "$FORWARD_NARC_CONF" <<< "INTERFACE=\"${INTERFACE}\";PROTOCOL=\"${PROTOCOL}\";ORIG_IP=\"${ORIG_IP}\";ORIG_PORT=\"${ORIG_PORT}\";NEW_IP=\"${NEW_IP}\";NEW_PORT=\"${NEW_PORT}\""
 							#
 							if [ "$FORWARD_NARC_CONF_AENDERN" = yes ] ; then
@@ -155,7 +155,7 @@ forward_conf() {
 								unset -- INTERFACE PROTOCOL ORIG_IP ORIG_PORT NEW_IP NEW_PORT
 							fi
 						else
-							MSG=$(gettext 'Sie muessen, bis auf Interface, alle Menuepunkte mit Werten belegen.')
+							MSG=$(gettext 'Sie müssen, bis auf Interface, alle Menuepunkte mit Werten belegen.')
 							msgbox "$gv_Attention" "$MSG"
 						fi
 						#}}}
@@ -174,7 +174,7 @@ forward_conf() {
 				forward_input
 				;;
 			-c)
-				# Forward Regeln aendern# {{{
+				# Forward Regeln ändern# {{{
 				local Anz Forward_List
 				integer Anz
 				# Funktion forward_change_list{{{
@@ -234,7 +234,7 @@ forward_conf() {
 				## }}}
 				;;
 			-d)
-				# Forward Regeln loeschen# {{{
+				# Forward Regeln löschen# {{{
 				local Anz Forward_List ForwardListe Line Z_Nr
 				typeset -a Z_Nr
 				integer Anz
@@ -259,8 +259,8 @@ forward_conf() {
 				#}}}
 				# Funktion forward_delete_list_menue{{{
 				#
-				DEL_TITLE=$(gettext 'Konfiguration::Weiterleitung::loeschen')
-				DEL_MSG=$(gettext 'Waehlen Sie eine oder mehrere Forward Regeln zum loeschen aus.')
+				DEL_TITLE=$(gettext 'Konfiguration::Weiterleitung::löschen')
+				DEL_MSG=$(gettext 'Wählen Sie eine oder mehrere Forward Regeln zum löschen aus.')
 				forward_delete_list_menue() {
 					checklist "$1" "$DEL_TITLE" "$DEL_MSG" "$Forward_List"
 				}
@@ -280,7 +280,7 @@ forward_conf() {
 									(( Anz++ ))
 									L_Nr[Anz]=${Z_Nr[i]}
 								}
-								# Zeilen loeschen
+								# Zeilen löschen
 								if [ -n "$L_Nr" ] ; then
 									Line="${L_Nr//\ /d ; }d"
 									sed -e "$Line" "$FORWARD_NARC_CONF" > "${FORWARD_NARC_CONF}$$"

@@ -16,9 +16,9 @@ alias_table() {
 			menubox "$1" "$TABLE_TITLE" "$USER_AUSWAHL_MSG" "$USER_AUSWAHL_MENU"
 		}
 		## }}}
-	# Funktion alias_aendern{{{
+	# Funktion alias_ändern{{{
 	#
-	alias_aendern() {
+	alias_ändern() {
 	alias_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl"  in
@@ -26,18 +26,18 @@ alias_table() {
 				alias_menue "${gv_Auswahl#HELP }"
 				;;
 			$lv_Local_Recipient)
-				# lokalen Empfaenger eingeben{{{
+				# lokalen Empfänger eingeben{{{
 				user_group_check -p
 				if [ "$U_G_ARRAY" ] ; then
 					USER_AUSWAHL_MENU=($U_G_ARRAY)
-					USER_AUSWAHL_MSG=$(gettext 'Waehen Sie einen lokalen Benutzer/Empfaenger aus')
+					USER_AUSWAHL_MSG=$(gettext 'Wähen Sie einen lokalen Benutzer/Empfänger aus')
 					local_recipient_menu "$ADR"
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/user_help
 								local_recipient_menu "${gv_Auswahl#HELP }"
 								;;
-							*)	# uebernehmen
+							*)	# übernehmen
 								ADR="$gv_Auswahl"
 								break
 								;;
@@ -48,8 +48,8 @@ alias_table() {
 				alias_menue $lv_Local_Recipient
 				;;
 			$lv_Other_Recipient)
-				# andere Empfaenger eingeben{{{
-				OTHER_USER_MSG=$(gettext 'Geben Sie hier bitte einen oder mehrere Empfaenger ein, an die die Mail weitergeleitet werden soll. Getrennt mit einem Komma und Leerzeichen. Dies koennen auch externe Adressen sein (Bsp. user1, user2 | freund@domain.de).')
+				# andere Empfänger eingeben{{{
+				OTHER_USER_MSG=$(gettext 'Geben Sie hier bitte einen oder mehrere Empfänger ein, an die die Mail weitergeleitet werden soll. Getrennt mit einem Komma und Leerzeichen. Dies können auch externe Adressen sein (Bsp. user1, user2 | freund@domain.de).')
 				inputbox "$TABLE_TITLE" "$OTHER_USER_MSG" "$EXT_ADR"
 				if [ "${(w)#gv_Auswahl}" -gt 1 ] ; then
 					case "$gv_Auswahl" in
@@ -98,24 +98,24 @@ alias_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Eintraege
+				# Ansicht der Einträge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
 			$gv_Create)
 				# Werte anlegen
 				unset -- ADR EXT_ADR AENDERN_ADR AENDERN_ADR1
-				alias_aendern
+				alias_ändern
 				tabellen_menue $gv_Create
 				;;
 			$gv_Edit)
-				# Eintraege bearbeiten# {{{
+				# Einträge bearbeiten# {{{
 				edit_file "$TABLE_TITLE" "$FILE"
 				## }}}
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Eintraege aendern{{{
+				# Einträge ändern{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL[1]} ]] ; then
 					CHANGE_MENU=($AUSWAHL)
@@ -126,14 +126,14 @@ alias_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl veraendern
+								# Auswahl verändern
 								C_CHOICE="$gv_Auswahl"
 								ADR="${${${=gv_Auswahl}[1]}%:}"
 								EXT_ADR="${${=gv_Auswahl}[2,$]}"
 								AENDERN_ADR="$ADR"
 								AENDERN_ADR1="$EXT_ADR"
 								#
-								alias_aendern
+								alias_ändern
 								break
 								;;
 						esac
@@ -145,7 +145,7 @@ alias_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Eintraege loeschen{{{
+				# Einträge löschen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -155,7 +155,7 @@ alias_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# Loeschen
+							*)	# Löschen
 								while read ADRESS REST ; do
 									grep -v "^${ADRESS}[[:space:]]${REST}" $FILE >$FILE$$
 									mv $FILE$$ $FILE

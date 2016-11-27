@@ -1,4 +1,4 @@
-# Funktion manage_keys Schluessel erstellen/loeschen# {{{
+# Funktion manage_keys Schlüssel erstellen/löschen# {{{
 #
 # usage: manage_keys
 #
@@ -17,10 +17,10 @@ while [ -n "$gv_Auswahl" ] ; do
 			manage_key_menu "${gv_Auswahl#HELP }"
 			;;
 		$gv_Create)
-			# Schluessel anlegen# {{{
+			# Schlüssel anlegen# {{{
 			# Funktion create_key_menu# {{{
 			#
-			lv_Encryption=$(gettext 'Verschluesselung')
+			lv_Encryption=$(gettext 'Verschlüsselung')
 			#
 			CREATE_KEY_TITLE=(${lv_Key}::${gv_Create})
 			create_key_menu() {
@@ -40,7 +40,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						dselect ${KEY_FILE%/*}
 						if [ -n "$VERZ" ] ; then
 							KEYNAME_TITLE=(${lv_Key}::${gv_Filename})
-							KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen fuer die Schluesseldatei ein. Bedenken Sie das bei "gpg" Verschluesselung die Dateiendung .gpg mit angegeben werden muss.')
+							KEYNAME_MSG=$(gettext 'Geben Sie den Dateinamen für die Schlüsseldatei ein. Bedenken Sie das bei "gpg" Verschlüsselung die Dateiendung .gpg mit angegeben werden muss.')
 							inputbox "$KEYNAME_TITLE" "$KEYNAME_MSG" "${KEY_FILE_NAME##*/}"
 							if [ -n "$gv_Auswahl" ] ; then
 								KEY_FILE_NAME="${VERZ}/${gv_Auswahl}"
@@ -53,7 +53,7 @@ while [ -n "$gv_Auswahl" ] ; do
 						create_key_menu $gv_Filename
 						;;
 					$lv_Encryption)
-						# Verschluesselung auswaehlen# {{{
+						# Verschlüsselung auswählen# {{{
 						# Funktion choice_encrypt_menu# {{{
 						#
 						choice_encrypt_menu() {
@@ -81,7 +81,7 @@ while [ -n "$gv_Auswahl" ] ; do
 									;;
 								$gv_Back)	break
 									;;
-								*)	# uebernehmen
+								*)	# übernehmen
 									KEY_CRYPT="$gv_Auswahl"
 									break
 									;;
@@ -94,11 +94,11 @@ while [ -n "$gv_Auswahl" ] ; do
 						# Keyfile anlegen# {{{
 						if [ -n "$KEY_FILE_NAME" ] ; then
 							tmpkey=${gv_WorkDir}/tempfile
-							PASSWD_MSG=$(gettext 'Geben Sie eine $KEY_CRYPT Passphrase zum verschluesseln der Schluesseldatei ein und wiederholen es im Feld darunter. Mit den Pfeiltasten koennen Sie zwischen den Eingabefeldern springen.')
+							PASSWD_MSG=$(gettext 'Geben Sie eine $KEY_CRYPT Passphrase zum verschlüsseln der Schlüsseldatei ein und wiederholen es im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
 							if [ -z "$KEY_CRYPT" ] ; then
-								# ohne Verschluesselung
+								# ohne Verschlüsselung
 								dd if=/dev/urandom of=$KEY_FILE_NAME bs=1c count=256
-								# Mit GPG verschluesseln
+								# Mit GPG verschlüsseln
 							elif [ "$KEY_CRYPT" = gpg ] ; then
 								mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" 8 21
 								if [[ -n "$gv_Pass" ]] ; then
@@ -111,12 +111,12 @@ while [ -n "$gv_Auswahl" ] ; do
 									chmod 600 ${KEY_FILE_NAME}.gpg
 									unset -- gv_Pass
 								fi
-							# Mit SSL verschluesseln
+							# Mit SSL verschlüsseln
 							elif [ "$KEY_CRYPT" = openssl ] ; then
 								mixed_password "$gv_Passwd_TITLE" "$PASSWD_MSG" 8 21
 								if [[ -n "$gv_Pass" ]] ; then
 									dd if=/dev/urandom of=$tmpkey bs=1c count=256
-									$OPENSSL enc -aes-256-cbc -e -salt -in $tmpkey -out $KEY_FILE_NAME -k "$gv_Pass"
+									$OPENSSL enc -äs-256-cbc -e -salt -in $tmpkey -out $KEY_FILE_NAME -k "$gv_Pass"
 									chmod 600 $KEY_FILE_NAME
 									unset -- gv_Pass
 								fi
@@ -136,7 +136,7 @@ while [ -n "$gv_Auswahl" ] ; do
 			manage_key_menu $gv_Create
 			;;
 		$gv_Delete)
-			# Schluessel loeschen# {{{
+			# Schlüssel löschen# {{{
 			file_choice "${KEY_FILE%/*}" multi
 			if [ -n "${WERT[1]}" ] ; then
 				while read i ; do

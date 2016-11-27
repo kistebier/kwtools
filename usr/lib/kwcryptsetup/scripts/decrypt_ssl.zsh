@@ -1,4 +1,4 @@
-#!/bin/zsh -x
+#!/bin/zsh
 #
 # Author: Kai Wilke  <kiste@netzworkk.de> 06.05.2014
 #
