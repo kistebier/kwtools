@@ -45,8 +45,8 @@ kwmutt_hdr_conf() {
 				while read -r a b Rest ; do
 					if [[ $a == $Hook ]] ; then
 						(( Anz++ ))
-						Tmp_Header_Menue[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\""
-						Tmp_Header_Menue_M[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\" off"
+						Tmp_Header_Menü[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\""
+						Tmp_Header_Menü_M[Anz]="$Anz \"$a $b ${${${${Rest//\\/\\\\}//\$/\\\$}//\`/\\\`}//\"/\\\"}\" off"
 					fi
 				done < $Hook_File
 			else
@@ -54,7 +54,7 @@ kwmutt_hdr_conf() {
 			fi
 		}
 		## }}}
-		unset -- Tmp_Header_Menue Tmp_Header_Menue_M Hook Hook_File
+		unset -- Tmp_Header_Menü Tmp_Header_Menü_M Hook Hook_File
 		# Wenn es eine $M_HOOKS Datei gibt einlesen.
 		# Ansonsten wird eine Beispiel-Datei erstellt.
 		if [ $# = 1 ] ; then
@@ -515,7 +515,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Alias und $lv_Charset mit einem Wert belegen.')
+										MSG=$(gettext 'Sie müssen erst die Menüpunkte $lv_Alias und $lv_Charset mit einem Wert belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -566,7 +566,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Mailbox und $lv_Header oder $lv_Set oder $lv_Push mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen erst die Menüpunkte $lv_Mailbox und $lv_Header oder $lv_Set oder $lv_Push mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -589,7 +589,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen erst die Menuepunkte $lv_Mailbox und ${lv_Mailbox}1 mit einem Wert belegen.')
+										MSG=$(gettext 'Sie müssen erst die Menüpunkte $lv_Mailbox und ${lv_Mailbox}1 mit einem Wert belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -654,7 +654,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_Option und $lv_Set oder $lv_Unignore mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_Option und $lv_Set oder $lv_Unignore mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -693,7 +693,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_Patter und $lv_Mailbox mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_Patter und $lv_Mailbox mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -715,7 +715,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_KeyId und $lv_Patter mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_KeyId und $lv_Patter mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -752,7 +752,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_Score und $lv_Option oder $lv_Patter mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_Score und $lv_Option oder $lv_Patter mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -817,7 +817,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen mindestens die Menuepunkte $lv_Patter und $lv_Header oder $lv_Set mit Werten belegen.')
+										MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_Patter und $lv_Header oder $lv_Set mit Werten belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -840,7 +840,7 @@ $Un_Set
 											mv "$gv_LogFile" "$M_HOOK" 2>&1
 										fi
 									else
-										MSG=$(gettext 'Sie müssen erst den Menuepunkt $lv_Unignore mit einem Wert belegen.')
+										MSG=$(gettext 'Sie müssen erst den Menüpunkt $lv_Unignore mit einem Wert belegen.')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -888,9 +888,9 @@ $Un_Set
 						if [ -f "$M_HOOK" ] ; then
 							# Header Datei einlesen.
 							read_file_headers $Hook_Name
-							if [ -n "${Tmp_Header_Menue[1]}" ] ; then
+							if [ -n "${Tmp_Header_Menü[1]}" ] ; then
 								# vorhandene Header zur Auswahl (ändern) anbieten.
-								CHANGE_MENU=($Tmp_Header_Menue)
+								CHANGE_MENU=($Tmp_Header_Menü)
 								menubox "$HOOK_CHOICE" "$HOOK_TITLE" "$gv_Menupoint" "$CHANGE_MENU"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
@@ -908,7 +908,7 @@ $Un_Set
 														charset-hook)
 															# charset-hook Werte einlesen# {{{
 															unset -- HDR_ALIAS HDR_CHARSET
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c Rest ; do
 																HDR_ALIAS="${${c//\$/\\\$}//\`/\\\`}"
 																HDR_CHARSET="${Rest//\"/}"
@@ -918,7 +918,7 @@ $Un_Set
 														folder-hook)
 															# folder-hook Werte einlesen# {{{
 															unset -- HDR_MAILBOX HDR_HEADER HDR_SET
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c d Rest ; do
 																HDR_MAILBOX="$c"
 																# Prüfen ob eine Set Variable, push Befehl
@@ -937,7 +937,7 @@ $Un_Set
 														pgp-hook)
 															# pgp-hook Werte einlesen# {{{
 															unset -- HDR_PATTER HDR_KEYID
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c Rest ; do
 																HDR_PATTER="$c"
 																HDR_KEYID="${${Rest%\"}%\'}"
@@ -947,7 +947,7 @@ $Un_Set
 														mbox-hook)
 															# mbox-hook Werte einlesen# {{{
 															unset -- HDR_MAILBOX HDR_MAILBOX1
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c Rest ; do
 																HDR_MAILBOX="$c"
 																HDR_MAILBOX1="${${${Rest//\$/\\\$}//\`/\\\`}//\"/}"
@@ -957,14 +957,14 @@ $Un_Set
 														message-hook)
 															# message-hook Wert einlesen# {{{
 															unset -- HDR_OPTION HDR_PATTER HDR_SET
-															print ${${Tmp_Header_Menue[gv_Auswahl]}//\\/} | \
+															print ${${Tmp_Header_Menü[gv_Auswahl]}//\\/} | \
 															while read a b c d e Rest ; do
 																case "${c#\'}" in
 																	\~*)
 																		# Ist eine Option angegeben, wird
 																		# nach den Variablen/Befehlen set
 																		# und (un)ignore gesucht, damit
-																		# das Menue weiss was es darstellen
+																		# das Menü weiss was es darstellen
 																		# soll.
 																		HDR_OPTION="${c#\'}"
 																		case "${d#\'}" in
@@ -996,7 +996,7 @@ $Un_Set
 														(fcc|fcc-save|save)-hook)
 															# save-hook Wert einlesen# {{{
 															unset -- HDR_MAILBOX HDR_OPTION HDR_PATTER
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c d Rest ; do
 																case "${c#\'}" in
 																	\~*)
@@ -1016,7 +1016,7 @@ $Un_Set
 														score)
 															# score Werte einlesen# {{{
 															unset -- HDR_OPTION HDR_PATTER HDR_SCORE
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c d Rest ; do
 																case "${c#\'}" in
 																	\~*)
@@ -1044,7 +1044,7 @@ $Un_Set
 														send-hook)
 															# send-hook Wert einlesen# {{{
 															unset -- HDR_OPTION HDR_PATTER HDR_SET
-															print ${Tmp_Header_Menue[gv_Auswahl]} | \
+															print ${Tmp_Header_Menü[gv_Auswahl]} | \
 															while read -r a b c d e Rest ; do
 																case "${c#\'}" in
 																	\~*)
@@ -1076,7 +1076,7 @@ $Un_Set
 														unignore)
 															# unignore Header Werte einlesen.# {{{
 															unset -- HDR_UNIGNORE
-															HDR_UNIGNORE="${${${Tmp_Header_Menue[gv_Auswahl]}//<->* \"${Opt}[[:space:]]/}%\"}"
+															HDR_UNIGNORE="${${${Tmp_Header_Menü[gv_Auswahl]}//<->* \"${Opt}[[:space:]]/}%\"}"
 															## }}}
 															;;
 													esac
@@ -1086,7 +1086,7 @@ $Un_Set
 											}
 											## }}}
 											unset -- Value_Old
-											Value_Old="${${${${${Tmp_Header_Menue[gv_Auswahl]}//<->* \"/}//\\/}%\"}//\ /[[:space:]]*}"
+											Value_Old="${${${${${Tmp_Header_Menü[gv_Auswahl]}//<->* \"/}//\\/}%\"}//\ /[[:space:]]*}"
 											read_hook_list "$Hook_Name"
 											hook_conf
 											break
@@ -1108,9 +1108,9 @@ $Un_Set
 						if [ -f "$M_HOOK" ] ; then
 							# Header Datei einlesen.
 							read_file_headers "$Hook_Name"
-							if [ -n "${Tmp_Header_Menue_M[1]}" ] ; then
+							if [ -n "${Tmp_Header_Menü_M[1]}" ] ; then
 								# vorhandene Header zur Auswahl (löschen) anbieten.
-								DEL_MENU=($Tmp_Header_Menue_M)
+								DEL_MENU=($Tmp_Header_Menü_M)
 								checklist "" "$HOOK_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
@@ -1126,7 +1126,7 @@ $Un_Set
 											Anz=0
 											for i in ${=gv_Auswahl} ; {
 												(( Anz++ ))
-												Tmp=${${${${${${Tmp_Header_Menue[i]}//*${Hook_Name}/\"${Hook_Name}}#\"}%\"}//\\\`/\`}//\ /[[:space:]]*}
+												Tmp=${${${${${${Tmp_Header_Menü[i]}//*${Hook_Name}/\"${Hook_Name}}#\"}%\"}//\\\`/\`}//\ /[[:space:]]*}
 												Line[Anz]=${${(ws,:,)$(grep -n "^${Tmp}" $M_HOOK)}[1]}d
 											}
 											#

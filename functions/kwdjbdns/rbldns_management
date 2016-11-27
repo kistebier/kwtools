@@ -92,25 +92,25 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				;;
 			$gv_Delete)
 				# Daten löschen{{{
-				unset -- D_Menue
+				unset -- D_Menü
 				ANZ=1
 				while read DATA ; do
 					case "$DATA" in
 						[0-9]*.[0-9]*.[0-9]*.[0-9]*)	
-							D_Menue[ANZ]="$DATA "$gv_Host" off"
+							D_Menü[ANZ]="$DATA "$gv_Host" off"
 							;;
 						[0-9]*.[0-9]*.[0-9]*.0/[0-9]*)	
-							D_Menue[ANZ]="$DATA "$gv_Network" off"
+							D_Menü[ANZ]="$DATA "$gv_Network" off"
 							;;
 						:[0-9]*.[0-9]*.[0-9]*.[0-9]*:[a-zA-Z:/_-.0-9]*)	
-							D_Menue[ANZ]="\"$DATA\" "$TEXT" off"
+							D_Menü[ANZ]="\"$DATA\" "$TEXT" off"
 							;;
 					esac
 					(( ANZ++ ))
 				done < data
 				#
-				if [ -n "${D_Menue[1]}" ] ; then
-					DEL_MENU=($D_Menue)
+				if [ -n "${D_Menü[1]}" ] ; then
+					DEL_MENU=($D_Menü)
 					checklist "" "$RBL_ADMIN_TITLE" "$DEL_MSG" "$DEL_MENU"
 					# Einträge löschen
 					while [ "$gv_Auswahl" ] ; do

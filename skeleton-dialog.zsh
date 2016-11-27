@@ -76,7 +76,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
 		${gv_Configuration}1)
-			# Selber weiter machen ;-), ursprÃ¼nglicher Menuepunkt wird markiert
+			# Selber weiter machen ;-), ursprünglicher Menüpunkt wird markiert
             # und der Fokus steht auf diesem.
 			main_menu "${gv_Configuration}1"
 			;;
