@@ -2,17 +2,18 @@
 #
 ##############################################################################
 # Developed by Kai Wilke 'kiste' <kiste@netzworkk.de> 2012-03-02
-# Copyright (c) 2012 Netzworkk, http://www.netzworkk.de/
+# Copyright (c) 2012-2016 Netzworkk, http://www.netzworkk.de
 # Licensed under terms of GNU General Public License.
 # All rights reserved.
 #
 # remove-oldfile.zsh: Loescht alte nicht mehr benötigte Dateien,
 # wie zum Beispiel Dateien die bei der Installation etc. anfallen..
 #
-# Version: 0.0.1
+# Version: 0.0.2
 
 # Changelog:
 # 2012-03-02 - created
+# 2016-11-28 - updated
 ##############################################################################
 
 setopt nonomatch
@@ -31,9 +32,9 @@ VIM_SUFFIX=(.swp)
 for d in $ETC_DIR ; {
 	for f in $DPKG_SUFFIX $BACKUP_SUFFIX $RPM_SUFFIX $VIM_SUFFIX ; {
 		# normal files
-		rm -rfv ${d}/**/*${f}(N)
+		rm -rfv ${d}/**/*${f}(.N)
 		# hidden files
-		rm -rfv ${d}/**/.*${f}(N)
+		rm -rfv ${d}/**/.*${f}(.N)
 	}
 }
 
