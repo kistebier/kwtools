@@ -22,7 +22,7 @@ manage_reqs() {
 				local Conf_Section
 				Conf_Section="$1"
 				# Funktion (req_sign_menu)# {{{
-				REQ_SIGN_TITLE="${lv_Reqüst}::${lv_Sign}"
+				REQ_SIGN_TITLE="${lv_Request}::${lv_Sign}"
 				#
 				req_sign_menu() {
 					REQ_SIGN_MENU=($REQS_ALL_E)
@@ -102,7 +102,7 @@ manage_reqs() {
 												# preserveDN prüfen
 												check_preservedn
 												# Zertifikate erzeugen und mit CA signieren
-												sign_cert_reqüst "$CA_OPEN_NAME" "${Conf_Section%_*}_ca" "$SIGN_FILE" "$VALIDITY" "$Digest"
+												sign_cert_request "$CA_OPEN_NAME" "${Conf_Section%_*}_ca" "$SIGN_FILE" "$VALIDITY" "$Digest"
 												# Passwörter löschen
 												unset -- $REQS_UNSET
 												break
@@ -137,8 +137,8 @@ manage_reqs() {
 		lv_Server_Sign=$(gettext 'signieren (Server)')
 		lv_Client_Sign=$(gettext 'signieren (Benutzer)')
 		#
-		REQ_TITLE="${CA_OPEN_NAME}::${lv_Reqüst}"
-    		REQ_MENU=(\"$gv_Display\" \"\" \"$lv_Reqüst_Create\" \"\"
+		REQ_TITLE="${CA_OPEN_NAME}::${lv_Request}"
+    		REQ_MENU=(\"$gv_Display\" \"\" \"$lv_Request_Create\" \"\"
 		\"$lv_Import\" \"\" \"$lv_Server_Sign\" \"\"
 		\"$lv_Client_Sign\" \"\"
 		$gv_Delete \"\" $gv_Back \"\")
@@ -173,7 +173,7 @@ manage_reqs() {
 				$gv_Display)
 					# Anforderungen anschauen# {{{
 					# Funktion (req_display_menu)# {{{
-					REQ_DISPLAY_TITLE="${lv_Reqüst}::${gv_Display}"
+					REQ_DISPLAY_TITLE="${lv_Request}::${gv_Display}"
 					#
 					req_display_menu() {
 						REQ_DISPLAY_MENU=($REQS_ALL_M)
@@ -217,10 +217,10 @@ manage_reqs() {
 					## }}}
 					req_menu $gv_Display
 					;;
-				$lv_Reqüst_Create)
+				$lv_Request_Create)
 					# Neue Anforderung und Schlüssel erstellen
 					conf_ca -r
-					req_menu $lv_Reqüst_Create
+					req_menu $lv_Request_Create
 					;;
 				$lv_Import)
 					# Anforderung zum Import auswählen# {{{
@@ -239,12 +239,12 @@ manage_reqs() {
 							gen_name
 							REQ_NEW_FILE="${KWSSL_DIR}/${CA_OPEN_NAME}/req/${GEN_NAME}.pem"
 							if [ ! -f "$REQ_NEW_FILE" ] ; then
-								# Frage ob diese Reqüst Datei importiert werden soll
-								IMPORT_REQ_TITLE="${lv_Reqüst}::${lv_Import}"
+								# Frage ob diese Request Datei importiert werden soll
+								IMPORT_REQ_TITLE="${lv_Request}::${lv_Import}"
 								IMPORT_REQ_MSG=$(gettext 'Soll diese Anforderung wirklich importiert werden (ja/nein)?\n\n${lv_Ssl_CommonName}: $COMMONNAME\n${lv_Ssl_Land_Code}: $COUNTRYCODE\n${lv_Ssl_Bundesstaat}: $COUNTRY\n${lv_Ssl_Location}: $LOCATION\n${lv_Ssl_Organisation}: $ORGANISATION\n${lv_Ssl_Organisation_Unit}: $ORGANISATIONUNIT\n${lv_Ssl_Email}: $MAIL')
 								yesno "$IMPORT_REQ_TITLE" "$IMPORT_REQ_MSG" "yes"
 								if [ "$gv_Auswahl" != no ] ; then
-									# Reqüst importieren
+									# Request importieren
 									PROG_OPT=(req ${=INFORM_FORMAT} -in $REQ_FILE
 								   		-outform PEM -out $REQ_NEW_FILE)
 									openssl $PROG_OPT || prog_failure
@@ -272,7 +272,7 @@ manage_reqs() {
 				$gv_Delete)
 					# Anforderungen löschen# {{{
 					# Funktion (del_req_choice_menu)# {{{
-					REQ_DEL_TITLE="${lv_Reqüst}::${gv_Delete}"
+					REQ_DEL_TITLE="${lv_Request}::${gv_Delete}"
 					del_req_choice_menu() {
 						REQ_DEL_MENU=($REQS_ALL_M)
 						checklist "$1" "$REQ_DEL_TITLE" "$gv_Menupoint" "$REQ_DEL_MENU"

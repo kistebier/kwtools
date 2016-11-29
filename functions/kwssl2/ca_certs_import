@@ -160,11 +160,11 @@ ca_certs_import() {
 							-passout env:CAPASSWD || prog_failure
 						#
 						if [ "$RET" != 1 ] ; then
-							# Certificate Reqüst erstellen
-							create_reqüst "$NEW_CA_NAME" cacert.key "$lv_Digest"
+							# Certificate Request erstellen
+							create_request "$NEW_CA_NAME" cacert.key "$lv_Digest"
 							# CA Zertifikat erzeugen und mit CA signieren
 							if [ "$RET" != 1 ] ; then
-								sign_ca_reqüst "$NEW_CA_NAME" "$VALIDITY"
+								sign_ca_request "$NEW_CA_NAME" "$VALIDITY"
 								if [ "$RET" != 1 ] ; then
 									# Dateien in die CA-Struktur kopieren und CA-Kette erstellen.
 									integrate_files_to_ca "$NEW_CA_NAME" "$GEN_NAME" "$NR"

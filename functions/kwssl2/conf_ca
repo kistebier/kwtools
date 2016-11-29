@@ -39,7 +39,7 @@ conf_ca() {
 		KEYLENGTH="4096"
 		VALIDITY=${VALIDITY:-3650}
 		PRESERVEDN=${PRESERVEDN:-yes}
-		REQ_CREATE_TITLE="${lv_Reqüst_Create}"
+		REQ_CREATE_TITLE="${lv_Request_Create}"
 		#
 		# Funktion (create_private_key), erstellt einen privaten Schlüssel# {{{
 		#
@@ -206,7 +206,7 @@ conf_ca() {
 				-r)
 					# Anforderung
 					CA_TITLE=$(gettext 'erstelle Anforderung')
-					HELPFILE="conf_reqüst_help conf_defaultca_help"
+					HELPFILE="conf_request_help conf_defaultca_help"
 					;;
 			esac
 		}
@@ -280,12 +280,12 @@ conf_ca() {
 					cd $KWSSL_DIR
 					# privater Schlüssel
 					create_private_key "$CA_NAME" cacert.key "$KEYLENGTH"
-					# Certificate Reqüst
+					# Certificate Request
 					if [ "$RET" != 1 ] ; then
-						create_reqüst "$CA_NAME" cacert.key "$lv_Digest"
+						create_request "$CA_NAME" cacert.key "$lv_Digest"
 						# Zertifikat erzeugen und mit RootCA signieren
 						if [ "$RET" != 1 ] ; then
-							sign_ca_reqüst "$CA_NAME" "$VALIDITY"
+							sign_ca_request "$CA_NAME" "$VALIDITY"
 							if [ "$RET" != 1 ] ; then
 								# Dateien in die CA-Struktur kopieren und CA-Kette erstellen.
 								integrate_files_to_ca "$CA_NAME" "$GEN_NAME" "$NR"
@@ -336,10 +336,10 @@ conf_ca() {
 					create_private_key "$CA_OPEN_NAME" "$GEN_NAME" "$KEYLENGTH"
 					# Anforderung erstellen
 					if [ "$RET" != 1 ] ; then
-						create_reqüst "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
+						create_request "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
 						# Zertifikate erzeugen und mit (Sub)CA signieren
 						if [ "$RET" != 1 ] ; then
-							sign_cert_reqüst "$CA_OPEN_NAME" "${Cert_Opt%_*}_ca" "${GEN_NAME}.pem" "$VALIDITY" "$Digest"
+							sign_cert_request "$CA_OPEN_NAME" "${Cert_Opt%_*}_ca" "${GEN_NAME}.pem" "$VALIDITY" "$Digest"
 						fi
 					fi
 				else
@@ -364,7 +364,7 @@ conf_ca() {
 					create_private_key "$CA_OPEN_NAME" "$GEN_NAME" "$KEYLENGTH"
 					# Anforderung erstellen
 					if [ "$RET" != 1 ] ; then
-						create_reqüst "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
+						create_request "$CA_OPEN_NAME" "$GEN_NAME" "$lv_Digest"
 					fi
 				else
 					MSG=$(gettext 'Sie müssen mindestens die Menüpunkte $lv_Ssl_CommonName, $lv_Ssl_Password, $lv_Ssl_Land_Code und $lv_Ssl_Email mit Werten belegen.')

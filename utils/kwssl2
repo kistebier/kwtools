@@ -78,8 +78,8 @@ lv_UserCA_Create=$(gettext 'Benutzer Zertifikat erstellen')
 lv_ServerCA_Create=$(gettext 'Server Zertifikat erstellen')
 lv_Cert=$(gettext 'Zertifikate')
 lv_Key=$(gettext 'Schlüssel')
-lv_Reqüst=$(gettext 'Anforderungen')
-lv_Reqüst_Create=$(gettext 'Anforderung erstellen')
+lv_Request=$(gettext 'Anforderungen')
+lv_Request_Create=$(gettext 'Anforderung erstellen')
 lv_Sign=$(gettext 'signieren')
 lv_ExportFilename=$(gettext 'Export Dateiname')
 lv_YesValidity=$(gettext 'gueltig')
@@ -405,11 +405,11 @@ create_pki() {
 	fi
 }
 ## }}}
-# Funktion (create_reqüst), erstellt eine Anforderung# {{{
+# Funktion (create_request), erstellt eine Anforderung# {{{
 #
-# usage: create_reqüst CANAME FILENAME DIGEST
+# usage: create_request CANAME FILENAME DIGEST
 #
-create_reqüst() {
+create_request() {
 	if [[ ${#argv} == 3 ]] ; then
 		local CAName KeyFile ReqFile Digest CaDir
 		# Variablen
@@ -424,7 +424,7 @@ create_reqüst() {
 			KeyFile="${CaDir}/cacert.key"
 			ReqFile="${CaDir}/cacert.req"
 		fi
-		# Certificate Reqüst
+		# Certificate Request
 		openssl req -new -keyform PEM -outform PEM \
 			-config $KWSSL2RC \
 			-key $KeyFile \
@@ -465,8 +465,8 @@ get_format_file() {
 						;;
 				esac
 				;;
-			-r)	# Certificate Reqüst
-				if [ "$Tmp" = "PEM certificate reqüst" ] ; then
+			-r)	# Certificate Request
+				if [ "$Tmp" = "PEM certificate request" ] ; then
 					INFORM_FORMAT="-inform PEM"
 				else
 					INFORM_FORMAT="-inform DER"
@@ -722,7 +722,7 @@ main_menu() {
     		MAIN_MENU=($lv_Open \"\" $gv_Configuration \"\"
 			$gv_Display \"\" \"$lv_CA_Create\" \"\"
 			\"$lv_SubCA_Create\" \"\" \"$lv_Cert\" \"\"
-			\"$lv_Key\" \"\" \"$lv_Reqüst\" \"\"
+			\"$lv_Key\" \"\" \"$lv_Request\" \"\"
 			\"$lv_CA_Import\" \"\" \"$lv_CA_Export\" \"\"
 			\"$lv_CA_CRL_Export\" \"\" \"$lv_Dh_File\" \"\"
 			\"$lv_CA_Delete\" \"\" $gv_Exit \"\")
@@ -731,7 +731,7 @@ main_menu() {
     		MAIN_MENU=($lv_Open \"\" $gv_Configuration \"\"
 			$gv_Display \"\" \"$lv_CA_Create\" \"\"
 			\"$lv_SubCA_Create\" \"\" \"$lv_Cert\" \"\"
-			\"$lv_Key\" \"\" \"$lv_Reqüst\" \"\"
+			\"$lv_Key\" \"\" \"$lv_Request\" \"\"
 			\"$lv_CA_Import\" \"\" \"$lv_CA_Export\" \"\"
 			\"$lv_CA_Chain_Export\" \"\" \"$lv_CA_CRL_Export\" \"\"
 			\"$lv_Dh_File\" \"\"
@@ -1187,12 +1187,12 @@ search_ca() {
 	}
 }
 ## }}}
-# Funktion (sign_cert_reqüst), mittels Anforderung (certificate reqüst) Zertifikat# {{{
+# Funktion (sign_cert_request), mittels Anforderung (certificate request) Zertifikat# {{{
 # erzeugen und mit CA signieren. Ist für Server und Benutzer Zertifikate.
 #
-# usage: sign_cert_reqüst CANAME [ server_ca | client_ca ] REQ_DATEI VALIDITY DIGEST
+# usage: sign_cert_request CANAME [ server_ca | client_ca ] REQ_DATEI VALIDITY DIGEST
 #
-sign_cert_reqüst() {
+sign_cert_request() {
 	if [[ ${#argv} == 5 ]] ; then
 		local CAName Section File Validity Digest Dir
 		CAName="$1"
@@ -1214,12 +1214,12 @@ sign_cert_reqüst() {
 	fi
 }
 ## }}}
-# Funktion (sign_ca_reqüst), mittels Anforderung (certificate reqüst) CA# {{{
+# Funktion (sign_ca_request), mittels Anforderung (certificate request) CA# {{{
 # erzeugen und mit (Root)CA signieren. Ist für CA Zertifikate.
 #
-# usage: sign_ca_reqüst CANAME VALIDITY
+# usage: sign_ca_request CANAME VALIDITY
 #
-sign_ca_reqüst() {
+sign_ca_request() {
 	if [[ ${#argv} == 2 ]] ; then
 		local CAName Validity CADir CANewDir
 		CAName="$1"
@@ -1362,11 +1362,11 @@ while [ "$gv_Auswahl" ] ; do
 			manage_keys
 			main_menu $lv_Key
 			;;
-		$lv_Reqüst)
+		$lv_Request)
 			# Anforderungen verwalten
 			autoload -U manage_reqs
 			manage_reqs
-			main_menu $lv_Reqüst
+			main_menu $lv_Request
 			;;
 		$lv_CA_Import)
 			# CA importieren
