@@ -5,10 +5,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# This is the debhelper compatibility version to use.
-# >=3 create conffiles automatically
-#export DH_COMPAT=5
-
 # Name our packages
 package-common=kwtools-common
 package-bin=kwtools-bin
@@ -206,7 +202,6 @@ install:
 
 	# kwtools-net-narc
 	cp -a etc/kwtools/kwnarc/kwnarc.conf $(CURDIR)/debian/$(package-net-narc)$(etc_path)/kwtools/kwnarc
-	cp -a lib/systemd/system/kwnarc.service $(CURDIR)/debian/$(package-net-narc)$(systemd_path)
 	cp -a net/kwnarcconf $(CURDIR)/debian/$(package-net-narc)$(exec_path)/net
 	cp -a usr/sbin/kwnarc $(CURDIR)/debian/$(package-net-narc)$(sbin_path)
 	cp -a help/kwnarcconf $(CURDIR)/debian/$(package-net-narc)$(help_path)
@@ -428,6 +423,7 @@ binary-indep: build install
 #	dh_installpam
 #	dh_installmime
 	dh_installinit -n --name=kwnarc
+	dh_systemd_enable --name=kwnarc
 #	dh_installcron
 	dh_installcron --name=kwrsync_backup
 	dh_installman
