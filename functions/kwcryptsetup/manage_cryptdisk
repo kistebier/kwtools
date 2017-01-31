@@ -15,7 +15,7 @@ manage_cryptdisk() {
 		## }}}
 	# Funktion (luks_resize), vergrössern/verkleinern# {{{
 	############################################
-	# TODO: Partitionen vergr�ssern/verkleinern geht noch nicht.
+	# TODO: Partitionen vergrössern/verkleinern geht noch nicht.
 	#
 	luks_resize() {
 		Resize_Opt="$1"
@@ -115,8 +115,8 @@ manage_cryptdisk() {
 												if [ -n "$SIZE_MIB" ] ; then
 													Size_Tmp="$SIZE_MIB"
 												fi
-												# ist die Grösse um die verkleinert werden soll
-												# kleiner als die ganze Grösse der LV dann wird
+												# ist die GrÃ¶sse um die verkleinert werden soll
+												# kleiner als die ganze GrÃ¶sse der LV dann wird
 												# verkleinert.
 												if [[ "$Size_Tmp" -lt "$LV_SIZE" ]] ; then
 													(( LV_NEW_SIZE = LV_SIZE - Size_Tmp ))
@@ -173,7 +173,7 @@ manage_cryptdisk() {
 		# TODO:
 		# --keyfile muss irgendwie eingebunden/geändert werden.
 		#
-		# Schl�sseldatei und Schl�sselscript benutzen
+		# Schlüsseldatei und Schlüsselscript benutzen
 		if [ -n "$KEYSCRIPT" ] ; then
 			if [ "$USELUKS" = yes ] ; then
 				$KEYSCRIPT $keyscriptarg | \
@@ -186,7 +186,7 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
 					open --type plain $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			fi
-		# ohne Schl�sseldatei
+		# ohne Schlüsseldatei
 		elif [ -z "$key" -o "$key" = none ] ; then
 			# Passphrase eingeben
 			PASSWD_MSG=$(gettext 'Geben Sie die Passphrase für das Laufwerk ${CRYPT_PREFIX}-${CRYPT_FILE} ein und wiederholen es im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
@@ -203,7 +203,7 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
 					open --type plain $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			fi
-		# mit Schlüssel
+		# mit SchlÃ¼ssel
 		elif [ -n "$key" ] ; then
 			if [ "$USELUKS" = yes ] ; then
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} $LUKSFORMAT luksFormat $SRC &>/dev/null || return=1
@@ -231,7 +231,7 @@ manage_cryptdisk() {
 		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufälliger Werte übershrieben werden (ja/nein)?
 
 Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Grösse nicht stimmt.')
-		# Gr�sse des Laufwerks berechnen
+		# Grösse des Laufwerks berechnen
 		if [ "$Opt" = -p ] ; then
 			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
 			Sectors=$(blkid -o value -s PART_ENTRY_SIZE -p ${CRYPT_PATH}/${CRYPT_FILE})
@@ -248,13 +248,13 @@ Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschr
 			return 1
 		fi
 
-		# Frage, ob das Laufwerk mit /dev/urandom �berschrieben werden soll.
+		# Frage, ob das Laufwerk mit /dev/urandom überschrieben werden soll.
 		yesno "$MANAGE_TITLE" "$DD_QUESTION_MSG" yes
 		if [ "$gv_Auswahl" = yes ] ; then
 			dd if=/dev/urandom of=${CRYPT_PATH}/${CRYPT_FILE} bs=1 count=${Part_Size} >/dev/null 2>$gv_LogFile &
 			# Fortschrittsanzeige
 			dd_gauge "dd if=/dev/urandom of=${CRYPT_PATH}/${CRYPT_FILE} bs=1 count=${Part_Size}" "$Part_Size" "$DD_MSG"
-		# Dateigr�sse checken
+		# Dateigrösse checken
 		elif [ "$Opt" != -p ] ; then
 			Real_Size=${$(LANG=C ; LC_NUMERIC=en ; ls -l ${CRYPT_PATH}/${CRYPT_FILE})[5]}
 			if [[ $Real_Size != $Part_Size ]] ; then
@@ -268,11 +268,11 @@ Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschr
 			# Fehlermeldung falls das Laufwerk nicht erstellt werden konnte.
 			MSG=$(gettext 'Das Laufwerk ${CRYPT_PREFIX}-${CRYPT_FILE} konnte nicht erstellt werden.')
 			msgbox "$gv_Attention" "$MSG"
-			# Passphrase/Schl�ssel l�schen
+			# Passphrase/Schlüssel löschen
 			clean_keys
 			return 1
 		else
-			# Passphrase/Schl�ssel l�schen
+			# Passphrase/Schlüssel löschen
 			clean_keys
 		fi
 		
@@ -280,15 +280,15 @@ Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschr
 		if [[ $MAKESWAP == yes ]] ; then
 			# Swap Laufwerk und Signatur erstellen
 			cryptdisk_swap "${CRYPT_PREFIX}-${CRYPT_FILE}"
-			# /etc/crypttab �ndern
+			# /etc/crypttab ändern
 			change_crypttab
 			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	swap	swap	OPTIONEN	0	0')
 			msgbox "$gv_Info" "$MSG"
 		elif [[ -n $TMPFS ]] ; then
-			# Tempor�res Laufwerk erstellen.
+			# Temporäres Laufwerk erstellen.
 			cryptdisk_tmp "${CRYPT_PREFIX}-${CRYPT_FILE}"
-			# /etc/crypttab �ndern
+			# /etc/crypttab ändern
 			change_crypttab
 			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
@@ -296,13 +296,13 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 		else
 			# Laufwerk mit dem dementsprechenden Dateisystem formatieren.
 			# Wenn die Formatierung verneint wird, wird trotzdem
-			# ein Eintrag in der /etc/crypttab getätigt.
+			# ein Eintrag in der /etc/crypttab getÃ¤tigt.
 			format "${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}"
 			if [ "$?" != 0 ] ; then
-				# /etc/crypttab �ndern
+				# /etc/crypttab ändern
 				change_crypttab
 			else
-				# /etc/crypttab �ndern
+				# /etc/crypttab ändern
 				change_crypttab
 				MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
 ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
@@ -366,14 +366,14 @@ Bei \"nein\" wird abgebrochen.')
 								dselect_check -c "$VERZ"
 								if [ -n "$VERZ" ] ; then
 									CONT_TITLE=(${gv_Create}::${lv_Container})
-									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen für den Container ein.')
+									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen fÃ¼r den Container ein.')
 									inputbox "$CONT_TITLE" "$CONT_MSG"
 									if [ -n "$gv_Auswahl" ] ; then
 										# Variablen für create_action belegen
 										CRYPT_PATH="$VERZ"
 										CRYPT_FILE="$gv_Auswahl"
 										Src=${${${(s: :)${(M)"${(f)$(< $TABFILE)}"##*${VERZ}/${CRYPT_FILE}[[:space:]]*}}[2]}%% *}
-										# existierendes Laufwerk überschreiben?
+										# existierendes Laufwerk Ã¼berschreiben?
 										if [ -f "${VERZ}/${CRYPT_FILE}" -a -f "$Src" ] ; then
 											yesno "$CONT_TITLE" "$OVERWRITE_MSG" "no"
 											if [ "$gv_Auswahl" = yes ] ; then

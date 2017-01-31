@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 22.11.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 31.01.2017
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschlüsselten
 # Devices mittels cryptsetup.
@@ -9,9 +9,9 @@
 # /lib/cryptsetup/cryptdisks.functions übernommen, angepasst
 # oder erweitert.
 #
-# Version: 0.2.2
+# Version: 0.2.3
 
-# Ausf�hren von Befehlen auf bestimmte Signale.
+# Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Nummerierung geben kann.
 #
@@ -38,7 +38,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	export FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enth�lt die globalen Scripteinstellungen und l�dt
+# script_init enthält die globalen Scripteinstellungen und lädt
 # diese automatisch.
 #
 autoload -U script_init
@@ -81,7 +81,7 @@ fi
 load_module dm-crypt
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
-# ben�tigten Funktionen laden.
+# benötigten Funktionen laden.
 autoload -U no_luks_cryptdev_msg
 
 # Wenn es die oder eine von den Konfigurationsdateien kwcryptsetuprc
@@ -95,11 +95,11 @@ fi
 #################################################
 # TODO: CIPHER hier lassen? Tendenz ja.
 if [[ "${gv_K_Release%%-*}" > 2.6.33 ]] ; then
-	CIPHER="äs-xts-plain64"
-	#CIPHER="äs-cbc-essiv:sha256"
+	CIPHER="aes-xts-plain64"
+	#CIPHER="aes-cbc-essiv:sha256"
 else
-	CIPHER="äs-xts-plain"
-	#CIPHER="äs-plain"
+	CIPHER="aes-xts-plain"
+	#CIPHER="aes-plain"
 fi
 
 # translation Variablen
@@ -133,10 +133,10 @@ main_menu() {
 }
 ## }}}
 # Funktion (no_block_device), Nachricht das es kein Block# {{{
-# Gerät ist
+# GerÃ¤t ist
 #
 no_block_device() {
-	MSG=$(gettext '$dst ist kein block Gerät.')
+	MSG=$(gettext '$dst ist kein block GerÃ¤t.')
 	msgbox "$gv_Attention" "$MSG"
 }
 ## }}}
@@ -180,7 +180,7 @@ no_block_device() {
 	checkscript_fail_msg() {
 		MSG=$(gettext 'Die Überprüfung von ${MAPPER}/${dst} ist fehlgeschlagen. Vielleicht ist das Passwort falsch oder falsche Argumente an das Checkscript ($CHECK) übergeben.
 
-Das verschlüsselte Gerät $dst wird entfernt.')
+Das verschlÃ¼sselte GerÃ¤t $dst wird entfernt.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -190,7 +190,7 @@ parse_opts() {
 
 	# Variablen# {{{
 	################################
-	# TODO: einige Variablen löschen
+	# TODO: einige Variablen lÃ¶schen
 	DST="$1"
 	PARAMS=""
 	LUKSPARAMS=""
@@ -208,7 +208,7 @@ parse_opts() {
     KEYSCRIPT=""
 	CRYPTTAB_OPTIONS=""
 	LOUD=""
-#	# extra Variablen gegen�ber Debians Funktion
+#	# extra Variablen gegenüber Debians Funktion
 #	# /lib/cryptsetup/cryptdisks.functions leeren
 #	CIPHER=""
 #	DISCARD=""
@@ -358,7 +358,7 @@ parse_opts() {
 			tcrypt)
 				USETCRYPT="yes"
 				;;
-			nöarly)
+			nÃ¶arly)
 				if [ -n "$VALUE" ]; then
 					NOEARLY="yes"
 				else
@@ -434,9 +434,9 @@ parse_key() {
 #
 # usage: cryptdisk_stop [ -c ] "$DST"
 #
-# -c  - erstelltes verschlüsseltes Laufwerk ohne die Nachricht
+# -c  - erstelltes verschlÃ¼sseltes Laufwerk ohne die Nachricht
 #       Laufwerk wurde schon gestoppt beenden.
-# DST - verschlüsseltes Laufwerk
+# DST - verschlÃ¼sseltes Laufwerk
 #
 cryptdisk_stop() {
 	local OpenCount dst Opt SrcMajor SrcMinor
@@ -509,7 +509,7 @@ cryptdisk_start() {
 	fi
 
 	dmsetup mknodes
-	# externes Medium einbinden (Schlüssel)
+	# externes Medium einbinden (SchlÃ¼ssel)
 	if [ -n "$MOUNT_PATH" ] ; then
 		mount_fs
 	fi
@@ -552,7 +552,7 @@ cryptdisk_start() {
 				return 1
 			fi
 
-			# Make sure that target device dösn't exist
+			# Make sure that target device doesn't exist
 			if [ -b "${MAPPER}/$dst" ] ; then
 				MSG=$(gettext '$dst: Das Laufwerk läuft bereits.')
 				msgbox "$gv_Attention" "$MSG"
@@ -592,7 +592,7 @@ cryptdisk_start() {
 				cryptsetup --verbose $HEADER resize "$dst" || return $?
 			fi
 		done
-	# Externes Medium ausbinden (Bsp. Schlüssel auf USB)
+	# Externes Medium ausbinden (Bsp. SchlÃ¼ssel auf USB)
 	umount_fs
 	return 0
 }
@@ -691,7 +691,7 @@ check_key() {
 ## }}}
 # Funktion clean_keys# {{{
 clean_keys() {
-	# Schl�ssel-Dateien und Dateien mit
+	# Schlüssel-Dateien und Dateien mit
 	# Passphrase schreddern.
 	if [ -n "$PASSPHRASE" ] ; then
 		unset -- PASSPHRASE
@@ -959,8 +959,8 @@ umount_fs() {
 	}
 }
 ## }}}
-# Funktion check_batch_mode, unterst�tzt cryptsetup den batch-mode?# {{{
-# Nur wichtig f�r luksFormat.
+# Funktion check_batch_mode, unterstützt cryptsetup den batch-mode?# {{{
+# Nur wichtig für luksFormat.
 #
 check_batch_mode() {
 	if cryptsetup --batch-mode --help &>/dev/null ; then
@@ -1001,7 +1001,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
 		$lv_State)
-			# Status von verschlüsselten Laufwerken anzeigen (/etc/crypttab)# {{{
+			# Status von verschlÃ¼sselten Laufwerken anzeigen (/etc/crypttab)# {{{
 			search_cryptdev
 			# zur Auswahl anbieten
 			if [ -n "$MAP_DEV_M" ] ; then
@@ -1055,7 +1055,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Luks
 			;;
 		$lv_Drives)
-			# verschlüsselte Laufwerke managen.
+			# verschlÃ¼sselte Laufwerke managen.
 			autoload -U manage_cryptdisk
 			manage_cryptdisk
 			main_menu $lv_Drives
