@@ -6,7 +6,7 @@
 #
 # Version: 0.0.1
 
-# Ausführen von Befehlen auf bestimmte Signale.
+# AusfÃ¼hren von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
@@ -30,7 +30,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthält die globalen Scripteinstellungen und lädt
+# script_init enthÃ¤lt die globalen Scripteinstellungen und lÃ¤dt
 # diese automatisch.
 #
 autoload -U script_init
@@ -42,7 +42,7 @@ script_init
 
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
-# benötigten Funktionen laden. Die Funktion sys_conf wird bereits
+# benÃ¶tigten Funktionen laden. Die Funktion sys_conf wird bereits
 # von der Funktion script_init ausgefÃ¼hrt.
 # autoload -U ...
 
@@ -76,7 +76,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
 		${gv_Configuration}1)
-			# Selber weiter machen ;-), ursprünglicher Menüpunkt wird markiert
+			# Selber weiter machen ;-), ursprÃ¼nglicher MenÃ¼punkt wird markiert
             # und der Fokus steht auf diesem.
 			main_menu "${gv_Configuration}1"
 			;;

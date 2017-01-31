@@ -133,10 +133,10 @@ main_menu() {
 }
 ## }}}
 # Funktion (no_block_device), Nachricht das es kein Block# {{{
-# GerÃ¤t ist
+# Gerät ist
 #
 no_block_device() {
-	MSG=$(gettext '$dst ist kein block GerÃ¤t.')
+	MSG=$(gettext '$dst ist kein block Gerät.')
 	msgbox "$gv_Attention" "$MSG"
 }
 ## }}}
@@ -180,7 +180,7 @@ no_block_device() {
 	checkscript_fail_msg() {
 		MSG=$(gettext 'Die Überprüfung von ${MAPPER}/${dst} ist fehlgeschlagen. Vielleicht ist das Passwort falsch oder falsche Argumente an das Checkscript ($CHECK) übergeben.
 
-Das verschlÃ¼sselte GerÃ¤t $dst wird entfernt.')
+Das verschlüsselte Gerät $dst wird entfernt.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	## }}}
@@ -190,7 +190,7 @@ parse_opts() {
 
 	# Variablen# {{{
 	################################
-	# TODO: einige Variablen lÃ¶schen
+	# TODO: einige Variablen löschen
 	DST="$1"
 	PARAMS=""
 	LUKSPARAMS=""
@@ -358,7 +358,7 @@ parse_opts() {
 			tcrypt)
 				USETCRYPT="yes"
 				;;
-			nÃ¶arly)
+			nöarly)
 				if [ -n "$VALUE" ]; then
 					NOEARLY="yes"
 				else
@@ -434,9 +434,9 @@ parse_key() {
 #
 # usage: cryptdisk_stop [ -c ] "$DST"
 #
-# -c  - erstelltes verschlÃ¼sseltes Laufwerk ohne die Nachricht
+# -c  - erstelltes verschlüsseltes Laufwerk ohne die Nachricht
 #       Laufwerk wurde schon gestoppt beenden.
-# DST - verschlÃ¼sseltes Laufwerk
+# DST - verschlüsseltes Laufwerk
 #
 cryptdisk_stop() {
 	local OpenCount dst Opt SrcMajor SrcMinor
@@ -509,7 +509,7 @@ cryptdisk_start() {
 	fi
 
 	dmsetup mknodes
-	# externes Medium einbinden (SchlÃ¼ssel)
+	# externes Medium einbinden (Schlüssel)
 	if [ -n "$MOUNT_PATH" ] ; then
 		mount_fs
 	fi
@@ -592,7 +592,7 @@ cryptdisk_start() {
 				cryptsetup --verbose $HEADER resize "$dst" || return $?
 			fi
 		done
-	# Externes Medium ausbinden (Bsp. SchlÃ¼ssel auf USB)
+	# Externes Medium ausbinden (Bsp. Schlüssel auf USB)
 	umount_fs
 	return 0
 }
@@ -1001,7 +1001,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
 		$lv_State)
-			# Status von verschlÃ¼sselten Laufwerken anzeigen (/etc/crypttab)# {{{
+			# Status von verschlüsselten Laufwerken anzeigen (/etc/crypttab)# {{{
 			search_cryptdev
 			# zur Auswahl anbieten
 			if [ -n "$MAP_DEV_M" ] ; then
@@ -1055,7 +1055,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Luks
 			;;
 		$lv_Drives)
-			# verschlÃ¼sselte Laufwerke managen.
+			# verschlüsselte Laufwerke managen.
 			autoload -U manage_cryptdisk
 			manage_cryptdisk
 			main_menu $lv_Drives

@@ -1,4 +1,4 @@
-# Funktion für alle *regexp* oder *pcre* Tabellen{{{
+# Funktion fÃ¼r alle *regexp* oder *pcre* Tabellen{{{
 #
 # usage: regexp_pcre_table FILE
 #
@@ -72,7 +72,7 @@ regexp_pcre_table() {
 					inputbox "$TABLE_TITLE" "$STRING_MSG" "$STRING"
 					if [ -n "$gv_Auswahl" ] ; then
 						#
-						# Eingabe überprüfen auf Anfang (/) und End (/)
+						# Eingabe Ã¼berprÃ¼fen auf Anfang (/) und End (/)
 						# alles quoten, was irgendwie von der shell ausgewertet wird.
 						#
 						case $gv_Auswahl in
@@ -91,7 +91,7 @@ regexp_pcre_table() {
 					regexp_pcre_menue $lv_String
 					;;
 				$lv_Flags)
-					# Flags für den RA auswählen# {{{
+					# Flags fÃ¼r den RA auswÃ¤hlen# {{{
 					if [[ $TAB_FM == pcre ]] ; then
 						flags_choice -p "$FLAGS"
 					else
@@ -101,7 +101,7 @@ regexp_pcre_table() {
 					regexp_pcre_menue $lv_Flags
 					;;
 				$lv_Action)
-					# Aktion ausführen (OK, REJECT....)# {{{
+					# Aktion ausfÃ¼hren (OK, REJECT....)# {{{
 					kwpostfix_action "$ACTION"
 					case $ACTION in
 						OK|DUNNO)	unset -- TEXT
@@ -138,7 +138,7 @@ regexp_pcre_table() {
 					regexp_pcre_menue $lv_Port
 					;;
 				$lv_Transport)
-					# Transportmethode auswählen# {{{
+					# Transportmethode auswÃ¤hlen# {{{
 					transport_methode "${TRANS##:*}" "${TRANS##*:}"
 					if [[ $WERT == error ]] ; then
 						TRANS="$WERT"
@@ -347,7 +347,7 @@ regexp_pcre_table() {
 				tabellen_menue "${gv_Auswahl#HELP }"
 				;;
 			$gv_Display)
-				# Ansicht der Einträge
+				# Ansicht der EintrÃ¤ge
 				tab_ansicht
 				tabellen_menue $gv_Display
 				;;
@@ -365,7 +365,7 @@ regexp_pcre_table() {
 				tabellen_menue $gv_Edit
 				;;
 			$gv_Change)
-				# Einträge verändern{{{
+				# EintrÃ¤ge verÃ¤ndern{{{
 				unset -- STRING FLAGS ACTION MAIL TRANS HOST TEXT AENDERN_ADR \
 					OldHost OldMail OldPort OldText OldTrans
 				key_value "$FILE"
@@ -378,7 +378,7 @@ regexp_pcre_table() {
 								menubox "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$TABLE_ENTRY_MSG" "$CHANGE_MENU"
 								;;
 							*)
-								# Auswahl verändern
+								# Auswahl verÃ¤ndern
 								print "${gv_Auswahl//\\/\\\\\\}" | \
 									sed -e 's#\\#\\\\\\#g ; 
 									s#\"#\\\\\\"#g ; s#\$#\\\\\\$#g' | \
@@ -475,7 +475,7 @@ regexp_pcre_table() {
 				tabellen_menue $gv_Change
 				;;
 			$gv_Delete)
-				# Einträge löschen{{{
+				# EintrÃ¤ge lÃ¶schen{{{
 				key_value "$FILE"
 				if [[ -n ${AUSWAHL_MULTI[1]} ]] ; then
 					DEL_MENU=($AUSWAHL_MULTI)
@@ -485,7 +485,7 @@ regexp_pcre_table() {
 							HELP*)	script_help kwpostfix_del_help
 								checklist "${gv_Auswahl#HELP }" "$TABLE_TITLE" "$gv_Delete_MSG" "$DEL_MENU"
 								;;	
-							*)	# Löschen
+							*)	# LÃ¶schen
 								 while read ADRESS ; do
 									grep -Fv "$ADRESS" $FILE >$FILE$$
 									mv $FILE$$ $FILE

@@ -2,7 +2,7 @@
 #
 # Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
 #
-# Script: kwcamera, zum einstellen, downloaden, löschen von Bildern in Digital Kameras.
+# Script: kwcamera, zum einstellen, downloaden, lÃ¶schen von Bildern in Digital Kameras.
 # Version: 0.1.1
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -26,7 +26,7 @@ if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
 	FPATH=${Script_init_Fpath}:${FPATH}
 fi
 
-# script_init enthält die globalen Scripteinstellungen und lädt
+# script_init enthÃ¤lt die globalen Scripteinstellungen und lÃ¤dt
 # diese automatisch.
 autoload -U script_init
 
@@ -179,7 +179,7 @@ while [ "$gv_Auswahl" ] ; do
 						conf_menu $gv_Directory
 						;;
 					$lv_Port)
-						# Port auswÃ¤hlen{{{
+						# Port auswÃ¼hlen{{{
 						char_device_anzeige
 						if [ "$CHAR_ARRAY" ] ; then
 							# Funktion char_conf_port_menu{{{
@@ -209,12 +209,12 @@ while [ "$gv_Auswahl" ] ; do
 						conf_menu $lv_Port
 						;;
 					$lv_Model)
-						# 1. verfügbare Kameramodelle in einem array speichern{{{
+						# 1. verfÃ¼gbare Kameramodelle in einem array speichern{{{
 						#
 						unset -- MOD_ARRAY
 						ANZ=1
 						gphoto2 --list-cameras | grep -v '^[A-Z]' \
-							| sed 's/"//g ; s/>>//g ; s/<<//g ; s/»//g ; s/«//g' | while read i ; do
+							| sed 's/"//g ; s/>>//g ; s/<<//g ; s/Â»//g ; s/Â«//g' | while read i ; do
 							MOD_ARRAY[ANZ]="\"$i\" \"\""
 							(( ANZ++ ))
 						done
@@ -296,7 +296,7 @@ while [ "$gv_Auswahl" ] ; do
 							fi	
 							cd "$IMAGE_SUB_DIR"
 							#
-							# Präfix für Bilder eingeben.
+							# PrÃ¤fix fÃ¼r Bilder eingeben.
 							#
 							IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
 							#
@@ -308,13 +308,13 @@ while [ "$gv_Auswahl" ] ; do
 								IMAGE_PRAEFIX="$gv_Auswahl"
 							else	
 								#
-								# Falls es kein Präfix gibt, wird image genommen. So werden die Sandartdateien 
-								# nicht überschrieben, da die Kamera alles im P1010001.JPG Format speichert.
+								# Falls es kein PrÃ¤fix gibt, wird image genommen. So werden die Sandartdateien 
+								# nicht Ã¼berschrieben, da die Kamera alles im P1010001.JPG Format speichert.
 								#
 								IMAGE_PRAEFIX="image-`date +%d.%m.%Y`"
 							fi
-							# überprüfen, ob der Präfix, in dem angegebenen Verzeichnis schon vorhanden ist.
-							# Wenn ja gehts zur Neueingabe eines Präfixes.
+							# Ã¼berprÃ¼fen, ob der PrÃ¤fix, in dem angegebenen Verzeichnis schon vorhanden ist.
+							# Wenn ja gehts zur Neueingabe eines PrÃ¤fixes.
 							#
 							ls (*/)#${IMAGE_PRAEFIX}-<0-1000000>.(jpg|JPG) &>/dev/null
 							while [ "$?" = 0 ] ; do
@@ -339,7 +339,7 @@ while [ "$gv_Auswahl" ] ; do
 								user_device_check "$VERZ" AIE
 								cd "$VERZ"
 								#
-								# Präfix für thumbnails setzen
+								# PrÃ¤fix fÃ¼r thumbnails setzen
 								# gphoto2 Bug, bei --filename mit %n
 								#
 								IMAGE_PRAEFIX="thumb-${IMAGE_PRAEFIX}"
@@ -450,7 +450,7 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $lv_Download
 			;;
 		$gv_Delete)
-			# Bilder in der Kamera löschen{{{
+			# Bilder in der Kamera lÃ¶schen{{{
 			#
 			if [ "$CAMERA_PORT" -a "$CAMERA_MODELL" ] ; then
 				gphoto2 --port "$CAMERA_PORT" --camera "$CAMERA_MODELL" -D

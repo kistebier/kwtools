@@ -38,8 +38,8 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# auf Programme prÃ¼fen.
-prog_check losetup loop-Ã¤s-keygen
+# auf Programme prüfen.
+prog_check losetup loop-äs-keygen
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
 fi
@@ -52,7 +52,7 @@ lv_Container=$(gettext 'Container')
 lv_Partition=$(gettext 'Partition')
 lv_Swap=$(gettext 'Swap')
 PASSWD_TITLE=$(gettext 'GPG-Passphrase')
-PASSWD_MSG=$(gettext 'Geben Sie bitte die Passphrase fÃ¼r Ihre gpg Schlüsseldatei ($KEY_FILE) ein!')
+PASSWD_MSG=$(gettext 'Geben Sie bitte die Passphrase für Ihre gpg Schlüsseldatei ($KEY_FILE) ein!')
 CREATE_MULTI_KEY_INFO=$(gettext 'Jetzt wird ein multi_key erstellt. Dies könnte etwas dauern.')
 
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
@@ -164,12 +164,12 @@ create_cont() {
 	else
 		Dev=ok
 	fi
-	# Suche nach freien loop GerÃ¤ten
+	# Suche nach freien loop Geräten
 	lo_setup
 	if [ -n "$gv_Loop_Dev" -a "$Dev" = ok ] ; then
 		if [ "$MULTI_KEY" = yes ] ; then
 			if [ -n "$KEY_FILE_PATH" ] ; then
-				# GrÃ¶sse in Byte umrechnen
+				# Grösse in Byte umrechnen
 				convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
 				if [ -n "$SIZE_B" ] ; then
 					dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
@@ -183,7 +183,7 @@ create_cont() {
 					unset -- PASSPHRASE
 					# Formatieren
 					format $gv_Loop_Dev
-					# Nachricht fÃ¼r /etc/fstab.
+					# Nachricht für /etc/fstab.
 					if [ "$?" = 0 ] ; then
 						fstab_info_multi "$CONTAINER"
 					else
@@ -203,7 +203,7 @@ create_cont() {
 			fi
 		else
 			# ohne KEY_FILE erstellen
-			# GrÃ¶sse in Byte umrechnen
+			# Grösse in Byte umrechnen
 			convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
 			if [ -n "$SIZE_B" ] ; then
 				dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
@@ -217,7 +217,7 @@ create_cont() {
 				unset -- PASSPHRASE
 				# Formatieren
 				format $gv_Loop_Dev
-				# Nachricht fÃ¼r /etc/fstab. fstab_info braucht die Variable CONTAINER
+				# Nachricht für /etc/fstab. fstab_info braucht die Variable CONTAINER
 				if [ "$?" = 0 ] ; then
 					fstab_info "$CONTAINER"
 				else
@@ -348,8 +348,8 @@ while [ "$gv_Auswahl" ] ; do
 						# Schlüssellänge eingeben{{{
 						ENCRYPT_TITLE=(${gv_Configuration}::${lv_Enctryption})
 						ENCRYPT_MSG=$(gettext 'Wählen Sie eine Verschlüsselungsart aus.')
-						ENCRYPT_MENU=(NONE \"\" XOR \"\" Ã¤s128 \"\" Ã¤s192 \"\"
-						Ã¤s256 \"\" twofish128 \"\" twofish160 \"\" twofish168 \"\"
+						ENCRYPT_MENU=(NONE \"\" XOR \"\" äs128 \"\" äs192 \"\"
+						äs256 \"\" twofish128 \"\" twofish160 \"\" twofish168 \"\"
 						twofish192 \"\" twofish256 \"\" blowfish128 \"\"
 						blowfish168 \"\" blowfish192 \"\" blowfish256 \"\"
 						serpent128 \"\" serpent192 \"\" serpent256 \"\")
@@ -374,12 +374,12 @@ while [ "$gv_Auswahl" ] ; do
 						conf_menue $lv_Mount
 						;;
 					$gv_Directory)
-						# Verzeichnis in dem der SchlÃ¼ssel gespeichert wird auswÃ¤hlen{{{
+						# Verzeichnis in dem der Schlüssel gespeichert wird auswählen{{{
 						dselect "$KEY_FILE_PATH"
 						if [ "$VERZ" ] ; then
 							dselect_check -c "$VERZ"
 							if [ "$VERZ" ] ; then
-								# Verzeichnis auf Rechte prÃ¼fen
+								# Verzeichnis auf Rechte prüfen
 								if user_device_check "$VERZ" RX ; then
 									KEY_FILE_PATH="$VERZ"
 								else
@@ -429,13 +429,13 @@ while [ "$gv_Auswahl" ] ; do
 			haupt_menue $lv_Container
 			;;
 		$lv_Partition)
-			# verschlÃ¼sseltes Laufwerk erstellen{{{
+			# verschlüsseltes Laufwerk erstellen{{{
 			if [ -n "$ENCRYPT" ] ; then
 				# Festplatten finden
 				disk
 				# Partitionen finden.
 				partdb
-				# heraussuchen von unverschlÃ¼sselten Partitionen
+				# heraussuchen von unverschlüsselten Partitionen
 				# die in keinem btrfs RAID Array vorkommen.
 				search_devices -p
 				if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
@@ -456,7 +456,7 @@ while [ "$gv_Auswahl" ] ; do
 					if [ -n "$WERT" ] ; then
 						Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$WERT}}[1]}"
 						if [ "$Ist" ] ; then
-							# Laufwerk wenn nÃ¶tig ausbinden
+							# Laufwerk wenn nötig ausbinden
 							mount_check -u "$Ist"
 							while [ "$U_MOUNT" = no ] ; do
 								part_choice "$Parts"
@@ -475,7 +475,7 @@ while [ "$gv_Auswahl" ] ; do
 								losetup -d $Ist || prog_failure
 							fi
 						fi
-						# Suche nach freien loop GerÃ¤ten
+						# Suche nach freien loop Geräten
 						lo_setup
 						if [ -n "$gv_Loop_Dev" ] ; then
 							if [ "$MULTI_KEY" = yes ] ; then
@@ -487,7 +487,7 @@ while [ "$gv_Auswahl" ] ; do
 										unset -- PASSPHRASE
 										# Formatieren
 										format $gv_Loop_Dev
-										# Nachricht fÃ¼r /etc/fstab. fstab_info_multi braucht
+										# Nachricht für /etc/fstab. fstab_info_multi braucht
 										# die Variable WERT.
 										if [ "$?" = 0 ] ; then
 											fstab_info_multi "$WERT"
@@ -514,7 +514,7 @@ while [ "$gv_Auswahl" ] ; do
 									unset -- PASSPHRASE
 									# Formatieren
 									format $gv_Loop_Dev
-									# Nachricht fÃ¼r /etc/fstab. fstab_info braucht
+									# Nachricht für /etc/fstab. fstab_info braucht
 									# die Variable WERT.
 									if [ "$?" = 0 ] ; then
 										fstab_info "$WERT"
@@ -545,7 +545,7 @@ while [ "$gv_Auswahl" ] ; do
 			haupt_menue $lv_Partition
 			;;
 		$lv_Swap)
-			# verschlÃ¼sselte Swap-Partitionen erstellen{{{
+			# verschlüsselte Swap-Partitionen erstellen{{{
 			# Festplatten finden
 			disk
 			# Swap-Partitionen finden und zur Auswahl stellen.

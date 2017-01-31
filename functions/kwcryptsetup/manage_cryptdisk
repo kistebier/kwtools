@@ -115,8 +115,8 @@ manage_cryptdisk() {
 												if [ -n "$SIZE_MIB" ] ; then
 													Size_Tmp="$SIZE_MIB"
 												fi
-												# ist die GrÃ¶sse um die verkleinert werden soll
-												# kleiner als die ganze GrÃ¶sse der LV dann wird
+												# ist die Grösse um die verkleinert werden soll
+												# kleiner als die ganze Grösse der LV dann wird
 												# verkleinert.
 												if [[ "$Size_Tmp" -lt "$LV_SIZE" ]] ; then
 													(( LV_NEW_SIZE = LV_SIZE - Size_Tmp ))
@@ -203,7 +203,7 @@ manage_cryptdisk() {
 					cryptsetup ${=PARAMS} ${=PLAINPARAMS} ${=EXTRAPARAMS} \
 					open --type plain $SRC ${CRYPT_PREFIX}-${CRYPT_FILE} &>/dev/null || return=1
 			fi
-		# mit SchlÃ¼ssel
+		# mit Schlüssel
 		elif [ -n "$key" ] ; then
 			if [ "$USELUKS" = yes ] ; then
 				cryptsetup ${=PARAMS} ${=LUKSPARAMS} $LUKSFORMAT luksFormat $SRC &>/dev/null || return=1
@@ -296,7 +296,7 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 		else
 			# Laufwerk mit dem dementsprechenden Dateisystem formatieren.
 			# Wenn die Formatierung verneint wird, wird trotzdem
-			# ein Eintrag in der /etc/crypttab getÃ¤tigt.
+			# ein Eintrag in der /etc/crypttab getätigt.
 			format "${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}"
 			if [ "$?" != 0 ] ; then
 				# /etc/crypttab ändern
@@ -366,14 +366,14 @@ Bei \"nein\" wird abgebrochen.')
 								dselect_check -c "$VERZ"
 								if [ -n "$VERZ" ] ; then
 									CONT_TITLE=(${gv_Create}::${lv_Container})
-									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen fÃ¼r den Container ein.')
+									CONT_MSG=$(gettext 'Geben Sie bitte einen Namen für den Container ein.')
 									inputbox "$CONT_TITLE" "$CONT_MSG"
 									if [ -n "$gv_Auswahl" ] ; then
 										# Variablen für create_action belegen
 										CRYPT_PATH="$VERZ"
 										CRYPT_FILE="$gv_Auswahl"
 										Src=${${${(s: :)${(M)"${(f)$(< $TABFILE)}"##*${VERZ}/${CRYPT_FILE}[[:space:]]*}}[2]}%% *}
-										# existierendes Laufwerk Ã¼berschreiben?
+										# existierendes Laufwerk überschreiben?
 										if [ -f "${VERZ}/${CRYPT_FILE}" -a -f "$Src" ] ; then
 											yesno "$CONT_TITLE" "$OVERWRITE_MSG" "no"
 											if [ "$gv_Auswahl" = yes ] ; then
