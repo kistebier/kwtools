@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 04.05.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 31.01.2017
 #
-# Script: kwecryptfs, erstellt ein verschlÃ¼sseltes Dateisystem
-#         Ã¼ber einem Verzeichnis.
+# Script: kwecryptfs, erstellt ein verschlüsseltes Dateisystem
+#         über einem Verzeichnis.
 #
-# Version: 0.0.6
+# Version: 0.0.7
 
-# AusfÃ¼hren von Befehlen auf bestimmte Signale.
+# Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
 # eine andere Numerierung geben kann.
 #
@@ -50,14 +50,14 @@ fi
 
 kernel_release
 if [[ "${gv_K_Release%%-*}" < 2.6.24 ]] ; then
-	MSG=$(gettext 'Ihr Kernel ($gv_K_Release) ist zu alt fÃ¼r kwecryptfs.')
+	MSG=$(gettext 'Ihr Kernel ($gv_K_Release) ist zu alt für kwecryptfs.')
     msgbox "$gv_Attention" "$MSG"
     exit 0
 fi
 
 # Nachdem das Script initialisiert wurde, kann man die anderen
 # benötigten Funktionen laden. Die Funktion sys_conf wird bereits
-# von der Funktion script_init ausgefÃ¼hrt.
+# von der Funktion script_init ausgeführt.
 autoload -U kwecryptfs_conf
 
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
@@ -65,7 +65,7 @@ read_file kwecryptfsrc
 
 # Variablen
 TABFILE="/etc/fstab"
-gv_Key=$(gettext 'SchlÃ¼ssel')
+gv_Key=$(gettext 'Schlüssel')
 
 # Kernel Modul ecryptfs laden
 load_module ecryptfs
@@ -275,7 +275,7 @@ write_fstab() {
 # Funktion (no_tabentry_msg), kein Eintrag vorhanden.# {{{
 #
 no_tabentry_msg() {
-	MSG=$(gettext 'Es ist kein Eintrag fÃ¼r ecryptfs in der Datei /etc/fstab vorhanden.')
+	MSG=$(gettext 'Es ist kein Eintrag für ecryptfs in der Datei /etc/fstab vorhanden.')
     infobox "$gv_Info" "$MSG" 3
 }
 ## }}}
@@ -329,24 +329,24 @@ while [ "$gv_Auswahl" ] ; do
 			main_menu $gv_Configuration
 			;;
         $gv_Directory)
-			# verschlÃ¼sselte Verzeichnisse erstellen, Ã¤ndern und lÃ¶schen# {{{
+			# verschlüsselte Verzeichnisse erstellen, ändern und löschen# {{{
 			autoload -U manage_cryptdir
 			manage_cryptdir
 			## }}}
 			main_menu $gv_Directory
 			;;
 		$gv_Key)
-			# Datei SchlÃ¼sselverwaltung, einfacher SchlÃ¼ssel in Datei passwd=passphrase# {{{
+			# Datei Schlüsselverwaltung, einfacher Schlüssel in Datei passwd=passphrase# {{{
 			autoload -U manage_keys
 			manage_keys
 			## }}}
 			main_menu $gv_Key
 			;;
         $gv_Start)
-            # verschlÃ¼sselte Verzeichnisse starten# {{{
+            # verschlüsselte Verzeichnisse starten# {{{
 			read_fstab ecryptfs
             if [ -n "${FSTAB_VALUES[1]}" ] ; then
-				# PrÃ¼fen ob verschlÃ¼sseltes Verzeichnis eingebunden ist oder nicht.
+				# PrÃ¼fen ob verschlüsseltes Verzeichnis eingebunden ist oder nicht.
 				check_no_activ no
 				if [ -n "$A_DIR_M" ] ; then
 	                checklist "" "$gv_Start" "$gv_Menupoint" "$A_DIR_M"
@@ -359,7 +359,7 @@ while [ "$gv_Auswahl" ] ; do
 	                        *)
 								# Verzeichnisse mounten (f.E. USB_Keyfile).
 								mount_fs
-								# verschlÃ¼sselte Verzeichnisse mounten.
+								# verschlüsselte Verzeichnisse mounten.
 								for i in ${=gv_Auswahl} ; {
 									mount "$i"
 								}
@@ -370,7 +370,7 @@ while [ "$gv_Auswahl" ] ; do
 						esac
 					done
 				else
-					MSG=$(gettext 'Es sind alle verschlÃ¼sselten Verzeichnisse aktiv.')
+					MSG=$(gettext 'Es sind alle verschlüsselten Verzeichnisse aktiv.')
 					msgbox "$gv_Info" "$MSG"
 				fi
             else
@@ -380,10 +380,10 @@ while [ "$gv_Auswahl" ] ; do
             main_menu $gv_Start
             ;;
         $gv_Stop)
-            # verschlÃ¼sselte Verzeichnisse beenden# {{{
+            # verschlüsselte Verzeichnisse beenden# {{{
 			read_fstab ecryptfs
             if [ -n "$FSTAB_VALUES" ] ; then
-				# PrÃ¼fen ob verschlÃ¼sseltes Verzeichnis eingebunden ist oder nicht.
+				# Prüfen ob verschlüsseltes Verzeichnis eingebunden ist oder nicht.
 				check_no_activ yes
 				if [ -n "$A_DIR_M" ] ; then
 	                checklist "" "$gv_Stop" "$gv_Menupoint" "$A_DIR_M"
@@ -403,7 +403,7 @@ while [ "$gv_Auswahl" ] ; do
 						esac
 					done
 				else
-					MSG=$(gettext 'Es sind keine verschlÃ¼sselten Verzeichnisse aktiv.')
+					MSG=$(gettext 'Es sind keine verschlüsselten Verzeichnisse aktiv.')
 					msgbox "$gv_Info" "$MSG"
 				fi
             else
