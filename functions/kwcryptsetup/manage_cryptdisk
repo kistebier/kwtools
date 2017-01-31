@@ -228,9 +228,7 @@ manage_cryptdisk() {
 		local Part_Size Opt Sectors
 		Opt="$1"
 		DD_MSG=$(gettext 'Status beim überschreiben von Laufwerk ${CRYPT_PATH}/${CRYPT_FILE}.')
-		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufälliger Werte übershrieben werden (ja/nein)?
-
-Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Grösse nicht stimmt.')
+		DD_QUESTION_MSG=$(gettext 'Soll das Laufwerk ${CRYPT_PATH}/${CRYPT_FILE} mittels zufälliger Werte übershrieben werden (ja/nein)?\n\nBei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschrieben/erstellt werden, falls es nicht existiert beziehungsweise die Grösse nicht stimmt.')
 		# Grösse des Laufwerks berechnen
 		if [ "$Opt" = -p ] ; then
 			#Part_Size=${${(s: :)$(export LC_ALL=C ; fdisk -l ${CRYPT_PATH}/${CRYPT_FILE} 2>/dev/null)}[5]}	
@@ -282,16 +280,14 @@ Bei der Erstellung eines verschlüsselten Containers muss das Laufwerk überschr
 			cryptdisk_swap "${CRYPT_PREFIX}-${CRYPT_FILE}"
 			# /etc/crypttab ändern
 			change_crypttab
-			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
-${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	swap	swap	OPTIONEN	0	0')
+			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:\n\n${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	swap	swap	OPTIONEN	0	0')
 			msgbox "$gv_Info" "$MSG"
 		elif [[ -n $TMPFS ]] ; then
 			# Temporäres Laufwerk erstellen.
 			cryptdisk_tmp "${CRYPT_PREFIX}-${CRYPT_FILE}"
 			# /etc/crypttab ändern
 			change_crypttab
-			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
-${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
+			MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:\n\n${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 			msgbox "$gv_Info" "$MSG"
 		else
 			# Laufwerk mit dem dementsprechenden Dateisystem formatieren.
@@ -304,8 +300,7 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$TMPFS	OPTIONEN	0	2')
 			else
 				# /etc/crypttab ändern
 				change_crypttab
-				MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:
-${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
+				MSG=$(gettext 'Sie können jetzt in die Datei /etc/fstab folgendes eintragen:\n\n${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
 				msgbox "$gv_Info" "$MSG"
 			fi
 		fi
@@ -341,9 +336,7 @@ ${MAPPER}/${CRYPT_PREFIX}-${CRYPT_FILE}	MOUNTPUNKT	$FS	OPTIONEN	0	2')
 				;;
 			$gv_Create)
 				# Verschlüsseltes Device erstellen# {{{
-				OVERWRITE_MSG=$(gettext 'Das Laufwerk $CRYPT_FILE existiert schon. Soll es überschrieben werden (ja/nein)?
-
-Bei \"nein\" wird abgebrochen.')
+				OVERWRITE_MSG=$(gettext 'Das Laufwerk $CRYPT_FILE existiert schon. Soll es überschrieben werden (ja/nein)?\n\nBei \"nein\" wird abgebrochen.')
 				#
 				# Funktion create_menu# {{{
 				CREATE_TITLE=($gv_Create)
