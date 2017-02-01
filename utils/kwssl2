@@ -82,8 +82,8 @@ lv_Request=$(gettext 'Anforderungen')
 lv_Request_Create=$(gettext 'Anforderung erstellen')
 lv_Sign=$(gettext 'signieren')
 lv_ExportFilename=$(gettext 'Export Dateiname')
-lv_YesValidity=$(gettext 'gueltig')
-lv_NoValidity=$(gettext 'ungueltig')
+lv_YesValidity=$(gettext 'gültig')
+lv_NoValidity=$(gettext 'ungültig')
 lv_RevokeValidity=$(gettext 'widerrufen')
 lv_Open=$(gettext 'öffnen')
 #
@@ -488,8 +488,8 @@ get_format_file() {
 # Funktion (get_info_files), Zertifikate Dateien herausfinden# {{{
 #
 # usage: get_info_files [ -u | -v | nichts ]
-# -u - ungueltige Zertifikate
-# -v  - gueltige Zertifikate
+# -u - ungültige Zertifikate
+# -v  - gültige Zertifikate
 # - - alle Zertifikate
 #
 #
@@ -499,7 +499,7 @@ get_info_files() {
 	unset -- $UNSET $UNSET_INFO_FILE
 	local Anz Tmp Opt
 	Opt="$1"
-	# Funktion (check_datetime), gueltig/ungueltig anhand# {{{
+	# Funktion (check_datetime), gültig/ungültig anhand# {{{
 	# der Zeitdaten herausfinden
 	#
 	check_datetime() {
@@ -529,7 +529,7 @@ get_info_files() {
 	while read Val Time Serial d Subject Rest ; do
 		case $Val in
 			V)	Tmp="$Subject"
-				# V = gueltig, aber trotzdem prüfen.
+				# V = gültig, aber trotzdem prüfen.
 				#lv_Validity="$lv_YesValidity"
 				check_datetime
 				;;
@@ -543,7 +543,7 @@ get_info_files() {
 		gen_name
 		case "$Opt" in
 			-u)
-				# ungueltige Certificates herrausfinden# {{{
+				# ungültige Certificates herrausfinden# {{{
 				CERTFILE="${KWSSL_DIR}/${CA_OPEN_NAME}/certs/${GEN_NAME}.pem"
 				if [ -f "$CERTFILE" ] ; then
 					case "$lv_Validity" in
@@ -558,7 +558,7 @@ get_info_files() {
 				## }}}
 				;;
 			-v)
-				# gueltige Certificates herrausfinden# {{{
+				# gültige Certificates herrausfinden# {{{
 				CERTFILE="${KWSSL_DIR}/${CA_OPEN_NAME}/certs/${GEN_NAME}.pem"
 				if [ -f "$CERTFILE" ] ; then
 					case "$lv_Validity" in
@@ -573,7 +573,7 @@ get_info_files() {
 				## }}}
 				;;
 			*)
-				# alle ((un)gueltige) Certificates herrausfinden# {{{
+				# alle ((un)gültige) Certificates herrausfinden# {{{
 				CERTFILE="${KWSSL_DIR}/${CA_OPEN_NAME}/certs/${GEN_NAME}.pem"
 				if [ -f "$CERTFILE" ] ; then
 					(( Anz++ ))

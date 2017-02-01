@@ -5,7 +5,7 @@ MSG=$(gettext 'smtp_address_preference: Wählen Sie das Internet Protokoll aus.
 \tStandard ist any.
 
 smtp_always_send_ehlo: Soll sich Postfix immer als ESMTP-fähiger
-\tServer indentifizieren (ja/nein)
+\tServer indentifizieren ($gv_Yes/$gv_No)
 \tStandard ist ja.
 
 smtp_bind_address: IPv4-Adresse, die für ausgehende Verbindungen
@@ -22,7 +22,7 @@ smtp_body_checks: Tabelle, eine Filterung des Bodies beim versenden
 
 smtp_cname_overrides_servername: Soll das überschreiben der Server-
 \tnamen, die der SMTP client zum loggen benutzt, bei DNS CNAME
-\trecords erlaubt werden (ja/nein)? Dies geschieht beim SASL
+\trecords erlaubt werden ($gv_Yes/$gv_No)? Dies geschieht beim SASL
 \tPasswort nachschlagen, bei der TLS Regel Entscheidung oder
 \tbei der TLS Zertifikat Bestätigung.
 \tStandard ist nein.
@@ -34,10 +34,10 @@ smtp_connect_timeout: Timeout für den Aufbau der Verbindung. Wenn
 \tStandard ist 30s.
 
 smtp_connection_cache_destinations: Soll die SMTP Verbindung
-\tpermanent gecacht werden (ja/nein)?
+\tpermanent gecacht werden ($gv_Yes/$gv_No)?
 smtp_connection_cache_on_demand: Soll die SMTP Verbindung zeitweilig
 \tgecacht werden, wenn ein Ziel ein hohes Mail Aufkommen in
-\tder "active" Warteschlange hat (ja/nein)?
+\tder "active" Warteschlange hat ($gv_Yes/$gv_No)?
 \tStandard ist ja.
 
 smtp_connection_reuse_time_limit: Zeit ab wann der Cache einer SMTP
@@ -65,7 +65,7 @@ smtp_data_xfer_timeout: Timeout bei Übertragung einer Mail. Zur
 
 smtp_defer_if_no_mx_address_found: Soll die Mail Zustellung zurück-
 \tgestellt werden, wenn ein MX record nicht zu einer IP
-\tAdresse aufgelöst werden kann (ja/nein)?
+\tAdresse aufgelöst werden kann ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_delivery_slot_cost: Dient dem Postfix Queue Manager zur
@@ -127,7 +127,7 @@ smtp_dns_resolver_options: DNS Resolver Optionen für den Postfix
 \tDatei /etc/resolv.conf hin.
 
 smtp_enforce_tls: Soll SSL/TLS beim Versand einer Mail erzwungen
-\twerden (ja/nein)?
+\twerden ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_extra_recipient_limit: Anzahl der zusätzlichen Mailadressen
@@ -138,8 +138,8 @@ smtp_fallback_relay: Liste von optionalen Rechnernamen, an welchen
 \tunzustellbare/fehlerhafte Mails, zur weiteren Bearbeitung,
 \tgesendet werden.
 
-smtp_generic_maps: Tabelle die die Umschreibung von lokal gueltigen
-\tAdressen zu global gueltigen Adressen beim versenden übers
+smtp_generic_maps: Tabelle die die Umschreibung von lokal gültigen
+\tAdressen zu global gültigen Adressen beim versenden übers
 \tInternet beinhaltet.
 
 smtp_header_checks: Tabelle, eine Filterung des Header beim
@@ -196,13 +196,13 @@ smtp_nested_header_checks: Tabelle mit Filtermustern der Mailanhänge
 \tHeader, beim versenden einer mail.
 
 smtp_never_send_ehlo: Soll sich Postfix nie als ESMTP-fähiger Server
-\tidentifizieren (ja/nein)?
+\tidentifizieren ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_per_record_deadline: Sie können das Verhalten der
 \tsmtp_*_timeout Limits verändern vom Zeitlimit eines Lese- oder
 \tSchreibaufruf zu einem Zeitlimit zum erhalten oder senden einer
-\tkompletten Aufzeichnung (ja/nein).
+\tkompletten Aufzeichnung ($gv_Yes/$gv_No).
 \tStandard ist nein.
 
 NOTIZ: Falls smtp_per_record_deadline an ist kann ein kurzer Timeout
@@ -232,11 +232,11 @@ smtp_quit_timeout: Timeout nach Übertragung des Kommandos QUIT.
 \tStandard ist 300s.
 
 smtp_quote_rfc821_envelope: Sollen die Adressen im SMTP MAIL FROM
-\tund RCPT TO Kommando gequotet werden (ja/nein)?
+\tund RCPT TO Kommando gequotet werden ($gv_Yes/$gv_No)?
 \tStandard ist ja.
 
 smtp_randomize_addresses: Soll die Reihenfolge der Enveloper-Adressen
-\tbei einer SMTP-Sitzung gemixt werden (ja/nein)? Das verhindert
+\tbei einer SMTP-Sitzung gemixt werden ($gv_Yes/$gv_No)? Das verhindert
 \t, das stets die gleiche defekte Adresse die gesamte
 \tAuslieferung einer Mail blockiert.
 \tStandard ist ja.
@@ -275,13 +275,13 @@ smtp_sasl_auth_cache_time: Eingabe des maximalen Alters der
 \tStandard ist 90d (d = Tage).
 
 smtp_sasl_auth_enable:  Soll die Identifizierung über SMTP-Auth bei
-\tausgehenden Mails aktiviert werden (ja/nein)?
+\tausgehenden Mails aktiviert werden ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_sasl_auth_soft_bounce: Falls eine SMTP-AUTH Identifierzierung
 \tmit dem Fehlercode 535 abgelehnt wird kann die Mailzustellung
 \taufgeschoben werden oder die Mail als unzustellbar gekennzeichnet
-\twerden (ja/nein).
+\twerden ($gv_Yes/$gv_No).
 \tStandard ist ja.
 
 NOTIZ: Ein ja überschreibt die globale Einstellung des
@@ -323,28 +323,28 @@ smtp_sasl_type: Wählen Sie ein SASL Plugin mit der sich der Postfix
 
 smtp_send_dummy_mail_auth: Man kann an das MAIL FROM Kommando, bei
 \tder SMTP-AUTH Identifierzierung die AUTH=<> Optionen anhängen
-\t(ja/nein).
+\t($gv_Yes/$gv_No).
 \tStandard ist nein.
 
 smtp_send_xforward_command: Soll ein nicht Standard XFORWARD
 \tKommando gesendet werden, falls SMTP Server EHLO XFORWARD
-\tunterstuetzt (ja/nein)?
+\tunterstuetzt ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_sender_dependent_authentication: Hier können Sie die
 \tAuthentifizierung des Postfix Clients mittels SMTP_AUTH
 \taktivieren. Dabei wird der SMTP Cache ausgeschaltet, damit bei
 \tMails von verschiedenen Sendern die richtige Beglaubigung
-\tangewendet wird (ja/nein).
+\tangewendet wird ($gv_Yes/$gv_No).
 \tStandard ist nein.
 
 smtp_skip_5xx_greeting: Soll der Begrüssungsstring bei einem
-\tSMTP-Code 5xx (dauerhafter Fehler) ignoriert werden (ja/nein)?
+\tSMTP-Code 5xx (dauerhafter Fehler) ignoriert werden ($gv_Yes/$gv_No)?
 \tBei ja wird dann trotzdem versucht die Mail abzusetzen.
 \tStandard ist ja.
 
 smtp_skip_quit_response: Soll die Sitzung nach dem Kommando QUIT
-\tgetrennt werden (ja/nein), oder soll auf eine Antwort gewartet
+\tgetrennt werden ($gv_Yes/$gv_No), oder soll auf eine Antwort gewartet
 \twerden?
 \tStandard ist ja.
 
@@ -360,7 +360,7 @@ smtp_tls_CApath: Verzeichnis in dem die Zertifikate liegen, für
 \tServers gelesen.
 
 smtp_tls_block_early_mail_reply: Soll versucht werden eine Mail
-\tHijacking Attacke zu erkennen (ja/nein)? Dies basiert auf der
+\tHijacking Attacke zu erkennen ($gv_Yes/$gv_No)? Dies basiert auf der
 \tSchwachstelle im TLS Protokoll (CVE-2009-3555), wo ein Angreifer
 \tböswillige HELO, MAIL, RCPT, DATA Kommandos vorab an eine
 \tPostfix SMTP client TLS Session schickt.
@@ -397,7 +397,7 @@ NOTIZ: Stellen Sie die richtigen Rechte dieser Datei ein!
 
 smtp_tls_enforce_peername: Soll der entfernte SMTP Server die
 \tInformationen, für Rechnernamen im Zertifikat suchen
-\t(ja/nein)?
+\t($gv_Yes/$gv_No)?
 \tStandard ist ja.
 
 smtp_tls_exclude_ciphers: Auswahl einer Liste der Verschlüsselung
@@ -437,7 +437,7 @@ smtp_tls_mandatory_protocols: Auswahl der TLS Protokolle die der
 
 smtp_tls_note_starttls_offer: Soll der Rechnername vom entfernten
 \tSMTP Server geloggt werden, falls TLS nicht für diesen
-\tServer aktiviert ist (ja/nein)?
+\tServer aktiviert ist ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_tls_per_site: Tabelle für die Regeln der TLS Benutzung von
@@ -484,7 +484,7 @@ smtp_tls_verify_cert_match: Auswahl der Strategie wie der Postfix
 
 smtp_use_tls: Soll SMTP-Auth bei ausgehenden Verbindungen benutzt
 \twerden, falls ein entfernter SMTP Server STARTTLS
-\tanbietet (ja/nein)?
+\tanbietet ($gv_Yes/$gv_No)?
 \tStandard ist nein.
 
 smtp_xforward_timeout: Timeout für den SMTP Clienten für das
