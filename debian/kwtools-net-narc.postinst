@@ -5,81 +5,60 @@
 
 set -e
 
-# summary of how this script can be called:
-#        * <postinst> `configure' <most-recently-configured-version>
-#        * <old-postinst> `abort-upgrade' <new version>
-#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
-#          <new-version>
-#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
-#          <failed-install-package> <version> `removing'
-#          <conflicting-package> <version>
-# for details, see http://www.debian.org/doc/debian-policy/ or
-# the debian-policy package
-#
-# quoting from the policy:
-#     Any necessary prompting should almost always be confined to the
-#     post-installation script, and should be protected with a conditional
-#     so that unnecessary prompting doesn't happen if a package's
-#     installation fails and the `postinst' is called with `abort-upgrade',
-#     `abort-remove' or `abort-deconfigure'.
-
 case "$1" in
 	configure)
-				ETC_PATH=/etc/kwtools/kwnarc
-				# debconf Bibliothek einlesen
-				. /usr/share/debconf/confmodule
-				db_version 2.0
-				#
-				if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-					Init_Script="invoke-rc.d kwnarc"
-				else
-					Init_Script="/etc/init.d/kwnarc"
-				fi
-				#
-				echo ""
-				echo "Compile functions from kwtools-scripts"
-				echo ""
-				zsh -fc 'setopt extendedglob ; for i in /usr/share/kwtools/functions/kwnarcconf ; do
-					zcompile -U -M $i.zwc $i/*~*.zwc(^/) ; chmod 644 $i.zwc ; done'	
-				# Menues erzeugen
-				if [ -x "`which update-menus 2>/dev/null`" ] ; then
-					update-menus
-				fi
-				# Rechte setzen
-				chmod 0600 ${ETC_PATH}/kwnarc.conf
-				#
-				#db_input medium kwtools-net-narc/boot || true
-				#db_go
-				#
-				db_get kwtools-net-narc/boot || RET="false"
-				if [ "$RET" = "true" ] ; then
-					# Runlevel Symlinks erstellen
-					update-rc.d kwnarc defaults >/dev/null
-					#
-					if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
-						$Init_Script restart
-					else
-						$Init_Script start
-					fi
-				else
-					if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
-						$Init_Script stop
-					fi
-					# Runlevel Symlinks entfernen
-					update-rc.d -f kwnarc remove >/dev/null
-				fi
-				db_stop
-				exit 0
-    ;;
-
-    abort-upgrade|abort-remove|abort-deconfigure)
-
-    ;;
-
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
+		ETC_PATH=/etc/kwtools/kwnarc
+		# debconf Bibliothek einlesen
+		. /usr/share/debconf/confmodule
+		db_version 2.0
+		#
+		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+			Init_Script="invoke-rc.d kwnarc"
+		else
+			Init_Script="/etc/init.d/kwnarc"
+		fi
+		#
+		echo ""
+		echo "Compile functions from kwtools-scripts"
+		echo ""
+		zsh -fc 'setopt extendedglob ; for i in /usr/share/kwtools/functions/kwnarcconf ; do
+			zcompile -U -M $i.zwc $i/*~*.zwc(^/) ; chmod 644 $i.zwc ; done'	
+		# Menues erzeugen
+		if [ -x "`which update-menus 2>/dev/null`" ] ; then
+			update-menus
+		fi
+		# Rechte setzen
+		chmod 0600 ${ETC_PATH}/kwnarc.conf
+		#
+		#db_input medium kwtools-net-narc/boot || true
+		#db_go
+		#
+		db_get kwtools-net-narc/boot || RET="false"
+		if [ "$RET" = "true" ] ; then
+			# Runlevel Symlinks erstellen
+			update-rc.d kwnarc defaults >/dev/null
+			#
+			if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
+				$Init_Script restart
+			else
+				$Init_Script start
+			fi
+		else
+			if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
+				$Init_Script stop
+			fi
+			# Runlevel Symlinks entfernen
+			update-rc.d -f kwnarc remove >/dev/null
+		fi
+		db_stop
+		exit 0
+		;;
+	abort-upgrade|abort-remove|abort-deconfigure)
+		;;
+	*)
+		echo "postinst called with unknown argument \`$1'" >&2
+		exit 1
+		;;
 esac
 
 # dh_installdeb will replace this with shell code automatically
