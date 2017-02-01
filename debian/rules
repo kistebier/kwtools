@@ -32,6 +32,7 @@ package-sys-raid=kwtools-sys-raid
 package-sys-rc=kwtools-sys-rc
 package-utils=kwtools-utils
 package-utils-pim=kwtools-utils-pim
+package-utils-pwsafe=kwtools-utils-pwsafe
 package-utils-ssl=kwtools-utils-ssl
 #
 share_path=/usr/share/kwtools
@@ -351,24 +352,24 @@ install:
 	cp -a debian/po/kwrunlevconf/usr $(CURDIR)/debian/$(package-sys-rc)
 
 	# kwtools-utils
-	cp -a utils/kwgpgcrypt utils/kwmuttprintcf utils/kwpwsafe \
+	cp -a utils/kwgpgcrypt utils/kwmuttprintcf \
 		utils/kwvmstat $(CURDIR)/debian/$(package-utils)$(exec_path)/utils
-	cp -a help/kwgpgcrypt help/kwmuttprintcf help/kwpwsafe \
+	cp -a help/kwgpgcrypt help/kwmuttprintcf \
 		help/kwvmstat $(CURDIR)/debian/$(package-utils)$(help_path)
 #	cp -a help/kwadmin/utils_kwgpgcrypt_help \
-#		help/kwadmin/utils_kwmuttprintcf_help help/kwadmin/utils_kwpwsafe_help \
+#		help/kwadmin/utils_kwmuttprintcf_help \
 #		help/kwadmin/utils_kwvmstat_help \
 #		$(CURDIR)/debian/$(package-utils)$(kwhelp_path)
 	cp -a functions/kwgpgcrypt functions/kwmuttprintcf \
-		functions/kwpwsafe functions/kwvmstat \
+		functions/kwvmstat \
 		$(CURDIR)/debian/$(package-utils)$(func_path)
 	cp -a man/de/man1/kwgpgcrypt.1 \
-		man/de/man1/kwmuttprintcf.1 man/de/man1/kwpwsafe.1 man/de/man1/kwvmstat.1 \
+		man/de/man1/kwmuttprintcf.1 man/de/man1/kwvmstat.1 \
 		$(CURDIR)/debian/$(package-utils)$(man_path)/de/man1
 	cp -a man/de/man5/kwvmstatrc.5 \
 		$(CURDIR)/debian/$(package-utils)$(man_path)/de/man5
-	cp -av debian/po/kwgpgcrypt/usr \
-		debian/po/kwmuttprintcf/usr debian/po/kwpwsafe/usr \
+	cp -a debian/po/kwgpgcrypt/usr \
+		debian/po/kwmuttprintcf/usr \
 		debian/po/kwvmstat/usr $(CURDIR)/debian/$(package-utils)
 
 	# kwtools-utils-pim
@@ -391,6 +392,17 @@ install:
 	cp -a debian/po/kwholiday/usr debian/po/kwtex-cal/usr \
 		debian/po/kwplaner/usr debian/po/kwtermin/usr \
 		debian/po/kwtermin_cron/usr $(CURDIR)/debian/$(package-utils-pim)
+
+	# kwtools-utils-pwsafe
+	cp -a utils/kwpwsafe $(CURDIR)/debian/$(package-utils-pwsafe)$(exec_path)/utils
+	cp -a help/kwpwsafe $(CURDIR)/debian/$(package-utils-pwsafe)$(help_path)
+#	cp -a help/kwadmin/utils_kwpwsafe_help $(CURDIR)/debian/$(package-utils-pwsafe)$(kwhelp_path)
+	cp -a functions/kwpwsafe $(CURDIR)/debian/$(package-utils-pwsafe)$(func_path)
+	cp -a man/de/man1/kwpwsafe.1 \
+		$(CURDIR)/debian/$(package-utils-pwsafe)$(man_path)/de/man1
+	cp -a man/de/man5/kwpwsaferc.5 \
+		$(CURDIR)/debian/$(package-utils-pwsafe)$(man_path)/de/man5
+	cp -a debian/po/kwpwsafe/usr $(CURDIR)/debian/$(package-utils-pwsafe)
 	
 	# kwtools-utils-ssl
 	cp -a utils/kwssl2 $(CURDIR)/debian/$(package-utils-ssl)$(exec_path)/utils
