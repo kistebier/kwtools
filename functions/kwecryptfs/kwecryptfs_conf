@@ -24,14 +24,14 @@ kwecryptfs_conf() {
 	# Funktion conf_menu# {{{
 	conf_menu() {
 		if [ "$KONF" = yes ] ; then
-			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-äs}\"
+			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
 			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
 			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
 		else
 			KONF_MENU=($gv_Directory \"$O_DIR\" $lv_Mountp \"$M_POINT\"
-			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-äs}\"
+			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
 			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
@@ -62,7 +62,7 @@ kwecryptfs_conf() {
 				# Welcher Chiffrierungstyp soll verwendet werden?# {{{
 				CIPHER_MSG=$(gettext 'Wählen Sie einen Chiffrierungstyp aus. Standard ist aes.')
 				CIPHER_MENU=(aes \"\" arc4 \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
-				menubox "${CIPHER:-äs}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
+				menubox "${CIPHER:-aes}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 				# Auswahl anbieten
 				while [ -n "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
@@ -474,7 +474,7 @@ kwecryptfs_conf() {
 					# Schlüsseltype
 					if [ -n "$KEY_TYPE" -a -n "$O_DIR" -a -n "$M_POINT" ] ; then
 						OPT="${REST_OPTION},key=${KEY_TYPE}"
-						OPT="${OPT},ecryptfs_cipher=${CIPHER:-äs},ecryptfs_key_bytes=${KEY_SIZE:-16}"
+						OPT="${OPT},ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
 						if [ "$XATTR" = yes ] ; then
 							OPT="${OPT},ecryptfs_xattr"
 						fi
