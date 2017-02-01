@@ -531,7 +531,7 @@ sys_conf() {
 								if [ -n "$MaxChar" ] ; then
 									if [ "$Char" -lt "$MinChar" -o "$Char" -gt "$MaxChar" ] ; then
 										# falsche Password Länge
-										MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
+										MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden ($gv_Yes/$gv_No)?')
 										yesno "$gv_Attention" "$MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											mixed_password_menu
@@ -548,7 +548,7 @@ sys_conf() {
 									fi	
 								elif [ "$Char" -lt "$MinChar" ] ; then
 									# falsche Password Länge
-							        MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (ja/nein)?')
+							        MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden ($gv_Yes/$gv_No)?')
 									yesno "$gv_Attention" "$MSG" ""
 									if [ "$gv_Auswahl" = yes ] ; then
 										mixed_password_menu
@@ -3781,7 +3781,7 @@ file_choice() {
 					File="$2"
 					if [ ! -d $File ] ; then
 						if [ ! -f "$File" ] ; then
-							MSG=$(gettext 'Die Datei $File ist nicht vorhanden. Soll sie angelegt werden (ja/nein)?')
+							MSG=$(gettext 'Die Datei $File ist nicht vorhanden. Soll sie angelegt werden ($gv_Yes/$gv_No)?')
 							# Vorschlag "yes" für die Funktion "yesno", siehe Funktion
 							# "yesno".
 						    yesno "$gv_Attention" "$MSG" ""
@@ -4908,7 +4908,7 @@ is_value() {
 				msgbox "$gv_Attention" "$MSG"
 			}
 			## }}}
-			YES_NO_MOUNT_MSG=$(gettext '$PART_DEV ist ins Dateisystem eingebunden. Es muss oder kann entfernt werden. Soll dies jetzt geschehen (ja/nein)?')
+			YES_NO_MOUNT_MSG=$(gettext '$PART_DEV ist ins Dateisystem eingebunden. Es muss oder kann entfernt werden. Soll dies jetzt geschehen ($gv_Yes/$gv_No)?')
 			unset -- MOUNTPOINT MOUNT U_MOUNT PART_DEV PART_DEV1
 			export MOUNTPOINT
 			PART_DEV="$2"
@@ -5215,7 +5215,7 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (print_file), Datei Drucken ja/nein{{{
+	# Funktion (print_file), Datei Drucken $gv_Yes/$gv_No{{{
 	#
 	# benötigt die Funktion yesno
 	# usage: print_file File
@@ -5230,7 +5230,7 @@ is_value() {
 			#
 			File="$1"
 			TITLE=$(gettext 'Drucken')
-			MSG=$(gettext 'Soll die Datei $File gedruckt werden (ja/nein)?')
+			MSG=$(gettext 'Soll die Datei $File gedruckt werden ($gv_Yes/$gv_No)?')
 			yesno "$TITLE" "$MSG" ""
 			if [ "$gv_Auswahl" = yes ] ; then
 				lpr "$File"
@@ -5678,7 +5678,7 @@ is_value() {
 	#
 	root_check() {
 		if [ "`id -u`" != 0 ] ; then
-			MSG=$(gettext 'Fuer diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln (ja/nein)?')
+			MSG=$(gettext 'Fuer diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln ($gv_Yes/$gv_No)?')
 			yesno "$gv_Attention" "$MSG" ""
 			#
 			if [ "$gv_Auswahl" = yes ] ; then
@@ -6095,7 +6095,7 @@ search_fdisks() {
 										break
 									else
 										# Passwort basiert auf einem Wörterbucheintrag.
-										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag.\nPassworteingabe wiederholen (ja/nein)?')
+										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag.\nPassworteingabe wiederholen ($gv_Yes/$gv_No)?')
 										yesno "$gv_Attention" "$DICT_MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											passwd_conf_menu
@@ -6194,7 +6194,7 @@ search_fdisks() {
 	#
 	del_file_msg() {
 		TITLE=$(gettext 'Dateien löschen')
-		MSG=$(gettext 'Soll(en) die (Original) Datei(en) gelöscht werden (ja/nein)? Dies kann ein söben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
+		MSG=$(gettext 'Soll(en) die (Original) Datei(en) gelöscht werden ($gv_Yes/$gv_No)? Dies kann ein söben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
 		yesno "$TITLE" "$MSG" ""
 	}
 	#}}}

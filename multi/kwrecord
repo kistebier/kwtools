@@ -214,7 +214,7 @@ while [ "$gv_Auswahl" ] ; do
 					DEL_TITLE=$(gettext 'CD+-RW::löschen')
 					DEL_MSG=$(gettext 'Lösche CD+-RW.')
 					DEL_MENU=($lv_Minimal \"\" $lv_All \"\")
-					CDRW_DEL_MSG=$(gettext 'Soll die CD-+R(W) wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+					CDRW_DEL_MSG=$(gettext 'Soll die CD-+R(W) wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren ($gv_Yes/$gv_No)?')
 					#
 					menubox "" "$DEL_TITLE" "$gv_Menupoint" "$DEL_MENU"
 					while [ $gv_Auswahl ] ; do
@@ -252,7 +252,7 @@ while [ "$gv_Auswahl" ] ; do
 				check_cd_state "$CDROM"
 				if [[ $CD_RW == yes ]] ; then
 					if [[ $CD_R_EMPTY == yes ]] ; then
-						MSG=$(gettext 'Diese CD+-RW ist schon leer. Fortfahren (ja/nein)?')
+						MSG=$(gettext 'Diese CD+-RW ist schon leer. Fortfahren ($gv_Yes/$gv_No)?')
 						yesno "$gv_Info" "$MSG" "no"
 						if [ "$gv_Auswahl" = yes ] ; then
 							del_cd
@@ -296,13 +296,13 @@ while [ "$gv_Auswahl" ] ; do
 				case "$DVD_MEDIUM" in
 					DVD?RW | DVDRAM)
 						if [[ $DVD_STATUS == blank  ]] ; then
-							MSG=$(gettext 'Diese DVD-+RW/RAM ist schon leer. Fortfahren (ja/nein)?')
+							MSG=$(gettext 'Diese DVD-+RW/RAM ist schon leer. Fortfahren ($gv_Yes/$gv_No)?')
 							yesno "$gv_Info" "$MSG" "no"
 							if [ "$gv_Auswahl" = yes ] ; then
 								del_dvd
 							fi
 						else
-							MSG=$(gettext 'Soll die DVD-+RW/RAM wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren (ja/nein)?')
+							MSG=$(gettext 'Soll die DVD-+RW/RAM wirklich gelöscht werden? Alle Daten gehen dabei verloren. Fortfahren ($gv_Yes/$gv_No)?')
 							yesno "$gv_Attention" "$MSG" ""
 							if [ "$gv_Auswahl" = yes ] ; then
 								del_dvd

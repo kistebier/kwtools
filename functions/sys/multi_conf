@@ -330,7 +330,7 @@ multi_conf() {
 					;;
 				$lv_Simulate)
 					# CD/DVD on the fly kopieren (yes/no)?{{{
-					SIMULATE_MSG=$(gettext 'Soll das brennen simuliert werden (ja/nein)?')
+					SIMULATE_MSG=$(gettext 'Soll das brennen simuliert werden ($gv_Yes/$gv_No)?')
 					yesno "$PROJECT_TITLE" "$SIMULATE_MSG" "$SIMULATE"
 					if [ "$gv_Auswahl" = yes ] ; then
 						SIMULATE=yes
@@ -1563,7 +1563,7 @@ EJECT=\"$EJECT\"
 			check_cd_state "$Dev"
 			while [[ -z $CD_RW ]] ; do
 				# Nachricht das kein richtiges Medium (CD) gefunden wurde
-				MSG=$(gettext 'Im Laufwerk liegt kein CD Medium! Wollen Sie ein Medium einlegen (ja/nein)?')
+				MSG=$(gettext 'Im Laufwerk liegt kein CD Medium! Wollen Sie ein Medium einlegen ($gv_Yes/$gv_No)?')
 				yesno "$gv_Attention" "$MSG" ""
 				if [[ $gv_Auswahl == yes ]] ; then
 					eject "$Dev" &>/dev/null
@@ -1612,7 +1612,7 @@ EJECT=\"$EJECT\"
 					return 1
 				fi
 				# CD+-RW ersetzen?
-				MSG=$(gettext 'Das Medium (CD-+RW) ist schon beschrieben. Sollen die Daten ersetzt werden (ja/nein)?')
+				MSG=$(gettext 'Das Medium (CD-+RW) ist schon beschrieben. Sollen die Daten ersetzt werden ($gv_Yes/$gv_No)?')
 				yesno "$gv_Info" "$MSG" ""
 				if [[ $gv_Auswahl == no ]] ; then
 					cp -a ${gv_WorkDir}/filelist "$IST_FILE" &>/dev/null
@@ -1681,7 +1681,7 @@ EJECT=\"$EJECT\"
 			check_dvd_state "$Dev"
 			while [[ ${DVD_MEDIUM%[-+]*} != DVD ]] && [[ ${DVD_MEDIUM%[-+]*} != BD ]] ; do
 				# Nachricht das kein richtiges Medium (DVD) gefunden wurde
-				MSG=$(gettext 'Im Laufwerk liegt kein DVD/BD Medium! Wollen Sie ein Medium einlegen (ja/nein)?')
+				MSG=$(gettext 'Im Laufwerk liegt kein DVD/BD Medium! Wollen Sie ein Medium einlegen ($gv_Yes/$gv_No)?')
 				yesno "$gv_Attention" "$MSG" ""
 				if [[ $gv_Auswahl == yes ]] ; then
 					eject "$Dev" &>/dev/null
@@ -1722,7 +1722,7 @@ EJECT=\"$EJECT\"
 				case $DVD_MEDIUM in
 					DVD+RW|DVD-RW|DVD-RAM|BD-RE)
 						# DVD+-RW/RAM/BD-RE ersetzen?
-						MSG=$(gettext 'Das Medium ($DVD_MEDIUM) ist schon beschrieben. Sollen die Daten ersetzt werden (ja/nein)?')
+						MSG=$(gettext 'Das Medium ($DVD_MEDIUM) ist schon beschrieben. Sollen die Daten ersetzt werden ($gv_Yes/$gv_No)?')
 						yesno "$gv_Info" "$MSG" "no"
 						if [[ $gv_Auswahl == no ]] ; then
 							MS_START=no

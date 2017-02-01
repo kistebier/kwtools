@@ -15,7 +15,7 @@
 # mail_address - siehe Header der Funktion
 #
 # globale Variablen:
-# gv_Boot - Interface beim Systemstart starten (ja/nein)
+# gv_Boot - Interface beim Systemstart starten ($gv_Yes/$gv_No)
 # gv_Broadcast - Broadcast Adresse
 # gv_Dhcp - Interface per DHCP konfigurieren
 # gv_Gateway - Gateway Adresse
@@ -213,11 +213,11 @@ net_conf() {
 		fi
 	}
 	#}}}
-	# Funktion iface_dhcp, Soll dhcp benutzt werden (ja/nein)?# {{{
+	# Funktion iface_dhcp, Soll dhcp benutzt werden ($gv_Yes/$gv_No)?# {{{
 	#
 	# usage: iface_dhcp
 	iface_dhcp() {
-		DHCP_MSG=$(gettext 'Soll das Netzwerk per dhcp konfiguriert werden (ja/nein)?')
+		DHCP_MSG=$(gettext 'Soll das Netzwerk per dhcp konfiguriert werden ($gv_Yes/$gv_No)?')
 		yesno "$gv_Configuration" "$DHCP_MSG" "$gv_Dhcp"
 		if [ "$gv_Auswahl" = yes ] ; then
 			gv_Dhcp=yes
@@ -449,8 +449,8 @@ net_conf() {
 	#
 	# usage: iface_onboot
 	iface_onboot() {
-		# Soll das Interface schon beim Systemstart gestartet werden (ja/nein)?
-		BOOT_MSG=$(gettext 'Soll das Interface beim Systemstart gestartet werden (ja/nein)?')
+		# Soll das Interface schon beim Systemstart gestartet werden ($gv_Yes/$gv_No)?
+		BOOT_MSG=$(gettext 'Soll das Interface beim Systemstart gestartet werden ($gv_Yes/$gv_No)?')
 		yesno "$gv_Configuration" "$BOOT_MSG" "$gv_Boot"
 		if [ "$gv_Auswahl" = yes ] ; then
 			gv_Boot=yes

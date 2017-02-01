@@ -38,10 +38,10 @@ if [ -n "${NO_PROGS[1]}" ] ; then
 	exit 0
 fi
 
-# Soll die alte Konfiguration übernommen werden (ja/nein)?
+# Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/vcdburnrc" -a ! -f "${gv_HomePath}/.kwtools/kwvcdburnrc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/vcdburnrc" "${gv_HomePath}/.kwtools/kwvcdburnrc" &>/dev/null
@@ -117,7 +117,7 @@ while [ "$gv_Auswahl" ] ; do
 			CREATE_MSG=$(gettext 'Erzeuge Video-CD: $file.')
 			#
 			# Soll eine VCD Struktur für alle Dateien erstellt werden,
-			# wenn es mehr als eine Datei gibt (ja/nein)?
+			# wenn es mehr als eine Datei gibt ($gv_Yes/$gv_No)?
 			if [ "$V_Anz" -gt 1 ] ; then
 				CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (Ja/nein)?')
 				yesno "$VIDEO_TITLE" "$CREATE_MULTI_QUESTION_MSG" ""

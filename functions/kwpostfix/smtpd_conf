@@ -150,7 +150,7 @@ smtpd_conf() {
 			smtpd_authorized_xforward_hosts)
 				# SMTP Clients das XFORWARD Feature erlauben.{{{
 				yesno_option "$smtpd_authorized_xforward_hosts" "127.0.0.0/8"
-				SMTPD_AUTH_XFORWARD_HOSTS_MSG=$(gettext 'Soll den SMTP Clients das XFORWARD Feature erlaubt werden (ja/nein)?')
+				SMTPD_AUTH_XFORWARD_HOSTS_MSG=$(gettext 'Soll den SMTP Clients das XFORWARD Feature erlaubt werden ($gv_Yes/$gv_No)?')
 				yesno "$SMTPD_TITLE" "$SMTPD_AUTH_XFORWARD_HOSTS_MSG" "$YN_OPT"
 				if [ "$gv_Auswahl" = yes ] ; then
 					smtpd_authorized_xforward_hosts="127.0.0.0/8"
@@ -237,7 +237,7 @@ smtpd_conf() {
 				;;
 			smtpd_client_port_logging)
 				# Standard = no# {{{
-				SMTPD_CLIENT_PORT_LOGGING_MSG=$(gettext 'Soll der TCP-Port des Clients geloggt werden (ja/nein)?')
+				SMTPD_CLIENT_PORT_LOGGING_MSG=$(gettext 'Soll der TCP-Port des Clients geloggt werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_CLIENT_PORT_LOGGING_MSG"
 				smtpd_client_port_logging="$WERT"
 				postconf -e smtpd_client_port_logging="$WERT"
@@ -278,7 +278,7 @@ smtpd_conf() {
 				;;
 			smtpd_delay_open_until_valid_rcpt)
 				# Standard = yes# {{{
-				SMTPD_DELAY_OPEN_UNTIL_VALID_RCPT_MSG=$(gettext 'Soll Postfix erst nach dem ersten gueltigen Empfänger eine Verbindung zum SMTP-Proxy aufbauen (ja/nein)?')
+				SMTPD_DELAY_OPEN_UNTIL_VALID_RCPT_MSG=$(gettext 'Soll Postfix erst nach dem ersten gueltigen Empfänger eine Verbindung zum SMTP-Proxy aufbauen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_DELAY_OPEN_UNTIL_VALID_RCPT_MSG"
 				smtpd_delay_open_until_valid_rcpt="$WERT"
 				postconf -e smtpd_delay_open_until_valid_rcpt="$WERT"
@@ -291,7 +291,7 @@ smtpd_conf() {
 				# es schon vorher feststeht. Schlechte Mailclients
 				# kapieren den REJECT nach einem MAIL FROM: sonst nicht
 				# und versuchen immer wieder die Mail einzuliefern.
-				SMTPD_DELAY_REJECT_MSG=$(gettext 'Soll bei einem REJECT, einer Restriktion, nicht sofort abgebrochen werden (ja/nein)? Siehe Hilfe.')
+				SMTPD_DELAY_REJECT_MSG=$(gettext 'Soll bei einem REJECT, einer Restriktion, nicht sofort abgebrochen werden ($gv_Yes/$gv_No)? Siehe Hilfe.')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_DELAY_REJECT_MSG"
 				smtpd_delay_reject="$WERT"
 				postconf -e smtpd_delay_reject="$WERT"
@@ -384,7 +384,7 @@ smtpd_conf() {
 				;;
 			smtpd_helo_required)
 				# Muss ein Client ein HELO senden (yes/no)?{{{
-				SMTPD_HELO_REQUIRED_MSG=$(gettext 'Muss ein Client ein HELO senden (ja/nein)?')
+				SMTPD_HELO_REQUIRED_MSG=$(gettext 'Muss ein Client ein HELO senden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_HELO_REQUIRED_MSG"
 				smtpd_helo_required="$WERT"
 				postconf -e smtpd_helo_required="$WERT"
@@ -465,7 +465,7 @@ smtpd_conf() {
 				;;
 			smtpd_peername_lookup)
 				# Standard = yes# {{{
-				SMTPD_PEERNAME_LOOKUP_MSG=$(gettext 'Soll Postfix den Reverse-Lookup des Clients auflösen oder nicht (ja/nein)?')
+				SMTPD_PEERNAME_LOOKUP_MSG=$(gettext 'Soll Postfix den Reverse-Lookup des Clients auflösen oder nicht ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_PEERNAME_LOOKUP_MSG"
 				smtpd_peername_lookup="$WERT"
 				postconf -e smtpd_peername_lookup="$WERT"
@@ -599,7 +599,7 @@ smtpd_conf() {
 				;;
 			smtpd_reject_unlisted_recipient)
 				# Mails mit unbekannte Empfänger Adresse verwerfen?{{{
-				SMTPD_REJECT_UNLISTED_RECIPIENT_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Empfänger Adresse verwerfen (ja/nein)?')
+				SMTPD_REJECT_UNLISTED_RECIPIENT_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Empfänger Adresse verwerfen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_REJECT_UNLISTED_RECIPIENT_MSG"
 				smtpd_reject_unlisted_recipient="$WERT"
 				postconf -e smtpd_reject_unlisted_recipient="$WERT"
@@ -608,7 +608,7 @@ smtpd_conf() {
 				;;
 			smtpd_reject_unlisted_sender)
 				# Mails mit unbekannter Absender Adresse verwerfen?{{{
-				SMTPD_REJECT_UNLISTED_SENDER_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Absender Adresse verwerfen (ja/nein)?')
+				SMTPD_REJECT_UNLISTED_SENDER_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Absender Adresse verwerfen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_REJECT_UNLISTED_SENDER_MSG"
 				smtpd_reject_unlisted_sender="$WERT"
 				postconf -e smtpd_reject_unlisted_sender="$WERT"
@@ -631,7 +631,7 @@ smtpd_conf() {
 				;;
 			smtpd_sasl_auth_enable)
 				# SMTP-AUTH, für eingehende mails, benutzen?{{{
-				SMTPD_SASL_AUTH_ENABLE_MSG=$(gettext 'SMTP-AUTH, für eingehende mails, benutzen (ja/nein)?')
+				SMTPD_SASL_AUTH_ENABLE_MSG=$(gettext 'SMTP-AUTH, für eingehende mails, benutzen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_SASL_AUTH_ENABLE_MSG"
 				smtpd_sasl_auth_enable="$WERT"
 				postconf -e smtpd_sasl_auth_enable="$WERT"
@@ -640,7 +640,7 @@ smtpd_conf() {
 				;;
 			smtpd_sasl_authenticated_header)
 				# Standard = no# {{{
-				SMTPD_SASL_AUTHENTICATED_HEADER_MSG=$(gettext 'Soll Postfix Informationen über den SMTP-Auth-Login in die Received-Zeilen mit aufnehmen (ja/nein)?')
+				SMTPD_SASL_AUTHENTICATED_HEADER_MSG=$(gettext 'Soll Postfix Informationen über den SMTP-Auth-Login in die Received-Zeilen mit aufnehmen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_SASL_AUTHENTICATED_HEADER_MSG"
 				smtpd_sasl_authenticated_header="$WERT"
 				postconf -e smtpd_sasl_authenticated_header="$WERT"
@@ -805,7 +805,7 @@ smtpd_conf() {
 				;;
 			smtpd_tls_always_issue_session_ids)
 				# Soll der Postfix SMTP Server eine TLS Session ID ausstellen, falls das TLS# {{{
-				# Session Caching deaktiviert ist (ja/nein)?
+				# Session Caching deaktiviert ist ($gv_Yes/$gv_No)?
 				# Standard = yes
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_TLS_ALWAYS_SESSION_ISSUE_IDS_MSG"
 				smtpd_tls_always_issue_session_ids="$WERT"
@@ -815,7 +815,7 @@ smtpd_conf() {
 				;;
 			smtpd_tls_ask_ccert)
 				# Muss beim Server explizit nach einem Client Zertifikat {{{
-				# nachgefragt werden (ja/nein)?
+				# nachgefragt werden ($gv_Yes/$gv_No)?
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_TLS_ASK_CCERT_MSG"
 				smtpd_tls_ask_ccert="$WERT"
 				postconf -e smtpd_tls_ask_ccert="$WERT"
@@ -824,7 +824,7 @@ smtpd_conf() {
 				;;
 			smtpd_tls_auth_only)
 				# für eingehende mails, nur SSL/TLS benutzen?{{{
-				SMTPD_TLS_AUTH_ONLY_MSG=$(gettext 'Soll dieser Server, für eingehende Mails, nur SSL/TLS benutzen (ja/nein)?')
+				SMTPD_TLS_AUTH_ONLY_MSG=$(gettext 'Soll dieser Server, für eingehende Mails, nur SSL/TLS benutzen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_TLS_AUTH_ONLY_MSG"
 				smtpd_tls_auth_only="$WERT"
 				postconf -e smtpd_tls_auth_only="$WERT"
@@ -1042,7 +1042,7 @@ smtpd_conf() {
 			smtpd_tls_received_header)
 				# Soll der Mailserver, für eingehende mails, die{{{
 				# received Zeilen loggen?
-				SMTPD_TLS_RECEIVED_HEADER_MSG=$(gettext 'Soll dieser Server ($myhosname), für eingehende Mails, die received Zeilen loggen (ja/nein)?')
+				SMTPD_TLS_RECEIVED_HEADER_MSG=$(gettext 'Soll dieser Server ($myhosname), für eingehende Mails, die received Zeilen loggen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_TLS_RECEIVED_HEADER_MSG"
 				smtpd_tls_received_header="$WERT"
 				postconf -e smtpd_tls_received_header="$WERT"
@@ -1094,7 +1094,7 @@ smtpd_conf() {
 				;;
 			smtpd_tls_wrappermode)
 				# Wrappermode einschalten{{{
-				SMTPD_TLS_WRAPPERMODE_MSG=$(gettext 'Soll dieser Server, für eingehende Mails, den Wrapper benutzen (ja/nein)?')
+				SMTPD_TLS_WRAPPERMODE_MSG=$(gettext 'Soll dieser Server, für eingehende Mails, den Wrapper benutzen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_TLS_WRAPPERMODE_MSG"
 				smtpd_tls_wrappermode="$WERT"
 				postconf -e smtpd_tls_wrappermode="$WERT"

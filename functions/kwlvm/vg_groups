@@ -52,7 +52,7 @@ vg_groups() {
 			RET=0
 			Anz="${(w)#LV_ACTIV}"
 			Devs=${LV_ACTIV//\ /\\n}
-			MSG=$(gettext 'Diese LVs sind noch aktiv. Sie müssen erst deaktiviert werden.\n$Devs\n\nSoll dies jetzt geschehen (ja/nein)?')
+			MSG=$(gettext 'Diese LVs sind noch aktiv. Sie müssen erst deaktiviert werden.\n$Devs\n\nSoll dies jetzt geschehen ($gv_Yes/$gv_No)?')
 			yesno "$gv_Attention" "$MSG" "" "$Anz"
 			if [ "$gv_Auswahl" = yes ] ; then
 				lvchange -a n $LV_ACTIV &>/dev/null || prog_failure
@@ -562,7 +562,7 @@ vg_groups() {
 									if [ "$Z_VG" -a "$S_VG" ] ; then
 										# Soll die VG sicherheitshalber beendet werden?
 										# Sonst kann man die VGs z. B. nicht verbinden.
-										MSG=$(gettext 'Diese VG $S_VG kann jetzt sicherheitshalber deaktiviert werden. Sonst kann man die VGs nicht verbinden. Soll dies jetzt geschehen (ja/nein)?')
+										MSG=$(gettext 'Diese VG $S_VG kann jetzt sicherheitshalber deaktiviert werden. Sonst kann man die VGs nicht verbinden. Soll dies jetzt geschehen ($gv_Yes/$gv_No)?')
 										yesno "$gv_Attention" "$MSG" "" 2
 										if [ "$gv_Auswahl" = yes ] ; then
 											vgchange -a n $S_VG &>/dev/null || prog_failure
@@ -655,7 +655,7 @@ vg_groups() {
 								Anz=${(w)#gv_Auswahl}
 								DEVS="$gv_Auswahl"
 								Devs=${gv_Auswahl//\ /\\n}
-								MSG=$(gettext 'Jetzt werden alle ausgewählten Volume Groups gelöscht.\n$Devs\n\nFortfahren (ja/nein)?')
+								MSG=$(gettext 'Jetzt werden alle ausgewählten Volume Groups gelöscht.\n$Devs\n\nFortfahren ($gv_Yes/$gv_No)?')
 								yesno "$gv_Attention" "$MSG" "" "$Anz"
 								if [ "$gv_Auswahl" = yes ] ; then
 									for v in ${=DEVS} ; {

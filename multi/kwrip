@@ -33,10 +33,10 @@ autoload -U script_init
 # Scriptinitialisierung und Arbeitsverzeichnis erstellen
 script_init
 
-# Soll die alte Konfiguration übernommen werden (ja/nein)?
+# Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/cdriprc" -a ! -f "${gv_HomePath}/.kwtools/kwriprc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc übernommen werden (ja/nein)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/cdriprc" "${gv_HomePath}/.kwtools/kwriprc" &>/dev/null
@@ -605,7 +605,7 @@ while [ "$gv_Auswahl" ] ; do
 								# (-e $gv_Auswahl wird noch nicht richtig ausgewertet)
 								if [ -n "$gv_Auswahl" ] ; then
 									if ls ${gv_Auswahl}-<->*.mpg(.) &>/dev/null ; then
-										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese überschrieben werden (ja/nein)?')
+										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese überschrieben werden ($gv_Yes/$gv_No)?')
 										yesno "$gv_Info" "$MSG" "no"
 										if [[ $gv_Auswahl == yes ]] ; then
 											VCD_NAME="$gv_Auswahl"

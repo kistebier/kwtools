@@ -160,7 +160,7 @@ lmtp_conf() {
 				;;
 			lmtp_assume_final)
 				# Standard = no# {{{
-				LMTP_ASSUME_FINAL_MSG=$(gettext 'Soll dem entfernten LMTP Server, ohne DNS Support, die Nachricht \"delivered\" anstelle von \"relayed\" geschickt werden (ja/nein)?')
+				LMTP_ASSUME_FINAL_MSG=$(gettext 'Soll dem entfernten LMTP Server, ohne DNS Support, die Nachricht \"delivered\" anstelle von \"relayed\" geschickt werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_ASSUME_FINAL_MSG"
 				lmtp_assume_final="$WERT"
 				postconf -e lmtp_assume_final="$WERT"
@@ -220,7 +220,7 @@ lmtp_conf() {
 			lmtp_cname_overrides_servername)
 				# Ãberschreiben von Servernamen bei CNAME records erlauben{{{
 				# Standard = no
-				LMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das überschreiben der Servernamen, die der LMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden (ja/nein)?')
+				LMTP_CNAME_OVERRIDES_SERVERNAME_MSG=$(gettext 'Soll das überschreiben der Servernamen, die der LMTP client zum loggen benutzt, bei DNS CNAME records erlaubt werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_CNAME_OVERRIDES_SERVERNAME_MSG"
 				lmtp_cname_overrides_servername="$WERT"
 				postconf -e lmtp_cname_overrides_servername="$WERT"
@@ -239,7 +239,7 @@ lmtp_conf() {
 				;;
 			lmtp_connection_cache_destinations)
 				# permanentes LMTP Verbindungscaching einschalten{{{
-				LMTP_CONNECTION_CACHE_DESTINATION_MSG=$(gettext 'Soll die LMTP Verbindung permanent gecacht werden (ja/nein)?')
+				LMTP_CONNECTION_CACHE_DESTINATION_MSG=$(gettext 'Soll die LMTP Verbindung permanent gecacht werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_CONNECTION_CACHE_DESTINATION_MSG"
 				lmtp_connection_cache_destinations="$WERT"
 				postconf -e lmtp_connection_cache_destinations="$WERT"
@@ -249,7 +249,7 @@ lmtp_conf() {
 			lmtp_connection_cache_on_demand)
 				# Zeitweiliges LMTP Verbindungscaching einschalten{{{
 				# Standard = yes
-				LMTP_CONNECTION_CACHE_ON_DEMAND_MSG=$(gettext 'Soll die LMTP Verbindung zeitweilig gecacht werden, wenn ein Ziel ein hohes Mail Aufkommen in der \"active\" Warteschlange hat (ja/nein)?')
+				LMTP_CONNECTION_CACHE_ON_DEMAND_MSG=$(gettext 'Soll die LMTP Verbindung zeitweilig gecacht werden, wenn ein Ziel ein hohes Mail Aufkommen in der \"active\" Warteschlange hat ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_CONNECTION_CACHE_ON_DEMAND_MSG"
 				lmtp_connection_cache_on_demand="$WERT"
 				postconf -e lmtp_connection_cache_on_demand="$WERT"
@@ -586,7 +586,7 @@ lmtp_conf() {
 				;;
 			lmtp_per_record_deadline)
 				# Standard = no# {{{
-				LMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie können das Verhalten der lmtp_*_timeout Limits verändern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden (ja/nein)?')
+				LMTP_PER_RECORD_DEADLINE_MSG=$(gettext 'Sie können das Verhalten der lmtp_*_timeout Limits verändern vom Zeitlimit eines Lese- oder Schreibaufruf zu einem Zeitlimit zum erhalten oder senden einer kompletten Aufzeichnung.\n\nSoll dies aktiviert werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_PER_RECORD_DEADLINE_MSG"
 				lmtp_per_record_deadline="$WERT"
 				postconf -e lmtp_per_record_deadline="$WERT"
@@ -646,7 +646,7 @@ lmtp_conf() {
 				;;
 			lmtp_quote_rfc821_envelope)
 				# Sollen die Adressen im LMTP MAIL FROM und RCPT TO Kommando gequotet werden# {{{
-				LMTP_QUOTE_RFC821_ENVELOPE_MSG=$(gettext 'Sollen die Adressen im LMTP MAIL FROM und RCPT TO Kommando gequotet werden (ja/nein)?')
+				LMTP_QUOTE_RFC821_ENVELOPE_MSG=$(gettext 'Sollen die Adressen im LMTP MAIL FROM und RCPT TO Kommando gequotet werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_QUOTE_RFC821_ENVELOPE_MSG"
 				lmtp_quote_rfc821_envelope="$WERT"
 				postconf -e lmtp_quote_rfc821_envelope="$WERT"
@@ -749,7 +749,7 @@ lmtp_conf() {
 				;;
 			lmtp_sasl_auth_enable)
 				# LMTP-AUTH beim Versand über LMTP aktivieren?{{{
-				LMTP_SASL_AUTH_MSG=$(gettext 'LMTP-AUTH beim Versand über LMTP aktivieren (ja/nein)?')
+				LMTP_SASL_AUTH_MSG=$(gettext 'LMTP-AUTH beim Versand über LMTP aktivieren ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SASL_AUTH_MSG"
 				lmtp_sasl_auth_enable="$WERT"
 				postconf -e lmtp_sasl_auth_enable="$WERT"
@@ -758,7 +758,7 @@ lmtp_conf() {
 				;;
 			lmtp_sasl_auth_soft_bounce)
 				# Standard = yes# {{{
-				LMTP_SASL_AUTH_SOFT_BOUNCE_MSG=$(gettext 'Falls eine LMTP-AUTH Identifierzierung mit dem Fehlercode 535 abgelehnt wird kann die Mailzustellung aufgeschoben werden oder die Mail als unzustellbar gekennzeichnet werden.\n\nSoll die Mailzustellung aufgeschoben werden (ja/nein)?.')
+				LMTP_SASL_AUTH_SOFT_BOUNCE_MSG=$(gettext 'Falls eine LMTP-AUTH Identifierzierung mit dem Fehlercode 535 abgelehnt wird kann die Mailzustellung aufgeschoben werden oder die Mail als unzustellbar gekennzeichnet werden.\n\nSoll die Mailzustellung aufgeschoben werden ($gv_Yes/$gv_No)?.')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SASL_AUTH_SOFT_BOUNCE_MSG"
 				lmtp_sasl_auth_soft_bounce="$WERT"
 				postconf -e lmtp_sasl_auth_soft_bounce="$WERT"
@@ -871,7 +871,7 @@ lmtp_conf() {
 				;;
 			lmtp_send_dummy_mail_auth)
 				# Standard = no# {{{
-				LMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der LMTP-AUTH Identifierzierung die AUTH=<> Optionen anhängen.\n\nSoll dies geschehen(ja/nein)?')
+				LMTP_SEND_DUMMY_MAIL_AUTH_MSG=$(gettext 'Man kann an das MAIL FROM Kommando, bei der LMTP-AUTH Identifierzierung die AUTH=<> Optionen anhängen.\n\nSoll dies geschehen($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SEND_DUMMY_MAIL_AUTH_MSG"
 				lmtp_send_dummy_mail_auth="$WERT"
 				postconf -e lmtp_send_dummy_mail_auth="$WERT"
@@ -888,7 +888,7 @@ lmtp_conf() {
 				;;
 			lmtp_sender_dependent_authentication)
 				# Standard ist = no.# {{{
-				LMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier können Sie die Authentifizierung des Postfix Clients mittels LMTP_AUTH aktivieren. Dabei wird der LMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden (ja/nein)?')
+				LMTP_SENDER_DEP_AUTH_MSG=$(gettext 'Hier können Sie die Authentifizierung des Postfix Clients mittels LMTP_AUTH aktivieren. Dabei wird der LMTP Cache ausgeschaltet, damit bei Mails von verschiedenen Sendern die richtige Beglaubigung angewendet wird.\n\nSoll die Authentifizierung aktiviert werden ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SENDER_DEP_AUTH_MSG"
 				lmtp_sender_dependent_authentication="$WERT"
 				postconf -e lmtp_sender_dependent_authentication="$WERT"
@@ -898,7 +898,7 @@ lmtp_conf() {
 			lmtp_skip_5xx_greeting)
 				# Begrüssungstext bei LMTP_Code 5xx{{{
 				# (dauerhafter Fehler) ignorieren?
-				LMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begrüssungstext bei LMTP_Code 5xx (dauerhafter Fehler) ignorieren (ja/nein)?')
+				LMTP_SKIP_5XX_GREETING_MSG=$(gettext 'Begrüssungstext bei LMTP_Code 5xx (dauerhafter Fehler) ignorieren ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SKIP_5XX_GREETING_MSG"
 				lmtp_skip_5xx_greeting="$WERT"
 				postconf -e lmtp_skip_5xx_greeting="$WERT"
@@ -907,7 +907,7 @@ lmtp_conf() {
 				;;
 			lmtp_skip_quit_response)
 				# Beenden einer LMTP Sitzung nach dem QUIT Kommando, ohne auf Antwort zu warten?{{{
-				LMTP_SKIP_QUIT_RESPONSE_MSG=$(gettext 'Beenden einer LMTP Sitzung nach dem QUIT Kommando, ohne auf Antwort zu warten (ja/nein)?')
+				LMTP_SKIP_QUIT_RESPONSE_MSG=$(gettext 'Beenden einer LMTP Sitzung nach dem QUIT Kommando, ohne auf Antwort zu warten ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_SKIP_QUIT_RESPONSE_MSG"
 				lmtp_skip_quit_response="$WERT"
 				postconf -e lmtp_skip_quit_response="$WERT"
@@ -964,7 +964,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_block_early_mail_reply)
 				# Standard = no# {{{
-				LMTP_TLS_BLOCK_EMR_MSG=$(gettext 'Soll der LMTP Server versuchen eine Mail Hjacking Attacke zu erkennen (ja/nein)? Dies basiert auf der Schwachstelle im TLS Protokoll (CVE-2009-3555).')
+				LMTP_TLS_BLOCK_EMR_MSG=$(gettext 'Soll der LMTP Server versuchen eine Mail Hjacking Attacke zu erkennen ($gv_Yes/$gv_No)? Dies basiert auf der Schwachstelle im TLS Protokoll (CVE-2009-3555).')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_TLS_BLOCK_EMR_MSG"
 				lmtp_tls_block_early_mail_reply="$WERT"
 				postconf -e lmtp_tls_block_early_mail_reply="$WERT"
@@ -1030,7 +1030,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_enforce_peername)
 				# lmtp_tls_enforce_peername aktivieren{{{
-				LMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte LMTP Server die Informationen, für Rechnernamen im Zertifikat suchen (ja/nein)?')
+				LMTP_TLS_ENFORCE_PEERNAME_MSG=$(gettext 'Soll der entfernte LMTP Server die Informationen, für Rechnernamen im Zertifikat suchen ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_TLS_ENFORCE_PEERNAME_MSG"
 				lmtp_tls_enforce_peername="$WERT"
 				postconf -e lmtp_tls_enforce_peername="$WERT"
@@ -1144,7 +1144,7 @@ lmtp_conf() {
 				;;
 			lmtp_tls_note_starttls_offer)
 				# lmtp_tls_note_starttls_offer aktivieren{{{
-				LMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten LMTP Server geloggt werden, falls TLS nicht für diesen Server aktiviert ist (ja/nein)?')
+				LMTP_TLS_NOTE_STARTTLS_OFFER_MSG=$(gettext 'Soll der Rechnername vom entfernten LMTP Server geloggt werden, falls TLS nicht für diesen Server aktiviert ist ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_TLS_NOTE_STARTTLS_OFFER_MSG"
 				lmtp_tls_note_starttls_offer="$WERT"
 				postconf -e lmtp_tls_note_starttls_offer="$WERT"
@@ -1258,7 +1258,7 @@ lmtp_conf() {
 				;;
 			lmtp_use_tls)
 				# tls für eingehende Verbindungen aktivieren{{{
-				LMTP_USE_TLS_MSG=$(gettext 'Soll TLS benutzt werden, falls ein entfernter LMTP Server STARTTLS anbietet (ja/nein)?')
+				LMTP_USE_TLS_MSG=$(gettext 'Soll TLS benutzt werden, falls ein entfernter LMTP Server STARTTLS anbietet ($gv_Yes/$gv_No)?')
 				ja_nein_tausch "$LMTP_TITLE" "$LMTP_USE_TLS_MSG"
 				lmtp_use_tls="$WERT"
 				postconf -e lmtp_use_tls="$WERT"
