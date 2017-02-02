@@ -225,34 +225,34 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				;;
 			$gv_Delete)
 				# Daten löschen{{{
-				unset -- D_Menü
+				unset -- D_Menue
 				ANZ=1
 				while read DATA ; do
 					case ${DATA%\=*} in
 						*\@[0-9]*.[0-9]*.[0-9]*.[0-9]*:*,AXFR)	
-							D_Menü[ANZ]="${DATA%\=*} ${gv_Host}+AXFR off"
+							D_Menue[ANZ]="${DATA%\=*} ${gv_Host}+AXFR off"
 							;;
 						[0-9]*.[0-9]*.[0-9]*.[0-9]*:*,AXFR)	
-							D_Menü[ANZ]="${DATA%\=*} ${gv_Host}+AXFR off"
+							D_Menue[ANZ]="${DATA%\=*} ${gv_Host}+AXFR off"
 							;;
 						*\@[0-9]*.[0-9]*.[0-9]*.[0-9]*:*)	
-							D_Menü[ANZ]="${DATA%\=*} $gv_Host off"
+							D_Menue[ANZ]="${DATA%\=*} $gv_Host off"
 							;;
 						[0-9]*.[0-9]*.[0-9]*.[0-9]*:*)	
-							D_Menü[ANZ]="$DATA $gv_Host off"
+							D_Menue[ANZ]="$DATA $gv_Host off"
 							;;
 						[0-9]*\.:*)	
-							D_Menü[ANZ]="$DATA $gv_Network off"
+							D_Menue[ANZ]="$DATA $gv_Network off"
 							;;
 						[0-9]*.[0-9]*\.:*)	
-							D_Menü[ANZ]="$DATA $gv_Network off"
+							D_Menue[ANZ]="$DATA $gv_Network off"
 							;;
 						[0-9]*.[0-9]*.[0-9]*\.:*)	
-							D_Menü[ANZ]="$DATA $gv_Network off"
+							D_Menue[ANZ]="$DATA $gv_Network off"
 							;;
 						:deny|:allow)
 							GLOBAL=$(gettext 'global')
-							D_Menü[ANZ]="$DATA $GLOBAL off"
+							D_Menue[ANZ]="$DATA $GLOBAL off"
 							;;
 					esac
 					(( ANZ++ ))
@@ -260,8 +260,8 @@ if [ -d ${SV_DIR}/${DNS} ] ; then
 				#
 				# Einträge löschen
 				#
-				if [ -n "${D_Menü[1]}" ] ; then
-					DEL_MENU=($D_Menü)
+				if [ -n "${D_Menue[1]}" ] ; then
+					DEL_MENU=($D_Menue)
 					DEL_TITLE=(${lv_Administration}::${lv_Axfrdns})
 					checklist "" "$AXFR_MAIN_TITLE" "$DEL_MSG" "$DEL_MENU"
 					while [ "$gv_Auswahl" ] ; do

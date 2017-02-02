@@ -28,7 +28,7 @@ kwcryptsetup_conf() {
 	lv_Keyslot=$(gettext 'Schlüssel Slot')
 	lv_Mountdir=$(gettext 'Mountverz.')
 	lv_Noauto=$(gettext 'Noauto')
-	lv_Nöarly=$(gettext 'Verzögerung')
+	lv_Noearly=$(gettext 'Verzögerung')
 	lv_Offset=$(gettext 'Offset')
 	lv_Precheck=$(gettext 'Vorprüfung')
 	lv_Quiet=$(gettext 'still')
@@ -61,7 +61,7 @@ kwcryptsetup_conf() {
 			$lv_Checkargs \"$CHECKARGS\" \"$lv_Keyscript\" \"$KEYSCRIPT\"
 			$lv_Skip \"$SKIP\"
 			$lv_Timeout \"$TIMEOUT\"
-			$lv_Nöarly \"$NOEARLY\" $lv_Noauto \"$NOAUTO\"
+			$lv_Noearly \"$NOEARLY\" $lv_Noauto \"$NOAUTO\"
 			$lv_Loud \"$LOUD\" $lv_Quiet \"$QUIET\"
 			$lv_Tries \"$TRIES\" 
 			$gv_Save \"\" $gv_Back \"\")
@@ -76,7 +76,7 @@ kwcryptsetup_conf() {
 			$lv_Precheck \"$PRECHECK\" $lv_Check \"$CHECK\"
 			$lv_Checkargs \"$CHECKARGS\" \"$lv_Keyscript\" \"$KEYSCRIPT\"
 			$lv_Skip \"$SKIP\" $lv_Swap \"$MAKESWAP\" $lv_Tmp \"$TMPFS\"
-			$lv_Timeout \"$TIMEOUT\" $lv_Nöarly \"$NOEARLY\"
+			$lv_Timeout \"$TIMEOUT\" $lv_Noearly \"$NOEARLY\"
 			$lv_Noauto \"$NOAUTO\" $lv_Loud \"$LOUD\"
 			$lv_Quiet \"$QUIET\"
 			$lv_Tries \"$TRIES\" $gv_Save \"\" $gv_Back \"\")
@@ -91,7 +91,7 @@ kwcryptsetup_conf() {
 			$lv_Precheck \"$PRECHECK\" $lv_Check \"$CHECK\"
 			$lv_Checkargs \"$CHECKARGS\" \"$lv_Keyscript\" \"$KEYSCRIPT\"
 			$lv_Skip \"$SKIP\" $lv_Swap \"$MAKESWAP\" $lv_Tmp \"$TMPFS\"
-			$lv_Timeout \"$TIMEOUT\" $lv_Nöarly \"$NOEARLY\"
+			$lv_Timeout \"$TIMEOUT\" $lv_Noearly \"$NOEARLY\"
 			$lv_Noauto \"$NOAUTO\" $lv_Loud \"$LOUD\"
 			$lv_Quiet \"$QUIET\" $lv_Tries \"$TRIES\"
 			\"$lv_Keyslot\" \"$KEYSLOT\" $gv_Save \"\" $gv_Back \"\")
@@ -110,7 +110,7 @@ kwcryptsetup_conf() {
 			$lv_Checkargs \"$CHECKARGS\" \"$lv_Keyscript\" \"$KEYSCRIPT\"
 			$lv_Skip \"$SKIP\" $lv_Swap \"$MAKESWAP\"
 			$lv_Tmp \"$TMPFS\" $lv_Timeout \"$TIMEOUT\"
-			$lv_Nöarly \"$NOEARLY\" $lv_Noauto \"$NOAUTO\"
+			$lv_Noearly \"$NOEARLY\" $lv_Noauto \"$NOAUTO\"
 			$lv_Loud \"$LOUD\" $lv_Quiet \"$QUIET\"
 			$lv_Tries \"$TRIES\" \"$lv_Keyslot\" \"$KEYSLOT\"
 			$gv_Save \"\" $gv_Back \"\")
@@ -511,8 +511,8 @@ kwcryptsetup_conf() {
 				unset -- Fs_Type
 				TMP_MSG=$(gettext 'Wählen Sie ein Dateisytem für das zu erzeugende verschlüsselte Laufwerk aus.')
 				formatprogs_check
-				if [ -n "${FM_Menü[1]}" ] ; then
-					Fs_Type=($gv_None \"\" $FM_Menü)
+				if [ -n "${FM_Menue[1]}" ] ; then
+					Fs_Type=($gv_None \"\" $FM_Menue)
 					menubox "$TMPFS" "$gv_Configuration" "$TMP_MSG" "$Fs_Type"
 					while [ -n "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
@@ -547,7 +547,7 @@ kwcryptsetup_conf() {
 				## }}}
 				conf_menu $lv_Timeout
 				;;
-			$lv_Nearly)
+			$lv_Noearly)
 				# Auswahl ob beim Bootprozess das Laufwerk erst später erstellt# {{{
 				# werden soll, z. B. nachdem LVM oder RAID Arrays erstellt worden sind
 				# (Ja/Nein).
@@ -559,7 +559,7 @@ kwcryptsetup_conf() {
 					NOEARLY=no
 				fi
 				## }}}
-				conf_menu $lv_Nöarly
+				conf_menu $lv_Noearly
 				;;
 			$lv_Tries)
 				# Wie oft soll versucht werden, die Passphrase eingeben zu können.# {{{
@@ -679,7 +679,7 @@ kwcryptsetup_conf() {
 						PARAMS="$PARAMS --tries=$TRIES" 
 					fi
 					if [ "$NOEARLY" = yes ] ; then
-						OPT="${OPT},nearly"
+						OPT="${OPT},noearly"
 					fi
 					if [ "$NOAUTO" = yes ] ; then
 						OPT="${OPT},noauto"

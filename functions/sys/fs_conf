@@ -547,17 +547,17 @@ fs_conf() {
 			if [ -z "$F_FS" ] ; then
 				formatprogs_check
 				#
-				# Die Variable FM_Menü wird vorher von der Funktion formatprogs_check belegt.
+				# Die Variable FM_Menue wird vorher von der Funktion formatprogs_check belegt.
 				#
-				if [ -n "${FM_Menü[1]}" ] ; then
+				if [ -n "${FM_Menue[1]}" ] ; then
 					FTITLE=$(gettext 'Formatierung')
 					FMSG=$(gettext 'Wählen Sie ein Dateisystem aus, mit welchem das Laufwerk formatiert werden soll.')
-					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menü"
+					menubox "$FS" "$FTITLE" "$FMSG" "$FM_Menue"
 					#
 					while [ "$gv_Auswahl" ] ; do
 						case "$gv_Auswahl" in
 							HELP*)	script_help share/format_help
-								menubox "${gv_Auswahl#HELP }" "$FTITLE" "$FMSG" "$FM_Menü"
+								menubox "${gv_Auswahl#HELP }" "$FTITLE" "$FMSG" "$FM_Menue"
 								;;
 							*)	
 								FS=$gv_Auswahl
@@ -583,7 +583,7 @@ fs_conf() {
 	# nichts - alle von den kwtools unterstützen FSs.
 	#
 	formatprogs_check() {
-		unset -- FM_Menü Fs
+		unset -- FM_Menue Fs
 		local Fs Anz
 		integer Anz
 		case "$1" in
@@ -603,30 +603,30 @@ fs_conf() {
 				fat16|fat32)
 					if [[ -x ${commands[mkfs.vfat]} ]] ; then
 						(( Anz++ ))
-						FM_Menü[Anz]="$i \"\""
+						FM_Menue[Anz]="$i \"\""
 					fi
 					;;
 				ntfs)
 					if [[ -x ${commands[mk${i}]} ]] ; then
 						(( Anz++ ))
-						FM_Menü[Anz]="$i \"\""
+						FM_Menue[Anz]="$i \"\""
 					fi
 					;;
 				*swap) # Das * steht für Kompalität zu (kw)parted (linux-swap).
 					if [[ -x ${commands[mk${i##*-}]} ]] ; then
 						(( Anz++ ))
-						FM_Menü[Anz]="$i \"\""
+						FM_Menue[Anz]="$i \"\""
 					fi
 					;;
 				*)
 					if [[ -x ${commands[mkfs.${i}]} ]] ; then
 						(( Anz++ ))
-						FM_Menü[Anz]="$i \"\""
+						FM_Menue[Anz]="$i \"\""
 					fi
 					;;
 			esac
 		}
-		if [ -z "${FM_Menü[1]}" ] ; then
+		if [ -z "${FM_Menue[1]}" ] ; then
 			MSG=$(gettext 'Sie haben keine Formatierungs Werkzeuge installiert oder der PATH ist nicht bekannt (Variable PATH).')
 			msgbox "$gv_Attention" "$MSG"
 		fi

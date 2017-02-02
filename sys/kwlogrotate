@@ -73,10 +73,10 @@ main_menu() {
 	menubox  "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
 #}}}
-# Funktion log_ändern_menue{{{
+# Funktion log_aendern_menue{{{
 #
 LOGFILE_TITLE=$(gettext 'Logdatei')
-log_ändern_menue() {
+log_aendern_menue() {
 	unset -- LOGFILE_MENU LogFiles
 	local LogFiles
 	while read A B ; do
@@ -177,14 +177,14 @@ no_logfile_select_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
-# Funktion log_ändern{{{
+# Funktion log_aendern{{{
 #
-log_ändern() {
-	log_ändern_menue
+log_aendern() {
+	log_aendern_menue
 	while [ "$gv_Auswahl" ] ; do
 		case "$gv_Auswahl" in
 			HELP*)	script_help conf_help
-				log_ändern_menue "${gv_Auswahl#HELP }"
+				log_aendern_menue "${gv_Auswahl#HELP }"
 				;;
 			"$Add_Entry")
 				# Einen Eintrag für Logdateien hinzufügen# {{{
@@ -226,7 +226,7 @@ $gv_Back \"\""
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
-				log_ändern_menue "$Add_Entry"
+				log_aendern_menue "$Add_Entry"
 				;;
 			$Name)
 				# Name der Logdatei Konfiguration eingeben{{{
@@ -246,7 +246,7 @@ $gv_Back \"\""
 					fi
 				fi
 				#}}}
-				log_ändern_menue $Name
+				log_aendern_menue $Name
 				;;
 			$LogDatei*)
 				# Logdateien auswählen{{{
@@ -299,7 +299,7 @@ $gv_Back \"\""
 					no_input_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Count*)
 				# Anzahl der Rotierung eingeben{{{
@@ -325,7 +325,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Rotatetime*)
 				# Wann soll rotiert werden?{{{
@@ -370,7 +370,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Mail*)
 				# Wem soll gemailt werden?{{{
@@ -392,7 +392,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Size*)
 				# Grösse einstellen ab wann rotiert werden soll{{{
@@ -430,7 +430,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Compress*)
 				# Welches Kompressionsprogramm einstellen{{{
@@ -454,7 +454,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Access*)
 				# Rechte, user und Gruppenrechte einstellen{{{
@@ -479,7 +479,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$Script*)
 				# Script, ein Befehl der nach der Rotierung ausgeführt werden soll{{{
@@ -506,7 +506,7 @@ $gv_Back \"\""
 					no_logfile_select_msg
 				fi
 				#}}}
-				log_ändern_menue $CHOICE
+				log_aendern_menue $CHOICE
 				;;
 			$gv_Save)
 				# Einstellungen speichern{{{
@@ -517,7 +517,7 @@ $gv_Back \"\""
 				else
 					MSG=$(gettext 'Sie müssen die Menüpunkte Name und für alle Logdateien, Anzahl und Rotierzeit mit Werten belegen. Alle anderen Menüpunkte sind optional.')
 					msgbox "$gv_Attention" "$MSG"
-					log_ändern_menue
+					log_aendern_menue
 				fi
 				#}}}
 				;;
@@ -576,7 +576,7 @@ ${Access}${L_Anz} \"\"
 ${Script}${L_Anz} \"\"
 $gv_Save \"\"
 $gv_Back \"\""
-						log_ändern
+						log_aendern
 					else
 						no_input_msg
 					fi
@@ -589,7 +589,7 @@ $gv_Back \"\""
 			# Log-Konf.-datei ändern{{{
 			log_file_wert
 			if [ "$NAME" ] ; then
-				log_ändern
+				log_aendern
 			fi
 			#}}}
 			main_menu $gv_Change

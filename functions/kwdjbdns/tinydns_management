@@ -399,42 +399,42 @@ tinydns_management() {
 					;;
 				$gv_Delete)
 					# Datenbank Einträge löschen{{{
-					unset -- E_Menü
+					unset -- E_Menue
 					while read DATA ; do
 						case $DATA in
 							.*)	#
 								# Nameserver
-								E_Menü+=($DATA $lv_Nameserver off)
+								E_Menue+=($DATA $lv_Nameserver off)
 								;;
 							\&*)#
 								# Child Nameserver
-								E_Menü+=(\"$DATA\" \"$lv_Child_Nameserver\" off)
+								E_Menue+=(\"$DATA\" \"$lv_Child_Nameserver\" off)
 								;;
 							=*)	#
 								# Rechner
-								E_Menü+=($DATA $gv_Host off)
+								E_Menue+=($DATA $gv_Host off)
 								;;
 							+*)	#
 								# Alias
-								E_Menü+=($DATA $lv_Alias off)
+								E_Menue+=($DATA $lv_Alias off)
 								;;
 							@*)	#
 								# Mailserver
-								E_Menü+=($DATA $lv_Mailserver off)
+								E_Menue+=($DATA $lv_Mailserver off)
 								;;
 							6*)	#
 								# IPv6 Rechner
-								E_Menü+=($DATA \"$lv_Host6\" off)
+								E_Menue+=($DATA \"$lv_Host6\" off)
 								;;
 							3*)	#
 								# IPv6 Alias
-								E_Menü+=($DATA \"$lv_Alias6\" off)
+								E_Menue+=($DATA \"$lv_Alias6\" off)
 								;;
 						esac
 					done <data
 					#
-					if [ -n "${E_Menü[1]}" ] ; then
-						DEL_MENU=($E_Menü)
+					if [ -n "${E_Menue[1]}" ] ; then
+						DEL_MENU=($E_Menue)
 						checklist "" "$TINYDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
 						while [ -n "$gv_Auswahl" ] ; do
 							case "$gv_Auswahl" in

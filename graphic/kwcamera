@@ -379,23 +379,23 @@ while [ "$gv_Auswahl" ] ; do
 							$lv_Choice)
 								# Eine Auswahl an Bildern zur Verfügung# {{{
 								# stellen
-								unset -- Anz Suffix Choice_Menü
+								unset -- Anz Suffix Choice_Menue
 								typeset -a Suffix
 								local Anz Suffix
 								integer Anz
 								Anz=1
 								while read Count Pic Rest ; do
-									Choice_Menü[Anz]="${Count#[#]} $Pic off"
+									Choice_Menue[Anz]="${Count#[#]} $Pic off"
 									Suffix[Anz]="${Pic##*.}"
 									(( Anz++ ))
 								done <${gv_WorkDir}/list_img
 								#
 								DOWN_MSG=$(gettext 'Wählen Sie ein oder mehrere Bilder zum download aus.')
-								checklist "" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menü"
+								checklist "" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
 								while [ -n "$gv_Auswahl" ] ; do
 									case "$gv_Auswahl" in
 										HELP*)	script_help choice_help
-											checklist "${gv_Auswahl#HELP }" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menü"
+											checklist "${gv_Auswahl#HELP }" "$DOWN_TITLE" "$DOWN_MSG" "$Choice_Menue"
 											;;
 										*)
 											# Auswahl übernehmen

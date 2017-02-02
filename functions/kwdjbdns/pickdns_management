@@ -375,36 +375,36 @@ pickdns_management() {
 					;;
 				$gv_Delete)
 					# Datenbank Einträge löschen{{{
-					unset -- E_Menü
+					unset -- E_Menue
 					ANZ=1
 					while read DATA ; do
 						case $DATA in
 							-*:[1-9]*.*:[a-zA-Z][a-zA-Z])
 								# Rechner + Location exclude
-								E_Menü[ANZ]="$DATA $lv_Exclude off"
+								E_Menue[ANZ]="$DATA $lv_Exclude off"
 								;;
 							+*:[1-9.]*.*:[a-zA-Z][a-zA-Z])
 								# Rechner + Location include
-								E_Menü[ANZ]="$DATA $lv_Include off"
+								E_Menue[ANZ]="$DATA $lv_Include off"
 								;;
 							-*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
 								# Rechner exclude
-								E_Menü[ANZ]="$DATA \"$gv_Host $lv_Exclude\" off"
+								E_Menue[ANZ]="$DATA \"$gv_Host $lv_Exclude\" off"
 								;;
 							+*:[1-9][0-9]*.[0-9]*.[0-9]*.[0-9]*)
 								# Rechner include
-								E_Menü[ANZ]="$DATA \"$gv_Host $lv_Include\" off"
+								E_Menue[ANZ]="$DATA \"$gv_Host $lv_Include\" off"
 								;;
 							%*:[1-9.]*)
 								# Rechner + Location include
-								E_Menü[ANZ]="$DATA $lv_Location off"
+								E_Menue[ANZ]="$DATA $lv_Location off"
 								;;
 						esac
 						(( ANZ++ ))
 					done <data
 					#
-					if [ -n "${E_Menü[1]}" ] ; then
-						DEL_MENU=($E_Menü)
+					if [ -n "${E_Menue[1]}" ] ; then
+						DEL_MENU=($E_Menue)
 						DEL_TITLE=(${PICKDNS_TITLE})
 						checklist "" "$PICKDNS_TITLE" "$DEL_MSG" "$DEL_MENU"
 						while [ -n "$gv_Auswahl" ] ; do
