@@ -1764,7 +1764,7 @@ sys_conf() {
 					Opt="$1"
 					Size="${2//,/.}"
 #					Tmp="$Size:r"
-#					# evtl. mit Nullen auffuellen
+#					# evtl. mit Nullen auffüllen
 #					if [ ${#Size:e} -eq 1 ] ; then
 #						Tmp1="${Size:e}00"
 #					elif [ ${#Size:e} -eq 2 ] ; then
@@ -1898,8 +1898,8 @@ convert_mib_size() {
 #				(( SIZE_MIB = Size * 1152921504606846976 ))
 #				;;
 			*)	# Nachricht das diese Masseinheit nicht
-				# unterstuetzt wird
-				MSG=$(gettext 'Diese Masseinheit ($Opt) wird nicht unterstuetzt.')
+				# unterstützt wird
+				MSG=$(gettext 'Diese Masseinheit ($Opt) wird nicht unterstützt.')
 				msgbox "$gv_Attention" "$MSG"
 				return 1
 				;;
@@ -2893,7 +2893,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 			Full_Size="$2"
 			GAUGE_MSG="$3"
 			Dd_Pid="`print ${${(ws: :)${(M)${(f)"$(ps ax)"}##*${Dd_Cmd}*}}[1]}`"
-			# DD_LOG mit Daten fuellen
+			# DD_LOG mit Daten füllen
 			File_Size=$(kill -USR1 $Dd_Pid ; print ${${(ws: :)$(tail -1 $gv_LogFile)}[1]})
 			(( PERCENT = ${File_Size}00 / Full_Size ))
 			if [ -n "$PERCENT" ] ; then
@@ -2910,7 +2910,7 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 	#
 	# Es konvertiert 10 CD Laufwerke um.
 	#
-	# NOTIZ: Zur Zeit werden nur cdrom Laufwerke unterstuetzt.
+	# NOTIZ: Zur Zeit werden nur cdrom Laufwerke unterstützt.
 	#
 	# usage: device_convert [ -i ] DEVICE
 	# -i - umgekehrtes konvertieren.
@@ -5109,7 +5109,7 @@ is_value() {
 	# usage: os_check
 	#
 	os_check() {
-		# Diese Distris werden unterstuetzt. Bei Debian gibt es noch die
+		# Diese Distris werden unterstützt. Bei Debian gibt es noch die
 		# Unterstutzung für die Live-CD grml.
 		for i in centos Debian fedora SUSE ; {
 			if [ ! -z "`print ${(M)${(f)"$(< /proc/version)"}##*${i}}`" ] ; then
@@ -5188,7 +5188,7 @@ is_value() {
 					;;
 			esac
 		else
-			MSG=$(gettext 'Diese Distribution wird noch nicht unterstuetzt. Sie arbeiten auf eigene Gefahr.')
+			MSG=$(gettext 'Diese Distribution wird noch nicht unterstützt. Sie arbeiten auf eigene Gefahr.')
 			msgbox "$gv_Info" "$MSG"
 		fi
 	}
@@ -5244,7 +5244,7 @@ is_value() {
 	#
 	# usage: prog_check [ -p PERM ] "Programm Programm ..."
 	# -p - zur Zeit geht nur:
-	# PERM=s - setuid Eigentuemer ausführbar (Bsp. cdrdao)
+	# PERM=s - setuid Eigentümer ausführbar (Bsp. cdrdao)
 	#
 	prog_check() {
 		unset -- PROGS PROGS_E NO_PROGS
@@ -5580,7 +5580,7 @@ is_value() {
 		fi
 	}
 	#}}}
-	# Funktion (return_check) um den Rueckgabewert zu prüfen{{{
+	# Funktion (return_check) um den Rückgabewert zu prüfen{{{
 	#
 	# usage: return_check mit der Variable U_OPT
 	# U_OPT=- Apostrophe werden zwischen den Wörtern gelöscht, Leerzeichen
@@ -5678,7 +5678,7 @@ is_value() {
 	#
 	root_check() {
 		if [ "`id -u`" != 0 ] ; then
-			MSG=$(gettext 'Fuer diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln ($gv_Yes/$gv_No)?')
+			MSG=$(gettext 'Für diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln ($gv_Yes/$gv_No)?')
 			yesno "$gv_Attention" "$MSG" ""
 			#
 			if [ "$gv_Auswahl" = yes ] ; then
@@ -5707,7 +5707,7 @@ is_value() {
 			create_file -d $TMP_PATH
 			gv_Script_Lock=${TMP_PATH}/${gv_ScriptName}.lock
 			if [ -e "$gv_Script_Lock" ] ; then
-				MSG=$(gettext 'Scripte mit root Rechten duerfen nur in einer Instanz laufen. Das Script beendet sich jetzt.')
+				MSG=$(gettext 'Scripte mit root Rechten dürfen nur in einer Instanz laufen. Das Script beendet sich jetzt.')
 				msgbox "$gv_Attention" "$MSG"
 				unset -- gv_Script_Lock
 				exit 0
@@ -5846,7 +5846,7 @@ search_fdisks() {
 	# Da bekommt dialog kein Fenster hin oder es ist ziehmlich gequetscht.
 	# 
 	if [ $COLUMNS -le 79 -o $LINES -le 20 ] ; then
-		MSG=$(gettext "${B_ERROR}Ihre Bildschirmauflösung ist zu klein (${GREEN}${COLUMNS}x${LINES}${B_ERROR}). Um vernuenftig arbeiten zu können, benötigen Sie mindestens ${GREEN}80x20${B_ERROR}, besser ${GREEN}80x40${B_ERROR}. Drücken Sie jetzt ENTER.${NORMAL}")
+		MSG=$(gettext "${B_ERROR}Ihre Bildschirmauflösung ist zu klein (${GREEN}${COLUMNS}x${LINES}${B_ERROR}). Um vernünftig arbeiten zu können, benötigen Sie mindestens ${GREEN}80x20${B_ERROR}, besser ${GREEN}80x40${B_ERROR}. Drücken Sie jetzt ENTER.${NORMAL}")
 		print
 		print "${B_ERROR}${gv_Attention}!"
 		print "$MSG"
@@ -5877,12 +5877,12 @@ search_fdisks() {
 	#
 	# usage: user_device_check "$DEVICE" RECHTE
 	# DEVICE - Device das überprüf werden soll.
-	# Rechte: r = Leserechte der Eigentuemer prüfen
-	#         w = Schreibrechte der Eigentuemer prüfen
-	#         x = Ausführrechte der Eigentuemer prüfen
-	#         A = Leserechte der Eigentuemergruppe prüfen
-	#         I = Schreibrechte der Eigentuemergruppe prüfen
-	#         E = Ausführrechte der Eigentuemergruppe prüfen
+	# Rechte: r = Leserechte der Eigentümer prüfen
+	#         w = Schreibrechte der Eigentümer prüfen
+	#         x = Ausführrechte der Eigentümer prüfen
+	#         A = Leserechte der Eigentümergruppe prüfen
+	#         I = Schreibrechte der Eigentümergruppe prüfen
+	#         E = Ausführrechte der Eigentümergruppe prüfen
 	#         R = Leserechte für alle anderen prüfen
 	#         W = Schreibrechte für alle anderen prüfen
 	#         X = Ausführrechte für alle anderen prüfen
@@ -5891,7 +5891,7 @@ search_fdisks() {
 		if [ "$#" = 2 ] ; then
 			SYS_DEV="$1"
 			PERM="$2"
-			MSG=$(gettext 'Sie duerfen auf dem Device/Datei ($SYS_DEV) nicht lesen/schreiben. Sie müssen die Rechte auf Lesen/Schreiben setzen, beziehungsweise der richtigen Gruppe angehören.')
+			MSG=$(gettext 'Sie dürfen auf dem Device/Datei ($SYS_DEV) nicht lesen/schreiben. Sie müssen die Rechte auf Lesen/Schreiben setzen, beziehungsweise der richtigen Gruppe angehören.')
 			#
 			# Rechte checken
 			# Funktion user_check{{{
@@ -6459,7 +6459,7 @@ no_option_msg() {
 	no_perm_prog_msg() {
 		if [ "$#" = 1 ] ; then
 			Prog="$1"
-			MSG=$(gettext 'Sie duerfen das Script/Programm ($Prog) nicht ausführen. Lesen Sie die Hilfe zu $Prog.')
+			MSG=$(gettext 'Sie dürfen das Script/Programm ($Prog) nicht ausführen. Lesen Sie die Hilfe zu $Prog.')
 			msgbox "$gv_Attention" "$MSG"
 		else
 			no_para_msg $0
@@ -6494,7 +6494,7 @@ no_option_msg() {
 	#
 	# usage: no_special_character_msg
 	no_special_character_msg() {
-		MSG=$(gettext 'Sie duerfen keine Sonderzeichen benutzen.')
+		MSG=$(gettext 'Sie dürfen keine Sonderzeichen benutzen.')
 		msgbox "$gv_Attention" "$MSG"	
 	}
 	# }}}
