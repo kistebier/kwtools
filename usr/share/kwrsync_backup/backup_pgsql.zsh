@@ -33,7 +33,7 @@ Backup_Dir="${Pg_Home}/dump/backup"
 Schema_Dir="${Pg_Home}/dump/schema"
 Date="`date +%d.%m.%Y`"
 #
-# Pruefen ob folgende Programme ausfuehrbar sind.
+# Prüfen ob folgende Programme ausführbar sind.
 for i in pg_dump pg_dumpall psql su vacuumdb ; {
 	if [[ ! -x ${commands[$i]} ]] ; then
 		print ""

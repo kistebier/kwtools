@@ -4,7 +4,7 @@
 #
 # Script: kwparted, ein frontend für parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
-# Es fehlt die Unterstuetzung zum kopieren der Dateisysteme hfs* und jfs.
+# Es fehlt die Unterstützung zum kopieren der Dateisysteme hfs* und jfs.
 # ++++++++++++++++++++++++++++++
 #
 # Version: 0.3.1
@@ -132,10 +132,10 @@ disklabel() {
 }
 ## }}}
 # Funktion (no_support_pttype_msg), Nachricht das alle anderen Disk Labels# {{{
-# von kwparted noch nicht unterstuetzt werden.
+# von kwparted noch nicht unterstützt werden.
 #
 no_support_pttype_msg() {
-	MSG=$(gettext 'Dieser Partitionstabellentyp ($FPDISKLABEL) wird noch nicht unterstuetzt.')
+	MSG=$(gettext 'Dieser Partitionstabellentyp ($FPDISKLABEL) wird noch nicht unterstützt.')
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
@@ -179,7 +179,7 @@ read_parted() {
 			*)
 				# bsd|dvh|loop|mac|pc98|sun
 				# Diese Partitionstabellentypen werden von kwparted
-				# noch nicht unterstuetzt.
+				# noch nicht unterstützt.
 				no_support_pttype_msg
 				return 1
 				;;
@@ -544,7 +544,7 @@ parted_edit() {
 									Fl="${i%,}"
 									#########################################
 									# INFO: swap
-									# Dieses Flag wird nicht mehr unterstuetzt.
+									# Dieses Flag wird nicht mehr unterstützt.
 									#########################################
 									if [ "$Fl" != swap ] ; then
 										if [ ! -z ${(M)${Flag_Old}[(fr)${Fl}*]} ] ; then
@@ -687,7 +687,7 @@ parted_edit() {
 					# können bestimmte Dateisysteme vergrössert, verkleinert,
 					# kopiert, geändert und gelöscht werden.
 					elif [[ ${${(M)${PART_ANZ_NR[ACTION_NR+1]}##*--${FREE}--}##* } == --${FREE}-- ]] ; then
-						# prüfen wie welches Dateisystem von kwparted unterstuetzt# {{{
+						# prüfen wie welches Dateisystem von kwparted unterstützt# {{{
 						# wird.
 						######################################################
 						# TODO: immer nochmal prüfen, welches FS-Tool was kann.
@@ -776,13 +776,13 @@ parted_edit() {
 								;;
 							*)
 								# alle anderen Dateisysteme werden
-								# noch nicht unterstuetzt.
+								# noch nicht unterstützt.
 								ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
 								;;
 						esac
 						#}}}
 					else
-						# prüfen wie welches Dateisystem von kwparted unterstuetzt# {{{
+						# prüfen wie welches Dateisystem von kwparted unterstützt# {{{
 						# wird.
 						FsTmp=${${(ws: :)${PART_ANZ_NR[ACTION_NR]}}[3]}
 						case $FsTmp in
@@ -821,18 +821,18 @@ parted_edit() {
 								;;
 							*)
 								# alle anderen Dateisysteme werden
-								# noch nicht unterstuetzt.
+								# noch nicht unterstützt.
 								ACTION_PART_MENU=($gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
 								;;
 						esac
 						## }}}
 					fi
-					# Checken ob das Dateisystem unterstuetzt wurde,
+					# Checken ob das Dateisystem unterstützt wurde,
 					# ansonsten kommt eine Meldung.
 					if [ ! -z "${ACTION_PART_MENU[1]}" ] ; then
 						menubox "$1" "$ACTION_PART_TITLE" "$gv_Menupoint" "$ACTION_PART_MENU"
 					else
-						# Dateisystem wird nicht unterstuetzt.
+						# Dateisystem wird nicht unterstützt.
 						if [ -n "$FsTmp" ] ; then
 							no_fs_support_msg "$FsTmp"
 						fi
@@ -1334,11 +1334,11 @@ parted_edit() {
 										# Partitionstyp speziefische Werte einlesen.
 										case "$FPDISKLABEL" in
 											gpt)
-												# Auswahl für den Partitionstabellentyp "gpt" zerpfluecken.
+												# Auswahl für den Partitionstabellentyp "gpt" zerpflücken.
 												value_choice_gpt "$NR"
 												;;
 											dos)
-												# Auswahl für den Partitionstabellentyp "msdos" zerpfluecken.
+												# Auswahl für den Partitionstabellentyp "msdos" zerpflücken.
 												value_choice_msdos "$NR"
 												;;
 										esac
@@ -1387,11 +1387,11 @@ parted_edit() {
 				## }}}
 				case "$FPDISKLABEL" in
 					gpt)
-						# Auswahl für den Partitionstabellentyp "gpt" zerpfluecken.
+						# Auswahl für den Partitionstabellentyp "gpt" zerpflücken.
 						value_choice_gpt "$PART_DEST_NR"
 						;;
 					dos)
-						# Auswahl für den Partitionstabellentyp "msdos" zerpfluecken.
+						# Auswahl für den Partitionstabellentyp "msdos" zerpflücken.
 						value_choice_msdos "$PART_DEST_NR"
 						;;
 				esac
@@ -1577,7 +1577,7 @@ while [ "$gv_Auswahl" ] ; do
 		$lv_Status)
 			# Status von kwparted anzeigen.# {{{
 			TITLE=${lv_Status}:
-			MSG=$(gettext 'Hier sehen Sie die Dateisysteme die wie folgt unterstuetzt werden.')
+			MSG=$(gettext 'Hier sehen Sie die Dateisysteme die wie folgt unterstützt werden.')
 			TABLE_HEADER=$(gettext '    FS     | bemerken | erstellen | kopieren | vergrössern | verkleinern | löschen | Flags | check')
 			> $gv_LogFile <<< "$TITLE"
 			>> $gv_LogFile <<< "$MSG"
