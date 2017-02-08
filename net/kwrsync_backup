@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke  <kiste@netzworkk.de> 07.02.2017
 #
 # Script: kwrsync_backup, erstellt remote Backups mittels dem Programm rsync
-# Version: 1.0.7
+# Version: 1.0.8
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -81,10 +81,10 @@ fi
 LOGFILE="${LOGFILE:-/var/log/${gv_ScriptName}.log}"
 
 # Variablen# {{{
-lv_Hourly=$(gettext 'stuendlich')
+lv_Hourly=$(gettext 'stündlich')
 lv_Daily=$(gettext 'täglich')
 lv_Weekly=$(gettext 'wöchentlich')
-lv_Mounthly=$(gettext 'monatlich')
+lv_Monthly=$(gettext 'monatlich')
 ## }}}
 # Funktion main_menu{{{
 #
@@ -231,7 +231,7 @@ while [ "$gv_Auswahl" ] ; do
 				backup_time_menu() {
 					TIME_TITLE=$lv_Backup
 					TIME_MENU=($lv_Hourly \"\" $lv_Daily \"\"
-					$lv_Weekly \"\" $lv_Mounthly \"\" $gv_Back \"\")
+					$lv_Weekly \"\" $lv_Monthly \"\" $gv_Back \"\")
 					menubox "$1" "$TIME_TITLE" "$gv_Menupoint" "$TIME_MENU"
 				}
 				## }}}
@@ -265,12 +265,12 @@ while [ "$gv_Auswahl" ] ; do
 							fi
 							backup_time_menu $lv_Weekly
 							;;
-						$lv_Mounthly)
+						$lv_Monthly)
 							check_space_fp
 							if [[ $RET == 0 ]] ; then
 								kwrsync_backup_exec mounthly
 							fi
-							backup_time_menu $lv_Mounthly
+							backup_time_menu $lv_Monthly
 							;;
 						$gv_Back)	break
 							;;
