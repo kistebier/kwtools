@@ -426,7 +426,7 @@ kwrsync_backup_conf() {
 							[[ ! -f /root/.ssh/id_rsa.pub ]] || \
 							[[ ! -f /root/.ssh/id_ecdsa.pub ]] || \
 							[[ ! -f /root/.ssh/id_ed25519.pub ]] ; then
-							NO_ID_DSA_MSG=$(gettext 'Es gibt keine Schlüssel (ssh) für den Benutzer \"root\". Sollen jetzt welche erstellt werden (Ja/Nein)?')
+							NO_ID_DSA_MSG=$(gettext 'Es gibt keine Schlüssel (ssh) für den Benutzer \"root\". Sollen jetzt welche erstellt werden ($gv_Yes/$gv_No)?')
 							yesno "$gv_Info" "$NO_ID_DSA_MSG" "" 2
 							if [ "$gv_Auswahl" = yes ] ; then
 								for t in dsa rsa ecdsa ed25519 ; {
@@ -462,7 +462,7 @@ kwrsync_backup_conf() {
 									print "command=\"sudo rsync --server --sender -vlogDtprRe.iLsfx --delete-excluded --numeric-ids . /\" "$(< $f) >> /root/.ssh/authorized_keys.rsync
 								fi
 							}
-							MSG=$(gettext 'Denken Sie dran die Datei /root/.ssh/authorized_keys(.rsync) auf die zu sichernden Rechner ($SERVER), ins ~/.ssh Verzeichnis des Benutzers \"$USER_RUN\" zu kopieren. Diesen Benutzer sollten Sie vorher anlegen oder angelegt haben. Lesen Sie dazu die Hilfe!')
+							MSG=$(gettext 'Denken Sie dran die Datei /root/.ssh/authorized_keys.rsync auf die zu sichernden Rechner ($SERVER), ins ~/.ssh Verzeichnis des Benutzers \"$USER_RUN\" zu kopieren. Diesen Benutzer sollten Sie vorher anlegen oder angelegt haben. Lesen Sie dazu die Hilfe!')
 							msgbox "$gv_Info" "$MSG"
 							break
 						fi
