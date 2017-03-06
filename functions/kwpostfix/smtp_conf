@@ -116,6 +116,7 @@ smtp_conf() {
 		smtp_tls_session_cache_database \"\$smtp_tls_session_cache_database\"
 		smtp_tls_session_cache_timeout \"\$smtp_tls_session_cache_timeout\"
 		smtp_tls_verify_cert_match \"\$smtp_tls_verify_cert_match\"
+		smtp_tls_wrappermode \"\$smtp_tls_wrappermode\"
 		smtp_use_tls \"\$smtp_use_tls\"
 		smtp_xforward_timeout \"\$smtp_xforward_timeout\"
 		postfix \"reload\"
@@ -1304,6 +1305,15 @@ smtp_conf() {
 				fi
 				## }}}
 				conf_smtp_menu smtp_tls_verify_cert_match
+				;;
+			smtp_tls_wrappermode)
+				# Wrappermode einschalten{{{
+				SMTP_TLS_WRAPPERMODE_MSG=$(gettext 'Soll dieser Server, für ausgehende Mails, den TLS Wrapper benutzen ($gv_Yes/$gv_No)?')
+				ja_nein_tausch "$SMTPD_TITLE" "$SMTP_TLS_WRAPPERMODE_MSG"
+				smtp_tls_wrappermode="$WERT"
+				postconf -e smtp_tls_wrappermode="$WERT"
+				#}}}
+				conf_smtpd_menue smtp_tls_wrappermode
 				;;
 			smtp_use_tls)
 				# tls für eingehende Verbindungen aktivieren{{{
