@@ -37,6 +37,9 @@ case "$1" in
 		if [ "$RET" = "true" ] ; then
 			# Runlevel Symlinks erstellen
 			update-rc.d kwnarc defaults >/dev/null
+			test -f /etc/kwtools/kwnarc/kwnarc.conf && \
+				sed -i "s/^START_IPTABLES=.*/START_IPTABLES=yes/" \
+				/etc/kwtools/kwnarc/kwnarc.conf
 			#
 			if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
 				$Init_Script restart
@@ -49,6 +52,9 @@ case "$1" in
 			fi
 			# Runlevel Symlinks entfernen
 			update-rc.d -f kwnarc remove >/dev/null
+			test -f /etc/kwtools/kwnarc/kwnarc.conf && \
+				sed -i "s/^START_IPTABLES=.*/START_IPTABLES=no/" \
+				/etc/kwtools/kwnarc/kwnarc.conf
 		fi
 		db_stop
 		exit 0

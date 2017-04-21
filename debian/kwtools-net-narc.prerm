@@ -26,6 +26,7 @@ case "$1" in
 	upgrade)
 		if iptables -L | grep '^[DROP|ACCEPT|REJECT|LOG]' | grep -v '^Chain' ; then
 			$Init_Script stop || exit $?
+			systemctl stop kwnarc.service || exit $?
 		fi
 		exit 0
 		;;
