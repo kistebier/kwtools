@@ -3,12 +3,33 @@
 # usage: manage_cryptdir
 #
 manage_cryptdir() {
+	UNSET=(CIPHER FILENAME_ENCRYPT KEY_FILE KEY_SIZE KEY_TYPE M_O_VALUE
+	MOUNT_PATH M_POINT NOAUTO O_DIR PASSTHROUGH NO_SIG_CACHE VERSION XATTR)
 	# Funktion manage_menu# {{{
 	#
 	MANAGE_TITLE="$gv_Directory"
 	MANAGE_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
 	manage_menu() {
 		menubox "$1" "$MANAGE_TITLE" "$gv_Menupoint" "$MANAGE_MENU"
+	}
+	## }}}
+	# Funktion (mount_cryptdir)# {{{
+	#
+	mount_cryptdir() {
+		# Mount Optionen
+		M_OPT="${OPT},${KEY}"
+		# Verzeichnis mounten
+		printf "\n" | mount -t ecryptfs "$O_DIR" "$M_POINT" -o "$M_OPT" | &> ${gv_WorkDir}/sig-cache.txt &>/dev/null
+		# Signatur herausbekommen
+		SIG=${${(ws:=:)${(M)$(< ${gv_WorkDir}/sig-cache.txt)##ecryptfs_sig*}}[2]}
+		if [[ -n $SIG ]] && [[ $KEYRING == yes ]] ; then
+			OPT="${M_OPT},cryptfs_sig=${SIG},ecryptfs_fnek_sig=${SIG}"
+			< ${gv_WorkDir}/sig-cache.txt >> ${HOME}/.ecryptfs/sig-cache.txt &>/dev/null
+		else
+			OPT="${M_OPT},cryptfs_sig=${SIG},ecryptfs_fnek_sig=${SIG},${KEY}"
+		fi
+		# fstab mit keyfile schreiben
+		write_fstab
 	}
 	## }}}
 	manage_menu
@@ -19,26 +40,34 @@ manage_cryptdir() {
 				;;
 			$gv_Create)
 	            # verschlüsselte Verzeichnisse erstellen# {{{
-	            unset -- CIPHER KEY_FILE KEY_SIZE KEY_TYPE M_O_VALUE \
-	                MOUNT_PATH M_POINT NOAUTO O_DIR PASSTHROUGH NO_SIG_CACHE VERSION XATTR
+				unset -- $UNSET
 	            read_file kwecryptfsrc
 	            kwecryptfs_conf
 	            if [ "$?" = 0 ] ; then
+					# eventuelles externes Laufwerk einbinden
+					if ! mount_fs ; then
+						break
+					fi
 	                # erstmal Verzeichnis umounten
-	                mount_check -a "$O_DIR"
-	                # fstab schreiben
-	                write_fstab
-	                # Verzeichnis mounten
-					mount_check -m "$O_DIR" &>/dev/null
+					mount_check -a "$O_DIR"
+	                # mounten, Signatur herausbekommen und fstab schreiben
+					case "$KEY_OPT" in
+						passphrase_passwd_file)
+							mount_cryptdir
+							;;
+						passphrase_passwd)
+							mount_cryptdir
+							;;
+					esac
 	            fi
+				umount_fs
+				unset -- KEY KEY_OPT KEY_PASS M_OPT OPT
 				## }}}
 				manage_menu $gv_Create
 				;;
 			$gv_Change)
 	            # verschlüsselte Verzeichnisse ändern# {{{
-	            unset -- CIPHER KEY_FILE KEY_SIZE KEY_TYPE M_O_VALUE \
-	                MOUNT_PATH M_POINT NOAUTO O_DIR PASSTHROUGH \
-					NO_SIG_CACHE VERSION XATTR
+				unset -- $UNSET
 	            read_fstab ecryptfs
 	            if [ -n "${FSTAB_VALUES_E[1]}" ] ; then
 	                menubox "$NR" "$gv_Change" "$gv_Menupoint" "$FSTAB_VALUES_E"
@@ -51,24 +80,38 @@ manage_cryptdir() {
 	                        *)
 	                            # übernehmen
 								NR="$gv_Auswahl"
-	                            read_fstab_value
+	                            read_fstab_value "$gv_Auswahl"
 	                            parse_opts
 	                            kwecryptfs_conf
 	            				if [ "$?" = 0 ] ; then
+									# eventuelles externes Laufwerk einbinden
+									if ! mount_fs ; then
+										break
+									fi
 	                				# erstmal Verzeichnis umounten
-	                            	mount_check -a "$FS_DRIVE"
-	                				# fstab schreiben
-	                            	write_fstab
-	                				# Verzeichnis mounten
-	                            	mount_check -m "$O_DIR" &>/dev/null
+									mount_check -a "$FS_DRIVE"
+									############################
+									# TODO: alte Signatur tauschen
+									############################
+					                # mounten, Signatur herausbekommen und fstab schreiben
+									case "$KEY_OPT" in
+										passphrase_passwd_file)
+											mount_cryptdir
+											;;
+										passphrase_passwd)
+											mount_cryptdir
+											;;
+									esac
 	            				fi
 	                            break
 	                            ;;
 	                    esac
 	                done
+					unset -- KEY KEY_OPT KEY_PASS M_OPT OPT
 	            else
 	                no_tabentry_msg
 	            fi
+				umount_fs
 				## }}}
 				manage_menu $gv_Change
 				;;
@@ -85,12 +128,22 @@ manage_cryptdir() {
 	                            ;;
 	                        *)
 	                            # übernehmen
+								############################
+								# TODO: alte Signatur löschen
+								############################
 								for i in ${=gv_Auswahl} ; {
 	                				# erstmal Verzeichnis umounten
 	                            	mount_check -a "${${FSTAB_VALUES[i]}%% *}"
-	                				# fstab schreiben
-									print -l ${(R)${(f)"$(< $TABFILE)"}##(${${FSTAB_VALUES[i]}%% *}[[:space:]]*)*} > ${gv_WorkDir}/fstab
-									mv ${gv_WorkDir}/fstab $TABFILE
+									if [[ $U_MOUNT == yes ]] ; then
+	                					# fstab schreiben
+										print -l ${(R)${(f)"$(< $TABFILE)"}##(#s)(${${FSTAB_VALUES[i]}%% *}[[:space:]]*)*} > ${gv_WorkDir}/fstab
+										mv ${gv_WorkDir}/fstab $TABFILE
+										MSG=$(gettext 'Soll das verschlüsselte Laufwerk ($${${FSTAB_VALUES[i]}%% *}) auch gelöscht werden ($gv_Yes/$gv_No)?')
+										yesno "$gv_Delete" "$MSG" yes
+										if [[ $gv_Auswahl == yes ]] ; then
+											rm -rf "${${FSTAB_VALUES[i]}%% *}" &>/dev/null
+										fi
+									fi
 								}
 	                            break
 	                            ;;
@@ -106,6 +159,7 @@ manage_cryptdir() {
 				;;
 		esac
 	done
+	return 0
 }
 #
 ### Modeline {{{

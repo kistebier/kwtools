@@ -14,33 +14,25 @@ kwecryptfs_config() {
 # des3_ede, twofish, cast5, cast6, arc4). Standard ist aes. 
 CIPHER=\"$CIPHER\"
 
+Soll die Verschlüsselung der Dateinamen eingeschaltet werden (yes/no)?
+FILENAME_ENCRYPT=\"$FILENAME_ENCRYPT\"
+
 # Schlüsselgrösse (16, 24, 32). Standard ist 16.
 KEY_SIZE=\"$KEY_SIZE\"
 
-# Geben Sie den Schlüsseltyp an (gpg, openssl, passphrase,
-# pkcs11-helper, tspi). Diese liegen normalerweise
-# unter /usr/lib*/ecryptfs/. Standard ist passphrase.
+# Soll für das einbinden des verschlüsselten Laufwerks der Kernel
+# Schlüsselring benutzt werden (yes/no)?
+KEYRING=\"$KEYRING\"
+
+# Geben Sie den Schlüsseltyp an (passphrase,tspi). Diese liegen normalerweise
+# unter /usr/lib/arch-linux-gnu/ecryptfs/. Standard ist passphrase.
 # Dazu muss man noch die Schlüssel Option, wie eine
 # Schlüsseldatei mit angeben.
 #
-# Einige der folgenden Werte kann man kombinieren. Z. B.
-# KEY_TYPE=openssl:openssl_passwd_keyfile=/path/to/openssl_private_RSA_file:openssl_passwd_file=/path/to/openssl_password_file
+# key=keytype:key_module_option=option
 #
-# KEY_TYPE=keytype:key_option=option
-#
-# KEY_TYPE=gpg - Hier ist noch nichts
-#
-# KEY_TYPE=openssl:openssl_passwd=password
-# KEY_TYPE=openssl:openssl_passwd_file=/path/to/openssl_password_file
-# KEY_TYPE=openssl:openssl_passwd_keyfile=/path/to/openssl_private_RSA_file
-#
-# KEY_TYPE=passphrase:passphrase_passwd=password
-# KEY_TYPE=passphrase:passphrase_passwd_file=/path/to/password_file
-# KEY_TYPE=passphrase:passphrase_salt=16 digit hex Wert.
-#
-# KEY_TYPE=pkcs11-helper - Hier ist noch nichts
-#
-# KEY_TYPE=tspi - Hier ist noch nichts
+# key=passphrase:passphrase_passwd_file=/path/to/password_file
+# key=passphrase:passphrase_passwd=password
 #
 # siehe man 7 ecryptfs.
 KEY_TYPE=\"$KEY_TYPE\"
@@ -52,9 +44,9 @@ MOUNT_PATH=\"$MOUNT_PATH\"
 # werden, sondern manuell (yes/no)?
 NOAUTO=\"$NOAUTO\"
 
-# Soll die Signatur des Schlüssels mit
+# Soll die Signatur des Schlüssels nicht mit
 # ~/.ecryptfs/sig-cache.txt verglichen werden
-# (yes/no)? No ist gut für nicht interactive
+# (yes/no)? yes ist gut für nicht interactive
 # Setups, falls die Schlüssel Signatur nicht
 # im Cache ist.
 NO_SIG_CACHE=\"$NO_SIG_CACHE\"
@@ -63,6 +55,10 @@ NO_SIG_CACHE=\"$NO_SIG_CACHE\"
 # ins ecryptfs durch gereicht werden (yes/no)? Ist gut
 # um auch unverschlüsselte Dateien zu bearbeiten.
 PASSTHROUGH=\"$PASSTHROUGH\"
+
+# Soll beim aushängen des Laufwerks auch die Passphrase aus
+# dem Kernel Keyring gelöscht werden (yes/no)?
+UNLINK_SIGS=\"$UNLINK_SIGS\"
 
 # Soll die Version der verschlüsselten Dateien angezeigt
 # werden (yes/no)? Ist gut für Backups Tools die erweiterte

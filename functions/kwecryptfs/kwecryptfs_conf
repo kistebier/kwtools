@@ -2,21 +2,24 @@
 #
 # benötigt die Funktion kwecryptfs_config
 #
-# usage: kwecryptfs_conf
+# usage: kwecryptfs_conf [ -c ]
+# -c - only configuration
 #
 kwecryptfs_conf() {
 	lv_Cipher=$(gettext 'Chiffrierungstyp')
-	lv_Version=$(gettext 'Versionsanzeige')
-	lv_Passthrough=$(gettext 'unverschlüsselte_Dateien')
+	lv_Filename_Encrypt=$(gettext 'Dateinamenverschlüsselung')
+	lv_Passthrough=$(gettext 'unverschlüsselte Dateien')
 	lv_Keysize=$(gettext 'Schlüsselgrösse')
-	lv_Keytyp=$(gettext 'Schlüsseltyp')
+	lv_Keyring=$(gettext 'Schlüsselring')
 	lv_Mountp=$(gettext 'Mountpunkt')
 	lv_Mountverz=$(gettext 'Mountverz')
 	lv_Noauto=$(gettext 'Noauto')
-	lv_Nosigcache=$(gettext 'Signatur')
+	lv_Nosigcache=$(gettext 'kein Signatur Cache')
+	lv_Unlink_Sigs=$(gettext 'Passphrase löschen')
+	lv_Version=$(gettext 'Versionsanzeige')
 	lv_Xattr=$(gettext 'Attribute')
 	#
-	unset -- KONF
+	unset -- KONF OPT
 	if [ "${argv[1]}" = -c ] ; then
 		KONF=yes
 	fi
@@ -25,16 +28,24 @@ kwecryptfs_conf() {
 	conf_menu() {
 		if [ "$KONF" = yes ] ; then
 			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
+			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
+			$lv_Keyring \"$KEYRING\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
-			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
+			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
+			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
+			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
 			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
 		else
 			KONF_MENU=($gv_Directory \"$O_DIR\" $lv_Mountp \"$M_POINT\"
 			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
+			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
+			$lv_Keyring \"$KEYRING\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
-			$lv_Nosigcache \"$NO_SIG_CACHE\" $lv_Passthrough \"${PASSTHROUGH:-yes}\"
+			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
+			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
+			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
 			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
 		fi
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$KONF_MENU"
@@ -48,7 +59,7 @@ kwecryptfs_conf() {
 				;;
 			$lv_Xattr)
 				# Metadaten in den erweiterten Attributen des Dateisystems speichern?.# {{{
-				XATTR_MSG=$(gettext 'Sollen die Metadaten der verschlüsselten Dateien in dem erweiterten Attributen des Dateisystems gespeichert werden ($gv_Yes/$gv_No)?')
+				XATTR_MSG=$(gettext 'Sollen die Metadaten im erweiterten Attribut der kleinen Dateien und nicht in der Header-Region gespeichert werden ($gv_Yes/$gv_No)?')
 				yesno "$gv_Configuration" "$XATTR_MSG" "$XATTR"
 				if [ "$gv_Auswahl" = yes ] ; then
 					XATTR=yes
@@ -79,13 +90,25 @@ kwecryptfs_conf() {
 				## }}}
 				conf_menu $lv_Cipher
 				;;
+			$lv_Filename_Encrypt)
+				# Soll die Verschlüsselung der Dateinamen eingeschaltet werden (ja/nein)?# {{{
+				FILENAME_ENCRYPT_MSG=$(gettext 'Soll die Verschlüsselung der Dateinamen eingeschaltet werden ($gv_Yes/$gv_No)?')
+				yesno "$gv_Configuration" "$FILENAME_ENCRYPT_MSG" "$FILENAME_ENCRYPT"
+				if [ "$gv_Auswahl" = yes ] ; then
+					FILENAME_ENCRYPT=yes
+				else
+					FILENAME_ENCRYPT=no
+				fi
+				## }}}
+				conf_menu $lv_Filename_Encrypt
+				;;
 			$lv_Mountp) 
 				# Mountpunkt für das verschlüsselte Verzeichnis auswählen.{{{
 				#Auswahl des Verzeichnis das verschlüsselt werden soll.
 				dselect "$M_POINT"
-				if [ "$VERZ" ] ; then
+				if [ -n "$VERZ" ] ; then
 					dselect_check -c "$VERZ"
-					if [ "$VERZ" ] ; then
+					if [ -d "$VERZ" ] ; then
 						M_POINT="$VERZ"
 					fi
 				else
@@ -118,280 +141,47 @@ kwecryptfs_conf() {
 				## }}}
 				conf_menu $lv_Keysize
 				;;
+			$lv_Keyring)
+				# Soll der Kernel Schlüsselring benutzt werden# {{{
+				KEYRING_MSG=$(gettext 'Soll für das einbinden des verschlüsselten Laufwerks der Kernel Shlüsselring benutzt werden ($gv_Yes/$gv_No)?')
+				yesno "$gv_Configuration" "$KEYRING_MSG" "$KEYRING"
+				if [ "$gv_Auswahl" = yes ] ; then
+					KEYRING=yes
+				else
+					KEYRING=no
+				fi
+				## }}}
+				conf_menu $lv_Keyring
+				;;
 			$lv_Keytyp)
 				# Welcher Schlüssel Typ soll verwendet werden?# {{{
-				####################################################
-				# TODO:
-				# Weitere Schlüsseltypen hinzufügen, wie gpg
-				# pkcs11-helper, tspi
-				#
-				KEY_TYPE_OPT_MSG=$(gettext 'Wählen Sie die Option für den Schlüsseltyp aus.')
-				lv_Manual=$(gettext 'manuell')
-				# Funktion (keyfile), Password Datei auswählen# {{{
-				keyfile() {
-					unset -- KEY_FILE
-					file_choice "${KEY_FILE%/*}" only
-					if [ -n "$WERT" ] ; then
-						KEY_FILE="${VERZ}/${WERT}"
-					fi
-				}
-				## }}}
-				# Funktion (key_pass_input), Schlüsseleingabe# {{{
-				#
-				key_pass_input() {
-					PASSWD_MSG=$(gettext 'Geben Sie ein openssl Passwort ein.')
-					PASSWD1_MSG=$(gettext 'Geben Sie das openssl Passwort erneut ein.')
-					password "$gv_Passwd_TITLE" "$PASSWD_MSG"
-					if [ -n "$PASSPHRASE" ] ; then
-						KEY_PASS="$PASSPHRASE"
-						password "$gv_Passwd_TITLE" "$PASSWD1_MSG"
-						if [ "$PASSPHRASE" != "$KEY_PASS" ] ; then
-							different_passwd
-							unset -- KEY_PASS PASSPHRASE
-						else
-							unset -- PASSPHRASE
-						fi
-					else
-						no_input_msg
-					fi
-				}
-				## }}}
-				# Funktion (key_typ_menu)# {{{
-				KEY_TYPE_MSG=$(gettext 'Wählen Sie den Schlüsseltyp aus. Standard ist passphrase.')
-				KEY_TYPE_MENU=(gpg \"\" openssl \"\" passphrase \"\"
-				pkcs11-helper \"\" tspi \"\" $gv_Back \"\")
-				key_typ_menu() {
-					menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
-				}
-				## }}}
-				# Auswahl anbieten
-				key_typ_menu "$KEY_TYPE"
-				while [ -n "$gv_Auswahl" ] ; do
-					case "$gv_Auswahl" in
-						HELP*)	script_help keytype_help
-							key_typ_menu "${gv_Auswahl#HELP }"
-							;;
-						*)
-							# Auswahl übernehmen# {{{
-							OLD_KEY_TYPE="$gv_Auswahl"
-							KEY_TYPE="$OLD_KEY_TYPE"
-							case "$KEY_TYPE" in
-								gpg)
-									hier_ist_noch_nichts $KEY_TYPE
-									#KEY_OPT="$gv_Auswahl"
-									;;
-								openssl)
-									# Schlüsseltyp openssl# {{{
-									KEY_TYPE_OPT_MENU=(openssl_keyfile \"\" openssl_passwd \"\" openssl_passwd_file \"\" $gv_Back \"\")
-									menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
-									while [ -n "$gv_Auswahl" ] ; do
-										case "$gv_Auswahl" in
-											HELP*)
-												script_help keytype_help
-												menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
-												;;
-											openssl_keyfile)
-												# openssl private RSA SSL Schlüssel Datei auswählen# {{{
-												KEY_OPT="$gv_Auswahl"
-												unset -- Tmp
-												#
-												keyfile
-												if [ -n "$KEY_FILE" ] ; then
-													Tmp="${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
-													#
-													KEY_OPT_MENU=($lv_Manual \"\" openssl_passwd \"\" openssl_passwd_file \"\" $gv_Back \"\")
-													menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_OPT_MENU"
-													while [ -n "$gv_Auswahl" ] ; do
-														case "$gv_Auswahl" in
-															HELP*)	script_help keytype_help
-																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_OPT_MENU"
-																;;
-															$lv_Manual)
-																# übernehmen, interactive Eingabe der Passphrase.
-																KEY_TYPE="$Tmp"
-																break
-																;;
-															openssl_passwd)
-																# openssl_passwd eingeben# {{{
-																key_pass_input
-																if [ -n "$KEY_PASS" ] ; then
-																	KEY_TYPE="${Tmp}:openssl_passwd=${KEY_PASS}"
-																	unset -- KEY_PASS KEY_OPT
-																else
-																	unset -- KEY_TYPE KEY_OPT
-																fi
-																## }}}
-																break
-																;;
-															openssl_passwd_file)
-																# openssl_passwd_file Datei auswählen# {{{
-																keyfile
-																if [ -n "$KEY_FILE" ] ; then
-																	KEY_TYPE="${Tmp}:openssl_passwd_file=${KEY_FILE}"
-																	unset -- KEY_OPT
-																else
-																	unset -- KEY_TYPE KEY_OPT
-																	no_input_msg
-																fi
-																## }}}
-																break
-																;;
-															$gv_Back)
-																break
-																;;
-														esac
-													done
-												else
-													unset -- KEY_TYPE
-													no_input_msg
-												fi
-												## }}}
-												break
-												;;
-											openssl_passwd)
-												# openssl Password eingeben# {{{
-												KEY_OPT="$gv_Auswahl"
-												key_pass_input
-												if [ -n "$KEY_PASS" ] ; then
-													KEY_TYPE="${KEY_TYPE}:${KEY_OPT}=${KEY_PASS}"
-													unset -- KEY_PASS KEY_OPT
-												else
-													unset -- KEY_TYPE KEY_OPT
-												fi
-												## }}}
-												break
-												;;
-											openssl_passwd_file)
-												# openssl Passwort Datei auswählen# {{{
-												KEY_OPT="$gv_Auswahl"
-												unset -- Tmp
-												#
-												keyfile
-												if [ -n "$KEY_FILE" ] ; then
-													Tmp="${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
-													#
-													KEY_OPT_MENU=($lv_Manual \"\" openssl_passwd \"\" openssl_keyfile \"\" $gv_Back \"\")
-													menubox "" "$gv_Configuration" "$gv_Menupoint" "$KEY_OPT_MENU"
-													while [ -n "$gv_Auswahl" ] ; do
-														case "$gv_Auswahl" in
-															HELP*)	script_help keytype_help
-																menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$gv_Menupoint" "$KEY_OPT_MENU"
-																;;
-															$lv_Manual)
-																# übernehmen, interactive Eingabe der Passphrase.
-																KEY_TYPE="$Tmp"
-																break
-																;;
-															openssl_passwd)
-																# openssl_passwd eingeben# {{{
-																key_pass_input
-																if [ -n "$KEY_PASS" ] ; then
-																	KEY_TYPE="${Tmp}:openssl_passwd=${KEY_PASS}"
-																	unset -- KEY_PASS KEY_OPT
-																else
-																	unset -- KEY_TYPE KEY_OPT
-																fi
-																## }}}
-																break
-																;;
-															openssl_keyfile)
-																# openssl private RSA SSL Schlüssel Datei auswählen# {{{
-																keyfile
-																if [ -n "$KEY_FILE" ] ; then
-																	KEY_TYPE="${Tmp}:openssl_keyfile=${KEY_FILE}"
-																	unset -- KEY_OPT
-																else
-																	unset -- KEY_TYPE KEY_OPT
-																	no_input_msg
-																fi
-																## }}}
-																break
-																;;
-															$gv_Back)
-																break
-																;;
-														esac
-													done
-												else
-													unset -- KEY_TYPE
-													no_input_msg
-												fi
-												## }}}
-												break
-												;;
-										esac
-									done
-									## }}}
-									;;
-								passphrase)
-									# Schlüsseltyp passphrase# {{{
-									KEY_TYPE_OPT_MENU=(passphrase_passwd \"\"
-									passphrase_passwd_file \"\"
-									passphrase_salt \"\" $gv_Back \"\")
-									menubox "" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
-									while [ -n "$gv_Auswahl" ] ; do
-										case "$gv_Auswahl" in
-											HELP*)
-												script_help keytype_help
-												menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_TYPE_OPT_MSG" "$KEY_TYPE_OPT_MENU"
-												;;
-											passphrase_passwd)
-												# Password eingeben# {{{
-												KEY_OPT="$gv_Auswahl"
-												key_pass_input
-												if [ -n "$KEY_PASS" ] ; then
-													KEY_TYPE="${KEY_TYPE}:${KEY_OPT}=${KEY_PASS}"
-													unset -- KEY_PASS KEY_OPT
-												else
-													unset -- KEY_TYPE KEY_OPT
-												fi
-												## }}}
-												break
-												;;
-											passphrase_passwd_file)
-												# Schlüsseldatei auswählen# {{{
-												KEY_OPT="$gv_Auswahl"
-												keyfile
-												if [ -n "$KEY_FILE" ] ; then
-													KEY_TYPE="${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
-													unset -- KEY_OPT
-												else
-													unset -- KEY_TYPE KEY_OPT
-													no_input_msg
-												fi
-												## }}}
-												break
-												;;
-											passphrase_salt)
-												# 16 digit hex Wert eingeben
-												#KEY_OPT="$gv_Auswahl"
-												hier_ist_noch_nichts $gv_Auswahl
-												break
-												;;
-										esac
-									done
-									## }}}
-									;;
-								pkcs11-helper)
-									hier_ist_noch_nichts $KEY_TYPE
-									#KEY_OPT="$gv_Auswahl"
-									;;
-								tspi)
-									hier_ist_noch_nichts $KEY_TYPE
-									#KEY_OPT="$gv_Auswahl"
-									;;
-							esac
-							# nochmal simple prüfen ob KEY_TYPE korrekt belegt ist.
-							if [ "$KEY_TYPE" = "$OLD_KEY_TYPE" ] ; then
-								unset -- OLD_KEY_TYPE KEY_TYPE
-							fi
-							## }}}
-							break
-							;;
-						$gv_Back)	break
-							;;
-					esac
-				done
+				if [[ $KONF == yes ]] ; then
+					## Funktion key_type_menu{{{
+					KEY_TYPE_MSG=$(gettext 'Wählen Sie einen Schlüsseltyp aus.')
+					key_type_menu() {
+						KEY_TYPE_MENU=(passphrase \"\" $gv_Back \"\")
+						menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
+					}
+					## }}}
+					# Auswahl anbieten
+					key_type_menu "$KEY_TYPE"
+					while [ -n "$gv_Auswahl" ] ; do
+						case "$gv_Auswahl" in
+							HELP*)	script_help keytype_help
+								key_type_menu "${gv_Auswahl#HELP }"
+								;;
+							passphrase)
+								# Auswahl übernehmen
+								KEY_TYPE="$gv_Auswahl"
+								break
+								;;
+							$gv_Back|*)	break
+								;;
+						esac
+					done
+				else
+					manage_keys
+				fi
 				## }}}
 				conf_menu $lv_Keytyp
 				;;
@@ -410,9 +200,9 @@ kwecryptfs_conf() {
 				;;
 			$lv_Nosigcache)
 				# Soll die Signatur des Schlüssels mit# {{{
-				# ~/.ecryptfs/sig-cache.txt verglichen werden? No ist gut
-				# für nicht interactive Setup Scripts.
-				NO_SIG_CACHE_MSG=$(gettext 'Soll die gemountete Schlüssel Signatur mit dem Wert in ~/.ecryptfs/sig-cache.txt verglichen werden ($gv_Yes/$gv_No)?')
+				# ~/.ecryptfs/sig-cache.txt nicht verglichen werden? Yes ist gut
+				# für nicht interactive Setup Scripte.
+				NO_SIG_CACHE_MSG=$(gettext 'Soll die gemountete Schlüssel Signatur nicht mit dem Wert in ~/.ecryptfs/sig-cache.txt verglichen werden ($gv_Yes/$gv_No)?')
 				yesno "$gv_Configuration" "$NO_SIG_CACHE_MSG" "$NO_SIG_CACHE"
 				if [ "$gv_Auswahl" = yes ] ; then
 					NO_SIG_CACHE=yes
@@ -424,8 +214,8 @@ kwecryptfs_conf() {
 				;;
 			$lv_Passthrough)
 				# Sollen nicht verschlüsselte Dateien# {{{
-				# ins ecryptfs durch gereicht werden? Ist gut
-				# um auch unverschlüsselte Dateien zu bearbeiten.
+				# ins ecryptfs durch gereicht werden? Ist gut falls
+				# man auch unverschlüsselte Dateien bearbeiten will.
 				PASSTHROUGH_MSG=$(gettext 'Sollen nicht verschlüsselte Dateien ins verschlüsselte Dateisystem durch gereicht werden ($gv_Yes/$gv_No)?')
 				yesno "$gv_Configuration" "$PASSTHROUGH_MSG" "$PASSTHROUGH"
 				if [ "$gv_Auswahl" = yes ] ; then
@@ -435,6 +225,19 @@ kwecryptfs_conf() {
 				fi
 				## }}}
 				conf_menu $lv_Passthrough
+				;;
+			$lv_Unlink_Sigs)
+				# Soll beim aushängen des Laufwerks die Passphrase# {{{
+				# aus dem Kernel Keyring gelöscht werden (yes/no)?
+				UNLINK_SIGS_MSG=$(gettext 'Soll beim aushängen des Laufwerks auch die Passphrase aus dem Kernel Schlüsselring gelöscht werden($gv_Yes/$gv_No)?')
+				yesno "$gv_Configuration" "$UNLINK_SIGS_MSG" "$UNLINK_SIGS"
+				if [ "$gv_Auswahl" = yes ] ; then
+					UNLINK_SIGS=yes
+				else
+					UNLINK_SIGS=no
+				fi
+				## }}}
+				conf_menu $lv_Unlink_Sigs
 				;;
 			$lv_Version)
 				# Soll die Version der verschlüsselten Dateien angezeigt# {{{
@@ -471,24 +274,49 @@ kwecryptfs_conf() {
 					kwecryptfs_config
 				else
 					# Einstellungen für das verändern von Verzeichnissen.# {{{
-					# Schlüsseltype
-					if [ -n "$KEY_TYPE" -a -n "$O_DIR" -a -n "$M_POINT" ] ; then
-						OPT="${REST_OPTION},key=${KEY_TYPE}"
-						OPT="${OPT},ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
+					# Schlüsseltyp
+					if [ -n "$KEY_OPT" -a -n "$O_DIR" -a -n "$M_POINT" ] ; then
+						OPT="ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
 						if [ "$XATTR" = yes ] ; then
-							OPT="${OPT},ecryptfs_xattr"
+							OPT="${OPT},ecryptfs_xattr=y"
+						else
+							OPT="${OPT},ecryptfs_xattr=n"
+						fi
+						if [ "$FILENAME_ENCRYPT" = yes ] ; then
+							OPT="${OPT},ecryptfs_enable_filename_crypto=y"
+						else
+							OPT="${OPT},ecryptfs_enable_filename_crypto=n"
 						fi
 						if [ "$PASSTHROUGH" = yes ] ; then
-							OPT="${OPT},ecryptfs_passthrough"
+							OPT="${OPT},ecryptfs_passthrough=y"
+						else
+							OPT="${OPT},ecryptfs_passthrough=n"
 						fi
 						if [ "$NO_SIG_CACHE" = yes ] ; then
-							OPT="${OPT},no_sig_cache"
+							OPT="${OPT},no_sig_cache=y"
+						else
+							OPT="${OPT},no_sig_cache=n"
+						fi
+						if [ "$UNLINK_SIGS" = yes ] ; then
+							OPT="${OPT},ecryptfs_unlink_sigs"
 						fi
 						if [ "$VERSION" = yes ] ; then
-							OPT="${OPT},ecryptfs_encrcrypted_view"
+							OPT="${OPT},ecryptfs_encrcrypted_view=y"
+						else
+							OPT="${OPT},ecryptfs_encrcrypted_view=n"
 						fi
+						if [ "$NOAUTO" = yes ] ; then
+							OPT="${OPT},noauto,user"
+						else
+							OPT="${OPT},user"
+						fi
+						if [ -n "$REST_OPTION" ] ; then
+							OPT="${OPT},${REST_OPTION}"
+						fi
+						# Rechte einstellen
+						chmod 700 "$O_DIR" "$M_POINT"
 					else
-						MSG=$(gettext'Sie müssen erst ein Verzeichnis das chiffriert werden soll und dessen Mountpunkt angeben und natürlich einen Schlüsseltyp und dessen Optionen.')
+						MSG=$(gettext'Sie müssen erst ein Verzeichnis das chiffriert werden soll, dessen Mountpunkt und natürlich einen Schlüsseltyp und dessen Optionen angeben.')
 						msgbox "$gv_Attention" "$MSG"
 						return 1
 					fi
@@ -497,11 +325,11 @@ kwecryptfs_conf() {
 				## }}}
 				return 0
 				;;
-			$gv_Back)	return 1
+			$gv_Back|*)	return 1
 				;;
 		esac
 	done
-	return 1
+	return 0
 }
 ## }}}
 ### Modeline {{{
