@@ -5563,7 +5563,8 @@ is_value() {
 	#
 	read_fstab() {
 		integer Anz
-		unset -- FS_DRIVE MOUNT_POINT FILESYSTEM MOUNT_OPTION DUMP CHECK Var FSTAB_ALL FSTAB_VALUES
+		unset -- FS_DRIVE MOUNT_POINT FILESYSTEM MOUNT_OPTION DUMP CHECK \
+			Var FSTAB_ALL FSTAB_VALUES FSTAB_VALUES_E FSTAB_VALUES_M
 		if [ "$#" = 1 ] ; then
 			Var="$1"
 		fi
@@ -5582,8 +5583,10 @@ is_value() {
 			done
 		#
 		if [ -n "$Var" ] ; then
+			Anz=0
 			for i in {1..${#FSTAB_ALL[@]}} ; {
 				if [ ! -z "${(M)${FSTAB_ALL[i]}##*${Var}*}" ] ; then
+					(( Anz++ ))
 					FSTAB_VALUES+=(${FSTAB_ALL[i]})
 					FSTAB_VALUES_E+=($Anz \"${FSTAB_ALL[i]}\")
 					FSTAB_VALUES_M+=($Anz \"${FSTAB_ALL[i]}\" off)
