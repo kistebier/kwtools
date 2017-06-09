@@ -777,7 +777,7 @@ sys_conf() {
 	#        MIN_ZAHL - Wieviel Zeichen soll das Passwort mindestens haben.
 	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort höchstens haben.
 	#
-	# Das Passwort muss mindestens 6 Zeichen lang sein.
+	# Das Passwort muss mindestens 8 Zeichen lang sein.
 	#
 	password() {
 		unset -- MinChar MaxChar
@@ -789,7 +789,7 @@ sys_conf() {
 			elif [ -n "$3" ] ; then 
 				MinChar=$3
 			else
-				MinChar=6
+				MinChar=8
 			fi
             # Berechnung der übergebenen Zeichen der Nachricht und
             # dementsprechend die Zeilengrösse einstellen.
@@ -3865,21 +3865,22 @@ file_choice() {
 		# Funktion (gen_key_menu){{{
 		#
 		lv_Charlength=$(gettext 'Zeichenlänge')
+		lv_GenPass=$(gettext 'Passwortgenerierung')
 		gen_key_menu() {
 			GEN_KEY_MENU=($gv_Input \"$INPUT\" $lv_Charlength \"$CHAR\"
 			$gv_Create \"\" $gv_Back \"\")
-			menubox "$1" "$lv_Charlength" "$gv_Menupoint" "$GEN_KEY_MENU"
+			menubox "$1" "$lv_GenPass" "$gv_Menupoint" "$GEN_KEY_MENU"
 		}
 		#}}}
 		gen_key_menu
 		while [ -n "$gv_Auswahl" ] ; do
 			case "$gv_Auswahl" in
-				HELP*)	script_help gen_key_help
+				HELP*)	script_help share/gen_key_help
 					gen_key_menu "${gv_Auswahl#HELP }"
 					;;
 				$gv_Input)
 					# Wort zur Erstellung eines Passworts eingeben{{{
-					inputbox "$gv_Input" "$PASSWD_MSG" "$INPUT"
+					inputbox "${lv_GenPass}::${gv_Input}" "$PASSWD_MSG" "$INPUT"
 					if [ -n "$gv_Auswahl" ] ; then
 						INPUT="$gv_Auswahl"
 					else
@@ -3891,7 +3892,7 @@ file_choice() {
 				$lv_Charlength)
 					# Zeichenlänge zur Erstellung eines Passworts eingeben{{{
 					CHAR_MSG=$(gettext 'Geben Sie bitte die Länge des zu erstellenden Passwortes an.')
-					number_input "$lv_Charlength" "$PASSWD_MSG" "${CHAR:-8}"
+					number_input "${lv_GenPass}::${lv_Charlength}" "$CHAR_MSG" "${CHAR:-8}"
 					if [ -n "$NUMBER" ] ; then
 						CHAR="$NUMBER"
 					else
@@ -4944,12 +4945,14 @@ is_value() {
 							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
 								no_umount_os_msg
 								U_MOUNT=no
+								return 1
 								;;
 							*)	# Falls die Partition gemountet, ist ohne nachfragen umounten.
-								umount "$PART_DEV" 
+								umount "$MOUNTPOINT" 
 								if [ $? != 0 ] ; then
 									no_umount_msg
 									U_MOUNT=no
+									return 1
 								else
 									U_MOUNT=yes
 								fi
@@ -4961,6 +4964,7 @@ is_value() {
 						if [ $? != 0 ] ; then
 							no_umount_msg
 							U_MOUNT=no
+							return 1
 						else
 							U_MOUNT=yes
 						fi
@@ -4989,6 +4993,7 @@ is_value() {
 							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestöpselt sein.')
 							msgbox "$gv_Attention" "$MSG"
 							MOUNT=no
+							return 1
 						fi
 					fi
 					## }}}
@@ -5004,6 +5009,7 @@ is_value() {
 							MSG=$(gettext '$PART_DEV konnte nicht ins Dateisystem eingebunden werden. Das Laufwerk muss in der Datei /etc/fstab konfiguriert, beziehungsweise an den Rechner angestöpselt sein.')
 							msgbox "$gv_Attention" "$MSG"
 							MOUNT=no
+							return 1
 						fi
 					fi
 					## }}}
@@ -5019,6 +5025,7 @@ is_value() {
 							/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp)
 								no_umount_os_msg
 								U_MOUNT=no
+								return 1
 								;;
 							*)	# Falls die Partition gemountet, ist nachfragen ob sie
 								# umountet werden soll.
@@ -5031,12 +5038,14 @@ is_value() {
 									if [ $? != 0 ] ; then
 										no_umount_msg
 										U_MOUNT=no
+										return 1
 									else
 										U_MOUNT=yes
 									fi
 								else 
 									umount_part_omit_msg
 									U_MOUNT=no
+									return 1
 								fi
 								;;
 						esac
@@ -5053,12 +5062,14 @@ is_value() {
 							if [ $? != 0 ] ; then
 								no_umount_msg
 								U_MOUNT=no
+								return 1
 							else
 								U_MOUNT=yes
 							fi
 						else 
 							umount_part_omit_msg
 							U_MOUNT=no
+							return 1
 						fi
 					else
 						U_MOUNT=yes
@@ -5069,6 +5080,7 @@ is_value() {
 		else
 			no_para_msg $0
 		fi
+		return 0
 	}
 	#}}}
 	# Funktion (mount_path), um ein MountVerzeichnis einzustellen# {{{
