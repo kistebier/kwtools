@@ -21,6 +21,7 @@ package-net-postfix=kwtools-net-postfix
 package-sys=kwtools-sys
 package-sys-btrfs=kwtools-sys-btrfs
 package-sys-crypt=kwtools-sys-crypt
+package-sys-ecryptfs=kwtools-sys-ecryptfs
 package-sys-fuse=kwtools-sys-fuse
 package-sys-grub=kwtools-sys-grub
 package-sys-grub2=kwtools-sys-grub2
@@ -270,18 +271,28 @@ install:
 
 	# kwtools-sys-crypt
 	cp -a sys/kwcrypt $(CURDIR)/debian/$(package-sys-crypt)$(exec_path)/sys
-	cp -a kwecryptfs kwlosetup kwcryptsetup $(CURDIR)/debian/$(package-sys-crypt)$(exec_path)/
-	cp -a help/kwecryptfs help/kwcrypt help/kwcryptsetup help/kwlosetup \
+	cp -a kwlosetup kwcryptsetup $(CURDIR)/debian/$(package-sys-crypt)$(exec_path)/
+	cp -a help/kwcrypt help/kwcryptsetup help/kwlosetup \
 		$(CURDIR)/debian/$(package-sys-crypt)$(help_path)
 #	cp -a help/kwadmin/sys_kwcrypt_help $(CURDIR)/debian/$(package-sys-crypt)$(kwhelp_path)
-	cp -a functions/kwecryptfs functions/kwcrypt functions/kwcryptsetup \
-          functions/kwlosetup $(CURDIR)/debian/$(package-sys-crypt)$(func_path)
+	cp -a functions/kwcrypt functions/kwcryptsetup functions/kwlosetup \
+		$(CURDIR)/debian/$(package-sys-crypt)$(func_path)
 	cp -a man/de/man5/kwcryptsetuprc.5 man/de/man5/kwlosetuprc.5 \
-		man/de/man5/kwecryptfsrc.5 $(CURDIR)/debian/$(package-sys-crypt)$(man_path)/de/man5
-	cp -a man/de/man8/kwcrypt.8 man/de/man8/kwecryptfs.8 man/de/man8/kwcryptsetup.8 \
+		$(CURDIR)/debian/$(package-sys-crypt)$(man_path)/de/man5
+	cp -a man/de/man8/kwcrypt.8 man/de/man8/kwcryptsetup.8 \
 		man/de/man8/kwlosetup.8 $(CURDIR)/debian/$(package-sys-crypt)$(man_path)/de/man8
-	cp -a debian/po/kwecryptfs/usr debian/po/kwcrypt/usr debian/po/kwcryptsetup/usr \
+	cp -a debian/po/kwcrypt/usr debian/po/kwcryptsetup/usr \
 		debian/po/kwlosetup/usr $(CURDIR)/debian/$(package-sys-crypt)
+
+	# kwtools-sys-ecryptfs
+	cp -a kwecryptfs $(CURDIR)/debian/$(package-sys-ecryptfs)$(exec_path)/sys
+	cp -a help/kwecryptfs $(CURDIR)/debian/$(package-sys-ecryptfs)$(help_path)
+	cp -a functions/kwecryptfs $(CURDIR)/debian/$(package-sys-ecryptfs)$(func_path)
+	cp -a man/de/man5/kwecryptfsrc.5 \
+		$(CURDIR)/debian/$(package-sys-ecryptfs)$(man_path)/de/man5
+	cp -a man/de/man8/kwecryptfs.8 \
+		$(CURDIR)/debian/$(package-sys-ecryptfs)$(man_path)/de/man8
+	cp -a debian/po/kwecryptfs/usr $(CURDIR)/debian/$(package-sys-ecryptfs)
 
 	# kwtools-sys-fuse
 	cp -a sys/kwfuse $(CURDIR)/debian/$(package-sys-fuse)$(exec_path)/sys
