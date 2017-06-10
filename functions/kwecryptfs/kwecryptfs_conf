@@ -42,7 +42,7 @@ kwecryptfs_conf() {
 			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
 			$lv_Keyring \"$KEYRING\"
-			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
+			$gv_Key \"$KEY\" $lv_Noauto \"$NOAUTO\"
 			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
 			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
 			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
@@ -155,35 +155,37 @@ kwecryptfs_conf() {
 				;;
 			$lv_Keytyp)
 				# Welcher Schlüssel Typ soll verwendet werden?# {{{
-				if [[ $KONF == yes ]] ; then
-					## Funktion key_type_menu{{{
-					KEY_TYPE_MSG=$(gettext 'Wählen Sie einen Schlüsseltyp aus.')
-					key_type_menu() {
-						KEY_TYPE_MENU=(passphrase \"\" $gv_Back \"\")
-						menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
-					}
-					## }}}
-					# Auswahl anbieten
-					key_type_menu "$KEY_TYPE"
-					while [ -n "$gv_Auswahl" ] ; do
-						case "$gv_Auswahl" in
-							HELP*)	script_help keytype_help
-								key_type_menu "${gv_Auswahl#HELP }"
-								;;
-							passphrase)
-								# Auswahl übernehmen
-								KEY_TYPE="$gv_Auswahl"
-								break
-								;;
-							$gv_Back|*)	break
-								;;
-						esac
-					done
-				else
-					manage_keys
-				fi
+				## Funktion key_type_menu{{{
+				KEY_TYPE_MSG=$(gettext 'Wählen Sie einen Schlüsseltyp aus.')
+				key_type_menu() {
+					KEY_TYPE_MENU=(passphrase \"\" $gv_Back \"\")
+					menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
+				}
+				## }}}
+				# Auswahl anbieten
+				key_type_menu "$KEY_TYPE"
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help keytype_help
+							key_type_menu "${gv_Auswahl#HELP }"
+							;;
+						passphrase)
+							# Auswahl übernehmen
+							KEY_TYPE="$gv_Auswahl"
+							break
+							;;
+						$gv_Back|*)	break
+							;;
+					esac
+				done
 				## }}}
 				conf_menu $lv_Keytyp
+				;;
+			$gv_Key)
+				# Schlüssel# {{{
+				manage_keys
+				## }}}
+				conf_menu $gv_Key
 				;;
 			$lv_Noauto)
 				# Auswahl ob beim Bootprozess das Laufwerk gemappt werden soll,# {{{
@@ -325,7 +327,8 @@ kwecryptfs_conf() {
 				## }}}
 				return 0
 				;;
-			$gv_Back|*)	return 1
+			$gv_Back|*)	unset -- KEY
+				return 1
 				;;
 		esac
 	done
