@@ -5640,6 +5640,7 @@ is_value() {
 				if [ "$BREAK" ] ; then
 					unset -- BREAK
 				fi
+				RET=0
 				;;
 			1 | 255 )
 				local Cnt
@@ -5653,15 +5654,18 @@ is_value() {
 					if [ "$BREAK" ] ; then
 						Cnt="$BREAK"
 						unset -- BREAK
+						RET=1
 						break $Cnt
 					fi
 				fi
+				RET=1
 				;;
 			2)	# Hilfe
 				gv_Auswahl=$(< ${DialogReDirect##*>})
 				if [ "$BREAK" ] ; then
 					unset -- BREAK
 				fi
+				RET=0
 				;;
 			3)	
 				# dialog Extra
@@ -5671,6 +5675,7 @@ is_value() {
 				if [ "$BREAK" ] ; then
 					unset -- BREAK
 				fi
+				RET=0
 				;;
 			4)	
 				######################################
@@ -5678,6 +5683,7 @@ is_value() {
 				######################################
 				# dialog item Hilfe
 				#gv_Auswahl=$(< ${DialogReDirect##*>})
+				RET=0
 				;;
 		esac
 		unset -- U_OPT
