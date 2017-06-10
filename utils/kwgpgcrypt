@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 20.09.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 10.06.2017
 #
 # Script: kwgpgcrypt, ent/verschlüsselt Dateien oder ganze Verzeichnisse.
-# Version: 0.1.2
+# Version: 0.2.0
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -40,14 +40,6 @@ if [ -z "$PROGS" ] ; then
 	exit 0
 else
 	PROG=${commands[gpg]}
-fi
-
-# gnupg Version
-VERSION=${${(ws: :)${(M)${(f)"$(gpg --version)"}##(#s)gpg*}}[3]}
-if [[ $VERSION > 1.4.21 ]] ; then
-	MSG=$(gettext 'kwgpgcrypt unterstützt bis jetzt nur gnupg bis Version 1.4.21.')
-	msgbox "$gv_Info" "$MSG"
-	exit 0
 fi
 
 PGP_HOME="${gv_HomePath}/.gnupg"
@@ -224,8 +216,8 @@ parse_opt() {
 #
 pub_new_create
 # Seit Version 1.2.5-3 benutzt gnupg die Options Datei gpg.conf
-Version=${${(s: :)${(M)${(f)"$(gpg --help)"}[(r)gpg*]}}[3]}
-if [[ $Version < 1.2.5-3 ]] ; then
+VERSION=${${(ws: :)${(M)${(f)"$(gpg --version)"}##(#s)gpg*}}[3]}
+if [[ $VERSION < 1.2.5-3 ]] ; then
 	PGP_OPTIONS="${PGP_HOME}/options"
 else
 	PGP_OPTIONS="${PGP_HOME}/gpg.conf"
