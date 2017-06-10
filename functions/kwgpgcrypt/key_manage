@@ -136,7 +136,7 @@ key_manage() {
 								inputbox "$EXPORT_TITLE" "$EXPORT_INPUT_MSG"
 								#
 								if [ "$gv_Auswahl" ] ; then
-									PROG_OPT="--yes --homedir $PGP_HOME --armor --export --output ${PGP_HOME}/${gv_Auswahl}_pub.txt $Who"
+									PROG_OPT="--yes --homedir $PGP_HOME --armor --export --output ${PGP_HOME}/${gv_Auswahl}_pub.asc $Who"
 									eval $PROG "${=PROG_OPT}"
 									break
 								else
@@ -174,10 +174,12 @@ key_manage() {
 								Key_Id="$gv_Auswahl"
 								# Passphrase eingeben 
 								password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
-								gpgcrypt_opt sign-key "$Key_Id"
-								eval $PROG "${=PROG_OPT}"
-								# Passphrase löschen
-								unset -- PASSPHRASE
+								if [ "$RET" = 0 ] ; then
+									gpgcrypt_opt sign-key "$Key_Id"
+									eval $PROG "${=PROG_OPT}"
+									# Passphrase löschen
+									unset -- PASSPHRASE
+								fi
 								break
 								;;
 						esac
@@ -212,15 +214,16 @@ key_manage() {
 								if [ "$gv_Auswahl" ] ; then
 									# Passphrase eingeben 
 									password "$gv_Passwd_TITLE" "$MANTRA_MSG" 5
-									gpgcrypt_opt revoke "$Who"
-									eval $PROG "${=PROG_OPT}"
-									# Passphrase löschen
-									unset -- PASSPHRASE
-									break
+									if [ "$RET" = 0 ] ; then
+										gpgcrypt_opt revoke "$Who"
+										eval $PROG "${=PROG_OPT}"
+										# Passphrase löschen
+										unset -- PASSPHRASE
+									fi
 								else
 									no_input_msg
-									break
 								fi
+								break
 								;;
 						esac
 					done
@@ -249,10 +252,10 @@ key_manage() {
 									if [ "$gv_Auswahl" ] ; then
 										PROG_OPT="--yes --homedir $PGP_HOME --keyserver "$KEY_SERV_ALL" --send-keys "$gv_Auswahl""
 										eval $PROG "${=PROG_OPT}"
-										break
 									else
 										no_input_msg
 									fi
+									break
 									;;
 							esac
 						done

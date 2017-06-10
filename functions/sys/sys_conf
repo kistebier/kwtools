@@ -810,25 +810,27 @@ sys_conf() {
 			
 			return_check
 			
-			Char="${(c)#gv_Auswahl}"
-			if [ -n "$MaxChar" ] ; then
-				if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" -a "$Char" -le "$MaxChar" ] ; then
-					PASSPHRASE="$gv_Auswahl"
+			if [ "$RET" = 0 ] ; then
+				Char="${(c)#gv_Auswahl}"
+				if [ -n "$MaxChar" ] ; then
+					if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" -a "$Char" -le "$MaxChar" ] ; then
+						PASSPHRASE="$gv_Auswahl"
+					else
+						# falsche Password Länge
+						MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- gv_Auswahl PASSPHRASE
+					fi	
 				else
-					# falsche Password Länge
-					MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.')
-					msgbox "$gv_Attention" "$MSG"
-					unset -- gv_Auswahl PASSPHRASE
-				fi	
-			else
-				if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" ] ; then
-					PASSPHRASE="$gv_Auswahl"
-				else
-					# falsche Password Länge
-					MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.')
-					msgbox "$gv_Attention" "$MSG"
-					unset -- gv_Auswahl PASSPHRASE
-				fi	
+					if [ "$gv_Auswahl" -a "$Char" -ge "$MinChar" ] ; then
+						PASSPHRASE="$gv_Auswahl"
+					else
+						# falsche Password Länge
+						MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.')
+						msgbox "$gv_Attention" "$MSG"
+						unset -- gv_Auswahl PASSPHRASE
+					fi	
+				fi
 			fi
 			unset -- gv_Auswahl
 		else
@@ -3940,7 +3942,7 @@ file_choice() {
 		Anz=0
 		Gpg_Home="${gv_HomePath}/.gnupg"
 		if [[ $VERSION > 1.4.21 ]] ; then
-			gpg --homedir $Gpg_Home --list-keys "$User" 2>/dev/null | \
+			print -l ${(u)${(f)"$(gpg --homedir $Gpg_Home --list-keys "$User" 2>/dev/null)"}} | \
 			while read a Key ; do
 				case "$a" in
 					^(pub|uid|sub))

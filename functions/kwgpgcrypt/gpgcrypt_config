@@ -4,24 +4,29 @@
 gpgcrypt_config() {
 	# Konfiguration ändern
 	if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)keyserver[[:space:]]*} ] ; then
-		sed -e "s#^keyserver[[:space:]].*#keyserver ${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}#g" $PGP_OPTIONS >$PGP_OPTIONS$$
-		mv $PGP_OPTIONS$$ $PGP_OPTIONS
+		sed -i "s#^keyserver[[:space:]].*#keyserver ${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}#g" $PGP_OPTIONS
 	else
 		>> $PGP_OPTIONS <<< "keyserver ${KEY_SERV_ALL:-hkps://hkps.pool.sks-keyservers.net}" 
 	fi
 	#
 	if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)default-key[[:space:]]*} ] ; then
-		sed -e "s#^default-key[[:space:]].*#default-key $DEFAULT_KEY#g" $PGP_OPTIONS >$PGP_OPTIONS$$
-		mv $PGP_OPTIONS$$ $PGP_OPTIONS
+		sed -i "s#^default-key[[:space:]].*#default-key $DEFAULT_KEY#g" $PGP_OPTIONS
 	else
 		>> $PGP_OPTIONS <<< "default-key $DEFAULT_KEY" 
 	fi
 	#
-	if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)trusted-key[[:space:]]*} ] ; then
-		sed -e "s#^trusted-key[[:space:]].*#trusted-key $TRUSTED_KEY#g" $PGP_OPTIONS >$PGP_OPTIONS$$
-		mv $PGP_OPTIONS$$ $PGP_OPTIONS
+	if [[ $VERSION > 1.4.21 ]] ; then
+		if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)encrypt-to[[:space:]]*} ] ; then
+			sed -i "s#^trusted-key[[:space:]].*#encrypt-to $TRUSTED_KEY#g" $PGP_OPTIONS
+		else
+			>> $PGP_OPTIONS <<< "encrypt-to $TRUSTED_KEY" 
+		fi
 	else
-		>> $PGP_OPTIONS <<< "trusted-key $TRUSTED_KEY" 
+		if [ ${(M)${(f)"$(< $PGP_OPTIONS)"}##(s#)trusted-key[[:space:]]*} ] ; then
+			sed -i "s#^trusted-key[[:space:]].*#trusted-key $TRUSTED_KEY#g" $PGP_OPTIONS
+		else
+			>> $PGP_OPTIONS <<< "trusted-key $TRUSTED_KEY" 
+		fi
 	fi
 	# Konfiguration einlesen
 	parse_opt

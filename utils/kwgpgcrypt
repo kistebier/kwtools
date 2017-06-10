@@ -43,6 +43,7 @@ else
 fi
 
 PGP_HOME="${gv_HomePath}/.gnupg"
+GNUPGHOME="$PGP_HOME"
 PGP_OPTION_SKEL="/usr/share/gnupg/option.skel"
 Lv_Verfall=$(gettext 'verfallen am')
 Lv_Verfall_End=$(gettext 'verfällt am')
@@ -119,9 +120,9 @@ pub_new_create() {
 # usage: private_list -u (eigene) oder nur private_list
 private_list() {
 	Day_Time=$(date +%Y%m%d)
-	# Funktion read_key, um Variablen zur Anzeige zu belegen{{{
+	# Funktion (read_key_old), um Variablen zur Anzeige zu belegen{{{
 	#
-	read_key() {
+	read_key_old() {
 		while read a Key Date REST ; do
 			if [ -z ${(M)${U_ID}##*${Key#*/}*} ] ; then
 				case "$a" in
@@ -156,19 +157,70 @@ private_list() {
 		done
 	}
 	#}}}
+	# Funktion (read_key), um Variablen zur Anzeige zu belegen{{{
+	#
+	read_key() {
+		while read a b c d REST ; do
+			if [ -z ${(M)${U_ID}##*${a}*} ] ; then
+				case "$a" in
+					pub)
+						if [ -n "$REST" ] ; then
+							V_Date="${${REST##*: }%]}"
+							if [ -n "$V_Date" ] ; then
+								V_Time="`date -d ${V_Date} +%Y%m%d`"
+								# Ist die Zeit kleiner/gleich der heutigen, wird die Variable "Verfall" mit "verfallen" belegt.
+								if [ "$V_Time" -le "$Day_Time" ] ; then
+									VERFALL="$Lv_Verfall ${V_Date}"
+								else
+									VERFALL="$Lv_Verfall_End ${V_Date}"
+								fi
+							fi
+						else
+							unset -- NAME 
+							VERFALL="$Lv_Verfall_No_End"
+						fi
+						;;
+					uid)
+						NAME="$REST"
+						;;
+					^(pub|uid|sub))
+						if [ -n "$a" ] ; then
+							U_ID=(${a[25,40]})
+						fi
+						;;
+				esac
+			fi
+			if [ -n "$NAME" ] ; then
+				I_Menue_Multi+=($U_ID \"${NAME//\"/} $VERFALL\" off)
+				I_Menue+=($U_ID \"${NAME//\"/} $VERFALL\")
+				unset -- NAME
+			fi
+		done
+	}
+	#}}}
 	unset -- I_Menue I_Menue_Multi U_ID NAME VERFALL
 	case $1 in
 		-u)	#
 			# eigene Schlüssel
 			#
-			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys "$USER" 2>/dev/null)"}##(s#)(pub|uid)*}} | \
-			read_key
+			if [[ $VERSION > 1.4.21 ]] ; then
+				print -l ${(u)${(f)"$(gpg --homedir $PGP_HOME --list-keys "$USER" 2>/dev/null)"}} | \
+				read_key
+			else
+				print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys "$USER" 2>/dev/null)"}##(s#)(pub|uid)*}} | \
+				read_key_old
+			fi
 			;;
 		*)	#
 			# alle Schlüssel
 			#
-			print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys 2>/dev/null)"}##(s#)(pub|uid)*}} | \
-			read_key
+			if [[ $VERSION > 1.4.21 ]] ; then
+				print -l ${(u)${(f)"$(gpg --homedir $PGP_HOME --list-keys 2>/dev/null)"}} | \
+				read_key
+			else
+				print -l ${(u)${(M)${(f)"$(gpg --homedir $PGP_HOME --list-keys 2>/dev/null)"}##(s#)(pub|uid)*}} | \
+				read_key_old
+			fi
 			;;
 	esac
 }
@@ -193,7 +245,7 @@ parse_opt() {
 						DEFAULT_KEY="$b"
 					fi
 					;;
-				trusted-key)
+				trusted-key|encrypt-to)
 					if [ ! -z "$b" ] ; then
 						TRUSTED_KEY="$b"
 					fi

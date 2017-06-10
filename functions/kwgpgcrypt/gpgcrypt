@@ -20,11 +20,11 @@ gpgcrypt_action() {
 			DIR_MENU=($DF_DIR_ARRAY)
 			DIR_TITLE=$(gettext 'Verzeichnisauswahl')
 			DIR_MSG=$(gettext 'Wählen Sie ein oder mehrere Verzeichnisse aus.')
-			radiolist "" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+			checklist "" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help share/data_help
-						radiolist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+						checklist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
 						;;
 					*)	#
 						# In allen ausgewählten Verzeichnissen nach Dateien
@@ -72,7 +72,6 @@ gpgcrypt_action() {
 		fi
 		#}}}
 	else
-		#
 		# Dateien ohne gpg Endung bearbeiten{{{
 		#
 		file_filter "$FORMAT" "$SUFFIX" "$A_SUFFIX"
@@ -81,11 +80,11 @@ gpgcrypt_action() {
 			FILE_MENU=($DF_ARRAY)
 			FILE_TITLE=$(gettext 'Dateiauswahl')
 			FILE_MSG=$(gettext 'Wählen Sie eine oder mehrere Dateien zur weiteren Bearbeitung aus.')
-			radiolist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+			checklist "" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*) script_help share/data_help
-						radiolist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+						checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
 						;;
 					*)	#
 						# Variable gv_Auswahl in Sicherheit bringen
