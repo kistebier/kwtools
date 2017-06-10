@@ -3937,24 +3937,40 @@ file_choice() {
 		#
 		local Anz
 		integer Anz
-		Anz=1
+		Anz=0
 		Gpg_Home="${gv_HomePath}/.gnupg"
-		print -l ${(u)${(M)${(f)"$(gpg --homedir $Gpg_Home --list-keys "$User" 2>/dev/null)"}##(s#)pub*}} | \
-		while read a Key Rest ; do
-			if [ -z ${(M)${ID}##*${Key#*/}*} ] ; then
-				ID[Anz]="${Key#*/} \"\""
-				(( Anz++ ))
-			fi
-		done
+		if [[ $VERSION > 1.4.21 ]] ; then
+			gpg --homedir $Gpg_Home --list-keys "$User" 2>/dev/null | \
+			while read a Key ; do
+				case "$a" in
+					^(pub|uid|sub))
+						if [ -z ${(M)${ID}##*$a*} ] ; then
+							(( Anz++ ))
+							ID[Anz]=(${a[25,40]})
+							ID_E[Anz]=(${a[25,40]} \"\")
+						fi
+						;;
+				esac
+			done
+		else
+			print -l ${(u)${(M)${(f)"$(gpg --homedir $Gpg_Home --list-keys "$User" 2>/dev/null)"}##(s#)pub*}} | \
+			while read a Key Rest ; do
+				if [ -z ${(M)${ID}##*${Key#*/}*} ] ; then
+					(( Anz++ ))
+					ID[Anz]=(${Key#*/})
+					ID_E[Anz]=(${Key#*/} \"\")
+				fi
+			done
+		fi
 		# Wurden Schlüssel gefunden, werden sie zur Auswahl angeboten.
 		if [ ! -z "$ID" ] ; then
 			KEY_ID_TITLE=(${gv_Configuration}::${lv_Default_Keyid})
 			KEY_ID_MSG=$(gettext 'Wählen Sie die Standard Schlüssel ID aus.')
-			menubox "$DEFAULT_KEY" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
+			menubox "$DEFAULT_KEY" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID_E"
 			while [ "$gv_Auswahl" ] ; do
 				case "$gv_Auswahl" in
 					HELP*)	script_help share/id_help
-						menubox "${gv_Auswahl#HELP }" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID"
+						menubox "${gv_Auswahl#HELP }" "$KEY_ID_TITLE" "$KEY_ID_MSG" "$ID_E"
 						;;
 					*)	#
 						# Schlüssel ID übernehmen
