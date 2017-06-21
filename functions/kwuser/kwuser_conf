@@ -13,7 +13,6 @@ kwuser_conf() {
 	KW_NGROUP=${KW_NGROUP:-users}
 	KW_NGROUPS=${KW_NGROUPS:-users}
 	lv_Umask=$(gettext 'umask')
-	lv_Pass_Length=$(gettext 'Passwortlänge')
 	lv_Firstlogin=$(gettext 'Erstlogin')
 	lv_Encrypt=$(gettext 'Verschlüsselung')
 	#
@@ -148,19 +147,6 @@ kwuser_conf() {
 				fi
 				#}}}
 				kwuser_conf_menu $lv_Firstlogin
-				;;
-			$lv_Pass_Length)
-				# Passwortlänge eingeben# {{{
-				MSG=$(gettext 'Geben Sie die Länge des Passworts ein, welches generiert werden soll (z.B. 8).')
-				number_input "$gv_Configuration" "$MSG" "$PASSWD_LENGTH"
-				if [ -n "$NUMBER" -a "$NUMBER" -ge 5 ] ; then
-					PASSWD_LENGTH="$NUMBER" 
-				else
-					MSG=$(gettext 'Die Passwortlänge ist zu kurz. Sie muss mindestens 5 Zeichen lang sein. Sie wird auf 8 Zeichen gesetzt.')
-					PASSWD_LENGTH="8"
-				fi
-				## }}}
-				kwuser_conf_menu $lv_Pass_Length
 				;;
 			$lv_Umask)
 				# Umask zum erstellen der Homeverzeichnisse vergeben# {{{

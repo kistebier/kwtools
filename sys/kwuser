@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 02.07.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 21.06.2017
 #
 # Script: kwuser, legt an, ändert und löscht User
-# Version: 1.0.5
+# Version: 1.0.6
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -753,11 +753,9 @@ user_konf() {
 				;;
 			"$lv_Password_Gen")
 				# Passwort generieren# {{{
-					if [[ -z $PASSWD_LENGTH ]] ; then
-						PASSWD_LENGTH=8
-					fi
-					gv_Pass=${${${(ws: :)$(head -c 256 /dev/urandom | uuencode -m -)}[4]}[1,$PASSWD_LENGTH]}
-					gv_Star_Passphrase="$gv_Pass"
+				autoload -U gen_keys
+				gen_keys
+				gv_Star_Passphrase="$P_PASS"
 				## }}}
 				user_konf_menue	$lv_Password_Gen
 				;;
