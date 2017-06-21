@@ -3861,16 +3861,14 @@ file_choice() {
 	# usage: gen_keys
 	#
 	gen_keys() {
-		PASSWD_MSG=$(gettext 'Geben Sie bitte eine Zeichenkette zur Erzeugung des Passwortes ein.')
-		INPUT=""
 		CHAR="8"
 		# Funktion (gen_key_menu){{{
 		#
 		lv_Charlength=$(gettext 'Zeichenlänge')
 		lv_GenPass=$(gettext 'Passwortgenerierung')
 		gen_key_menu() {
-			GEN_KEY_MENU=($gv_Input \"$INPUT\" $lv_Charlength \"$CHAR\"
-			$gv_Create \"\" $gv_Back \"\")
+			GEN_KEY_MENU=($lv_Charlength \"$CHAR\"
+			$gv_Generate \"\" $gv_Back \"\")
 			menubox "$1" "$lv_GenPass" "$gv_Menupoint" "$GEN_KEY_MENU"
 		}
 		#}}}
@@ -3879,17 +3877,6 @@ file_choice() {
 			case "$gv_Auswahl" in
 				HELP*)	script_help share/gen_key_help
 					gen_key_menu "${gv_Auswahl#HELP }"
-					;;
-				$gv_Input)
-					# Wort zur Erstellung eines Passworts eingeben{{{
-					inputbox "${lv_GenPass}::${gv_Input}" "$PASSWD_MSG" "$INPUT"
-					if [ -n "$gv_Auswahl" ] ; then
-						INPUT="$gv_Auswahl"
-					else
-						INPUT=""
-					fi
-					#}}}
-					gen_key_menu "$gv_Input"
 					;;
 				$lv_Charlength)
 					# Zeichenlänge zur Erstellung eines Passworts eingeben{{{
@@ -3903,17 +3890,16 @@ file_choice() {
 					#}}}
 					gen_key_menu "$lv_Charlength"
 					;;
-				$gv_Create)
+				$gv_Generate)
 					# Schlüssel erstellen{{{
-					unset -- P_PASS
-					if [ -n "$CHAR" -a -n "$INPUT" ] ; then
-						P_PASS="${$(openssl passwd $INPUT)[0,CHAR]}"
-						unset -- INPUT
+					unset -- gv_Pass
+					if [ -n "$CHAR" ] ; then
+						gv_Pass=${${${(ws: :)$(head -c 256 /dev/urandom | uuencode -m -)}[4]}[1,$CHAR]}
 						break
 					else
-						MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Input und $lv_Charlength mit Werten belegen.')
+						MSG=$(gettext 'Sie müssen erst den Menüpunkt $lv_Charlength mit einem Wert belegen.')
 						msgbox "$gv_Attention" "$MSG"
-						gen_key_menu
+						gen_key_menu "$lv_Charlength"
 					fi
 					#}}}
 					;;
