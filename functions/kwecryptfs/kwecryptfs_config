@@ -20,11 +20,12 @@ FILENAME_ENCRYPT=\"$FILENAME_ENCRYPT\"
 # Schlüsselgrösse (16, 24, 32). Standard ist 16.
 KEY_SIZE=\"$KEY_SIZE\"
 
-# Soll für das einbinden des verschlüsselten Laufwerks der Kernel
-# Schlüsselring benutzt werden (yes/no)?
-KEYRING=\"$KEYRING\"
+# Soll für das einbinden der verschlüsselten Laufwerke Signaturen
+# benutzt werden (yes/no)? Diese heissen ecryptfs_sig und
+# ecryptfs_fnek_sig (siehe man 7 ecryptfs).
+SIGS=\"$SIGS\"
 
-# Geben Sie den Schlüsseltyp an (passphrase,tspi). Diese liegen normalerweise
+# Geben Sie den Schlüsseltyp an (passphrase). Diese liegen normalerweise
 # unter /usr/lib/arch-linux-gnu/ecryptfs/. Standard ist passphrase.
 # Dazu muss man noch die Schlüssel Option, wie eine
 # Schlüsseldatei mit angeben.
@@ -46,7 +47,7 @@ NOAUTO=\"$NOAUTO\"
 
 # Soll die Signatur des Schlüssels nicht mit
 # ~/.ecryptfs/sig-cache.txt verglichen werden
-# (yes/no)? yes ist gut für nicht interactive
+# (yes/no)? yes ist gut für Nicht-interaktive
 # Setups, falls die Schlüssel Signatur nicht
 # im Cache ist.
 NO_SIG_CACHE=\"$NO_SIG_CACHE\"
@@ -73,6 +74,12 @@ XATTR=\"$XATTR\"
 # End ~/.kwtools/kwecryptfsrc"
 
 read_file kwecryptfsrc
+# Pfad für verschlüsselte Passphrase Dateien.
+if [ -d "$MOUNT_PATH" ] ; then
+	# externes Medium (z.B. USBStick)
+	WRAP_PASSPHRASE_PATH="${MOUNT_PATH}/${USER}/.ecryptfs"
+fi
+
 }
 #}}}
 ### Modeline {{{

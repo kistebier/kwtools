@@ -19,14 +19,16 @@ manage_cryptdir() {
 		# Mount Optionen
 		M_OPT="${OPT},${KEY}"
 		# Verzeichnis mounten
-		printf "\n" | mount -t ecryptfs "$O_DIR" "$M_POINT" -o "$M_OPT" | &> ${gv_WorkDir}/sig-cache.txt &>/dev/null
+		printf "\n" | mount -t ecryptfs "$O_DIR" "$M_POINT" -o "$M_OPT" | \
+			1> ${gv_WorkDir}/sig-cache.txt 1>/dev/null || \
+			prog_failure
 		# Signatur herausbekommen
 		SIG=${${(ws:=:)${(M)$(< ${gv_WorkDir}/sig-cache.txt)##ecryptfs_sig*}}[2]}
-		if [[ -n $SIG ]] && [[ $KEYRING == yes ]] ; then
-			OPT="${M_OPT},cryptfs_sig=${SIG},ecryptfs_fnek_sig=${SIG}"
-			< ${gv_WorkDir}/sig-cache.txt >> ${HOME}/.ecryptfs/sig-cache.txt &>/dev/null
+		if [[ -n $SIG ]] && [[ $SIGS == yes ]] ; then
+			FSTAB_OPT="${OPT},cryptfs_sig=${SIG},ecryptfs_fnek_sig=${SIG}"
+			< ${gv_WorkDir}/sig-cache.txt >> ${gv_HomePath}/.ecryptfs/sig-cache.txt &>/dev/null
 		else
-			OPT="${M_OPT},cryptfs_sig=${SIG},ecryptfs_fnek_sig=${SIG},${KEY}"
+			FSTAB_OPT="${M_OPT}"
 		fi
 		# fstab mit keyfile schreiben
 		write_fstab
@@ -51,17 +53,12 @@ manage_cryptdir() {
 	                # erstmal Verzeichnis umounten
 					mount_check -a "$O_DIR"
 	                # mounten, Signatur herausbekommen und fstab schreiben
-					case "$KEY_OPT" in
-						passphrase_passwd_file)
-							mount_cryptdir
-							;;
-						passphrase_passwd)
-							mount_cryptdir
-							;;
-					esac
+					if [ -n "$KEY" ] ; then
+						mount_cryptdir
+					fi
 	            fi
 				umount_fs
-				unset -- KEY KEY_OPT KEY_PASS M_OPT OPT
+				unset -- KEY KEY_PASS M_OPT OPT FSTAB_OPT
 				## }}}
 				manage_menu $gv_Create
 				;;
@@ -82,32 +79,19 @@ manage_cryptdir() {
 								NR="$gv_Auswahl"
 	                            read_fstab_value "$gv_Auswahl"
 	                            parse_opts
-	                            kwecryptfs_conf
-	            				if [ "$?" = 0 ] ; then
-									# eventuelles externes Laufwerk einbinden
-									if ! mount_fs ; then
-										break
-									fi
+	                            kwecryptfs_conf --change
+	            				if [ "$RET" = 0 ] ; then
 	                				# erstmal Verzeichnis umounten
 									mount_check -a "$FS_DRIVE"
-									############################
-									# TODO: alte Signatur tauschen
-									############################
-					                # mounten, Signatur herausbekommen und fstab schreiben
-									case "$KEY_OPT" in
-										passphrase_passwd_file)
-											mount_cryptdir
-											;;
-										passphrase_passwd)
-											mount_cryptdir
-											;;
-									esac
+					                # fstab ändern
+									FSTAB_OPT="$OPT"
+									write_fstab
 	            				fi
 	                            break
 	                            ;;
 	                    esac
 	                done
-					unset -- KEY KEY_OPT KEY_PASS M_OPT OPT
+					unset -- KEY KEY_OPT KEY_PASS M_OPT OPT FSTAB_OPT
 	            else
 	                no_tabentry_msg
 	            fi

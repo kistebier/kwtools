@@ -5,9 +5,10 @@
 #
 manage_keys() {
 	CREATE_KEY_TITLE="${gv_Key}::${gv_Create}"
-	lv_Key_Input=$(gettext 'Schlüsseleingabe')
-	lv_Genpass=$(gettext 'Schlüssel generieren')
 	lv_Key_Opt=$(gettext 'Schlüssel Module Optionen')
+	lv_Pass_Input=$(gettext 'Passphraseneingabe')
+	lv_Genpass=$(gettext 'Passphrase generieren')
+	lv_Encrypt_Pass=$(gettext 'verschlüsselte Passhrase')
 	#
 	#
 	if [ ! -n "$KEY_TYPE" ] ; then
@@ -21,11 +22,26 @@ manage_keys() {
 		FILE=yes
 	fi
 	#
-	unset -- KEY KEY_FILE KEYFILE KEY_PASS
+	unset -- E_PASS KEY KEY_FILE KEY_PASS
 	# Funktionen manage_key_menu# {{{
 	KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
 	manage_key_menu() {
-		menubox "$1" "$gv_Key" "$gv_Menupoint" "$KEY_MENU"
+		menubox "$1" "$lv_Passphrase_Manage" "$gv_Menupoint" "$KEY_MENU"
+	}
+	## }}}
+	# Funktion (passphrase_input), Eingabe einer Passphrase# {{{
+	#
+	passphrase_input() {
+		case "$KEY_OPT" in
+			$lv_Encrypt_Pass)
+				PASSWD_MSG=$(gettext 'Geben Sie eine Passphrase, die verschlüsselt werden soll, ein und wiederholen Sie diese neue Passphrase im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
+				mixed_password "$lv_Passphrase_Manage" "$PASSWD_MSG" 16
+				;;
+			*)
+				PASSWD_MSG=$(gettext 'Geben Sie eine Passphrase ein und wiederholen Sie diese neue Passphrase im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
+				mixed_password "$lv_Passphrase_Manage" "$PASSWD_MSG" 8
+				;;
+		esac
 	}
 	## }}}
 	manage_key_menu
@@ -35,14 +51,33 @@ manage_keys() {
 				manage_key_menu "${gv_Auswahl#HELP }"
 				;;
 			$gv_Create)
-				# Schlüssel anlegen# {{{
+				# Passphrase anlegen# {{{
 				# Funktion create_key_menu# {{{
 				#
 				create_key_menu() {
-					CREATE_KEY_MENU=(\"$lv_Key_Opt\" \"$KEY_OPT\"
-					$gv_Filename \"$KEY_FILE\" $lv_Key_Input \"$KEY_PASS\"
-					\"$lv_Genpass\" \"\" $gv_Create \"\" $gv_Back \"\")
-					menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+					case "$KEY_OPT" in
+						passphrase_passwd)
+							CREATE_KEY_MENU=(\"$lv_Key_Opt\" \"$KEY_OPT\"
+							$lv_Pass_Input \"$KEY_PASS_DISPLAY\"
+							\"$lv_Genpass\" \"\" $gv_Save \"\" $gv_Back \"\")
+							menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+							;;
+						$lv_Encrypt_Pass)
+							CREATE_KEY_MENU=(\"$lv_Key_Opt\" \"$KEY_OPT\"
+							$gv_Filename \"$KEY_FILE\"
+							\"$lv_Encrypt_Pass\" \"$E_PASS_DISPLAY\"
+							$lv_Pass_Input \"$KEY_PASS_DISPLAY\"
+							\"$lv_Genpass\" \"\" $gv_Save \"\" $gv_Back \"\")
+							menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+							;;
+						*)
+							CREATE_KEY_MENU=(\"$lv_Key_Opt\" \"$KEY_OPT\"
+							$gv_Filename \"$KEY_FILE\"
+							$lv_Pass_Input \"$KEY_PASS_DISPLAY\"
+							\"$lv_Genpass\" \"\" $gv_Save \"\" $gv_Back \"\")
+							menubox "$1" "$CREATE_KEY_TITLE" "$gv_Menupoint" "$CREATE_KEY_MENU"
+							;;
+					esac
 				}
 				## }}}
 				create_key_menu
@@ -60,10 +95,12 @@ manage_keys() {
 								if [[ $KEY_TYPE == passphrase ]] ; then
 									if [[ $FILE == yes ]] ; then
 										KEY_OPT_MENU=(passphrase_passwd_file \"\"
+										\"$lv_Encrypt_Pass\" \"\"
 										$gv_Back \"\")
 									else
 										KEY_OPT_MENU=(passphrase_passwd_file \"\"
 										passphrase_passwd \"\"
+										\"$lv_Encrypt_Pass\" \"\"
 										$gv_Back \"\")
 									fi
 								fi
@@ -77,7 +114,7 @@ manage_keys() {
 										script_help manage_create_key_help
 										key_opt_menu "${gv_Auswahl#HELP }"
 										;;
-									passphrase_*)
+									passphrase_*|$lv_Encrypt_Pass)
 										KEY_OPT=${gv_Auswahl}
 										break
 										;;
@@ -88,43 +125,76 @@ manage_keys() {
 							## }}}
 							create_key_menu $lv_Key_Opt
 							;;
+						$lv_Encrypt_Pass)
+							# Passphrase die verschlüsselt werden soll eingeben.# {{{
+							passphrase_input
+							if [ -n "$gv_Pass" ] ; then
+								E_PASS="$gv_Pass"
+								E_PASS_DISPLAY="$gv_Star_Passphrase"
+								unset -- gv_Pass gv_Star_Passphrase
+							fi
+							## }}}
+							create_key_menu $lv_Encrypt_Pass
+							;;
 						$gv_Filename)
 							# Dateinamen auswählen# {{{
-							keyfile "$KEY_FILE"
+							keyfile "${KEY_FILE:-$WRAP_PASSPHRASE_PATH}"
 							## }}}
 							create_key_menu $gv_Filename
 							;;
-						$lv_Key_Input)
-							# Passwort eingeben# {{{
-							key_pass_input
+						$lv_Pass_Input)
+							# Passphrase eingeben# {{{
+							passphrase_input
+							if [ -n "$gv_Pass" ] ; then
+								KEY_PASS="$gv_Pass"
+								KEY_PASS_DISPLAY="$gv_Star_Passphrase"
+								unset -- gv_Pass gv_Star_Passphrase
+							fi
 							## }}}
-							create_key_menu $lv_Encrypt_Input
+							create_key_menu $lv_Pass_Input
 							;;
 						$lv_Genpass)
-							# Passwort generieren# {{{
+							# Passwort/Passphrase generieren# {{{
 							autoload -U gen_keys
 							gen_keys
-							if [ -n "$P_PASS" ] ; then
-								KEY_PASS="$P_PASS"
-								unset -- P_PASS
+							if [ -n "$gv_Pass" ] ; then
+								# ist $KEY_OPT gleich passphrase_passwd oder
+								# passphrase_passwd_file dann wird die Variable
+								# $KEY_PASS mit dem Wert von $gv_Pass belegt,
+								# ansonsten $E_PASS.
+								case "$KEY_OPT" in
+									$lv_Encrypt_Pass)
+										password_display "$gv_Pass"
+										E_PASS_DISPLAY="$gv_Star_Passphrase"
+										E_PASS="$gv_Pass"
+										unset -- gv_Pass gv_Star_Passphrase
+										;;
+									*)
+										KEY_PASS_DISPLAY="$gv_Pass_Display"
+										KEY_PASS="$gv_Pass"
+										unset -- gv_Pass gv_Pass_Display
+										;;
+								esac
 							else
-								unset -- KEY_PASS
+								unset -- E_PASS KEY_PASS
 							fi
 							## }}}
 							create_key_menu $lv_Genpass
 							;;
-						$gv_Create)
-							# KEY="keytype:key_module_option=opetion/value anlegen# {{{
+						$gv_Save)
+							# KEY="keytype:key_module_option=option/value anlegen# {{{
 							case $KEY_OPT in
 								passphrase_passwd_file)
 									# Passphrase password file# {{{
-									if [ -n "$KEY_FILE" -a -n "$KEY_PASS" -a "$KEY_TYPE" ] ; then
-										if [ -f "$KEY_FILE"  -a "`wc -l < $KEY_FILE`" -gt 0 ] ; then
+									if [ -n "$KEY_FILE" ] && \
+										[ -n "$KEY_PASS" ] ; then
+										if [ -f "$KEY_FILE" ] && \
+											[ "`wc -l < $KEY_FILE`" -gt 0 ] ; then
 											# Datei ist vorhanden - überschreiben?
 											MSG=$(gettext 'Die Datei $KEY_FILE ist schon vorhanden. Soll sie überschrieben werden ($gv_Yes/$gv_No)? Denken Sie an Ihre verschlüsselten Dateien die Sie mit einem neuen Schlüssel nicht mehr entschlüsseln können.')
 											yesno "$gv_Attention" "$MSG" "$gv_No"
 											if [ "$gv_Auswahl" = "$gv_Yes" ] ; then
-												> "$KEY_FILE" <<< "passphrase_passwd=${KEY_PASS}"
+												> "$KEY_FILE" <<< "passphrase_passwd=\"${KEY_PASS}\""
 												chmod 0400 "$KEY_FILE"
 												KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
 												unset -- KEY_OPT KEY_PASS
@@ -134,29 +204,65 @@ manage_keys() {
 												return 0
 											fi
 										else
-											> "$KEY_FILE" <<< "passphrase_passwd=${KEY_PASS}"
+											> "$KEY_FILE" <<< "passphrase_passwd=\"${KEY_PASS}\""
 											chmod 0400 "$KEY_FILE"
 											KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
 											unset -- KEY_OPT KEY_PASS
 											return 0
 										fi
 									else
-										MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Filename und einen Schlüssel eingeben bzw. generieren.')
+										MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Filename und eine Passphrase eingeben bzw. generieren.')
 										msgbox "$gv_Info" "$MSG"
-										create_key_menu $lv_Encrypt_Input
+										create_key_menu $lv_Pass_Input
 									fi
 									## }}}
 									;;
 								passphrase_passwd)
 									# Passphrase# {{{
-									if [[ -n $KEY_PASS ]] ; then
+									if [ -n "$KEY_PASS" ] ; then
 										KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_PASS}"
-										unset -- KEY_PASS
+										unset -- KEY_OPT KEY_PASS
 										return 0
 									else
-										MSG=$(gettext 'Sie müssen erst einen Schlüssel eingeben bzw. generieren.')
+										MSG=$(gettext 'Sie müssen erst eine Passphrase eingeben bzw. generieren.')
 										msgbox "$gv_Info" "$MSG"
-										create_key_menu $lv_Encrypt_Input
+										create_key_menu $lv_Pass_Input
+									fi
+									## }}}
+									;;
+								$lv_Encrypt_Pass)
+									# verschlüsselte Passphrase# {{{
+									if [ -n "$KEY_FILE" ] && [ -n "$E_PASS" ] && \
+										[ -n "$KEY_PASS" ] ; then
+										if [ -f "$KEY_FILE" ] && \
+											[ "`file -b $KEY_FILE`" -eq data ] ; then
+											# Datei ist vorhanden - überschreiben?
+											MSG=$(gettext 'Die Datei $KEY_FILE ist schon vorhanden. Soll sie überschrieben werden ($gv_Yes/$gv_No)? Denken Sie an Ihre verschlüsselten Dateien die Sie mit einem neuen Schlüssel nicht mehr entschlüsseln können.')
+											yesno "$gv_Attention" "$MSG" "$gv_No"
+											if [ "$gv_Auswahl" = "$gv_Yes" ] ; then
+												printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
+												ecryptfs-wrap-passphrase "$KEY_FILE" - 1>/dev/null || \
+												prog_failure
+												chmod 0400 "$KEY_FILE"
+												KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
+												unset -- E_PASS KEY_OPT KEY_PASS
+												return 0
+											else
+												unset -- E_PASS KEY_OPT KEY_PASS
+												return 0
+											fi
+										else
+											printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
+											ecryptfs-wrap-passphrase "$KEY_FILE" -
+											chmod 0400 "$KEY_FILE"
+											KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
+											unset -- E_PASS KEY_OPT KEY_PASS
+											return 0
+										fi
+									else
+										MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Filename, eine $lv_Encrypt_Pass und eine Passphrase eingeben bzw. generieren.')
+										msgbox "$gv_Info" "$MSG"
+										create_key_menu $lv_Encrypt_Pass
 									fi
 									## }}}
 									;;
@@ -181,7 +287,7 @@ manage_keys() {
 				;;
 			$gv_Delete)
 				# Schlüsseldateien löschen# {{{
-				file_choice "${KEY_FILE%/*}" multi
+				file_choice "$WRAP_PASSPHRASE_PATH" multi
 				if [ -n "${WERT[1]}" ] ; then
 					while read i ; do
 						rm "${VERZ}/${i}" &>/dev/null

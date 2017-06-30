@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 10.06.2017
+# Autor: Kai Wilke  <kiste@netzworkk.de> 30.06.2017
 #
 # Script: kwecryptfs, erstellt ein verschlüsseltes Dateisystem
 #         über einem Verzeichnis.
@@ -63,18 +63,41 @@ autoload -U kwecryptfs_conf
 # Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
 read_file kwecryptfsrc
 
+umask 077
+
 # Variablen
-umask 022
 TABFILE="/etc/fstab"
+# Pfad für verschlüsselte Passphrase Dateien.# {{{
+if [ -d "$MOUNT_PATH" ] ; then
+	# externes Medium (z.B. USBStick)
+	WRAP_PASSPHRASE_PATH="${MOUNT_PATH}/${USER}/.ecryptfs"
+	if [ ! -d "$WRAP_PASSPHRASE_PATH" ] ; then
+		mkdir -p "$WRAP_PASSPHRASE_PATH"
+	fi
+else
+	WRAP_PASSPHRASE_PATH="/home/.ecryptfs/${USER}/.ecryptfs"
+	if [ ! -d "$WRAP_PASSPHRASE_PATH" ] ; then
+		mkdir -p "$WRAP_PASSPHRASE_PATH"
+		chmod 1777 /home/.ecryptfs
+	fi
+fi
+## }}}
 lv_Keytyp=$(gettext 'Schlüsseltyp')
-lv_Menupoint=(gettext 'Menüpunkt')
+lv_Passphrase_Manage=$(gettext 'Passphrasen Verwaltung')
 
 # Kernel Modul ecryptfs laden
 load_module ecryptfs
 
-	#############################################
-	# TODO: tspi
-	#############################################
+# fehlendes ecryptfs Verzeichnis für die
+# Signatur Cache Datei erstellen.
+if [ -! -d "${gv_HomePath}/.ecryptfs" ] ; then
+	mkdir ${gv_HomePath}/.ecryptfs
+fi
+
+#############################################
+# TODO: gpg,tspi
+#############################################
+
 # Funktion (check_no_activ), Check ob Verzeichnis aktiv oder nicht aktiv ist# {{{
 #
 # usage: check_no_activ [ no | yes ]
@@ -101,42 +124,26 @@ check_no_activ() {
 	esac
 }
 ## }}}
-	# Funktion (keyfile), Password Datei auswählen# {{{
+	# Funktion (keyfile), Password Datei auswählen/erzeugen# {{{
 	#
-	# usage: keyfile [ rsa ] KEYFILE
-	# rsa  RSA SSL keyfile
+	# usage: keyfile [ KEYFILE ]
 	#
 	keyfile() {
-		fselect  "${KEY_FILE%/*}"
+		local Tmp Tmpfile
+		Tmp="$1"
+		fselect  "${Tmp%/*}"
 		if [[ -n $gv_Auswahl ]] ; then
-			fselect_check -c "$gv_Auswahl"
-			if [[ -n $FILE ]] ; then
+			Tmpfile="${gv_Auswahl%_passphrase.txt}_passphrase.txt"
+			fselect_check -c "$Tmpfile"
+			if [[ -f $FILE ]] ; then
 				KEY_FILE="$FILE"
-			fi
-		fi
-	}
-	## }}}
-	# Funktion (key_pass_input), Schlüsseleingabe# {{{
-	#
-	key_pass_input() {
-		PASSWD_MSG=$(gettext 'Geben Sie ein Passwort ein.')
-		PASSWD1_MSG=$(gettext 'Geben Sie das Passwort erneut ein.')
-		password "$gv_Passwd_TITLE" "$PASSWD_MSG"
-		if [ -n "$PASSPHRASE" ] ; then
-			KEY_PASS="$PASSPHRASE"
-			password "$gv_Passwd_TITLE" "$PASSWD1_MSG"
-			if [ "$PASSPHRASE" != "$KEY_PASS" ] ; then
-				different_passwd
-				unset -- KEY_PASS PASSPHRASE
-			else
-				unset -- PASSPHRASE
 			fi
 		fi
 	}
 	## }}}
 # Funktion main_menu# {{{
 #
-MAIN_MENU=($gv_Configuration \"\" $gv_Directory \"\" $gv_Key \"\"
+MAIN_MENU=($gv_Configuration \"\" $gv_Directory \"\" \"$lv_Passphrase_Manage\" \"\"
 $gv_Start \"\" $gv_Stop \"\" $gv_Exit \"\")
 main_menu() {
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -271,14 +278,11 @@ parse_opts() {
                                         KEY_FILE="$Tmp2"
 										KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
                                         ;;
-                                    *)
-										# Passphrase Eingabe
-										MSG=$(gettext 'Geben Sie bitte die Passphrase ein.')
-										inputbox "$gv_Input" "$MSG"
-										if [ -n "$gv_Auswahl" ] ; then
-											KEY_PASS="$gv_Auswahl"
-											KEY="key=${KEY_TYPE}:passphrase_passwd=${KEY_PASS}"
-										fi
+                                    passphrase_passwd)
+										# Passphrasen Datei
+                                        KEY_OPT="$Tmp1"
+                                        KEY_PASS="$Tmp2"
+										KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_PASS}"
                                         ;;
                                 esac
                                 ## }}}
@@ -344,11 +348,11 @@ write_fstab() {
 	# fstab ändern/schreiben
 	if [ -n "$FSTAB_OLD" ] ; then
 		print -l ${(R)${(f)"$(< $TABFILE)"}##(#s)(${FSTAB_OLD}[[:space:]]*${MOUNT_POINT}*)*} > ${gv_WorkDir}/fstab
-		>> "${gv_WorkDir}/fstab" <<< "$O_DIR	$M_POINT	ecryptfs	$OPT	${DUMP:-0}	${CHECK:-0}"
+		>> "${gv_WorkDir}/fstab" <<< "$O_DIR	$M_POINT	ecryptfs	$FSTAB_OPT	${DUMP:-0}	${CHECK:-0}"
 		mv ${gv_WorkDir}/fstab $TABFILE
 	else
 		print -l ${(R)${(f)"$(< $TABFILE)"}##(#s)(${O_DIR}[[:space:]]*${M_POINT}*)*} > ${gv_WorkDir}/fstab
-		>> "${gv_WorkDir}/fstab" <<< "$O_DIR	$M_POINT	ecryptfs	$OPT	${DUMP:-0}	${CHECK:-0}"
+		>> "${gv_WorkDir}/fstab" <<< "$O_DIR	$M_POINT	ecryptfs	$FSTAB_OPT	${DUMP:-0}	${CHECK:-0}"
 		mv ${gv_WorkDir}/fstab $TABFILE
 	fi
 }
@@ -370,7 +374,7 @@ while [ "$gv_Auswahl" ] ; do
 		$gv_Configuration)
 			# Konfiguration# {{{
 			autoload -U kwecryptfs_config
-            kwecryptfs_conf -c
+            kwecryptfs_conf --conf
 			## }}}
 			main_menu $gv_Configuration
 			;;
@@ -381,12 +385,15 @@ while [ "$gv_Auswahl" ] ; do
 			## }}}
 			main_menu $gv_Directory
 			;;
-		$gv_Key)
-			# Datei Schlüsselverwaltung# {{{
+		$lv_Passphrase_Manage)
+			# Passphrase Datei Verwaltung# {{{
 			autoload -U manage_keys
-			manage_keys -f
+			# eventuelles externes Laufwerk einbinden
+			if mount_fs ; then
+				manage_keys -f
+			fi
 			## }}}
-			main_menu $gv_Key
+			main_menu $lv_Passphrase_Manage
 			;;
         $gv_Start)
             # verschlüsselte Verzeichnisse starten# {{{
@@ -413,29 +420,50 @@ while [ "$gv_Auswahl" ] ; do
 									Index=$FSTAB_VALUES[(i)$Dev]
 	                            	read_fstab_value "$[Index-1]"
 									parse_opts
-									# prüfen, ob keyring oder Schlüssel[datei]
+									# prüfen, ob Signaturen für Nicht-interaktives Einhängen
 									# benutzt werden soll.
-									if [ -n "$KEY" ] ; then
-										mount -t ecryptfs "$Dev" "$M_POINT" \
-											-o ${MOUNT_OPTIONS/key=*/$KEY} &>/dev/null && \
-										Keyring_Key="${KEY##*=}"
-										# Schlüssel in den Schlüsselring aufnehmen.
-										printf "%s" "$Keyring_Key" | \
-										ecryptfs-add-passphrase --fnek - &>/dev/null
-									else
+									if [ -n "$SIG" ] ; then
 										KEYRING_SIG=${${(ws: :)${(M)${(f)"$(keyctl list @u)"}##*$SIG}}[6]}
 										if [[ $KEYRING_SIG == $SIG ]] ; then
 											mount -i "$Dev" &>/dev/null
+										# prüfen, ob eine verschlüsselte Passphrase
+										# (ecryptfs_wrap_passphrase file) benutzt wird.
+										elif [ -n "$SIG" ] && \
+											[ -f "${WRAP_PASSPHRASE_PATH}/${O_DIR#.}_passphrase.txt" ] ; then
+											MSG=$(gettext 'Geben Sie das Passwort für die verschlüsselte Passphrase Datei (${WRAP_PASSPHRASE_PATH}/${M_POINT}-passphrase.txt) ein. Diese Passphrase wird dem Kernel Schlüsselring hinzugefügt.')
+											inputbox "$gv_Input" "$MSG"
+											if [ -n "$gv_Auswahl" ] ; then
+												# Passphrase in den Kernel Schlüsselring aufnehmen.
+												printf "%s" "$gv_Auswahl" | \
+												ecryptfs-insert-wrapped-passphrase-into-keyring ${WRAP_PASSPHRASE_PATH}/${O_DIR#.}_passphrase.txt - 1>/dev/null || \
+												prog_failure
+												mount -i "$Dev" 1>/dev/null || \
+													prog_failure
+											fi
 										else
 											MSG=$(gettext 'Geben Sie die Passphrase ein. Diese wird dem Kernel Schlüsselring hinzugefügt.')
 											inputbox "$gv_Input" "$MSG"
 											if [ -n "$gv_Auswahl" ] ; then
-											# Schlüssel in den Schlüsselring aufnehmen.
+												# Passphrase in den Kernel Schlüsselring aufnehmen.
 												printf "%s" "$gv_Auswahl" | \
-													ecryptfs-add-passphrase --fnek -
-												mount -i "$Dev" &>/dev/null
+												ecryptfs-add-passphrase --fnek - || \
+												prog_failure
+												mount -i "$Dev" 1>/dev/null || \
+													prog_failure
 											fi
 										fi
+									# prüfen, ob eine Passphrase Datei
+									# (passphrase_passwd_file) benutzt wird.
+									elif [ -n "$KEY" ] && [ -f "$KEY_FILE" ] ; then
+										printf "\n" | mount -t ecryptfs "$Dev" "$M_POINT" \
+											-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
+											prog_failure
+									# prüfen, ob eine Passphrase
+									# (passphrase_passwd) benutzt wird.
+									elif [ -n "$KEY" ] && [ -n "$KEY_PASS" ] ; then
+										printf "\n" | mount -t ecryptfs "$Dev" "$M_POINT" \
+											-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
+											prog_failure
 									fi
 								}
 								# sensible Variabeln löschen
@@ -473,7 +501,8 @@ while [ "$gv_Auswahl" ] ; do
 	                        *)
 								# Verzeichnisse umounten.
 								for i in ${=gv_Auswahl} ; {
-									mount_check -a "$i"
+									mount_check -a "$i" 1>/dev/null || \
+										prog_failure
 								}
 								break
 								;;

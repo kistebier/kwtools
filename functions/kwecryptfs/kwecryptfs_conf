@@ -2,15 +2,16 @@
 #
 # benötigt die Funktion kwecryptfs_config
 #
-# usage: kwecryptfs_conf [ -c ]
-# -c - only configuration
+# usage: kwecryptfs_conf [ --conf | --change ]
+# --conf - only configuration
+# --change - fstab change some settings
 #
 kwecryptfs_conf() {
 	lv_Cipher=$(gettext 'Chiffrierungstyp')
 	lv_Filename_Encrypt=$(gettext 'Dateinamenverschlüsselung')
 	lv_Passthrough=$(gettext 'unverschlüsselte Dateien')
 	lv_Keysize=$(gettext 'Schlüsselgrösse')
-	lv_Keyring=$(gettext 'Schlüsselring')
+	lv_Sigs=$(gettext 'Signaturen')
 	lv_Mountp=$(gettext 'Mountpunkt')
 	lv_Mountverz=$(gettext 'Mountverz')
 	lv_Noauto=$(gettext 'Noauto')
@@ -19,9 +20,13 @@ kwecryptfs_conf() {
 	lv_Version=$(gettext 'Versionsanzeige')
 	lv_Xattr=$(gettext 'Attribute')
 	#
-	unset -- KONF OPT
-	if [ "${argv[1]}" = -c ] ; then
+	unset -- KONF CHANGE OPT
+	if [ "${argv[1]}" = --conf ] ; then
 		KONF=yes
+		CHANGE=no
+	elif [ "${argv[1]}" = --change ] ; then
+		CHANGE=yes
+		KONF=no
 	fi
 	#
 	# Funktion conf_menu# {{{
@@ -30,8 +35,18 @@ kwecryptfs_conf() {
 			KONF_MENU=($lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
 			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
-			$lv_Keyring \"$KEYRING\"
+			$lv_Sigs \"$SIGS\"
 			$lv_Keytyp \"$KEY_TYPE\" $lv_Noauto \"$NOAUTO\"
+			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
+			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
+			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
+			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
+		elif [ "$CHANGE" = yes ] ; then
+			$lv_Xattr \"$XATTR\"
+			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
+			$lv_Mountverz \"$MOUNT_PATH\"
+			$lv_Sigs \"$SIGS\"
+			$lv_Noauto \"$NOAUTO\"
 			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
 			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
 			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
@@ -41,8 +56,8 @@ kwecryptfs_conf() {
 			$lv_Xattr \"$XATTR\" $lv_Cipher \"${CIPHER:-aes}\"
 			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\" $lv_Keysize \"${KEY_SIZE:-16}\"
-			$lv_Keyring \"$KEYRING\"
-			$gv_Key \"$KEY\" $lv_Noauto \"$NOAUTO\"
+			$lv_Sigs \"$SIGS\"
+			\"$lv_Passphrase_Manage\" \"$KEY\" $lv_Noauto \"$NOAUTO\"
 			\"$lv_Nosigcache\" \"$NO_SIG_CACHE\"
 			\"$lv_Passthrough\" \"${PASSTHROUGH:-no}\"
 			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
@@ -72,7 +87,7 @@ kwecryptfs_conf() {
 			$lv_Cipher)
 				# Welcher Chiffrierungstyp soll verwendet werden?# {{{
 				CIPHER_MSG=$(gettext 'Wählen Sie einen Chiffrierungstyp aus. Standard ist aes.')
-				CIPHER_MENU=(aes \"\" arc4 \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
+				CIPHER_MENU=(aes \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
 				menubox "${CIPHER:-aes}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 				# Auswahl anbieten
 				while [ -n "$gv_Auswahl" ] ; do
@@ -141,17 +156,17 @@ kwecryptfs_conf() {
 				## }}}
 				conf_menu $lv_Keysize
 				;;
-			$lv_Keyring)
+			$lv_Sigs)
 				# Soll der Kernel Schlüsselring benutzt werden# {{{
-				KEYRING_MSG=$(gettext 'Soll für das einbinden des verschlüsselten Laufwerks der Kernel Shlüsselring benutzt werden ($gv_Yes/$gv_No)?')
-				yesno "$gv_Configuration" "$KEYRING_MSG" "$KEYRING"
+				SIGS_MSG=$(gettext 'Sollen für das einbinden der verschlüsselten Laufwerken $lv_Sigs benutzt werden ($gv_Yes/$gv_No)?')
+				yesno "$gv_Configuration" "$SIGS_MSG" "$SIGS"
 				if [ "$gv_Auswahl" = yes ] ; then
-					KEYRING=yes
+					SIGS=yes
 				else
-					KEYRING=no
+					SIGS=no
 				fi
 				## }}}
-				conf_menu $lv_Keyring
+				conf_menu $lv_Sigs
 				;;
 			$lv_Keytyp)
 				# Welcher Schlüssel Typ soll verwendet werden?# {{{
@@ -181,11 +196,11 @@ kwecryptfs_conf() {
 				## }}}
 				conf_menu $lv_Keytyp
 				;;
-			$gv_Key)
-				# Schlüssel# {{{
+			$lv_Passphrase_Manage)
+				# Passphrasen Verwaltung# {{{
 				manage_keys
 				## }}}
-				conf_menu $gv_Key
+				conf_menu $lv_Passphrase_Manage
 				;;
 			$lv_Noauto)
 				# Auswahl ob beim Bootprozess das Laufwerk gemappt werden soll,# {{{
@@ -271,13 +286,58 @@ kwecryptfs_conf() {
 				;;
 			$gv_Save)
 				# speichern# {{{
+				# Konfiguration speichern
 				if [ "$KONF" = yes ] ; then
 					autoload -U kwecryptfs_config
 					kwecryptfs_config
+					return 0
+				# fstab Einstellungen ändern von verschlüsselten Verzeichnissen# {{{
+				elif [ "$CHANGE" = yes ] ; then
+					OPT="ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
+					if [ "$XATTR" = yes ] ; then
+						OPT="${OPT},ecryptfs_xattr=y"
+					else
+						OPT="${OPT},ecryptfs_xattr=n"
+					fi
+					if [ "$FILENAME_ENCRYPT" = yes ] ; then
+						OPT="${OPT},ecryptfs_enable_filename_crypto=y"
+					else
+						OPT="${OPT},ecryptfs_enable_filename_crypto=n"
+					fi
+					if [ "$PASSTHROUGH" = yes ] ; then
+						OPT="${OPT},ecryptfs_passthrough=y"
+					else
+						OPT="${OPT},ecryptfs_passthrough=n"
+					fi
+					if [ "$NO_SIG_CACHE" = yes ] ; then
+						OPT="${OPT},no_sig_cache=y"
+					else
+						OPT="${OPT},no_sig_cache=n"
+					fi
+					if [ "$UNLINK_SIGS" = yes ] ; then
+						OPT="${OPT},ecryptfs_unlink_sigs"
+					fi
+					if [ "$VERSION" = yes ] ; then
+						OPT="${OPT},ecryptfs_encrcrypted_view=y"
+					else
+						OPT="${OPT},ecryptfs_encrcrypted_view=n"
+					fi
+					if [ "$NOAUTO" = yes ] ; then
+						OPT="${OPT},noauto,user"
+					else
+						OPT="${OPT},user"
+					fi
+					if [-n "$SIG" ] ; then
+						OPT="${OPT},ecryptfs_fnek_sig=$SIG,ecryptfs_sig=$SIG"
+					fi
+					if [ -n "$REST_OPTION" ] ; then
+						OPT="${OPT},${REST_OPTION}"
+					fi
+					return 0
+					## }}}
 				else
-					# Einstellungen für das verändern von Verzeichnissen.# {{{
-					# Schlüsseltyp
-					if [ -n "$KEY_OPT" -a -n "$O_DIR" -a -n "$M_POINT" ] ; then
+					# Einstellungen für das verschlüsseln von Verzeichnissen.# {{{
+					if [ -n "$KEY" ] && [ -n "$O_DIR" ] && [ -n "$M_POINT" ] ; then
 						OPT="ecryptfs_cipher=${CIPHER:-aes},ecryptfs_key_bytes=${KEY_SIZE:-16}"
 						if [ "$XATTR" = yes ] ; then
 							OPT="${OPT},ecryptfs_xattr=y"
@@ -317,15 +377,15 @@ kwecryptfs_conf() {
 						fi
 						# Rechte einstellen
 						chmod 700 "$O_DIR" "$M_POINT"
+						return 0
 					else
 						MSG=$(gettext'Sie müssen erst ein Verzeichnis das chiffriert werden soll, dessen Mountpunkt und natürlich einen Schlüsseltyp und dessen Optionen angeben.')
 						msgbox "$gv_Attention" "$MSG"
-						return 1
+						conf_menu $gv_Directory
 					fi
 					## }}}
 				fi
 				## }}}
-				return 0
 				;;
 			$gv_Back|*)	unset -- KEY
 				return 1
