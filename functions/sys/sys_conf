@@ -449,7 +449,9 @@ sys_conf() {
 	#        MAX_ZAHL - Wieviel Zeichen darf das Passwort höchstens haben.
 	#
 	mixed_password() {
-		unset -- MinChar MaxChar Opt_Anz gv_Pass gv_Old_Pass
+		autoload -U password_display
+		unset -- MinChar MaxChar Opt_Anz gv_Pass gv_Pass_Display \
+			gv_Old_Pass gv_Old_Pass_Display
 		local MinChar MaxChar OPW NPW NNPW Title Msg
 		if [ "${#argv}" -ge 2 ] ; then
 			# Variablen Auswertung# {{{
@@ -519,12 +521,12 @@ sys_conf() {
 						Anz="${(w)#gv_Auswahl}"
 						if [ "$Anz" -eq "$Opt_Anz" ] ; then
 							if [ "$Opt_Anz" = 3 ] ; then
-								OPW="${${(ws: :)${=gv_Auswahl}}[1]}"
-								NPW="${${(ws: :)${=gv_Auswahl}}[2]}"
-								NNPW="${${(ws: :)${=gv_Auswahl}}[3]}"
+								OPW="${${(ws: :)${gv_Auswahl_Display}}[1]}"
+								NPW="${${(ws: :)${gv_Auswahl_Display}}[2]}"
+								NNPW="${${(ws: :)${gv_Auswahl_Display}}[3]}"
 							else
-								NPW="${${(ws: :)${=gv_Auswahl}}[1]}"
-								NNPW="${${(ws: :)${=gv_Auswahl}}[2]}"
+								NPW="${${(ws: :)${gv_Auswahl_Display}}[1]}"
+								NNPW="${${(ws: :)${gv_Auswahl_Display}}[2]}"
 							fi
 							if [ "$NPW" = "$NNPW" ] ; then
 								Char="${(c)#NPW}"
@@ -536,13 +538,17 @@ sys_conf() {
 										if [ "$gv_Auswahl" = yes ] ; then
 											mixed_password_menu
 										else
-											unset -- OPW NPW NNPW gv_Pass gv_Old_Pass
+											unset -- OPW NPW NNPW gv_Pass gv_Pass_Display \
+												gv_Old_Pass gv_Old_Pass_Display
 				    						break
 										fi
 									else
 										# richtige Password Länge
 										gv_Old_Pass="$OPW"
+										password_display $OPW
+										gv_Old_Pass_Display="$gv_Star_Passphrase"
 										gv_Pass="$NPW"
+										password_display $NPW
 										unset -- OPW NPW NNPW
 										break
 									fi	
@@ -553,13 +559,17 @@ sys_conf() {
 									if [ "$gv_Auswahl" = yes ] ; then
 										mixed_password_menu
 									else
-										unset -- OPW NPW NNPW gv_Pass gv_Old_Pass
+										unset -- OPW NPW NNPW gv_Pass gv_Pass_Display \
+											gv_Old_Pass gv_Old_Pass_Display
 			    						break
 									fi
 								else
 									# richtige Password Länge
 									gv_Old_Pass="$OPW"
+									password_display $OPW
+									gv_Old_Pass_Display="$gv_Star_Passphrase"
 									gv_Pass="$NPW"
+									password_display $NPW
 				                    unset -- OPW NPW NNPW
 			    					break
 								fi
@@ -3895,7 +3905,8 @@ file_choice() {
 					unset -- gv_Pass
 					if [ -n "$CHAR" ] ; then
 						gv_Pass=${${${(ws: :)$(head -c 256 /dev/urandom | uuencode -m -)}[4]}[1,$CHAR]}
-						break
+						gv_Pass_Display="${${${${gv_Pass//\\/\\\\}//\"/\\\"}//\$/\\\$}//\`/\\\`}"
+						return 0
 					else
 						MSG=$(gettext 'Sie müssen erst den Menüpunkt $lv_Charlength mit einem Wert belegen.')
 						msgbox "$gv_Attention" "$MSG"
@@ -3903,10 +3914,11 @@ file_choice() {
 					fi
 					#}}}
 					;;
-				$gv_Back)	break
+				$gv_Back|*)	return 1
 					;;
 			esac
 		done
+		return 0
 	}
 	#}}}
 	# Funktion (gpg_getkeys_id), holt die User Schlüssel-ID# {{{
@@ -6101,8 +6113,8 @@ search_fdisks() {
 						;;
 					*)
 						Anz="${(w)#gv_Auswahl}"
-						NPW="${${(ws: :)${=gv_Auswahl}}[2]}"
-						NNPW="${${(ws: :)${=gv_Auswahl}}[3]}"
+						NPW="${${(ws: :)${gv_Auswahl_Display}}[2]}"
+						NNPW="${${(ws: :)${gv_Auswahl_Display}}[3]}"
 						if [ "$Anz" -eq 3 ] ; then
 							if [ "$NPW" = "$NNPW" ] ; then
 								# Prüfen, ob cracklib installiert ist
