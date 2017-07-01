@@ -42,7 +42,7 @@ kwecryptfs_conf() {
 			\"$lv_Unlink_Sigs\" \"$UNLINK_SIGS\"
 			$lv_Version \"$VERSION\" $gv_Save \"\" $gv_Back \"\")
 		elif [ "$CHANGE" = yes ] ; then
-			$lv_Xattr \"$XATTR\"
+			KONF_MENU=($lv_Xattr \"$XATTR\"
 			$lv_Filename_Encrypt \"$FILENAME_ENCRYPT\"
 			$lv_Mountverz \"$MOUNT_PATH\"
 			$lv_Sigs \"$SIGS\"
@@ -87,7 +87,12 @@ kwecryptfs_conf() {
 			$lv_Cipher)
 				# Welcher Chiffrierungstyp soll verwendet werden?# {{{
 				CIPHER_MSG=$(gettext 'Wählen Sie einen Chiffrierungstyp aus. Standard ist aes.')
-				CIPHER_MENU=(aes \"\" blowfish \"\" cast5 \"\" cast6 \"\" des3_ede \"\" twofish \"\")
+				if [ "$KEY_TYPE" = passphrase ] || [ -z "$KEY_TYPE" ] ; then
+					CIPHER_MENU=(aes \"\" $gv_Back \"\")
+				elif [ "$KEY_TYPE" = tspi ] ; then
+					CIPHER_MENU=(aes \"\" blowfish \"\" cast5 \"\" cast6 \"\"
+					des3_ede \"\" twofish \"\" $gv_Back \"\")
+				fi
 				menubox "${CIPHER:-aes}" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 				# Auswahl anbieten
 				while [ -n "$gv_Auswahl" ] ; do
@@ -95,9 +100,12 @@ kwecryptfs_conf() {
 						HELP*)	script_help conf_help
 							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$CIPHER_MSG" "$CIPHER_MENU"
 							;;
-						*)
+						[a-z]*)
 							# Auswahl übernehmen
 							CIPHER="$gv_Auswahl"
+							break
+							;;
+						$gv_Back|*)
 							break
 							;;
 					esac
@@ -140,15 +148,18 @@ kwecryptfs_conf() {
 			$lv_Keysize)
 				# Schlüsselgrösse auswählen# {{{
 				KEY_SIZE_MSG=$(gettext 'Wählen Sie bitte die Grösse des Schlüssels aus. Standard ist 16.')
-				KEY_SIZE_MENU=(16 \"\" 24 \"\" 32 \"\")
+				KEY_SIZE_MENU=(16 \"\" 32 \"\" $gv_Back \"\")
 				menubox "${KEY_SIZE:-16}" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
 				while [ "$gv_Auswahl" ] ; do
 					case "$gv_Auswahl" in
 						HELP*)	script_help conf_help
 							menubox "${gv_Auswahl#HELP }" "$gv_Configuration" "$KEY_SIZE_MSG" "$KEY_SIZE_MENU"
 							;;
-						*)	# Wert übernehmen
+						[1-5]*)	# Wert übernehmen
 							KEY_SIZE="$gv_Auswahl"
+							break
+							;;
+						$gv_Back|*)	# abbrechen
 							break
 							;;
 					esac
@@ -173,7 +184,7 @@ kwecryptfs_conf() {
 				## Funktion key_type_menu{{{
 				KEY_TYPE_MSG=$(gettext 'Wählen Sie einen Schlüsseltyp aus.')
 				key_type_menu() {
-					KEY_TYPE_MENU=(passphrase \"\" $gv_Back \"\")
+					KEY_TYPE_MENU=(passphrase \"\" tspi \"\" $gv_Back \"\")
 					menubox "$1" "$gv_Configuration" "$KEY_TYPE_MSG" "$KEY_TYPE_MENU"
 				}
 				## }}}
@@ -188,6 +199,14 @@ kwecryptfs_conf() {
 							# Auswahl übernehmen
 							KEY_TYPE="$gv_Auswahl"
 							break
+							;;
+						tspi)
+							####################################
+							# TODO: wird noch nicht unterstützt.
+							####################################
+							MSG=$(gettext 'Der Schlüsseltyp tspi wird noch nicht unterstützt.')
+							msgbox "$gv_Info" "$MSG"
+							key_type_menu passphrase
 							;;
 						$gv_Back|*)	break
 							;;
@@ -205,7 +224,7 @@ kwecryptfs_conf() {
 			$lv_Noauto)
 				# Auswahl ob beim Bootprozess das Laufwerk gemappt werden soll,# {{{
 				# oder erst später manuell (Ja/Nein).
-				NOAUTO_MSG=$(gettext 'Soll das verschlüsselte Verzeichnis beim Start des Rechners manuell erstellt werden ($gv_Yes/$gv_No)?')
+				NOAUTO_MSG=$(gettext 'Soll das verschlüsselte Verzeichnis beim Start des Rechners manuell eingehängt werden ($gv_Yes/$gv_No)?')
 				yesno "$gv_Configuration" "$NOAUTO_MSG" "$NOAUTO"
 				if [ "$gv_Auswahl" = yes ] ; then
 					NOAUTO=yes
