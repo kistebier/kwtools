@@ -1,17 +1,34 @@
+'\" t
 .\"     Title: KWECRYPTFSRC
 .\"    Author: Kai Wilke <kiste@netzworkk.de>
-.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
-.\"      Date: 11/15/2013
-.\"    Manual: 
-.\"    Source: Version 0.0.4
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 07/06/2017
+.\"    Manual: Benutzer Anleitung
+.\"    Source: Version 1.0.0
+.\"  Language: English
 .\"
-.TH "KWECRYPTFSRC" "5" "11/15/2013" "Version 0.0.4" "Benutzer Anleitung"
+.TH "KWECRYPTFSRC" "5" "07/06/2017" "Version 1.0.0" "Benutzer Anleitung"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .SH "NAME"
-kwecryptfsrc \- Konfigurationsdatei f\(:ur kwecryptfs.
+kwecryptfsrc \- Konfigurationsdatei f\(:ur kwecryptfs\&.
 .SH "BESCHREIBUNG"
 .PP
 Dies ist die Standard Konfigurationsdatei vom Script
@@ -22,55 +39,36 @@ oder ist leer wird dies als Kommentar interpretiert\&.
 .PP
 \fBCIPHER\fR
 .RS 4
-W\(:ahlen Sie einen Chiffrierungstyp aus (\fBaes, blowfish, des3_ede, twofish, cast5, cast6, arc4\fR)\&. Standard ist
+W\(:ahlen Sie einen Chiffrierungstyp aus (\fBaes, blowfish, cast5, cast6, des3_ede, twofish\fR)\&. Beim Schl\(:usseltyp
+\fBpassphrase\fR
+geht nur der Chiffrierungstyp
+\fBaes\fR, bei
+\fBtspi\fR
+stehen alle zur Auswahl\&. Standard ist
 \(lq\fBaes\fR\(rq\&.
+.RE
+.PP
+\fBFILENAME_ENCRYPT\fR
+.RS 4
+Soll die Verschl\(:usselung der Dateinamen eingeschaltet werden (\fByes/no\fR)?
 .RE
 .PP
 \fBKEY_SIZE\fR
 .RS 4
-Auswahl der Schl\(:usselgr\(:osse (\fB16, 24, 32\fR)\&. Standard ist
+Angabe der Schl\(:usselgr\(:osse (\fB16, 32\fR) f\(:ur den Schl\(:usseltyp
+\(lq\fBpassphrase\fR\(rq\&. Standard ist
 \fB16\fR\&.
 .RE
 .PP
 \fBKEY_TYP\fR
 .RS 4
-Geben Sie den Schl\(:usseltyp an (\fBgpg, openssl, passphrase, pkcs11\-helper, tspi\fR) ein\&. Die unterst\(:utzten Schl\(:usseltypen liegen normalerweise unter
-\fI/usr/lib*/ecryptfs/\fR\&. Standard ist
-\fBpassphrase\fR\&. Dazu muss man noch eine Schl\(:ussel Option, wie eine Schl\(:usseldatei mit angeben\&. Beispiele:
+W\(:ahlen Sie den Schl\(:usseltyp (\fBpassphrase, tspi\fR) aus\&. Die unterst\(:utzten Schl\(:usseltypen liegen normalerweise unter
+\fI/usr/lib/ARCH\-linux\-gnu/ecryptfs/\fR\&.
 .sp
-\fBKEY_TYPE\fR=\fBkeytype\fR:\fBkey_option\fR=\fBoption\fR
-.sp
-Einige der folgenden Werte kann man kombinieren\&. Z\&. B\&.
-\%\fBKEY_TYPE\fR=\fB\%openssl:openssl_keyfile\fR=\fI\%/path/to/openssl_private_RSA_file\fR:\fB\%openssl_passwd_file\fR=\fI\%/path/to/openssl_password_file\fR
-.sp
-\fBKEY_TYPE\fR=\fBgpg\fR
-\- Hier ist noch nichts
-.sp
-\fBKEY_TYPE\fR=\fBopenssl\fR:\fBopenssl_passwd\fR=\fIpassphrase\fR
-.sp
-\fBKEY_TYPE\fR=\fBopenssl\fR:\fBopenssl_passwd_file\fR=\fI/path/to/openssl_password_file\fR
-.sp
-Auswahl einer Datei die die/den Schl\(:ussel enth\(:alt\&. Die Syntax der Datei ist
-\fBopenssl_passwd\fR=\fIpassphrase\fR\&. Bei dieser Auswahl k\(:onnen Sie zus\(:atzlich eine Openssl private RSA SSL Schl\(:usseldatei ausw\(:ahlen oder eine Passphrase mit eingeben\&.
-.sp
-\fBKEY_TYPE\fR=\fBopenssl\fR:\fBopenssl_keyfile\fR=\fI/path/to/openssl_private_RSA_file\fR
-.sp
-Auswahl einer Openssl private RSA SSL Schl\(:ussel Datei\&. Bei dieser Auswahl k\(:onnen Sie zus\(:atzlich eine Openssl Schl\(:ussel Datei ausw\(:ahlen oder eine Passphrase mit eingeben\&.
-.sp
-\fBKEY_TYPE\fR=\fBpassphrase\fR:\fBpassphrase_passwd\fR=\fIpassphrase\fR
-.sp
-\fBKEY_TYPE\fR=\fBpassphrase\fR:\fBpassphrase_passwd_file\fR=\fI/path/to/password_file\fR
-.sp
-Die Syntax der Datei ist
-\fBpasswd\fR=\fIpassphrase\fR\&.
-.sp
-\fBKEY_TYPE\fR=\fBpassphrase\fR:\fBpassphrase_salt\fR=16 digit hex Wert\&.
-.sp
-\fBKEY_TYPE\fR=\fBpkcs11\-helper\fR
-\- Hier ist noch nichts
+\fBKEY_TYPE\fR=\fBpassphrase\fR
 .sp
 \fBKEY_TYPE\fR=\fBtspi\fR
-\- Hier ist noch nichts
+\- Wird noch nicht unterst\(:utzt\&.
 .sp
 Siehe
 \fBecryptfs\fR(7)\&.
@@ -80,7 +78,7 @@ Siehe
 .RS 4
 Mountverzeichnis ausw\(:ahlen\&. Dieses Verzeichnis muss schon vorher existieren und sollte in der Datei
 \fI/etc/fstab\fR
-konfiguriert sein\&. Dieses dient zum einbinden von externen Laufwerken, die die externe Schl\(:usseldatei enthalten\&.
+konfiguriert sein\&. Dieses dient zum einbinden von externen Laufwerken, die die Schl\(:usseldateien enthalten\&.
 .RE
 .PP
 \fBNOAUTO\fR
@@ -93,7 +91,7 @@ Soll das Laufwerk nicht beim starten des Rechners erstellt werden, sondern manue
 Soll die gemountete Schl\(:ussel Signatur mit dem Wert in
 \fI~/\&.ecryptfs/sig\-cache\&.txt\fR
 verglichen werden (\fByes/no\fR)?
-\(lq\fBno\fR\(rq
+\(lq\fByes\fR\(rq
 ist gut f\(:ur nicht interactive Setup Scripts\&.
 .RE
 .PP
@@ -104,18 +102,31 @@ Sollen nicht verschl\(:usselte Dateien ins verschl\(:usselte Dateisystem durch g
 ist gut um auch unverschl\(:usselte Dateien zu bearbeiten\&.
 .RE
 .PP
+\fBSIGS\fR
+.RS 4
+Soll f\(~A\(14r das Einbinden der verschl\(~A\(14sselten Laufwerke Signaturen benutzt werden (\fByes/no\fR)? Diese heissen \fIecryptfs_sig\fR und \fIecryptfs_fnek_sig\fR\&.
+.sp
+Siehe
+\fBecryptfs\fR(7)\&.
+.RE
+.PP
+\fBUNLINK_SIGS\fR
+.RS 4
+Soll beim aush\(:angen des Laufwerks auch die Passphrase aus dem Kernel Keyring gel\(:oscht werden (\fByes/no\fR)?
+.RE
+.PP
 \fBVERSION\fR
 .RS 4
 Soll die Version der verschl\(:usselten Dateien angezeigt werden (\fByes/no\fR)?
 \(lq\fByes\fR\(rq
 ist gut f\(:ur Backup Tools die erweiterte Attribute des Dateisystems unterst\(:utzen, wie
-\fIext2/3\fR\&.
+ext2/3/4\&.
 .RE
 .PP
 \fBXATTR\fR
 .RS 4
 Sollen die Metadaten der verschl\(:usselten Dateien in den erweiterten Attributen des Dateisystems gespeichert werden (\fByes/no\fR)? Dateisysteme wie
-\fIext2/3/4\fR
+ext2/3/4
 unterst\(:utzen dies zum Beispiel\&.
 .RE
 .SH "DATEI"
@@ -135,9 +146,10 @@ F\(:ur weitere Details siehe
 .SH "AUTOR"
 .PP
 \fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
-.sp -1n
-.IP "" 4
+.RS 4
 Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.RE
 .SH "COPYRIGHT"
-Copyright \(co 2009-2013 Kai Wilke
+.br
+Copyright \(co 2009-2017 Kai Wilke
 .br

@@ -11,29 +11,22 @@ kwecryptfs_config() {
 # Autor: Kai Wilke <kiste@netzworkk.de>
 
 # Geben Sie einen Chiffrierungstyp an (aes, blowfish,
-# des3_ede, twofish, cast5, cast6, arc4). Standard ist aes. 
+# cast5, cast6, des3_ede, twofish). Beim Schlüsseltyp
+# passphrase geht nur der Chiffrierungstyp aes, bei tspi
+# stehen alle zur Auswahl. Standard ist aes. 
 CIPHER=\"$CIPHER\"
 
 Soll die Verschlüsselung der Dateinamen eingeschaltet werden (yes/no)?
 FILENAME_ENCRYPT=\"$FILENAME_ENCRYPT\"
 
-# Schlüsselgrösse (16, 24, 32). Standard ist 16.
+# Schlüsselgrösse (16, 32). Standard ist 16.
 KEY_SIZE=\"$KEY_SIZE\"
 
-# Soll für das einbinden der verschlüsselten Laufwerke Signaturen
-# benutzt werden (yes/no)? Diese heissen ecryptfs_sig und
-# ecryptfs_fnek_sig (siehe man 7 ecryptfs).
-SIGS=\"$SIGS\"
-
-# Geben Sie den Schlüsseltyp an (passphrase). Diese liegen normalerweise
-# unter /usr/lib/arch-linux-gnu/ecryptfs/. Standard ist passphrase.
-# Dazu muss man noch die Schlüssel Option, wie eine
-# Schlüsseldatei mit angeben.
-#
-# key=keytype:key_module_option=option
-#
-# key=passphrase:passphrase_passwd_file=/path/to/password_file
-# key=passphrase:passphrase_passwd=password
+# Geben Sie den Schlüsseltyp (passphrase, tspi) an. Die unterstützten
+# Schlüsseltypen liegen normalerweise unter
+# /usr/lib/ARCH-linux-gnu/ecryptfs/. Standard ist passphrase.
+# 
+# Notiz: der Schlüsseltyp tspi wird noch nicht unterstützt.
 #
 # siehe man 7 ecryptfs.
 KEY_TYPE=\"$KEY_TYPE\"
@@ -56,6 +49,11 @@ NO_SIG_CACHE=\"$NO_SIG_CACHE\"
 # ins ecryptfs durch gereicht werden (yes/no)? Ist gut
 # um auch unverschlüsselte Dateien zu bearbeiten.
 PASSTHROUGH=\"$PASSTHROUGH\"
+
+# Soll für das Einbinden der verschlüsselten Laufwerke Signaturen
+# benutzt werden (yes/no)? Diese heissen ecryptfs_sig und
+# ecryptfs_fnek_sig (siehe man 7 ecryptfs).
+SIGS=\"$SIGS\"
 
 # Soll beim aushängen des Laufwerks auch die Passphrase aus
 # dem Kernel Keyring gelöscht werden (yes/no)?
