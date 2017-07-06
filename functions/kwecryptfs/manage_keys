@@ -24,7 +24,11 @@ manage_keys() {
 	#
 	unset -- E_PASS KEY KEY_FILE KEY_PASS
 	# Funktionen manage_key_menu# {{{
-	KEY_MENU=($gv_Create \"\" $gv_Delete \"\" $gv_Back \"\")
+	if [ "$FILE" = yes ] ; then
+		KEY_MENU=($gv_Create \"\" $gv_Change \"\" $gv_Delete \"\" $gv_Back \"\")
+	else
+		KEY_MENU=($gv_Create \"\" $gv_Back \"\")
+	fi
 	manage_key_menu() {
 		menubox "$1" "$lv_Passphrase_Manage" "$gv_Menupoint" "$KEY_MENU"
 	}
@@ -42,6 +46,64 @@ manage_keys() {
 				mixed_password "$lv_Passphrase_Manage" "$PASSWD_MSG" 8
 				;;
 		esac
+	}
+	## }}}
+	# Funktion (keyfile), Password Datei auswählen/erzeugen# {{{
+	#
+	# usage: keyfile [ KEYFILE ]
+	#
+	keyfile() {
+		local Tmp Tmpfile
+		Tmp="$1"
+		fselect  "${Tmp%/*}"
+		if [[ -n $gv_Auswahl ]] ; then
+			Tmpfile="${gv_Auswahl%_passphrase.txt}_passphrase.txt"
+			if [[ -f $Tmpfile ]] ; then
+				if [ "`file -b $Tmpfile`" = data ] ; then
+					KEY_OPT="$lv_Encrypt_Pass"
+					# vorhandene verschlüsselte Passphrasen Datei 
+					# Werte abfragen/überprüfen.
+					PASSWD_MSG=$(gettext 'Geben Sie das Passwort für die Passphrase Datei $Tmpfile ein.')
+					password "$lv_Passphrase_Manage" "$PASSWD_MSG"
+					if [ -n "$PASSPHRASE" ] ; then
+						gv_Pass="`printf "%s" "$PASSPHRASE" | \
+						ecryptfs-unwrap-passphrase "$Tmpfile" - 2>/dev/null`"
+						if [ -n "$gv_Pass" ] ; then
+							E_PASS="$gv_Pass"
+							KEY_FILE="$Tmpfile"
+							KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
+							unset -- E_PASS KEY_FILE KEY_OPT
+							return 0
+						else
+							MSG=$(gettext 'Die Passphrase für die verschlüsselte Passphrasen Datei ist falsch.')
+							msgbox "$gv_Info" "$MSG"
+							unset -- PASSPHRASE
+							return 1
+						fi
+					fi	   
+				else
+					KEY_OPT="passphrase_passwd_file"
+					# vorhandenen Wert der passphrase_passwd_file Datei
+					# heraus holen.
+					gv_Pass=$(awk -F = '{print $2}' "$Tmpfile")
+					if [ -n "$gv_Pass" ] ; then
+						KEY_PASS="$gv_Pass"
+						KEY_FILE="$Tmpfile"
+						KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
+						unset -- gv_Pass KEY_OPT KEY_FILE
+						return 0
+					else
+						MSG=$(gettext 'Es ist keine Passphrase vorhanden.')
+						msgbox "$gv_Info" "$MSG"
+						unset -- gv_Pass
+						return 1
+					fi
+				fi
+			else
+				KEY_FILE="$FILE"
+			fi
+		fi
+		return 0
 	}
 	## }}}
 	manage_key_menu
@@ -138,7 +200,14 @@ manage_keys() {
 							;;
 						$gv_Filename)
 							# Dateinamen auswählen# {{{
-							keyfile "${KEY_FILE:-$WRAP_PASSPHRASE_PATH}"
+							keyfile "${${KEY_FILE:-$WRAP_PASSPHRASE_PATH}%/*}"
+							# existiert schon eine Passphrase Datei wird
+							# die vVariabel KEY für das Erstellen eines
+							# ecryptfs laufwerks belegt und diese Funktion
+							# beendet.
+							if [ -n "$KEY" ] ; then
+								return 0
+							fi
 							## }}}
 							create_key_menu $gv_Filename
 							;;
@@ -188,28 +257,11 @@ manage_keys() {
 									# Passphrase password file# {{{
 									if [ -n "$KEY_FILE" ] && \
 										[ -n "$KEY_PASS" ] ; then
-										if [ -f "$KEY_FILE" ] && \
-											[ "`wc -l < $KEY_FILE`" -gt 0 ] ; then
-											# Datei ist vorhanden - überschreiben?
-											MSG=$(gettext 'Die Datei $KEY_FILE ist schon vorhanden. Soll sie überschrieben werden ($gv_Yes/$gv_No)? Denken Sie an Ihre verschlüsselten Dateien die Sie mit einem neuen Schlüssel nicht mehr entschlüsseln können.')
-											yesno "$gv_Attention" "$MSG" "$gv_No"
-											if [ "$gv_Auswahl" = "$gv_Yes" ] ; then
-												> "$KEY_FILE" <<< "passphrase_passwd=\"${KEY_PASS}\""
-												chmod 0400 "$KEY_FILE"
-												KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
-												unset -- KEY_OPT KEY_PASS
-												return 0
-											else
-												unset -- KEY_OPT KEY_PASS
-												return 0
-											fi
-										else
-											> "$KEY_FILE" <<< "passphrase_passwd=\"${KEY_PASS}\""
-											chmod 0400 "$KEY_FILE"
-											KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
-											unset -- KEY_OPT KEY_PASS
-											return 0
-										fi
+										> "$KEY_FILE" <<< "passphrase_passwd=\"${KEY_PASS}\""
+										chmod 0400 "$KEY_FILE"
+										KEY="key=${KEY_TYPE}:${KEY_OPT}=${KEY_FILE}"
+										unset -- KEY_FILE KEY_OPT KEY_PASS
+										return 0
 									else
 										MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Filename und eine Passphrase eingeben bzw. generieren.')
 										msgbox "$gv_Info" "$MSG"
@@ -234,31 +286,13 @@ manage_keys() {
 									# verschlüsselte Passphrase# {{{
 									if [ -n "$KEY_FILE" ] && [ -n "$E_PASS" ] && \
 										[ -n "$KEY_PASS" ] ; then
-										if [ -f "$KEY_FILE" ] && \
-											[ "`file -b $KEY_FILE`" -eq data ] ; then
-											# Datei ist vorhanden - überschreiben?
-											MSG=$(gettext 'Die Datei $KEY_FILE ist schon vorhanden. Soll sie überschrieben werden ($gv_Yes/$gv_No)? Denken Sie an Ihre verschlüsselten Dateien die Sie mit einem neuen Schlüssel nicht mehr entschlüsseln können.')
-											yesno "$gv_Attention" "$MSG" "$gv_No"
-											if [ "$gv_Auswahl" = "$gv_Yes" ] ; then
-												printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
-												ecryptfs-wrap-passphrase "$KEY_FILE" - 1>/dev/null || \
-												prog_failure
-												chmod 0400 "$KEY_FILE"
-												KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
-												unset -- E_PASS KEY_OPT KEY_PASS
-												return 0
-											else
-												unset -- E_PASS KEY_OPT KEY_PASS
-												return 0
-											fi
-										else
-											printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
-											ecryptfs-wrap-passphrase "$KEY_FILE" -
-											chmod 0400 "$KEY_FILE"
-											KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
-											unset -- E_PASS KEY_OPT KEY_PASS
-											return 0
-										fi
+										printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
+										ecryptfs-wrap-passphrase "$KEY_FILE" - 1>/dev/null || \
+										prog_failure
+										chmod 0400 "$KEY_FILE"
+										KEY="key=${KEY_TYPE}:passphrase_passwd=${E_PASS}"
+										unset -- E_PASS KEY_FILE KEY_OPT KEY_PASS
+										return 0
 									else
 										MSG=$(gettext 'Sie müssen erst die Menüpunkte $gv_Filename, eine $lv_Encrypt_Pass und eine Passphrase eingeben bzw. generieren.')
 										msgbox "$gv_Info" "$MSG"
@@ -278,12 +312,92 @@ manage_keys() {
 							esac
 							## }}}
 							;;
-						$gv_Back|*)	return 1
+						$gv_Back|*)
+							unset -- E_PASS KEY KEY_FILE KEY_OPT KEY_PASS
+							return 1
 							;;
 					esac
 				done
 				## }}}
 				manage_key_menu $gv_Create
+				;;
+			$gv_Change)
+				# Verschlüsselungspasswort der Passphrase Datei ändern.# {{{
+				# Funktion (change_key_menu)# {{{
+				#
+				change_key_menu() {
+					CHANGE_MENU=($gv_Filename \"$KEY_FILE\"
+					$lv_Pass_Input \"$KEY_PASS_DISPLAY\"
+					$gv_Save \"\" $gv_Back \"\")
+					menubox "$1" "$lv_Passphrase_Manage" "$gv_Menupoint" "$CHANGE_MENU"
+				}
+				## }}}
+				change_key_menu
+				while [ -n "$gv_Auswahl" ] ; do
+					case "$gv_Auswahl" in
+						HELP*)	script_help manage_change_key_help
+							change_key_menu  "${gv_Auswahl#HELP }"
+							;;
+						$gv_Filename)
+							# Passphrase Datei auswählen# {{{
+							FORMAT=DATA
+							SUFFIX=".txt"
+							file_choice "${${KEY_FILE:-$WRAP_PASSPHRASE_PATH}%/*}" only "$KEY_FILE"
+							if [ -n "${WERT[1]}" ] ; then
+								KEY_FILE="${VERZ}/${WERT}"
+							fi
+							## }}}
+							change_key_menu $gv_Filename
+							;;
+						$lv_Pass_Input)
+							# Passphrase eingeben# {{{
+							PASSWD_MSG=$(gettext 'Geben Sie die alte Passphrase, eine neue Passphrase ein und wiederholen Sie diese neue Passphrase im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
+							mixed_password -o "$lv_Passphrase_Manage" "$PASSWD_MSG" 8
+							if [ -n "$gv_Pass" -a "$gv_Old_Pass" ] ; then
+								Tmp_Pass="`printf "%s" "$gv_Old_Pass" | \
+								ecryptfs-unwrap-passphrase "$KEY_FILE" - 2>/dev/null`"
+								if [ -n "$Tmp_Pass" ] ; then
+									E_PASS="$Tmp_Pass"
+									KEY_PASS="$gv_Pass"
+									KEY_PASS_DISPLAY="$gv_Star_Passphrase"
+									unset -- Tmp_Pass gv_Pass gv_Star_Passphrase
+								else
+									MSG=$(gettext 'Die alte Passphrase war leider falsch. Wiederholen Sie bitte diesen Schritt.')
+									msgbox "$gv_Info" "$MSG"
+									unset -- gv_Old_Pass gv_Pass
+								fi
+							else
+								MSG=$(gettext 'Sie müssen schon alle Felder ausfüllen. Wiederholen Sie bitte diesen Schritt.')
+								msgbox "$gv_Info" "$MSG"
+								unset -- gv_Old_Pass gv_Pass
+							fi
+							## }}}
+							change_key_menu $lv_Pass_Input
+							;;
+						$gv_Save)
+							# speichern# {{{
+							if [ -n "$KEY_FILE" ] && [ -n "$E_PASS" ] && \
+								[ -n "$KEY_PASS" ] ; then
+								printf  "%s\n%s" "$E_PASS" "$KEY_PASS" | \
+								ecryptfs-wrap-passphrase "$KEY_FILE" - 1>/dev/null || \
+								prog_failure
+								chmod 0400 "$KEY_FILE"
+								unset -- E_PASS KEY_FILE KEY_PASS
+							else
+								MSG=$(gettext 'Sie müssen erst eine Passphrase Datei auswählen und eine neue Passphrase eingeben.')
+								msgbox "$gv_Info" "$MSG"
+							fi
+							## }}}
+							change_key_menu $lv_Pass_Input
+							;;
+						$gv_Back| *)
+							unset -- E_PASS KEY_FILE KEY_PASS
+							break
+							;;
+					esac
+				done
+				## }}}
+				manage_key_menu $gv_Change
 				;;
 			$gv_Delete)
 				# Schlüsseldateien löschen# {{{
