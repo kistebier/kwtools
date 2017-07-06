@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 01.07.2017
+# Autor: Kai Wilke  <kiste@netzworkk.de> 06.07.2017
 #
 # Script: kwecryptfs, erstellt ein verschlüsseltes Dateisystem
 #         über einem Verzeichnis.
 #
-# Version: 0.1.0
+# Version: 1.0.0
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -124,23 +124,6 @@ check_no_activ() {
 	esac
 }
 ## }}}
-	# Funktion (keyfile), Password Datei auswählen/erzeugen# {{{
-	#
-	# usage: keyfile [ KEYFILE ]
-	#
-	keyfile() {
-		local Tmp Tmpfile
-		Tmp="$1"
-		fselect  "${Tmp%/*}"
-		if [[ -n $gv_Auswahl ]] ; then
-			Tmpfile="${gv_Auswahl%_passphrase.txt}_passphrase.txt"
-			fselect_check -c "$Tmpfile"
-			if [[ -f $FILE ]] ; then
-				KEY_FILE="$FILE"
-			fi
-		fi
-	}
-	## }}}
 # Funktion main_menu# {{{
 #
 MAIN_MENU=($gv_Configuration \"\" $gv_Directory \"\" \"$lv_Passphrase_Manage\" \"\"
