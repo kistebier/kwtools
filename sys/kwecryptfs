@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 06.07.2017
+# Autor: Kai Wilke  <kiste@netzworkk.de> 07.07.2017
 #
 # Script: kwecryptfs, erstellt ein verschlüsseltes Dateisystem
 #         über einem Verzeichnis.
@@ -408,12 +408,13 @@ while [ "$gv_Auswahl" ] ; do
 									if [ -n "$SIG" ] ; then
 										KEYRING_SIG=${${(ws: :)${(M)${(f)"$(keyctl list @u)"}##*$SIG}}[6]}
 										if [[ $KEYRING_SIG == $SIG ]] ; then
-											mount -i "$Dev" &>/dev/null
+											mount -i "$Dev" 1>/dev/null || \
+											prog_failure
 										# prüfen, ob eine verschlüsselte Passphrase
 										# (ecryptfs_wrap_passphrase file) benutzt wird.
 										elif [ -n "$SIG" ] && \
 											[ -f "${WRAP_PASSPHRASE_PATH}/${O_DIR#.}_passphrase.txt" ] ; then
-											MSG=$(gettext 'Geben Sie das Passwort für die verschlüsselte Passphrase Datei (${WRAP_PASSPHRASE_PATH}/${M_POINT}-passphrase.txt) ein. Diese Passphrase wird dem Kernel Schlüsselring hinzugefügt.')
+											MSG=$(gettext 'Geben Sie das Passwort für die verschlüsselte Passphrase Datei (${WRAP_PASSPHRASE_PATH}/${O_DIR#.}-passphrase.txt) ein. Diese Passphrase wird dem Kernel Schlüsselring hinzugefügt.')
 											inputbox "$gv_Input" "$MSG"
 											if [ -n "$gv_Auswahl" ] ; then
 												# Passphrase in den Kernel Schlüsselring aufnehmen.
@@ -421,7 +422,7 @@ while [ "$gv_Auswahl" ] ; do
 												ecryptfs-insert-wrapped-passphrase-into-keyring ${WRAP_PASSPHRASE_PATH}/${O_DIR#.}_passphrase.txt - 1>/dev/null || \
 												prog_failure
 												mount -i "$Dev" 1>/dev/null || \
-													prog_failure
+												prog_failure
 											fi
 										else
 											MSG=$(gettext 'Geben Sie die Passphrase ein. Diese wird dem Kernel Schlüsselring hinzugefügt.')
@@ -429,24 +430,24 @@ while [ "$gv_Auswahl" ] ; do
 											if [ -n "$gv_Auswahl" ] ; then
 												# Passphrase in den Kernel Schlüsselring aufnehmen.
 												printf "%s" "$gv_Auswahl" | \
-												ecryptfs-add-passphrase --fnek - || \
+												ecryptfs-add-passphrase --fnek - 1>/dev/null || \
 												prog_failure
 												mount -i "$Dev" 1>/dev/null || \
-													prog_failure
+												prog_failure
 											fi
 										fi
 									# prüfen, ob eine Passphrase Datei
 									# (passphrase_passwd_file) benutzt wird.
 									elif [ -n "$KEY" ] && [ -f "$KEY_FILE" ] ; then
 										printf "\n" | mount -t ecryptfs "$Dev" "$M_POINT" \
-											-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
-											prog_failure
+										-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
+										prog_failure
 									# prüfen, ob eine Passphrase
 									# (passphrase_passwd) benutzt wird.
 									elif [ -n "$KEY" ] && [ -n "$KEY_PASS" ] ; then
 										printf "\n" | mount -t ecryptfs "$Dev" "$M_POINT" \
-											-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
-											prog_failure
+										-o ${MOUNT_OPTIONS/key=*/$KEY} 1>/dev/null || \
+										prog_failure
 									fi
 								}
 								# sensible Variabeln löschen
