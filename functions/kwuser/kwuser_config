@@ -38,24 +38,16 @@ read_file kwuserrc
 # Datei /etc/login.defs ändern
 if [ -n "$KWUSER_UMASK" ] ; then
 	if [ -n "`print ${(M)$(< /etc/login.defs)##(#s)\#UMASK*}`" ] ; then
-		sed -e "s/^#UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs >${gv_WorkDir}/login
+		sed -i "s/^#UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs
 	else
-		sed -e "s/^UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs >${gv_WorkDir}/login
-	fi
-	if [ "`wc -l < ${gv_WorkDir}/login`" -gt 1 ] ; then
-		mv ${gv_WorkDir}/login /etc/login.defs
-		chmod 644 /etc/login.defs
+		sed -i "s/^UMASK.*/UMASK      $KWUSER_UMASK/" /etc/login.defs
 	fi
 fi
 if [ -n "$ENCRYPT_METHOD" ] ; then
 	if [ -n "`print ${(M)$(< /etc/login.defs)##(#s)\#ENCRYPT_METHOD*}`" ] ; then
-		sed -e "s/^#ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs >${gv_WorkDir}/login
+		sed -i "s/^#ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs
 	else
-		sed -e "s/^ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs >${gv_WorkDir}/login
-	fi
-	if [ "`wc -l < ${gv_WorkDir}/login`" -gt 1 ] ; then
-		mv ${gv_WorkDir}/login /etc/login.defs
-		chmod 644 /etc/login.defs
+		sed -i "s/^ENCRYPT_METHOD.*/ENCRYPT_METHOD $ENCRYPT_METHOD/" /etc/login.defs
 	fi
 fi
 }
