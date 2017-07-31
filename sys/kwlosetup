@@ -1,0 +1,603 @@
+#!/bin/zsh
+#
+# Autor: Kai Wilke <kiste@netzworkk.de> 02.02.2017
+#
+# Script: kwlosetup, verschlüsselt Partitionen oder ganze Laufwerke
+# Version: 0.1.17
+
+# Ausführen von Befehlen auf bestimmte Signale.
+# Notiz. Immer den Namen verwenden, da es auf einigen OS
+# eine andere Numerierung geben kann.
+#
+trap 'setterm --inversescreen off ; setterm --reset ;
+rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
+
+gv_ScriptName=${0##*/}
+
+#
+# Verzeichniss in denen nach Funktionen gesucht wird
+#
+if [ -f /usr/local/share/kwtools/functions/sys/script_init ] ; then
+	PREFIX=/usr/local
+else
+	PREFIX=/usr
+fi
+Script_init_Fpath="${PREFIX}/share/kwtools/functions/sys"
+export TEXTDOMAINDIR="${PREFIX}/share/locale"
+export TEXTDOMAIN="$gv_ScriptName"
+
+if [ -z ${(M)${FPATH}##*${Script_init_Fpath}*} ] ; then
+	FPATH=${Script_init_Fpath}:${FPATH}
+fi
+
+# script_init enthält die globalen Scripteinstellungen und lädt
+# diese automatisch.
+#
+autoload -U script_init
+
+# Scriptinitialisierung
+script_init
+
+# auf Programme prüfen.
+prog_check losetup loop-aes-keygen
+if [ -n "$NO_PROGS" ] ; then
+	exit 0
+fi
+
+# auf Root prüfen.
+root_check
+
+# Variablen
+lv_Container=$(gettext 'Container')
+lv_Partition=$(gettext 'Partition')
+lv_Swap=$(gettext 'Swap')
+PASSWD_TITLE=$(gettext 'GPG-Passphrase')
+PASSWD_MSG=$(gettext 'Geben Sie bitte die Passphrase für Ihre gpg Schlüsseldatei ($KEY_FILE) ein!')
+CREATE_MULTI_KEY_INFO=$(gettext 'Jetzt wird ein multi_key erstellt. Dies könnte etwas dauern.')
+
+# Wenn es eine KONFIGURATIONSRC Datei gibt einlesen.
+#
+read_file kwlosetuprc
+if [ -z "$BLOCK_SIZE" ] ; then
+	BLOCK_SIZE="1k"
+fi
+if [ -z "$COUNT_SIZE" ] ; then
+	COUNT_SIZE="10M"
+fi
+if [ -z "$ENCRYPT" ] ; then
+	ENCRYPT="AES128"
+fi
+
+# Funktion haupt_menue{{{
+MAIN_MENU=($gv_Configuration \"\" $lv_Container \"\" $lv_Partition \"\"
+$lv_Swap \"\" $gv_Exit \"\")
+haupt_menue() {
+	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
+}
+#}}}
+# Funktion, loop Module checken{{{
+loop_modules() {
+	load_module "loop cryptoloop loop_blowfish loop_serpent loop_twofish"
+}
+#}}}
+# Funktion create_multi_key_file{{{
+#
+create_multi_key_file() {
+	KEY_FILE=${KEY_FILE_PATH}/${1##*/}.gpg
+	rm -rf "$KEY_FILE" &>/dev/null
+	password "$PASSWD_TITLE" "$PASSWD_MSG" 5
+	if [ ! -z "$PASSPHRASE" ] ; then
+		msgbox "$gv_Info" "$CREATE_MULTI_KEY_INFO"
+		head -c 2880 /dev/urandom | uuencode -m - | head -n 66 \
+			| tail -n 65 | gpg --homedir ${gv_HomePath}/.gnupg --symmetric -a --passphrase-fd 3 3<<< "$PASSPHRASE" >$KEY_FILE
+	else
+		rm -rfv "$CONTAINER" &>/dev/null
+	fi
+}
+#}}}
+# Funktion no_conf_msg# {{{
+#
+no_conf_msg() {
+	MSG=$(gettext 'Sie haben nicht alle Parameter in der Konfiguration eingestellt.')
+	msgbox "$gv_Attention" "$MSG"
+}
+# }}}
+# Funktion format_info# {{{
+#
+format_info() {
+	Fstab_Value="$1"
+	format_info_MSG=$(gettext 'Sie müssen erst das Laufwerk \"$Fstab_Value\" formatieren damit Sie es ins Dateisystem einbinden können. Sie können dieses auch später manuell tätigen, aber mit diesem Script ($gv_ScriptName) ist es bequemer und der Eintrag für Ihre Dateisystem Datei (/etc/fstab) wird angezeigt.
+
+Soll die Formatierung wiederholt werden ($gv_Yes/$gv_No)?')
+
+	yesno "$gv_Info" "$format_info_MSG" "yes"
+}
+# }}}
+# Funktion fstab_info_multi# {{{
+#
+fstab_info_multi() {
+	Fstab_Value="$1"
+	fstab_info_multi_MSG=$(gettext 'Sie können jetzt die Zeichenkette \"$Fstab_Value Mountpath $FS Mountoptionen,loop=$gv_Loop_Dev,encryption=$ENCRYPT,gpgkey=$KEY_FILE 0 0\" in die Datei /etc/fstab eintragen. Die Werte für loop, Mountpath, Mountoptionen müssen Sie anpassen.')
+	msgbox "$gv_Info" "$fstab_info_multi_MSG"
+}
+# }}}
+# Funktion fstab_info# {{{
+#
+fstab_info() {
+	Fstab_Value="$1"
+	MSG=$(gettext 'Sie können jetzt die Zeichenkette \"$Fstab_Value Mountpath $FS Mountoptionen,loop=$gv_Loop_Dev,encryption=$ENCRYPT 0 0\" in die Datei /etc/fstab eintragen. Die Werte für loop, Mountpath, Mountoptionen müssen Sie anpassen.')
+	msgbox "$gv_Info" "$MSG"
+}
+# }}}
+# Funktion fstab_info_sw# {{{
+#
+fstab_info_sw() {
+	Fstab_Value="$1"
+	MSG=$(gettext 'Sie können jetzt die Zeichenkette \"$Fstab_Value none swap sw,loop=$gv_Loop_Dev,encryption=AES128 0 0\" in die Datei /etc/fstab eintragen.')
+	msgbox "$gv_Info" "$MSG"
+}
+# }}}
+# Funktion kwlosetup_20_passwd# {{{
+PASSWD_20_TITLE=$(gettext 'Passwort')
+PASSWD_20_MSG=$(gettext 'Geben Sie bitte ein mindestens 20 Zeichen langes Passwort ein!')
+kwlosetup_20_passwd() {
+	password "$PASSWD_20_TITLE" "$PASSWD_20_MSG" 20
+}
+# }}}
+# Funktion create_cont# {{{
+#
+# usage: create_cont
+create_cont() {
+	# Container unmounten
+	Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$CONTAINER}}[1]}"
+	if [ "$Ist" ] ; then
+		mount_check -u "$Ist"
+		if [ "$U_MOUNT" = yes ] ; then
+			Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$CONTAINER}}[1]}"
+			if [ "$Ist" ] ; then
+				losetup -d $Ist || prog_failure
+			fi
+			Dev=ok
+		else
+			Dev=nok
+		fi
+	else
+		Dev=ok
+	fi
+	# Suche nach freien loop Geräten
+	lo_setup
+	if [ -n "$gv_Loop_Dev" -a "$Dev" = ok ] ; then
+		if [ "$MULTI_KEY" = yes ] ; then
+			if [ -n "$KEY_FILE_PATH" ] ; then
+				# Grösse in Byte umrechnen
+				convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
+				if [ -n "$SIZE_B" ] ; then
+					dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
+				else
+					break
+				fi
+				#
+				create_multi_key_file "$CONTAINER"
+				if [ -f "$KEY_FILE" ] ; then
+					losetup -e $ENCRYPT -G ${gv_HomePath}/.gnupg -p 3 3<<< "$PASSPHRASE" -K "$KEY_FILE" $gv_Loop_Dev "$CONTAINER" || (unset -- PASSPHRASE ; prog_failure)
+					unset -- PASSPHRASE
+					# Formatieren
+					format $gv_Loop_Dev
+					# Nachricht für /etc/fstab.
+					if [ "$?" = 0 ] ; then
+						fstab_info_multi "$CONTAINER"
+					else
+						# Frage, ob nicht doch nochmal formatiert werden soll.
+						format_info "$CONTAINER"
+						while [ "$gv_Auswahl" = yes ] ; do
+							format $gv_Loop_Dev || format_info "$CONTAINER"
+							fstab_info_multi "$CONTAINER"
+							break
+						done
+					fi
+					# Loop Laufwerk ausbinden
+					losetup -d $gv_Loop_Dev || prog_failure
+				fi
+			else
+				no_conf_msg
+			fi
+		else
+			# ohne KEY_FILE erstellen
+			# Grösse in Byte umrechnen
+			convert_drive_size "${COUNT_SIZE##*[0-9]}" "${COUNT_SIZE%%[a-z,A-Z]*}"
+			if [ -n "$SIZE_B" ] ; then
+				dd if=/dev/zero of="$CONTAINER" bs=$BLOCK_SIZE count=$SIZE_B || prog_failure
+			else
+				break
+			fi
+			#
+			kwlosetup_20_passwd
+			if [ ! -z "$PASSPHRASE" ] ; then
+				losetup -e $ENCRYPT -p 3 3<<< "$PASSPHRASE" $gv_Loop_Dev "$CONTAINER" || (unset -- PASSPHRASE ; prog_failure)
+				unset -- PASSPHRASE
+				# Formatieren
+				format $gv_Loop_Dev
+				# Nachricht für /etc/fstab. fstab_info braucht die Variable CONTAINER
+				if [ "$?" = 0 ] ; then
+					fstab_info "$CONTAINER"
+				else
+					# Frage, ob nicht doch nochmal formatiert werden soll.
+					format_info "$CONTAINER"
+					while [ "$gv_Auswahl" = yes ] ; do
+						format $gv_Loop_Dev || format_info "$CONTAINER"
+						fstab_info "$CONTAINER"
+						break
+					done
+				fi
+				# Loop Laufwerk ausbinden
+				losetup -d $gv_Loop_Dev || prog_failure
+			fi
+		fi
+	fi
+}
+## }}}
+#
+#
+##################################################################
+#
+# Hauptprogramm
+#
+##################################################################
+#
+hw_conf
+fs_conf
+kernel_release
+lvm_version -q
+loop_modules
+haupt_menue
+while [ "$gv_Auswahl" ] ; do
+	case $gv_Auswahl in
+		HELP*)
+    	    # Hilfe Messagebox
+			script_help help
+			haupt_menue "${gv_Auswahl#HELP }"
+			;;
+		$gv_Configuration)
+			# Konfiguration{{{
+			lv_Blocksize=$(gettext 'Blockgrösse')
+			lv_Size=$(gettext 'Grösse')
+			lv_Multi_Key=$(gettext 'Multi_Key')
+			lv_Encryption=$(gettext 'Verschlüssellung')
+			lv_Mount=$(gettext 'Mountverz.')
+			#
+			# Funktion conf_menue{{{
+			conf_menue() {
+				CONF_MENU=($lv_Blocksize \"$BLOCK_SIZE\"
+			   	$lv_Container \"$CONTAINER\" $lv_Size \"$COUNT_SIZE\"
+			   	$lv_Multi_Key \"$MULTI_KEY\" $lv_Encryption \"$ENCRYPT\"
+			   	$lv_Mount \"$MOUNT_PATH\" $gv_Directory \"$KEY_FILE_PATH\"
+			   	$gv_Save \"\" \"$gv_Back\" \"\")
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+			}
+			#}}}
+			conf_menue
+			while [ "$gv_Auswahl" ] ; do
+				case "$gv_Auswahl" in
+					HELP*)	script_help conf_help
+						conf_menue "${gv_Auswahl#HELP }"
+						;;
+					$lv_Blocksize)
+						# Blockgrösse des Containers/Laufwerks/Partition{{{
+						BLOCK_SIZE_TITLE=($gv_Configuration}::${lv_Blocksize})
+						BLOCK_SIZE_MSG=$(gettext 'Wählen Sie eine Blockgrösse aus.')
+						BLOCK_SIZE_MENU=(512 \"\" 1k \"\" 2k \"\" 4k \"\" 8k \"\" 16k \"\" 32k \"\" 64k \"\")
+						menubox "$BLOCK_SIZE" "$BLOCK_SIZE_TITLE" "$BLOCK_SIZE_MSG" "$BLOCK_SIZE_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help block_size_help
+									menubox "${gv_Auswahl#HELP }" "$BLOCK_SIZE_TITLE" "$BLOCK_SIZE_MSG" "$BLOCK_SIZE_MENU"
+									;;
+								*)	BLOCK_SIZE="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						#}}}
+						conf_menue $lv_Blocksize
+						;;
+					$lv_Container)
+						# Containername auswählen{{{
+						dselect "${CONTAINER%/*}"
+						if [ "$VERZ" ] ; then
+							CONTAINER_TITLE=(${gv_Configuration}::${lv_Container})
+							CONTAINER_MSG=$(gettext 'Geben Sie bitten den Dateinamen des Containers ein.')
+							inputbox "$CONTAINER_TITLE" "$CONTAINER_MSG" "${CONTAINER##*/}"
+							if [ "$gv_Auswahl" -a "$VERZ" = / ] ; then
+								CONTAINER="${VERZ}${gv_Auswahl}"
+							elif [ "$gv_Auswahl" ] ; then
+								CONTAINER="${VERZ}/${gv_Auswahl}"
+							else
+								unset -- CONTAINER
+							fi
+						fi
+						#}}}
+						conf_menue $lv_Container
+						;;
+					$lv_Size)
+						# Grösse des Containers{{{
+						SIZE_TITLE=(${gv_Configuration}::${lv_Size})
+						SIZE_MSG=$(gettext 'Geben Sie hier bitte die Grösse des Containers ein. Es gehen die Grösseneinheiten [kKmMgGtTpP].')
+						number_input -D "$SIZE_TITLE" "$SIZE_MSG" "$COUNT_SIZE"
+						if [ "$NUMBER" ] ; then
+							COUNT_SIZE="$NUMBER"
+						else
+							unset -- COUNT_SIZE
+						fi
+						#}}}
+						conf_menue $lv_Size
+						;;
+					$lv_Multi_Key)
+						# Multi-Schlüssel aktivieren?{{{
+						MULTI_KEY_TITLE=(${gv_Configuration}::${lv_Multi_Key})
+						MULTI_KEY_MSG=$(gettext 'Wollen Sie Multi_Key aktivieren? Lesen Sie auch die Hilfe dazu.')
+						yesno "$MULTI_KEY_TITLE" "$MULTI_KEY_MSG" "$MULTI_KEY"
+						if [ "$gv_Auswahl" != no ] ; then
+							MULTI_KEY=yes
+						else
+							MULTI_KEY=no
+						fi
+						#}}}
+						conf_menue $lv_Multi_Key
+						;;
+					$lv_Encryption)
+						# Schlüssellänge eingeben{{{
+						ENCRYPT_TITLE=(${gv_Configuration}::${lv_Enctryption})
+						ENCRYPT_MSG=$(gettext 'Wählen Sie eine Verschlüsselungsart aus.')
+						ENCRYPT_MENU=(NONE \"\" XOR \"\" aes128 \"\" aes192 \"\"
+						aes256 \"\" twofish128 \"\" twofish160 \"\" twofish168 \"\"
+						twofish192 \"\" twofish256 \"\" blowfish128 \"\"
+						blowfish168 \"\" blowfish192 \"\" blowfish256 \"\"
+						serpent128 \"\" serpent192 \"\" serpent256 \"\")
+						menubox "$ENCRYPT" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+						while [ "$gv_Auswahl" ] ; do
+							case "$gv_Auswahl" in
+								HELP*)	script_help key_help
+									menubox "${gv_Auswahl#HELP }" "$ENCRYPT_TITLE" "$ENCRYPT_MSG" "$ENCRYPT_MENU"
+									;;
+								*)
+									ENCRYPT="$gv_Auswahl"
+									break
+									;;
+							esac
+						done
+						#}}}
+						conf_menue $lv_Encryption
+						;;
+					$lv_Mount)
+						# Auswahl des Mountverzeichnisses
+						mount_path "$MOUNT_PATH"
+						conf_menue $lv_Mount
+						;;
+					$gv_Directory)
+						# Verzeichnis in dem der Schlüssel gespeichert wird auswählen{{{
+						dselect "$KEY_FILE_PATH"
+						if [ "$VERZ" ] ; then
+							dselect_check -c "$VERZ"
+							if [ "$VERZ" ] ; then
+								# Verzeichnis auf Rechte prüfen
+								if user_device_check "$VERZ" RX ; then
+									KEY_FILE_PATH="$VERZ"
+								else
+									unset -- KEY_FILE_PATH
+								fi
+							else
+								unset -- KEY_FILE_PATH
+							fi
+						else
+							unset -- KEY_FILE_PATH
+						fi
+						#}}}
+						conf_menue $gv_Directory
+						;;
+					$gv_Save)
+						autoload -U kwlosetup_config
+						kwlosetup_config
+						break
+						;;
+					$gv_Back)	break
+						;;
+				esac
+			done
+			#}}}
+			haupt_menue $gv_Configuration
+			;;
+		$lv_Container)
+			# verschlüsselten Container erstellen{{{
+			unset -- WERT
+			#
+			if [ -n "$BLOCK_SIZE" -a -n "$COUNT_SIZE" -a -n "$ENCRYPT" -a -n "$CONTAINER" ] ; then
+				if [ -f "$CONTAINER" ] ; then
+					CONT_TITLE=($lv_Container)
+					MSG=$(gettext 'Dieser Container ($CONTAINER) existiert schon. Soll er neu erstellt werden ($gv_Yes/$gv_No)?')
+					yesno "$CONT_TITLE" "$MSG" "no"
+					if [ "$gv_Auswahl" = yes ] ; then
+						# Container erstellen
+						create_cont
+					fi
+				else
+					create_cont
+				fi
+			else
+				no_conf_msg
+			fi
+			#}}}
+			haupt_menue $lv_Container
+			;;
+		$lv_Partition)
+			# verschlüsseltes Laufwerk erstellen{{{
+			if [ -n "$ENCRYPT" ] ; then
+				# Festplatten finden
+				disk
+				# Partitionen finden.
+				partdb
+				# heraussuchen von unverschlüsselten Partitionen
+				# die in keinem btrfs RAID Array vorkommen.
+				search_devices -p
+				if [ -n "${NO_BTRFS_DEV[1]}" ] ; then
+					Parts="$NO_BTRFS_DEV_E"
+					# RAID Arrays finden und zur Auswahl stellen.
+					raid_filter -l
+					# LV's finden.
+					lv
+					if [ -n "${LV[1]}" ] ; then
+						Parts="$Parts $LV_E"
+					fi
+					if [ -n "${R_DEVS[1]}" ] ; then
+						Parts="$Parts $R_DEVS_E"
+					fi
+					# Gefundene Devices zur Auswahl anbieten.
+					part_choice "$Parts"
+					#
+					if [ -n "$WERT" ] ; then
+						Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$WERT}}[1]}"
+						if [ "$Ist" ] ; then
+							# Laufwerk wenn nötig ausbinden
+							mount_check -u "$Ist"
+							while [ "$U_MOUNT" = no ] ; do
+								part_choice "$Parts"
+								if [ -n "$WERT" ] ; then
+									Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$WERT}}[1]}"
+									if [ "$Ist" ] ; then
+										mount_check -u "$Ist"
+									fi
+								else
+									no_part_choice_msg
+									break
+								fi
+							done
+							Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$WERT}}[1]}"
+							if [ "$Ist" ] ; then
+								losetup -d $Ist || prog_failure
+							fi
+						fi
+						# Suche nach freien loop Geräten
+						lo_setup
+						if [ -n "$gv_Loop_Dev" ] ; then
+							if [ "$MULTI_KEY" = yes ] ; then
+								if [ -n "$KEY_FILE_PATH" ] ; then
+									create_multi_key_file "$WERT"
+									#
+									if [ -f "$KEY_FILE" ] ; then
+										losetup -e $ENCRYPT -G ${gv_HomePath}/.gnupg -p 3 3<<< "$PASSPHRASE" -K "$KEY_FILE" $gv_Loop_Dev "$WERT" || (unset -- PASSPHRASE ; prog_failure)
+										unset -- PASSPHRASE
+										# Formatieren
+										format $gv_Loop_Dev
+										# Nachricht für /etc/fstab. fstab_info_multi braucht
+										# die Variable WERT.
+										if [ "$?" = 0 ] ; then
+											fstab_info_multi "$WERT"
+										else
+											# Frage, ob nicht doch nochmal formatiert werden soll.
+											format_info "$WERT"
+											while [ "$gv_Auswahl" = yes ] ; do
+												format $gv_Loop_Dev || format_info "$WERT"
+												fstab_info_multi "$WERT"
+												break
+											done
+										fi
+										# Loop Laufwerk ausbinden
+										losetup -d $gv_Loop_Dev || prog_failure
+									fi
+								else
+									no_conf_msg
+								fi
+							else
+								# ohne KEY_FILE erstellen
+								kwlosetup_20_passwd
+								if [ ! -z "$PASSPHRASE" ] ; then
+									losetup -e $ENCRYPT -p 3 3<<< "$PASSPHRASE" $gv_Loop_Dev "$WERT" || (unset -- PASSPHRASE ; prog_failure)
+									unset -- PASSPHRASE
+									# Formatieren
+									format $gv_Loop_Dev
+									# Nachricht für /etc/fstab. fstab_info braucht
+									# die Variable WERT.
+									if [ "$?" = 0 ] ; then
+										fstab_info "$WERT"
+									else
+										# Frage, ob nicht doch nochmal formatiert werden soll.
+										format_info "$WERT"
+										while [ "$gv_Auswahl" = yes ] ; do
+											format $gv_Loop_Dev || format_info "$WERT"
+											fstab_info "$WERT"
+											break
+										done
+									fi
+									# Loop Laufwerk ausbinden
+									losetup -d $gv_Loop_Dev || prog_failure
+								fi
+							fi
+						fi
+					else
+						no_part_choice_msg
+					fi
+				else
+					no_part_msg
+				fi
+			else
+				no_conf_msg
+			fi
+			#}}}
+			haupt_menue $lv_Partition
+			;;
+		$lv_Swap)
+			# verschlüsselte Swap-Partitionen erstellen{{{
+			# Festplatten finden
+			disk
+			# Swap-Partitionen finden und zur Auswahl stellen.
+			partdb
+			if [ -n "$SWAP_DEV_E" ] ; then
+				part_choice "$SWAP_DEV_E"
+				if [ -n "$WERT" ] ; then
+					Ist=${(M)${(f)"$(swapon -s)"}##$WERT}
+					if [ "$Ist" ] ; then
+						swapoff $Ist
+						Ist="${${(s.:.)${(M)${(f)"$(losetup -a)"}##*$WERT}}[1]}"
+						if [ -n "$Ist" ] ; then
+							losetup -d $Ist || prog_failure
+						fi
+					fi
+					# Nachricht das das löschen länger dauern kann
+					lo_setup
+					if [ -n "$gv_Loop_Dev" ] ; then
+						MSG=$(gettext 'Das Löschen der unverschlüsselten Daten auf der Swap Partition kann, je nach Grösse, etwas dauern.')
+						msgbox "$gv_Info" "$MSG"
+						# unverschlüsselte Daten auf der Swap-Partition löschen
+						dd if=/dev/zero of="$WERT" bs=64k conv=notrunc &>/dev/null || prog_failure
+						mkswap $WERT || prog_failure
+						# Nachricht für /etc/fstab. fstab_info_sw braucht die Variable WERT
+						fstab_info_sw "$WERT"
+						swapon $WERT || prog_failure
+						# ksymoops löschen, da einige modprobe Versionen das
+						# laden von Modulen loggen. Das ist irre, da Swap meist
+						# an ist (und loop.[k]o modprobe'd vom kernel), bevor
+						# Partitionen schreibbar gemountet sind.
+						rm -rf /var/log/ksymoops &>/dev/null
+					fi
+				fi
+			else
+				MSG=$(gettext 'Es ist keine Swap Partition vorhanden. Sie müssen erst eine erstellen.')
+				msgbox "$gv_Attention" "$MSG"
+			fi
+			#}}}
+			haupt_menue $lv_Swap
+			;;
+		$gv_Exit)	break
+			;;
+	esac
+done	
+#
+# umounten des Mount-Verzeichnis
+if [ "$MOUNT_PATH" ] ; then
+	mount_check -u $MOUNT_PATH
+fi
+#
+exit 0
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
