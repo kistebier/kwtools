@@ -1,10 +1,10 @@
 #!/bin/zsh
-# Autor: Kai Wilke <kiste@netzworkk.de> 07.06.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 08.07.2017
 #
 # Script: install, installiert die kwtools Scripts und kompiliert,
 # wenn angegeben alle Funktionen.
 #
-# Version: 0.3.3
+# Version: 0.3.4
 #
 setopt shwordsplit extendedglob
 NAME=kwtools
@@ -195,7 +195,7 @@ for i in graphic multi net sys utils ; {
 # Programme der 1. Ebene installieren
 $INSTALL $INSTALL_EXEC_OPT ./{create.cal.pl,kwholiday,kwtex-cal,kwadmin,kwrsync_cron} $EXEC_PATH
 $INSTALL $INSTALL_EXEC_OPT ./{kwnetcardconf,skeleton-dialog.zsh,kwtermin*} $EXEC_PATH
-$INSTALL $INSTALL_EXEC_OPT ./{kwcryptsetup,kwlosetup,kwrsync_backup_cron} $EXEC_PATH
+$INSTALL $INSTALL_EXEC_OPT ./kwrsync_backup_cron $EXEC_PATH
 
 # Programme der System Ebene installieren
 $INSTALL $INSTALL_EXEC_OPT ./usr/sbin/*(.xN) $SBIN_PATH
@@ -219,9 +219,9 @@ $INSTALL $INSTALL_FILE_OPT ./etc/kwtools/kwrsync_backup.d/* ${DOC_PATH}/kwtools-
 $INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-net-postfix/examples
 $INSTALL $INSTALL_FILE_OPT ./etc/postfix/* ${DOC_PATH}/kwtools-net-postfix/examples
 # kwcryptsetup examples
-$INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-sys-crypt/examples
+$INSTALL $INSTALL_DIR_OPT ${DOC_PATH}/kwtools-sys-cryptsetup/examples
 $INSTALL $INSTALL_FILE_OPT ./usr/lib/kwcryptsetup/scripts/* \
-	${DOC_PATH}/kwtools-sys-crypt/examples
+	${DOC_PATH}/kwtools-sys-cryptsetup/examples
 
 # Dokumentation Links erstellen
 echo ""
@@ -231,7 +231,7 @@ echo ""
 pushd $DOC_PATH
 for i in kwtools-{bin,graphic,multi,sys,utils} \
 	kwtools-multi-{xmms2,xmms2d} kwtools-net-djbdns \
-	kwtools-sys-{btrfs,crypt,ecryptfs,fuse,grub2,kwpasswd,lvm,parted,quota,raid,rc} \
+	kwtools-sys-{btrfs,ecryptfs,fuse,grub2,kwpasswd,losetup-aes,lvm,parted,quota,raid,rc} \
 	kwtools-utils-pwsafe kwtools-utils-ssl ; do
 	if [ -d ${DOC_PATH}/${i} ] ; then
 		rm -rfv ${DOC_PATH}/${i}
@@ -285,7 +285,7 @@ sleep 2
 for P in ${EXEC_PATH}/*(N.x) ; {
 	LINK="`basename $P`"
 	case $LINK in
-		kwauth|kwnetcardconf|kwcryptsetup|kwlosetup|kwrsync_backup_cron)
+		kwauth|kwnetcardconf|kwrsync_backup_cron)
 			ln -sf $P ${SBIN_PATH}/${LINK}
 			;;
 		create.cal.pl|kw*)
