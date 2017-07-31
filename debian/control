@@ -34,11 +34,12 @@ Depends: ${misc:Depends},
  kwtools-net-postfix (>= ${source:Version}),
  kwtools-sys (>= ${source:Version}),
  kwtools-sys-btrfs (>= ${source:Version}),
- kwtools-sys-crypt (>= ${source:Version}),
+ kwtools-sys-cryptsetup (>= ${source:Version}),
  kwtools-sys-ecryptfs (>= ${source:Version}),
  kwtools-sys-fuse (>= ${source:Version}),
  kwtools-sys-grub2 (>= ${source:Version}),
  kwtools-sys-kwpasswd (>= ${source:Version}),
+ kwtools-sys-losetup-aes (>= ${source:Version}),
  kwtools-sys-lvm (>= ${source:Version}),
  kwtools-sys-parted (>= ${source:Version}),
  kwtools-sys-quota (>= ${source:Version}),
@@ -242,22 +243,19 @@ Description: Script btrfs filesystems to manage.
         and software RAID.
 Homepage: http://www.netzworkk.org
 
-Package: kwtools-sys-crypt
+Package: kwtools-sys-cryptsetup
 Section: admin
 Priority: optional
 Architecture: all
 Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), gnupg, cryptsetup (>= 1.6.4), parted (>= 3.2), zsh (>= 4.2.0)
-Suggests: kwtools-bin, kwtools-sys-ecryptfs, kwtools-sys-lvm, kwtools-sys-raid, loop-aes-utils, openssl (>= 1.1.0c), sudo
-Description: Scripts for encrypted devices
- Includes two scripts which enables management of encrypted devices.
+Suggests: kwtools-bin, openssl, sudo
+Description: Script for encrypted devices
+ Includes a script which enables management of encrypted devices.
  .
- kwcrypt: A wrapper for cryptsetup, loop-aes-utils and ecryptfs-utils.
  kwcryptsetup: A frontend for cryptsetup and dmsetup, with which one can
         encrypted discs and containers (files with file system), respectively.
         It can enlarge and reduce drives with luks extension, create gnupg
         and ssl keys and delete this.
- kwlosetup: A frontend for losetup, with which one can generate encrypted
-        discs and containers (files with file system), respectively.
 Homepage: http://www.netzworkk.org
 
 Package: kwtools-sys-ecryptfs
@@ -265,7 +263,7 @@ Section: admin
 Priority: optional
 Architecture: all
 Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), ecryptfs-utils (>= 111-4), zsh (>= 4.2.0)
-Suggests: kwtools-bin, kwtools-sys-lvm, kwtools-sys-raid, sudo
+Suggests: kwtools-bin, sudo
 Description: Script for encrypted filesystem
  Include a frontend script which enables management of encrypted filesystem.
  .
@@ -313,6 +311,19 @@ Description: Change user password.
            Only for Bash, Zsh, KDE and Gnome.
 Homepage: http://www.netzworkk.org
  
+Package: kwtools-sys-losetup-aes
+Section: admin
+Priority: optional
+Architecture: all
+Depends: ${misc:Depends}, kwtools-common (>= ${source:Version}), loop-aes-utils, parted (>= 3.2), zsh (>= 4.2.0)
+Suggests: kwtools-bin, sudo
+Description: Script for encrypted devices
+ Includes a script which enables management of loop-AES encrypted devices.
+ .
+ kwlosetup: A frontend for losetup, with which one can generate encrypted
+        discs and containers (files with file system), respectively.
+Homepage: http://www.netzworkk.org
+
 Package: kwtools-sys-lvm
 Section: admin
 Priority: optional
