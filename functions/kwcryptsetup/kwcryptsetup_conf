@@ -41,11 +41,11 @@ kwcryptsetup_conf() {
 	lv_Tries=$(gettext 'Wiederholungen')
 	lv_Verify=$(gettext 'Passwort überprüfen')
 	lv_Loud=$(gettext 'gesprächig')
+	HASH="${HASH:-sha512}"
 	## }}}
 	# Funktion conf_menu# {{{
 	conf_menu() {
 		unset -- KONF
-		HASH="${HASH:-sha512}"
 		KEY_SIZE="${KEY_SIZE:-256}"
 		TRIES="${TRIES:-3}"
 		#
@@ -232,7 +232,12 @@ kwcryptsetup_conf() {
 							;;
 						*)
 							# Auswahl übernehmen
-							HASH="$gv_Auswahl"
+							if [[ $MAKESWAP == yes  ]] ; then
+								MSG=$(gettext 'Wenn ein verschlüsseltes Swap-Laufwerk erstellt werden soll wird kein Hashwert unterstützt. Deaktivieren Sie den Menüpunkkt ${lv_Swap}.')
+								msgbox "$gv_Info" "$MSG"
+							else
+								HASH="$gv_Auswahl"
+							fi
 							break
 							;;
 					esac
@@ -500,6 +505,7 @@ kwcryptsetup_conf() {
 				if [ "$gv_Auswahl" = yes ] ; then
 					MAKESWAP=yes
 					USELUKS=no
+					unset -- HASH
 				else
 					MAKESWAP=no
 				fi
