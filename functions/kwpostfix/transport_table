@@ -108,26 +108,24 @@ transport_table() {
 						if [ "$AENDERN_ADR" ] ; then
 							if [ "$TRANS" != error ] ; then
 								if [ "$PORT" ] ; then
-									sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${HOST}:${PORT}#" $FILE >$FILE$$
+									sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${HOST}:${PORT}#" $FILE
 								else
-									sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${HOST}#" $FILE >$FILE$$
+									sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${HOST}#" $FILE
 								fi
 							else
-								sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${TEXT}#" $FILE >$FILE$$
+								sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1// /.*}.*#${ADR}\t${TRANS}:${TEXT}#" $FILE
 							fi
-							mv $FILE$$ $FILE
 						else
-							grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+							sed -i "/^${ADR}[[:space:]]/d" $FILE
 							if [ "$TRANS" != error ] ; then
 								if [ "$PORT" ] ; then
-									>> $FILE$$ <<< "$ADR	${TRANS}:${HOST}:${PORT}"
+									>> $FILE <<< "$ADR	${TRANS}:${HOST}:${PORT}"
 								else
-									>> $FILE$$ <<< "$ADR	${TRANS}:${HOST}"
+									>> $FILE <<< "$ADR	${TRANS}:${HOST}"
 								fi
 							else
-								>> $FILE$$ <<< "$ADR	${TRANS}:${TEXT}"
+								>> $FILE <<< "$ADR	${TRANS}:${TEXT}"
 							fi
-							mv $FILE$$ $FILE
 						fi
 						break
 					else

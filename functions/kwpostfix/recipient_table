@@ -43,12 +43,10 @@ recipient_table() {
 				# lookup Tabellen.
 				if [ "$ADR" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
-						sed -e "s#^${AENDERN_ADR}.*#${ADR}\t:#" $FILE >$FILE$$
-						mv $FILE$$ $FILE
+						sed -i "s#^${AENDERN_ADR}.*#${ADR}\t:#" $FILE
 					else
-						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
-						>> $FILE$$ <<< "$ADR	:"
-						mv $FILE$$ $FILE
+						sed -i "/^${ADR}[[:space:]]/d" $FILE
+						>> $FILE <<< "$ADR	:"
 					fi
 					break
 				else

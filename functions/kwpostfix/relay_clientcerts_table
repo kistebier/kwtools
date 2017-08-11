@@ -53,12 +53,10 @@ relay_clientcerts_table() {
 				# Einstellungen speichern{{{
 				if [ -n "$FINGERPRINT" -a -n "$USER_HOST" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
-						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${FINGERPRINT}\t${USER_HOST}#" $FILE >$FILE$$
-						mv $FILE$$ $FILE
+						sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${FINGERPRINT}\t${USER_HOST}#" $FILE
 					else
-						grep -v "^${FINGERPRINT}[[:space:]]" $FILE >$FILE$$
-						>> $FILE$$ <<< "$FINGERPRINT	$USER_HOST"
-						mv $FILE$$ $FILE
+						sed -i "/^${FINGERPRINT}[[:space:]]/d" $FILE
+						>> $FILE <<< "$FINGERPRINT	$USER_HOST"
 					fi
 					break
 				else

@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2017
 #
 # Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
 # zu managen.
 #
-# Version: 0.0.7
+# Version: 0.0.8
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -456,8 +456,7 @@ while [ "$gv_Auswahl" ] ; do
 				# in einer evtl. Datei listsongs
 				change_default() {
 					if [ -f ${gv_WorkDir}/listsongs ] ; then
-						sed -e "s#^default.## ; s#.*$CURRENT_SONG#default $CURRENT_SONG#" ${gv_WorkDir}/listsongs > ${gv_WorkDir}/listsongs_new
-						mv ${gv_WorkDir}/listsongs_new ${gv_WorkDir}/listsongs
+						sed -i "s#^default.## ; s#.*$CURRENT_SONG#default $CURRENT_SONG#" ${gv_WorkDir}/listsongs
 					fi
 				}
 				## }}}

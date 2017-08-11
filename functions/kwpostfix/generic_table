@@ -41,12 +41,10 @@ generic_table() {
 					# Einstellungen speichern{{{
 					if [ "$ADR" -a "$E_ADR" ] ; then
 						if [ -n "$AENDERN_ADR" -a -n "$AENDERN_ADR1" ] ; then
-							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE >$FILE$$
-							mv $FILE$$ $FILE
+							sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE
 						else
-							grep -v "^${ADR}[[:space:]]${E_ADR}" $FILE >$FILE$$
-							>> $FILE$$ <<< "$ADR	$E_ADR"
-							mv $FILE$$ $FILE
+							sed -i "/^${ADR}[[:space:]]${E_ADR}/d" $FILE
+							>> $FILE <<< "$ADR	$E_ADR"
 						fi
 						break
 					else

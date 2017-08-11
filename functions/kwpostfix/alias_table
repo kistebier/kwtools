@@ -71,12 +71,10 @@ alias_table() {
 				# Einstellungen speichern{{{
 				if [ -n "$ADR" -a -n "$EXT_ADR" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
-						sed -e "s#^${AENDERN_ADR}:[[:space:]]${AENDERN_ADR1}#${ADR}:\t${EXT_ADR}#" $FILE >$FILE$$
-						mv $FILE$$ $FILE
+						sed -i "s#^${AENDERN_ADR}:[[:space:]]${AENDERN_ADR1}#${ADR}:\t${EXT_ADR}#" $FILE
 					else
-						grep -v "^${ADR}:" $FILE >$FILE$$
-						>> $FILE$$ <<< "${ADR}: $EXT_ADR"
-						mv $FILE$$ $FILE
+						sed -i "/^${ADR}:/d" $FILE
+						>> $FILE <<< "${ADR}: $EXT_ADR"
 					fi
 					break
 				else

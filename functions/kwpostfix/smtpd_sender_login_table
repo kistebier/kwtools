@@ -51,12 +51,10 @@ smtpd_sender_login_table() {
 				# Einstellungen speichern{{{
 				if [ "$ADR" -a "$LOCAL_USER" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
-						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${LOCAL_USER}#" $FILE >$FILE$$
-						mv $FILE$$ $FILE
+						sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${LOCAL_USER}#" $FILE
 					else
-						grep -v "^${ADR}" $FILE >$FILE$$
-						>> $FILE$$ <<< "$ADR	$LOCAL_USER"
-						mv $FILE$$ $FILE
+						sed -i "/^${ADR}/d" $FILE
+						>> $FILE <<< "$ADR	$LOCAL_USER"
 					fi
 					break
 				else

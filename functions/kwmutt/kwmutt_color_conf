@@ -84,16 +84,12 @@ kwmutt_color_conf() {
 				$M_COLOR_HDR_AGENTS \
 				$M_COLOR_INDEX \
 				$M_COLOR_INDEX_SPAM ; {
-				sed -e "s#\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\|brightblack\|brightblue\|brightcyan\|brightgreen\|brightmagenta\|brightred\|brightwhite\|brightyellow\)[[:space:]]*\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\)#$FG $BG#" $i >${i}.bak &>/dev/null
-				# Datei zurück verschieben.
-				mv ${i}.bak $i &>/dev/null
+				sed -i "s#\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\|brightblack\|brightblue\|brightcyan\|brightgreen\|brightmagenta\|brightred\|brightwhite\|brightyellow\)[[:space:]]*\(black\|blue\|cyan\| default\|green\|magenta\|red\|white\|yellow\)#$FG $BG#" $i &>/dev/null
 			}
 			# ausgewählte Nachricht inverse monochrome Darstellung
-			sed -e "s#color[[:space:]]*indicator[[:space:]]*${FG}.*${BG}*#color indicator $BG $FG# ; 
+			sed -i "s#color[[:space:]]*indicator[[:space:]]*${FG}.*${BG}*#color indicator $BG $FG# ; 
 				s#color[[:space:]]*status[[:space:]]*${FG}.*${BG}*#color status $BG $FG#" \
-				"$M_COLORS" > ${M_COLORS}.bak &>/dev/null
-			# Datei zurück verschieben.
-			mv "${M_COLORS}.bak" "$M_COLORS" &>/dev/null
+				"$M_COLORS"&>/dev/null
 			# alle Farben neu einlesen.
 			default_color_read
 		else
@@ -763,18 +759,16 @@ kwmutt_color_conf() {
 						case "$Opt" in
 							abc_net)
 								# ABC-Netz Einträge einfärben.# {{{
-								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
+								sed -i "s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"10.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
 								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*172.\[0-9\]{1,2}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"172.\[0-9\]{1,2}.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
 								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*192.168.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"192.168.\[0-9\]{1,3}.\[0-9\]{1,3}\"# ; \
 								s#color[[:space:]]*body[[:space:]]*${Value_Old}*[[:space:]].*127.\[0-9\]{1,3}.\[0-9\]{1,3}.\[0-9\]{1,3}.#color body $Type_Color $Bg_Color \"127.\[0-9\]{1,3}.\[1-9\]{1,3}.\[1-9\]{1,3}\"#" \
-								"$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								"$File" 2>&1
 								## }}}
 								;;
 							abook)
 								# Adressbuch Einträge einfärben.# {{{
-								sed -e "s#$Value_Old#$Type_Color $Bg_Color#g" "$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#$Value_Old#$Type_Color $Bg_Color#g" "$File" 2>&1
 								## }}}
 								;;
 							important_words)
@@ -786,34 +780,29 @@ kwmutt_color_conf() {
 								;;
 							link)
 								# Internet links einfärben.# {{{
-								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*http.*#color body $Type_Color $Bg_Color \"(finger|ftp|hkp|http|https|telnet)://[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!]\)?/?\"#g ; s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*www.*#color body $Type_Color $Bg_Color \"www\\\\\\\\.[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!])?/?\"#g" "$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*http.*#color body $Type_Color $Bg_Color \"(finger|ftp|hkp|http|https|telnet)://[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!]\)?/?\"#g ; s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*www.*#color body $Type_Color $Bg_Color \"www\\\\\\\\.[-a-z0-9_.:]*[a-z0-9](/[^][{} \\\t\\\n\\\r\\\"<>\(\)]*[^][{} \\\t\\\n\\\r\\\"<>\(\).,:\!])?/?\"#g" "$File" 2>&1
 								## }}}
 								;;
 							mail)
 								# Mail Adressen einfärben.# {{{
-								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*\[-a-z_0-9.+\]+@\[-a-z_0-9.\].*#color body $Type_Color $Bg_Color \"[-a-z_0-9.+]+@[-a-z_0-9.]+\"#g" "$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*\[-a-z_0-9.+\]+@\[-a-z_0-9.\].*#color body $Type_Color $Bg_Color \"[-a-z_0-9.+]+@[-a-z_0-9.]+\"#g" "$File" 2>&1
 								## }}}
 								;;
 							mailbegin)
 								# Mail Adressen Einleitung einfärben.# {{{
-								sed -e "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*mailto.*#color body $Type_Color $Bg_Color \"(file|E-Mail[-A-Za-z]+|mailto|news):*\"#g" "$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*body[[:space:]]*${Value_Old}[[:space:]].*mailto.*#color body $Type_Color $Bg_Color \"(file|E-Mail[-A-Za-z]+|mailto|news):*\"#g" "$File" 2>&1
 								## }}}
 								;;
 							attachment|bold|hdrdefault|indicator|markers|message)
 								# allgemeine Farben einstellen# {{{
-								sed -e "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
-								"$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
+								"$File" 2>&1
 								## }}}
 								;;
 							normal|search|sidebar_new|signature|status|tilde|tree|underline)
 								# allgemeine Farben einstellen# {{{
-								sed -e "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
-								"$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*${Opt}[[:space:]]*${Value_Old}*#color $Opt $Type_Color $Bg_Color#" \
+								"$File" 2>&1
 								## }}}
 								;;
 							quoted*)
@@ -822,54 +811,47 @@ kwmutt_color_conf() {
 								case "$Nr" in
 									1)
 										Q_Nr=6
-										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										sed -i "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
 										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
-										"$File" > $gv_LogFile 2>&1
-										mv "$gv_LogFile" "$File" 2>&1
+										"$File" 2>&1
 										;;
 									2)
 										Q_Nr=7
-										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										sed -i "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
 										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
-										"$File" > $gv_LogFile 2>&1
-										mv "$gv_LogFile" "$File" 2>&1
+										"$File" 2>&1
 										;;
 									3)
 										Q_Nr=8
-										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										sed -i "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
 										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
-										"$File" > $gv_LogFile 2>&1
-										mv "$gv_LogFile" "$File" 2>&1
+										"$File" 2>&1
 										;;
 									4)
 										Q_Nr=9
-										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										sed -i "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
 										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
-										"$File" > $gv_LogFile 2>&1
-										mv "$gv_LogFile" "$File" 2>&1
+										"$File" 2>&1
 										;;
 									*)
 										Q_Nr=5
-										sed -e "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
+										sed -i "s#color[[:space:]]*quoted${Nr}[[:space:]]*${Value_Old}*#color quoted${Nr} $Type_Color $Bg_Color#g ; \
 										s#color[[:space:]]*quoted${Q_Nr}[[:space:]]*${Value_Old}*#color quoted${Q_Nr} $Type_Color $Bg_Color#g" \
-										"$File" > $gv_LogFile 2>&1
-										mv "$gv_LogFile" "$File" 2>&1
+										"$File" 2>&1
 										;;
 								esac
 								## }}}
 								;;
 							\~[DFGgNOQT])
 								# Index Farben einstellen# {{{
-								sed -e "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*${Opt}#color index $Type_Color $Bg_Color $Opt#" \
-								"$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*${Opt}#color index $Type_Color $Bg_Color $Opt#" \
+								"$File" 2>&1
 								## }}}
 								;;
 							'NO~C')
 								# Index Farben für keine richtige mailadresse einstellen# {{{
-								sed -e "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*\"! ~C \.\"#color index $Type_Color $Bg_Color \"! ~C .\"#" \
-								"$File" > $gv_LogFile 2>&1
-								mv "$gv_LogFile" "$File" 2>&1
+								sed -i "s#color[[:space:]]*index[[:space:]]*${Value_Old}*[[:space:]]*\"! ~C \.\"#color index $Type_Color $Bg_Color \"! ~C .\"#" \
+								"$File" 2>&1
 								## }}}
 								;;
 						esac

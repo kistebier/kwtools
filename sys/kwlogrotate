@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2017
 #
 # Script: kwlogrotate, zur Verwaltung der Logdateien
-# Version: 0.3.2
+# Version: 0.3.3
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -238,8 +238,7 @@ $gv_Back \"\""
 						inputbox "$CREATE_TITLE" "$CREATE_MSG"
 						if [ "$gv_Auswahl" ] ; then
 							NAME="${VERZ}/${gv_Auswahl}"
-							sed -e "s#^${Name}${MP_ANZ}.*#${Name}${MP_ANZ} \"$NAME\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-							mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+							sed -i "s#^${Name}${MP_ANZ}.*#${Name}${MP_ANZ} \"$NAME\"#" $LOGFILE_MENUE
 						else
 							no_input_msg
 						fi
@@ -313,12 +312,10 @@ $gv_Back \"\""
 					number_input "$COUNT_TITLE" "$COUNT_MSG" "${ANZAHL[MP_ANZ]}"
 					#
 					if [ "$NUMBER" ] ; then
-						sed -e "s#^${Count}${MP_ANZ}.*#${Count}${MP_ANZ} \"$NUMBER\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Count}${MP_ANZ}.*#${Count}${MP_ANZ} \"$NUMBER\"#" $LOGFILE_MENUE
 						ANZAHL[MP_ANZ]="$NUMBER"
 					else
-						sed -e "s#^${Count}${MP_ANZ}.*#${Count}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Count}${MP_ANZ}.*#${Count}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						ANZAHL[MP_ANZ]=""
 					fi
 				else
@@ -354,16 +351,14 @@ $gv_Back \"\""
 								*)	#
 									# Rotate vormerken
 									#
-									sed -e "s#^${Rotatetime}${MP_ANZ}.*#${Rotatetime}${MP_ANZ} \"${gv_Auswahl}\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-									mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+									sed -i "s#^${Rotatetime}${MP_ANZ}.*#${Rotatetime}${MP_ANZ} \"${gv_Auswahl}\"#" $LOGFILE_MENUE
 									ROTATE[MP_ANZ]="$gv_Auswahl"
 									break
 									;;
 							esac
 						done
 					else
-						sed -e "s#^${Rotatetime}${MP_ANZ}.*#${Rotatetime}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Rotatetime}${MP_ANZ}.*#${Rotatetime}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						ROTATE[MP_ANZ]=""
 					fi
 				else
@@ -380,12 +375,10 @@ $gv_Back \"\""
 					MP_ANZ=${gv_Auswahl##*[a-z,A-Z]}
 					mail_address
 					if [ "$MAILADR" ] ; then
-						sed -e "s#^${Mail}${MP_ANZ}.*#${Mail}${MP_ANZ} \"${MAILADR}\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Mail}${MP_ANZ}.*#${Mail}${MP_ANZ} \"${MAILADR}\"#" $LOGFILE_MENUE
 						U_MAIL[MP_ANZ]="$MAILADR"
 					else
-						sed -e "s#^${Mail}${MP_ANZ}.*#${Mail}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Mail}${MP_ANZ}.*#${Mail}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						U_MAIL[MP_ANZ]=""
 					fi
 				else
@@ -414,16 +407,14 @@ $gv_Back \"\""
 								*)	#
 									# Grösse annehmen
 									#
-									sed -e "s#^${Size}${MP_ANZ}.*#${Size}${MP_ANZ} \"$gv_Auswahl\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-									mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+									sed -i "s#^${Size}${MP_ANZ}.*#${Size}${MP_ANZ} \"$gv_Auswahl\"#" $LOGFILE_MENUE
 									SIZE[MP_ANZ]=$gv_Auswahl
 									break
 									;;
 							esac
 						done
 					else
-						sed -e "s#^${Size}${MP_ANZ}.*#${Size}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Size}${MP_ANZ}.*#${Size}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						SIZE[MP_ANZ]=""
 					fi
 				else
@@ -442,13 +433,11 @@ $gv_Back \"\""
 					if [ "$COMPRESS" ] ; then
 						COMPRESSART[MP_ANZ]="$COMPRESS"
 						UNCOMPRESSART[MP_ANZ]="$UNCOMPRESS"
-						sed -e "s#^${Compress}${MP_ANZ}.*#${Compress}${MP_ANZ} \"$COMPRESS\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Compress}${MP_ANZ}.*#${Compress}${MP_ANZ} \"$COMPRESS\"#" $LOGFILE_MENUE
 					else
 						COMPRESSART[MP_ANZ]=""
 						UNCOMPRESSART[MP_ANZ]=""
-						sed -e "s#^${Compress}${MP_ANZ}.*#${Compress}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Compress}${MP_ANZ}.*#${Compress}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 					fi
 				else
 					no_logfile_select_msg
@@ -468,11 +457,9 @@ $gv_Back \"\""
 					file_chmod
 					if [ "$CHMOD" ] ; then
 						CREATE[MP_ANZ]="$CHMOD"
-						sed -e "s#^${Access}${MP_ANZ}.*#${Access}${MP_ANZ} \"$CHMOD\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Access}${MP_ANZ}.*#${Access}${MP_ANZ} \"$CHMOD\"#" $LOGFILE_MENUE
 					else
-						sed -e "s#^${Access}${MP_ANZ}.*#${Access}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Access}${MP_ANZ}.*#${Access}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						CREATE[MP_ANZ]=""
 					fi
 				else
@@ -494,12 +481,10 @@ $gv_Back \"\""
 					inputbox "$SCRIPT_TITLE" "$SCRIPT_MSG" "${SCRIPT[MP_ANZ]}"
 					#
 					if [ "$gv_Auswahl" ] ; then
-						sed -e "s#^${Script}${MP_ANZ}.*#${Script}${MP_ANZ} \"$gv_Auswahl\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Script}${MP_ANZ}.*#${Script}${MP_ANZ} \"$gv_Auswahl\"#" $LOGFILE_MENUE
 						SCRIPT[MP_ANZ]="$gv_Auswahl"
 					else
-						sed -e "s#^${Script}${MP_ANZ}.*#${Script}${MP_ANZ} \"\"#" $LOGFILE_MENUE >$LOGFILE_MENUE$$
-						mv $LOGFILE_MENUE$$ $LOGFILE_MENUE
+						sed -i "s#^${Script}${MP_ANZ}.*#${Script}${MP_ANZ} \"\"#" $LOGFILE_MENUE
 						SCRIPT[MP_ANZ]=""
 					fi
 				else

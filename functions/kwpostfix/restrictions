@@ -307,13 +307,10 @@ restrictions() {
 				#
 				tab_support_choice "$a"
 				if [[ -n $MAPS ]] ; then
-					sed -e "s#^${a}.*#${a} $MAPS#" ${gv_WorkDir}/restrictions \
-						> ${gv_WorkDir}/restrictions$$
+					sed -i "s#^${a}.*#${a} $MAPS#" ${gv_WorkDir}/restrictions
 				else
-					print -l ${(R)${(f)"$(< ${gv_WorkDir}/restrictions)"}#${a} *} \
-						> ${gv_WorkDir}/restrictions$$
+					sed -i "/^${a}[[:space:]]/d" ${gv_WorkDir}/restrictions
 				fi
-				mv ${gv_WorkDir}/restrictions$$ ${gv_WorkDir}/restrictions
 				## }}}
 				;;
 			check_policy_service)

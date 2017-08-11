@@ -68,14 +68,12 @@ timeserver_conf() {
 							>> "$NTPDATE_FILE" <<< "$i"
 						}
 						# ntpdate Optionen einstellen
-						sed -e "s#NTPDATE_OPTIONS=.*#NTPDATE_OPTIONS=$NTPOPTIONS#" "$NTPDATE_OPTION_FILE" >${gv_WorkDir}/ntpdate 2>/dev/null && \
-						mv ${gv_WorkDir}/ntpdate "$NTPDATE_OPTION_FILE"
+						sed -i "s#NTPDATE_OPTIONS=.*#NTPDATE_OPTIONS=$NTPOPTIONS#" "$NTPDATE_OPTION_FILE" 2>/dev/null
 						;;
 					*)	# Debian, ab ntpdate 4.2.2
 						if [ -f "$NTPDATE_FILE" -a "`grep -q NTPSERVERS $NTPDATE_FILE`" ] ; then
-							sed -e "s#NTPSERVERS=.*#NTPSERVERS=\"$NTPSERVERS\"# ;
-								s#NTPOPTIONS=.*#NTPOPTIONS=\"$NTPOPTIONS\"#" "$NTPDATE_FILE" >"$NTPDATE_FILE$$" 2>/dev/null && \
-							mv "$NTPDATE_FILE$$" "$NTPDATE_FILE"
+							sed -i "s#NTPSERVERS=.*#NTPSERVERS=\"$NTPSERVERS\"# ;
+								s#NTPOPTIONS=.*#NTPOPTIONS=\"$NTPOPTIONS\"#" "$NTPDATE_FILE"2>/dev/null
 						else
 							> "$NTPDATE_FILE" <<< "# The settings in this file are used by the program ntpdate-debian, but not
 # by the upstream program ntpdate.

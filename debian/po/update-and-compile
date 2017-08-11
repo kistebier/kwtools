@@ -3,7 +3,7 @@
 # nur fuer das erstellen der Programm-Pakete geeignet,
 # nicht fuer den Source-Code.
 #
-# Last-Modified: Sat Nov 27 18:33:32 2016
+# Last-Modified: Fri Aug 11 00:27:32 2017
 
 setopt shwordsplit extendedglob
 setopt no_nomatch
@@ -100,8 +100,7 @@ for i in $SED_FUNC_PATH ; {
 	for files in * ; {
 		if [ -z "`grep 'gettext -d kwtools-common' $files`" ] ; then
 			if [ -n "`grep \(gettext $files`" ] ; then
-				sed -e 's#(gettext#(gettext -d kwtools-common#' $files >${files}.bak
-				mv ${files}.bak $files
+				sed -i 's#(gettext#(gettext -d kwtools-common#' $files
 			fi
 		fi
 	}

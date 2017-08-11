@@ -39,12 +39,10 @@ relocated_table() {
 				# Einträge speichern{{{
 				if [ "$ADR" -a "$E_ADR" ] ; then
 					if [ "$AENDERN_ADR" ] ; then
-						sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE >$FILE$$
-						mv $FILE$$ $FILE
+						sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${E_ADR}#" $FILE
 					else
-						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
-						>> $FILE$$ <<< "$ADR	$E_ADR"
-						mv $FILE$$ $FILE
+						sed -i "/^${ADR}[[:space:]]/d" $FILE
+						>> $FILE <<< "$ADR	$E_ADR"
 					fi
 					break
 				else

@@ -97,19 +97,17 @@ tls_per_site_table() {
 				if [ "$ADR" -a "$KEYWORD" ] ; then
 					if [ -n "$AENDERN_ADR" ] ; then
 						if [ -n "$PORT" ] ; then
-							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}:${PORT}\t${KEYWORD}#" $FILE >$FILE$$
+							sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}:${PORT}\t${KEYWORD}#" $FILE
 						else
-							sed -e "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${KEYWORD}#" $FILE >$FILE$$
+							sed -i "s#^${AENDERN_ADR}[[:space:]]${AENDERN_ADR1}#${ADR}\t${KEYWORD}#" $FILE
 						fi
-						mv $FILE$$ $FILE
 					else
-						grep -v "^${ADR}[[:space:]]" $FILE >$FILE$$
+						sed -i "/^${ADR}[[:space:]]/d" $FILE
 						if [ -n "$PORT" ] ; then
-							>> $FILE$$ <<< "${ADR}:${PORT}	$KEYWORD"
+							>> $FILE <<< "${ADR}:${PORT}	$KEYWORD"
 						else
-							>> $FILE$$ <<< "$ADR	$KEYWORD"
+							>> $FILE <<< "$ADR	$KEYWORD"
 						fi
-						mv $FILE$$ $FILE
 					fi
 					break
 				else
