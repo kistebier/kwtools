@@ -7,6 +7,24 @@ kwxmms2d_config() {
 	if [ -n "$XMMS_SERVER_PATH" ] ; then
 		sed -i "s#ipcsocket.*#ipcsocket\">${XMMS_SERVER_PATH}<\/property>#" "$CONFFILE"
 	fi
+	# kwtools Server Konfiguration schreiben.
+	#
+	> ${gv_HomePath}/.kwtools/kwxmms2drc <<< "# Beginn ~/.kwtools/kwxmms2drc
+#
+# Autor: Kai Wilke <kiste@netzworkk.de>
+
+# mit oder ohne Logdatei starten (yes/no)
+WITHLOGFILE=\"$WITHLOGFILE\"
+
+# Logdatei, Standard ist .cache/xmms2/xmms2d.log
+LOGFILE=\"$LOGFILE\"
+
+# mit oder ohne Rootrechte starten (yes/no)
+ROOT=\"$ROOT\"
+
+# End ~/.kwtools/kwxmms2drc"
+
+	read_file kwxmms2drc
 }
 #}}}
 ### Modeline {{{

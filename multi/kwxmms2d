@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 07.07.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 12.08.2017
 #
 # Script: kwxmms2d, ein Script um den xmms2d Dämon
 # zu managen.
 #
-# Version: 0.0.6
+# Version: 0.0.7
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -53,7 +53,27 @@ if [ ! -f "$CONFFILE" ] ; then
 	kill `pidof xmms2d`
 fi
 
+# Kwtools kwxmms2drc Konfiguration einlesen
+read_file kwxmms2drc
 
+# Funktion (read_prog_opt)# {{{
+#
+read_prog_opt() {
+	unset -- PROG_OPT
+	if [[ "$WITHLOGFILE" == yes ]] ; then
+		PROG_OPT="-v"
+	else
+		PROG_OPT="-q"
+	fi
+	if [[ -n "$LOGFILE" ]] ; then
+		PROG_OPT="$PROG_OPT -l $LOGFILE"
+	fi
+	if [[ "$ROOT" == yes ]] ; then
+		PROG_OPT="$PROG_OPT --yes-run-as-root"
+	fi
+	PROG_OPT="$PROG_OPT -c ~/.config/xmms2/xmms2.conf"
+}
+## }}}
 # Funktion main_menu{{{
 #
 main_menu() {
@@ -88,10 +108,10 @@ while [ "$gv_Auswahl" ] ; do
 			# lokalen Server starten# {{{
 			ps uxU $USER | grep xmms2d | egrep -v 'grep|kwxmms2d' >${gv_WorkDir}/ps
 			if [ "`wc -l < ${gv_WorkDir}/ps`" = 0 ] ; then
-				PROG_OPT=" -q -c ~/.config/xmms2/xmms2.conf"
+				read_prog_opt
 				eval xmms2-launcher "${=PROG_OPT}" 1>/dev/null || prog_failure
 			else
-				MSG=$(gettext 'Es läuft schon ein XMMS Server.')
+				MSG=$(gettext 'Es läuft schon ein XMMS2 Server.')
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}

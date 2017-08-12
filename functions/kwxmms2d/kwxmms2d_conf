@@ -2,17 +2,24 @@
 #
 # usage: kwxmms2d_conf
 kwxmms2d_conf() {
-	# Funktion (kwxmms2_conf_menu)# {{{
+	# Variabeln# {{{
 	lv_Xmms_Server=$(gettext 'Server')
+	lv_Logfile=$(gettext 'Logdatei')
+	lv_With_Logfile=$(gettext 'Logdatei verwenden')
+	lv_Root=$(gettext 'Root')
+	LOGFILE="${LOGFILE:-.cache/xmms2/xmms2d.log}"
+	## }}}
+	# Funktion (kwxmms2_conf_menu)# {{{
 	kwxmms2d_conf_menu() {
-		CONF_MENU=($lv_Xmms_Server \"$XMMS_SERVER_PATH\"
-		$gv_Save \"\" $gv_Back \"\")
+		CONF_MENU=(\"$lv_Xmms_Server\" \"$XMMS_SERVER_PATH\"
+		\"$lv_With_Logfile\" \"$WITHLOGFILE\" \"$lv_Logfile\" \"$LOGFILE\"
+	   \"$lv_Root\" \"$ROOT\" $gv_Save \"\" $gv_Back \"\")
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
 	## }}}
 	# Funktionen (restart_server_msg), Nachricht das man den Server neu starten soll# {{{
 	restart_server_msg() {
-		MSG=$(gettext 'Falls Sie die Adresse des Servers geändert haben sollten Sie ihn neu starten.')
+		MSG=$(gettext 'Falls Sie die Konfiguration des Servers geändert haben sollten Sie ihn neu starten.')
 		msgbox "$gv_Info" "$MSG"
 	}
 	## }}}
@@ -46,6 +53,42 @@ kwxmms2d_conf() {
 				fi
 				## }}}
 				kwxmms2d_conf_menu $lv_Xmms_Server
+				;;
+			$lv_With_Logfile)
+				# Frage, ob mit oder ohne Logdatei gestartet werden soll.# {{{
+				WITH_LOGFILE_MSG=$(gettext 'Soll die Ausgabe des Servers in eine Logdatei geschrieben werden (${gv_Yes}/${gv_No}?)')
+				yesno "$gv_Configuration" "$WITH_LOGFILE_MSG" ${WITHLOGFILE:-yes}
+				if [[ $gv_Auswahl == yes ]] ; then
+					WITHLOGFILE=yes
+				else
+					WITHLOGFILE=no
+				fi
+				## }}}
+				kwxmms2d_conf_menu $lv_With_Logfile
+				;;
+			$lv_Logfile)
+				# Auswahl einer Logdatei.# {{{
+				FORMAT="ASCII"
+				file_choice "$LOGFILE:h" create "$LOGFILE"
+				if [[ -f $WERT  ]] ; then
+					LOGFILE="$WERT"
+				else
+					LOGFILE=".cache/xmms2/xmms2d.log"
+				fi
+				## }}}
+				kwxmms2d_conf_menu $lv_Logfile
+				;;
+			$lv_Root)
+				# Frage, ob mit Rootrechten oder normal gestartet werden soll.# {{{
+				ROOT_MSG=$(gettext 'Soll der Servers mit Rootrechten gestartet werden (${gv_Yes}/${gv_No}?)')
+				yesno "$gv_Configuration" "$ROOT_MSG" ${ROOT:-no}
+				if [[ $gv_Auswahl == yes ]] ; then
+					ROOT=yes
+				else
+					ROOT=no
+				fi
+				## }}}
+				kwxmms2d_conf_menu $lv_Root
 				;;
 			$gv_Save)
 				# speichern
