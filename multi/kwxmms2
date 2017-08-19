@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 19.08.2017
 #
 # Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
 # zu managen.
@@ -36,8 +36,8 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Prüfen ob nyxmms2 installiert ist.
-prog_check nyxmms2 xmms2
+# Prüfen ob xmms2 installiert ist.
+prog_check xmms2
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
 fi
@@ -47,6 +47,7 @@ lv_Server_Plugins=$(gettext 'Plugins')
 lv_Playlist=$(gettext 'Playliste')
 lv_Playlists=$(gettext 'Playlisten')
 lv_Player=$(gettext 'Player')
+lv_Server_Conf=$(gettext 'Server Konfiguration')
 
 
 # Funktion (read_conf), Konf.-Datei einlesen.# {{{
@@ -62,7 +63,8 @@ read_conf() {
 # Funktion main_menu{{{
 #
 main_menu() {
-	MAIN_MENU=($gv_Configuration \"\" $lv_Player \"\" $lv_Playlists \"\"
+	MAIN_MENU=($gv_Configuration \"\" \"$lv_Server_Conf\" \"\" 
+	$lv_Player \"\" $lv_Playlists \"\"
 	\"$lv_Server_Plugins\" \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
 }
@@ -70,7 +72,7 @@ main_menu() {
 # Funktion (check_status), Server Status herausfinden{{{
 #
 check_status() {
-	echo q | nyxmms2 status >${gv_WorkDir}/state
+	echo '\n' | xmms2 status >${gv_WorkDir}/state
 	#State_Entry=${(M)${(f)$(< ${gv_WorkDir}/state)}##[a-zA-Z]*}
 	State_Entry=${$(< ${gv_WorkDir}/state)##[(fr)[a-zA-Z]*]}
 	case "$State_Entry" in
@@ -96,7 +98,7 @@ del_listsongs (){
 #
 list_pls() {
 	unset -- PLS_LIST_E PLS_LIST_M DEFAULT_ITEM PLS_CURRENT
-	nyxmms2 playlist list | sort | while read Pls ; do
+	xmms2 playlist list | sort | while read Pls ; do
 		if [ "${Pls%%?[a-zA-Z0-9]*}" = "*" ] ; then
 			PLS_LIST_E+=(\"${Pls#* }\" \"on\")
 			PLS_LIST_M+=(\"${Pls#* }\" \"\" on)
@@ -156,7 +158,7 @@ list_songs() {
 		fi
 	fi
 	if [ ! -f "${gv_WorkDir}/listsongs" ] ; then
-		nyxmms2 list 2>/dev/null | egrep -v "^($|Total|Failed)" | \
+		xmms2 list 2>/dev/null | egrep -v "^($|Total|Failed)" | \
 		while read Songs ; do
 			case $Songs in
 				'->'*)
@@ -206,11 +208,11 @@ list_songs() {
 #
 current_song() {
 	local Tmp
-	PLAYING_SONG="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[1]}"
-	CURRENT_SONG="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[2]}"
+	PLAYING_SONG="${${(ws,: ,)${"$(echo '\n' | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[1]}"
+	CURRENT_SONG="${${(ws,: ,)${"$(echo '\n' | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[2]}"
 	CURRENT_SONG="${CURRENT_SONG//\`/\\\`}"
 	STATUS_SONG="$PLAYING_SONG"
-	Tmp="${${(ws,: ,)${"$(echo q | nyxmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[3]}"
+	Tmp="${${(ws,: ,)${"$(echo q | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[3]}"
 	CURRENT_TIME="${Tmp% of*}"
 }
 ## }}}
@@ -235,16 +237,23 @@ no_current_songs_msg() {
 	msgbox "$gv_Info" "$MSG"
 }
 ## }}}
+# Funktion (no_server_online)# {{{
+#
+no_server_online() {
+	MSG=$(gettext 'Es läuft kein XMMS2 Server.')
+	msgbox "$gv_Info" "$MSG"
+}
+## }}}
 	# Funktion (server_config), Server Konfiguration# {{{
 	#
 	server_config() {
-		nyxmms2 server config > ${gv_WorkDir}/config
+		xmms2 server config > ${gv_WorkDir}/config
 	}
 	## }}}
 	# Funktion (plugin_support), vorhandene plugins speichern# {{{
 	#
 	plugin_support() {
-		nyxmms2 server plugins > ${gv_WorkDir}/plugins
+		xmms2 server plugins > ${gv_WorkDir}/plugins
 	}
 	## }}}
 	# Funktion (read_equal_config), einlesen der Equalizer Einstellungen # {{{
@@ -331,30 +340,113 @@ no_current_songs_msg() {
 	}
 	## }}}
 	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
+	#####################################
+	# TODO: nochmal checken, was ist mit list_pls?
+	#####################################
 	read_plugins() {
 		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
+		plugin_support
 		while read Plugin Char Desc ; do
 			case $Plugin in
+				alsa)	# ALSA Ausgabe Plugin
+					PLUGIN_ALSA=yes
+					;;
+				ao)	# Erweiterung, Ausgabe mittels libao, Plugin
+					PLUGIN_ALSA=yes
+					;;
+				apefile)	# Monkey's-Audio-Dateien Dekodierer Plugin
+					PLUGIN_APEFILE=yes
+					;;
+				asf)	# ASF-Erweiterung Plugin, ermöglicht das Entschlüsseln von
+						# ASF (Advanced Systems Format).
+					PLS_SUFFIX+=(.asx .ASX)
+					;;
 				asx)	# asx playlist Plugin
 					PLS_SUFFIX+=(.asx .ASX)
 					;;
-				cdda)	# CDDA Plugin
+				avcodec)	# dekodieren von avcodec Plugin
+					PLUGIN_AVCODEC=yes
+					;;
+				cdda)	# CDDA (Audio-CDs)  Plugin
 					PLUGIN_CDDA=yes
 					;;
-				curl)	# CDDA Plugin
+				curl)	# CURL (HTTP-Transport) Plugin
 					PLUGIN_CURL=yes
+					;;
+				cue)	# CUE Dateien Plugin
+					PLUGIN_CUE=yes
+					;;
+				daap)	# DAAP (Digital Audio Access Protokoll) Plugin,
+						# Medienbibliothek übers Netzwerk verteilen.
+					PLUGIN_DAAP=yes
+					;;
+				faad)	# FAAD-Dekodierer Plugin
+					PLUGIN_FAAD=yes
+					;;
+				flac)	# FLAC-Dekodierer Plugin
+					PLUGIN_FLAC=yes
+					;;
+				flv)	# FLV-Video-Erweiterung Plugin, ermöglicht das extrahieren von
+						# Audio aus Flash-Video-Dateien
+					PLUGIN_FLV=yes
 					;;
 				html)	# html playlist Plugin
 					PLS_SUFFIX+=(.html .HTML)
 					;;
+				ices)	# Ogg-Streaming-Ausgabe Plugin
+					PLUGIN_ICES=yes
+					;;
+				jack)	# JACK Ausgabe Plugin
+					PLUGIN_JACK=yes
+					;;
 				m3u)	# M3U playlist Plugin
 					PLS_SUFFIX+=(.m3u .M3U)
+					;;
+				mad)	# mittels libmad MP3s dekodieren Plugin
+					PLUGIN_MAD=yes
+					;;
+				mms)	# MMS-Transport Plugin
+					PLUGIN_MMS=yes
+					;;
+				modplug)	# MODPlug-Dekodierungs Plugin
+					PLUGIN_MODPLUG=yes
+					;;
+				mp4)	# MP4-Container dekodieren Plugin
+					PLUGIN_MP4=yes
+					;;
+				mpg123)	# libmpg123-basierte MP3-Dekodierung Plugin
+					PLUGIN_MPG123=yes
+					;;
+				musepack)	# MPC-Dekodierungs Plugin
+					PLUGIN_MUSEPACK=yes
+					;;
+				normalize)	# Normalisierungs-Erweiterung Plugin, ermöglicht die
+						# Lautstärke zu normalisieren.
+					PLUGIN_NORMALIZE=yes
+					;;
+				oss)	# OSS Ausgabe Plugin
+					PLUGIN_OSS=yes
 					;;
 				pls)	# PLS playlist Plugin
 					PLS_SUFFIX+=(.pls .PLS)
 					;;
+				pulse)	# Erweiterung, Pulseaudio Ausgabe Plugin
+					PLUGIN_PULSE=yes
+					;;
 				rss)	# rss playlist Plugin
-					PLS_SUFFIX+=(.rss .rss)
+					PLS_SUFFIX+=(.rss .RSS)
+					;;
+				smb)	# SMB-Transport (Server Message Block) Plugin
+					PLUGIN_SMB=yes
+					;;
+				tta)	# TTA-Dekodierung (True-Audio-Dateien) Plugin
+					PLUGIN_TTA=yes
+					;;
+				vorbis)	# Ogg-Vorbis-Dekodierungs Plugin
+					PLUGIN_VORBIS=yes
+					;;
+				wavpack)	# WavPack-Dekodierungs Plugin
+					PLUGIN_WAVPACK=yes
 					;;
 				xspf)	# xspf playlist Plugin
 					PLS_SUFFIX+=(.xspf .XSPF)
@@ -391,6 +483,7 @@ no_current_songs_msg() {
 
 # Wenn es eine Konf.-Datei gibt einlesen.
 read_conf
+net_conf
 os_check
 main_menu
 while [ "$gv_Auswahl" ] ; do
@@ -409,6 +502,13 @@ while [ "$gv_Auswahl" ] ; do
 			set +x
 			## }}}
 			main_menu $gv_Configuration
+			;;
+		$lv_Server_Conf)
+			# Server Konfiguration# {{{
+			autoload -U kwxmms2_server_conf
+			kwxmms2_server_conf
+			## }}}
+			main_menu $lv_Server_Conf
 			;;
 		$lv_Player)
 			# Player bedienen# {{{
@@ -531,7 +631,7 @@ while [ "$gv_Auswahl" ] ; do
 									Nr=${gv_Auswahl##[a-z.]* }
 									#Nr=${gv_Auswahl##[a-z.]* }
 									if [[ $Nr -le 20 ]] && [[ $Nr -ge -20 ]] ; then
-										nyxmms2 server config ${gv_Auswahl%% *} $Nr || prog_failure
+										xmms2 server config ${gv_Auswahl%% *} $Nr || prog_failure
 										# neue Konfigurationsdatei zum einlesen erstellen
 										server_config
 										read_equal_config
@@ -616,19 +716,19 @@ while [ "$gv_Auswahl" ] ; do
 							# Musik abspielen# {{{
 							if [ -n "$CURRENT_SONG" ] ; then
 								# Status checken und dementsprechend die einzelnen
-								# nyxmms2 Befehle ausführen.
+								# xmms2 Befehle ausführen.
 								case "$STATUS_SONG" in
 									Paused|Playing|Stopped)
 										if [ ! -z "$CURRENT_SONG_OLD" ] ; then
-											nyxmms2 jump "$CURRENT_SONG_NR" || prog_failure
-											nyxmms2 play "$CURRENT_SONG_NR" || prog_failure
+											xmms2 jump "$CURRENT_SONG_NR" || prog_failure
+											xmms2 play "$CURRENT_SONG_NR" || prog_failure
 											# default in listsongs ändern
 											change_default
 											# CURRENT_SONG_OLD wieder löschen, wird nicht
 											# mehr benötigt
 											unset -- CURRENT_SONG_OLD
 										else
-											nyxmms2 play || prog_failure
+											xmms2 play || prog_failure
 										fi
 										;;
 								esac
@@ -640,22 +740,22 @@ while [ "$gv_Auswahl" ] ; do
 							;;
 						$lv_Player_Pause)
 							# Musik - Pause
-							nyxmms2 pause || prog_failure
+							xmms2 pause || prog_failure
 							player_menu $lv_Player_Pause
 							;;
 						$lv_Player_Stop)
 							# Musik stoppen
-							nyxmms2 stop || prog_failure
+							xmms2 stop || prog_failure
 							player_menu $lv_Player_Stop
 							;;
 						$lv_Player_Prev)
 							# vorheriges Lied
-							nyxmms2 prev || prog_failure
+							xmms2 prev || prog_failure
 							player_menu $lv_Player_Prev
 							;;
 						$lv_Player_Next)
 							# nächstes Lied
-							nyxmms2 next || prog_failure
+							xmms2 next || prog_failure
 							player_menu $lv_Player_Next
 							;;
 						$gv_Back)	break
