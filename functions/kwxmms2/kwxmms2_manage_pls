@@ -1,665 +1,666 @@
 # Funktion (kwxmms2_manage_pls), Playlisten verwalten{{{
 #
 kwxmms2_manage_pls() {
+	# check Status des Servers# {{{
 	check_status
 	if [[ $SRV_ONLINE == yes ]] ; then
-		plugin_support
 		read_plugins
-		# Playlist creieren, ansehen, löschen
-		PLS_TITLE="$lv_Playlists"
-		# Funktion pls_menu{{{
-		#
-		lv_Pls_Clear=$(gettext 'leeren')
-		lv_Pls_Del_Songs=$(gettext 'Lieder löschen')
-		lv_Pls_Fill=$(gettext 'füllen')
-		lv_Pls_Shuffle=$(gettext 'mischen')
-		lv_Pls_Sort=$(gettext 'sortieren')
-		lv_Pls_Rename=$(gettext 'umbenennen')
-		lv_Pls_Switch=$(gettext 'Auswahl')
-		PLS_MENU=($gv_Display \"\" $lv_Pls_Switch \"\" $gv_Create \"\" $lv_Pls_Fill \"\"
-	   	$lv_Pls_Clear \"\" $lv_Pls_Sort \"\" $lv_Pls_Shuffle \"\"
-		$lv_Pls_Rename \"\" \"$lv_Pls_Del_Songs\" \"\" $gv_Delete \"\" $gv_Back \"\")
-		#
-		pls_menu() {
-			menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$PLS_MENU"
-		}
-		#}}}
-		pls_menu
-		while [ "$gv_Auswahl" ] ; do
-			case $gv_Auswahl in
-				HELP*)
-		    	    # Hilfe Messagebox
-					script_help pls_help
-					pls_menu "${gv_Auswahl#HELP }"
-					;;
-				$gv_Display)
-					# Anzeige des Inhalts von den Playlisten# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_E[1]}" ] ; then
-						# Funktion (pls_display_menu), Anzeige der Playlisten, Menue# {{{
-						#
-						pls_display_menu() {
-							PLS_LIST_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$PLS_LIST_MENU"
-						}
-						#}}}
-						pls_display_menu"$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_display_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# Ansicht des Inhalts der Playliste
-									nyxmms2 list -p $gv_Auswahl >${gv_WorkDir}/playlist
-									view_file ${gv_WorkDir}/playlist "${lv_Playlist}:${gv_Auswahl}"
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $gv_Display
-					;;
-				$gv_Create)
-					# Playliste erstellen# {{{
-					PLS_CREATE_MSG=$(gettext 'Geben Sie einen Namen für die Playliste ein.')
-					inputbox "$PLS_TITLE" "$PLS_CREATE_MSG"
-					if [ -n "$gv_Auswahl" ] ; then
-						nyxmms2 playlist create "$gv_Auswahl" || prog_failure
-					fi
-					## }}}
-					pls_menu $gv_Create
-					;;
-				$lv_Pls_Fill)
-					# Playliste füllen# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_E[1]}" ] ; then
-						# Funktion (pls_choice_menu), Auswahl der Playliste, Menue# {{{
-						PLS_FILL_MSG=$(gettext 'Wählen Sie eine Playliste aus die mit Daten gefuellt werden soll.')
-						pls_choice_menu() {
-							PLS_LIST_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$PLS_FILL_MSG" "$PLS_LIST_MENU"
-						}
-						## }}}
-						pls_choice_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_choice_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# ausgewählte Playlisten füllen
-									lv_Curl=http
-									lv_Cdda="CD/DVD"
-									lv_Directories=$(gettext 'Verzeichnisse')
-									lv_Files=$(gettext 'Dateien')
-									# lokal oder remote
-									check_local_remote
-									#
-									# Funktion (fill_methode_menu), Menue für Dateien/Dirs/Playlists/CD/DVD...# {{{
-									#
-									fill_methode_menu() {
-										if [[ $PLUGIN_CDDA == yes ]] && \
-										[[ $PLUGIN_CURL == yes ]] && \
-										[[ -n $PLS_SUFFIX ]] ; then
-											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
-											$lv_Cdda \"\" $lv_Curl \"\" $lv_Playlists \"\")
-										elif [[ $PLUGIN_CDDA != yes ]] && \
-										[[ $PLUGIN_CURL == yes ]] && \
-										[[ -n $PLS_SUFFIX ]] ; then
-											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
-											$lv_Curl \"\" $lv_Playlists \"\")
-										elif [[ $PLUGIN_CDDA == yes ]] && \
-										[[ $PLUGIN_CURL != yes ]] && \
-										[[ -n $PLS_SUFFIX ]] ; then
-											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
-											$lv_Cdda \"\" $lv_Playlists \"\")
-										elif [[ $PLUGIN_CDDA != yes ]] && \
-										[[ $PLUGIN_CURL != yes ]] && \
-										[[ -n $PLS_SUFFIX ]] ; then
-											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
-											$lv_Playlists \"\")
-										else
-											DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\")
-										fi
-										menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MENU"
-									}
-									## }}}
-									# Funktion (http_pls), Internet Adresse eingeben.# {{{
-									#
-									http_pls() {
-										# vorhandene Proxy Konfiguration einlesen.
-										if_conf_file "$OS" proxy
-										# Protokoll+Rechner+Portnumer Eingabe
-										HTTP_MSG=$(gettext 'Tragen Sie bitte die Internet Adresse ein (http://host:port).')
-										inputbox "$gv_Configuration" "$HTTP_MSG" "$Proxy"
-										if [ "$gv_Auswahl" ] ; then
-											case "$gv_Auswahl" in
-												http://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9])
-													if [ -n "$gv_Http_Proxy" ] ; then
-														# proxy ein und anstellen
-														nyxmms2 server config curl.proxyaddress "$gv_Http_Proxy" || prog_failure
-														nyxmms2 server config curl.useproxy 1 || prog_failure
-														nyxmms2 add -p "$DEFAULT_PLS" "$gv_Auswahl" || prog_failure
-													else
-														# proxy ausstellen
-														nyxmms2 server config curl.useproxy 0 || prog_failure
-														nyxmms2 add -p "$DEFAULT_PLS" "$gv_Auswahl" || prog_failure
-													fi
-													;;
-												*)	no_input_msg
-													;;
-											esac
-										fi
-									}
-									## }}}
-									DEFAULT_PLS="$gv_Auswahl"
-									if [[ $REMOTE == yes ]] ; then
-										# Menue für Dateien/Dirs/Playlists/CD/DVD...# {{{
-										fill_methode_menu
-										while [ "$gv_Auswahl" ] ; do
-											case "$gv_Auswahl" in
-												HELP*)	script_help pls_help
-													fill_methode_menu "${gv_Auswahl#HELP }"
-													;;
-												$lv_Directories)
-													# Volle Verzeichnis Pfadangabe für remote Server# {{{
-													PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Verzeichnis Pfad zu den Liedern ein.')
-													inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
-													if [ -n "$gv_Auswahl" ] ; then
-														PATH_TO_FILES="$gv_Auswahl"
-														nyxmms2 add -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
-													fi
-													break
-													## }}}
-													;;
-												$lv_Files)
-													# Volle Datei Pfadangabe für remote Server# {{{
-													PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Pfad zu der Lieddatei ein.')
-													inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
-													if [ -n "$gv_Auswahl" ] ; then
-														PATH_TO_FILES="$gv_Auswahl"
-														nyxmms2 add -f -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
-													fi
-													break
-													## }}}
-													;;
-												$lv_Cdda)
-													# CD/DVD Leselaufwerk auswählen.{{{
-													nyxmms2 add -f -P -p "$DEFAULT_PLS" cdda:// || prog_failure
-													break
-													#}}}
-													;;
-												$lv_Curl)
-													# http Adresse eingeben.{{{
-													http_pls
-													break
-													#}}}
-													;;
-												$lv_Playlists)
-													# Volle PlaylistDatei Pfadangabe für remote Server# {{{
-													PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Pfad zu der Playlist Datei ein.')
-													inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
-													if [ -n "$gv_Auswahl" ] ; then
-														PATH_TO_FILES="$gv_Auswahl"
-														nyxmms2 add -f -P -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
-													fi
-													break
-													## }}}
-													;;
-											esac
-										done
-										## }}}
-									else 
-										# Menue für Dateien/Dirs/Playlists/CD/DVD...# {{{
-										fill_methode_menu
-										while [ "$gv_Auswahl" ] ; do
-											case "$gv_Auswahl" in
-												HELP*)	script_help pls_help
-													fill_methode_menu "${gv_Auswahl#HELP }"
-													;;
-												$lv_Directories)
-													# ganze Verzeichnisse auswählen# {{{
-													dselect "$VERZ"
-													if [ "$VERZ" ] ; then
-														dselect_check "$VERZ"
-														if [ -n "$VERZ" ] ; then
-															# Verzeichnis auf Rechte prüfen
-															if ! user_device_check "$VERZ" AE ; then
-																break
-															fi
-															cd "$VERZ"
-															file_filter -d
-															if [ "${DF_DIR_ARRAY[1]}" ] ; then
-																DIR_MENU=($DF_DIR_ARRAY)
-																DIR_MSG=$(gettext 'Wählen Sie ein oder mehrere Verzeichnisse aus.')
-																checklist "" "$PLS_TITLE" "$DIR_MSG" "$DIR_MENU"
-																while [ "$gv_Auswahl" ] ; do
-																	case "$gv_Auswahl" in
-																		HELP*) script_help share/data_help
-																			checklist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
-																			;;
-																		*)	
-																			# Auswahl übernehmen
-																			while read dir ; do
-																				nyxmms2 add -p "$DEFAULT_PLS" "${VERZ}/${dir}" || prog_failure
-																			done < ${gv_LogFile}$$
-																			break
-																			;;
-																	esac
-																done
-															fi
-														fi
-													else
-														no_input_msg
-													fi
-													break
-													## }}}
-													;;
-												$lv_Files)
-													# Nur Dateien auswählen# {{{
-													dselect "$VERZ"
-													if [ "$VERZ" ] ; then
-														dselect_check "$VERZ"
-														if [ -n "$VERZ" ] ; then
-															# Verzeichnis auf Rechte prüfen
-															if ! user_device_check "$VERZ" AE ; then
-																break
-															fi
-															cd "$VERZ"
-															# Dateien mit folgendem Suffix ausnehmen
-															A_SUFFIX=".m3u .M3U .pls .PLS"
-															FORMAT="all"
-															#
-															file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
-															if [ "${DF_ARRAY[1]}" ] ; then
-																FILE_MENU=($DF_ARRAY)
-																FILE_MSG=$(gettext 'Wählen Sie ein oder mehrere Lieder aus.')
-																checklist "" "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
-																while [ "$gv_Auswahl" ] ; do
-																	case "$gv_Auswahl" in
-																		HELP*) script_help share/data_help
-																			checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
-																			;;
-																		*)
-																			# Auswahl übernehmen
-																			while read file ; do
-																				nyxmms2 add -f -p "$DEFAULT_PLS" "${VERZ}/${file}" || prog_failure
-																			done < ${gv_LogFile}$$
-																			break
-																			;;
-																	esac
-																done
-															else
-																MSG=$(gettext 'Es sind keine Lieder vorhanden.')
-																msgbox "$gv_Attention" "$MSG"
-															fi
-														fi
-													else
-														no_input_msg
-													fi
-													break
-													## }}}
-													;;
-												$lv_Cdda)
-													# CD/DVD Leselaufwerk auswählen.{{{
-													nyxmms2 add -f -P -p "$DEFAULT_PLS" cdda:// || prog_failure
-													break
-													#}}}
-													;;
-												$lv_Curl)
-													# http Adresse eingeben.{{{
-													http_pls
-													break
-													#}}}
-													;;
-												$lv_Playlists)
-													# Nur Playlisten auswählen# {{{
-													dselect "$VERZ"
-													if [ "$VERZ" ] ; then
-														dselect_check "$VERZ"
-														if [ -n "$VERZ" ] ; then
-															# Verzeichnis auf Rechte prüfen
-															if ! user_device_check "$VERZ" AE ; then
-																break
-															fi
-															cd "$VERZ"
-															#
-															SUFFIX="$PLS_SUFFIX"
-															FORMAT=""
-															A_SUFFIX=""
-															#
-															file_filter "$FORMAT" "$SUFFIX" "$A_SUFFIX"
-															if [ -n "${DF_ARRAY_M[1]}" ] ; then
-																FILE_MENU=($DF_ARRAY_M)
-																FILE_MSG=$(gettext 'Wählen Sie eine $lv_Playlist aus.')
-																menubox "" "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
-																while [ "$gv_Auswahl" ] ; do
-																	case "$gv_Auswahl" in
-																		HELP*) script_help share/data_help
-																			menubox "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
-																			;;
-																		*)
-																			# Auswahl übernehmen
-																			nyxmms2 add -f -P -p "$DEFAULT_PLS" "${VERZ}/${gv_Auswahl}" || prog_failure
-																			break
-																			;;
-																	esac
-																done
-															else
-																MSG=$(gettext 'Es sind keine $lv_Playlist Dateien vorhanden.')
-																msgbox "$gv_Attention" "$MSG"
-															fi
-														fi
-													else
-														no_input_msg
-													fi
-													break
-													## }}}
-													;;
-											esac
-										done
-										## }}}
-									fi
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Fill
-					;;
-				"$lv_Pls_Del_Songs")
-					# Lieder einer Playlisten löschen# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_M[1]}" ] ; then
-						# Funktion (pls_del_song_menu), Auswahl der Playliste deren Lieder# {{{
-						# gelöscht werden sollen
-						#
-						pls_del_song_menu() {
-							PLS_DEL_SONG_MSG=$(gettext 'Wählen Sie eine Playliste aus, aus deren ausgewählte Lieder gelöscht werden sollen.')
-							PLS_DEL_SONG_MENU=($PLS_LIST_M)
-							radiolist "$1" "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
-						}
-						## }}}
-						pls_del_song_menu
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_del_song_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# ausgewählte Songs der Playliste löschen
-									# ausgewählte Playliste sichern
-									DEFAULT_PLS="$gv_Auswahl"
-									# alte Songliste löschen und neue erstellen.
-									list_songs -r
-									if [ -n "${SONG_LIST_E_M[1]}" ] ; then
-										# Funktion (pls_del_songs_menu), Songauswahl löschen# {{{
-										pls_del_songs_menu() {
-											SONGS_MENU=($SONG_LIST_E_M)
-											checklist "$1" "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
-										}
-										## }}}
-										pls_del_songs_menu
-										while [ -n "$gv_Auswahl" ] ; do
-											case "$gv_Auswahl" in
-												HELP*)	script_init player_help
-													pls_del_songs_menu "${gv_Auswahl#HELP }"
-													;;
-												*)
-													# Auswahl übernehmen und Songs löschen
-													while read i ; do
-														nyxmms2 remove -p "$DEFAULT_PLS" "$i" || prog_failure
-													done < ${gv_LogFile}$$
-													break
-													;;
-											esac
-										done
-									else
-										no_songs_msg
-									fi
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Del_Songs
-					;;
-				$lv_Pls_Clear)
-					# Playliste leeren# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_M[1]}" ] ; then
-						# Funktion (pls_clear_menu), Auswahl der Playliste zum leeren# {{{
-						#
-						pls_clear_menu() {
-							PLS_CLEAR_MSG=$(gettext 'Wählen Sie eine oder mehrere Playlisten aus die geleert werden sollen.')
-							PLS_CLEAR_MENU=($PLS_LIST_M)
-							checklist "$1" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
-						}
-						## }}}
-						pls_clear_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_clear_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# ausgewählte Playlisten leerem
-									while read i ; do
-										nyxmms2 playlist clear "$i" || prog_failure
-									done < ${gv_LogFile}$$
-									del_listsongs
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Clear
-					;;
-				$lv_Pls_Rename)
-					# Playliste umbenennen# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_E[1]}" ] ; then
-						# Funktion (pls_rename_menu), Anzeige der Playlisten, Menue# {{{
-						PLS_RENAME_MSG=$(gettext 'Wählen Sie eine Playliste aus die umbenannt werden soll.')
-						pls_rename_menu() {
-							PLS_RENAME_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$PLS_RENAME_MSG" "$PLS_RENAME_MENU"
-						}
-						#}}}
-						pls_rename_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_rename_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# Playliste umbenennen
-									OLD_PLS="$gv_Auswahl"
-									PLS_RENAME1_MSG=$(gettext 'Geben Sie einen Namen für die Playliste ($OLD_PLS) ein.')
-									inputbox "$PLS_TITLE" "$PLS_RENAME1_MSG"
-									if [ -n "$gv_Auswahl" ] ; then
-										nyxmms2 playlist rename -f -p "$OLD_PLS" "$gv_Auswahl" || prog_failure
-									fi
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Rename
-					;;
-				$lv_Pls_Sort)
-					# Playliste sortieren# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_E[1]}" ] ; then
-						# Funktion (pls_sort_menu), Anzeige der Playlisten, Menue# {{{
-						PLS_SORT_MSG=$(gettext 'Wählen Sie eine Playliste aus die sortiert werden soll.')
-						pls_sort_menu() {
-							PLS_SORT_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$PLS_SORT_MSG" "$PLS_SORT_MENU"
-						}
-						#}}}
-						pls_sort_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_sort_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# Playliste sortieren
-									nyxmms2 playlist sort "$gv_Auswahl"
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Sort
-					;;
-				$lv_Pls_Shuffle)
-					# Playliste mischen# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "$PLS_LIST_E" ] ; then
-						# Funktion (pls_shuffle_menu), Anzeige der Playlisten, Menue# {{{
-						PLS_SHUFFLE_MSG=$(gettext 'Wählen Sie eine Playliste aus die gemischt werden soll.')
-						pls_shuffle_menu() {
-							PLS_SHUFFLE_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$PLS_SHUFFLE_MSG" "$PLS_SHUFFLE_MENU"
-						}
-						#}}}
-						pls_shuffle_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_shuffle_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# Playliste mischen
-									nyxmms2 playlist shuffle "$gv_Auswahl"
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Shuffle
-					;;
-				$lv_Pls_Switch)
-					# Playliste wechseln# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playliste auswählen
-					if [ -n "${PLS_LIST_E[1]}" ] ; then
-						# Funktion (pls_switch_menu), Anzeige der Playlisten, Menue# {{{
-						PLS_SWITCH_MSG=$(gettext 'Wählen Sie eine Playliste aus zu der gewechselt werden soll.')
-						pls_switch_menu() {
-							PLS_SWITCH_MENU=($PLS_LIST_E)
-							menubox "$1" "$PLS_TITLE" "$PLS_SWITCH_MSG" "$PLS_SWITCH_MENU"
-						}
-						#}}}
-						pls_switch_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_switch_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# Playliste wechseln
-									nyxmms2 playlist switch "$gv_Auswahl"
-									del_listsongs
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $lv_Pls_Switch
-					;;
-				$gv_Delete)
-					# Playlisten löschen# {{{
-					# Playlisten herausfinden
-					list_pls
-					# Playlisten auswählen
-					if [ -n "${PLS_LIST_M[1]}" ] ; then
-						# Funktion (pls_del_menu), Auswahl der Playliste, Menue# {{{
-						#
-						pls_del_menu() {
-							PLS_DEL_MSG=$(gettext 'Wählen Sie eine oder mehrere Playlisten aus die gelöscht werden sollen.')
-							PLS_DEL_MENU=($PLS_LIST_M)
-							checklist "$1" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
-						}
-						## }}}
-						pls_del_menu "$DEFAULT_ITEM"
-						while [ "$gv_Auswahl" ] ; do
-							case $gv_Auswahl in
-								HELP*)
-						    	    # Hilfe Messagebox
-									script_help pls_help
-									pls_del_menu "${gv_Auswahl#HELP }"
-									;;
-								*)	# ausgewählte Playlisten löschen
-									while read i ; do
-										nyxmms2 playlist remove "$i" || prog_failure
-									done < ${gv_LogFile}$$
-									del_listsongs
-									break
-									;;
-							esac
-						done
-					else
-						no_entry_msg
-					fi
-					## }}}
-					pls_menu $gv_Delete
-					;;
-				$gv_Back)	break
-					;;
-			esac
-		done
+	else
+		no_server_online
+		return 1
 	fi
+	## }}}
+	# Playlist creieren, ansehen, löschen
+	PLS_TITLE="$lv_Playlists"
+	# Funktion pls_menu{{{
+	#
+	lv_Pls_Clear=$(gettext 'leeren')
+	lv_Pls_Del_Songs=$(gettext 'Lieder löschen')
+	lv_Pls_Fill=$(gettext 'füllen')
+	lv_Pls_Shuffle=$(gettext 'mischen')
+	lv_Pls_Sort=$(gettext 'sortieren')
+	lv_Pls_Rename=$(gettext 'umbenennen')
+	lv_Pls_Switch=$(gettext 'Auswahl')
+	PLS_MENU=($gv_Display \"\" $lv_Pls_Switch \"\" $gv_Create \"\" $lv_Pls_Fill \"\"
+   	$lv_Pls_Clear \"\" $lv_Pls_Sort \"\" $lv_Pls_Shuffle \"\"
+	$lv_Pls_Rename \"\" \"$lv_Pls_Del_Songs\" \"\" $gv_Delete \"\" $gv_Back \"\")
+	#
+	pls_menu() {
+		menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$PLS_MENU"
+	}
+	#}}}
+	pls_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe Messagebox
+				script_help pls_help
+				pls_menu "${gv_Auswahl#HELP }"
+				;;
+			$gv_Display)
+				# Anzeige des Inhalts von den Playlisten# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_E[1]}" ] ; then
+					# Funktion (pls_display_menu), Anzeige der Playlisten, Menue# {{{
+					#
+					pls_display_menu() {
+						PLS_LIST_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$PLS_LIST_MENU"
+					}
+					#}}}
+					pls_display_menu"$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_display_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# Ansicht des Inhalts der Playliste
+								xmms2 list -p $gv_Auswahl >${gv_WorkDir}/playlist
+								view_file ${gv_WorkDir}/playlist "${lv_Playlist}:${gv_Auswahl}"
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $gv_Display
+				;;
+			$gv_Create)
+				# Playliste erstellen# {{{
+				PLS_CREATE_MSG=$(gettext 'Geben Sie einen Namen für die Playliste ein.')
+				inputbox "$PLS_TITLE" "$PLS_CREATE_MSG"
+				if [ -n "$gv_Auswahl" ] ; then
+					xmms2 playlist create "$gv_Auswahl" || prog_failure
+				fi
+				## }}}
+				pls_menu $gv_Create
+				;;
+			$lv_Pls_Fill)
+				# Playliste füllen# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_E[1]}" ] ; then
+					# Funktion (pls_choice_menu), Auswahl der Playliste, Menue# {{{
+					PLS_FILL_MSG=$(gettext 'Wählen Sie eine Playliste aus die mit Daten gefuellt werden soll.')
+					pls_choice_menu() {
+						PLS_LIST_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$PLS_FILL_MSG" "$PLS_LIST_MENU"
+					}
+					## }}}
+					pls_choice_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_choice_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# ausgewählte Playlisten füllen
+								lv_Curl=http
+								lv_Cdda="CD/DVD"
+								lv_Directories=$(gettext 'Verzeichnisse')
+								lv_Files=$(gettext 'Dateien')
+								# lokal oder remote
+								check_local_remote
+								#
+								# Funktion (fill_methode_menu), Menue für# {{{
+								# Dateien/Dirs/Playlists/CD/DVD...
+								######################################
+								# TODO: checken, besonders curl (http_pls),http
+								######################################
+								#
+								fill_methode_menu() {
+									if [[ $PLUGIN_CDDA == yes ]] && \
+									[[ $PLUGIN_CURL == yes ]] && \
+									[[ -n $PLS_SUFFIX ]] ; then
+										DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
+										$lv_Cdda \"\" $lv_Curl \"\" $lv_Playlists \"\")
+									elif [[ $PLUGIN_CDDA != yes ]] && \
+									[[ $PLUGIN_CURL == yes ]] && \
+									[[ -n $PLS_SUFFIX ]] ; then
+										DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
+										$lv_Curl \"\" $lv_Playlists \"\")
+									elif [[ $PLUGIN_CDDA == yes ]] && \
+									[[ $PLUGIN_CURL != yes ]] && \
+									[[ -n $PLS_SUFFIX ]] ; then
+										DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
+										$lv_Cdda \"\" $lv_Playlists \"\")
+									elif [[ $PLUGIN_CDDA != yes ]] && \
+									[[ $PLUGIN_CURL != yes ]] && \
+									[[ -n $PLS_SUFFIX ]] ; then
+										DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\"
+										$lv_Playlists \"\")
+									else
+										DIR_CHOICE_MENU=($lv_Directories \"\" $lv_Files \"\")
+									fi
+									menubox "$1" "$PLS_TITLE" "$gv_Menupoint" "$DIR_CHOICE_MENU"
+								}
+								## }}}
+								# Funktion (http_pls), Internet Adresse eingeben.# {{{
+								#####################################
+								# TODO: oder nur xmms2 play?
+								#####################################
+								#
+								http_pls() {
+									# Protokoll+Rechner+Portnumer Eingabe
+									HTTP_MSG=$(gettext 'Tragen Sie bitte die Internet Adresse ein (http://host:port).')
+									inputbox "$gv_Configuration" "$HTTP_MSG" "$Proxy"
+									if [ "$gv_Auswahl" ] ; then
+										case "$gv_Auswahl" in
+											http://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9])
+													xmms2 add -p "$DEFAULT_PLS" "$gv_Auswahl" || prog_failure
+												;;
+											*)	no_input_msg
+												;;
+										esac
+									fi
+								}
+								## }}}
+								DEFAULT_PLS="$gv_Auswahl"
+								if [[ $REMOTE == yes ]] ; then
+									# Menue für Dateien/Dirs/Playlists/CD/DVD...# {{{
+									fill_methode_menu
+									while [ "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help pls_help
+												fill_methode_menu "${gv_Auswahl#HELP }"
+												;;
+											$lv_Directories)
+												# Volle Verzeichnis Pfadangabe für remote Server# {{{
+												PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Verzeichnis Pfad zu den Liedern ein.')
+												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
+												if [ -n "$gv_Auswahl" ] ; then
+													PATH_TO_FILES="$gv_Auswahl"
+													xmms2 add -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+												fi
+												break
+												## }}}
+												;;
+											$lv_Files)
+												# Volle Datei Pfadangabe für remote Server# {{{
+												PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Pfad zu der Lieddatei ein.')
+												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
+												if [ -n "$gv_Auswahl" ] ; then
+													PATH_TO_FILES="$gv_Auswahl"
+													xmms2 add -f -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+												fi
+												break
+												## }}}
+												;;
+											$lv_Cdda)
+												# CD/DVD Leselaufwerk auswählen.{{{
+												xmms2 add -f -P -p "$DEFAULT_PLS" cdda:// || prog_failure
+												break
+												#}}}
+												;;
+											$lv_Curl)
+												# http Adresse eingeben.{{{
+												http_pls
+												break
+												#}}}
+												;;
+											$lv_Playlists)
+												# Volle PlaylistDatei Pfadangabe für remote Server# {{{
+												PLS_FILES_MSG=$(gettext 'Geben Sie bitte den vollen Pfad zu der Playlist Datei ein.')
+												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
+												if [ -n "$gv_Auswahl" ] ; then
+													PATH_TO_FILES="$gv_Auswahl"
+													xmms2 add -f -P -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+												fi
+												break
+												## }}}
+												;;
+										esac
+									done
+									## }}}
+								else 
+									# Menue für Dateien/Dirs/Playlists/CD/DVD...# {{{
+									fill_methode_menu
+									while [ "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_help pls_help
+												fill_methode_menu "${gv_Auswahl#HELP }"
+												;;
+											$lv_Directories)
+												# ganze Verzeichnisse auswählen# {{{
+												dselect "$VERZ"
+												if [ "$VERZ" ] ; then
+													dselect_check "$VERZ"
+													if [ -n "$VERZ" ] ; then
+														# Verzeichnis auf Rechte prüfen
+														if ! user_device_check "$VERZ" AE ; then
+															break
+														fi
+														cd "$VERZ"
+														file_filter -d
+														if [ "${DF_DIR_ARRAY[1]}" ] ; then
+															DIR_MENU=($DF_DIR_ARRAY)
+															DIR_MSG=$(gettext 'Wählen Sie ein oder mehrere Verzeichnisse aus.')
+															checklist "" "$PLS_TITLE" "$DIR_MSG" "$DIR_MENU"
+															while [ "$gv_Auswahl" ] ; do
+																case "$gv_Auswahl" in
+																	HELP*) script_help share/data_help
+																		checklist "${gv_Auswahl#HELP }" "$DIR_TITLE" "$DIR_MSG" "$DIR_MENU"
+																		;;
+																	*)	
+																		# Auswahl übernehmen
+																		while read dir ; do
+																			xmms2 add -p "$DEFAULT_PLS" "${VERZ}/${dir}" || prog_failure
+																		done < ${gv_LogFile}$$
+																		break
+																		;;
+																esac
+															done
+														fi
+													fi
+												else
+													no_input_msg
+												fi
+												break
+												## }}}
+												;;
+											$lv_Files)
+												# Nur Dateien auswählen# {{{
+												dselect "$VERZ"
+												if [ "$VERZ" ] ; then
+													dselect_check "$VERZ"
+													if [ -n "$VERZ" ] ; then
+														# Verzeichnis auf Rechte prüfen
+														if ! user_device_check "$VERZ" AE ; then
+															break
+														fi
+														cd "$VERZ"
+														# Dateien mit folgendem Suffix ausnehmen
+														A_SUFFIX=".m3u .M3U .pls .PLS"
+														FORMAT="all"
+														#
+														file_filter -r "$FORMAT" "$SUFFIX" "$A_SUFFIX"
+														if [ "${DF_ARRAY[1]}" ] ; then
+															FILE_MENU=($DF_ARRAY)
+															FILE_MSG=$(gettext 'Wählen Sie ein oder mehrere Lieder aus.')
+															checklist "" "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
+															while [ "$gv_Auswahl" ] ; do
+																case "$gv_Auswahl" in
+																	HELP*) script_help share/data_help
+																		checklist "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+																		;;
+																	*)
+																		# Auswahl übernehmen
+																		while read file ; do
+																			xmms2 add -f -p "$DEFAULT_PLS" "${VERZ}/${file}" || prog_failure
+																		done < ${gv_LogFile}$$
+																		break
+																		;;
+																esac
+															done
+														else
+															MSG=$(gettext 'Es sind keine Lieder vorhanden.')
+															msgbox "$gv_Attention" "$MSG"
+														fi
+													fi
+												else
+													no_input_msg
+												fi
+												break
+												## }}}
+												;;
+											$lv_Cdda)
+												# CD/DVD Leselaufwerk auswählen.{{{
+												xmms2 add -f -P -p "$DEFAULT_PLS" cdda:// || prog_failure
+												break
+												#}}}
+												;;
+											$lv_Curl)
+												# http Adresse eingeben.{{{
+												http_pls
+												break
+												#}}}
+												;;
+											$lv_Playlists)
+												# Nur Playlisten auswählen# {{{
+												dselect "$VERZ"
+												if [ "$VERZ" ] ; then
+													dselect_check "$VERZ"
+													if [ -n "$VERZ" ] ; then
+														# Verzeichnis auf Rechte prüfen
+														if ! user_device_check "$VERZ" AE ; then
+															break
+														fi
+														cd "$VERZ"
+														#
+														SUFFIX="$PLS_SUFFIX"
+														FORMAT=""
+														A_SUFFIX=""
+														#
+														file_filter "$FORMAT" "$SUFFIX" "$A_SUFFIX"
+														if [ -n "${DF_ARRAY_M[1]}" ] ; then
+															FILE_MENU=($DF_ARRAY_M)
+															FILE_MSG=$(gettext 'Wählen Sie eine $lv_Playlist aus.')
+															menubox "" "$PLS_TITLE" "$FILE_MSG" "$FILE_MENU"
+															while [ "$gv_Auswahl" ] ; do
+																case "$gv_Auswahl" in
+																	HELP*) script_help share/data_help
+																		menubox "${gv_Auswahl#HELP }" "$FILE_TITLE" "$FILE_MSG" "$FILE_MENU"
+																		;;
+																	*)
+																		# Auswahl übernehmen
+																		xmms2 add -f -P -p "$DEFAULT_PLS" "${VERZ}/${gv_Auswahl}" || prog_failure
+																		break
+																		;;
+																esac
+															done
+														else
+															MSG=$(gettext 'Es sind keine $lv_Playlist Dateien vorhanden.')
+															msgbox "$gv_Attention" "$MSG"
+														fi
+													fi
+												else
+													no_input_msg
+												fi
+												break
+												## }}}
+												;;
+										esac
+									done
+									## }}}
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Fill
+				;;
+			"$lv_Pls_Del_Songs")
+				# Lieder einer Playlisten löschen# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_M[1]}" ] ; then
+					# Funktion (pls_del_song_menu), Auswahl der Playliste deren Lieder# {{{
+					# gelöscht werden sollen
+					#
+					pls_del_song_menu() {
+						PLS_DEL_SONG_MSG=$(gettext 'Wählen Sie eine Playliste aus, aus deren ausgewählte Lieder gelöscht werden sollen.')
+						PLS_DEL_SONG_MENU=($PLS_LIST_M)
+						radiolist "$1" "$DEFAULT_ITEM" "$PLS_TITLE" "$PLS_DEL_SONG_MSG" "$PLS_DEL_SONG_MENU"
+					}
+					## }}}
+					pls_del_song_menu
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_del_song_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# ausgewählte Songs der Playliste löschen
+								# ausgewählte Playliste sichern
+								DEFAULT_PLS="$gv_Auswahl"
+								# alte Songliste löschen und neue erstellen.
+								list_songs -r
+								if [ -n "${SONG_LIST_E_M[1]}" ] ; then
+									# Funktion (pls_del_songs_menu), Songauswahl löschen# {{{
+									pls_del_songs_menu() {
+										SONGS_MENU=($SONG_LIST_E_M)
+										checklist "$1" "$PLS_TITLE" "$gv_Menupoint" "$SONGS_MENU"
+									}
+									## }}}
+									pls_del_songs_menu
+									while [ -n "$gv_Auswahl" ] ; do
+										case "$gv_Auswahl" in
+											HELP*)	script_init player_help
+												pls_del_songs_menu "${gv_Auswahl#HELP }"
+												;;
+											*)
+												# Auswahl übernehmen und Songs löschen
+												while read i ; do
+													xmms2 remove -p "$DEFAULT_PLS" "$i" || prog_failure
+												done < ${gv_LogFile}$$
+												break
+												;;
+										esac
+									done
+								else
+									no_songs_msg
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Del_Songs
+				;;
+			$lv_Pls_Clear)
+				# Playliste leeren# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_M[1]}" ] ; then
+					# Funktion (pls_clear_menu), Auswahl der Playliste zum leeren# {{{
+					#
+					pls_clear_menu() {
+						PLS_CLEAR_MSG=$(gettext 'Wählen Sie eine oder mehrere Playlisten aus die geleert werden sollen.')
+						PLS_CLEAR_MENU=($PLS_LIST_M)
+						checklist "$1" "$PLS_TITLE" "$PLS_CLEAR_MSG" "$PLS_CLEAR_MENU"
+					}
+					## }}}
+					pls_clear_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_clear_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# ausgewählte Playlisten leerem
+								while read i ; do
+									xmms2 playlist clear "$i" || prog_failure
+								done < ${gv_LogFile}$$
+								del_listsongs
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Clear
+				;;
+			$lv_Pls_Rename)
+				# Playliste umbenennen# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_E[1]}" ] ; then
+					# Funktion (pls_rename_menu), Anzeige der Playlisten, Menue# {{{
+					PLS_RENAME_MSG=$(gettext 'Wählen Sie eine Playliste aus die umbenannt werden soll.')
+					pls_rename_menu() {
+						PLS_RENAME_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$PLS_RENAME_MSG" "$PLS_RENAME_MENU"
+					}
+					#}}}
+					pls_rename_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_rename_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# Playliste umbenennen
+								OLD_PLS="$gv_Auswahl"
+								PLS_RENAME1_MSG=$(gettext 'Geben Sie einen Namen für die Playliste ($OLD_PLS) ein.')
+								inputbox "$PLS_TITLE" "$PLS_RENAME1_MSG"
+								if [ -n "$gv_Auswahl" ] ; then
+									xmms2 playlist rename -f -p "$OLD_PLS" "$gv_Auswahl" || prog_failure
+								fi
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Rename
+				;;
+			$lv_Pls_Sort)
+				# Playliste sortieren# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_E[1]}" ] ; then
+					# Funktion (pls_sort_menu), Anzeige der Playlisten, Menue# {{{
+					PLS_SORT_MSG=$(gettext 'Wählen Sie eine Playliste aus die sortiert werden soll.')
+					pls_sort_menu() {
+						PLS_SORT_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$PLS_SORT_MSG" "$PLS_SORT_MENU"
+					}
+					#}}}
+					pls_sort_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_sort_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# Playliste sortieren
+								xmms2 playlist sort "$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Sort
+				;;
+			$lv_Pls_Shuffle)
+				# Playliste mischen# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "$PLS_LIST_E" ] ; then
+					# Funktion (pls_shuffle_menu), Anzeige der Playlisten, Menue# {{{
+					PLS_SHUFFLE_MSG=$(gettext 'Wählen Sie eine Playliste aus die gemischt werden soll.')
+					pls_shuffle_menu() {
+						PLS_SHUFFLE_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$PLS_SHUFFLE_MSG" "$PLS_SHUFFLE_MENU"
+					}
+					#}}}
+					pls_shuffle_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_shuffle_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# Playliste mischen
+								xmms2 playlist shuffle "$gv_Auswahl"
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Shuffle
+				;;
+			$lv_Pls_Switch)
+				# Playliste wechseln# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playliste auswählen
+				if [ -n "${PLS_LIST_E[1]}" ] ; then
+					# Funktion (pls_switch_menu), Anzeige der Playlisten, Menue# {{{
+					PLS_SWITCH_MSG=$(gettext 'Wählen Sie eine Playliste aus zu der gewechselt werden soll.')
+					pls_switch_menu() {
+						PLS_SWITCH_MENU=($PLS_LIST_E)
+						menubox "$1" "$PLS_TITLE" "$PLS_SWITCH_MSG" "$PLS_SWITCH_MENU"
+					}
+					#}}}
+					pls_switch_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_switch_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# Playliste wechseln
+								xmms2 playlist switch "$gv_Auswahl"
+								del_listsongs
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $lv_Pls_Switch
+				;;
+			$gv_Delete)
+				# Playlisten löschen# {{{
+				# Playlisten herausfinden
+				list_pls
+				# Playlisten auswählen
+				if [ -n "${PLS_LIST_M[1]}" ] ; then
+					# Funktion (pls_del_menu), Auswahl der Playliste, Menue# {{{
+					#
+					pls_del_menu() {
+						PLS_DEL_MSG=$(gettext 'Wählen Sie eine oder mehrere Playlisten aus die gelöscht werden sollen.')
+						PLS_DEL_MENU=($PLS_LIST_M)
+						checklist "$1" "$PLS_TITLE" "$PLS_DEL_MSG" "$PLS_DEL_MENU"
+					}
+					## }}}
+					pls_del_menu "$DEFAULT_ITEM"
+					while [ "$gv_Auswahl" ] ; do
+						case $gv_Auswahl in
+							HELP*)
+					    	    # Hilfe Messagebox
+								script_help pls_help
+								pls_del_menu "${gv_Auswahl#HELP }"
+								;;
+							*)	# ausgewählte Playlisten löschen
+								while read i ; do
+									xmms2 playlist remove "$i" || prog_failure
+								done < ${gv_LogFile}$$
+								del_listsongs
+								break
+								;;
+						esac
+					done
+				else
+					no_entry_msg
+				fi
+				## }}}
+				pls_menu $gv_Delete
+				;;
+			$gv_Back)	break
+				;;
+		esac
+	done
+	return 0
 }
 #
 ### Modeline {{{

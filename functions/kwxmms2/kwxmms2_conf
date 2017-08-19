@@ -2,16 +2,27 @@
 #
 # usage: kwxmms2_conf
 kwxmms2_conf() {
-	check_status
-	if [[ $SRV_ONLINE == yes ]] ; then
-		XMMS_SERVER_ADR=${${(ws: = :)$(nyxmms2 server config core.ipcsocket)}[2]}
-	fi
-	# Funktion (kwxmms2_conf_menu)# {{{
+	# Variabeln# {{{
 	lv_Xmms_Server=$(gettext 'Serveradresse')
 	lv_Xmms_Client=$(gettext 'Client')
+	## }}}
+	# Status des XMMS2 Server prüfen und aktuelle Server Adressen einlesen.# {{{
+	check_status
+	if [[ $SRV_ONLINE == yes ]] ; then
+		XMMS_PATH_FULL=${${(ws: = :)$(xmms2 server config core.ipcsocket)}[2]}
+	else
+		no_server_online
+	fi
+	## }}}
+	# Funktion (kwxmms2_conf_menu)# {{{
 	kwxmms2_conf_menu() {
-		CONF_MENU=($lv_Xmms_Server \"$XMMS_SERVER_ADR\" --------------- \"\"
-   		$lv_Xmms_Client \"$XMMS_PATH\" $gv_Save \"\" $gv_Back \"\")
+		if [[ $SRV_ONLINE == yes ]] ; then
+			CONF_MENU=($lv_Xmms_Server \"$XMMS_PATH_FULL\" --------------- \"\"
+	   		$lv_Xmms_Client \"$XMMS_PATH\")
+		else
+			CONF_MENU=($lv_Xmms_Client \"$XMMS_PATH\")
+		fi
+		CONF_MENU+=($gv_Save \"\" $gv_Back \"\")
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
 	## }}}
@@ -24,37 +35,21 @@ kwxmms2_conf() {
 				kwxmms2_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xmms_Server|---*)
+				# Anzeige aller xmms2 Server Adressen.
 				kwxmms2_conf_menu $lv_Xmms_Server
 				;;
 			$lv_Xmms_Client)
 				# Protokoll+Rechner+Portnumer Eingabe# {{{
 				# oder Protokoll+Verzeichnis.
-				unset -- Value
-				local Value
-
 				XMMS_SERVER_MSG=$(gettext 'Tragen Sie bitte die Adresse Ihres xmms2d Servers ein (Bsp.: tcp://host:9667 oder unix:///tmp/xmms-ipc-username). Siehe Hilfe.')
 				inputbox "$gv_Configuration" "$XMMS_SERVER_MSG" "$XMMS_PATH"
 				if [ -n "$gv_Auswahl" ] ; then
-					Anz=1
-					for i in `print ${gv_Auswahl//;/ }` ; {
-						case "$i" in
-							tcp://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|unix:///*)
-								if (( $Anz > 1 )) ; then
-									Value+=(\;${i})
-								else
-									Value+=($i)
-								fi
-								(( Anz++ ))
-								;;
-							*)
-								no_input_msg
-								;;
-						esac
-					}
+					XMMS_PATH="$gv_Auswahl"
+					# exportieren des Wertes
+					export XMMS_PATH
+				else
+					no_input_msg
 				fi
-				# Übernahme der Werte
-				XMMS_PATH="${Value//\ /}"
-				export XMMS_PATH
 				## }}}
 				kwxmms2_conf_menu $lv_Xmms_Client
 				;;
@@ -67,6 +62,7 @@ kwxmms2_conf() {
 				;;
 		esac
 	done
+	return 0
 }
 ## }}}
 ### Modeline {{{
