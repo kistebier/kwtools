@@ -100,6 +100,7 @@ kwxmms2_server_conf() {
 				;;
 			$lv_Output_Plugin)
 				# Auswahl des Musik Ausgabe Plugin (alsa,ao,ices,jack,oss,pulse)# {{{
+				umset -- OUTPUT_PLUGIN
 				if [[ $PLUGIN_ALSA == yes ]] ; then
 					OUTPUT_MENU+=(alsa \"\")
 				fi
@@ -120,6 +121,10 @@ kwxmms2_server_conf() {
 				fi
 				if [[ ${OUTPUT_MENU[1]} ]] ; then
 					OUTPUT_MENU+=($gv_Back \"\")
+				else
+					MSG=$(gettext 'Es ist kein Output Plugin installiert! Installieren Sie bitte eines!')
+					msgbox "$gv_Info" "$MSG"
+					break
 				fi
 				OUTPUT_MSG=$(gettext'Wählen Sie das Ausgabe Plugin aus.')
 				# Funktion (output_plugin_menu)# {{{
