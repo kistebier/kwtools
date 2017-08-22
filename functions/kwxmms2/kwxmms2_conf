@@ -31,7 +31,7 @@ kwxmms2_conf() {
 		case $gv_Auswahl in
 			HELP*)
 	    	    # Hilfe Messagebox
-				script_help conf_help
+				script_help conf_client_help
 				kwxmms2_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xmms_Server|---*)
@@ -44,11 +44,17 @@ kwxmms2_conf() {
 				XMMS_SERVER_MSG=$(gettext 'Tragen Sie bitte die Adresse Ihres xmms2d Servers ein (Bsp.: tcp://host:9667 oder unix:///tmp/xmms-ipc-username). Siehe Hilfe.')
 				inputbox "$gv_Configuration" "$XMMS_SERVER_MSG" "$XMMS_PATH"
 				if [ -n "$gv_Auswahl" ] ; then
-					XMMS_PATH="$gv_Auswahl"
-					# exportieren des Wertes
-					export XMMS_PATH
-				else
-					no_input_msg
+					case "$gv_Auswahl" in
+						tcp://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|unix:///*)
+							# Übernahme des Werte
+							XMMS_PATH="$gv_Auswahl"
+							# exportieren des Wertes
+							export XMMS_PATH
+							;;
+						*)
+							no_input_msg
+							;;
+					esac
 				fi
 				## }}}
 				kwxmms2_conf_menu $lv_Xmms_Client
@@ -58,7 +64,7 @@ kwxmms2_conf() {
 				kwxmms2_config
 				break
 				;;
-			$gv_Back)	break
+			$gv_Back|*)	break
 				;;
 		esac
 	done
