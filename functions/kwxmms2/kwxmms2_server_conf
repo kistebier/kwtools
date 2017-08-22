@@ -10,6 +10,8 @@ kwxmms2_server_conf() {
 	lv_Curl_Authproxy=$(gettext 'curl.authproxy')
 	lv_Curl_Proxyuser=$(gettext 'curl.proxyuser')
 	lv_Curl_Proxypass=$(gettext 'curl.proxypass')
+	lv_Oss_Device=$(gettext 'oss.device')
+	lv_Oss_Mixer=$(gettext 'oss.mixer')
 	## }}}
 	# Funktion (read_act_conf)# {{{
 	#
@@ -45,6 +47,12 @@ kwxmms2_server_conf() {
 					else
 						CURL_USEPROXY="no"
 					fi
+					;;
+				oss.device)
+					OSS_DEV="$Key"
+					;;
+				oss.mixer)
+					OSS_MIXER="$Key"
 					;;
 				*)
 					;;
@@ -85,6 +93,10 @@ kwxmms2_server_conf() {
 			\"$lv_Curl_Authproxy\" \"$CURL_AUTHPROXY\"
 			\"$lv_Curl_Proxyuser\" \"$CURL_PROXYUSER\"
 			\"$lv_Curl_Proxypass\" \"$CURL_PROXYPASS\")
+		fi
+		if [[ $PLUGIN_OSS == yes ]] ; then
+			CONF_MENU+=(\"$lv_Oss_Device\" \"$OSS_DEV\"
+			\"$lv_Oss_Mixer\" \"$OSS_MIXER\")
 		fi
 		CONF_MENU+=($gv_Back \"\")
 		menubox "$1" "$lv_Server_Conf" "$gv_Menupoint" "$CONF_MENU"
@@ -262,7 +274,17 @@ kwxmms2_server_conf() {
 				## }}}
 				kwxmms2_server_conf_menu $lv_Curl_Useproxy
 				;;
-			$gv_Back)	break
+			$lv_Oss_Device)
+				# Auswahl der OSS Soundkarte# {{{
+				## }}}
+				kwxmms2_server_conf_menu $lv_Oss_Device
+				;;
+			$lv_Oss_Mixer)
+				# Auswahl des OSS Soundkarten Mixer Device# {{{
+				## }}}
+				kwxmms2_server_conf_menu $lv_Oss_Mixer
+				;;
+			$gv_Back|*)	break
 				;;
 		esac
 	done
