@@ -11,7 +11,7 @@ kwxmms2d_conf() {
 	## }}}
 	# Funktion (kwxmms2_conf_menu)# {{{
 	kwxmms2d_conf_menu() {
-		CONF_MENU=(\"$lv_Xmms_Server\" \"$XMMS_SERVER_PATH\"
+		CONF_MENU=(\"$lv_Xmms_Server\" \"$XMMS_PATH_FULL\"
 		\"$lv_With_Logfile\" \"$WITHLOGFILE\" \"$lv_Logfile\" \"$LOGFILE\"
 	   \"$lv_Root\" \"$ROOT\" $gv_Save \"\" $gv_Back \"\")
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
@@ -24,27 +24,27 @@ kwxmms2d_conf() {
 	}
 	## }}}
 
-	# herrausfinden der alten Adresse
-	XMMS_SERVER_PATH=${${${(M)$(grep ipcsocket "$CONFFILE")##*(unix*|tcp*)}#*>}%<*}
-
 	kwxmms2d_conf_menu
-	while [ "$gv_Auswahl" ] ; do
+	while [ -n "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)
 	    	    # Hilfe Messagebox
-				script_help conf_help
+				script_help conf_server_help
 				kwxmms2d_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Xmms_Server)
-				# Protokoll+Rechner+Portnumer Eingabe# {{{
-				# oder Protokoll+Verzeichnis.
-				XMMS_SERVER_MSG=$(gettext 'Tragen Sie bitte die Adresse Ihres xmms2d Servers ein (Bsp.: tcp://host:9667 oder unix:///tmp/xmms-ipc-username). Siehe Hilfe.')
-				inputbox "$gv_Configuration" "$XMMS_SERVER_MSG" "$XMMS_SERVER_PATH"
+				# tcp://Rechner:Portnumer Eingabe# {{{
+				# und/oder unix:///tmp/Verzeichnis.
+				# Bei mehreren Adressen muss ein ";" dazwischen sein.
+				XMMS_SERVER_MSG=$(gettext 'Tragen Sie bitte die Adresse(n) Ihres xmms2d Servers ein (Bsp.: tcp://host:9667 oder unix:///tmp/xmms-ipc-username). Siehe Hilfe.')
+				inputbox "$gv_Configuration" "$XMMS_SERVER_MSG" "$XMMS_PATH_FULL"
 				if [ -n "$gv_Auswahl" ] ; then
 					case "$gv_Auswahl" in
-						tcp://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|unix:///*)
+						(tcp://*:*|unix:///*))
 							# Übernahme der Werte
-							XMMS_SERVER_PATH="$gv_Auswahl"
+							XMMS_PATH_FULL="$gv_Auswahl"
+							# Variabel XMMS_PATH belegen und exportieren
+							export_xmms_path
 							;;
 						*)
 							no_input_msg
