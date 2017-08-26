@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 22.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 26.08.2017
 #
 # Script: kwxmms2d, ein Script um den xmms2d Dämon
 # zu managen.
@@ -36,15 +36,17 @@ autoload -U script_init
 # Scriptinitialisierung
 script_init
 
-# Prüfen ob xmms2d und xmms2-launcher installiert sind.
-prog_check xmms2d xmms2-launcher
+# Prüfen ob xmms2d, xmms2-launcher und xmms2 installiert sind.
+prog_check xmms2d xmms2-launcher xmms2
 if [ -n "$NO_PROGS" ] ; then
 	exit 0
 fi
 
 # Variablen
+lv_Plugin_Conf=$(gettext 'PLugin Konfiguration')
 lv_Server_Start=$(gettext 'Server starten')
 lv_Server_Stop=$(gettext 'Server stoppen')
+lv_Server_Conf=$(gettext 'Server Konfiguration')
 CONFFILE="${HOME}/.config/xmms2/xmms2.conf"
 
 # Muster der Konfiguration erstellen
@@ -56,7 +58,38 @@ fi
 # Kwtools kwxmms2drc Konfiguration einlesen
 read_file kwxmms2drc
 
-# Funktion (read_prog_opt)# {{{
+# Funktion (check_status), Server Status herausfinden{{{
+#
+check_status() {
+	echo '\n' | xmms2 status >${gv_WorkDir}/state
+	#State_Entry=${(M)${(f)$(< ${gv_WorkDir}/state)}##[a-zA-Z]*}
+	State_Entry=${$(< ${gv_WorkDir}/state)##[(fr)[a-zA-Z]*]}
+	case "$State_Entry" in
+		*"not connect"*)
+			no_connect_msg
+			SRV_ONLINE=no
+			;;
+		*)
+			SRV_ONLINE=yes
+			;;
+	esac
+}
+#}}}
+# Funktion (export_xmms_path), Variabel XMMS_PATH belegen und exportieren{{{
+#
+export_xmms_path() {
+	if [[ -n $XMMS_PATH_FULL ]] ; then
+		if [[ ${(M)${XMMS_PATH_FULL}#*;*} ]] ; then
+			XMMS_PATH="${${(s:;:)${XMMS_PATH_FULL}}[1]}"
+			export XMMS_PATH
+		else
+			XMMS_PATH="$XMMS_PATH_FULL"
+			export XMMS_PATH
+		fi
+	fi
+}
+#}}}
+# Funktion (read_prog_opt), Start Optionen des Servers festlegen# {{{
 #
 read_prog_opt() {
 	unset -- PROG_OPT
@@ -83,6 +116,12 @@ main_menu() {
 }
 #}}}
 
+# herrausfinden der aktuellen Server Adresse(n)
+XMMS_PATH_FULL=${${${(M)$(grep ipcsocket "$CONFFILE")##*(unix*|tcp*)}#*>}%<*}
+# Falls die Server Adresse(n) nicht geändert werden, wird schon hier
+# die Variabel XMMS_PATH belegt und exportiert.
+export_xmms_path
+
 ##################################################################
 #
 # Hauptprogramm
@@ -99,15 +138,44 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
-			autoload -U kwxmms2d_conf kwxmms2d_config
-			kwxmms2d_conf
+			# Funktion (conf_menu){{{
+			#
+			conf_menu() {
+				CONF_MENU=(\"$lv_Server_Conf\" \"\" \"$lv_Plugin_Conf\" \"\"
+				$gv_Back \"\")
+				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
+			}
+			#}}}
+			conf_menu
+			while [[ -n $gv_Auswahl ]] ; do
+				case "$gv_Auswahl" in
+					HELP*)
+						script_help conf_help
+						conf_menu "${gv_Auswahl#HELP }"
+						;;
+					$lv_Server_Conf)
+						# xmms2 Client konfigurieren
+						autoload -U kwxmms2d_conf kwxmms2d_config
+						kwxmms2d_conf
+						conf_menu $lv_Server_Conf
+						;;
+					$lv_Plugin_Conf)
+						# installierte Plugins vom xmms2d Server konfigurieren
+						autoload -U kwxmms2_plugin_conf
+						kwxmms2_plugin_conf
+						conf_menu $lv_Plugin_Conf
+						;;
+					$gv_Back|*)
+						break
+						;;
+				esac
+			done
 			## }}}
 			main_menu "$gv_Configuration"
 			;;
 		$lv_Server_Start)
 			# lokalen Server starten# {{{
-			ps uxU $USER | grep xmms2d | egrep -v 'grep|kwxmms2d' >${gv_WorkDir}/ps
-			if [ "`wc -l < ${gv_WorkDir}/ps`" = 0 ] ; then
+			if ! ps uxu | grep xmms2d | egrep -v 'grep|kwxmms2d' ; then
 				read_prog_opt
 				eval xmms2-launcher "${=PROG_OPT}" 1>/dev/null || prog_failure
 			else
