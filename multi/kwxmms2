@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 22.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 26.08.2017
 #
 # Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
 # zu managen.
@@ -47,8 +47,6 @@ lv_Server_Plugins=$(gettext 'Plugins')
 lv_Playlist=$(gettext 'Playliste')
 lv_Playlists=$(gettext 'Playlisten')
 lv_Player=$(gettext 'Player')
-lv_Client_Conf=$(gettext 'Client Konfiguration')
-lv_Server_Conf=$(gettext 'Server Konfiguration')
 
 
 # Funktion (read_conf), Konf.-Datei einlesen.# {{{
@@ -64,7 +62,7 @@ read_conf() {
 # Funktion main_menu{{{
 #
 main_menu() {
-	MAIN_MENU=($gv_Configuration \"\" \"$lv_Server_Conf\" \"\" 
+	MAIN_MENU=($gv_Configuration \"\"
 	$lv_Player \"\" $lv_Playlists \"\"
 	\"$lv_Server_Plugins\" \"\" $gv_Exit \"\")
 	menubox "$1" "$gv_Mainmenu" "$gv_Menupoint" "$MAIN_MENU"
@@ -499,47 +497,11 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$gv_Configuration)
 			# Konfiguration# {{{
-			# Funktion (conf_menu){{{
-			#
-			conf_menu() {
-				CONF_MENU=(\"$lv_Client_Conf\" \"\" \"$lv_Server_Conf\" \"\"
-				$gv_Back \"\")
-				menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
-			}
-			#}}}
-			conf_menu
-			while [[ -n $gv_Auswahl ]] ; do
-				case "$gv_Auswahl" in
-					HELP*)
-						script_help help
-						conf_menu "${gv_Auswahl#HELP }"
-						;;
-					$lv_Client_Conf)
-						# xmms2 Client konfigurieren
-						autoload -U kwxmms2_conf kwxmms2_config
-						kwxmms2_conf
-						conf_menu $lv_Client_Conf
-						;;
-					$lv_Server_Conf)
-						# xmms2d Server konfigurieren
-						autoload -U kwxmms2_server_conf
-						kwxmms2_server_conf
-						conf_menu $lv_Server_Conf
-						;;
-					$gv_Back|*)
-						break
-						;;
-				esac
-			done
+			# xmms2 Client konfigurieren
+			autoload -U kwxmms2_conf kwxmms2_config
+			kwxmms2_conf
 			## }}}
 			main_menu $gv_Configuration
-			;;
-		$lv_Server_Conf)
-			# Server Konfiguration# {{{
-			autoload -U kwxmms2_server_conf
-			kwxmms2_server_conf
-			## }}}
-			main_menu $lv_Server_Conf
 			;;
 		$lv_Player)
 			# Player bedienen# {{{
