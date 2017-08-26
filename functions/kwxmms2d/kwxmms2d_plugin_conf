@@ -1,0 +1,438 @@
+# Funktion (kwxmms2_plugin_conf)# {{{
+#
+# usage: kwxmms2_plugin_conf
+kwxmms2_plugin_conf() {
+	# Variabeln# {{{
+	lv_Output_Plugin=$(gettext 'output.plugin')
+	lv_Alsa_Device=$(gettext 'alsa.device')
+	lv_Curl_Proxyaddress=$(gettext 'curl.proxyaddress')
+	lv_Curl_Useproxy=$(gettext 'curl.useproxy')
+	lv_Curl_Authproxy=$(gettext 'curl.authproxy')
+	lv_Curl_Proxyuser=$(gettext 'curl.proxyuser')
+	lv_Curl_Proxypass=$(gettext 'curl.proxypass')
+	lv_Oss_Device=$(gettext 'oss.device')
+	lv_Oss_Mixer=$(gettext 'oss.mixer')
+	## }}}
+	# Funktion (plugin_support), vorhandene plugins speichern# {{{
+	#
+	plugin_support() {
+		xmms2 server plugins > ${gv_WorkDir}/plugins
+	}
+	## }}}
+	# Funktion (read_act_conf)# {{{
+	#
+	read_act_conf() {
+		local Value Delimiter Key
+		while read Value Delimiter Key ; do
+			case "$Value" in
+				alsa.device)
+					ALSA_DEV="$Key"
+					;;
+				output.plugin)
+					OUTPUT_PLUGIN="$Key"
+					;;
+				curl.authproxy)
+					if (( $Key == 1 )) ; then
+						CURL_AUTHPROXY="yes"
+					else
+						CURL_AUTHPROXY="no"
+					fi
+					;;
+				curl.proxyaddress)
+					CURL_PROXYADR="$Key"
+					;;
+				curl.proxypass)
+					CURL_PROXYPASS="$Key"
+					;;
+				curl.proxyuser)
+					CURL_PROXYUSER="$Key"
+					;;
+				curl.useproxy)
+					if (( $Key == 1 )) ; then
+						CURL_USEPROXY="yes"
+					else
+						CURL_USEPROXY="no"
+					fi
+					;;
+				oss.device)
+					OSS_DEV="$Key"
+					;;
+				oss.mixer)
+					OSS_MIXER="$Key"
+					;;
+				*)
+					;;
+			esac
+		done < ${gv_WorkDir}/config
+	}
+	## }}}
+	# Funktion (read_alsa_cards)# {{{
+	#
+	read_alsa_cards() {
+		SND_CARDS=(default \"\")
+		print -l ${(M)${(f)"$(< /proc/asound/cards)"}## <-> *} | \
+			while read Nr Name Rest ; do 
+				SND_CARDS+=(${Name#\[} \"\")
+			done
+	}
+	## }}}
+	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
+	#####################################
+	# TODO: nochmal checken, was ist mit list_pls?
+	#####################################
+	read_plugins() {
+		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
+		plugin_support
+		while read Plugin Char Desc ; do
+			case $Plugin in
+				alsa)	# ALSA Ausgabe Plugin
+					PLUGIN_ALSA=yes
+					;;
+				ao)	# Erweiterung, Ausgabe mittels libao, Plugin
+					PLUGIN_ALSA=yes
+					;;
+				apefile)	# Monkey's-Audio-Dateien Dekodierer Plugin
+					PLUGIN_APEFILE=yes
+					;;
+				asf)	# ASF-Erweiterung Plugin, ermöglicht das Entschlüsseln von
+						# ASF (Advanced Systems Format).
+					PLS_SUFFIX+=(.asx .ASX)
+					;;
+				asx)	# asx playlist Plugin
+					PLS_SUFFIX+=(.asx .ASX)
+					;;
+				avcodec)	# dekodieren von avcodec Plugin
+					PLUGIN_AVCODEC=yes
+					;;
+				cdda)	# CDDA (Audio-CDs)  Plugin
+					PLUGIN_CDDA=yes
+					;;
+				curl)	# CURL (HTTP-Transport) Plugin
+					PLUGIN_CURL=yes
+					;;
+				cue)	# CUE Dateien Plugin
+					PLUGIN_CUE=yes
+					;;
+				daap)	# DAAP (Digital Audio Access Protokoll) Plugin,
+						# Medienbibliothek übers Netzwerk verteilen.
+					PLUGIN_DAAP=yes
+					;;
+				faad)	# FAAD-Dekodierer Plugin
+					PLUGIN_FAAD=yes
+					;;
+				flac)	# FLAC-Dekodierer Plugin
+					PLUGIN_FLAC=yes
+					;;
+				flv)	# FLV-Video-Erweiterung Plugin, ermöglicht das extrahieren von
+						# Audio aus Flash-Video-Dateien
+					PLUGIN_FLV=yes
+					;;
+				html)	# html playlist Plugin
+					PLS_SUFFIX+=(.html .HTML)
+					;;
+				ices)	# Ogg-Streaming-Ausgabe Plugin
+					PLUGIN_ICES=yes
+					;;
+				jack)	# JACK Ausgabe Plugin
+					PLUGIN_JACK=yes
+					;;
+				m3u)	# M3U playlist Plugin
+					PLS_SUFFIX+=(.m3u .M3U)
+					;;
+				mad)	# mittels libmad MP3s dekodieren Plugin
+					PLUGIN_MAD=yes
+					;;
+				mms)	# MMS-Transport Plugin
+					PLUGIN_MMS=yes
+					;;
+				modplug)	# MODPlug-Dekodierungs Plugin
+					PLUGIN_MODPLUG=yes
+					;;
+				mp4)	# MP4-Container dekodieren Plugin
+					PLUGIN_MP4=yes
+					;;
+				mpg123)	# libmpg123-basierte MP3-Dekodierung Plugin
+					PLUGIN_MPG123=yes
+					;;
+				musepack)	# MPC-Dekodierungs Plugin
+					PLUGIN_MUSEPACK=yes
+					;;
+				normalize)	# Normalisierungs-Erweiterung Plugin, ermöglicht die
+						# Lautstärke zu normalisieren.
+					PLUGIN_NORMALIZE=yes
+					;;
+				oss)	# OSS Ausgabe Plugin
+					PLUGIN_OSS=yes
+					;;
+				pls)	# PLS playlist Plugin
+					PLS_SUFFIX+=(.pls .PLS)
+					;;
+				pulse)	# Erweiterung, Pulseaudio Ausgabe Plugin
+					PLUGIN_PULSE=yes
+					;;
+				rss)	# rss playlist Plugin
+					PLS_SUFFIX+=(.rss .RSS)
+					;;
+				smb)	# SMB-Transport (Server Message Block) Plugin
+					PLUGIN_SMB=yes
+					;;
+				tta)	# TTA-Dekodierung (True-Audio-Dateien) Plugin
+					PLUGIN_TTA=yes
+					;;
+				vorbis)	# Ogg-Vorbis-Dekodierungs Plugin
+					PLUGIN_VORBIS=yes
+					;;
+				wavpack)	# WavPack-Dekodierungs Plugin
+					PLUGIN_WAVPACK=yes
+					;;
+				xspf)	# xspf playlist Plugin
+					PLS_SUFFIX+=(.xspf .XSPF)
+					;;
+			esac
+		done < ${gv_WorkDir}/plugins
+	}
+	## }}}
+	# Funktion (server_config), Server Konfiguration# {{{
+	#
+	server_config() {
+		xmms2 server config > ${gv_WorkDir}/config
+	}
+	## }}}
+	# Status des XMMS2 Server prüfen und aktuelle Konfiguration einlesen.# {{{
+	check_status
+	if [[ $SRV_ONLINE == yes ]] ; then
+		plugin_support
+		server_config
+		read_act_conf
+		read_plugins
+	else
+		no_server_online
+		return 1
+	fi
+	## }}}
+	# Funktion (kwxmms2_plugin_conf_menu)# {{{
+	kwxmms2_plugin_conf_menu() {
+		CONF_MENU=(\"$lv_Output_Plugin\" \"$OUTPUT_PLUGIN\")
+		if [[ $PLUGIN_ALSA == yes ]] ; then
+			CONF_MENU+=(\"$lv_Alsa_Device\" \"$ALSA_DEV\")
+		fi
+		if [[ $PLUGIN_CURL == yes ]] ; then
+			CONF_MENU+=(\"$lv_Curl_Proxyaddress\" \"$CURL_PROXYADR\"
+			\"$lv_Curl_Useproxy\" \"$CURL_USEPROXY\"
+			\"$lv_Curl_Authproxy\" \"$CURL_AUTHPROXY\"
+			\"$lv_Curl_Proxyuser\" \"$CURL_PROXYUSER\"
+			\"$lv_Curl_Proxypass\" \"$CURL_PROXYPASS\")
+		fi
+		if [[ $PLUGIN_OSS == yes ]] ; then
+			CONF_MENU+=(\"$lv_Oss_Device\" \"$OSS_DEV\"
+			\"$lv_Oss_Mixer\" \"$OSS_MIXER\")
+		fi
+		CONF_MENU+=($gv_Back \"\")
+		menubox "$1" "$lv_Plugin_Conf" "$gv_Menupoint" "$CONF_MENU"
+	}
+	## }}}
+	kwxmms2_plugin_conf_menu
+	while [ "$gv_Auswahl" ] ; do
+		case $gv_Auswahl in
+			HELP*)
+	    	    # Hilfe Messagebox
+				script_help conf_plugin_help
+				kwxmms2_plugin_conf_menu "${gv_Auswahl#HELP }"
+				;;
+			$lv_Output_Plugin)
+				# Auswahl des Musik Ausgabe Plugin (alsa,ao,ices,jack,oss,pulse)# {{{
+				umset -- OUTPUT_PLUGIN
+				if [[ $PLUGIN_ALSA == yes ]] ; then
+					OUTPUT_MENU+=(alsa \"\")
+				fi
+				if [[ $PLUGIN_AO == yes ]] ; then
+					OUTPUT_MENU+=(ao \"\")
+				fi
+				if [[ $PLUGIN_ICES == yes ]] ; then
+					OUTPUT_MENU+=(ices \"\")
+				fi
+				if [[ $PLUGIN_JACK == yes ]] ; then
+					OUTPUT_MENU+=(jack \"\")
+				fi
+				if [[ $PLUGIN_OSS == yes ]] ; then
+					OUTPUT_MENU+=(oss \"\")
+				fi
+				if [[ $PLUGIN_PULSE == yes ]] ; then
+					OUTPUT_MENU+=(pulse \"\")
+				fi
+				if [[ ${OUTPUT_MENU[1]} ]] ; then
+					OUTPUT_MENU+=($gv_Back \"\")
+				else
+					MSG=$(gettext 'Es ist kein Output Plugin installiert! Installieren Sie bitte eines!')
+					msgbox "$gv_Info" "$MSG"
+					break
+				fi
+				OUTPUT_MSG=$(gettext'Wählen Sie das Ausgabe Plugin aus.')
+				# Funktion (output_plugin_menu)# {{{
+				output_plugin_menu() {
+					menubox "$1" "$gv_Configuration" "$OUTPUT_MSG" "$OUTPUT_MENU"
+				}
+				## }}}
+				output_plugin_menu
+				while [[ -n $gv_Auswahl ]] ; do
+					case "$gv_Auswahl" in
+						HELP*)
+							script_help conf_output_plugin_help
+							output_plugin_menu "${gv_Auswahl#HELP }"
+							;;
+						a*|i*|j*|o*|p*)	# Auswahl übernehmen
+							OUTPUT_PLUGIN="$gv_Auswahl"
+							xmms2 server config output.plugin "$gv_Auswahl"
+							break
+							;;
+						$gv_Back|*)
+							break
+							;;
+					esac
+				done
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Output_Plugin
+				;;
+			$lv_Alsa_Device)
+				# Auswahl der Alsa Soundkarte# {{{
+				read_alsa_cards
+				if [[ -n ${SND_CARDS[1]}  ]] ; then
+					# Funktion (alsa_dev_menu)# {{{
+					alsa_dev_menu() {
+						ALSA_DEV_MENU=($SND_CARDS $gv_Back \"\")
+						ALSA_DEV_MSG=$(gettext 'Wählen Sie eine Soundkarte aus.')
+						menubox "$1" "$gv_Configuration" "$ALSA_DEV_MSG" "$ALSA_DEV_MENU"
+					}
+					## }}}
+					alsa_dev_menu
+					while [[ -n $gv_Auswahl ]] ; do
+						case "$gv_Auswahl" in
+							HELP*)
+								script_help conf_alsa_dev_help
+								alsa_dev_menu "${gv_Auswahl#HELP }"
+								;;
+							default)	# Auswahl übernehmen
+								ALSA_DEV="$gv_Auswahl"
+								xmms2 server config alsa.device "$gv_Auswahl"
+								break
+								;;
+							[A-Z]*)	# Auswahl übernehmen
+								ALSA_DEV="$gv_Auswahl"
+								xmms2 server config alsa.device "default:CARD=$gv_Auswahl"
+								break
+								;;
+							$gv_Back|*)
+								break
+								;;
+						esac
+					done
+				else
+					MSG=$(gettext 'Es ist keine von Alsa unterstützte Soundkarte vorhanden.')
+					msgbox "$gv_Info" "$MSG"
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Alsa_Device
+				;;
+			$lv_Curl_Authproxy)
+				# Authentifizierung gegenüber des Proxy (ja/nein)?# {{{
+				CURL_AUTHPROXY_MSG=$(gettext 'Muss man sich gegenüber des Proxy authentifizieren (${gv_Yes}/${gv_No}?)')
+				yesno "$gv_Configuration" "$CURL_AUTHPROXY_MSG" "$CURL_AUTHPROXY"
+				if [[ $gv_Auswahl == yes ]] ; then
+					CURL_AUTHPROXY="$gv_Auswahl"
+					xmms2 server config curl.authproxy 1
+				else
+					CURL_AUTHPROXY="$gv_Auswahl"
+					xmms2 server config curl.authproxy 0
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Curl_Authproxy
+				;;
+			$lv_Curl_Proxyaddress)
+				# Eingabe von Curl Proxy Adresse# {{{
+				# vorhandene Proxy Konfiguration einlesen.
+				if_conf_file "$OS" proxy
+				# Protokoll+Rechner+Portnumer Eingabe
+				conf_proxy -h
+				if [[ -n $gv_Http_Proxy ]] ; then
+					CURL_PROXYADR="$gv_Http_Proxy"
+					xmms2 server config curl.proxyaddress "$gv_Http_Proxy"
+				else
+					CURL_PROXYADR=""
+					xmms2 server config curl.proxyaddress ""
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Curl_Proxyaddress
+				;;
+			$lv_Curl_Proxypass)
+				# Passwort für die Authentifizierung gegenüber dem Proxy eingeben.# {{{
+				CURL_PROXYPASS_MSG=$(gettext 'Geben Sie das Passwort Ihres Proxy ein und wiederholen Sie das Passwort im Feld darunter. Mit den Pfeiltasten können Sie zwischen den Eingabefeldern springen.')
+				mixed_password "$gv_Configuration" "$CURL_PROXYPASS_MSG"
+				if [[ -n $gv_Pass ]] ; then
+					CURL_PROXYPASS="$gv_Star_Passphrase"
+					xmms2 server config curl.proxypass "$gv_Pass"
+					unset -- gv_Pass gv_Star_Passphrase
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Curl_Proxypass
+				;;
+			$lv_Curl_Proxyuser)
+				# Proxy User für die Authentifizierung gegenüber dem Proxy eingeben.# {{{
+				CURL_PROXYUSER_MSG=$(gettext'Geben Sie bitte den Benutzer ein mit dem Sie sich gegenüber dem Proxy authentifizieren.')
+				inputbox "$gv_Configuration" "$CURL_PROXYUSER_MSG" "$CURL_PROXYUSER"
+				if [[ -n $gv_Auswahl ]] ; then
+					CURL_PROXYUSER="$gv_Auswahl"
+					xmms2 server config curl.proxyuser "$gv_Auswahl"
+				else
+					CURL_PROXYUSER=""
+					xmms2 server config curl.proxyuser ""
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Curl_Proxyuser
+				;;
+			$lv_Curl_Useproxy)
+				# Curl proxy benutzen (ja/nein)?# {{{
+				CURL_USEPROXY_MSG=$(gettext 'Soll ein Proxy benutzt werden (${gv_Yes}/${gv_No}?)')
+				yesno "$gv_Configuration" "$CURL_USEPROXY_MSG" "$CURL_USEPROXY"
+				if [[ $gv_Auswahl == yes ]] ; then
+					CURL_USEPROXY="$gv_Auswahl"
+					xmms2 server config curl.useproxy 1
+				else
+					CURL_USEPROXY="$gv_Auswahl"
+					xmms2 server config curl.useproxy 0
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Curl_Useproxy
+				;;
+			$lv_Oss_Device)
+				# Auswahl der OSS Soundkarte# {{{
+				FORMAT=CHAR
+				file_choice "${${OSS_DEV%/*}:-/dev/snd}" only "$OSS_DEV"
+				if [[ -n $WERT ]] ; then
+					OSS_DEV="${VERZ}/${WERT}"
+					xmms2 server config oss.device $OSS_DEV
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Oss_Device
+				;;
+			$lv_Oss_Mixer)
+				# Auswahl des OSS Soundkarten Mixer Device# {{{
+				FORMAT=CHAR
+				file_choice /dev only "$OSS_MIXER"
+				if [[ -n $WERT ]] ; then
+					OSS_MIXER="${VERZ}/${$WERT}"
+					xmms2 server config oss.mixer $OSS_MIXER
+				fi
+				## }}}
+				kwxmms2_plugin_conf_menu $lv_Oss_Mixer
+				;;
+			$gv_Back|*)	break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4:                                                                               
+### }}}
