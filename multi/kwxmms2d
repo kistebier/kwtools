@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 26.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 06.09.2017
 #
 # Script: kwxmms2d, ein Script um den xmms2d Dämon
 # zu managen.
@@ -161,8 +161,8 @@ while [ "$gv_Auswahl" ] ; do
 						;;
 					$lv_Plugin_Conf)
 						# installierte Plugins vom xmms2d Server konfigurieren
-						autoload -U kwxmms2_plugin_conf
-						kwxmms2_plugin_conf
+						autoload -U kwxmms2d_plugin_conf
+						kwxmms2d_plugin_conf
 						conf_menu $lv_Plugin_Conf
 						;;
 					$gv_Back|*)
@@ -175,7 +175,7 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$lv_Server_Start)
 			# lokalen Server starten# {{{
-			if ! ps uxu | grep xmms2d | egrep -v 'grep|kwxmms2d' ; then
+			if ! ps x | grep xmms2d | egrep -v 'grep|kwxmms2d' ; then
 				read_prog_opt
 				eval xmms2-launcher "${=PROG_OPT}" 1>/dev/null || prog_failure
 			else
@@ -187,11 +187,10 @@ while [ "$gv_Auswahl" ] ; do
 			;;
 		$lv_Server_Stop)
 			# lokale(n) Server stoppen# {{{
-			ps uxU $USER | grep xmms2d | egrep -v 'grep|kwxmms2d' >${gv_WorkDir}/ps
-			if [ "`wc -l < ${gv_WorkDir}/ps`" != 0 ] ; then
-				while read User Ps_Id Rest ; do
-					kill "$Ps_Id"
-				done < ${gv_WorkDir}/ps
+			if ps x | grep xmms2d | egrep -v 'grep|kwxmms2d' ; then
+				for i in `pidof xmms2d` ; {
+					kill "$i"
+				}
 			else
 				MSG=$(gettext 'Es läuft kein XMMS Server.')
 				msgbox "$gv_Info" "$MSG"

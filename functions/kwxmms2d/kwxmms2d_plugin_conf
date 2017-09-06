@@ -1,7 +1,7 @@
-# Funktion (kwxmms2_plugin_conf)# {{{
+# Funktion (kwxmms2d_plugin_conf)# {{{
 #
 # usage: kwxmms2_plugin_conf
-kwxmms2_plugin_conf() {
+kwxmms2d_plugin_conf() {
 	# Variabeln# {{{
 	lv_Output_Plugin=$(gettext 'output.plugin')
 	lv_Alsa_Device=$(gettext 'alsa.device')
@@ -210,8 +210,8 @@ kwxmms2_plugin_conf() {
 		return 1
 	fi
 	## }}}
-	# Funktion (kwxmms2_plugin_conf_menu)# {{{
-	kwxmms2_plugin_conf_menu() {
+	# Funktion (kwxmms2d_plugin_conf_menu)# {{{
+	kwxmms2d_plugin_conf_menu() {
 		CONF_MENU=(\"$lv_Output_Plugin\" \"$OUTPUT_PLUGIN\")
 		if [[ $PLUGIN_ALSA == yes ]] ; then
 			CONF_MENU+=(\"$lv_Alsa_Device\" \"$ALSA_DEV\")
@@ -231,13 +231,13 @@ kwxmms2_plugin_conf() {
 		menubox "$1" "$lv_Plugin_Conf" "$gv_Menupoint" "$CONF_MENU"
 	}
 	## }}}
-	kwxmms2_plugin_conf_menu
+	kwxmms2d_plugin_conf_menu
 	while [ "$gv_Auswahl" ] ; do
 		case $gv_Auswahl in
 			HELP*)
 	    	    # Hilfe Messagebox
 				script_help conf_plugin_help
-				kwxmms2_plugin_conf_menu "${gv_Auswahl#HELP }"
+				kwxmms2d_plugin_conf_menu "${gv_Auswahl#HELP }"
 				;;
 			$lv_Output_Plugin)
 				# Auswahl des Musik Ausgabe Plugin (alsa,ao,ices,jack,oss,pulse)# {{{
@@ -291,7 +291,7 @@ kwxmms2_plugin_conf() {
 					esac
 				done
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Output_Plugin
+				kwxmms2d_plugin_conf_menu $lv_Output_Plugin
 				;;
 			$lv_Alsa_Device)
 				# Auswahl der Alsa Soundkarte# {{{
@@ -331,7 +331,7 @@ kwxmms2_plugin_conf() {
 					msgbox "$gv_Info" "$MSG"
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Alsa_Device
+				kwxmms2d_plugin_conf_menu $lv_Alsa_Device
 				;;
 			$lv_Curl_Authproxy)
 				# Authentifizierung gegenüber des Proxy (ja/nein)?# {{{
@@ -345,7 +345,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config curl.authproxy 0
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Curl_Authproxy
+				kwxmms2d_plugin_conf_menu $lv_Curl_Authproxy
 				;;
 			$lv_Curl_Proxyaddress)
 				# Eingabe von Curl Proxy Adresse# {{{
@@ -361,7 +361,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config curl.proxyaddress ""
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Curl_Proxyaddress
+				kwxmms2d_plugin_conf_menu $lv_Curl_Proxyaddress
 				;;
 			$lv_Curl_Proxypass)
 				# Passwort für die Authentifizierung gegenüber dem Proxy eingeben.# {{{
@@ -373,7 +373,7 @@ kwxmms2_plugin_conf() {
 					unset -- gv_Pass gv_Star_Passphrase
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Curl_Proxypass
+				kwxmms2d_plugin_conf_menu $lv_Curl_Proxypass
 				;;
 			$lv_Curl_Proxyuser)
 				# Proxy User für die Authentifizierung gegenüber dem Proxy eingeben.# {{{
@@ -387,7 +387,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config curl.proxyuser ""
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Curl_Proxyuser
+				kwxmms2d_plugin_conf_menu $lv_Curl_Proxyuser
 				;;
 			$lv_Curl_Useproxy)
 				# Curl proxy benutzen (ja/nein)?# {{{
@@ -401,7 +401,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config curl.useproxy 0
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Curl_Useproxy
+				kwxmms2d_plugin_conf_menu $lv_Curl_Useproxy
 				;;
 			$lv_Oss_Device)
 				# Auswahl der OSS Soundkarte# {{{
@@ -412,7 +412,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config oss.device $OSS_DEV
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Oss_Device
+				kwxmms2d_plugin_conf_menu $lv_Oss_Device
 				;;
 			$lv_Oss_Mixer)
 				# Auswahl des OSS Soundkarten Mixer Device# {{{
@@ -423,7 +423,7 @@ kwxmms2_plugin_conf() {
 					xmms2 server config oss.mixer $OSS_MIXER
 				fi
 				## }}}
-				kwxmms2_plugin_conf_menu $lv_Oss_Mixer
+				kwxmms2d_plugin_conf_menu $lv_Oss_Mixer
 				;;
 			$gv_Back|*)	break
 				;;
