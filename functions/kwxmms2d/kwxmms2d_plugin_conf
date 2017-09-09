@@ -5,13 +5,18 @@ kwxmms2d_plugin_conf() {
 	# Variabeln# {{{
 	lv_Output_Plugin=$(gettext 'output.plugin')
 	lv_Alsa_Device=$(gettext 'alsa.device')
+	lv_Cdda_Device=$(gettext 'cdda.device')
+	lv_Diskwrite_Dest_Dir=$(gettext 'diskwrite.destination_directory')
 	lv_Curl_Proxyaddress=$(gettext 'curl.proxyaddress')
 	lv_Curl_Useproxy=$(gettext 'curl.useproxy')
 	lv_Curl_Authproxy=$(gettext 'curl.authproxy')
 	lv_Curl_Proxyuser=$(gettext 'curl.proxyuser')
 	lv_Curl_Proxypass=$(gettext 'curl.proxypass')
+	lv_Mad_Enc=$(gettext 'mad.id3v1_encoding')
+	lv_Mpg123_Enc=$(gettext 'mpg123.id3v1_encoding')
 	lv_Oss_Device=$(gettext 'oss.device')
 	lv_Oss_Mixer=$(gettext 'oss.mixer')
+	ENC_MSG=$(gettext 'Geben Sie den Zeichensatz zum enkodieren von id3v2 Tags an (z.B. ISO8859-1 oder UTF-8)')
 	## }}}
 	# Funktion (plugin_support), vorhandene plugins speichern# {{{
 	#
@@ -30,6 +35,12 @@ kwxmms2d_plugin_conf() {
 					;;
 				output.plugin)
 					OUTPUT_PLUGIN="$Key"
+					;;
+				cdda.device)
+					CDDA_DEV="$Key"
+					;;
+				diskwrite.destination_directory)
+					DESTINATION_DIR="$Key"
 					;;
 				curl.authproxy)
 					if (( $Key == 1 )) ; then
@@ -54,6 +65,12 @@ kwxmms2d_plugin_conf() {
 						CURL_USEPROXY="no"
 					fi
 					;;
+				mad.id3v1_encoding)
+					MAD_ENC="$Key"
+					;;
+				mpg123.id3v1_encoding)
+					MPG123_ENC="$Key"
+					;;
 				oss.device)
 					OSS_DEV="$Key"
 					;;
@@ -77,9 +94,6 @@ kwxmms2d_plugin_conf() {
 	}
 	## }}}
 	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
-	#####################################
-	# TODO: nochmal checken, was ist mit list_pls?
-	#####################################
 	read_plugins() {
 		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
 		plugin_support
@@ -93,13 +107,6 @@ kwxmms2d_plugin_conf() {
 					;;
 				apefile)	# Monkey's-Audio-Dateien Dekodierer Plugin
 					PLUGIN_APEFILE=yes
-					;;
-				asf)	# ASF-Erweiterung Plugin, ermöglicht das Entschlüsseln von
-						# ASF (Advanced Systems Format).
-					PLS_SUFFIX+=(.asx .ASX)
-					;;
-				asx)	# asx playlist Plugin
-					PLS_SUFFIX+=(.asx .ASX)
 					;;
 				avcodec)	# dekodieren von avcodec Plugin
 					PLUGIN_AVCODEC=yes
@@ -127,8 +134,11 @@ kwxmms2d_plugin_conf() {
 						# Audio aus Flash-Video-Dateien
 					PLUGIN_FLV=yes
 					;;
-				html)	# html playlist Plugin
-					PLS_SUFFIX+=(.html .HTML)
+				gme)	# Game Music Emulator, Plugin
+					PLUGIN_GME=yes
+					;;
+				gvfs)	# GVFS-Transport (Glib virtual file system), Plugin
+					PLUGIN_GVFS=yes
 					;;
 				ices)	# Ogg-Streaming-Ausgabe Plugin
 					PLUGIN_ICES=yes
@@ -136,8 +146,8 @@ kwxmms2d_plugin_conf() {
 				jack)	# JACK Ausgabe Plugin
 					PLUGIN_JACK=yes
 					;;
-				m3u)	# M3U playlist Plugin
-					PLS_SUFFIX+=(.m3u .M3U)
+				karaoke)	# Karaoke Erweiterung Plugin
+					PLUGIN_KARAOKE=yes
 					;;
 				mad)	# mittels libmad MP3s dekodieren Plugin
 					PLUGIN_MAD=yes
@@ -161,20 +171,20 @@ kwxmms2d_plugin_conf() {
 						# Lautstärke zu normalisieren.
 					PLUGIN_NORMALIZE=yes
 					;;
+				ofa)	# Open Fingerprint Architektur, Plugin
+					PLUGIN_OFA=yes
+					;;
 				oss)	# OSS Ausgabe Plugin
 					PLUGIN_OSS=yes
-					;;
-				pls)	# PLS playlist Plugin
-					PLS_SUFFIX+=(.pls .PLS)
 					;;
 				pulse)	# Erweiterung, Pulseaudio Ausgabe Plugin
 					PLUGIN_PULSE=yes
 					;;
-				rss)	# rss playlist Plugin
-					PLS_SUFFIX+=(.rss .RSS)
-					;;
 				smb)	# SMB-Transport (Server Message Block) Plugin
 					PLUGIN_SMB=yes
+					;;
+				sid)	# Decodierung von C64- und C128-Melodien, Plugin
+					PLUGIN_SID=yes
 					;;
 				tta)	# TTA-Dekodierung (True-Audio-Dateien) Plugin
 					PLUGIN_TTA=yes
@@ -184,9 +194,6 @@ kwxmms2d_plugin_conf() {
 					;;
 				wavpack)	# WavPack-Dekodierungs Plugin
 					PLUGIN_WAVPACK=yes
-					;;
-				xspf)	# xspf playlist Plugin
-					PLS_SUFFIX+=(.xspf .XSPF)
 					;;
 			esac
 		done < ${gv_WorkDir}/plugins
@@ -212,9 +219,13 @@ kwxmms2d_plugin_conf() {
 	## }}}
 	# Funktion (kwxmms2d_plugin_conf_menu)# {{{
 	kwxmms2d_plugin_conf_menu() {
-		CONF_MENU=(\"$lv_Output_Plugin\" \"$OUTPUT_PLUGIN\")
+		CONF_MENU=(\"$lv_Output_Plugin\" \"$OUTPUT_PLUGIN\"
+		\"$lv_Diskwrite_Dest_Dir\" \"$DESTINATION_DIR\")
 		if [[ $PLUGIN_ALSA == yes ]] ; then
 			CONF_MENU+=(\"$lv_Alsa_Device\" \"$ALSA_DEV\")
+		fi
+		if [[ $PLUGIN_CDDA == yes ]] ; then
+			CONF_MENU+=(\"$lv_Cdda_Device\" \"$CDDA_DEV\")
 		fi
 		if [[ $PLUGIN_CURL == yes ]] ; then
 			CONF_MENU+=(\"$lv_Curl_Proxyaddress\" \"$CURL_PROXYADR\"
@@ -222,6 +233,12 @@ kwxmms2d_plugin_conf() {
 			\"$lv_Curl_Authproxy\" \"$CURL_AUTHPROXY\"
 			\"$lv_Curl_Proxyuser\" \"$CURL_PROXYUSER\"
 			\"$lv_Curl_Proxypass\" \"$CURL_PROXYPASS\")
+		fi
+		if [[ $PLUGIN_MAD == yes ]] ; then
+			CONF_MENU+=(\"$lv_Mad_Enc\" \"$MAD_ENC\")
+		fi
+		if [[ $PLUGIN_MPG123 == yes ]] ; then
+			CONF_MENU+=(\"$lv_Mpg123_Enc\" \"$MPG123_ENC\")
 		fi
 		if [[ $PLUGIN_OSS == yes ]] ; then
 			CONF_MENU+=(\"$lv_Oss_Device\" \"$OSS_DEV\"
@@ -333,6 +350,33 @@ kwxmms2d_plugin_conf() {
 				## }}}
 				kwxmms2d_plugin_conf_menu $lv_Alsa_Device
 				;;
+			$lv_Cdda_Device)
+				# Auswahl des CD/DVD Laufwerks# {{{
+				fselect "${${CDDA_DEV%/*}:-/dev}"
+				if [[ -n $gv_Auswahl ]] ; then
+					CDDA_DEV="$gv_Auswahl"
+					xmms2 server config cdda.device $CDDA_DEV
+				fi
+				## }}}
+				kwxmms2d_plugin_conf_menu $lv_Cdda_Device
+				;;
+			$lv_Diskwrite_Dest_Dir)
+				# Temporäres Verzeichnis auswählen{{{
+				dselect "$DESTINATION_DIR"
+				if [[ -n $VERZ ]] ; then
+					dselect_check -c "$VERZ"
+					if [[ -d $VERZ ]] ; then
+						DESTINATION_DIR="$VERZ"
+					else
+						DESTINATION_DIR="/tmp"
+					fi
+				else
+					DESTINATION_DIR="/tmp"
+				fi
+				xmms2 server config diskwrite.destination_directory $DESTINATION_DIR
+				#}}}
+				kwxmms2d_plugin_conf_menu $lv_Diskwrite_Dest_Dir
+				;;
 			$lv_Curl_Authproxy)
 				# Authentifizierung gegenüber des Proxy (ja/nein)?# {{{
 				CURL_AUTHPROXY_MSG=$(gettext 'Muss man sich gegenüber des Proxy authentifizieren (${gv_Yes}/${gv_No}?)')
@@ -402,6 +446,28 @@ kwxmms2d_plugin_conf() {
 				fi
 				## }}}
 				kwxmms2d_plugin_conf_menu $lv_Curl_Useproxy
+				;;
+			$lv_Mad_Enc)
+				# Zeichensatz zum enkodieren von id3v2 Tags{{{
+				inputbox "$gv_Configuration" "$ENC_MSG" "$MAD_ENC"
+				if [[ -n $gv_Auswahl ]] ; then
+					MAD_ENC="$gv_Auswahl"
+				else
+					MAD_ENC="ISO8859-1"
+				fi
+				#}}}
+				kwxmms2d_plugin_conf_menu $lv_Mad_Enc
+				;;
+			$lv_Mpg123_Enc)
+				# Zeichensatz zum enkodieren von id3v2 Tags{{{
+				inputbox "$gv_Configuration" "$ENC_MSG" "$MPG123_ENC"
+				if [[ -n $gv_Auswahl ]] ; then
+					MPG123_ENC="$gv_Auswahl"
+				else
+					MPG123_ENC="ISO8859-1"
+				fi
+				#}}}
+				kwxmms2d_plugin_conf_menu $lv_Mpg123_Enc
 				;;
 			$lv_Oss_Device)
 				# Auswahl der OSS Soundkarte# {{{
