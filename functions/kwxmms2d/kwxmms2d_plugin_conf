@@ -16,7 +16,7 @@ kwxmms2d_plugin_conf() {
 	lv_Mpg123_Enc=$(gettext 'mpg123.id3v1_encoding')
 	lv_Oss_Device=$(gettext 'oss.device')
 	lv_Oss_Mixer=$(gettext 'oss.mixer')
-	ENC_MSG=$(gettext 'Geben Sie den Zeichensatz zum enkodieren von id3v2 Tags an (z.B. ISO8859-1 oder UTF-8)')
+	ENC_MSG=$(gettext 'Geben Sie den Zeichensatz zum enkodieren von id3v2 Tags an (z.B. ISO8859-1 oder UTF-8)!')
 	## }}}
 	# Funktion (plugin_support), vorhandene plugins speichern# {{{
 	#
@@ -95,7 +95,13 @@ kwxmms2d_plugin_conf() {
 	## }}}
 	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
 	read_plugins() {
-		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
+		unset -- PLUGIN_ALSA PLUGIN_AO PLUGIN_APEFILE PLUGIN_AVCODEC \
+			PLUGIN_CDDA PLUGIN_CURL PLUGIN_CUE PLUGIN_DAAP \
+			PLUGIN_FAAD PLUGIN_FLAC PLUGIN_FLV PLUGIN_GME PLUGIN_GVFS \
+			PLUGIN_ICES PLUGIN_JACK PLUGIN_KARAOKE PLUGIN_MAD PLUGIN_MMS \
+			PLUGIN_MODPLUG PLUGIN_MP4 PLUGIN_MPG123 PLUGIN_MUSEPACK \
+			PLUGIN_NORMALIZE PLUGIN_OFA PLUGIN_OSS PLUGIN_PULSE PLUGIN_SID \
+			PLUGIN_SMB PLUGIN_TTA PLUGIN_VORBIS PLUGIN_WAVPACK
 		plugin_support
 		while read Plugin Char Desc ; do
 			case $Plugin in
@@ -280,7 +286,7 @@ kwxmms2d_plugin_conf() {
 				if [[ ${OUTPUT_MENU[1]} ]] ; then
 					OUTPUT_MENU+=($gv_Back \"\")
 				else
-					MSG=$(gettext 'Es ist kein Output Plugin installiert! Installieren Sie bitte eines!')
+					MSG=$(gettext 'Es ist kein Output Plugin installiert. Installieren Sie bitte eines!')
 					msgbox "$gv_Info" "$MSG"
 					break
 				fi
@@ -379,7 +385,7 @@ kwxmms2d_plugin_conf() {
 				;;
 			$lv_Curl_Authproxy)
 				# Authentifizierung gegenüber des Proxy (ja/nein)?# {{{
-				CURL_AUTHPROXY_MSG=$(gettext 'Muss man sich gegenüber des Proxy authentifizieren (${gv_Yes}/${gv_No}?)')
+				CURL_AUTHPROXY_MSG=$(gettext 'Muss man sich gegenüber des Proxy authentifizieren (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$CURL_AUTHPROXY_MSG" "$CURL_AUTHPROXY"
 				if [[ $gv_Auswahl == yes ]] ; then
 					CURL_AUTHPROXY="$gv_Auswahl"
@@ -396,10 +402,10 @@ kwxmms2d_plugin_conf() {
 				# vorhandene Proxy Konfiguration einlesen.
 				if_conf_file "$OS" proxy
 				# Protokoll+Rechner+Portnumer Eingabe
-				conf_proxy -h
-				if [[ -n $gv_Http_Proxy ]] ; then
-					CURL_PROXYADR="$gv_Http_Proxy"
-					xmms2 server config curl.proxyaddress "$gv_Http_Proxy"
+				conf_proxy -o
+				if [[ -n $gv_Proxy ]] ; then
+					CURL_PROXYADR="$gv_Proxy"
+					xmms2 server config curl.proxyaddress "$gv_Proxy"
 				else
 					CURL_PROXYADR=""
 					xmms2 server config curl.proxyaddress ""
@@ -435,7 +441,7 @@ kwxmms2d_plugin_conf() {
 				;;
 			$lv_Curl_Useproxy)
 				# Curl proxy benutzen (ja/nein)?# {{{
-				CURL_USEPROXY_MSG=$(gettext 'Soll ein Proxy benutzt werden (${gv_Yes}/${gv_No}?)')
+				CURL_USEPROXY_MSG=$(gettext 'Soll ein Proxy benutzt werden (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$CURL_USEPROXY_MSG" "$CURL_USEPROXY"
 				if [[ $gv_Auswahl == yes ]] ; then
 					CURL_USEPROXY="$gv_Auswahl"
@@ -455,6 +461,7 @@ kwxmms2d_plugin_conf() {
 				else
 					MAD_ENC="ISO8859-1"
 				fi
+				xmms2 server config mad.id3v1_encoding $MAD_ENC
 				#}}}
 				kwxmms2d_plugin_conf_menu $lv_Mad_Enc
 				;;
@@ -466,6 +473,7 @@ kwxmms2d_plugin_conf() {
 				else
 					MPG123_ENC="ISO8859-1"
 				fi
+				xmms2 server config mpg123.id3v1_encoding $MPG123_ENC
 				#}}}
 				kwxmms2d_plugin_conf_menu $lv_Mpg123_Enc
 				;;
