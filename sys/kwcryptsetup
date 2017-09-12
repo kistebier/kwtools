@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 12.09.2017
 #
 # Script: kwcryptsetup, Erstellung und Bearbeitung von verschlüsselten
 # Devices mittels cryptsetup.
@@ -244,7 +244,7 @@ parse_opts() {
 				;;
 			cipher)
 	            if [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Es ist kein Wert für die Option "cipher" vorhanden.')
+					MSG=$(gettext '$DST: Es ist kein Wert für die Option "cipher" vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 	            fi
@@ -252,7 +252,7 @@ parse_opts() {
 				;;
 			size)
 				if [[ "$VALUE" != <->* ]] && [[ "$VALUE" == 0 ]] ; then
-					MSG=$(gettext '$DST: Dieser Wert ($VALUE) für "size" ist inkorrekt.')
+					MSG=$(gettext '$DST: Dieser Wert ($VALUE) für "size" ist inkorrekt, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				else
@@ -261,7 +261,7 @@ parse_opts() {
 				;;
 			hash)
 				if [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Es ist kein Wert für die Option "hash" vorhanden.')
+					MSG=$(gettext '$DST: Es ist kein Wert für die Option "hash" vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -269,7 +269,7 @@ parse_opts() {
 				;;
 			offset)
 				if [[ -z "$VALUE" ]] ; then
-					MSG=$(gettext '$DST: Es ist kein Wert für die Option "offset" vorhanden.')
+					MSG=$(gettext '$DST: Es ist kein Wert für die Option "offset" vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -277,7 +277,7 @@ parse_opts() {
            		;;
 			skip)
 				if [[ -z "$VALUE" ]] ; then
-					MSG=$(gettext '$DST: Es ist kein Wert für die Option "skip" vorhanden.')
+					MSG=$(gettext '$DST: Es ist kein Wert für die Option "skip" vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -295,7 +295,7 @@ parse_opts() {
 				elif [ -x /lib/cryptsetup/checks/${VALUE} ]; then
 					CHECK="/lib/cryptsetup/checks/${VALUE}"
 				else
-					MSG=$(gettext 'check $CHECK ist kein ausführbares Script.')
+					MSG=$(gettext 'check $CHECK ist kein ausführbares Script, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -314,7 +314,7 @@ parse_opts() {
 				elif [ -x /lib/cryptsetup/checks/${VALUE} ] ; then
 					PRECHECK="/lib/cryptsetup/checks/${VALUE}"
 				else
-					MSG=$(gettext 'precheck $PRECHECK ist kein ausführbares Script.')
+					MSG=$(gettext 'precheck $PRECHECK ist kein ausführbares Script, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -346,7 +346,7 @@ parse_opts() {
 				;;
 			header)
 	            if [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Kein Wert für header vorhanden.')
+					MSG=$(gettext '$DST: Kein Wert für header vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
@@ -378,11 +378,11 @@ parse_opts() {
 				;;
 			keyscript)
 	            if [ -n "$KEYSCRIPT" ] ; then
-					MSG=$(gettext '$DST: Mehrere Optionen für die Entschlüsselung von Schlüsseln sind nicht zusammen erlaubt.')
+					MSG=$(gettext '$DST: Mehrere Optionen für die Entschlüsselung von Schlüsseln sind nicht zusammen erlaubt, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 	            elif [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Es ist kein Wert für die Option "keyscript" vorhanden.')
+					MSG=$(gettext '$DST: Es ist kein Wert für die Option "keyscript" vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 	            elif [ -x "$VALUE" ] ; then
@@ -392,14 +392,14 @@ parse_opts() {
 				elif type "$VALUE" &>/dev/null ; then
 	            	KEYSCRIPT="$VALUE"
 				else
-					MSG=$(gettext '$DST: Das Script $VALUE ist nicht ausführbar.')
+					MSG=$(gettext '$DST: Das Script $VALUE ist nicht ausführbar, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 	            fi
 				;;
 			keyslot)
 	            if [ -z "$VALUE" ] ; then
-					MSG=$(gettext '$DST: Kein Wert für keyslot vorhanden.')
+					MSG=$(gettext '$DST: Kein Wert für keyslot vorhanden, ignoriert.')
 					msgbox "$gv_Info" "$MSG"
 					return 1
 				fi
