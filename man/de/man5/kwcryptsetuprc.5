@@ -1,21 +1,38 @@
+'\" t
 .\"     Title: KWCRYPTSETUPRC
 .\"    Author: Kai Wilke <kiste@netzworkk.de>
-.\" Generator: DocBook XSL Stylesheets v1.73.2 <http://docbook.sf.net/>
-.\"      Date: 11/15/2013
-.\"    Manual: 
-.\"    Source: Version 0.1.5
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 09/12/2017
+.\"    Manual: Benutzer Anleitung
+.\"    Source: Version 0.2.4
+.\"  Language: English
 .\"
-.TH "KWCRYPTSETUPRC" "5" "11/15/2013" "Version 0.1.5" "Benutzer Anleitung"
+.TH "KWCRYPTSETUPRC" "5" "09/12/2017" "Version 0.2.4" "Benutzer Anleitung"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .SH "NAME"
-kwcryptsetuprc \- Konfigurationsdatei f\(:ur kwcryptsetup.
+kwcryptsetuprc \- Konfigurationsdatei f\(:ur kwcryptsetup\&.
 .SH "BESCHREIBUNG"
 .PP
 Dies ist die Standard Konfigurationsdatei vom Script
-\fBkwcryptsetup\fR\&. Diese Werte werden beim Erstellen von verschl\(:usselten Laufwerken angeboten, auch zur Ver\(:anderung\&. Beginnt eine Zeile mit
+\fBkwcryptsetup\fR\&. Diese Werte werden beim Erstellen von verschl\(:usselten Laufwerken angeboten\&. Beginnt eine Zeile mit
 \(lq#\(rq
 oder ist leer wird dies als Kommentar interpretiert\&.
 .SH "VARIABELN"
@@ -28,26 +45,44 @@ Sektoren ein (\fB8\fR
 =
 \fB4096 Byte\fR)\&. Das dient f\(:ur die
 \(lq\fBstripe\fR\(rq
-Option auf RAID Laufwerken oder Logischen Volumes (\fILVM\fR)\&. Lesen Sie dazu die Manpages der Programme zur Formatierung\&.
+Option auf RAID Laufwerken oder Logischen Volumes (LVM)\&. Lesen Sie dazu die Manpages der Programme zur Formatierung\&.
 .RE
 .PP
-\fBGPG\fR
+\fBCHECK\fR
 .RS 4
-Soll
-\(lq\fBgnupg\fR\(rq
-zum entschl\(:usseln der Schl\(:usseldatei verwendet werden (\fByes/no\fR)? Geht nicht zusammen mit der Option
-\(lq\fBSSL\fR\(rq\&.
+Script, pr\(:uft den Inhalt des Ziellaufwerks, z\&.B\&. auf Dateisysteme\&. Liefert das Script einen Fehler wird das Laufwerk entfernt\&.
+.RE
+.PP
+\fBCHECKARGS\fR
+.RS 4
+Argumente f\(:ur das Pr\(:uf\-Script (CHECK)\&.
+.RE
+.PP
+\fBCIPHER\fR
+.RS 4
+Verschl\(:usselungsparameter\&.
+.sp
+NOTIZ: Standard\-Verschl\(:usselungsparameter sind:
+.sp
+plain: \fBaes\-cbc\-essiv:sha256\fR, Schl\(:ussel: \fB256 Bits\fR, Passphrase\-Hashen: \fBripemd160\fR
+.sp
+LUKS1: \fBaes\-xts\-plain64\fR, Schl\(:ussel: \fB256 Bits\fR, LUKS\-Header\-Hashen: \fBsha256\fR, Zufallszahlengenerator: \fI/dev/urandom\fR
+.RE
+.PP
+\fBDISCARD\fR
+.RS 4
+Soll die Benutzung von Discard bei Anforderung an ein Device erlaubt werden (\fByes/no\fR)?
 .RE
 .PP
 \fBHASH\fR
 .RS 4
-Auswahl des Hashwertes der f\(:ur die die Passphrase verwendet werden soll\&. Standard ist
-\fBripemd160\fR\&.
+Angabe des Hashwertes der f\(:ur die Passphrase verwendet werden soll\&. Standard ist
+\fBsha512\fR\&.
 .RE
 .PP
 \fBITERATION_TIME\fR
 .RS 4
-Geben Sie die Zeit f\(:ur den Passwort Prozess, in Mikrosekunden (Standard ist
+Geben Sie die Zeit f\(:ur den Passwort Prozess, in Millisekunden (Standard ist
 \fB1\fR) ein\&.
 .RE
 .PP
@@ -77,6 +112,11 @@ Auswahl der Schl\(:usselgr\(:osse (\fB128, 192, 256\fR)\&. Standard ist
 Soll beim starten des Laufwerks eine Warnung ausgegeben werden, wenn dieses nicht existiert (\fByes/no\fR)?
 .RE
 .PP
+\fBLUKSHEADER\fR
+.RS 4
+Datei oder Laufwerk auf dem der LUKS Header seperat gespeichert werden soll\&.
+.RE
+.PP
 \fBMAKESWAP\fR
 .RS 4
 Soll ein Swap\-Laufwerk erstellt werden (\fByes/no\fR)?
@@ -85,7 +125,7 @@ Soll ein Swap\-Laufwerk erstellt werden (\fByes/no\fR)?
 \fBMOUNT_PATH\fR
 .RS 4
 Mountverzeichnis ausw\(:ahlen\&. Dieses Verzeichnis muss schon vorher existieren und sollte in der Datei
-\fI/etc/fstab\fR
+/etc/fstab
 konfiguriert sein\&. Dieses dient zum einbinden von externen Laufwerken, die die externe Schl\(:usseldatei enthalten\&.
 .RE
 .PP
@@ -103,35 +143,48 @@ benutzen, da es sonst zu Fehlern beim mounten des Laufwerks kommt\&. Das verschl
 .PP
 \fBNOEARLY\fR
 .RS 4
-Soll das Laufwerk verz\(:ogert erstellt werden, zum Beispiel nach dem RAID Arrays oder LVMs erstellt worden sind (\fByes/no\fR)?
+Soll das Laufwerk verz\(:ogert erstellt werden, zum Beispiel nach dem RAID Arrays oder LVs erstellt worden sind (\fByes/no\fR)?
 .RE
 .PP
 \fBOFFSET\fR
 .RS 4
 Geben Sie eine Zahl ein um wieviele Sektoren der 1\&. Sektor verschoben werden soll\&. Ab diesem Sektor wird das Laufwerk auf das verschl\(:usselte Laufwerk abgebildet\&. Hat das original Laufwerk
-\fI10000\fR
+10000
 Sektoren und
 \(lq\fBOFFSET\fR\(rq
 ist
-\fI300\fR
+300
 wird das original Laufwerk ab Sektor
-\fI300\fR
+300
 bis zum Ende auf das verschl\(:usselte Laufwerk abgebildet\&. Siehe auch die Option
 \(lq\fBSKIP\fR\(rq\&.
 .RE
 .PP
+\fBPRECHECK\fR
+.RS 4
+Script f\(:ur die Pr\(:ufung bevor ein Laufwerk ge\(:offnet wird\&. Liefert das Script einen Fehler wird das Laufwerk nicht ge\(:offnet\&.
+.sp
+Notiz: Ben\(:otigt man nicht bei Laufwerken mit LUKS Erweiterung, daf\(:ur gibt es die Option isLuks\&.
+.RE
+.PP
+\fBQUIET\fR
+.RS 4
+Soll beim starten des Laufwerks eine Warnung unterdr\(:uckt werden, wenn dieses nicht existiert (yes/no)? Dies \(:uberschreibt die Option
+\(lq\fBLOUD\fR\(rq\&.
+.RE
+.PP
 \fBREADONLY\fR
 .RS 4
-Soll das Laufwerk im Nur Lesemodus erstellt werden (\fByes/no\fR)? Zum Beispiel f\(:ur CD/DVD\&.
+Soll das Laufwerk im Nur Lesemodus erstellt werden (\fByes/no\fR)? Zum Beispiel f\(:ur \fICD/DVD\fR\&.
 .RE
 .PP
 \fBSIZE\fR
 .RS 4
 Gr\(:osse des Containers\&. Standard Blockgr\(:osse ist
 \fB1 KByte\fR\&. Die Gr\(:osse der zu erstellenden verschl\(:usselten Datei (Container) muss gr\(:osser als
-\fB1 MByte\fR
-sein (LUKS\-Header)\&. Sie k\(:onnen als Masseinheit folgende Zeichen benutzen, [\fIkKmMtTpPeEzZ\fR]
-\fIm|M\-MegaByte\fR\&.
+\fB2 MByte\fR
+sein (LUKS\-Header)\&. Sie k\(:onnen als Masseinheit folgende Zeichen benutzen, [kKmMtTpPeEzZ]
+m|M\-MegaByte\&.
 .RE
 .PP
 \fBSKIP\fR
@@ -141,17 +194,9 @@ Geben Sie eine Zahl ein wieviele Sektoren am Anfang des verschl\(:usselten Laufw
 behandelt Sektor
 \fB0\fR
 des verschl\(:usselten Laufwerks als w\(:are es Sektor
-\fBSKIP\fR=\fIn\fR\&. Dadurch kann man aus der Mitte eines verschl\(:usselten Laufwerks ein St\(:uck rausschneiden und es mit dem Schl\(:ussel des original Laufwerks immer noch korrekt ver\- und vor allem entschl\(:usseln, so dass dasselbe rauskommt, als h\(:atte man Sektor
-\fIn\fR+\fBSKIP\fR
+\fBSKIP\fR=n\&. Dadurch kann man aus der Mitte eines verschl\(:usselten Laufwerks ein St\(:uck rausschneiden und es mit dem Schl\(:ussel des original Laufwerks immer noch korrekt ver\- und vor allem entschl\(:usseln, so dass dasselbe rauskommt, als h\(:atte man Sektor
+n+\fBSKIP\fR
 vom original Laufwerk ver\- bzw\&. entschl\(:usselt\&.
-.RE
-.PP
-\fBSSL\fR
-.RS 4
-Soll
-\fBopenssl\fR
-zum entschl\(:usseln der Schl\(:usseldatei verwendet werden (\fByes/no\fR)? Geht nicht zusammen mit der Option
-\(lq\fBGPG\fR\(rq\&.
 .RE
 .PP
 \fBTIMEOUT\fR
@@ -203,9 +248,10 @@ F\(:ur weitere Details siehe
 .SH "AUTOR"
 .PP
 \fBKai Wilke\fR <\&kiste@netzworkk\&.de\&>
-.sp -1n
-.IP "" 4
+.RS 4
 Die Manpage wurde in DocBook XML f\(:ur die Debian Distribution geschrieben\&.
+.RE
 .SH "COPYRIGHT"
-Copyright \(co 2002-2013 Kai Wilke
+.br
+Copyright \(co 2002-2017 Kai Wilke
 .br
