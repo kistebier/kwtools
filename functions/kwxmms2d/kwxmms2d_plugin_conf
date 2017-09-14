@@ -96,7 +96,7 @@ kwxmms2d_plugin_conf() {
 	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
 	read_plugins() {
 		unset -- PLUGIN_ALSA PLUGIN_AO PLUGIN_APEFILE PLUGIN_AVCODEC \
-			PLUGIN_CDDA PLUGIN_CURL PLUGIN_CUE PLUGIN_DAAP \
+			PLUGIN_ASF PLUGIN_CDDA PLUGIN_CURL PLUGIN_CUE PLUGIN_DAAP \
 			PLUGIN_FAAD PLUGIN_FLAC PLUGIN_FLV PLUGIN_GME PLUGIN_GVFS \
 			PLUGIN_ICES PLUGIN_JACK PLUGIN_KARAOKE PLUGIN_MAD PLUGIN_MMS \
 			PLUGIN_MODPLUG PLUGIN_MP4 PLUGIN_MPG123 PLUGIN_MUSEPACK \
@@ -113,6 +113,10 @@ kwxmms2d_plugin_conf() {
 					;;
 				apefile)	# Monkey's-Audio-Dateien Dekodierer Plugin
 					PLUGIN_APEFILE=yes
+					;;
+				asf)	# ASF-Erweiterung Plugin, ermöglicht das Entschlüsseln von
+						# ASF (Advanced Systems Format).
+					PLUGIN_ASF=yes
 					;;
 				avcodec)	# dekodieren von avcodec Plugin
 					PLUGIN_AVCODEC=yes
@@ -264,7 +268,7 @@ kwxmms2d_plugin_conf() {
 				;;
 			$lv_Output_Plugin)
 				# Auswahl des Musik Ausgabe Plugin (alsa,ao,ices,jack,oss,pulse)# {{{
-				umset -- OUTPUT_PLUGIN
+				unset -- OUTPUT_PLUGIN
 				if [[ $PLUGIN_ALSA == yes ]] ; then
 					OUTPUT_MENU+=(alsa \"\")
 				fi
