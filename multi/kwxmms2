@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 26.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 14.09.2017
 #
 # Script: kwxmms2, ein Script um das X-Multimedia System "xmms2"
 # zu managen.
@@ -207,11 +207,12 @@ list_songs() {
 #
 current_song() {
 	local Tmp
-	PLAYING_SONG="${${(ws,: ,)${"$(echo '\n' | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[1]}"
-	CURRENT_SONG="${${(ws,: ,)${"$(echo '\n' | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[2]}"
+	print '\n' | sleep 2 | xmms2 status | egrep 'Stopped*|Playing*|Paused*' > ${gv_WorkDir}/current_song
+	PLAYING_SONG="${${(ws,: ,)$(< ${gv_WorkDir}/current_song)}[1]}"
+	CURRENT_SONG="${${(ws,: ,)$(< ${gv_WorkDir}/current_song)}[2]}"
 	CURRENT_SONG="${CURRENT_SONG//\`/\\\`}"
 	STATUS_SONG="$PLAYING_SONG"
-	Tmp="${${(ws,: ,)${"$(echo q | xmms2 status)"##(s#)[(fr)(Stopped|Playing|Paused)*]}}[3]}"
+	Tmp="${${(ws,: ,)$(< ${gv_WorkDir}/current_song)}[3]}"
 	CURRENT_TIME="${Tmp% of*}"
 }
 ## }}}
@@ -338,122 +339,6 @@ no_server_online() {
 		fi
 	}
 	## }}}
-	# Funktion (read_plugins), einlesen von vorhandenen Plugins# {{{
-	#####################################
-	# TODO: nochmal checken, was ist mit list_pls?
-	#####################################
-	read_plugins() {
-		unset -- PLS_SUFFIX PLUGIN_CDDA PLUGIN_CURL
-		plugin_support
-		while read Plugin Char Desc ; do
-			case $Plugin in
-				alsa)	# ALSA Ausgabe Plugin
-					PLUGIN_ALSA=yes
-					;;
-				ao)	# Erweiterung, Ausgabe mittels libao, Plugin
-					PLUGIN_ALSA=yes
-					;;
-				apefile)	# Monkey's-Audio-Dateien Dekodierer Plugin
-					PLUGIN_APEFILE=yes
-					;;
-				asf)	# ASF-Erweiterung Plugin, ermöglicht das Entschlüsseln von
-						# ASF (Advanced Systems Format).
-					PLS_SUFFIX+=(.asx .ASX)
-					;;
-				asx)	# asx playlist Plugin
-					PLS_SUFFIX+=(.asx .ASX)
-					;;
-				avcodec)	# dekodieren von avcodec Plugin
-					PLUGIN_AVCODEC=yes
-					;;
-				cdda)	# CDDA (Audio-CDs)  Plugin
-					PLUGIN_CDDA=yes
-					;;
-				curl)	# CURL (HTTP-Transport) Plugin
-					PLUGIN_CURL=yes
-					;;
-				cue)	# CUE Dateien Plugin
-					PLUGIN_CUE=yes
-					;;
-				daap)	# DAAP (Digital Audio Access Protokoll) Plugin,
-						# Medienbibliothek übers Netzwerk verteilen.
-					PLUGIN_DAAP=yes
-					;;
-				faad)	# FAAD-Dekodierer Plugin
-					PLUGIN_FAAD=yes
-					;;
-				flac)	# FLAC-Dekodierer Plugin
-					PLUGIN_FLAC=yes
-					;;
-				flv)	# FLV-Video-Erweiterung Plugin, ermöglicht das extrahieren von
-						# Audio aus Flash-Video-Dateien
-					PLUGIN_FLV=yes
-					;;
-				html)	# html playlist Plugin
-					PLS_SUFFIX+=(.html .HTML)
-					;;
-				ices)	# Ogg-Streaming-Ausgabe Plugin
-					PLUGIN_ICES=yes
-					;;
-				jack)	# JACK Ausgabe Plugin
-					PLUGIN_JACK=yes
-					;;
-				m3u)	# M3U playlist Plugin
-					PLS_SUFFIX+=(.m3u .M3U)
-					;;
-				mad)	# mittels libmad MP3s dekodieren Plugin
-					PLUGIN_MAD=yes
-					;;
-				mms)	# MMS-Transport Plugin
-					PLUGIN_MMS=yes
-					;;
-				modplug)	# MODPlug-Dekodierungs Plugin
-					PLUGIN_MODPLUG=yes
-					;;
-				mp4)	# MP4-Container dekodieren Plugin
-					PLUGIN_MP4=yes
-					;;
-				mpg123)	# libmpg123-basierte MP3-Dekodierung Plugin
-					PLUGIN_MPG123=yes
-					;;
-				musepack)	# MPC-Dekodierungs Plugin
-					PLUGIN_MUSEPACK=yes
-					;;
-				normalize)	# Normalisierungs-Erweiterung Plugin, ermöglicht die
-						# Lautstärke zu normalisieren.
-					PLUGIN_NORMALIZE=yes
-					;;
-				oss)	# OSS Ausgabe Plugin
-					PLUGIN_OSS=yes
-					;;
-				pls)	# PLS playlist Plugin
-					PLS_SUFFIX+=(.pls .PLS)
-					;;
-				pulse)	# Erweiterung, Pulseaudio Ausgabe Plugin
-					PLUGIN_PULSE=yes
-					;;
-				rss)	# rss playlist Plugin
-					PLS_SUFFIX+=(.rss .RSS)
-					;;
-				smb)	# SMB-Transport (Server Message Block) Plugin
-					PLUGIN_SMB=yes
-					;;
-				tta)	# TTA-Dekodierung (True-Audio-Dateien) Plugin
-					PLUGIN_TTA=yes
-					;;
-				vorbis)	# Ogg-Vorbis-Dekodierungs Plugin
-					PLUGIN_VORBIS=yes
-					;;
-				wavpack)	# WavPack-Dekodierungs Plugin
-					PLUGIN_WAVPACK=yes
-					;;
-				xspf)	# xspf playlist Plugin
-					PLS_SUFFIX+=(.xspf .XSPF)
-					;;
-			esac
-		done < ${gv_WorkDir}/plugins
-	}
-	## }}}
 	# Funktion (check_local_remote), prüfen ob der xmms2d Server lokal oder remote läuft# {{{
 	#
 	check_local_remote() {
@@ -461,8 +346,8 @@ no_server_online() {
 		# -a Alias Rechnernamen
 		if [[ -n $XMMS_PATH ]] ; then
 			LOCAL_IP_ADRESSES="127.0.0.1 `hostname -I`"
-			LOCAL_HOSTNAMES=$(hostname -a)
-			XMMS_HOST=${${XMMS_PATH//*\//}%:*}
+			LOCAL_HOSTNAMES="`hostname -a` `hostname -f`"
+			XMMS_HOST=${${${${XMMS_PATH//*\//}/\[}/\]}%:*}
 			Ist="`print ${(M)$(print $LOCAL_IP_ADRESSES $LOCAL_HOSTNAMES)##$XMMS_HOST}`"
 			if [[ -n $Ist ]] ; then
 				REMOTE=no
@@ -483,10 +368,6 @@ no_server_online() {
 # Wenn es eine Konf.-Datei gibt einlesen und die Variabel
 # XMMS_PATH exportieren.
 read_conf
-# Funktionsdatei net_conf einlesen
-net_conf
-# Operation System herausfinden und Support prüfen
-os_check
 main_menu
 while [ "$gv_Auswahl" ] ; do
 	case $gv_Auswahl in
@@ -711,7 +592,7 @@ while [ "$gv_Auswahl" ] ; do
 								# Status checken und dementsprechend die einzelnen
 								# xmms2 Befehle ausführen.
 								case "$STATUS_SONG" in
-									Paused|Playing|Stopped)
+									*Paused|*Playing|*Stopped)
 										if [ ! -z "$CURRENT_SONG_OLD" ] ; then
 											xmms2 jump "$CURRENT_SONG_NR" || prog_failure
 											xmms2 play "$CURRENT_SONG_NR" || prog_failure
