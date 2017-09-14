@@ -3703,10 +3703,15 @@ file_choice() {
 											;;
 										*)
 											# Dateien mit diesem Datei.Suffix nicht nehmen
-											if [ ${file##*.} != "$4" ] ; then
-												Filetest=$( file -b "$file" )
-												create_value
-											fi
+											# $3 - muss mp3|MP3|m3u|M3U... sein
+											case  ${file##*.} in
+												 $4)
+													 ;;
+												 *)
+													Filetest=$( file -b "$file" )
+													create_value
+													;;
+											esac
 											;;
 									esac
 								else
@@ -3773,10 +3778,15 @@ file_choice() {
 											;;
 										*)
 											# Dateien mit diesem Datei.Suffix nicht nehmen
-											if [[ ${file##*.} != $3 ]] ; then
-												Filetest=$( file -b "$file" )
-												create_value
-											fi
+											# $3 - muss mp3|MP3|m3u|M3U... sein
+											case  ${file##*.} in
+												 $3)
+													 ;;
+												 *)
+													Filetest=$( file -b "$file" )
+													create_value
+													;;
+											esac
 											;;
 									esac
 								else
