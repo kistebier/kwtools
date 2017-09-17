@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 10.09.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 17.09.2017
 #
 # Script: kwxmms2d, ein Script um den xmms2d Dämon
 # zu managen.
@@ -58,23 +58,6 @@ fi
 # Kwtools kwxmms2drc Konfiguration einlesen
 read_file kwxmms2drc
 
-# Funktion (check_status), Server Status herausfinden{{{
-#
-check_status() {
-	echo '\n' | xmms2 status >${gv_WorkDir}/state
-	#State_Entry=${(M)${(f)$(< ${gv_WorkDir}/state)}##[a-zA-Z]*}
-	State_Entry=${$(< ${gv_WorkDir}/state)##[(fr)[a-zA-Z]*]}
-	case "$State_Entry" in
-		*"not connect"*)
-			no_connect_msg
-			SRV_ONLINE=no
-			;;
-		*)
-			SRV_ONLINE=yes
-			;;
-	esac
-}
-#}}}
 # Funktion (export_xmms_path), Variabel XMMS_PATH belegen und exportieren{{{
 #
 export_xmms_path() {
@@ -180,7 +163,7 @@ while [ "$gv_Auswahl" ] ; do
 				read_prog_opt
 				eval xmms2-launcher "${=PROG_OPT}" 1>/dev/null || prog_failure
 			else
-				MSG=$(gettext 'Es läuft schon ein XMMS2 Server.')
+				MSG=$(gettext 'Es läuft schon ein xmms2d Server.')
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}
@@ -193,7 +176,7 @@ while [ "$gv_Auswahl" ] ; do
 					kill "$i"
 				}
 			else
-				MSG=$(gettext 'Es läuft kein XMMS Server.')
+				MSG=$(gettext 'Es läuft kein xmms2d Server.')
 				msgbox "$gv_Info" "$MSG"
 			fi
 			## }}}

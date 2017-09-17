@@ -18,6 +18,29 @@ kwxmms2d_plugin_conf() {
 	lv_Oss_Mixer=$(gettext 'oss.mixer')
 	ENC_MSG=$(gettext 'Geben Sie den Zeichensatz zum enkodieren von id3v2 Tags an (z.B. ISO8859-1 oder UTF-8)!')
 	## }}}
+	# Funktion (check_status), Server Status herausfinden{{{
+	#
+	check_status() {
+		print '\n' | xmms2 status &>${gv_WorkDir}/state
+		State_Entry=${$(< ${gv_WorkDir}/state)##[(fr)[a-zA-Z]*]}
+		case "$State_Entry" in
+			*"not connect"*)
+				no_connect_msg
+				SRV_ONLINE=no
+				;;
+			*)
+				SRV_ONLINE=yes
+				;;
+		esac
+	}
+	#}}}
+	# Funktion (no_connect_msg), Nachricht das Server nicht erreichbar ist.# {{{
+	#
+	no_connect_msg() {
+		MSG=$(gettext 'Der Server ist nicht erreichbar.')
+		msgbox "$gv_Info" "$MSG"
+	}
+	## }}}
 	# Funktion (plugin_support), vorhandene plugins speichern# {{{
 	#
 	plugin_support() {
@@ -223,7 +246,6 @@ kwxmms2d_plugin_conf() {
 		read_act_conf
 		read_plugins
 	else
-		no_server_online
 		return 1
 	fi
 	## }}}
