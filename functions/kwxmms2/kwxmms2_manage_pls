@@ -245,7 +245,7 @@ kwxmms2_manage_pls() {
 								# Funktion (fill_methode_menu), Menue für# {{{
 								# Dateien/Dirs/Playlists/CD/DVD...
 								######################################
-								# TODO: erweitern http, ...
+								# TODO: erweitern
 								######################################
 								#
 								fill_methode_menu() {
@@ -264,17 +264,14 @@ kwxmms2_manage_pls() {
 								}
 								## }}}
 								# Funktion (http_pls), Internet Adresse eingeben.# {{{
-								#####################################
-								# TODO: mit Port?
-								#####################################
 								#
 								http_pls() {
 									# Protokoll+Rechner+Portnumer Eingabe
-									HTTP_MSG=$(gettext 'Tragen Sie bitte die Internet Adresse ein (http://host:port).')
+									HTTP_MSG=$(gettext 'Tragen Sie bitte die Internet Adresse ein (http(s)://host...).')
 									inputbox "$gv_Configuration" "$HTTP_MSG" "$Proxy"
 									if [ "$gv_Auswahl" ] ; then
 										case "$gv_Auswahl" in
-											http://*:[1-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9])
+											htt[ps]://*)
 													xmms2 add -p "$DEFAULT_PLS" "$gv_Auswahl" || prog_failure
 												;;
 											*)	no_input_msg
@@ -292,7 +289,7 @@ kwxmms2_manage_pls() {
 									fill_methode_menu
 									while [ "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
-											HELP*)	script_help pls_help
+											HELP*)	script_help pls_fill_help
 												fill_methode_menu "${gv_Auswahl#HELP }"
 												;;
 											$lv_Directories)
@@ -301,7 +298,7 @@ kwxmms2_manage_pls() {
 												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
 												if [ -n "$gv_Auswahl" ] ; then
 													PATH_TO_FILES="$gv_Auswahl"
-													xmms2 add -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+													xmms2 add -p "$DEFAULT_PLS" "$PATH_TO_FILES" || prog_failure
 												fi
 												break
 												## }}}
@@ -312,7 +309,7 @@ kwxmms2_manage_pls() {
 												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
 												if [ -n "$gv_Auswahl" ] ; then
 													PATH_TO_FILES="$gv_Auswahl"
-													xmms2 add -f -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+													xmms2 add -f -p "$DEFAULT_PLS" "$PATH_TO_FILES" || prog_failure
 												fi
 												break
 												## }}}
@@ -335,7 +332,7 @@ kwxmms2_manage_pls() {
 												inputbox "$PLS_TITLE" "$PLS_FILES_MSG"
 												if [ -n "$gv_Auswahl" ] ; then
 													PATH_TO_FILES="$gv_Auswahl"
-													xmms2 add -f -P -p "$DEFAULT_PLS" "${XMMS_PATH}${PATH_TO_FILES}" || prog_failure
+													xmms2 add -f -P -p "$DEFAULT_PLS" "$PATH_TO_FILES" || prog_failure
 												fi
 												break
 												## }}}
@@ -348,7 +345,7 @@ kwxmms2_manage_pls() {
 									fill_methode_menu
 									while [ "$gv_Auswahl" ] ; do
 										case "$gv_Auswahl" in
-											HELP*)	script_help pls_help
+											HELP*)	script_help pls_fill_help
 												fill_methode_menu "${gv_Auswahl#HELP }"
 												;;
 											$lv_Directories)
