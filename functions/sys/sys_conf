@@ -1644,41 +1644,40 @@ sys_conf() {
 		fi
 	}
 	## }}}
-# Funktion (compare_releases), überprüft, ob die 1. Version (aktuelle){{{
+# Funktion (compare_versions), überprüft, ob die 1. Version (aktuelle){{{
 # größer oder gleich der 2. Version (Mindestanforderung) ist.
 #
-# usage: compare_releases VERSION1 VERSION2
+# usage: compare_versions VERSION1 VERSION2
 # VERSION1 - aktuelle Version
 # VERSION2 - minimal benötigte Version
 #
-compare_releases() {
-	local Arg1 Arg2 Major1 Major2 Minor1 Minor2 Minor_Subject1 Minor_Subject2
-	integer Major1 Major2 Minor1 Minor2 Minor_Subject1 Minor_Subject2
+compare_versions() {
+	local Arg1 Arg2 Major1 Major2 Minor1 Minor2 Minor_Sub1 Minor_Sub2
+	integer Major1 Major2 Minor1 Minor2 Minor_Sub1 Minor_Sub2
 	if [[ ${#argv} == 2 ]] ; then
 		Arg1="$1"
 		Arg2="$2"
 		print ${(s:.:)${Arg1}} | while read a b c d ; do
 			Major1="$a"
 			Minor1="$b"
-			Minor_Subject1="${c%%-*}"
+			Minor_Sub1="${c%-*}"
 		done
 		print ${(s:.:)${Arg2}} | while read a b c d ; do
 			Major2="$a"
 			Minor2="$b"
-			Minor_Subject2="${c%%-*}"
+			Minor_Sub2="${c%-*}"
 		done
 		if (( $Major1 > $Major2 )) ; then
 		elif (( $Major1 == $Major2 )) ; then
 			if (( $Minor1 > $Minor2 )) ; then
 			elif (( $Minor1 == $Minor2 )) ; then
-				if (( $Minor_Subject1 < $Minor_Subject2 )) ; then
+				if (( $Minor_Sub1 < $Minor_Sub2 )) ; then
 					return 1
 				fi
 			fi
 		fi
 	else
 		no_para_msg $0
-		return 1
 	fi
 	return 0
 }
