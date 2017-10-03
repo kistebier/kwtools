@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 25.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.10.2017
 #
 # Script: kwraid, Konfiguriert und kreiert Software RAID Systeme.
-# Version: 0.4.0
+# Version: 0.4.1
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -38,7 +38,7 @@ script_init
 # Kernelversion installiert ist.
 # RAID Module laden.
 kernel_release
-if [[ "${gv_K_Release%%-*}" < 2.6.33 ]] ; then
+if ! compare_versions "$gv_K_Release"  "2.6.33" ; then
 	MSG=$(gettext 'Sie benötigen mindestens Kernel Version >=2.6.33. Das Script bricht jetzt ab.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0

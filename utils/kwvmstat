@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 09.06.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.10.2017
 #
 # Script: kwvmstat, zeigt verschiedene Statistiken
 #         des virtuellen Speichers (man 1 vmstat).
 #
-# Version: 0.3.2
+# Version: 0.3.3
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -35,6 +35,14 @@ autoload -U script_init
 
 # Scriptinitialisierung
 script_init
+
+# Kernel Version überprüfen
+kernel_release
+if ! compare_versions "$gv_K_Release"  "2.6.0" ; then
+	MSG=$(gettext 'Sie benötigen einen Kernel >= Version 2.6.0.')
+	msgbox "$INFO" "$MSG"
+	exit 0
+fi
 
 # auf Programme prüfen
 prog_check vmstat
@@ -84,13 +92,6 @@ no_null_msg() {
 # Hauptprogramm
 #
 ##################################################################
-#
-kernel_release
-if [[ "${gv_K_Release%%-*}" < 2.6.0 ]] ; then
-	MSG=$(gettext 'Sie benötigen einen Kernel >= Version 2.6.0.')
-	msgbox "$INFO" "$MSG"
-	exit 0
-fi
 #
 hw_conf
 main_menu
