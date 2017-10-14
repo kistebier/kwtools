@@ -13,6 +13,20 @@ kwbtrfs_subvolumes_create() {
 		SV_CREATE_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Drive}"
 		# vorhandene  Subvolumes finden
 		search_subvolumes
+		# Function (check_sv_name), prüft ob es den Subvolumenamen schon gibt.{{{
+		check_sv_name () {
+			local Tmp
+			Tmp=$(print ${(M)${SUBVOL_DEV}##*${gv_Auswahl}*})
+			for s in ${=Tmp} ; {
+				Ok=yes
+				if [[ $s == ${DRIVE}${gv_Auswahl} ]] ; then
+					Ok=no
+					return 1
+				fi
+			}
+			return 0
+		}
+		#}}}
 		# Funktion (subvol_create_menu), Menue für das erstellen von Subvolumes# {{{
 		#
 		subvol_create_menu() {
@@ -43,7 +57,7 @@ kwbtrfs_subvolumes_create() {
 								DRIVE="$gv_Auswahl"
 								break
 								;;
-							*)
+							*|$gv_Back)
 								break
 								;;
 						esac
@@ -53,21 +67,26 @@ kwbtrfs_subvolumes_create() {
 					;;
 				$lv_Suvol_Name)
 					# Snapshot Name eingeben# {{{
-					SUBVOL_NAME_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Suvol_Name}"
-					MSG=$(gettext 'Geben Sie einen Namen für das $lv_Subvolume ein.')
-					inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
-					while [ -n "$gv_Auswahl" ] ; do
-						# Prüfen, ob es das Subvolume schon gibt.
-						Tmp=$(print ${(M)${SUBVOL_DEV##*/}##*${gv_Auswahl}})
-						if [[ ! -n ${Tmp[1]} ]] ; then
-							SUBVOL_NAME="$gv_Auswahl"
-							break
-						else
-							IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
-							msgbox "$gv_Info" "$IS_MSG"
-							inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
-						fi
-					done
+					if [[ -n $DRIVE ]] ; then
+						SUBVOL_NAME_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Suvol_Name}"
+						MSG=$(gettext 'Geben Sie einen Namen für das $lv_Subvolume ein.')
+						inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
+						while [ -n "$gv_Auswahl" ] ; do
+							# Prüfen, ob es das Subvolume schon gibt.
+							check_sv_name
+							if [[ $Ok == yes ]] ; then
+								SUBVOL_NAME="$gv_Auswahl"
+								break
+							else
+								IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
+								msgbox "$gv_Info" "$IS_MSG"
+								inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
+							fi
+						done
+					else
+						MSG=$(gettext 'Sie müssen erst ein $lv_Btrfs_Drive auswählen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
 					## }}}
 					subvol_create_menu "$lv_Suvol_Name"
 					;;
@@ -87,7 +106,7 @@ kwbtrfs_subvolumes_create() {
 					fi
 					## }}}
 					;;
-				*)
+				*|$gv_Back)
 					break
 					;;
 			esac
