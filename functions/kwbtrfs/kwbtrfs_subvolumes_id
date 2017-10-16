@@ -3,14 +3,31 @@
 # usage: kwbtrfs_subvolumes_id
 #
 kwbtrfs_subvolumes_id() {
-	unset -- DRIVE ID
+	unset -- DRIVE ID Mp_Sv SUBVOL_ID
 	mount_btrfs_dev_check
 	if [[ -n ${BTRFS_PATH[1]} ]] ; then
 		# vorhandene  Subvolumes finden
+		search_subvolumes "$BTRFS_PATH"
 		# Variable# {{{
 		lv_Id=$(gettext 'ID')
 		ID_TITLE="${lv_Subvolume}::${lv_DefaultId}"
 		## }}}
+		# Function (check_sv_id), prüft ob es die Subvolume ID schon gibt.{{{
+		check_sv_id () {
+			local Tmp
+			Ok=yes
+			if [ -n ${SUBVOL_ID[1]} ] ; then
+				Tmp=$(print ${(M)${SUBVOL_ID}##*${NUMBER}*})
+				for id in ${=Tmp} ; {
+					if [[ $id == $NUMBER ]] ; then
+						Ok=no
+						return 1
+					fi
+				}
+			fi
+			return 0
+		}
+		#}}}
 		# Funktion (subvol_id_menu), Menue für das einstallen der IDs# {{{
 		subvol_id_menu() {
 			ID_MENU=($lv_Drive \"$DRIVE\" $lv_Id \"$ID\"
@@ -19,6 +36,9 @@ kwbtrfs_subvolumes_id() {
 		}
 		## }}}
 		# Funktion (btrfs_id_choice_menu), Btrfs-Laufwerke zur Auswahl anzeigen# {{{
+		############################
+		# TODO: weg, dafür btrfs_choice_menu
+		############################
 		#
 		btrfs_id_choice_menu() {
 			SV_ID_MENU=($BTRFS_PATH_E $SUBVOL_DEV_E $gv_Back \"\")
@@ -26,7 +46,24 @@ kwbtrfs_subvolumes_id() {
 			menubox "$1" "$ID_TITLE" "$BTRFS_SV_MSG" "$SV_ID_MENU"
 		}
 		## }}}
-		search_subvolumes
+		# Funktion (subvol_ids), Listet die Subvol IDs eines btrfs Laufwerk auf{{{
+		#
+		# usage: subvol_ids DRIVE
+		#
+		subvol_ids () {
+			if [[ ${#argv} == 1 ]] ; then
+				local Dev
+				unset -- SUBVOL_ID
+				Dev="$1"
+				btrfs subvolume list -tu $Dev | tail -n +3 | \
+					while read id Rest ; do
+						SUBVOL_ID+=($id)
+					done
+			else
+				no_para_msg $0
+			fi
+		}
+		#}}}
 		subvol_id_menu
 		while [[ -n $gv_Auswahl ]] ; do
 			case $gv_Auswahl in
@@ -46,9 +83,25 @@ kwbtrfs_subvolumes_id() {
 							/*)
 								# Laufwerk/Subvolume übernehmen
 								DRIVE="$gv_Auswahl"
+								# Prüfe, ob $DRIVE ein Subvolume ist
+								unset -- Index_Anz Index Mp_Sv
+								# Wenn es Subvolumes gibt die Anzahl diese herausfinden
+								# und um 1 erhöhen.
+								Index_Anz=${#SUBVOL_DEV}
+								(( Index_Anz++ ))
+								Index=$SUBVOL_DEV[(i)$DRIVE]
+								# Wenn $DRIVE ein Subvolume ist dann ist es im
+								# Index von $SUBVOL_DEV kleiner als $Index_Anz.
+								if [[ $Index -lt $Index_Anz ]] ; then
+									# Mountpoint des Subvolume herausfinden
+									get_mountpoint_subvol "$DRIVE"
+									subvol_ids "$Mp_Sv"
+								else
+									subvol_ids "$DRIVE"
+								fi
 								break
 								;;
-							*)
+							*|$gv_Back)
 								break
 								;;
 						esac
@@ -58,20 +111,25 @@ kwbtrfs_subvolumes_id() {
 					;;
 				$lv_Id)
 					# ID Numer eingeben# {{{
-					MSG=$(gettext 'Geben Sie eine ID für das $lv_Drive $DRIVE ein.\n\nDie ID 5 ist ein fester Alias für das root Dateisystem. Lesen Sie bitte die Hilfe davor.\n')
-					number_input "$ID_TITLE" "$MSG" "$ID"
-					while [[ -n $NUMBER ]] ; do
-						# Prüfen, ob es das Subvolume schon gibt.
-						Tmp="`print ${(M)${SUBVOL_ID}##*${NUMBER}}`"
-						if [[ ! -n $Tmp ]] ; then
-							ID="$NUMBER"
-							break
-						else
-							ID_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
-							msgbox "$gv_Info" "$ID_MSG"
-							number_input "$ID_TITLE" "$MSG" "$ID"
-						fi
-					done
+					if [[ -n $DRIVE ]] ; then
+						MSG=$(gettext 'Geben Sie eine ID für das $lv_Drive $DRIVE ein.\n\nDie ID 5 ist ein fester Alias für das Wurzelverzeichnis. Lesen Sie bitte die Hilfe davor.\n')
+						number_input "$ID_TITLE" "$MSG" "$ID"
+						while [[ -n $NUMBER ]] ; do
+							# Prüfen, ob es die Subvolume ID schon gibt.
+							check_sv_id
+							if [[ $Ok == yes ]] ; then
+								ID="$NUMBER"
+								break
+							else
+								ID_MSG=$(gettext 'Die $lv_Id $NUMBER ist schon vorhanden. Geben Sie bitte eine andere ein!')
+								msgbox "$gv_Info" "$ID_MSG"
+								number_input "$ID_TITLE" "$MSG" "$ID"
+							fi
+						done
+					else
+						MSG=$(gettext 'Sie müssen erst ein $lv_Drive auswählen.')
+						msgbox "$gv_Info" "$MSG"
+					fi
 					## }}}
 					subvol_id_menu "$lv_Id"
 					;;
@@ -81,10 +139,13 @@ kwbtrfs_subvolumes_id() {
 						MSG=$(gettext 'Soll das Laufwerk wirklich diese ID ($ID) bekommen (gv_Yes/gv_No)?\n\nBei $gv_Yes wird die Struktur des Laufwerks geändert.')
 						yesno "$ID_TITLE" "$MSG" no
 						if [[ $gv_Auswahl == yes ]] ; then
-							btrfs subvolume set-default $ID "$DRIVE" 2>&1 || \
-								(prog_failure ; return 1)
-							# neu einlesen
-							search_subvolumes
+							if [[ -n ${SUBVOL_ID[1]} ]] && [[ -n $Mp_Sv ]] ; then
+								btrfs subvolume set-default $ID "$Mp_Sv" 2>&1 || \
+									(prog_failure ; return 1)
+							else
+								btrfs subvolume set-default $ID "$DRIVE" 2>&1 || \
+									(prog_failure ; return 1)
+							fi
 							break
 						fi
 					else
@@ -94,7 +155,7 @@ kwbtrfs_subvolumes_id() {
 					fi
 					## }}}
 					;;
-				*)
+				*|$gv_Back)
 					break
 					;;
 			esac

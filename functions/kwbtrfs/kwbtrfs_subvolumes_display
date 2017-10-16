@@ -3,32 +3,39 @@
 # usage: kwbtrfs_subvolumes_display
 #
 kwbtrfs_subvolumes_display() {
-	search_subvolumes
-	if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-		subvol_checklist
-		while [[ -n ${gv_Auswahl[1]} ]] ; do
-			case $gv_Auswahl in
-				HELP*)
-					script_help subvolumes_help
-					subvol_checklist "${gv_Auswahl#HELP }"
-					;;
-				/*)
-					# Information über die ausgewählten Subvolumes anzeigen# {{{
-					rm -rf ${gv_WorkDir}/show_subvol &>/dev/null
-					for i in ${=gv_Auswahl} ; {
-						btrfs subvolume show $i >> ${gv_WorkDir}/show_subvol
-					}
-					view_file  ${gv_WorkDir}/show_subvol
-					## }}}
-					subvol_checklist
-					;;
-				*)
-					# zurück
-					break
-			esac
-		done
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		search_subvolumes "$BTRFS_PATH"
+		if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+			subvol_checklist
+			while [[ -n ${gv_Auswahl[1]} ]] ; do
+				case $gv_Auswahl in
+					HELP*)
+						script_help subvolumes_help
+						subvol_checklist "${gv_Auswahl#HELP }"
+						;;
+					/*)
+						# Information über die ausgewählten Subvolumes anzeigen# {{{
+						rm -rf ${gv_WorkDir}/show_subvol &>/dev/null
+						for i in ${=gv_Auswahl} ; {
+							get_mountpoint_subvol "$i"
+							btrfs subvolume show $Mp_Sv >> ${gv_WorkDir}/show_subvol
+						}
+						view_file  ${gv_WorkDir}/show_subvol
+						## }}}
+						subvol_checklist
+						;;
+					*|$gv_Back)
+						# zurück
+						break
+				esac
+			done
+		else
+			no_subvolume_msg
+			return 1
+		fi
 	else
-		no_subvolume_msg
+		no_btrfs_dev_msg
 		return 1
 	fi
 	return 0

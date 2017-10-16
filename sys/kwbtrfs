@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.10.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 16.10.2017
 #
 # Script: kwbtrfs, bearbeitet Btrfs-Dateisysteme.
-# Version: 0.0.4
+# Version: 0.0.5
 #
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -426,6 +426,18 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Findnew=$(gettext 'Zustand Dateien')
 			lv_DefaultId=$(gettext 'Subvolume IDs')
 			## }}}
+			# Funktion (get_mountpoint_subvol){{{
+			#
+			# usage: get_mountpoint_subvol DRIVE
+			get_mountpoint_subvol () {
+				if [[ ${#argv} == 1 ]] ; then
+					Drive="$1"
+					Mp_Sv="`print ${${(s: :)${(M)${(f)"$(mount)"}##*subvol=/${Drive##*/}\)}}[3]}`"
+				else
+					no_para_msg $0
+				fi
+			}
+			#}}}
 			# Funktion (subvolumes_menu)# {{{
 			#
 			subvolumes_menu() {
@@ -445,53 +457,41 @@ while [ "$gv_Auswahl" ] ; do
 			# Funktion (search_subvolumes), suche nach Subvolumes# {{{
 			#
 			search_subvolumes() {
-				unset -- SUBVOL_DEV SUBVOL_DEV_E SUBVOL_DEV_M SUBVOL_ID SUBVOL_MOUNT_DEVS
-				for i in ${=BTRFS_DEV} ; {
-					mount_check -c $i
-					if [[ $MOUNT == no ]] ; then
-						MOUNT_DEV=(${gv_WorkDir}/${i##*/})
-						mkdir $MOUNT_DEV &>/dev/null
-						if mount -o rw -t btrfs $i $MOUNT_DEV &>/dev/null ; then
-							MOUNT_DEVS+=($MOUNT_DEV)
-							btrfs subvolume list -tu $MOUNT_DEV >${gv_WorkDir}/subvolumes
-							list_subvolumes
-						fi
-					else
-						MOUNT_DEV=($MOUNTPOINT)
-						btrfs subvolume list -tu $MOUNT_DEV >${gv_WorkDir}/subvolumes
-						list_subvolumes
-					fi
-				}
-			}
-			## }}}
-			# Funktion (list_subvolumes), listet Subvolumes auf# {{{
-			#
-			list_subvolumes() {
-				if [[ -s ${gv_WorkDir}/subvolumes ]] ; then
-					while read id gen tl uuid s ; do
-						# suche nach subvol=/subvolumename
-						Tmp="`print ${${(s: :)${(M)${(f)"$(mount)"}##*subvol=/${s}*}}[3]}`"
-						
-						if [[ ! -n $Tmp ]] ; then
-							if [[ ! -d ${MOUNT_DEV%/}/${s} ]] ; then
-								mkdir ${MOUNT_DEV%/}/${s} &>/dev/null
+				if [[ ${#argv} -ge 1 ]] ; then
+					unset -- SUBVOL_DEV SUBVOL_DEV_E SUBVOL_DEV_M SUBVOL_MOUNT_DEVS
+					local Dev
+					Dev="$1"
+					for d in ${=Dev} ; {
+						btrfs subvolume list -tu $d | tail -n +3 | \
+						while read id  gen tl uuid s ; do
+							if [[ -n $s ]] ; then
+								# suche nach subvol=/subvolumename
+								Tmp="`print ${${(s: :)${(M)${(f)"$(mount)"}##*subvol=/${s}*\)}}[3]}`"
+								
+								if [[ ! -n $Tmp ]] ; then
+									MOUNT_DEV=(${gv_WorkDir}/${d##*/})
+									if [[ ! -d ${MOUNT_DEV%/}/${s} ]] ; then
+										mkdir ${MOUNT_DEV%/}/${s} &>/dev/null
+									fi
+									if mount -t btrfs -o subvol=${s},rw $d ${MOUNT_DEV%/}/${s} &>/dev/null ; then
+										SUBVOL_MOUNT_DEVS+=(${MOUNT_DEV%/}/${s})
+										SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
+										SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
+										SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
+									fi
+								else
+									MOUNT_DEV=($d)
+									SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
+									SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
+									SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
+								fi
+							else
+								no_subvolume_msg
 							fi
-							if mount -t btrfs -o subvol=${s},rw $i ${MOUNT_DEV%/}/${s} &>/dev/null ; then
-								SUBVOL_MOUNT_DEVS+=(${MOUNT_DEV%/}/${s})
-								SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
-								SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
-								SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
-								SUBVOL_ID+=($id)
-							fi
-						else
-							SUBVOL_DEV+=(${MOUNT_DEV%/}/${s})
-							SUBVOL_DEV_E+=(${MOUNT_DEV%/}/${s} \"\")
-							SUBVOL_DEV_M+=(${MOUNT_DEV%/}/${s} \"\" off)
-							SUBVOL_ID+=($id)
-						fi
-					done < ${gv_WorkDir}/subvolumes
+						done
+					}
 				else
-					no_subvolume_msg
+					no_part_msg $0
 				fi
 			}
 			## }}}

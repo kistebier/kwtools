@@ -3,7 +3,7 @@
 # usage: kwbtrfs_subvolumes_create
 #
 kwbtrfs_subvolumes_create() {
-	unset -- SUBVOL_NAME
+	unset -- DRIVE SUBVOL_NAME
 	# Prüfen, ob Btrfs-Laufwerke eingebunden sind und wenn
 	# nicht einbinden und Variblen BTRFS_PATH belegen.
 	mount_btrfs_dev_check
@@ -12,18 +12,19 @@ kwbtrfs_subvolumes_create() {
 		lv_Suvol_Name=$(gettext 'Subvolumename')
 		SV_CREATE_TITLE="${lv_Subvolumes}::${gv_Create}::${lv_Drive}"
 		# vorhandene  Subvolumes finden
-		search_subvolumes
 		# Function (check_sv_name), prüft ob es den Subvolumenamen schon gibt.{{{
 		check_sv_name () {
-			local Tmp
-			Tmp=$(print ${(M)${SUBVOL_DEV}##*${gv_Auswahl}*})
-			for s in ${=Tmp} ; {
+			if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+				local Tmp
 				Ok=yes
-				if [[ $s == ${DRIVE}${gv_Auswahl} ]] ; then
-					Ok=no
-					return 1
-				fi
-			}
+				Tmp=$(print ${(M)${SUBVOL_DEV}##*${gv_Auswahl}*})
+				for s in ${=Tmp} ; {
+					if [[ $s == ${DRIVE}${gv_Auswahl} ]] ; then
+						Ok=no
+						return 1
+					fi
+				}
+			fi
 			return 0
 		}
 		#}}}
@@ -55,6 +56,7 @@ kwbtrfs_subvolumes_create() {
 							/*)
 								# Auswahl übernehmen
 								DRIVE="$gv_Auswahl"
+								search_subvolumes "$DRIVE"
 								break
 								;;
 							*|$gv_Back)
@@ -78,6 +80,7 @@ kwbtrfs_subvolumes_create() {
 								SUBVOL_NAME="$gv_Auswahl"
 								break
 							else
+								unset -- SUBVOL_NAME
 								IS_MSG=$(gettext 'Das $lv_Subvolume $gv_Auswahl ist schon vorhanden. Geben Sie bitte einen anderen Namen ein!')
 								msgbox "$gv_Info" "$IS_MSG"
 								inputbox "$SUBVOL_NAME_TITLE" "$MSG" "$SUBVOL_NAME"
@@ -97,7 +100,6 @@ kwbtrfs_subvolumes_create() {
 						btrfs subvolume create "${DRIVE}/${SUBVOL_NAME}" 2>&1 | \
 							progressbox "$lv_Subvolumes" "$MSG" || \
 							(prog_failure ; return 1)
-						search_subvolumes
 						break
 					else
 						MSG=$(gettext 'Sie müssen erst die Menüpunkte $lv_Drive und $lv_Suvol_Name mit Werten belegen.')

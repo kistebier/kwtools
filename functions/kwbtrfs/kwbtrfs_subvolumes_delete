@@ -3,42 +3,70 @@
 # usage: kwbtrfs_subvolumes_delete
 #
 kwbtrfs_subvolumes_delete() {
-	search_subvolumes
-	if [[ -n ${SUBVOL_DEV[1]} ]] ; then
-		subvol_checklist
-		while [ -n ${gv_Auswahl[1]} ] ; do
-			case $gv_Auswahl in
-				HELP*)
-					script_help subvolumes_help
-					subvol_checklist "${gv_Auswahl#HELP }"
-					;;
-				/*)
-					# ausgewählte Subvolumes löschen# {{{
-					# Auswahl sicher
-					SUBVOL_DEVS="$gv_Auswahl"
-					# Frage, ob die ausgewählten Subvolumes wirklich
-					# gelöscht werden sollen.
-					DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes
-${=SUBVOL_DEVS// /\n}gelöscht werden ($gv_Yes/$gv_No)?')
-					yesno "$lv_Subvolumes" "$DEL_MSG" no
-					#
-					if [[ $gv_Auswahl == yes ]] ; then
-						MSG=$(gettext 'Lösche $lv_Subvolumes')
-						btrfs subvolume delete -C ${=SUBVOL_DEVS} 2>&1 | \
-							progressbox "$lv_Subvolumes" "$MSG" || \
-							(prog_failure ; return 1)
-						search_subvolumes
+	unset -- SUBVOL_DEVS
+	mount_btrfs_dev_check
+	if [[ -n ${BTRFS_PATH[1]} ]] ; then
+		search_subvolumes "$BTRFS_PATH"
+		if [[ -n ${SUBVOL_DEV[1]} ]] ; then
+			subvol_checklist
+			while [ -n ${gv_Auswahl[1]} ] ; do
+				case $gv_Auswahl in
+					HELP*)
+						script_help subvolumes_help
+						subvol_checklist "${gv_Auswahl#HELP }"
+						;;
+					/*)
+						# ausgewählte Subvolumes löschen# {{{
+						# Auswahl sichern
+						SUBVOL_DEVS="$gv_Auswahl"
+						# Frage, ob die ausgewählten Subvolumes wirklich
+						# gelöscht werden sollen.
+						DEL_MSG=$(gettext 'Sollen diese $lv_Subvolumes ${=SUBVOL_DEVS// /\n}gelöscht werden ($gv_Yes/$gv_No)?')
+						yesno "$lv_Subvolumes" "$DEL_MSG" no
+						#
+						if [[ $gv_Auswahl == yes ]] ; then
+							for i in ${=SUBVOL_DEVS} ; {
+								# Mountpoint für das Subvolume herausbekommen.
+								get_mountpoint_subvol "$i"
+								if [[ -n $Mp_Sv ]] ; then
+									case  in
+										/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp|/usr|/var)
+											MSG=$(gettext 'Dieses $lv_Subvolume $i mit dem Einhängepunkt $Mp_Sv kann man nicht ausbinden, da es vom Betriebssystem benötigt wird. Dadurch kann man das $lv_Subvolume auch nicht löschen.')
+											msgbox "$gv_Info" "$MSG"
+											;;
+										*)	# Falls das Subvolume eingebunden ist,
+											# ausbinden.
+											if umount "$i" ; then
+												btrfs subvolume delete -C "$i" 2>&1 | \
+												(prog_failure ; return 1)
+											else
+												MSG=$(gettext 'Das Ausbinden vom $lv_Subvolume $i ist fehlgeschlagen.')
+												msgbox "$gv_Info" "$MSG"
+											fi
+											;;
+									esac
+								else
+									btrfs subvolume delete -C "$i" 2>&1 | \
+									(prog_failure ; return 1)
+								fi
+							}
+							break
+						else
+							subvol_checklist
+						fi
+						## }}}
+						;;
+					*|$gv_Back)
+						# zurück
 						break
-					fi
-					## }}}
-					;;
-				*)
-					# zurück
-					break
-			esac
-		done
+				esac
+			done
+		else
+			no_subvolume_msg
+			return 1
+		fi
 	else
-		no_subvolume_msg
+		no_btrfs_dev_msg
 		return 1
 	fi
 	return 0
