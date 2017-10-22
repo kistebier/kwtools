@@ -173,7 +173,7 @@ kwbtrfs_create_options() {
 			$lv_Mix_Metadata)
 				# einstellen, ob Mixed Mode oder nicht.# {{{
 				MIX_METADATA_TITLE="${lv_Options}::${lv_Mix_Metadata}"
-				MSG=$(gettext 'Sollen die Daten und Metadaten Gruppen Blöcke zusammengelegt werden oder nicht (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einem Dateisystem kleiner als 5GiB besitzen. Über 5GiB kann es zu Leistungseinbussen führen.')
+				MSG=$(gettext 'Sollen die Daten und Metadaten Block Gruppen zusammengelegt werden oder nicht (${gv_Yes}/${gv_No})?\nDies ist sinnvoll bei kleinen Laufwerken und einem Dateisystem kleiner als 5GiB besitzen. Über 5GiB kann es zu Leistungseinbussen führen.')
 				yesno "$MIX_METADATA_TITLE" "$MSG" no
 				if [[ $gv_Auswahl == yes ]] ; then
 					MIX_METADATA="$gv_Yes"
@@ -209,7 +209,7 @@ kwbtrfs_create_options() {
 					fi 
 				else
 					NODESIZE=16384
-					MSG=$(gettext 'Die Nodesize muss >=4096 und <=65536 sein.')
+					MSG=$(gettext 'Die Nodesize muss >=16384 und <=65536 sein.')
 					msgbox "$gv_Attention" "$MSG"
 				fi
 				#}}}
@@ -218,7 +218,7 @@ kwbtrfs_create_options() {
 			$lv_Nodatasum)
 				# Datei Checksumme ausschalten ($gv_Yes/$gv_No).# {{{
 				NODATASUM_TITLE="${lv_Options}::${lv_Nodatasum}"
-				MSG=$(gettext 'Soll die Berechnung der Checksumme aller Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
+				MSG=$(gettext 'Soll die Berechnung der Checksumme aller Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?')
 				yesno "$NODATASUM_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					NODATASUM="$gv_Yes"
@@ -231,7 +231,7 @@ kwbtrfs_create_options() {
 			$lv_Noinline)
 				# inlining von kleinen Dateien ausschalten ($gv_Yes/$gv_No).# {{{
 				NOINLINE_TITLE="${lv_Options}::${lv_Noinline}"
-				MSG=$(gettext 'Soll inlining von kleinen Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?.')
+				MSG=$(gettext 'Soll inlining von kleinen Dateien ausgeschaltet werden (${gv_Yes}/${gv_No})?')
 				yesno "$NOINLINE_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					NOINLINE="$gv_Yes"
@@ -244,7 +244,7 @@ kwbtrfs_create_options() {
 			$lv_Noxattr)
 				# einstellen, ob xattrs und ACLs ignoriert werden sollen oder nicht.# {{{
 				XATTR_TITLE="${lv_Options}::${lv_Noxattr}"
-				MSG=$(gettext 'Sollen xattrs und ACLs beim konvertieren ignoriert werden (${gv_Yes}/${gv_No})?.')
+				MSG=$(gettext 'Sollen xattrs und ACLs beim konvertieren ignoriert werden (${gv_Yes}/${gv_No})?')
 				yesno "$XATTR_TITLE" "$MSG" yes
 				if [[ $gv_Auswahl == yes ]] ; then
 					NOXATTR="$gv_Yes"
@@ -308,7 +308,7 @@ kwbtrfs_create_options() {
 				# einstellen, ob das Laufwerk nicht getrimmt werden soll oder doch.# {{{
 				#
 				NODISCARD_TITLE="${lv_Options}::${lv_Nodiscard}"
-				MSG=$(gettext 'Soll das Laufwerk nicht auf Geschwindigkeit getrimmt werden ($gv_Yes/$gv_No)?')
+				MSG=$(gettext 'Soll das Laufwerk nicht auf Geschwindigkeit getrimmt werden (${gv_Yes}/${gv_No})?')
 				yesno "$NODISCARD_TITLE" "$MSG" no
 				if [[ $gv_Auswahl == yes ]] ; then
 					NODISCARD=yes
@@ -322,7 +322,7 @@ kwbtrfs_create_options() {
 				# Eingabe des Wurzelverzeichnis mit dessen Daten das neue Laufwerk# {{{
 				# gefuellt werden soll. Dieses muss nicht eingebunden sein.
 				ROOTDIR_TITLE="${lv_Options}::${lv_Rootdir}"
-				ROOTDIR_MSG=$(gettext 'Geben Sie das Wurzelverzeichnis ein mit dessen Daten das neue Laufwerk gefuellt werden soll.')
+				ROOTDIR_MSG=$(gettext 'Geben Sie das Wurzelverzeichnis ein mit dessen Daten das neue Laufwerk gefüllt werden soll.')
 				inputbox "$ROOTDIR_TITLE" "$ROOTDIR_MSG" "$ROOTDIR"
 				if [[ ${gv_Auswahl[1]} == / ]] ; then
 					ROOTDIR="$gv_Auswahl"
@@ -369,7 +369,7 @@ kwbtrfs_create_options() {
 				# einstellen, ob die Metadaten des original FS gelöscht# {{{
 				# werden sollen oder nicht.
 				RM_META_TITLE="${lv_Options}::${lv_Rm_Metadata}"
-				MSG=$(gettext 'Sollen die Metadaten des original Dateisystem nach dem konvertieren gelöscht werden (${gv_Yes}/${gv_No})?.')
+				MSG=$(gettext 'Sollen die Metadaten des original Dateisystem nach dem konvertieren gelöscht werden (${gv_Yes}/${gv_No})?')
 				yesno "$RM_META_TITLE" "$MSG" no
 				if [[ $gv_Auswahl == yes ]] ; then
 					RMOMETA="$gv_Yes"
