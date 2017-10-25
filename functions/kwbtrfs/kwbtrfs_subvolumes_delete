@@ -29,7 +29,7 @@ kwbtrfs_subvolumes_delete() {
 								# Mountpoint für das Subvolume herausbekommen.
 								get_mountpoint_subvol "$i"
 								if [[ -n $Mp_Sv ]] ; then
-									case  in
+									case $Mp_Sv in
 										/|/bin|/dev|/etc|/lib|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp|/usr|/var)
 											MSG=$(gettext 'Dieses $lv_Subvolume $i mit dem Einhängepunkt $Mp_Sv kann man nicht ausbinden, da es vom Betriebssystem benötigt wird. Dadurch kann man das $lv_Subvolume auch nicht löschen.')
 											msgbox "$gv_Info" "$MSG"
@@ -59,6 +59,7 @@ kwbtrfs_subvolumes_delete() {
 					*|$gv_Back)
 						# zurück
 						break
+						;;
 				esac
 			done
 		else
