@@ -25,7 +25,6 @@ kwmutt_smime_conf() {
 		smime_import_cert_command \"$smime_import_cert_command\"
 		smime_pk7out_command \"$smime_pk7out_command\"
 		smime_sign_command \"$smime_sign_command\"
-		smime_sign_opaque_command \"$smime_sign_opaque_command\"
 		smime_verify_command \"$smime_verify_command\"
 		smime_verify_opaque_command \"$smime_verify_opaque_command\"
 		$gv_Save \"\"
@@ -56,7 +55,6 @@ kwmutt_smime_conf() {
 	smime_keys="${smime_keys:-~/.smime/keys}"
 	smime_pk7out_command="${smime_pk7out_command:-openssl smime -verify -in %f -noverify -pk7out}"
 	smime_sign_command="${smime_sign_command:-openssl smime -sign -signer %c -inkey %k -passin stdin -in %f -certfile %i -outform DER}"
-	#smime_sign_opaque_command="${smime_sign_opaque_command}"
 	smime_timeout="${smime_timeout:-300}"
 	smime_verify_command="${smime_verify_command:-openssl smime -verify -inform DER -in %s %C -content %f}"
 	smime_verify_opaque_command="${smime_verify_opaque_command:-openssl smime -verify -inform DER -in %s %C || openssl smime -verify -inform DER -in %s -noverify 2>/dev/null}"
@@ -287,18 +285,6 @@ kwmutt_smime_conf() {
 				fi
 				#}}}
 				smime_conf_menu smime_sign_command
-				;;
-			smime_sign_opaque_command)
-				# Kommando um eine S/MIME Signatur zu erzeugen (application/x-pkcs7-signature).# {{{
-				MSG=$(gettext 'Geben Sie den Befehl ein um eine S/MIME Signatur vom Typ application/x-pkcs7-signature zu erstellen.')
-				inputbox "$SMIME_TITLE" "$MSG" "$smime_sign_opaque_command"
-				if [ -n "$gv_Auswahl" ] ; then
-					smime_sign_opaque_command="$gv_Auswahl"
-				else
-					smime_sign_opaque_command=""
-				fi
-				#}}}
-				smime_conf_menu smime_sign_opaque_command
 				;;
 			smime_timeout)
 				# Timeout von S/MIME Passphrasen# {{{
