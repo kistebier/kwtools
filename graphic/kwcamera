@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 00.11.2017
 #
 # Script: kwcamera, zum einstellen, downloaden, löschen von Bildern in Digital Kameras.
-# Version: 0.1.1
+# Version: 0.1.2
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -43,7 +43,7 @@ fi
 # Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/camerarc" -a ! -f "${gv_HomePath}/.kwtools/kwcamerarc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/camerarc nach ${gv_HomePath}/.kwtools/kwcamerarc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/camerarc nach ${gv_HomePath}/.kwtools/kwcamerarc übernommen werden (${gv_Yes}/${gv_No})? Bei $gv_No wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/camerarc" "${gv_HomePath}/.kwtools/kwcamerarc" &>/dev/null
