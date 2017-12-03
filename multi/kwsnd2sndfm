@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.12.2017
 #
 # Script: kwsnd2sndfm, konvertiert soundformate
-# Version: 0.0.13
+# Version: 0.0.14
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -37,7 +37,7 @@ script_init
 # Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/snd2sndfmrc" -a ! -f "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/snd2sndfmrc nach ${gv_HomePath}/.kwtools/kwsnd2sndfmrc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/snd2sndfmrc nach ${gv_HomePath}/.kwtools/kwsnd2sndfmrc übernommen werden (${gv_Yes}/${gv_No})? Bei $gv_No wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/snd2sndfmrc" "${gv_HomePath}/.kwtools/kwsnd2sndfmrc" &>/dev/null
@@ -129,10 +129,10 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Ogg_Enc_Opt=$(gettext 'Ogg_Encoder_Option')
 			LAME_DEC_TITLE=(${gv_Configuration}::${lv_Lame_Dec_Opt})
 			OGG_DEC_TITLE=(${gv_Configuration}::${lv_Ogg_Dec_Opt})
-			DEC_MSG=$(gettext 'Geben Sie hier die Optionen zum decodieren der Sound Dateien ein, siehe man 1 lame oder oggdec.')
+			DEC_MSG=$(gettext 'Geben Sie hier die Optionen zum dekodieren der Sound Dateien ein, siehe man 1 lame oder oggdec.')
 			LAME_ENC_TITLE=(${gv_Configuration}::${lv_Lame_Enc_Opt})
 			OGG_ENC_TITLE=(${gv_Configuration}::${lv_Ogg_Enc_Opt})
-			ENC_MSG=$(gettext 'Geben Sie hier die Optionen zum encodieren der Sound Dateien ein, siehe man 1 lame oder oggenc.')
+			ENC_MSG=$(gettext 'Geben Sie hier die Optionen zum kodieren der Sound Dateien ein, siehe man 1 lame oder oggenc.')
 			#
 			# Funktion, snd_conf_menue{{{
 			snd_conf_menue() {
