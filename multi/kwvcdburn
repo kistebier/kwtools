@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 04.09.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.12.2017
 #
 # Script: kwvcdburn, kreiert und brennt (S)VCD Filme
-# Version: 0.1.2
+# Version: 0.1.3
 #
 
 trap 'setterm --inversescreen off ; setterm --reset ;
@@ -41,7 +41,7 @@ fi
 # Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/vcdburnrc" -a ! -f "${gv_HomePath}/.kwtools/kwvcdburnrc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/vcdburnrc nach ${gv_HomePath}/.kwtools/kwvcdburnrc übernommen werden (${gv_Yes}/${gv_No})? Bei $gv_No wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/vcdburnrc" "${gv_HomePath}/.kwtools/kwvcdburnrc" &>/dev/null
@@ -119,7 +119,7 @@ while [ "$gv_Auswahl" ] ; do
 			# Soll eine VCD Struktur für alle Dateien erstellt werden,
 			# wenn es mehr als eine Datei gibt ($gv_Yes/$gv_No)?
 			if [ "$V_Anz" -gt 1 ] ; then
-				CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (Ja/nein)?')
+				CREATE_MULTI_QUESTION_MSG=$(gettext 'Soll aus allen Dateien eine einheitliche Video-CD Struktur erzeugt werden (${gv_Yes}/${gv_No})?')
 				yesno "$VIDEO_TITLE" "$CREATE_MULTI_QUESTION_MSG" ""
 				if [ "$gv_Auswahl" = yes ] ; then
 					# Dateinamen vergeben
