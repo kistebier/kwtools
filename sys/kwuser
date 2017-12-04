@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 07.07.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.12.2017
 #
 # Script: kwuser, legt an, ändert und löscht User
-# Version: 1.0.7
+# Version: 1.0.8
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -63,7 +63,7 @@ USERPASS_FILE="/root/passwd"
 PASS_FILE="${gv_WorkDir}/passwd.txt"
 CONF_USER_TITLE=$(gettext '${gv_Configuration}::Benutzer')
 P_PREFIX_TITLE=$(gettext '${gv_Configuration}::Massenbenutzer')
-CREATE_MSG=$(gettext 'Geben Sie hier bitte einen Benutzer Namen ohne Sonderzeichen ein.')
+CREATE_MSG=$(gettext 'Geben Sie hier bitte einen Benutzernamen ohne Sonderzeichen ein.')
 lv_Prefix=$(gettext 'Prefix')
 lv_Prefix_Home=$(gettext 'Prefix_Homeverz.')
 lv_Count=$(gettext 'Anzahl')
@@ -795,7 +795,7 @@ user_konf() {
 				# Sperrung des Accounts.
 				# inaktive Zeit nach Verfallsdatum des Benutzer Accounts (expire,...)
 				INACTIVE_TITLE=(${gv_Configuration}::${lv_Inactive})
-				INACTIVE_MSG=$(gettext 'Geben Sie die Anzahl der Tage ein die dieses Benutzerfach, ohne Passwort Ãnderung, bestehen soll (z.B. 60).')
+				INACTIVE_MSG=$(gettext 'Geben Sie die Anzahl der Tage ein die dieses Benutzerfach, ohne Passwort Änderung, bestehen soll (z.B. 60).')
 				number_input "$INACTIVE_TITLE" "$INACTIVE_MSG" "$INACTIVE" 
 				if [ -n "$NUMBER" ] ; then
 					INACTIVE="$NUMBER"
@@ -1046,7 +1046,7 @@ while [ "$gv_Auswahl" ] ; do
 						if [ -n "$gv_Auswahl" ] ; then
 							check_prefix -m "$gv_Auswahl"
 							if [ -n "$P_IS_USER" ] ; then
-								DEL_ASK_MSG=$(gettext 'Sollen die Benutzer mit dem Prefix \"$gv_Auswahl\" wirklich gelöscht werden ($gv_Yes/$gv_No)?')
+								DEL_ASK_MSG=$(gettext 'Sollen die Benutzer mit dem Prefix \"$gv_Auswahl\" wirklich gelöscht werden (${gv_Yes}/${gv_No})?')
 								yesno "$gv_Info" "$DEL_ASK_MSG" ""
 								if [[ $gv_Auswahl == yes ]] ; then
 									# Gibts es einen Prefix+Nr werden alle Benutzer
