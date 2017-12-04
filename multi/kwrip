@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 27.11.2016
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.12.2017
 #
 # Script: kwrip, rippt ganze Audio und Video CD's
 #
-# Version: 0.2.0
+# Version: 0.2.1
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_WorkDir &>/dev/null' EXIT INT
@@ -36,7 +36,7 @@ script_init
 # Soll die alte Konfiguration übernommen werden ($gv_Yes/$gv_No)?
 if [ -f "${gv_HomePath}/.kwtools/cdriprc" -a ! -f "${gv_HomePath}/.kwtools/kwriprc" ] ; then
 	CONVERT_TITLE=$(gettext 'Konfigurationsübernahme')
-	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc übernommen werden ($gv_Yes/$gv_No)? Bei nein wird die alte Konfigurationsdatei nur gelöscht.')
+	CONVERT_MSG=$(gettext 'Soll die Konfigurations Datei ${gv_HomePath}/.kwtools/cdriprc nach ${gv_HomePath}/.kwtools/kwriprc übernommen werden (${gv_Yes}/${gv_No})? Bei $gv_No wird die alte Konfigurationsdatei nur gelöscht.')
 	yesno "$CONVERT_TITLE" "$CONVERT_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		mv "${gv_HomePath}/.kwtools/cdriprc" "${gv_HomePath}/.kwtools/kwriprc" &>/dev/null
@@ -316,7 +316,7 @@ while [ "$gv_Auswahl" ] ; do
 								AUDIO_TRACK[Anz]="track${Anz}"
 							done
 							if [ "$CDDB" = yes ] ; then
-								MSG=$(gettext 'Fuer diese CD gibt es keine Information in der $CDDB_SRV CDDB-Datenbank. Alle Lieder werden im ausgewählten Verzeichnis ${AUDIO_DIR}/../${ARTIST}/${ALBUM} gespeichert.')
+								MSG=$(gettext 'Für diese CD gibt es keine Information in der $CDDB_SRV CDDB-Datenbank. Alle Lieder werden im ausgewählten Verzeichnis ${AUDIO_DIR}/../${ARTIST}/${ALBUM} gespeichert.')
 								msgbox "$gv_Info" "$MSG"
 							fi
 						fi
@@ -530,7 +530,7 @@ while [ "$gv_Auswahl" ] ; do
 										encode_opt
 										audio_rip_exec
 									else
-										MSG=$(gettext 'Fuer diese CD gibt es keine Information über die Liedanzahl (kaputt?).')
+										MSG=$(gettext 'üer diese CD gibt es keine Information über die Liedanzahl (kaputt?).')
 										msgbox "$gv_Info" "$MSG"
 									fi
 									## }}}
@@ -541,7 +541,7 @@ while [ "$gv_Auswahl" ] ; do
 							esac
 						done
 					else
-						MSG=$(gettext 'Sie müssen erst eine Audio CD in ihr Laufwerk einlegen.')
+						MSG=$(gettext 'Sie müssen erst eine Audio-CD in ihr Laufwerk einlegen.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
 					# entsperren
@@ -605,7 +605,7 @@ while [ "$gv_Auswahl" ] ; do
 								# (-e $gv_Auswahl wird noch nicht richtig ausgewertet)
 								if [ -n "$gv_Auswahl" ] ; then
 									if ls ${gv_Auswahl}-<->*.mpg(.) &>/dev/null ; then
-										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese überschrieben werden ($gv_Yes/$gv_No)?')
+										MSG=$(gettext 'Die Datei ($gv_Auswahl) ist schon vorhanden. Soll diese überschrieben werden (${gv_Yes}/${gv_No})?')
 										yesno "$gv_Info" "$MSG" "no"
 										if [[ $gv_Auswahl == yes ]] ; then
 											VCD_NAME="$gv_Auswahl"
@@ -624,7 +624,7 @@ while [ "$gv_Auswahl" ] ; do
 							fi
 						fi
 					else
-						MSG=$(gettext 'Sie müssen erst eine Video CD in ihr Laufwerk einlegen.')
+						MSG=$(gettext 'Sie müssen erst eine Video-CD in ihr Laufwerk einlegen.')
 						msgbox "$gv_Attention" "$MSG"
 					fi
 				fi
