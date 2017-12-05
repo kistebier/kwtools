@@ -1,13 +1,13 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 05.10.2015
+# Autor: Kai Wilke <kiste@netzworkk.de> 04.12.2017
 #
 # Script: kwparted, ein frontend für parted (Partitionierungstool)
 # ++++++++++++++++++++++++++++++
 # Es fehlt die Unterstützung zum kopieren der Dateisysteme hfs* und jfs.
 # ++++++++++++++++++++++++++++++
 #
-# Version: 0.3.1
+# Version: 0.3.2
 
 # ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da auf einigen OS
@@ -49,7 +49,7 @@ if [ -z "$PROGS" ] ; then
 fi
 # Version prüfen
 Parted_Version=${${(ws: :)${(M)${(f)"$(parted -v)"}##*GNU*parted*}}[4]}
-if [[ $Parted_Version -le 3.0 ]] ; then
+if ! compare_versions "$Parted_Version"  "3.0" ; then
 	MSG=$(gettext 'Diese Version ($Parted_Version) ist zu alt. Sie benötigen mindestens eine Version >3.0.')
 	msgbox "$gv_Info" "$MSG"
 	exit 0
@@ -70,7 +70,7 @@ MODELL=$(gettext 'Modell')
 PART_TAB=$(gettext 'Partitionstabelle')
 DISK_SIZE_ALL=$(gettext 'Grösse')
 START_PART=1
-NO_PARTTAB=$(gettext 'Diese Festplatte hat keine Partitionstabelle. Sie können jetzt eine erstellen. Möchten Sie das ($gv_Yes/$gv_No)?')
+NO_PARTTAB=$(gettext 'Diese Festplatte hat keine Partitionstabelle. Sie können jetzt eine erstellen. Möchten Sie das (${gv_Yes}/${gv_No})?')
 DEFECT_FP=$(gettext 'Man kann keine Partitionstabelle anlegen. Vielleicht ist Ihre Festplatte kaputt oder Ihre BIOS Einstellungen sind falsch.')
 #
 lv_Status=$(gettext 'Status')
