@@ -57,9 +57,9 @@ kwgrub2_conf() {
 	lv_Grub_Badram=$(gettext 'Speicheradressen')
 	#
 	DEFAULT_MSG=$(gettext 'Wählen Sie einen Eintrag aus, den grub2 standardmässig starten soll.')
-	GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Standard Menueeintrag des Xen Kernels ein (s. kernel Dokumentation).')
-	GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Xen Kernel ein (s. kernel Dokumentation).')
-	HIDDEN_TIMEOUT_MSG=$(gettext 'Wählen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrückt um das Bootmenue anzuzeigen an.')
+	GRUB_CMDLINE_XEN_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Standard Menüeintrag des Xen Kernels ein (s. Kernel Dokumentation).')
+	GRUB_CMDLINE_XEN_MSG=$(gettext 'Geben Sie bitte Ihre Parameter für den Xen Kernel ein (s. Kernel Dokumentation).')
+	HIDDEN_TIMEOUT_MSG=$(gettext 'Wählen Sie den versteckten Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll an. Ausser es wird eine Taste gedrückt um das Bootmenü anzuzeigen an.')
 	TIMEOUT_MSG=$(gettext 'Wählen Sie den Timeout aus, nach welcher Zeit (s) grub2 die Standard Bootkonfiguration starten soll.')
 	## }}}
 	# Funktion (conf_menu){{{
@@ -67,17 +67,17 @@ kwgrub2_conf() {
 		#\"$lv_Grub_Video_Backend\" \"$GRUB_VIDEO_BACKEND\"
 		CONF_MENU=(\"$lv_Grub_Default\" \"${GRUB_DEFAULT:-0}\"
 		\"$lv_Grub_Savedefault\" \"$GRUB_SAVEDEFAULT\"
-		$lv_Grub_Timeout \"${GRUB_TIMEOUT:-5}\"
+		\"$lv_Grub_Timeout\" \"${GRUB_TIMEOUT:-5}\"
 		\"$lv_Grub_Hidden_Timeout\" \"$GRUB_HIDDEN_TIMEOUT\"
 		\"$lv_Grub_Hidden_Timeout_Quiet\" \"$GRUB_HIDDEN_TIMEOUT_QUIET\"
 		\"$lv_Grub_Default_Button\" \"$GRUB_DEFAULT_BUTTON\"
 		\"$lv_Grub_Timeout_Button\" \"$GRUB_TIMEOUT_BUTTON\"
 		\"$lv_Grub_Hidden_Timeout_Button\" \"$GRUB_HIDDEN_TIMEOUT_BUTTON\"
 		\"$lv_Grub_Button_Cmos_Address\" \"$GRUB_BUTTON_CMOS_ADDRESS\"
-		$lv_Grub_Distributor \"$GRUB_DISTRIBUTOR\"
+		\"$lv_Grub_Distributor\" \"$GRUB_DISTRIBUTOR\"
 		\"$lv_Grub_Terminal_Input\" \"$GRUB_TERMINAL_INPUT\"
 		\"$lv_Grub_Terminal_Output\" \"$GRUB_TERMINAL_OUTPUT\"
-		$lv_Grub_Terminal \"$GRUB_TERMINAL\"
+		\"$lv_Grub_Terminal\" \"$GRUB_TERMINAL\"
 		\"$lv_Grub_Serial_Cmd\" \"$GRUB_SERIAL_COMMAND\"
 		\"$lv_Grub_Cmdline_Linux\" \"$GRUB_CMDLINE_LINUX\"
 		\"$lv_Grub_Cmdline_Linux_Default\" \"${GRUB_CMDLINE_LINUX_DEFAULT:-quiet}\"
@@ -88,16 +88,16 @@ kwgrub2_conf() {
 		\"$lv_Grub_Cmdline_Xen_Default\" \"$GRUB_CMDLINE_XEN_DEFAULT\"
 		\"$lv_Grub_Cmdline_Xen_Replace\" \"$GRUB_CMDLINE_XEN_REPLACE\"
 		\"$lv_Grub_Cmdline_Xen_Replace_Default\" \"$GRUB_CMDLINE_XEN_REPLACE_DEFAULT\"
-		$lv_Grub_Disable_Linux_Uuid \"${GRUB_DISABLE_LINUX_UUID:-false}\"
-		$lv_Grub_Disable_Linux_Recovery \"${GRUB_DISABLE_LINUX_RECOVERY:-false}\"
-		$lv_Grub_Gfxmode \"$GRUB_GFXMODE\"
-		$lv_Grub_Background \"$GRUB_BACKGROUND\"
-		$lv_Grub_Theme \"$GRUB_THEME\"
+		\"$lv_Grub_Disable_Linux_Uuid\" \"${GRUB_DISABLE_LINUX_UUID:-false}\"
+		\"$lv_Grub_Disable_Linux_Recovery\" \"${GRUB_DISABLE_LINUX_RECOVERY:-false}\"
+		\"$lv_Grub_Gfxmode\" \"$GRUB_GFXMODE\"
+		\"$lv_Grub_Background\" \"$GRUB_BACKGROUND\"
+		\"$lv_Grub_Theme\" \"$GRUB_THEME\"
 		\"$lv_Grub_Gfxpayload_Linux\" \"$GRUB_GFXPAYLOAD_LINUX\"
 		\"$lv_Grub_Disable_Os_Propper\" \"$GRUB_DISABLE_OS_PROPPER\"
-		$lv_Grub_Init_Tune \"$GRUB_INIT_TUNE\"
+		\"$lv_Grub_Init_Tune\" \"$GRUB_INIT_TUNE\"
 		\"$lv_Grub_Preload_Modules\" \"$GRUB_PRELOAD_MODULES\"
-		$lv_Grub_Badram \"$GRUB_BADRAM\"
+		\"$lv_Grub_Badram\" \"$GRUB_BADRAM\"
 		$gv_Save \"\" $gv_Back \"\")
 		menubox "$1" "$gv_Configuration" "$gv_Menupoint" "$CONF_MENU"
 	}
@@ -163,7 +163,7 @@ kwgrub2_conf() {
 				;;
 			"$lv_Grub_Savedefault")
 				# Savedefault# {{{
-				SAVE_DEFAULT_MSG=$(gettext 'Soll der letzte Menueeintrag, der mit \"grub-set-default\" oder \"grub-reboot\" ausgeführt wird, gespeichert werden ($gv_Yes/$gv_No)?')
+				SAVE_DEFAULT_MSG=$(gettext 'Soll der letzte Menüeintrag, der mit \"grub-set-default\" oder \"grub-reboot\" ausgeführt wird, gespeichert werden (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$SAVE_DEFAULT_MSG" "$GRUB_SAVEDEFAULT"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_SAVEDEFAULT="true"
@@ -233,7 +233,7 @@ kwgrub2_conf() {
 				;;
 			"$lv_Grub_Hidden_Timeout_Quiet")
 				# stiller versteckter Timeout # {{{
-				HIDDEN_TIMEOUT_QUIET_MSG=$(gettext 'Soll die Anzeige des Countdown vom \"versteckten Timeout\" unterdrückt werden ($gv_Yes/$gv_No)?')
+				HIDDEN_TIMEOUT_QUIET_MSG=$(gettext 'Soll die Anzeige des Countdown vom \"versteckten Timeout\" unterdrückt werden (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$HIDDEN_TIMEOUT_QUIET_MSG" "$GRUB_HIDDEN_TIMEOUT_QUIET"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_HIDDEN_TIMEOUT_QUIET="true"
@@ -476,7 +476,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Linux")
 				# Linux Kernel Kommandozeilen Argumente eingeben# {{{
 				GRUB_CMDLINE_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Linux})
-				GRUB_CMDLINE_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter ein (s. Kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_TITLE" "$GRUB_CMDLINE_MSG" "$GRUB_CMDLINE_LINUX"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_LINUX="$gv_Auswahl"
@@ -491,7 +491,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Linux_Default")
 				# Linux Kernel Kommandozeilen Argumente für default Menue Eintrag eingeben# {{{
 				GRUB_CMDLINE_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Linux_Default})
-				GRUB_CMDLINE_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter für den Standard Menueeintrag ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre Kernel Parameter für den Standard Menüeintrag ein (s. Kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_DEFAULT_TITLE" "$GRUB_CMDLINE_DEFAULT_MSG" "$GRUB_CMDLINE_LINUX_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_LINUX_DEFAULT="$gv_Auswahl"
@@ -506,7 +506,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Netbsd")
 				# NetBSD Kernel Kommandozeilen Argumente eingeben# {{{
 				GRUB_CMDLINE_NETBSD_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Netbsd})
-				GRUB_CMDLINE_NETBSD_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_NETBSD_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter ein (s. Kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_NETBSD_TITLE" "$GRUB_CMDLINE_NETBSD_MSG" "$GRUB_CMDLINE_NETBSD"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_NETBSD="$gv_Auswahl"
@@ -521,7 +521,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Netbsd_Default")
 				# NetBSD Kernel Kommandozeilen Argumente eingeben# {{{
 				GRUB_CMDLINE_NETBSD_DEFAULT_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Netbsd_Default})
-				GRUB_CMDLINE_NETBSD_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter für den Standard Menueeintrag ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_NETBSD_DEFAULT_MSG=$(gettext 'Geben Sie bitte Ihre NetBSD Kernel Parameter für den Standard Menüeintrag ein (s. Kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_NETBSD_DEFAULT_TITLE" "$GRUB_CMDLINE_NETBSD_DEFAULT_MSG" "$GRUB_CMDLINE_NETBSD_DEFAULT"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_NETBSD_DEFAULT="$gv_Auswahl"
@@ -536,7 +536,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Cmdline_Gnumach")
 				# NetBSD Kernel Kommandozeilen Argumente eingeben# {{{
 				GRUB_CMDLINE_GNUMACH_TITLE=(${gv_Configuration}::${lv_Grub_Cmdline_Gnumach})
-				GRUB_CMDLINE_GNUMACH_MSG=$(gettext 'Geben Sie bitte Ihre GNU Mach Kernel Parameter ein (s. kernel Dokumentation).')
+				GRUB_CMDLINE_GNUMACH_MSG=$(gettext 'Geben Sie bitte Ihre GNU Mach Kernel Parameter ein (s. Kernel Dokumentation).')
 				inputbox "$GRUB_CMDLINE_GNUMACH_TITLE" "$GRUB_CMDLINE_GNUMACH_MSG" "$GRUB_CMDLINE_GNUMACH"
 				if [ -n "$gv_Auswahl" ] ; then
 					GRUB_CMDLINE_GNUMACH="$gv_Auswahl"
@@ -598,7 +598,7 @@ kwgrub2_conf() {
 				;;
 			$lv_Grub_Disable_Linux_Uuid)
 				# UUID ausschalten $gv_Yes/$gv_No# {{{
-				DISABLE_UUID_MSG=$(gettext 'Soll die Benutzung von universally-unique identifiers (UUID) ausgeschaltet werden ($gv_Yes/$gv_No)?')
+				DISABLE_UUID_MSG=$(gettext 'Soll die Benutzung von universally-unique identifiers (UUID) ausgeschaltet werden (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$DISABLE_UUID_MSG" "$GRUB_DISABLE_LINUX_UUID"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_DISABLE_LINUX_UUID="true"
@@ -610,7 +610,7 @@ kwgrub2_conf() {
 				;;
 			$lv_Grub_Disable_Linux_Recovery)
 				# Recovery Menueeintrag ausschalten $gv_Yes/$gv_No# {{{
-				DISABLE_RECOVERY_MSG=$(gettext 'Soll die Benutzung von Recovery Menueeintragen ausgeschaltet werden ($gv_Yes/$gv_No)?')
+				DISABLE_RECOVERY_MSG=$(gettext 'Soll die Benutzung von Recovery Menüeintragen ausgeschaltet werden (${gv_Yes}/${gv_No})?')
 				yesno "$gv_Configuration" "$DISABLE_RECOVERY_MSG" "$GRUB_DISABLE_LINUX_RECOVERY"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_DISABLE_LINUX_RECOVERY="true"
@@ -770,7 +770,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Gfxpayload_Linux")
 				# Zusatz zur Auflösung festlegen{{{
 				GFXPAYLOAD_TITLE=(${gv_Configuration}::${lv_Grub_Gfxpayload_Linux})
-				GFXPAYLOAD_MSG=$(gettext 'Wählen Sie einen Zusatz zum Menuepunt \"Auflösung\" aus.')
+				GFXPAYLOAD_MSG=$(gettext 'Wählen Sie einen Zusatz zum Menüpunkt \"Auflösung\" aus.')
 				# Funktion (gfxpayload_menu)# {{{
 				gfxpayload_menu() {
 					GFXPAYLOAD_MENU=(kepp \"\" text \"\" 640x480x24 \"\"
@@ -798,7 +798,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Disable_Os_Propper")
 				# OS Propper ausschalten $gv_Yes/$gv_No# {{{
 				DISABLE_OS_PROPPER_TITLE=(${gv_Configuration}::${lv_Grub_Disable_Os_Propper})
-				DISABLE_OS_PROPPER_MSG=$(gettext 'Soll das proben nach anderen Betriebssystemen ausgeschaltet werden ($gv_Yes/$gv_No)?')
+				DISABLE_OS_PROPPER_MSG=$(gettext 'Soll das proben nach anderen Betriebssystemen ausgeschaltet werden (${gv_Yes}/${gv_No})?')
 				yesno "$DISABLE_OS_PROPPER_TITLE" "$DISABLE_OS_PROPPER_MSG" "$GRUB_DISABLE_OS_PROPPER"
 				if [ "$gv_Auswahl" = yes ] ; then
 					GRUB_DISABLE_OS_PROPPER="true"
@@ -846,7 +846,7 @@ kwgrub2_conf() {
 			"$lv_Grub_Preload_Modules")
 				# Kernel Module die vorher geladen werden sollen festlegen{{{
 				PRELOAD_MOD_TITLE=(${gv_Configuration}::${lv_Grub_Preload_Modules})
-				PRELOAD_MOD_MSG=$(gettext 'Geben Sie bitte die Kernel Module, getrennt durch ein Leerzeichen, ein die von grub2 vor dem Starten des Betriebssystems geladen werden sollen (Bsp.: xfs ext4.')
+				PRELOAD_MOD_MSG=$(gettext 'Geben Sie bitte die Kernel Module, getrennt durch ein Leerzeichen, ein die von grub2 vor dem Starten des Betriebssystems geladen werden sollen (Bsp.: xfs ext4).')
 				inputbox "$PRELOAD_MOD_TITLE" "$PRELOAD_MOD_MSG" "$GRUB_PRELOAD_MODULES"
 				#
 				if [ -n "$gv_Auswahl" ] ; then
