@@ -1,10 +1,10 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke  <kiste@netzworkk.de> 12.07.2016
+# Autor: Kai Wilke  <kiste@netzworkk.de> 15.12.2017
 #
 # Script: kwquota, Frontend für quota (ext234], reiserfs, jfs) und xfs_quota
 #
-# Version: 0.1.1
+# Version: 0.1.2
 
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -539,9 +539,13 @@ while [ "$gv_Auswahl" ] ; do
 												;;
 										esac
 										## }}}
-										XFS_DRIVE_MENU=($lv_On \"\" $lv_Backup_Create \"\"
-										$lv_Backup_Back \"\" $lv_Clean_Space \"\"
-										$lv_Off \"\" $lv_Complete_Off \"\" $gv_Back \"\")
+										XFS_DRIVE_MENU=(\"$lv_On\" \"\"
+										\"$lv_Backup_Create\" \"\"
+										\"$lv_Backup_Back\" \"\"
+										\"$lv_Clean_Space\" \"\"
+										\"$lv_Off\" \"\" 
+										\"$lv_Complete_Off\" \"\"
+										$gv_Back \"\")
 										# Funktion (xfs_drive_menu)# {{{
 										xfs_drive_menu() {
 											menubox "$1" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$XFS_DRIVE_MENU"
@@ -563,7 +567,7 @@ while [ "$gv_Auswahl" ] ; do
 												$lv_Backup_Create)
 													# Quota Informationen in einer Datei sichern.# {{{
 													if [ -s "$Q_BAK_FILE" ] ; then
-														BAK_MSG=$(gettext 'Es existiert schon eine Backup Datei. Ãberschreiben ($gv_Yes/$gv_No)?')
+														BAK_MSG=$(gettext 'Es existiert schon eine Backup Datei, überschreiben (${gv_Yes}/${gv_No})?')
 														yesno "$XFS_DRIVE_TITLE" "$BAK_MSG" ""
 														if [ "$gv_Auswahl" = yes ] ; then
 															(export LC_ALL=C ; xfs_quota -x -c "dump $QU_OPT" $FS_MP > $Q_BAK_FILE || prog_failure)
@@ -585,8 +589,7 @@ while [ "$gv_Auswahl" ] ; do
 													xfs_drive_menu $lv_Backup_Create
 													;;
 												$lv_Backup_Back)
-													# Quota Informationen aus einer Datei zurück# {{{
-													# spielen
+													# Quota Informationen aus einer Datei wiederherstellen# {{{
 													if [ -s "$Q_BAK_FILE" ] ; then
 														(export LC_ALL=C ; xfs_quota -x -c "restore -f $Q_BAK_FILE" $FS_MP || prog_failure)
 													else
@@ -614,7 +617,7 @@ while [ "$gv_Auswahl" ] ; do
 													# Quota auf dem Laufwerk permanent ausschalten# {{{
 													# Danach muss man das Laufwerk neueinbinden
 													# bzw. den Rechner neu starten.
-													OFF_MSG=$(gettext ' Das Quota auf dem Laufwerk komplett ausschalten ($gv_Yes/$gv_No)?\n
+													OFF_MSG=$(gettext 'Das Quota auf dem Laufwerk komplett ausschalten (${gv_Yes}/${gv_No})?\n
 \n
 Notiz: Sie müssen das Laufwerk danach neu einbinden oder den Rechner neu starten.')
 													yesno "$XFS_DRIVE_TITLE" "$OFF_MSG" ""
@@ -641,7 +644,9 @@ Notiz: Sie müssen das Laufwerk danach neu einbinden oder den Rechner neu starte
 									# ext2/3/4, jfs und reiserfs Dateisysteme# {{{
 									ext_ug_quota_check
 									if [ -s "$USER_LOGFILE" -o -s "$GROUP_LOGFILE" ] ; then
-										DRIVE_ON_OFF_MENU=($lv_On \"\" $lv_Off \"\" $gv_Back \"\")
+										DRIVE_ON_OFF_MENU=(\"$lv_On\" \"\"
+										\"$lv_Off\" \"\"
+										$gv_Back \"\")
 										menubox "" "$FS_DRIVE_TITLE" "$DRIVE_STATUS_MSG" "$DRIVE_ON_OFF_MENU"
 										while [ -n "$gv_Auswahl" ] ; do
 											case "$gv_Auswahl" in
