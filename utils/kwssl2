@@ -1,11 +1,11 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 07.07.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 03.02.2018
 #
 # Script: kwssl2, erstellt eine PKI (Public Key Infrastructur),
 # CAs, Zertifikate, signiert diese ....
 #
-# Version: 0.0.7
+# Version: 0.0.8
 #
 
 # Ausführen von Befehlen auf bestimmte Signale.
@@ -286,7 +286,7 @@ check_preservedn() {
 #
 choice_preservedn() {
 	PRESERVEDN_TITLE="$lv_Ssl_PreserveDN"
-	PRESERVEDN_MSG=$(gettext 'Email Adresse zum Subject DN hinzufügen ($gv_Yes/$gv_No)?')
+	PRESERVEDN_MSG=$(gettext 'Email Adresse zum Subject DN hinzufügen (${gv_Yes}/${gv_No})?')
 	yesno "$PRESERVEDN_TITLE" "$PRESERVEDN_MSG" "yes"
 	if [ "$gv_Auswahl" != no ] ; then
 		PRESERVEDN="yes"
@@ -1465,7 +1465,7 @@ while [ "$gv_Auswahl" ] ; do
 					$gv_Create)
 						# Diffie Hellman Datei erstellen.# {{{
 						if [ -n "$DH_FILENAME" -a -f "$DH_FILENAME" ] ; then
-							MSG=$(gettext 'Die Datei "$DH_FILENAME" ist schon vorhanden.\n\nSoll sie überschrieben werden ($gv_Yes/$gv_No)?')
+							MSG=$(gettext 'Die Datei "$DH_FILENAME" ist schon vorhanden.\n\nSoll sie überschrieben werden (${gv_Yes}/${gv_No})?')
 							yesno "$gv_Info" "$MSG" "no"
 							if [ "$gv_Auswahl" != no ] ; then
 								openssl dhparam -out "$DH_FILENAME" $KEYLENGTH || prog_failure
@@ -1475,7 +1475,7 @@ while [ "$gv_Auswahl" ] ; do
 							openssl dhparam -out "$DH_FILENAME" $KEYLENGTH || prog_failure
 							break
 						else
-							MSG=$(gettext 'Sie müssen mindestens den Menupunkt $lv_Filename mit einem Wert belegen.')
+							MSG=$(gettext 'Sie müssen mindestens den Menüpunkt $lv_Filename mit einem Wert belegen.')
 							msgbox "$gv_Info" "$MSG"
 							dh_menu $lv_Filename
 						fi
