@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 19.10.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 05.02.2018
 #
 # Script: kwbtrfs, bearbeitet Btrfs-Dateisysteme.
-# Version: 0.0.5
+# Version: 0.0.6
 #
 # Ausführen von Befehlen auf bestimmte Signale.
 # Notiz. Immer den Namen verwenden, da es auf einigen OS
@@ -331,11 +331,13 @@ while [ "$gv_Auswahl" ] ; do
 			lv_Df=$(gettext 'Blockbelegung')
 			lv_Label=$(gettext 'Label')
 			lv_Size=$(gettext 'Grösse')
+			lv_Sync=$(gettext 'Synchronisation')
 			# Funktion (filesystem_menu)# {{{
 			#
 			filesystem_menu() {
 				MENU=($gv_Display \"\" \"$lv_Detail\" \"\" $lv_Df \"\" $lv_Defrag \"\"
-				$lv_Label \"\" $gv_Enlarge \"\" $gv_Reduce \"\" $gv_Back \"\")
+				$lv_Label \"\" $gv_Enlarge \"\" $gv_Reduce \"\"
+				$lv_Sync \"\" $gv_Back \"\")
 				menubox "$1" "$lv_Filesystem" "$gv_Menupoint" "$MENU"
 			}
 			## }}}
@@ -400,9 +402,8 @@ while [ "$gv_Auswahl" ] ; do
 							;;
 						$lv_Sync)
 							# Dateisystem synchronisieren# {{{
-							# ###############
-							# TODO: nur RAID Arrays?
-							hier_ist_noch_nichts $lv_Sync
+							autoload -U kwbtrfs_filesystem_sync
+							kwbtrfs_filesystem_sync
 							## }}}
 							filesystem_menu $lv_Sync
 							;;
