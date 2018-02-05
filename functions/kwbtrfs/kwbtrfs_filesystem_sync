@@ -1,0 +1,51 @@
+# Funktion (kwbtrfs_filesystem_sync), Synchronisierung von Btrfs-Laufwerken# {{{
+#
+# usage: kwbtrfs_filesystem_sync
+#
+kwbtrfs_filesystem_sync() {
+	mount_btrfs_dev_check
+	btrfs_dev_checklist "$lv_Filesystem"
+	while [[ ${gv_Auswahl[1]} ]] ; do
+		case $gv_Auswahl in
+			HELP*)
+				# Hilfe
+				script_help filesystem_help
+				btrfs_dev_checklist "${lv_Filesystem}::${lv_Sync}" "${gv_Auswahl#HELP }"
+				;;
+			/*)
+				# Synchronisierung der ausgewählten Laufwerke anzeigen# {{{
+				# Funktion (sync_msg), Anzeige welches Laufwerk# {{{
+				# synchonisiert wird.
+				#
+				sync_msg() {
+					unset -- Dev
+					if [[ ${#argv} == 1 ]] ; then
+						Dev="$1"
+						MSG=$(gettext 'Synchronisiere das Laufwerk $Dev.')
+					else
+						no_para_msg $0
+					fi
+				}
+				## }}}
+				for i in ${=gv_Auswahl} ; {
+					sync_msg "$i"
+					btrfs filesystem sync $i | \
+						progressbox "$lv_Sync" "$MSG" || \
+						prog_failure
+				}
+				## }}}
+				btrfs_dev_checklist "${lv_Filesystem}::${lv_Sync}" "${gv_Auswahl[1]}"
+				;;
+			*)
+				# zurück
+				break
+				;;
+		esac
+	done
+	return 0
+}
+## }}}
+### Modeline {{{
+### vim:ft=zsh:foldmethod=marker
+### vim:set ts=4: 
+### }}}
