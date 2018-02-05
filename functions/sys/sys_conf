@@ -3110,7 +3110,6 @@ $TIME test -x $Prog_Wahl_X && $Sudo $Prog_Wahl_X"
 							#}}}
 							;;
 						*)
-							hier_ist_noch_nichts "$Dev"
 							;;
 					esac
 					#}}}
@@ -4450,7 +4449,7 @@ file_choice() {
 	# ist und dann starten. Ist keines vorhanden wird der kwtools Code benutzt.
 	#
 	# usage: if_conf_prog "$OS" PARAMETER
-	# PARAMETER - Parametr welcher konfiguriert werden soll.
+	# PARAMETER - Parameter welcher konfiguriert werden soll.
 	#             [auth|libpam-ldap|mail|net|raid]
 	#
 	if_conf_prog() {
@@ -4673,7 +4672,9 @@ file_choice() {
 					esac
 					## }}}
 					;;
-				*)	hier_ist_noch_nichts $If_Opt	;;
+				*)	MSG=$(gettext 'Für diese Distribution ($Os) kennen die kwtools keine Konfigurations Werkzeuge.')
+					msgbox "$gv_Info" "$MSG"
+					;;
 			esac
 		else
 			no_para_msg $0
