@@ -533,7 +533,7 @@ sys_conf() {
 								if [ -n "$MaxChar" ] ; then
 									if [ "$Char" -lt "$MinChar" -o "$Char" -gt "$MaxChar" ] ; then
 										# falsche Password Länge
-										MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden ($gv_Yes/$gv_No)?')
+										MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar und höchstens $MaxChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (${gv_Yes}/${gv_No})?')
 										yesno "$gv_Attention" "$MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											mixed_password_menu
@@ -559,7 +559,7 @@ sys_conf() {
 									fi	
 								elif [ "$Char" -lt "$MinChar" ] ; then
 									# falsche Password Länge
-							        MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden ($gv_Yes/$gv_No)?')
+							        MSG=$(gettext 'Die Länge des/der Passworts/Passphrase muss mindestens $MinChar Zeichen sein.\nSoll die Eingabe der Passphrase wiederholt werden (${gv_Yes}/${gv_No})?')
 									yesno "$gv_Attention" "$MSG" ""
 									if [ "$gv_Auswahl" = yes ] ; then
 										mixed_password_menu
@@ -3860,7 +3860,7 @@ file_choice() {
 					File="$2"
 					if [ ! -d $File ] ; then
 						if [ ! -f "$File" ] ; then
-							MSG=$(gettext 'Die Datei $File ist nicht vorhanden. Soll sie angelegt werden ($gv_Yes/$gv_No)?')
+							MSG=$(gettext 'Die Datei $File ist nicht vorhanden. Soll sie angelegt werden (${gv_Yes}/${gv_No})?')
 							# Vorschlag "yes" für die Funktion "yesno", siehe Funktion
 							# "yesno".
 						    yesno "$gv_Attention" "$MSG" ""
@@ -4932,7 +4932,7 @@ is_value() {
 		# Ãbersetzung mittels gettext
 		MASK_TITLE=$(gettext 'Zugriffsrechte')
 		MASK_MSG=$(gettext 'Geben Sie bitte die Zugriffsrechte ein. (1=ausführen , 2=schreiben, 4=lesen) Man kann diese Zahlen unterschiedlich zusammenrechnen (Bsp. 0640, man 1 chmod).')
-		UMASK_MSG=$(gettext 'Geben Sie hier bitte die 3 oder 4 Oktalzifern für die Zugriffsrechte ein (Bsp. 0022 oder 022, man 2 umask).')
+		UMASK_MSG=$(gettext 'Geben Sie hier bitte die 3 oder 4 Oktalziffern für die Zugriffsrechte ein (Bsp. 0022 oder 022, man 2 umask).')
 		#
 		if [ -z "$1" ] ; then
 			number_input "$MASK_TITLE" "$MASK_MSG"
@@ -4994,7 +4994,7 @@ is_value() {
 				msgbox "$gv_Attention" "$MSG"
 			}
 			## }}}
-			YES_NO_MOUNT_MSG=$(gettext '$PART_DEV ist ins Dateisystem eingebunden. Es muss oder kann entfernt werden. Soll dies jetzt geschehen ($gv_Yes/$gv_No)?')
+			YES_NO_MOUNT_MSG=$(gettext '$PART_DEV ist ins Dateisystem eingebunden. Es muss oder kann entfernt werden. Soll dies jetzt geschehen (${gv_Yes}/${gv_No})?')
 			unset -- MOUNTPOINT MOUNT U_MOUNT PART_DEV PART_DEV1
 			export MOUNTPOINT
 			PART_DEV="$2"
@@ -5327,7 +5327,7 @@ is_value() {
 			#
 			File="$1"
 			TITLE=$(gettext 'Drucken')
-			MSG=$(gettext 'Soll die Datei $File gedruckt werden ($gv_Yes/$gv_No)?')
+			MSG=$(gettext 'Soll die Datei $File gedruckt werden (${gv_Yes}/${gv_No})?')
 			yesno "$TITLE" "$MSG" ""
 			if [ "$gv_Auswahl" = yes ] ; then
 				lpr "$File"
@@ -5785,7 +5785,7 @@ is_value() {
 	#
 	root_check() {
 		if [ "`id -u`" != 0 ] ; then
-			MSG=$(gettext 'Für diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln ($gv_Yes/$gv_No)?')
+			MSG=$(gettext 'Für diese Aktion benötigen Sie root Rechte. In den Administrator Modus wechseln (${gv_Yes}/${gv_No})?')
 			yesno "$gv_Attention" "$MSG" ""
 			#
 			if [ "$gv_Auswahl" = yes ] ; then
@@ -6202,7 +6202,7 @@ search_fdisks() {
 										break
 									else
 										# Passwort basiert auf einem Wörterbucheintrag.
-										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag.\nPassworteingabe wiederholen ($gv_Yes/$gv_No)?')
+										DICT_MSG=$(gettext 'Das Passwort basiert auf einem Wörterbucheintrag.\nPassworteingabe wiederholen (${gv_Yes}/${gv_No})?')
 										yesno "$gv_Attention" "$DICT_MSG" ""
 										if [ "$gv_Auswahl" = yes ] ; then
 											passwd_conf_menu
@@ -6301,7 +6301,7 @@ search_fdisks() {
 	#
 	del_file_msg() {
 		TITLE=$(gettext 'Dateien löschen')
-		MSG=$(gettext 'Soll(en) die (Original) Datei(en) gelöscht werden ($gv_Yes/$gv_No)? Dies kann ein söben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
+		MSG=$(gettext 'Soll(en) die (Original) Datei(en) gelöscht werden (${gv_Yes}/${gv_No})? Dies kann ein soeben erstelltes Image sein oder Dateien die in andere Dateien umgewandelt worden sind.')
 		yesno "$TITLE" "$MSG" ""
 	}
 	#}}}
@@ -6556,7 +6556,7 @@ no_option_msg() {
 	# usage: no_para_msg $0
 	no_para_msg() {
 		FUNC="$1"
-		MSG=$(gettext 'Sie haben falsche oder nicht genuegend Parameter der Funktion $FUNC übergeben.')
+		MSG=$(gettext 'Sie haben falsche oder nicht genügend Parameter der Funktion $FUNC übergeben.')
 		msgbox "$gv_Attention" "$MSG"
 	}
 	#}}}
