@@ -1,9 +1,9 @@
 #!/bin/zsh
 #
-# Autor: Kai Wilke <kiste@netzworkk.de> 11.08.2017
+# Autor: Kai Wilke <kiste@netzworkk.de> 12.02.2018
 #
 # Script: kwpostfix, Konfiguriert Mailserver (MTA) postfix
-# Version: 0.1.20
+# Version: 0.1.21
 
 trap 'setterm --inversescreen off ; setterm --reset ;
 rm -rf $gv_Script_Lock $gv_WorkDir &>/dev/null' EXIT INT
@@ -116,18 +116,18 @@ lv_Pix_Workarounds=$(gettext 'PIX Workarounds')
 DEFAULT_DESTINATION_RATE_DELAY_MSG=$(gettext 'Geben Sie die Zeit ein nach der jeder Mailzustellung wieder an das gleiche Ziel eine Mail versandt werden darf (Standard ist 0s).')
 FIRST_ADR_MSG=$(gettext 'Geben Sie bitte eine Mailadresse, User oder eine Domain ein (Bsp. user | @domain.de | user@domain.de).')
 SMTP_CONNECT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout für den Aufbau der Verbindung ein (Bsp.: 30s).')
-SMTP_DATA_DONE_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Ãbertragung einer Mail ein (Standard 600s).')
+SMTP_DATA_DONE_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Übertragung einer Mail ein (Standard 600s).')
 SMTP_DATA_INIT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach Absenden des SMTP-Kommandos DATA ein (Standard 120s).')
-SMTP_DATA_XFER_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout bei Ãbertragung einer Mail ein (Standard 180s).')
+SMTP_DATA_XFER_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout bei Übertragung einer Mail ein (Standard 180s).')
 SMTP_MAIL_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach dem Versand des SMTP-Kommandos MAIL FROM: ein (Standard 300s).')
-SMTP_QUIT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach der Ãbertragung des SMTP-Kommandos QUIT ein (Standard 300s).')
-SMTP_RCPT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach der Ãbertragung des SMTP-Kommandos RCPT TO: ein (Standard 300s).')
+SMTP_QUIT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach der Übertragung des SMTP-Kommandos QUIT ein (Standard 300s).')
+SMTP_RCPT_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout nach der Übertragung des SMTP-Kommandos RCPT TO: ein (Standard 300s).')
 SMTP_XFORWARD_TIMEOUT_MSG=$(gettext 'Geben Sie den Timeout für den SMTP Clienten für das senden des Kommandos XFORWARD und der Antwort vom Server ein (Standard 300s).')
-SMTPD_TLS_REQ_CCERT_MSG=$(gettext 'Benötigen Clients ein Zertifikat ($gv_Yes/$gv_No)?')
-SMTPD_ENFORCE_TLS_MSG=$(gettext 'Soll SSL/TLS bei eingehenden Verbindungen erzwungen werden ($gv_Yes/$gv_No)?')
-SMTPD_USE_TLS_MSG=$(gettext 'Soll dieser Server für eingehende Mails SSL/TLS Verschlüsselung benutzen ($gv_Yes/$gv_No)?')
-SMTPD_TLS_ALWAYS_SESSION_ISSUE_IDS_MSG=$(gettext 'Soll der Postfix SMTP Server eine TLS Session ID ausstellen, falls das TLS Session Caching deaktiviert ist ($gv_Yes/$gv_No)?')
-SMTPD_TLS_ASK_CCERT_MSG=$(gettext 'Soll beim Server explizit nach einem Client Zertifikat nachgefragt werden ($gv_Yes/$gv_No)?')
+SMTPD_TLS_REQ_CCERT_MSG=$(gettext 'Benötigen Clients ein Zertifikat (${gv_Yes}/${gv_No})?')
+SMTPD_ENFORCE_TLS_MSG=$(gettext 'Soll SSL/TLS bei eingehenden Verbindungen erzwungen werden (${gv_Yes}/${gv_No})?')
+SMTPD_USE_TLS_MSG=$(gettext 'Soll dieser Server für eingehende Mails SSL/TLS Verschlüsselung benutzen (${gv_Yes}/${gv_No})?')
+SMTPD_TLS_ALWAYS_SESSION_ISSUE_IDS_MSG=$(gettext 'Soll der Postfix SMTP Server eine TLS Session ID ausstellen, falls das TLS Session Caching deaktiviert ist (${gv_Yes}/${gv_No})?')
+SMTPD_TLS_ASK_CCERT_MSG=$(gettext 'Soll beim Server explizit nach einem Client Zertifikat nachgefragt werden (${gv_Yes}/${gv_No})?')
 TABLE_MAILADDRESS_INPUT_MSG=$(gettext 'Geben Sie eine Mailadresse ein (Bsp. user@domain.de).')
 TABLE_MAILADDRESS_OR_DOMAIN_INPUT_MSG=$(gettext 'Geben Sie eine Mailadresse oder Domain ein (Bsp. @domain.de | user@domain.de).')
 REGEXP_MINIMUM_MENUPOINTS_MSG=$(gettext 'Sie müssen mindestens die Menüpunkte Zeichenkette, Aktion und Transport mit Werten belegen.')
@@ -136,12 +136,12 @@ DB_PASSWD_MSG=$(gettext 'Geben Sie bitte das Passwort für die Datenbank ein.')
 DB_PASSWD_MSG1=$(gettext 'Geben Sie bitte erneut das Passwort für die Datenbank ein.')
 DB_HOSTS_MSG=$(gettext 'Geben Sie die Rechnernamen, getrennt durch ein Leerzeichen, ein auf dem die Datenbank läuft.')
 INTERNET_ROTOCOL_MSG=$(gettext 'Wählen Sie das Internet Protokoll aus.')
-DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurückgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgelöst werden kann ($gv_Yes/$gv_No)?')
+DEFER_IF_NO_MX_ADDRESS_FOUND_MSG=$(gettext 'Soll die Mail Zustellung zurückgestellt werden, wenn ein MX record nicht zu einer IP Adresse aufgelöst werden kann (${gv_Yes}/${gv_No})?')
 DNS_RESOLVER_OPTIONS_MSG=$(gettext 'Wählen Sie ein oder mehrere Optionen für den DNS Resolver aus.')
-ENFORCE_TLS_MSG=$(gettext 'SSL/TLS für den Versand erzwingen ($gv_Yes/$gv_No)?')
-RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen ($gv_Yes/$gv_No)?')
+ENFORCE_TLS_MSG=$(gettext 'SSL/TLS für den Versand erzwingen (${gv_Yes}/${gv_No})?')
+RANDOMIZE_ADDRESSES_MSG=$(gettext 'Reihenfolge der envelope Adressen mixen (${gv_Yes}/${gv_No})?')
 SASL_MECHANISM_MSG=$(gettext 'Wählen Sie bitte die Mechanismen die erlaubt werden sollen.')
-SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden ($gv_Yes/$gv_No)?')
+SEND_XFORWARD_CMD_MSG=$(gettext 'Soll ein nicht Standard XFORWARD Kommando gesendet werden (${gv_Yes}/${gv_No})?')
 
 MAIL_CONFIG="`postconf -h config_directory &>/dev/null`"
 if [ -z "$MAIL_CONFIG" ] ; then
