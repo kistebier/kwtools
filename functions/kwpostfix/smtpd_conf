@@ -164,7 +164,7 @@ smtpd_conf() {
 				;;
 			smtpd_banner)
 				# Begrüssungsbanner# {{{
-				SMTPD_BANNER_MSG=$(gettext 'Geben Sie bitte einen Begrüssungtext ein (Bsp. \$myhostname ESMTP \$mail_name)')
+				SMTPD_BANNER_MSG=$(gettext 'Geben Sie bitte einen Begrüssungtext ein (Bsp. \$myhostname ESMTP \$mail_name).')
 				inputbox "$SMTPD_TITLE" "$SMTPD_BANNER_MSG" "${smtpd_banner//\$/\\\$}"
 				if [ -n "$gv_Auswahl" ] ; then
 					smtpd_banner="$gv_Auswahl"
@@ -199,7 +199,7 @@ smtpd_conf() {
 			smtpd_client_event_limit_exceptions)
 				# Clients die von Verbindungsanzahl, -rate oder von# {{{
 				# SMTP Rate Restrictionen ausgenommen werden sollen.
-				SMTPD_CLIENT_EVENT_LIMIT_EXCEPT=$(gettext 'Geben Sie die Clients ein die von der Verbingsanzahl, -rate oder von SMTP benötigte Rate Restriktionen ausgenommen werden sollen (Bsp. \$mynetworks)')
+				SMTPD_CLIENT_EVENT_LIMIT_EXCEPT=$(gettext 'Geben Sie die Clients ein die von der Verbindungsanzahl, -rate oder von SMTP benötigte Rate Restriktionen ausgenommen werden sollen (Bsp. \$mynetworks).')
 				inputbox "$SMTPD_TITLE" "$SMTPD_CLIENT_EVENT_LIMIT_EXCEPT" "${smtpd_client_event_limit_exceptions//\$/\\\$}"
 				if [ -n "$gv_Auswahl" ] ; then
 					smtpd_client_event_limit_exceptions="$gv_Auswahl"
@@ -310,7 +310,7 @@ smtpd_conf() {
 				;;
 			smtpd_discard_ehlo_keywords)
 				# EHLO Schlüsselwörtern{{{
-				SMTPD_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schlüsselwörtern (starttls, auth, ...) die der SMTP Server nichten senden soll, bei einer EHLO Antwort von einem entfernten SMTP Client.')
+				SMTPD_DISCARD_EHLO_KEYWORDS_MSG=$(gettext 'Geben Sie eine Liste von EHLO Schlüsselwörtern (starttls, auth, ...) die der SMTP Server nicht senden soll, bei einer EHLO Antwort von einem entfernten SMTP Client.')
 				inputbox "$SMTP_TITLE" "$SMTPD_DISCARD_EHLO_KEYWORDS_MSG" "$smtpd_discard_ehlo_keywords"
 				if [ "$gv_Auswahl" ] ; then
 					smtpd_discard_ehlo_keywords="$gv_Auswahl"
@@ -410,7 +410,7 @@ smtpd_conf() {
 			smtpd_junk_command_limit)
 				# Muellkommandos, um Verbindungen offen zu halten/maximal{{{
 				# Standard ist 100.
-				SMTPD_JUNK_COMMAND_LIMIT_MSG=$(gettext 'Geben Sie die maximale Anzahl an Muellkomandos ein um eine Verbindung offen zu halten (Bsp.: 100 oder \${stress?1}\${stress:100}).')
+				SMTPD_JUNK_COMMAND_LIMIT_MSG=$(gettext 'Geben Sie die maximale Anzahl an Müllkomandos ein um eine Verbindung offen zu halten (Bsp.: 100 oder \${stress?1}\${stress:100}).')
 				inputbox "$SMTPD_TITLE" "$SMTPD_JUNK_COMMAND_LIMIT_MSG" "${smtpd_junk_command_limit//\$/\\\$}"
 				if [[ -n $gv_Auswahl ]] ; then
 					smtpd_junk_command_limit="$gv_Auswahl"
@@ -599,7 +599,7 @@ smtpd_conf() {
 				;;
 			smtpd_reject_unlisted_recipient)
 				# Mails mit unbekannte Empfänger Adresse verwerfen?{{{
-				SMTPD_REJECT_UNLISTED_RECIPIENT_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Empfänger Adresse verwerfen (${gv_Yes}/${gv_No})?')
+				SMTPD_REJECT_UNLISTED_RECIPIENT_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannter Empfänger Adresse verwerfen (${gv_Yes}/${gv_No})?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_REJECT_UNLISTED_RECIPIENT_MSG"
 				smtpd_reject_unlisted_recipient="$WERT"
 				postconf -e smtpd_reject_unlisted_recipient="$WERT"
@@ -608,7 +608,7 @@ smtpd_conf() {
 				;;
 			smtpd_reject_unlisted_sender)
 				# Mails mit unbekannter Absender Adresse verwerfen?{{{
-				SMTPD_REJECT_UNLISTED_SENDER_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannte Absender Adresse verwerfen (${gv_Yes}/${gv_No})?')
+				SMTPD_REJECT_UNLISTED_SENDER_MSG=$(gettext 'Soll der SMTP Server Mails mit unbekannter Absender Adresse verwerfen (${gv_Yes}/${gv_No})?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_REJECT_UNLISTED_SENDER_MSG"
 				smtpd_reject_unlisted_sender="$WERT"
 				postconf -e smtpd_reject_unlisted_sender="$WERT"
@@ -631,7 +631,7 @@ smtpd_conf() {
 				;;
 			smtpd_sasl_auth_enable)
 				# SMTP-AUTH, für eingehende mails, benutzen?{{{
-				SMTPD_SASL_AUTH_ENABLE_MSG=$(gettext 'SMTP-AUTH, für eingehende mails, benutzen (${gv_Yes}/${gv_No})?')
+				SMTPD_SASL_AUTH_ENABLE_MSG=$(gettext 'SMTP-AUTH für eingehende mails benutzen (${gv_Yes}/${gv_No})?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_SASL_AUTH_ENABLE_MSG"
 				smtpd_sasl_auth_enable="$WERT"
 				postconf -e smtpd_sasl_auth_enable="$WERT"
@@ -640,7 +640,7 @@ smtpd_conf() {
 				;;
 			smtpd_sasl_authenticated_header)
 				# Standard = no# {{{
-				SMTPD_SASL_AUTHENTICATED_HEADER_MSG=$(gettext 'Soll Postfix Informationen über den SMTP-Auth-Login in die Received-Zeilen mit aufnehmen (${gv_Yes}/${gv_No})?')
+				SMTPD_SASL_AUTHENTICATED_HEADER_MSG=$(gettext 'Soll Postfix Informationen über den SMTP-AUTH Login in die Received-Zeilen mit aufnehmen (${gv_Yes}/${gv_No})?')
 				ja_nein_tausch "$SMTPD_TITLE" "$SMTPD_SASL_AUTHENTICATED_HEADER_MSG"
 				smtpd_sasl_authenticated_header="$WERT"
 				postconf -e smtpd_sasl_authenticated_header="$WERT"
